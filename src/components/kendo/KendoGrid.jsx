@@ -129,69 +129,64 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             (col.props?.field ? `col:${col.props.field}` : `col-idx:${idx}`);
         return cloneElement(col, { key: safeKey });
     });
+    
     if (parentProps?.multiSelect) {
-        // 헤더: 라벨 + 체크박스
+        // 헤더: 라벨 + 체크박스 (indeterminate 지원)
         const SelectionHeaderCell = () => {
-            const stop = (e) => e.stopPropagation();
-
+            const ref = useRef(null);
+        
+            // indeterminate는 DOM property로 설정해야 함 (attribute로 쓰면 경고 발생)
+            useEffect(() => {
+            if (ref.current) {
+                ref.current.indeterminate = headerSomeSelected; // 일부만 체크 시 하이픈 상태
+            }
+            }, [headerSomeSelected]);
+        
+            const stop = (e) => e.stopPropagation(); // 헤더 클릭이 정렬/필터로 전파되는 것 방지
+        
             return (
-                <div
-                    onClick={stop}
-                    style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}
-                >
-                    <span>{selectionHeaderTitle}</span>
-                    <Checkbox
-                        checked={!!headerSelectionValue}
-                        {...(headerSomeSelected ? { indeterminate: true } : {})} // false일 땐 전달 X
-                        onChange={(e) => {
-                            onHeaderSelectionChange({
-                                syntheticEvent: { target: { checked: e.value } },
-                                dataItems: viewItems,
-                            });
-                        }}
+            <div
+                onClick={stop}
+                style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                width: "100%",
+                }}
+            >
+                {/* 헤더 라벨(컬럼명) */}
+                <span>{selectionHeaderTitle}</span>
+        
+                {/* 네이티브 체크박스 (경고 없음) */}
+                <div className="k-checkbox-wrap">
+                    <input
+                    ref={ref}
+                    type="checkbox"
+                    className="k-checkbox"   
+                    checked={!!headerSelectionValue}
+                    onChange={(e) => {
+                        onHeaderSelectionChange({
+                        syntheticEvent: { target: { checked: e.target.checked } },
+                        dataItems: viewItems, // ← 현재 화면에 보이는 아이템들만 대상으로
+                        });
+                    }}
+                    aria-label="Select all rows"
                     />
                 </div>
+            </div>
             );
         };
-        // todo 경고 뜸
-        // const SelectionHeaderCell = () => {
-        //     const ref = useRef(null);
 
-        //     // indeterminate는 DOM 'property'로만 설정해야 함
-        //     useEffect(() => {
-        //       if (ref.current) ref.current.indeterminate = headerSomeSelected;
-        //     }, [headerSomeSelected]);
-
-        //     const stop = (e) => e.stopPropagation();
-
-        //     return (
-        //       <div
-        //         onClick={stop}
-        //         className="k-cell-inner"
-        //         style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-        //       >
-        //         <span>{selectionHeaderTitle}</span>
-        //         <input
-        //           type="checkbox"
-        //           ref={ref}
-        //           checked={!!headerSelectionValue}
-        //           onChange={(e) => {
-        //             onHeaderSelectionChange({
-        //               syntheticEvent: { target: { checked: e.target.checked } },
-        //               dataItems: processedData,
-        //             });
-        //           }}
-        //         />
-        //       </div>
-        //     );
-        //   };
         const selectionCol = (
             <Column
                 key="__selection_col"   // 고정 고유키
                 field={selectedField}
-                width="100px"
+                width="120px"
                 headerCell={SelectionHeaderCell}
                 sortable={false}
+                filterable={false}
+                columnMenu={undefined}
             />
         );
 

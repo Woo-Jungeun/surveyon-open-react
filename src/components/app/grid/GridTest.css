@@ -1,30 +1,65 @@
 /* 셀 강조(노란색) — 원하는 색상으로 바꾸세요 */
 #grid_01 .lv3-selected {
-    background-color: #FFF3BF !important;  /* 노랑 */
-  }
-  
-  /* 일반 클릭 행 강조 (연두색) */
-  #grid_01 .k-table-tbody tr.row-active,
-  #grid_01 .k-table-tbody tr.k-selected {
-    background: #eafae5 !important;
-  }
-  
-  /* lv3 셀 선택 중(드래그/토글 등)엔 행 강조/호버/선택 배경 제거 */
-  #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row.k-selected,
-  #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row[aria-selected="true"],
-  #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row:hover,
-  #grid_01.lv3-cell-select .k-table-tbody tr.k-grid-edit-row,
-  #grid_01.lv3-dd-open  .k-table-tbody tr.k-table-row.k-selected,
-  #grid_01.lv3-dd-open  .k-table-tbody tr.k-table-row[aria-selected="true"],
-  #grid_01.lv3-dd-open  .k-table-tbody tr.k-table-row:hover,
-  #grid_01.lv3-dd-open  .k-table-tbody tr.k-grid-edit-row {
-    background: transparent !important;
-  }
-  
-  /* 일부 테마 변수 사용 시 대비 */
-  #grid_01.lv3-cell-select,
-  #grid_01.lv3-dd-open {
-    --kendo-selected-bg: transparent !important;
-  }
-  /*컬럼 숨기기*/
-  .k-grid .k-filter-row { display: none; }
+  background-color: #FFF3BF !important;
+}
+
+/* 일반 클릭 행 강조 (연두색) */
+#grid_01 .k-table-tbody tr.row-active,
+#grid_01 .k-table-tbody tr.k-selected {
+  background: #eafae5 !important;
+}
+
+/* lv3 셀 선택 중(드래그/토글 등)엔 행 강조/호버/선택 배경 제거 */
+#grid_01.lv3-cell-select .k-table-tbody tr.k-table-row.k-selected,
+#grid_01.lv3-cell-select .k-table-tbody tr.k-table-row[aria-selected="true"],
+#grid_01.lv3-cell-select .k-table-tbody tr.k-table-row:hover,
+#grid_01.lv3-cell-select .k-table-tbody tr.k-grid-edit-row,
+#grid_01.lv3-dd-open .k-table-tbody tr.k-table-row.k-selected,
+#grid_01.lv3-dd-open .k-table-tbody tr.k-table-row[aria-selected="true"],
+#grid_01.lv3-dd-open .k-table-tbody tr.k-table-row:hover,
+#grid_01.lv3-dd-open .k-table-tbody tr.k-grid-edit-row {
+  background: transparent !important;
+}
+
+/* 일부 테마 변수 사용 시 대비 */
+#grid_01.lv3-cell-select,
+#grid_01.lv3-dd-open {
+  --kendo-selected-bg: transparent !important;
+}
+
+/*컬럼 숨기기*/
+.k-grid .k-filter-row {
+  display: none;
+}
+
+/* 혹시 헤더가 overflow로 잘리는 테마일 때 대비 */
+#grid_01 .k-table-thead th,
+#grid_01 .k-table-thead [role="columnheader"] {
+  overflow: visible;
+}
+
+#grid_01 .k-table-thead [role="columnheader"] span {
+  white-space: nowrap;
+}
+
+/* 모든 체크박스(행 + 헤더) 동일 스타일 */
+.k-table .k-checkbox-wrap .k-checkbox[type='checkbox'] {
+  display: inline-block;
+  border: 1px solid #a5e2c5;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  appearance: none;
+  /* 브라우저 기본 스타일 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: #fff;
+  border-radius: 4px;
+}
+
+/* 체크 상태 */
+.k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:checked {
+  border: 1px solid #00b272;
+  background: url(/src/assets/images/checkbox_on.png) no-repeat center #fff;
+  background-size: 12px 10px;
+}
