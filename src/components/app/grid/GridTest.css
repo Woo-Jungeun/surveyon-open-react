@@ -1,0 +1,30 @@
+/* 셀 강조(노란색) — 원하는 색상으로 바꾸세요 */
+#grid_01 .lv3-selected {
+    background-color: #FFF3BF !important;  /* 노랑 */
+  }
+  
+  /* 일반 클릭 행 강조 (연두색) */
+  #grid_01 .k-table-tbody tr.row-active,
+  #grid_01 .k-table-tbody tr.k-selected {
+    background: #eafae5 !important;
+  }
+  
+  /* lv3 셀 선택 중(드래그/토글 등)엔 행 강조/호버/선택 배경 제거 */
+  #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row.k-selected,
+  #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row[aria-selected="true"],
+  #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row:hover,
+  #grid_01.lv3-cell-select .k-table-tbody tr.k-grid-edit-row,
+  #grid_01.lv3-dd-open  .k-table-tbody tr.k-table-row.k-selected,
+  #grid_01.lv3-dd-open  .k-table-tbody tr.k-table-row[aria-selected="true"],
+  #grid_01.lv3-dd-open  .k-table-tbody tr.k-table-row:hover,
+  #grid_01.lv3-dd-open  .k-table-tbody tr.k-grid-edit-row {
+    background: transparent !important;
+  }
+  
+  /* 일부 테마 변수 사용 시 대비 */
+  #grid_01.lv3-cell-select,
+  #grid_01.lv3-dd-open {
+    --kendo-selected-bg: transparent !important;
+  }
+  /*컬럼 숨기기*/
+  .k-grid .k-filter-row { display: none; }

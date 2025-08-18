@@ -1,0 +1,55 @@
+{
+  "calendar": {
+    "today": "오늘"
+  },
+  "datetimepicker": {
+    "date": "날짜",
+    "time": "시간",
+    "cancel": "취소",
+    "set": "설정"
+  },
+  "timepicker": {
+    "set": "설정",
+    "cancel": "취소",
+    "now": "오늘",
+    "selectNow": "오늘 선택",
+    "toggleTimeSelector": "",
+    "toggleClock": ""
+  },
+  "upload": {
+    "dropFilesHere": "이 곳에 업로드할 파일을 드롭하세요.",
+    "select": "파일 선택"
+  },
+
+  "grid.sortAscending": "오름차순 정렬",
+  "grid.sortDescending": "내림차순 정렬",
+  "grid.filter": "필터",
+  "grid.columns": "컬럼",
+  "grid.columnsChooser": "컬럼 선택",
+
+  "grid.filterEqOperator": "같음",
+  "grid.filterNotEqOperator": "같지 않음",
+  "grid.filterIsNullOperator": "값 없음",
+  "grid.filterIsNotNullOperator": "값 있음",
+  "grid.filterStartsWithOperator": "다음으로 시작",
+  "grid.filterContainsOperator": "포함",
+  "grid.filterEndsWithOperator": "다음으로 끝남",
+  "grid.filterGteOperator": "크거나 같음",
+  "grid.filterGtOperator": "큼",
+  "grid.filterLteOperator": "작거나 같음",
+  "grid.filterLtOperator": "작음",
+  "grid.filterAfterOrEqualOperator": "이후(포함)",
+  "grid.filterAfterOperator": "이후",
+  "grid.filterBeforeOrEqualOperator": "이전(포함)",
+  "grid.filterBeforeOperator": "이전",
+  "grid.filterAndLogic": "그리고",
+  "grid.filterOrLogic": "또는",
+  "grid.filterClearButton": "지우기",
+  "grid.filterSubmitButton": "적용",
+
+  "grid.filterCheckAll": "전체 선택",
+  "grid.filterClear": "초기화",
+
+  "grid.columnsApply": "적용",
+  "grid.columnsReset": "초기화"
+}

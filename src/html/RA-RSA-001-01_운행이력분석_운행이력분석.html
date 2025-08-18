@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>운행 이력 분석</span>
+					<span>운행 이력 분석</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">운행 이력 분석</h2>
+
+					<div class="btnWrap">
+						<button class="btnM">선택 노선 복제</button>
+						<button class="btnM btnTxt">선택 노선 삭제</button>
+						<button class="btnM btnTxt">엑셀 출력</button>
+					</div>
+				</div>
+			</article>
+
+			<article class="subContWrap">
+				<div class="subCont subContL">
+					<p class="txtTitL">분석 조건 설정</p>
+					<div class="cmn_sub_ipt mgB24">
+						<p class="txtTit">기간</p>
+						<div class="iptCal row2">
+							<div class="inpArea cal">
+								<input type="text">
+								<span class="iptCalTxt">부터</span>
+							</div>
+							<div class="inpArea cal">
+								<input type="text">
+								<span class="iptCalTxt">까지</span>
+							</div>
+						</div>
+					</div>
+					<div class="cmn_sub_ipt mgB40">
+						<p class="txtTit">시간대</p>
+						<!-- kendo dropdownlist -->
+						<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+							<span class="k-input-inner">
+								<span class="k-input-value-text">option 1</span>
+							</span>
+							<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+							<select>
+								<option>option 1</option>
+								<option>option 2</option>
+							</select>
+						</span>
+						<!-- //kendo dropdownlist -->
+					</div>									
+					<button class="wfull btnL">조회하기</button>
+				</div>
+
+				<div class="subCont subContR">
+
+					<div class="gridWrap grid_rsa">
+						<!-- contents 1 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">노선 운행 이력</h2>
+								<a href="#" class="txtLink">더보기 +</a>
+							</div>
+		
+							<div class="cont">
+								<div>
+									<ul class="listLine">
+										<li class="subTit">
+											<span class="listName">데이터 항목</span>
+											<span class="listTotal">실 운행 이력</span>
+										</li>
+										<li>
+											<span class="listName">노선 평균 운행횟수</span>
+											<span class="listTotal"><i class="txtNum">14.9</i> 회</span>
+										</li>
+										<li>
+											<span class="listName">노선 평균 운행대수</span>
+											<span class="listTotal"><i class="txtNum">3.4</i> 대</span>
+										</li>
+										<li>
+											<span class="listName">노선 평균 배차간격</span>
+											<span class="listTotal"><i class="txtNum">00:08:32</i></span>
+										</li>
+										<li>
+											<span class="listName">노선 평균 운행거리</span>
+											<span class="listTotal"><i class="txtNum">480.5</i> km</span>
+										</li>
+									</ul>
+								</div>					
+							</div>				
+						</div>
+						<!-- contents1 -->
+
+						<!-- contents2 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">기사 운행 이력</h2>
+								<a href="#" class="txtLink">더보기 +</a>
+							</div>
+		
+							<div class="cont">
+								<div>
+									<ul class="listLine">
+										<li class="subTit">
+											<span class="listName">데이터 항목</span>
+											<span class="listTotal">실 운행 이력</span>
+										</li>
+										<li>
+											<span class="listName">기사 1명당 일평균 운행횟수</span>
+											<span class="listTotal"><i class="txtNum">14.9</i> 회</span>
+										</li>
+										<li>
+											<span class="listName">기사 1명당 일평균 운행시간</span>
+											<span class="listTotal"><i class="txtNum">09:03:23</i></span>
+										</li>
+										<li>
+											<span class="listName">기사 1명당 일평균 운행거리</span>
+											<span class="listTotal"><i class="txtNum">80</i> km</span>
+										</li>
+										<li>
+											<span class="listName">기사 1명당 일평균 휴식시간</span>
+											<span class="listTotal"><i class="txtNum">01:11:26</i></span>
+										</li>
+									</ul>
+								</div>					
+							</div>				
+						</div>
+						<!-- contents2 -->
+
+						<!-- contents3 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">버스 막차 준수율</h2>
+							</div>
+
+							<div class="cont disF gap20">
+								<div style="width: 153px; height: 153px; border:1px solid #ff8024">donut chart</div>
+								<ul class="listLine">
+									<li class="subTit">
+										<span class="listName">운수사명</span>
+										<span class="listTotal">버스막차준수율</span>
+									</li>
+									<li>
+										<span class="listName">A 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+									<li>
+										<span class="listName">B 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+									<li>
+										<span class="listName">C 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+								</ul>		
+							</div>				
+						</div>
+						<!-- //contents3 -->
+
+						<!-- contents4 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">중간 경유지 준수율</h2>
+							</div>
+
+							<div class="cont disF gap20">
+								<div style="width: 153px; height: 153px; border:1px solid #ff8024">donut chart</div>
+								<ul class="listLine">
+									<li class="subTit">
+										<span class="listName">운수사명</span>
+										<span class="listTotal">중간 경유지 준수율</span>
+									</li>
+									<li>
+										<span class="listName">A 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+									<li>
+										<span class="listName">B 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+									<li>
+										<span class="listName">C 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+								</ul>		
+							</div>				
+						</div>
+						<!-- //contents4 -->
+
+						<!-- contents5 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">민원</h2>
+							</div>
+
+							<div class="cont disF gap20">
+								<div style="width: 153px; height: 153px; border:1px solid #ff8024">donut chart</div>
+
+								<div class="chartLabel flexW">
+									<p class="labelTxtC label04">무정차</p>
+									<p class="labelTxtC label05">도착시간 지연</p>
+									<p class="labelTxtC label06">불친절</p>
+									<p class="labelTxtC label07">신호위반</p>
+									<p class="labelTxtC label08">위험운행</p>
+									<p class="labelTxtC label09">급정거</p>
+									<p class="labelTxtC label10">급제동</p>									
+								</div>
+
+								<ul class="listLine">
+									<li class="subTit">
+										<span class="listName">운수사명</span>
+										<span class="listTotal">민원 건수</span>
+									</li>
+									<li>
+										<span class="listName">A 운수사</span>
+										<span class="listTotal"><i class="txtNum">100</i> 건</span>
+									</li>
+									<li>
+										<span class="listName">B 운수사</span>
+										<span class="listTotal"><i class="txtNum">100</i> 건</span>
+									</li>
+									<li>
+										<span class="listName">C 운수사</span>
+										<span class="listTotal"><i class="txtNum">100</i> 건</span>
+									</li>
+								</ul>		
+							</div>				
+						</div>
+						<!-- //contents5 -->
+
+						<!-- contents6 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">유형별 운송 수입금</h2>
+							</div>
+
+							<div class="cont disF gap20">
+								<div style="width: 153px; height: 153px; border:1px solid #ff8024">donut chart</div>
+								<ul class="listLine">
+									<li class="subTit">
+										<span class="listName">운수사명</span>
+										<span class="listTotal">버스막차준수율</span>
+									</li>
+									<li>
+										<span class="listName">A 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+									<li>
+										<span class="listName">B 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+									<li>
+										<span class="listName">C 운수사</span>
+										<span class="listTotal"><i class="txtNum">95.7</i> %</span>
+									</li>
+								</ul>		
+							</div>				
+						</div>
+						<!-- //contents6 -->
+
+
+					</div>			
+				</div>
+			</article>
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+	
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>

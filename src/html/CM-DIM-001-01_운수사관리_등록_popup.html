@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>1 depth</span>
+					<span>2 depth</span>
+					<span>3 depth</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">페이지 타이틀</h2>
+
+					<div class="btnWrap">
+						<button class="btnM">기능 버튼</button>
+						<button class="btnM btnTxt">기능 버튼</button>
+					</div>
+				</div>
+			</article>
+
+			<article class="subContWrap">
+				<div class="subCont subContL">
+					<p class="txtTit">라벨</p>
+					<select class="mgB40">
+						<option>텍스트</option>
+						<option>텍스트 1</option>
+						<option>텍스트 2</option>
+						<option>텍스트 3</option>
+					</select>
+					<button class="wfull btnL">기능 버튼</button>
+				</div>
+
+				<div class="subCont subContR">
+
+
+				</div>
+			</article>
+
+			<!-- popup / on -->
+			<article class="modal on">
+				<div class="cmn_popup" style="width: 1320px;">
+					<div class="popTit">
+						<h3>운수사 등록</h3>
+						<a href="#" class="btnClose"><span class="hidden">close</span></a>
+					</div>		
+					
+					<div class="popCont">
+						<div class="popTbl">
+							<h4 class="popContTit">기본 정보</h4>
+
+							<table class="tbl iptType02">
+								<colgroup>
+									<col width="600px" />
+									<col width="40px" />
+									<col width="600px" />
+								</colgroup>
+
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">운수사명</span>
+											<input type="text" placeholder="내용을 입력해주세요.">
+										</div>
+									</td>
+									<td></td>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">담당자명</span>
+											<input type="text" placeholder="내용을 입력해주세요.">
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">운수사 ID</span>
+											<input type="text" placeholder="내용을 입력해주세요.">
+										</div>
+									</td>
+									<td></td>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">담당자 번호</span>
+											<input type="text" placeholder="내용을 입력해주세요.">
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">운영 여부</span>
+											<!-- kendo dropdownlist -->
+											<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+												<span class="k-input-inner">
+													<span class="k-input-value-text">option 1</span>
+												</span>
+												<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+												<select>
+													<option>option 1</option>
+													<option>option 2</option>
+												</select>
+											</span>
+											<!-- //kendo dropdownlist -->
+										</div>
+									</td>
+									<td></td>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">이메일</span>
+											<input type="text" placeholder="내용을 입력해주세요.">
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">사업자등록번호</span>
+											<input type="text" placeholder="내용을 입력해주세요.">
+										</div>
+									</td>
+									<td></td>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">영업소</span>
+											<div class="iptBox iptBox03">
+												<input type="text" value="전라북도 익산시 삼성구 삼성동 999">
+												<button class="btnTxt">주소찾기</button>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">법인등록번호</span>
+											<input type="text" placeholder="내용을 입력해주세요."> 
+										</div>
+									</td>
+									<td rowspan="3"></td>
+									<td rowspan="3">
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">비고</span>
+											<textarea></textarea>
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">설립일</span>
+											<div class="inpArea cal">
+												<input type="text">
+											</div> 
+										</div>
+									</td>									
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">폐업일</span>
+											<div class="inpArea cal">
+												<input type="text">
+											</div> 
+										</div>
+									</td>									
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">대표자명</span>
+											<input type="text" placeholder="내용을 입력해주세요."> 
+										</div>
+									</td>
+									<td rowspan="2"></td>
+									<td rowspan="2">
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">비고</span>
+											<!-- kendo file upload -->
+											<div class="k-upload">
+												<div class="k-dropzone k-upload-dropzone">
+													<div class="k-upload-button-wrap">
+														<button type="button" aria-label="Select files..." class="k-button k-upload-button">
+															<span class="k-button-text">
+																<span aria-hidden="true">Select files...</span>
+															</span>
+														</button>
+														<input class="k-hidden" autocomplete="off" name="files" type="file" multiple="" title="No files selected" aria-label="Select files...">
+													</div>
+													<div class="k-dropzone-hint">파일을 첨부해주세요.</div>
+												</div>
+											</div>
+											<!-- kendo file upload -->
+										</div>
+									</td>
+								</tr>
+								<tr>
+									<td>
+										<div class="cmn_pop_ipt">
+											<span class="iptTit">대표번호</span>
+											<input type="text" placeholder="내용을 입력해주세요."> 
+										</div>
+									</td>
+								</tr>
+							</table>
+						</div>						
+					</div>
+
+					<div class="popBtn">
+						<div class="btnWrap">
+							<button class="btnL btnTxt type01">취소</button>
+							<button class="btnL">저장</button>
+						</div>
+					</div>
+				</div>
+			</article>
+			<!-- //popup / on -->
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+	
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>사업 계획 관리</span>
+					<span>배차코스 관리</span>
+					<span>일일 배차</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">일일 배차</h2>
+
+					<div class="btnWrap">
+						<button class="btnM">일일 배차 일괄 등록</button>
+						<button class="btnM btnTxt">엑셀 다운로드</button>
+					</div>
+				</div>
+			</article>
+
+			<article class="subContWrap type01">
+				<div class="subCont">
+
+					<div class="cmn_total_wrap type01">
+						<div class="disF">
+							<a class="icon iconPrev"><span class="hidden">이전</span></a>
+
+							<div class="cmn_total">
+								<span class="totalNum">2024</span>
+								<span class="txt">년</span>
+								<span class="totalNum">6</span>
+								<span class="txt">월</span>
+								<span class="totalNum">4</span>
+								<span class="txt">일</span>
+							</div>
+
+							<a class="icon iconNext"><span class="hidden">다음</span></a>
+						</div>
+
+						<button class="btnIcon btnCal">달력에서 선택</button>
+					</div>
+
+					<div class="cmn_gird_wrap">
+						<p class="totalTxt">
+							총 <i class="fcGreen">3</i>개
+						</p>
+						
+						<div id="grid_01" class="cmn_grid"></div>						
+					</div>					
+				</div>
+			</article>
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+
+	<script type="text/javascript">
+		var data = [
+				{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				}
+			];
+			$(document).ready(function() {
+				$("#grid_01").kendoGrid({
+					columns: [						
+						{ field: "info_01", width: "5%", title:"번호"},
+						{ field: "info_02", width: "", title:"운수사명"},
+						{ field: "info_03", width: "", title:"운수사 ID"},
+						{ field: "info_04", width: "", title:"운영여부"},
+						{ field: "info_05", width: "", title:"대표자명"},
+						{ field: "info_06", width: "", title:"대표번호"},
+						{ field: "info_07", width: "", title:"이메일"},
+						{ field: "info_08", width: "", title:"영업소"},
+						{ field: "info_09", width: "", title:"등록일자"},
+						{ field: "info_10", width: "", title:"수정일자"},
+						{ field: "", width: "", title:"상세", template: function(mad){return "<button class='k-button-solid-primary btnS' style='box-sizing:revert; line-height:1;'>보기</button>";}}
+					],
+					dataSource: {
+						data: data,
+						pageSize: 10
+					},
+					scrollable: false,
+					sortable: true,
+					filterable: false,
+					pageable: {
+						input: false,
+						numeric: true
+					},
+				});				
+				
+			});
+	</script>
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>

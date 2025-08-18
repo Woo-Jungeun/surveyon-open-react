@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>1 depth</span>
+					<span>2 depth</span>
+					<span>3 depth</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">페이지 타이틀</h2>
+
+					<div class="btnWrap">
+						<button class="btnM">기능 버튼</button>
+						<button class="btnM btnTxt">기능 버튼</button>
+					</div>
+				</div>
+			</article>
+
+			<article class="subContWrap">
+				<div class="subCont subContL">
+					<p class="txtTit">라벨</p>
+					<select class="mgB40">
+						<option>텍스트</option>
+						<option>텍스트 1</option>
+						<option>텍스트 2</option>
+						<option>텍스트 3</option>
+					</select>
+					<button class="wfull btnL">기능 버튼</button>
+				</div>
+
+				<div class="subCont subContR">
+
+
+				</div>
+			</article>
+
+			<!-- popup / on -->
+			<article class="modal on">
+				<div class="cmn_popup">
+					<div class="popTit">
+						<h3>행정처분 상세 <span class="fcGreen">의견제출 요청</span></h3>
+						<a href="#" class="btnClose"><span class="hidden">close</span></a>
+					</div>		
+					
+					<div class="popCont type01">
+						<div class="col2">
+
+							<div class="popTbl">
+								<h4 class="popContTit">신고 정보</h4>
+								
+								<table class="tbl iptCol2">
+									<colgroup>
+										<col width="340px" />
+										<col width="40px" />
+										<col width="340px" />
+									</colgroup>
+	
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">신고 일자</span>
+												<div class="inpArea cal">
+													<input type="text" disabled>
+												</div> 
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt w218">
+												<span class="iptTit">처리 상태</span>
+												<!-- kendo dropdownlist -->
+												<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+													<span class="k-input-inner">
+														<span class="k-input-value-text">option 1</span>
+													</span>
+													<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+													<select disabled>
+														<option>option 1</option>
+														<option>option 2</option>
+													</select>
+												</span>
+												<!-- //kendo dropdownlist -->
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt w218">
+												<span class="iptTit">신고 사항</span>
+												<!-- kendo dropdownlist -->
+												<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+													<span class="k-input-inner">
+														<span class="k-input-value-text">option 1</span>
+													</span>
+													<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+													<select disabled>
+														<option>option 1</option>
+														<option>option 2</option>
+													</select>
+												</span>
+												<!-- //kendo dropdownlist -->
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt w218">
+												<span class="iptTit">신고 방법</span>
+												<!-- kendo dropdownlist -->
+												<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+													<span class="k-input-inner">
+														<span class="k-input-value-text">option 1</span>
+													</span>
+													<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+													<select disabled>
+														<option>option 1</option>
+														<option>option 2</option>
+													</select>
+												</span>
+												<!-- //kendo dropdownlist -->
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">신고자</span>
+												<input type="text" value="홍길동" disabled> 
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">신고자 연락처</span>
+												<input type="text" value="010-1234-1234" disabled> 
+											</div>
+										</td>
+									</tr>	
+									<tr>
+										<td colspan="3">
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">신고 내용</span>
+												<textarea disabled class="h160">익선 터미널 부근 정류장에서 무정차</textarea>
+											</div>
+										</td>										
+									</tr>
+									<tr>
+										<td colspan="3">
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">파일 첨부</span>
+												<!-- kendo file upload -->
+												<div class="k-upload">
+													<div class="k-dropzone k-upload-dropzone">
+														<div class="k-upload-button-wrap">
+															<button type="button" aria-label="Select files..." class="k-button k-upload-button">
+																<span class="k-button-text">
+																	<span aria-hidden="true">Select files...</span>
+																</span>
+															</button>
+															<input class="k-hidden" autocomplete="off" name="files" type="file" multiple="" title="No files selected" aria-label="Select files..." disabled>
+														</div>
+														<div class="k-dropzone-hint">파일을 첨부해주세요.</div>
+													</div>
+												</div>
+												<!-- kendo file upload -->
+											</div>
+										</td>										
+									</tr>	
+									<tr>
+										<td colspan="3">
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">개인정보 공개</span>
+												<div class="radioBox">
+													<input type="radio" id="info_1_01" name="info_1" checked disabled>
+													<label for="info_1_01">비공개</label>
+													<input type="radio" id="info_1_02" name="info_1" disabled>
+													<label for="info_1_02">공개</label>
+												</div>
+											</div>
+										</td>										
+									</tr>									
+								</table>
+
+								<div class="decoLine"></div>
+
+								<h4 class="popContTit">운행 정보
+									<button class="btnTxt btnS">경로 보기</button>
+								</h4>
+								
+								<table class="tbl iptCol2">
+									<colgroup>
+										<col width="340px" />
+										<col width="40px" />
+										<col width="340px" />
+									</colgroup>
+	
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit decoS">노선 번호</span>
+												<input type="text" value="100" disabled>										
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit decoS">날짜</span>
+												<div class="inpArea cal">
+													<input type="text" disabled>
+												</div> 
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">정류장명</span>
+												<input type="text" value="가나다" disabled>								
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">시간</span>
+												<div class="iptBox">
+													<input type="text" value="15:30">
+													<span class="iptDeco">~</span>
+													<input type="text" value="15:30">
+												</div>
+											</div>
+										</td>
+									</tr>									
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">차량번호</span>
+												<input type="text" value="1234" disabled>								
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">운수사</span>
+												<input type="text" value="A운수사" disabled>	
+											</div>
+										</td>
+									</tr>
+									<tr>		
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">기사</span>
+												<input type="text" value="김길동" disabled>
+											</div>
+										</td>
+										<td></td>
+										<td></td>
+									</tr>								
+								</table>								
+							</div>
+
+							<div class="popTbl">
+								<h4 class="popContTit">행정처분 정보</h4>
+
+								<table class="tbl iptCol2">
+									<colgroup>
+										<col width="340px" />
+										<col width="40px" />
+										<col width="340px" />
+									</colgroup>
+	
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt w218">
+												<span class="iptTit">위반 사항</span>
+												<!-- kendo dropdownlist -->
+												<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+													<span class="k-input-inner">
+														<span class="k-input-value-text">option 1</span>
+													</span>
+													<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+													<select>
+														<option>option 1</option>
+														<option>option 2</option>
+													</select>
+												</span>
+												<!-- //kendo dropdownlist -->								
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt w218">
+												<span class="iptTit">관찰 기관</span>
+												<!-- kendo dropdownlist -->
+												<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+													<span class="k-input-inner">
+														<span class="k-input-value-text">option 1</span>
+													</span>
+													<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+													<select>
+														<option>option 1</option>
+														<option>option 2</option>
+													</select>
+												</span>
+												<!-- //kendo dropdownlist -->											
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">과태료</span>
+												<input type="text" value="100,000">									
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">과태료 납부기한</span>
+												<div class="inpArea cal">
+													<input type="text" disabled>
+												</div> 		
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">과징금</span>
+												<input type="text" value="-">									
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">과징금 납부기한</span>
+												<div class="inpArea cal">
+													<input type="text" disabled>
+												</div> 		
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt w218">
+												<span class="iptTit">납부 여부</span>
+												<!-- kendo dropdownlist -->
+												<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+													<span class="k-input-inner">
+														<span class="k-input-value-text">option 1</span>
+													</span>
+													<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+													<select>
+														<option>option 1</option>
+														<option>option 2</option>
+													</select>
+												</span>
+												<!-- //kendo dropdownlist -->							
+											</div>
+										</td>
+										<td></td>
+										<td>
+											<div class="cmn_pop_ipt w218">
+												<span class="iptTit">불법운행 처리</span>
+												<!-- kendo dropdownlist -->
+												<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+													<span class="k-input-inner">
+														<span class="k-input-value-text">option 1</span>
+													</span>
+													<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+													<select>
+														<option>option 1</option>
+														<option>option 2</option>
+													</select>
+												</span>
+												<!-- //kendo dropdownlist -->		
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="3">
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">행정처분 내용</span>
+												<textarea class="h160"></textarea>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="3">
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">파일 첨부</span>
+												<!-- kendo file upload -->
+												<div class="k-upload">
+													<div class="k-dropzone k-upload-dropzone">
+														<div class="k-upload-button-wrap">
+															<button type="button" aria-label="Select files..." class="k-button k-upload-button">
+																<span class="k-button-text">
+																	<span aria-hidden="true">Select files...</span>
+																</span>
+															</button>
+															<input class="k-hidden" autocomplete="off" name="files" type="file" multiple="" title="No files selected" aria-label="Select files...">
+														</div>
+														<div class="k-dropzone-hint">파일을 첨부해주세요.</div>
+													</div>
+												</div>
+												<!-- kendo file upload -->
+											</div>
+										</td>
+									</tr>					
+								</table>
+
+								<div class="decoLine"></div>
+
+								<h4 class="popContTit">의견제출 <i class="fcGreen">D-23</i></h4>
+
+								<table class="tbl">
+									<colgroup>
+										<col width="720px" />
+									</colgroup>
+	
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">의견제출 기한</span>
+												<div class="inpArea cal">
+													<input type="text" disabled>
+												</div> 										
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">행정처분 내용</span>
+												<textarea class="h160"></textarea>
+											</div>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<div class="cmn_pop_ipt">
+												<span class="iptTit">파일 첨부</span>
+												<!-- kendo file upload -->
+												<div class="k-upload">
+													<div class="k-dropzone k-upload-dropzone">
+														<div class="k-upload-button-wrap">
+															<button type="button" aria-label="Select files..." class="k-button k-upload-button">
+																<span class="k-button-text">
+																	<span aria-hidden="true">Select files...</span>
+																</span>
+															</button>
+															<input class="k-hidden" autocomplete="off" name="files" type="file" multiple="" title="No files selected" aria-label="Select files...">
+														</div>
+														<div class="k-dropzone-hint">파일을 첨부해주세요.</div>
+													</div>
+												</div>
+												<!-- kendo file upload -->
+											</div>
+										</td>
+									</tr>					
+								</table>
+							</div>
+							
+						</div>					
+					</div>
+
+					<!-- 상세 버튼타입 -->
+					<!-- <div class="popBtn">
+						<div class="btnWrap">
+							<button class="btnL">수정</button>
+						</div>
+					</div> -->
+					<!-- //상세 버튼타입 -->
+
+					<!-- 등록/수정 버튼타입 -->
+					<div class="popBtn">
+						<div class="btnWrap">
+							<button class="btnL btnTxt type01">취소</button>
+							<button class="btnL">저장</button>
+						</div>
+					</div>
+					<!-- //등록/수정 버튼타입 -->
+				</div>
+			</article>
+			<!-- //popup / on -->
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+	
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>시스템 관리</span>
+					<span>메뉴 관리</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">메뉴 관리</h2>
+
+					<div class="btnWrap">
+						<button class="btnM">등록</button>
+						<button class="btnM btnTxt">삭제</button>
+					</div>
+				</div>
+			</article>
+
+			<article class="subContWrap">
+				<div class="subCont subContL">
+					<div class="cmn_sub_ipt mgB24">
+						<p class="txtTit">메뉴 명</p>
+						<!-- kendo dropdownlist -->
+						<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+							<span class="k-input-inner">
+								<span class="k-input-value-text">option 1</span>
+							</span>
+							<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+							<select>
+								<option>option 1</option>
+								<option>option 2</option>
+							</select>
+						</span>
+						<!-- //kendo dropdownlist -->
+					</div>
+					<div class="cmn_sub_ipt mgB40">
+						<p class="txtTit">사용여부</p>
+						<!-- kendo dropdownlist -->
+						<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+							<span class="k-input-inner">
+								<span class="k-input-value-text">option 1</span>
+							</span>
+							<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+							<select>
+								<option>option 1</option>
+								<option>option 2</option>
+							</select>
+						</span>
+						<!-- //kendo dropdownlist -->
+					</div>
+					<button class="wfull btnL">조회</button>
+				</div>
+
+				<div class="subCont subContR">
+
+					<p class="totalTxt">
+						총 <i class="fcGreen">3</i>개
+					</p>
+
+					<div class="cmn_grid_treeList">
+						<!-- kendo grid > tree list -->
+						<div class="k-grid k-grid-md k-treelist-scrollable">
+							<table class="k-table k-table-md k-grid-table">
+								<colgroup>
+									<col>
+								</colgroup>
+								<thead class="k-table-thead k-grid-header">
+									<tr class="k-table-row">
+										<th class="k-table-th k-header">
+											<span class="k-cell-inner"><span class="k-link"><span class="k-column-title">메뉴 명</span></span></span>
+										</th>
+										<th class="k-table-th k-header">
+											<span class="k-cell-inner"><span class="k-link"><span class="k-column-title">메뉴 ID</span></span></span>
+										</th>
+										<th class="k-table-th k-header">
+											<span class="k-cell-inner"><span class="k-link"><span class="k-column-title">깊이</span></span></span>
+										</th>
+										<th class="k-table-th k-header">
+											<span class="k-cell-inner"><span class="k-link"><span class="k-column-title">사용여부</span></span></span>
+										</th>
+										<th class="k-table-th k-header">
+											<span class="k-cell-inner"><span class="k-link"><span class="k-column-title">URL</span></span></span>
+										</th>
+										<th class="k-table-th k-header">
+											<span class="k-cell-inner"><span class="k-link"><span class="k-column-title">비고</span></span></span>
+										</th>
+										<th class="k-table-th k-header">
+											<span class="k-cell-inner"><span class="k-link"><span class="k-column-title">상세</span></span></span>
+										</th>
+									</tr>
+								</thead>
+								<tbody class="k-table-tbody">
+									<tr class="k-table-row k-master-row">
+										<td class="k-table-td k-text-nowrap">
+											<span class="k-icon k-svg-icon k-svg-i-caret-alt-down k-treelist-toggle">
+												<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-prevent-selection="true"><path d="M256 352 128 160h256z"></path></svg>
+											</span>메뉴 1
+										</td>
+										<td>00001</td>
+										<td>1</td>
+										<td>Y</td>
+										<td>/user/info</td>
+										<td>-</td>
+										<td><button class="btnS">보기</button></td>
+									</tr>
+									<tr class="k-table-row k-master-row k-alt">
+										<td class="k-table-td k-text-nowrap">
+											<span class="k-treelist-toggle k-icon k-svg-icon">
+												<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>
+											</span>
+											<span class="k-icon k-svg-icon k-svg-i-caret-alt-down k-treelist-toggle">
+												<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-prevent-selection="true"><path d="M256 352 128 160h256z"></path></svg>
+											</span>메뉴 1-1
+										</td>
+										<td>00001</td>
+										<td>1</td>
+										<td>Y</td>
+										<td>/user/info</td>
+										<td>-</td>
+										<td><button class="btnS">보기</button></td>
+									</tr>
+									<tr class="k-table-row k-master-row">
+										<td class="k-table-td k-text-nowrap">
+											<span class="k-treelist-toggle k-icon k-svg-icon">
+												<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>
+											</span>
+											<span class="k-treelist-toggle k-icon k-svg-icon">
+												<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>
+											</span>
+											<span class="k-icon k-svg-icon k-svg-i-caret-alt-right k-treelist-toggle">
+												<svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" data-prevent-selection="true"><path d="M352 256 160 384V128z"></path></svg>
+											</span>메뉴 1-1-1
+										</td>
+										<td>00001</td>
+										<td>1</td>
+										<td>Y</td>
+										<td>/user/info</td>
+										<td>-</td>
+										<td><button class="btnS">보기</button></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+						<!-- //kendo grid > tree list -->
+					</div>
+
+
+				</div>
+			</article>
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>

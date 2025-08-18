@@ -1,0 +1,486 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>수요 분석</span>
+					<span>GIS 승하차 분석</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">GIS 승하차 분석</h2>
+
+				</div>
+			</article>
+
+			<article class="subContWrap type01">
+				<!-- 지도 영역 -->
+				<div class="subCont cmn_map_full">
+					<img src="cmn/images/ex_map.png" style="width: 100%; height: 100%;" />
+				</div>
+				<!-- //지도 영역 -->
+
+				<!-- mapMenu -->
+				<div class="mapMenu">
+
+					<!-- 240604 : 레이아웃 변경 -->
+					<div class="leftInfoWrap">
+						<div class="leftInfo on">
+							<a class="infoTit brdTopN">
+								조회하기
+							</a>
+
+							<div class="infoList btnWrap type03">
+								<div class="btnBox tabMenu">
+									<button class="btnTab on">전체노선</button>
+									<button class="btnTab">벽지노선</button>
+									<button class="btnTab">순환노선</button>
+								</div>
+
+								<div class="inpArea inpSearch">
+									<input type="text">
+								</div>
+
+								<button class="wfull btnL">조회하기</button>
+							</div>
+						</div>
+
+						<div class="leftInfo on">
+							<a class="infoTit">
+								정류장 리스트
+							</a>
+
+							<div class="infoList" style="display: block;">
+
+								<p class="totalTxt mgL20">
+									노선 <i class="fcGreen">103</i>개
+									<span class="line"></span>
+									정류장 <i class="fcGreen">3401</i>개
+								</p>
+
+								<div class="cmn_grid">
+									<!-- kendo grid -->
+									<div class="k-grid k-grid-md">
+										<div class="k-grid-aria-root">
+											<div class="k-grid-header">
+												<div class="k-grid-header-wrap">
+													<table class="k-table k-grid-header-table k-table-md">
+														<colgroup>
+															<col><col>
+														</colgroup>
+														<thead class="k-table-thead">
+															<tr class="k-table-row">
+																<th class="k-table-th k-header">
+																	<span class="k-cell-inner">
+																		<span class="k-link">
+																			<span class="k-column-title"><input type="checkbox"><label></label></span>
+																		</span>
+																	</span>
+																</th>
+																<th class="k-table-th k-header">
+																	<span class="k-cell-inner">
+																		<span class="k-link">
+																			<span class="k-column-title">구분</span>
+																		</span>
+																	</span>
+																</th>
+																<th class="k-table-th k-header">
+																	<span class="k-cell-inner">
+																		<span class="k-link">
+																			<span class="k-column-title">노선 번호</span>
+																		</span>
+																	</span>
+																</th>
+																<th class="k-table-th k-header">
+																	<span class="k-cell-inner">
+																		<span class="k-link">
+																			<span class="k-column-title">정류장</span>
+																		</span>
+																	</span>
+																</th>
+															</tr>
+														</thead>
+													</table>
+												</div>
+											</div>
+											<div class="k-grid-container">
+												<div class="k-grid-content k-virtual-content">
+													<div class="k-grid-table-wrap">
+														<table class="k-table k-grid-table k-table-md">
+															<colgroup>
+																<col><col>
+															</colgroup>
+															<tbody class="k-table-tbody">
+																<tr class="k-table-row k-master-row">
+																	<td class="k-table-td"><input type="checkbox" checked><label></label></td>
+																	<td class="k-table-td"><p class="txtBoxS txtBoxS_01">일반</p></td>
+																	<td class="k-table-td">999번</td>
+																	<td class="k-table-td">23</td>
+																</tr>
+																<tr class="k-table-row k-master-row k-table-alt-row k-alt">
+																	<td class="k-table-td"><input type="checkbox" checked><label></label></td>
+																	<td class="k-table-td"><p class="txtBoxS txtBoxS_02">벽지</p></td>
+																	<td class="k-table-td">999번</td>
+																	<td class="k-table-td">23</td>
+																</tr>
+															</tbody>
+														</table>
+													</div>
+													<div class="k-height-container">
+														<div></div>
+													</div>
+												</div>
+											</div>
+										</div>							
+									</div>
+									<!--// kendo grid -->
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- //240604 : 레이아웃 변경 -->
+				</div>
+				<!-- //mapMenu -->
+
+				<!-- mapInfoWrap -->
+				<div class="mapInfoWrap">
+					<div class="iptBtn iptBtnM on">
+						승하차 분석
+					</div>
+
+					<div class="infoBoxWrap infoBoxWrapM">
+						<div class="hBox">
+							<div class="infoBox">
+								<p class="txtTit">선택 노선</p>
+
+								<div class="listView">
+									<div class="listItem">999번<a href="#" class="icon iconClose"><span class="hidden">닫기</span></a></div>
+									<div class="listItem">999번<a href="#" class="icon iconClose"><span class="hidden">닫기</span></a></div>
+									<div class="listItem">999번<a href="#" class="icon iconClose"><span class="hidden">닫기</span></a></div>
+									<div class="listItem">999번<a href="#" class="icon iconClose"><span class="hidden">닫기</span></a></div>
+									<div class="listItem">999번<a href="#" class="icon iconClose"><span class="hidden">닫기</span></a></div>
+									<div class="listItem">999번<a href="#" class="icon iconClose"><span class="hidden">닫기</span></a></div>
+								</div>
+							</div>
+
+							<div class="infoBox">
+								<p class="txtTit">분석 대상</p>
+
+								<div class="radioBox">
+									<input type="radio" id="radio_01" name="radio" checked><label for="radio_01">정류장</label>
+									<input type="radio" id="radio_02" name="radio"><label for="radio_02">행정동</label>
+								</div>
+							</div>
+
+							<div class="infoBox">
+								<p class="txtTit">조회 데이터</p>
+
+								<div class="radioBox">
+									<input type="radio" id="radio_03" name="radio1" checked><label for="radio_03">승차</label>
+									<input type="radio" id="radio_04" name="radio1"><label for="radio_04">환승</label>
+									<input type="radio" id="radio_05" name="radio1"><label for="radio_05">하차</label>
+								</div>
+							</div>
+
+							<div class="infoBox">
+								<p class="txtTit">기간</p>
+
+								<div class="iptCal row2">
+									<div class="inpArea cal">
+										<input type="text">
+										<span class="iptCalTxt">부터</span>
+									</div>
+									<div class="inpArea cal">
+										<input type="text">
+										<span class="iptCalTxt">까지</span>
+									</div>
+								</div>
+							</div>
+
+							<div class="infoBox">
+								<p class="txtTit">시간대</p>
+								<!-- kendo dropdownlist -->
+								<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid mgB12">
+									<span class="k-input-inner">
+										<span class="k-input-value-text">option 1</span>
+									</span>
+									<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+									<select>
+										<option>option 1</option>
+										<option>option 2</option>
+									</select>
+								</span>
+								<!-- //kendo dropdownlist -->
+								<div class="iptCal col2">
+									<!-- kendo dropdownlist -->
+									<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+										<span class="k-input-inner">
+											<span class="k-input-value-text">option 1</span>
+										</span>
+										<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+										<select>
+											<option>option 1</option>
+											<option>option 2</option>
+										</select>
+									</span>
+									<!-- //kendo dropdownlist -->
+									<span class="iptDeco">-</span>
+									<!-- kendo dropdownlist -->
+									<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+										<span class="k-input-inner">
+											<span class="k-input-value-text">option 1</span>
+										</span>
+										<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+										<select>
+											<option>option 1</option>
+											<option>option 2</option>
+										</select>
+									</span>
+									<!-- //kendo dropdownlist -->	
+								</div>						
+							</div>
+
+							<button class="wfull btnL">조회하기</button>
+						</div>
+
+					</div>
+				</div>
+				<!-- //mapInfoWrap -->
+
+				<!-- mapinfoPop -->
+				<div class="mapinfoPop on">
+					<div class="popTit">
+						<h3>분석 결과</h3>
+						<a href="#" class="icon iconCloseBK"><span class="hidden">닫기</span></a>
+					</div>
+
+					<div class="popCont">
+						<ul class="listCol2">
+							<li>
+								<span class="txt"><span class="txtName">정류장명</span><i>익산시립도서관</i></span>
+								<span class="txt"><span class="txtName">정류장 권역</span><i>삼성동</i></span>
+							</li>
+							<li>
+								<span class="txt"><span class="txtName">정류장 ID</span><i>12345</i></span>
+								<span class="txt"><span class="txtName">승강장 구분</span><i>유개</i></span>
+							</li>
+						</ul>
+
+						<div class="decoLineS"></div>
+
+						<p class="txtBg mgB20">승차 분석 결과<span>2024-04-01 ~ 2024-04-31<i class="line_02"></i>출근 시간대</span></p>
+
+						<div class="iptCal row2 mgB20">
+							<div class="inpArea flexB">
+								<span class="iptCalTxt">정류장 경유 노선 선택</span>
+								<!-- kendo dropdownlist -->
+								<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid w300">
+									<span class="k-input-inner">
+										<span class="k-input-value-text">option 1</span>
+									</span>
+									<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+									<select>
+										<option>option 1</option>
+										<option>option 2</option>
+									</select>
+								</span>
+								<!-- //kendo dropdownlist -->			
+							</div>							
+						</div>
+
+						<ul class="listCol2 mgB20">
+							<li>
+								<span class="txt"><span class="txtName">총 승차 (일평균)</span><i>102,304회 (3,203회)</i></span>
+								<span class="txt"><span class="txtName">하차태그율</span><i>64.3%</i></span>
+							</li>
+							<li>
+								<span class="txt"><span class="txtName">총 하차 (일평균)</span><i>78,203회 (2,203회)</i></span>
+								<span class="txt"><span class="txtName">평균환승대기시간</span><i>00:08:03</i></span>
+							</li>
+							<li>
+								<span class="txt"><span class="txtName">총 환승 (일평균)</span><i>15,203회 (981회)</i></span>
+								<span class="txt"></span>
+							</li>
+						</ul>
+
+						<!-- 240604 : 레이아웃 변경 -->
+						<div class="btnBox tabMenu mgB12">
+							<button class="btnTab">주요 하차 정류장</button>
+							<button class="btnTab">주요 하차 지역</button>
+						</div>
+						<!-- //240604 : 레이아웃 변경 -->
+
+						<div class="cmn_grid type01">
+							<!-- kendo grid -->
+							<div class="k-grid k-grid-md">
+								<div class="k-grid-aria-root">
+									<div class="k-grid-header">
+										<div class="k-grid-header-wrap">
+											<table class="k-table k-grid-header-table k-table-md">
+												<colgroup>
+													<col><col>
+												</colgroup>
+												<thead class="k-table-thead">
+													<tr class="k-table-row">
+														<th class="k-table-th k-header">
+															<span class="k-cell-inner">
+																<span class="k-link">
+																	<span class="k-column-title">ID</span>
+																</span>
+															</span>
+														</th>
+														<th class="k-table-th k-header">
+															<span class="k-cell-inner">
+																<span class="k-link">
+																	<span class="k-column-title">Product Name</span>
+																</span>
+															</span>
+														</th>
+													</tr>
+												</thead>
+											</table>
+										</div>
+									</div>
+									<div class="k-grid-container">
+										<div class="k-grid-content k-virtual-content">
+											<div class="k-grid-table-wrap">
+												<table class="k-table k-grid-table k-table-md">
+													<colgroup>
+														<col><col>
+													</colgroup>
+													<tbody class="k-table-tbody">
+														<tr class="k-table-row k-master-row">
+															<td class="k-table-td">1</td>
+															<td class="k-table-td">샘플1</td>
+														</tr>
+														<tr class="k-table-row k-master-row k-table-alt-row k-alt">
+															<td class="k-table-td">2</td>
+															<td class="k-table-td">샘플2</td>
+														</tr>
+														<tr class="k-table-row k-master-row">
+															<td class="k-table-td">3</td>
+															<td class="k-table-td">샘플3</td>
+														</tr>
+														<tr class="k-table-row k-master-row k-table-alt-row k-alt">
+															<td class="k-table-td">4</td>
+															<td class="k-table-td">샘플2</td>
+														</tr>
+														<tr class="k-table-row k-master-row">
+															<td class="k-table-td">5</td>
+															<td class="k-table-td">샘플3</td>
+														</tr>
+														<tr class="k-table-row k-master-row k-table-alt-row k-alt">
+															<td class="k-table-td">6</td>
+															<td class="k-table-td">샘플2</td>
+														</tr>
+														<tr class="k-table-row k-master-row">
+															<td class="k-table-td">7</td>
+															<td class="k-table-td">샘플3</td>
+														</tr>
+													</tbody>
+												</table>
+											</div>
+											<div class="k-height-container">
+												<div></div>
+											</div>
+										</div>
+									</div>
+								</div>								
+							</div>
+							<!--// kendo grid -->
+						</div>
+
+					</div>					
+				</div>
+				<!-- //mapinfoPop -->
+
+				<!-- mapBtnWrap -->
+				<div class="mapBtnWrap">
+					<div class="legendWrap">
+						<div class="iptBtn on">
+							범례
+						</div>
+
+						<div class="infoBoxWrap">
+							<div class="checkList">
+								<input type="checkbox" checked id="check_01"><label for="check_01" class="labelTxtC label11"><span></span>81 -</label>
+								<input type="checkbox" id="check_02"><label for="check_02" class="labelTxtC label05"><span></span>81 -</label>
+								<input type="checkbox" id="check_03"><label for="check_03" class="labelTxtC label06"><span></span>81 -</label>
+								<input type="checkbox" id="check_04"><label for="check_04" class="labelTxtC label04"><span></span>81 -</label>
+							</div>
+							<div class="setWrap">
+								<span>(단위 : 천명)</span>
+								<a href="#" class="icon iconSet"><span class="hidden">설정</span></a>
+							</div>
+						</div>
+					</div>
+
+					<a href="#" class="icon iconArr on"><span>벽지구간</span></a>
+
+					<a href="#" class="icon iconExpend"></a>
+
+					<div class="iconBox">
+						<a href="#" class="icon iconPlus"><span class="hidden">확대</span></a>
+						<a href="#" class="icon iconMinus"><span class="hidden">축소</span></a>
+					</div>
+				</div>
+				<!-- //mapBtnWrap -->
+
+			</article>
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>

@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>1 depth</span>
+					<span>코스시간표관리</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">코스 시간표 관리</h2>
+				</div>
+			</article>
+
+			<article class="subContWrap type01">
+				<div class="subCont">
+
+					<div class="bgBox mgB32">						
+						<div class="iptWrap">
+							<div class="iptBox">
+								<span class="iptTit decoS">코스 번호</span>
+								<div class="iptWrapS">
+									<input type="text" style="width: 320px;">
+									<button type="button" class="btnM btnTxt">중복체크</button>
+									
+								</div>
+							</div>
+
+							<div class="iptBox">
+								<span class="iptTit decoS">코스명</span>
+								<input type="text" style="width: 320px;">
+							</div>
+
+							<div class="iptBox wfull_02">
+								<span class="iptTit decoS">선택 노선</span>
+								<!-- kendo dropdownlist -->
+								<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+									<span class="k-input-inner">
+										<span class="k-input-value-text">option 1</span>
+									</span>
+									<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+									<select>
+										<option>option 1</option>
+										<option>option 2</option>
+									</select>
+								</span>
+								<!-- //kendo dropdownlist -->	
+							</div>
+
+							<button class="btnM mgTAuto">조회하기</button>
+						</div>
+					</div>
+
+					<div class="cmn_grid gridTimeWrap">
+						<!-- kendo grid -->
+						<div class="k-grid k-grid-md">
+							<div class="k-grid-aria-root">
+								<div class="k-grid-header">
+									<div class="k-grid-header-wrap">
+										<table class="k-table k-grid-header-table k-table-md">
+											<colgroup>
+												<col width="100px">
+												<col width="160px">
+												<col width="160px">
+												<col width="160px">
+												<col width="240px">
+												<col width="240px">
+												<col width="240px">
+												<col width="240px">
+												<col width="80px">
+												<col width="80px">
+												<col width="80px">
+												<col width="80px">
+												<col width="80px">
+												<col width="80px">
+												<col width="100px">
+											</colgroup>
+											<thead class="k-table-thead">
+												<tr class="k-table-row">
+													<th class="k-table-th k-header" rowspan="2">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">추가/삭제</span>
+															</span>
+														</span>
+													</th>
+													<th class="k-table-th k-header" rowspan="2">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">노선</span>
+															</span>
+														</span>
+													</th>
+													<th class="k-table-th k-header" rowspan="2">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">기점</span>
+															</span>
+														</span>
+													</th>
+													<th class="k-table-th k-header" rowspan="2">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">종점</span>
+															</span>
+														</span>
+													</th>
+													<th class="k-table-th k-header" colspan="2">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">왕</span>
+															</span>
+														</span>
+													</th>
+													<th class="k-table-th k-header" colspan="2">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">복</span>
+															</span>
+														</span>
+													</th>
+													<th class="k-table-th k-header" colspan="6">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">운휴</span>
+															</span>
+														</span>
+													</th>
+													<th class="k-table-th k-header" rowspan="2">
+														<span class="k-cell-inner">
+															<span class="k-link">
+																<span class="k-column-title">비고 </span>
+															</span>
+														</span>
+													</th>
+												</tr>
+												<tr>
+													<th class="k-table-th k-header">
+														<div class="flexB">
+															<!-- kendo dropdownlist -->
+															<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid" style="width: 190px;">
+																<span class="k-input-inner">
+																	<span class="k-input-value-text">option 1</span>
+																</span>
+																<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																<select>
+																	<option>option 1</option>
+																	<option>option 2</option>
+																</select>
+															</span>
+															<!-- //kendo dropdownlist -->
+															
+															<div class="btnWrapS">
+																<a href="#" class="iconPlusS"><span class="hidden">추가</span></a>
+																<a href="#" class="iconDelS"><span class="hidden">추가</span></a>
+															</div>
+														</div>
+													</th>
+													<th class="k-table-th k-header">
+														<div class="flexB">
+															<!-- kendo dropdownlist -->
+															<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																<span class="k-input-inner" style="width: 190px;">
+																	<span class="k-input-value-text">option 1</span>
+																</span>
+																<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																<select>
+																	<option>option 1</option>
+																	<option>option 2</option>
+																</select>
+															</span>
+															<!-- //kendo dropdownlist -->
+															
+															<div class="btnWrapS">
+																<a href="#" class="iconPlusS"><span class="hidden">추가</span></a>
+																<a href="#" class="iconDelS"><span class="hidden">추가</span></a>
+															</div>
+														</div>
+													</th>
+													<th class="k-table-th k-header">
+														<div class="flexB">
+															<!-- kendo dropdownlist -->
+															<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid" style="width: 190px;">
+																<span class="k-input-inner">
+																	<span class="k-input-value-text">option 1</span>
+																</span>
+																<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																<select>
+																	<option>option 1</option>
+																	<option>option 2</option>
+																</select>
+															</span>
+															<!-- //kendo dropdownlist -->
+															
+															<div class="btnWrapS">
+																<a href="#" class="iconPlusS"><span class="hidden">추가</span></a>
+																<a href="#" class="iconDelS"><span class="hidden">추가</span></a>
+															</div>
+														</div>
+													</th>
+													<th class="k-table-th k-header">
+														<div class="flexB">
+															<!-- kendo dropdownlist -->
+															<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid" style="width: 190px;">
+																<span class="k-input-inner">
+																	<span class="k-input-value-text">option 1</span>
+																</span>
+																<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																<select>
+																	<option>option 1</option>
+																	<option>option 2</option>
+																</select>
+															</span>
+															<!-- //kendo dropdownlist -->
+															
+															<div class="btnWrapS">
+																<a href="#" class="iconPlusS"><span class="hidden">추가</span></a>
+																<a href="#" class="iconDelS"><span class="hidden">추가</span></a>
+															</div>
+														</div>
+													</th>
+													<th class="k-table-th k-header">
+														<input type="checkbox"><label>평일</label>
+													</th>
+													<th class="k-table-th k-header">
+														<input type="checkbox"><label>토요일</label>
+													</th>
+													<th class="k-table-th k-header">
+														<input type="checkbox"><label>일요일</label>
+													</th>
+													<th class="k-table-th k-header">
+														<input type="checkbox"><label>공휴일</label>
+													</th>
+													<th class="k-table-th k-header">
+														<input type="checkbox"><label>방학</label>
+													</th>
+													<th class="k-table-th k-header">
+														<input type="checkbox"><label>하절기</label>
+													</th>
+												</tr>
+											</thead>
+										</table>
+									</div>
+								</div>
+								<div class="k-grid-container">
+									<div class="k-grid-content k-virtual-content">
+										<div class="k-grid-table-wrap">
+											<table class="k-table k-grid-table k-table-md">
+												<colgroup>
+													<col width="100px">
+													<col width="160px">
+													<col width="160px">
+													<col width="160px">
+													<col width="240px">
+													<col width="240px">
+													<col width="240px">
+													<col width="240px">
+													<col width="80px">
+													<col width="80px">
+													<col width="80px">
+													<col width="80px">
+													<col width="80px">
+													<col width="80px">
+													<col width="100px">
+												</colgroup>
+												<tbody class="k-table-tbody">
+													<tr class="k-table-row k-master-row">
+														<td class="k-table-td">
+															<div class="btnFlex">
+																<a href="#" class="btnPlus"><span class="hidden">추가</span></a>
+																<a href="#" class="btnMinus"><span class="hidden">삭제</span></a>
+															</div>
+														</td>
+														<td class="k-table-td">
+															<!-- kendo dropdownlist -->
+															<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																<span class="k-input-inner">
+																	<span class="k-input-value-text">option 1</span>
+																</span>
+																<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																<select>
+																	<option>option 1</option>
+																	<option>option 2</option>
+																</select>
+															</span>
+															<!-- //kendo dropdownlist -->
+														</td>
+														<td class="k-table-td">시외고속버스터미널</td>
+														<td class="k-table-td">북부시장</td>
+														<td class="k-table-td">
+															<div class="iptRow">
+																<div class="iptCol">
+																	<!-- kendo timepicker -->
+																	<div class="k-input k-timepicker k-input-md k-rounded-md k-input-solid">
+																		<input type="time">
+																	</div>
+																	<!-- //kendo timepicker -->
+																	<!-- kendo dropdownlist -->
+																	<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																		<span class="k-input-inner">
+																			<span class="k-input-value-text">option 1</span>
+																		</span>
+																		<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																		<select>
+																			<option>option 1</option>
+																			<option>option 2</option>
+																		</select>
+																	</span>
+																	<!-- //kendo dropdownlist -->
+																</div>
+																<input type="text">
+															</div>
+														</td>
+														<td class="k-table-td"></td>
+														<td class="k-table-td"></td>
+														<td class="k-table-td"></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"></td>
+													</tr>
+													<tr class="k-table-row k-master-row k-table-alt-row k-alt">
+														<td class="k-table-td">
+															<div class="btnFlex">
+																<a href="#" class="btnPlus"><span class="hidden">추가</span></a>
+																<a href="#" class="btnMinus"><span class="hidden">삭제</span></a>
+															</div>
+														</td>
+														<td class="k-table-td">
+															<!-- kendo dropdownlist -->
+															<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																<span class="k-input-inner">
+																	<span class="k-input-value-text">option 1</span>
+																</span>
+																<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																<select>
+																	<option>option 1</option>
+																	<option>option 2</option>
+																</select>
+															</span>
+															<!-- //kendo dropdownlist -->
+														</td>
+														<td class="k-table-td">시외고속버스터미널</td>
+														<td class="k-table-td">북부시장</td>
+														<td class="k-table-td">
+															<div class="iptRow">
+																<div class="iptCol">
+																	<!-- kendo timepicker -->
+																	<div class="k-input k-timepicker k-input-md k-rounded-md k-input-solid">
+																		<input type="time">
+																	</div>
+																	<!-- //kendo timepicker -->
+																	<!-- kendo dropdownlist -->
+																	<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																		<span class="k-input-inner">
+																			<span class="k-input-value-text">option 1</span>
+																		</span>
+																		<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																		<select>
+																			<option>option 1</option>
+																			<option>option 2</option>
+																		</select>
+																	</span>
+																	<!-- //kendo dropdownlist -->
+																</div>
+																<input type="text">
+															</div>
+														</td>
+														<td class="k-table-td">
+															<div class="iptRow">
+																<div class="iptCol">
+																	<!-- kendo timepicker -->
+																	<div class="k-input k-timepicker k-input-md k-rounded-md k-input-solid">
+																		<input type="time">
+																	</div>
+																	<!-- //kendo timepicker -->
+																	<!-- kendo dropdownlist -->
+																	<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																		<span class="k-input-inner">
+																			<span class="k-input-value-text">option 1</span>
+																		</span>
+																		<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																		<select>
+																			<option>option 1</option>
+																			<option>option 2</option>
+																		</select>
+																	</span>
+																	<!-- //kendo dropdownlist -->
+																</div>
+																<input type="text">
+															</div>
+														</td>
+														<td class="k-table-td">
+															<div class="iptRow">
+																<div class="iptCol">
+																	<!-- kendo timepicker -->
+																	<div class="k-input k-timepicker k-input-md k-rounded-md k-input-solid">
+																		<input type="time">
+																	</div>
+																	<!-- //kendo timepicker -->
+																	<!-- kendo dropdownlist -->
+																	<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																		<span class="k-input-inner">
+																			<span class="k-input-value-text">option 1</span>
+																		</span>
+																		<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																		<select>
+																			<option>option 1</option>
+																			<option>option 2</option>
+																		</select>
+																	</span>
+																	<!-- //kendo dropdownlist -->
+																</div>
+																<input type="text">
+															</div>
+														</td>
+														<td class="k-table-td">
+															<div class="iptRow">
+																<div class="iptCol">
+																	<!-- kendo timepicker -->
+																	<div class="k-input k-timepicker k-input-md k-rounded-md k-input-solid">
+																		<input type="time">
+																	</div>
+																	<!-- //kendo timepicker -->
+																	<!-- kendo dropdownlist -->
+																	<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+																		<span class="k-input-inner">
+																			<span class="k-input-value-text">option 1</span>
+																		</span>
+																		<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+																		<select>
+																			<option>option 1</option>
+																			<option>option 2</option>
+																		</select>
+																	</span>
+																	<!-- //kendo dropdownlist -->
+																</div>
+																<input type="text">
+															</div>
+														</td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"><input type="checkbox"><label></label></td>
+														<td class="k-table-td"></td>
+													</tr>
+												</tbody>
+											</table>
+										</div>
+										<div class="k-height-container">
+											<div></div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="k-pager k-pager-md k-grid-pager">
+								<div class="k-pager-numbers-wrap">
+									<button class="k-button k-button-md k-button-flat k-button-flat-base k-icon-button k-pager-nav k-pager-first k-disabled">
+										<span class="k-icon k-svg-icon k-svg-i-caret-alt-to-left k-button-icon"></span>
+									</button>
+									<button title="Go to the previous page" class="k-button k-button-md k-button-flat k-button-flat-base k-icon-button k-pager-nav k-disabled">
+										<span class="k-icon k-svg-icon k-svg-i-caret-alt-left k-button-icon"></span>
+									</button>
+									<div class="k-pager-numbers">
+										<button class="k-button k-button-md k-button-flat k-button-flat-primary k-selected">
+											<span class="k-button-text">1</span>
+										</button>
+										<button class="k-button k-button-md k-button-flat k-button-flat-primary">
+											<span class="k-button-text">2</span>
+										</button>
+									</div>
+									<button class="k-button k-button-md k-button-flat k-button-flat-base k-icon-button k-pager-nav">
+										<span class="k-icon k-svg-icon k-svg-i-caret-alt-right k-button-icon"></span>
+									</button>
+									<button class="k-button k-button-md k-button-flat k-button-flat-base k-icon-button k-pager-nav k-pager-last">
+										<span class="k-icon k-svg-icon k-svg-i-caret-alt-to-right k-button-icon"></span>
+									</button>
+								</div>
+								<span class="k-pager-info">1 - 5 of 30 items</span>
+							</div>
+						</div>
+						<!--// kendo grid -->
+					</div>
+
+					<div class="gridBtnWrap">
+						<button type="button" class="btnL btnTxt type01">취소하기</button>
+						<button type="button" class="btnL">저장하기</button>
+					</div>
+					
+				</div>
+			</article>
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>

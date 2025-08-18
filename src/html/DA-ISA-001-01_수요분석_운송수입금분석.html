@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="ko">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+		<title>익산시 BMS</title>
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.common.min.css" />
+		<link rel="stylesheet" href="https://kendo.cdn.telerik.com/2022.2.510/styles/kendo.default.min.css" />	
+		<link rel="stylesheet" href="cmn/css/common.css">	
+		<link rel="stylesheet" href="cmn/css/kendo_custom.css">		
+		<script type="text/javascript" src="cmn/JS/jqueryMin.js"></script>
+		<script type="text/javascript" src="cmn/JS/common.js"></script>	
+		  <script src="https://kendo.cdn.telerik.com/2022.2.510/js/kendo.all.min.js"></script>
+	</head>
+	<body>
+		<header>
+			<h1 class="logo">익산시 <span class="fcG">BMS</span></h1>
+
+			<div class="navWrap">
+				<ul class="nav depth01">
+					<li><a href="#">운수사관리</a></li>
+					<li><a href="#">기사 관리</a></li>
+					<li><a href="#">버스 관리</a></li>
+					<li><a href="#">행정 업무</a></li>
+					<li><a href="#">사업 계획 관리</a>
+						<ul class="depth02">
+							<li><a href="#">사업 계획 관리</a></li>
+							<li><a href="#">노선 관리</a></li>
+							<li><a href="#">정류장 관리</a></li>
+							<li><a href="#">배차코스 관리</a>
+								<ul class="depth03">
+									<li><a href="#">배차코스 설정</a></li>
+									<li><a href="#">일일배차</a></li>
+								</ul>
+							</li>
+						</ul>
+					</li>
+					<li><a href="#">경영 관리</a></li>
+					<li><a href="#">수요 분석</a></li>
+					<li><a href="#">운행이력 분석</a></li>
+					<li><a href="#">시스템 관리</a></li>
+				</ul>
+			</div>
+
+			<div class="userWrap">
+				<a href="#" class="userName">홍길동님</a> 
+				<a href="#" class="iconLogout">로그아웃</a>
+			</div>
+		</header>
+
+		<section>
+			<article class="subTitWrap">
+				<p class="subStep">
+					<span>홈</span>
+					<span>수요 분석</span>
+					<span>운송 수입금 분석</span>
+				</p>
+
+				<div class="subTit">
+					<h2 class="titTxt">운송 수입금 분석</h2>
+
+					<div class="btnWrap">
+						<button class="btnM">선택 노선 복제</button>
+						<button class="btnM btnTxt">선택 노선 삭제</button>
+						<button class="btnM btnTxt">엑셀 출력</button>
+					</div>
+				</div>
+			</article>
+
+			<article class="subContWrap">
+				<div class="subCont subContL">
+					<p class="txtTitL">분석 조건 설정</p>
+					<div class="cmn_sub_ipt mgB24">
+						<p class="txtTit">기간</p>
+						<div class="iptCal row2">
+							<div class="inpArea cal">
+								<input type="text">
+								<span class="iptCalTxt">부터</span>
+							</div>
+							<div class="inpArea cal">
+								<input type="text">
+								<span class="iptCalTxt">까지</span>
+							</div>
+						</div>
+					</div>
+					<div class="cmn_sub_ipt mgB40">
+						<p class="txtTit">운수사</p>
+						<!-- kendo dropdownlist -->
+						<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+							<span class="k-input-inner">
+								<span class="k-input-value-text">option 1</span>
+							</span>
+							<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+							<select>
+								<option>option 1</option>
+								<option>option 2</option>
+							</select>
+						</span>
+						<!-- //kendo dropdownlist -->
+					</div>									
+					<button class="wfull btnL">조회하기</button>
+				</div>
+
+				<div class="subCont subContR">
+
+					<div class="gridWrap grid_isa">
+						<!-- contents 1 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">운송 수입금 현황</h2>
+							</div>
+			
+							<div class="cont col2 type01">
+								<p class="totalLine">
+									<span class="totalName">총 운송 수입금</span>
+									<span class="totalNum"><i>793,234,358</i> 원</span>
+								</p> 
+		
+								<ul class="listLine">
+									<li>
+										<span class="listName">A 운수사</span>
+										<span class="listTotal"><i class="txtNum">232,234,358</i> 원</span>
+									</li>
+									<li>
+										<span class="listName">B 운수사</span>
+										<span class="listTotal"><i class="txtNum">232,234,358</i> 원</span>
+									</li>
+									<li>
+										<span class="listName">C 운수사</span>
+										<span class="listTotal"><i class="txtNum">232,234,358</i> 원</span>
+									</li>									
+								</ul>	
+							</div>				
+						</div>
+						<!-- contents1 -->
+
+						<!-- contents2 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">할인 금액</h2>
+							</div>
+			
+							<div class="cont col2 type01">
+								<p class="totalLine">
+									<span class="totalName">총 할인 금액</span>
+									<span class="totalNum"><i>93,234,358</i> 원</span>
+								</p> 
+		
+								<ul class="listLine">
+									<li>
+										<span class="listName">환승 할인</span>
+										<span class="listTotal"><i class="txtNum">232,234,358</i> 원</span>
+									</li>
+									<li>
+										<span class="listName">하차태그 할인</span>
+										<span class="listTotal"><i class="txtNum">232,234,358</i> 원</span>
+									</li>
+									<li>
+										<span class="listName">기타 할인</span>
+										<span class="listTotal"><i class="txtNum">232,234,358</i> 원</span>
+									</li>									
+								</ul>	
+							</div>				
+						</div>
+						<!-- contents2 -->
+
+						<!-- contents3 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">월별 운송 수입금</h2>
+								<a href="#" class="txtLink">전체보기</a>
+							</div>
+
+							<div class="cont">
+								<div>
+									<div class="mainChart">
+										<div class="chartLabel mgB28">
+											<p class="labelTxt label03 labelG"><span></span>A 운수사</p>
+											<p class="labelTxt label03"><span></span>B 운수사</p>
+											<p class="labelTxt label03 labelY"><span></span>C 운수사</p>
+
+											<!-- kendo dropdownlist -->
+											<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid">
+												<span class="k-input-inner">
+													<span class="k-input-value-text">option 1</span>
+												</span>
+												<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+												<select>
+													<option>option 1</option>
+													<option>option 2</option>
+												</select>
+											</span>
+											<!-- //kendo dropdownlist -->
+										</div>
+
+										<div style="width: 100%; height: 190px; border:1px solid #ff8024">
+											line-chart
+										</div>
+									</div>
+								</div>					
+							</div>				
+						</div>
+						<!-- //contents3 -->
+
+						<!-- contents4 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">월별 할인 금액</h2>
+							</div>
+
+							<div class="cont">
+								<div>
+									<div class="mainChart">
+										<div class="chartLabel mgB28">
+											<!-- kendo dropdownlist -->
+											<span class="k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid mgLAuto">
+												<span class="k-input-inner">
+													<span class="k-input-value-text">option 1</span>
+												</span>
+												<button class="k-button k-button-md k-button-solid k-button-solid-base k-icon-button k-input-button"></button>
+												<select>
+													<option>option 1</option>
+													<option>option 2</option>
+												</select>
+											</span>
+											<!-- //kendo dropdownlist -->
+										</div>
+
+										<div style="width: 100%; height: 190px; border:1px solid #ff8024">
+											line-chart
+										</div>
+									</div>
+								</div>					
+							</div>				
+						</div>
+						<!-- //contents4 -->
+
+						<!-- contents5 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">노선별 운송 수입금</h2>
+							</div>
+
+							<div class="cont">
+								<div>
+									<div class="mainChart">	
+
+										<div style="width: 100%; height: 190px; border:1px solid #ff8024">
+											line-chart
+										</div>
+									</div>
+								</div>					
+							</div>				
+						</div>
+						<!-- //contents5 -->
+
+						<!-- contents6 -->
+						<div class="gridItem">
+							<div class="contTop">
+								<h2 class="contTit">유형별 운송 수입금</h2>
+							</div>
+							
+							<div class="cont chartCol2">
+								<div class="chartCol2">
+									<div style="width: 152px; height: 152px; border:1px solid #ff8024">donut chart</div>
+									<ul class="listLine">
+										<li>
+											<span class="listName">카드 수입금</span>
+											<span class="listTotal"><i class="txtNum">710,234,358</i> 원</span>
+										</li>
+										<li>
+											<span class="listName">현금 수입금</span>
+											<span class="listTotal"><i class="txtNum">70,234,358</i> 원</span>
+										</li>
+									</ul>
+
+									<div class="chartLabel">
+										<p class="labelTxtC label04">카드 수 입금</p>
+										<p class="labelTxtC label05">현금 수 입금</p>
+									</div>
+								</div>							
+								
+								<div class="chartCol2 pdB32">
+									<div style="width: 152px; height: 152px; border:1px solid #ff8024">donut chart</div>
+									<ul class="listLine">
+										<li>
+											<span class="listName">일반</span>
+											<span class="listTotal"><i class="txtNum">623,456,890</i> 원</span>
+										</li>
+										<li>
+											<span class="listName">청소년</span>
+											<span class="listTotal"><i class="txtNum">623,456,890</i> 원</span>
+										</li>
+										<li>
+											<span class="listName">어린이</span>
+											<span class="listTotal"><i class="txtNum">623,456,890</i> 원</span>
+										</li>
+										<li>
+											<span class="listName">노인</span>
+											<span class="listTotal"><i class="txtNum">623,456,890</i> 원</span>
+										</li>
+										<li>
+											<span class="listName">장애인</span>
+											<span class="listTotal"><i class="txtNum">623,456,890</i> 원</span>
+										</li>
+									</ul>
+									<div class="chartLabel">
+										<p class="labelTxtC label04">일반</p>
+										<p class="labelTxtC label05">청소년</p>
+										<p class="labelTxtC label06">어린이</p>
+										<p class="labelTxtC label07">노인</p>
+										<p class="labelTxtC label08">장애인</p>
+									</div>
+								</div>							
+								
+							</div>
+						</div>						
+						<!-- //contents6 -->
+					</div>				
+									
+				</div>
+			</article>
+		</section>
+
+		<footer>Copyright 2024 Enterprise name. All rights reserved.</footer>
+	</body>
+
+	<script type="text/javascript">
+		var data = [
+				{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				},{
+					info_01:"123",
+					info_02: "A운수사",
+					info_03: "123456",
+					info_04: "운영",
+					info_05: "홍길동",
+					info_06: "054-123-1234",
+					info_07: "hongildong@gmail.com",
+					info_08: "전라북도 익산시 삼성동 593길 21",
+					info_09: "2024-01-01",
+					info_10: "2024-01-01",
+				}
+			];
+			$(document).ready(function() {
+				$("#grid_01").kendoGrid({
+					columns: [						
+						{ field: "info_01", width: "5%", title:"번호"},
+						{ field: "info_02", width: "", title:"운수사명"},
+						{ field: "info_03", width: "", title:"운수사 ID"},
+						{ field: "info_04", width: "", title:"운영여부"},
+						{ field: "info_05", width: "", title:"대표자명"},
+						{ field: "info_06", width: "", title:"대표번호"},
+						{ field: "info_07", width: "", title:"이메일"},
+						{ field: "info_08", width: "", title:"영업소"},
+						{ field: "info_09", width: "", title:"등록일자"},
+						{ field: "info_10", width: "", title:"수정일자"},
+						{ field: "", width: "", title:"상세", template: function(mad){return "<button class='k-button-solid-primary btnS' style='box-sizing:revert; line-height:1;'>보기</button>";}}
+					],
+					dataSource: {
+						data: data,
+						pageSize: 10
+					},
+					scrollable: false,
+					sortable: true,
+					filterable: false,
+					pageable: {
+						input: false,
+						numeric: true
+					},
+				});				
+				
+			});
+	</script>
+	<script src="cmn/JS/kendo_custom.js"></script>
+</html>
