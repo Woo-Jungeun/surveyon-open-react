@@ -45,7 +45,7 @@ const GridTestBody = () => {
                     <h2 className="titTxt">{TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}</h2>
                     {tabDivision === "1" && 
                         <div className="btnWrap">
-                            <GridHeaderBtnPrimary  onClick={onTab1SaveClick}>등록</GridHeaderBtnPrimary>
+                            <GridHeaderBtnPrimary  onClick={onTab1SaveClick}>저장</GridHeaderBtnPrimary>
                         </div>
                     }
                     {tabDivision === "2" && 

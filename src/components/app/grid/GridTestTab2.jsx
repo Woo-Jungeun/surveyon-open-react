@@ -32,9 +32,9 @@ const GridTestTab2 = forwardRef((props, ref) => {
         { field: "lv321code", title: "소분류 코드", show: true },
         { field: "lv3", title: "소분류", show: true },
         { field: "ex_sum", title: "집계현황", show: true, editable: false },
-        { field: "delete", title: "삭제", show: true, editable: true, allowHide: false },
         { field: "lv123code", title: "최종코드", show: true },
-        { field: "ex_gubun", title: "보기유형", show: true, editable: false }
+        { field: "ex_gubun", title: "보기유형", show: true, editable: false },
+        { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
     ]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
@@ -175,6 +175,8 @@ const GridTestTab2 = forwardRef((props, ref) => {
             const cls = `${trEl.props.className || ''} ${pending ? 'row-pending-delete' : ''}`;
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
         }, []);
+        
+        //console.log("dataState", dataState);
 
         return (
             <Fragment>
