@@ -5,7 +5,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { GridTestApi } from "@/components/app/grid/GridTestApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
-import {modalContext} from "@/components/common/Modal.jsx";
+import { modalContext } from "@/components/common/Modal.jsx";
 
 /**
  * 그리드 > 테스트 그리드 > 보기 데이터
@@ -135,10 +135,26 @@ const GridTestTab2 = forwardRef((props, ref) => {
                 .map(v => encodeURIComponent(String(v)))
                 .join("__");
 
-        // 삭제 토글: 플래그만 바꿈 (회색 처리용)
-        const togglePendingDelete = useCallback((cellProps) => {
-            const target = cellProps.dataItem;
-            const key = getKey(target);
+        // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글
+        const onClickDeleteCell = useCallback((cellProps) => {
+            const row = cellProps.dataItem;
+            const key = getKey(row);
+
+            // 새 행은 제거 
+            if (row.__isNew) {
+                setDataState(prev => {
+                    const kept = prev.data.filter(r => getKey(r) !== key);
+                    const reindexed = kept.map((r, idx) => {
+                        const next = { ...r, no: idx + 1 };
+                        next[COMPOSITE_KEY_FIELD] = makeRowKey(next);
+                        return next;
+                    });
+                    return { ...prev, data: reindexed };
+                });
+                return;
+            }
+
+            // 기존 행은 삭제 토글
             setDataState(prev => ({
                 ...prev,
                 data: prev.data.map(r =>
@@ -157,7 +173,7 @@ const GridTestTab2 = forwardRef((props, ref) => {
             // 1) 유효성 검사 (새 행만)
             const { ok, errors } = validateNewRows(prev);
             if (!ok) {
-                modal.showAlert("알림", errors.join("\n")); 
+                modal.showAlert("알림", errors.join("\n"));
                 return; // 저장 중단
             }
 
@@ -269,11 +285,8 @@ const GridTestTab2 = forwardRef((props, ref) => {
                                         cell={(props) => {
                                             const row = props.dataItem;
 
-                                            // 보기유형이 survey이거나 새로 추가된 행이면 삭제 버튼 숨김
-                                            if (row?.ex_gubun === 'survey' || row?.__isNew === true) {
-                                                return <td />;
-                                            }
-
+                                            // 보기유형이 survey이면 삭제 버튼 숨김
+                                            if (row?.ex_gubun === 'survey') return <td />;
                                             const pending = props.dataItem.__pendingDelete === true;
                                             return (
                                                 <td
@@ -284,7 +297,7 @@ const GridTestTab2 = forwardRef((props, ref) => {
                                                     <Button
                                                         className="btnM"
                                                         themeColor={pending ? "secondary" : "primary"}
-                                                        onClick={() => togglePendingDelete(props)}
+                                                        onClick={() => onClickDeleteCell(props)}
                                                     >
                                                         {pending ? "취소" : "삭제"}
                                                     </Button>
