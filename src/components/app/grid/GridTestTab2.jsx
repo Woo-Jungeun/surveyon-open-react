@@ -1,10 +1,11 @@
-import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { GridTestApi } from "@/components/app/grid/GridTestApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
+import {modalContext} from "@/components/common/Modal.jsx";
 
 /**
  * 그리드 > 테스트 그리드 > 보기 데이터
@@ -14,6 +15,7 @@ import { Button } from "@progress/kendo-react-buttons";
  */
 
 const GridTestTab2 = forwardRef((props, ref) => {
+    const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "테스트 그리드 탭2";
     let qnumText = "";   //문번호
@@ -64,6 +66,12 @@ const GridTestTab2 = forwardRef((props, ref) => {
 
         const insertIndex = data.length;    //마지막 행 뒤 행 추가 
 
+        // 임시 고유키(변하지 않게 랜덤/UUID 사용)
+        const tmpKey =
+            (typeof crypto !== 'undefined' && crypto.randomUUID)
+                ? crypto.randomUUID()
+                : `tmp_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
         const newRow = {
             no: insertIndex + 1,
             qnum_text: qnumText,
@@ -78,6 +86,7 @@ const GridTestTab2 = forwardRef((props, ref) => {
             ex_gubun: "analysis",
             inEdit: true, // 즉시 편집
             __isNew: true,  // 새로 추가된 행 표시 (삭제 버튼 숨김용)
+            __rowKey: tmpKey,          // 새 행에 고유키 부여
         };
 
         data.splice(insertIndex, 0, newRow);
@@ -142,8 +151,17 @@ const GridTestTab2 = forwardRef((props, ref) => {
 
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
-            // 1) 현재 그리드를 기반으로 최종 데이터 생성
+            // 0) 현재 그리드를 기반으로 최종 데이터 생성
             const prev = latestCtxRef.current?.dataState?.data ?? [];
+
+            // 1) 유효성 검사 (새 행만)
+            const { ok, errors } = validateNewRows(prev);
+            if (!ok) {
+                modal.showAlert("알림", errors.join("\n")); 
+                return; // 저장 중단
+            }
+
+            // 2) 보류 삭제 반영 + 재번호 + 키/플래그 정리
             const kept = prev.filter(r => !r.__pendingDelete);         // 보류 삭제 반영
             const normalized = kept.map((r, idx) => {
                 const next = {
@@ -156,12 +174,12 @@ const GridTestTab2 = forwardRef((props, ref) => {
                 return next;
             });
 
-            // 2) API 저장 호출 (예시)
+            // 3) API 저장 호출 (예시)
             // TODO: 저장 API로 변경
             // const { saveGrid } = GridTestApi();
             // await saveGrid.mutateAsync({ items: normalized });
 
-            // 3) 그리드 상태 반영
+            // 4) 그리드 상태 반영
             setDataState(prevState => ({ ...prevState, data: normalized }));
             setSelectedState?.({});   // 선택 해제
         }, [setDataState, setSelectedState]);
@@ -175,7 +193,50 @@ const GridTestTab2 = forwardRef((props, ref) => {
             const cls = `${trEl.props.className || ''} ${pending ? 'row-pending-delete' : ''}`;
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
         }, []);
-        
+
+        //유효성 체크 
+        const validateNewRows = (allRows) => {
+            const errors = [];
+            const newRows = (allRows || []).filter(r => r.__isNew === true);
+
+            if (newRows.length === 0) return { ok: true, errors }; // 새 행 없으면 통과
+
+            // 1) 필수값 체크: 소분류코드(lv321code), 소분류내용(lv3), 최종코드(lv123code)
+            for (const r of newRows) {
+                const code3 = (r.lv321code ?? '').trim();
+                const name3 = (r.lv3 ?? '').trim();
+                const finalCode = (r.lv123code ?? '').trim();
+
+                if (!code3) modal.showAlert("알림", `행 no=${r.no}: 소분류 코드는 필수입니다.`);
+                if (!name3) modal.showAlert("알림", `소분류 내용은 필수입니다.`);
+                if (!finalCode) modal.showAlert("알림", `행 no=${r.no}: 최종코드는 필수입니다.`);
+            }
+
+            // 2) 최종코드 중복체크(기존 데이터와 중복 금지 + 새 행끼리 중복 금지)
+            const existingFinals = new Set(
+                (allRows || [])
+                    .filter(r => r.__isNew !== true && r.__pendingDelete !== true)
+                    .map(r => (r.lv123code ?? '').trim())
+                    .filter(v => v !== '')
+                    .map(v => v.toLowerCase())
+            );
+
+            const seenNew = new Set();
+            for (const r of newRows) {
+                const key = (r.lv123code ?? '').trim().toLowerCase();
+                if (!key) continue; // 위에서 필수 체크했으므로 여기선 스킵만
+                if (existingFinals.has(key)) {
+                    modal.showAlert("알림", `행 no=${r.no}: 최종코드 '${r.lv123code}' 가 기존 데이터와 중복입니다.`);
+                }
+                if (seenNew.has(key)) {
+                    modal.showAlert("알림", `행 no=${r.no}: 최종코드 '${r.lv123code}' 가 새로 추가한 다른 행과 중복입니다.`);
+                }
+                seenNew.add(key);
+            }
+
+            return { ok: errors.length === 0, errors };
+        };
+
         //console.log("dataState", dataState);
 
         return (
