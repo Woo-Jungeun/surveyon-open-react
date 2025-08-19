@@ -19,7 +19,7 @@ const GridTestBody = () => {
     // 자식(Tab2) 메서드 호출용 ref
     const tab2Ref = useRef(null);
     
-    // Tab2 저장버튼 클릭 시 이벤트 핸들러
+    // Tab1 저장버튼 클릭 시 이벤트 핸들러
     const onTab1SaveClick = () => {
         //   tab2Ref.current?.addButtonClick?.(); // 자식의 addButtonClick 실행 (행 추가)
     };
@@ -29,7 +29,7 @@ const GridTestBody = () => {
     };
     // Tab2 저장버튼 클릭 시 이벤트 핸들러
     const onTab2SaveClick = () => {
-     //   tab2Ref.current?.addButtonClick?.(); // 자식의 addButtonClick 실행 (행 추가)
+        tab2Ref.current?.saveChanges?.(); // 변경, 삭제 행 적용 
     };
 
     return (
@@ -51,7 +51,7 @@ const GridTestBody = () => {
                     {tabDivision === "2" && 
                         <div className="btnWrap">
                             <GridHeaderBtnPrimary  onClick={onTab2AddClick}>추가</GridHeaderBtnPrimary>
-                            <GridHeaderBtnPrimary  onClick={onTab2SaveClick}>등록</GridHeaderBtnPrimary>
+                            <GridHeaderBtnPrimary  onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
                         </div>
                     }
                 </div>

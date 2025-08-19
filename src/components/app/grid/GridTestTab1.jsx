@@ -305,7 +305,7 @@ const GridTestTab1 = () => {
             return row?.[DATA_ITEM_KEY];
         }, []);
 
-        // 기존 코드 교체
+        // 추가 버튼 이벤트
         const handleAddButton = useCallback((cellProps) => {
             const clicked = cellProps.dataItem;
             const current = [...(dataState?.data ?? [])];// 현재 데이터 복사
@@ -545,7 +545,7 @@ const GridTestTab1 = () => {
                                         field="add"
                                         title={c.title}
                                         sortable={false}
-                                        columnMenu={columnMenu}
+                                        columnMenu={undefined}
                                         cell={(props) => {
                                             const row = props.dataItem;
                                             const maxCid = maxCidByFixedKey.get(row?.fixed_key);
