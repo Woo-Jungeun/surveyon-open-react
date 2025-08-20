@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useContext, useEffect } from "react";
+import React, { Fragment, useState, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
@@ -11,8 +11,7 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
  *
  * @author jewoo
  * @since 2025-08-19<br />
- */
-
+*/
 /*섹션 영역 */
 const Section = ({ id, title, first, open, onToggle, headerAddon, children }) => (
     <div className={`leftInfo ${open ? "on" : ""}`}>
@@ -109,7 +108,9 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
     const [previousPromptResValue, setPreviousPromptResValue] = useState("");   // 기존 응답 프롬프트 로그 데이터
 
     // 팝업에서 '선택' 눌렀을 때: textarea에 적용하고 팝업 닫기
-    const handleSelectPrompt = ({ type, time, text }) => {
+    const handleSelectPrompt = ({ text }) => {
+        setOpenPrompt(true);        // 프롬프트 섹션이 닫혀 있어도 자동으로 열기
+        
         setData(prev => ({
             ...prev,
             prompt_text: String(text || "")
