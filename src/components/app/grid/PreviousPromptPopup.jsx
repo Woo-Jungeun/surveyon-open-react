@@ -58,7 +58,11 @@ const PreviousPromptPopup = (parentProps) => {
             {rows.map(([time, text], idx) => (
               <tr key={`${time}-${idx}`}>
                 <th style={thStyle}>{time}</th>
-                <td style={tdStyle}><div style={preStyle}>{String(text)}</div></td>
+                <td style={tdStyle}>
+                  <div className="prompt-text" style={preStyle}>
+                    {String(text)}
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>

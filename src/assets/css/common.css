@@ -4215,3 +4215,21 @@ footer {
     color: #69706d;
     font-weight: 500;
 }
+
+/* 기존 프롬프트 팝업: 내용(오른쪽 칸)만 볼드 해제 */
+.modal .prompt-text,
+.modal .prompt-text * {
+  font-weight: 400 !important;
+}
+
+/* 혹시 서버에서 <b>/<strong>/<h*>로 내려오면 그것도 평문으로 */
+.modal .prompt-text b,
+.modal .prompt-text strong,
+.modal .prompt-text h1,
+.modal .prompt-text h2,
+.modal .prompt-text h3,
+.modal .prompt-text h4,
+.modal .prompt-text h5,
+.modal .prompt-text h6 {
+  font-weight: 400 !important;
+}
