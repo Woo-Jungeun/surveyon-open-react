@@ -1,21 +1,21 @@
 import React, { Fragment, useRef, useState } from "react";
 import { Button } from "@progress/kendo-react-buttons";
-import GridTestInfo from "@/components/app/grid/GridTestInfo";
-import GridTestTab1 from "@/components/app/grid/GridTestTab1";
-import GridTestTab2 from "@/components/app/grid/GridTestTab2";
-import GridTestTab3 from "@/components/app/grid/GridTestTab3";
+import OptionSettingInfo from "@/components/app/optionSetting/OptionSettingInfo";
+import OptionSettingTab1 from "@/components/app/optionSetting/OptionSettingTab1";
+import OptionSettingTab2 from "@/components/app/optionSetting/OptionSettingTab2";
+import OptionSettingTab3 from "@/components/app/optionSetting/OptionSettingTab3";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 
 /**
- * 그리드 > 테스트 그리드 Body
+ * 분석 > Body
  *
  * @author jewoo
  * @since 2025-08-14<br />
  */
-const GridTestBody = () => {
-  const TITLE_LIST = ["그리드", "테스트 그리드", ""];
+const OptionSettingBody = () => {
+  const TITLE_LIST = ["분석 대메뉴", "분석 메뉴", ""];
   const [tabDivision, setTabDivision] = useState("1");
-  const [isLeftOpen, setIsLeftOpen] = useState(true);     // ← 상태를 부모가 보유
+  const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
   const tab2Ref = useRef(null);
 
   /*버튼 이벤트 핸들러*/
@@ -52,7 +52,7 @@ const GridTestBody = () => {
       {/* 왼쪽 패널이 닫히면 부모에 left-closed 클래스 부여 */}
       <article className={`subContWrap ${isLeftOpen ? "" : "left-closed"}`}>
         <div className="subCont subContL">
-          <GridTestInfo
+          <OptionSettingInfo
             isOpen={isLeftOpen}
             onToggle={() => setIsLeftOpen(v => !v)}
           />
@@ -71,11 +71,11 @@ const GridTestBody = () => {
             </Button>
           </div>
 
-          {tabDivision === "1" ? <GridTestTab1 /> : tabDivision === "2" ? <GridTestTab2 ref={tab2Ref} /> : <GridTestTab3 />}
+          {tabDivision === "1" ? <OptionSettingTab1 /> : tabDivision === "2" ? <OptionSettingTab2 ref={tab2Ref} /> : <OptionSettingTab3 />}
         </div>
       </article>
     </Fragment>
   );
 };
 
-export default GridTestBody;
+export default OptionSettingBody;

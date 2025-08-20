@@ -4,12 +4,12 @@ import {useContext} from "react";
 import {loadingSpinnerContext} from "@/components/common/LoadingSpinner.jsx";
 
 /**
- *  API
+ *  분석 > API
  *
  * @author jewoo
  * @since 2025-08-08<br />
  */
-export function GridTestApi() {
+export function OptionSettingApi() {
 
     const loadingSpinner = useContext(loadingSpinnerContext);
 

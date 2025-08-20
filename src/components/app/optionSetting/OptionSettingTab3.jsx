@@ -3,18 +3,18 @@ import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column, GridColumnMenuFilter } from "@progress/kendo-react-grid";
 
-import { GridTestApi } from "@/components/app/grid/GridTestApi.js";
+import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 /**
- * 그리드 > 테스트 그리드 > rawdata
+ * 분석 > 그리드 영역 > rawdata
  *
  * @author jewoo
  * @since 2025-08-12<br />
  */
 
-const GridTestTab3 = () => {
+const OptionSettingTab3 = () => {
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
-    const MENU_TITLE = "테스트 그리드 탭3";
+    const MENU_TITLE = "rawdata";
 
     const [columns, setColumns] = useState([
         { field: "pid", title: "PID", show: true },
@@ -38,7 +38,7 @@ const GridTestTab3 = () => {
         />
     );
 
-    const { getGridData } = GridTestApi();
+    const { getGridData } = OptionSettingApi();
 
     //grid rendering 
     const GridRenderer = (props) => {
@@ -96,4 +96,4 @@ const GridTestTab3 = () => {
     );
 };
 
-export default GridTestTab3;
+export default OptionSettingTab3;

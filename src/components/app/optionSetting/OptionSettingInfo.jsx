@@ -1,13 +1,13 @@
 import React, { Fragment, useState, useContext, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
-import PreviousPromptPopup from "@/components/app/grid/PreviousPromptPopup";    // 기존 프롬프트 내용 팝업
+import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
 import { Input } from "@progress/kendo-react-inputs";
 import { TextArea } from "@progress/kendo-react-inputs";
-import { GridTestApi } from "@/components/app/grid/GridTestApi.js";
+import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 
 /**
- * 그리드 > 테스트 그리드 > 정보 영역
+ * 분석 > 정보 영역
  *
  * @author jewoo
  * @since 2025-08-19<br />
@@ -48,9 +48,9 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const GridTestInfo = ({ isOpen, onToggle }) => {
+const OptionSettingInfo = ({ isOpen, onToggle }) => {
     const [data, setData] = useState({}); //데이터 
-    const { getGridData } = GridTestApi();
+    const { getGridData } = OptionSettingApi();
 
     useEffect(() => {
         //분석 정보 데이터
@@ -318,4 +318,4 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
     );
 };
 
-export default GridTestInfo;
+export default OptionSettingInfo;

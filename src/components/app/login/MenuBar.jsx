@@ -106,10 +106,10 @@ const MenuBar = ({authMenuList, setAuthMenuList, setMenuData}) => {
                 <div className="navWrap">
                     <ul className="nav depth01">
                         <li key={"li-1"}>  
-                            <a>그리드</a> 
+                            <a>분석 대메뉴</a> 
                             <ul key={"ul-1"} className="depth02">
                                 <li key={"li-1-1"}>
-                                    <NavLink to={"/grid/grid-test"}>그리드테스트</NavLink>
+                                    <NavLink to={"/o/option-setting"}>분석 메뉴</NavLink>
                                 </li>
                             </ul>
                         </li>

@@ -2,25 +2,25 @@ import React, { Fragment, useEffect, useState, useRef, useCallback, useMemo } fr
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column, GridColumnMenuFilter } from "@progress/kendo-react-grid";
-import { GridTestApi } from "@/components/app/grid/GridTestApi.js";
+import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
-import "@/components/app/grid/GridTest.css";
+import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 
 /**
- * 그리드 > 테스트 그리드 > 응답 데이터
+ * 분석 > 그리드 영역 > 응답 데이터
  *
  * @author jewoo
  * @since 2025-08-11<br />
  */
 
-const GridTestTab1 = () => {
+const OptionSettingTab1 = () => {
     const DATA_ITEM_KEY = ["fixed_key", "cid"];
-    const MENU_TITLE = "테스트 그리드 탭1";
+    const MENU_TITLE = "응답 데이터";
     const SELECTED_FIELD = "selected";
-    const { getGridData } = GridTestApi();
+    const { getGridData } = OptionSettingApi();
     const [editField] = useState("inEdit");
 
     /**
@@ -606,4 +606,4 @@ const GridTestTab1 = () => {
     );
 };
 
-export default GridTestTab1;
+export default OptionSettingTab1;
