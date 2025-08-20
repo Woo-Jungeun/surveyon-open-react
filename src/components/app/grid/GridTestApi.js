@@ -13,7 +13,8 @@ export function GridTestApi() {
 
     const loadingSpinner = useContext(loadingSpinnerContext);
 
-    const getSampleData = useMutation(
+    //데이터 가져오기 
+    const getGridData = useMutation(
         async (data) => {
             // loadingSpinner.show();
             return await api.get(data, "/o/option_edit_api.aspx");
@@ -27,25 +28,25 @@ export function GridTestApi() {
             }
         }
     );
-
-    const insertMenuLogMutation = useMutation(
+    
+    //데이터 저장  
+    const saveGridData = useMutation(
         async (data) => {
-            return await api.post(data, "/v1/user-menu/create");
+            // loadingSpinner.show();
+            return await api.get(data, "/o/option_save_api.aspx");
         },
         {
             onSuccess: (res, data) => {
-                // console.log("getComboUserMutation", res, data);
             },
             onSettled: (data, error, variables, context) => {
                 //do...
-
+                // loadingSpinner.hide();
             }
         }
     );
 
-
     return {
-        getSampleData,
-        insertMenuLogMutation
+        getGridData,
+        saveGridData
     };
 }

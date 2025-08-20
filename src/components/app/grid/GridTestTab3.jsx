@@ -38,7 +38,7 @@ const GridTestTab3 = () => {
         />
     );
 
-    const { getSampleData } = GridTestApi();
+    const { getGridData } = GridTestApi();
 
     //grid rendering 
     const GridRenderer = (props) => {
@@ -82,7 +82,7 @@ const GridTestTab3 = () => {
     return (
         <GridData
             dataItemKey={DATA_ITEM_KEY}
-            searchMutation={getSampleData}
+            searchMutation={getGridData}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: "syhong",

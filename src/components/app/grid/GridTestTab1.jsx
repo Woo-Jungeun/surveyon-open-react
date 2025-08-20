@@ -20,7 +20,7 @@ const GridTestTab1 = () => {
     const DATA_ITEM_KEY = ["fixed_key", "cid"];
     const MENU_TITLE = "테스트 그리드 탭1";
     const SELECTED_FIELD = "selected";
-    const { getSampleData } = GridTestApi();
+    const { getGridData } = GridTestApi();
     const [editField] = useState("inEdit");
 
     /**
@@ -62,7 +62,7 @@ const GridTestTab1 = () => {
     // 소분류 드롭다운 데이터 + 메타 기능
     const [lv3Options, setLv3Options] = useState([]);
     useEffect(() => {
-        getSampleData.mutateAsync({
+        getGridData.mutateAsync({
             params: {
                 user: "syhong",
                 projectnum: "q250089uk",
@@ -589,7 +589,7 @@ const GridTestTab1 = () => {
     return (
         <GridData
             dataItemKey={DATA_ITEM_KEY}
-            searchMutation={getSampleData}
+            searchMutation={getGridData}
             selectedField={SELECTED_FIELD}
             multiSelect={false}
             editField={editField}

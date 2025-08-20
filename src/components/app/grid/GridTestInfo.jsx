@@ -50,11 +50,11 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 
 const GridTestInfo = ({ isOpen, onToggle }) => {
     const [data, setData] = useState({}); //데이터 
-    const { getSampleData } = GridTestApi();
+    const { getGridData } = GridTestApi();
 
     useEffect(() => {
         //분석 정보 데이터
-        getSampleData.mutateAsync({
+        getGridData.mutateAsync({
             params: {
                 user: "jewoo",
                 projectnum: "q250116_1R",

@@ -47,7 +47,7 @@ const GridTestTab2 = forwardRef((props, ref) => {
             onColumnsChange={setColumns}
         />
     );
-    const { getSampleData } = GridTestApi();
+    const { getGridData, saveGridData } = GridTestApi();
     const [editField] = useState("inEdit");
 
     // GridData가 내려주는 최신 컨텍스트를 저장
@@ -165,13 +165,31 @@ const GridTestTab2 = forwardRef((props, ref) => {
             }));
         }, [getKey, setDataState]);
 
+        // 행 클릭 시 편집기능 open
+        const onRowClick = useCallback((e) => {
+            const clicked = e.dataItem;
+            
+            // 보기유형이 survey면 편집 진입 막기 
+            if (clicked?.ex_gubun === 'survey') return;
+            
+            const clickedKey = getKey(clicked);
+            setDataState(prev => ({
+                ...prev,
+                data: (prev.data || []).map(r => ({
+                    ...r,
+                    // 클릭한 행만 편집모드로, 나머지는 해제
+                    inEdit: getKey(r) === clickedKey
+                }))
+            }));
+        }, [setDataState, getKey]);
+
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
             // 0) 현재 그리드를 기반으로 최종 데이터 생성
             const prev = latestCtxRef.current?.dataState?.data ?? [];
 
             // 1) 유효성 검사 (새 행만)
-            const { ok, errors } = validateNewRows(prev);
+            const { ok, errors } = validateRows(prev);
             if (!ok) {
                 modal.showAlert("알림", errors.join("\n"));
                 return; // 저장 중단
@@ -190,10 +208,18 @@ const GridTestTab2 = forwardRef((props, ref) => {
                 return next;
             });
 
-            // 3) API 저장 호출 (예시)
-            // TODO: 저장 API로 변경
-            // const { saveGrid } = GridTestApi();
-            // await saveGrid.mutateAsync({ items: normalized });
+            // 3) 저장 API 호출
+            // try {
+            //     const payload = buildSavePayload(normalized, qnumText);
+            //     console.log("SAVE payload >>>", payload);
+            //     // await saveGridData.mutateAsync(payload);
+            //     modal.showAlert("알림", "저장되었습니다.");
+            // } catch (err) {
+            //     console.error(err);
+            //     modal.showAlert("에러", "저장 중 오류가 발생했습니다.");
+            //     return; // 실패 시 그리드 상태 변경 안 함
+            // }
+
 
             // 4) 그리드 상태 반영
             setDataState(prevState => ({ ...prevState, data: normalized }));
@@ -210,50 +236,74 @@ const GridTestTab2 = forwardRef((props, ref) => {
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
         }, []);
 
-        //유효성 체크 
-        const validateNewRows = (allRows) => {
+        // 삭제 예정(__pendingDelete) 제외하고 전체 행 검증
+        const validateRows = (allRows) => {
             const errors = [];
-            const newRows = (allRows || []).filter(r => r.__isNew === true);
+            const rows = (allRows || []).filter(r => r.__pendingDelete !== true);
 
-            if (newRows.length === 0) return { ok: true, errors }; // 새 행 없으면 통과
+            // 1) 필수값 체크
+            rows.forEach((r) => {
+                const code3 = (r.lv321code || '').trim();
+                const name3 = (r.lv3 || '').trim();
+                const finalCode = (r.lv123code || '').trim();
+                if (!code3) modal.showAlert("알림", `소분류 코드는 필수입니다. (행 번호: ${r.no})`);
+                if (!name3) modal.showAlert("알림", `소분류 내용은 필수입니다. (행 번호: ${r.no})`);
+                if (!finalCode) modal.showAlert("알림", `최종코드는 필수입니다. (행 번호: ${r.no})`);
+            });
 
-            // 1) 필수값 체크: 소분류코드(lv321code), 소분류내용(lv3), 최종코드(lv123code)
-            for (const r of newRows) {
-                const code3 = (r.lv321code ?? '').trim();
-                const name3 = (r.lv3 ?? '').trim();
-                const finalCode = (r.lv123code ?? '').trim();
+            // 2) 최종코드 중복 체크(공백/대소문자 무시)
+            const codeMap = {};
+            rows.forEach((r) => {
+                const key = (r.lv123code || '').trim().toLowerCase();
+                if (!key) return; // 위에서 빈 값은 이미 에러 처리
+                if (!codeMap[key]) codeMap[key] = [];
+                codeMap[key].push(r.no);
+            });
 
-                if (!code3) modal.showAlert("알림", `행 no=${r.no}: 소분류 코드는 필수입니다.`);
-                if (!name3) modal.showAlert("알림", `소분류 내용은 필수입니다.`);
-                if (!finalCode) modal.showAlert("알림", `행 no=${r.no}: 최종코드는 필수입니다.`);
-            }
-
-            // 2) 최종코드 중복체크(기존 데이터와 중복 금지 + 새 행끼리 중복 금지)
-            const existingFinals = new Set(
-                (allRows || [])
-                    .filter(r => r.__isNew !== true && r.__pendingDelete !== true)
-                    .map(r => (r.lv123code ?? '').trim())
-                    .filter(v => v !== '')
-                    .map(v => v.toLowerCase())
-            );
-
-            const seenNew = new Set();
-            for (const r of newRows) {
-                const key = (r.lv123code ?? '').trim().toLowerCase();
-                if (!key) continue; // 위에서 필수 체크했으므로 여기선 스킵만
-                if (existingFinals.has(key)) {
-                    modal.showAlert("알림", `행 no=${r.no}: 최종코드 '${r.lv123code}' 가 기존 데이터와 중복입니다.`);
+            Object.keys(codeMap).forEach((k) => {
+                if (codeMap[k].length > 1) {
+                    modal.showAlert("알림", `최종코드 '${k}' 가 중복입니다. (행 번호: ${codeMap[k].join(', ')})`);
                 }
-                if (seenNew.has(key)) {
-                    modal.showAlert("알림", `행 no=${r.no}: 최종코드 '${r.lv123code}' 가 새로 추가한 다른 행과 중복입니다.`);
-                }
-                seenNew.add(key);
-            }
+            });
 
             return { ok: errors.length === 0, errors };
         };
 
         //console.log("dataState", dataState);
+        // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
+        const buildSavePayload = (rows, qnumText) => {
+            // __pendingDelete 행은 제외(=실제 삭제 반영), __isNew 플래그/로컬키는 서버로 안보냄
+            const cleaned = (rows || [])
+                .filter(r => r.__pendingDelete !== true)
+                .map((r, idx) => ({
+                    // 엑셀 샘플 맞춘 필드들 (있는 값만 보냄)
+                    v1: r.lv1 ?? "",
+                    v2: r.lv2 ?? "",
+                    v3: r.lv3 ?? "",
+                    qnum: qnumText ?? "",
+                    lv1code: r.lv1code ?? "",
+                    lv2code: r.lv2code ?? "",
+                    lv321code: r.lv321code ?? "",
+                    lv123code: r.lv123code ?? "",
+                    ex_gubun: r.ex_gubun ?? "analysis",
+                    ex_sum: r.ex_sum ?? "0",
+
+                    // 필요 시 확장 필드(그리드에 있으면 포함, 없으면 생략)
+                    ...(r.summary ? { summary: r.summary } : {}),
+                    ...(r.sentiment ? { sentiment: r.sentiment } : {}),
+                    ...(r.recheckyn ? { recheckyn: r.recheckyn } : {}),
+                    ...(r.answer_fin ? { answer_fin: r.answer_fin } : {}),
+                    ...(r.update_date ? { update_date: r.update_date } : {}),
+                }));
+
+            return {
+                user: "syhong",
+                projectnum: "q250089uk",
+                qnum: qnumText ?? "A2-2",
+                gb: "lb",
+                data: cleaned,
+            };
+        };
 
         return (
             <Fragment>
@@ -271,6 +321,7 @@ const GridTestTab2 = forwardRef((props, ref) => {
                             setSelectedState,
                             idGetter,
                             rowRender,
+                            onRowClick,
                         }}
                     >
                         {columns.filter(c => c.show !== false).map((c) => {
@@ -328,7 +379,7 @@ const GridTestTab2 = forwardRef((props, ref) => {
         <GridData
             dataItemKey={DATA_ITEM_KEY}
             rowNumber={"no"}
-            searchMutation={getSampleData}
+            searchMutation={getGridData}
             menuTitle={MENU_TITLE}
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
