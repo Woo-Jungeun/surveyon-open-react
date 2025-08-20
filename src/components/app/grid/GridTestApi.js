@@ -4,10 +4,10 @@ import {useContext} from "react";
 import {loadingSpinnerContext} from "@/components/common/LoadingSpinner.jsx";
 
 /**
- * 메뉴 API
+ *  API
  *
  * @author jewoo
- * @since 2024-04-23<br />
+ * @since 2025-08-08<br />
  */
 export function GridTestApi() {
 
@@ -28,7 +28,7 @@ export function GridTestApi() {
             }
         }
     );
-    
+
     //데이터 저장  
     const saveGridData = useMutation(
         async (data) => {

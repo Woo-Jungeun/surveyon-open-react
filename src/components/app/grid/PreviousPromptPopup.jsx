@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
  * 그리드 > 테스트 그리드 > 정보 영역 > 프롬프트 지침 > [기존] 버튼 팝업  
  *
  * @author jewoo
- * @since 2024-08-19<br />
+ * @since 2025-08-19<br />
  */
 const PreviousPromptPopup = (parentProps) => {
   const { popupShow, previousPromptResValue, previousPromptExValue, onSelectPrompt } = parentProps;

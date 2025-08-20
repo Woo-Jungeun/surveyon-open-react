@@ -10,7 +10,7 @@ import { GridTestApi } from "@/components/app/grid/GridTestApi.js";
  * 그리드 > 테스트 그리드 > 정보 영역
  *
  * @author jewoo
- * @since 2024-08-19<br />
+ * @since 2025-08-19<br />
  */
 
 /*섹션 영역 */
