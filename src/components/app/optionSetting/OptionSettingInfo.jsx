@@ -55,22 +55,22 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
         //분석 정보 데이터
         getGridData.mutateAsync({
             params: {
-                user: "jewoo",
-                projectnum: "q250116_1R",
-                qnum: "FM1",
+                user: "syhong",
+                projectnum: "q250089uk",
+                qnum: "A2-2",
                 gb: "info",
             }
         }).then((res) => {
             const d = res?.resultjson?.[0] || {};
             setData(d);
 
-            setPreviousPromptExValue(d?.prompt_text_ex_backup || "");    //보기 프롬프트 로그
-            setPreviousPromptResValue(d?.prompt_text_res_backup || "");  //응답 프롬프트 로그
+            setPreviousPromptExValue(d?.prompt_string_ex_backup || "");    //보기 프롬프트 로그
+            setPreviousPromptResValue(d?.prompt_string_res_backup || "");  //응답 프롬프트 로그
 
             // 드롭다운 초기값 동기화
-            setApiKey(d?.listapikey?.[0]?.keycontent ?? "");
+            setApiKey(d?.apikey?.[0]?.keycontent ?? "");
             setLang(d?.result_lang ?? "");
-            setModel(d?.selapi_model ?? "");
+            setModel(d?.model_select ?? "");
         });
     }, []);
 
@@ -113,7 +113,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
         
         setData(prev => ({
             ...prev,
-            prompt_text: String(text || "")
+            prompt_string: String(text || "")
         }));
         setPreviousPromptShow(false);
     };
@@ -130,28 +130,28 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
 
     // onChangeDropdown 핸들러
     const onChangeDropdown = (field) => (e) => {
-        //TODO apikey 바뀔때 listapikey값들 다 바껴야 함 
+        //TODO apikey 바뀔때 apikey값들 다 바껴야 함 
         const item = e?.value;
         const selectedLabel = item?.label ?? "";
 
         if (field === "apiKey") setApiKey(selectedLabel);
         if (field === "result_lang") setLang(selectedLabel);
-        if (field === "selapi_model") setModel(selectedLabel);
+        if (field === "model_select") setModel(selectedLabel);
 
         setData((prev) => {
             if (field === "apiKey") {
                 return {
                     ...prev,
-                    listapikey: [
-                        { ...(prev?.listapikey?.[0] || {}), keycontent: selectedLabel },
+                    apikey: [
+                        { ...(prev?.apikey?.[0] || {}), keycontent: selectedLabel },
                     ],
                 };
             }
             if (field === "result_lang") {
                 return { ...prev, result_lang: selectedLabel };
             }
-            if (field === "selapi_model") {
-                return { ...prev, selapi_model: selectedLabel };
+            if (field === "model_select") {
+                return { ...prev, model_select: selectedLabel };
             }
             return prev;
         });
@@ -180,12 +180,12 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                         {/* 문항 요약 */}
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">
-                                {(data?.qnum ? `${data?.qnum} ` : "")}문항
+                                {(data?.qnum_text ? `${data?.qnum_text} ` : "")}문항
                             </span>
                             <Input
                                 className="k-input k-input-solid"
-                                value={data?.question_fin || ""}
-                                onChange={(e) => onChangeInputEvent(e, "question_fin")}
+                                value={data?.keyword_string || ""}
+                                onChange={(e) => onChangeInputEvent(e, "keyword_string")}
                             />
                         </div>
                     </div>
@@ -203,8 +203,8 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                                 className="promptBox"
                                 rows={5}
                                 placeholder="프롬프트 지침을 입력하세요."
-                                value={data?.prompt_text || ""}
-                                onChange={(e) => onChangeInputEvent(e, "prompt_text")}
+                                value={data?.prompt_string || ""}
+                                onChange={(e) => onChangeInputEvent(e, "prompt_string")}
                             />
                         </div>
                     </Section>
@@ -243,7 +243,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                                 textField="label"
                                 dataItemKey="label"
                                 defaultValue={model}
-                                onChange={onChangeDropdown("selapi_model")}
+                                onChange={onChangeDropdown("model_select")}
                             />
                         </div>
                     </Section>
@@ -265,24 +265,24 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                             <Input
                                 className="k-input k-input-solid"
                                 // defaultValue={100} 
-                                value={data?.txtopen_item_lv3 || ""}
-                                onChange={(e) => onChangeInputEvent(e, "txtopen_item_lv3")}
+                                value={data?.open_item_lv1 || ""}
+                                onChange={(e) => onChangeInputEvent(e, "open_item_lv1")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">중분류 개수</span>
                             <Input
                                 className="k-input k-input-solid"
-                                value={data?.txtopen_item_lv2 || ""}
-                                onChange={(e) => onChangeInputEvent(e, "txtopen_item_lv2")}
+                                value={data?.open_item_lv2 || ""}
+                                onChange={(e) => onChangeInputEvent(e, "open_item_lv2")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">대분류 개수</span>
                             <Input
                                 className="k-input k-input-solid"
-                                value={data?.txtopen_item_lv1 || ""}
-                                onChange={(e) => onChangeInputEvent(e, "txtopen_item_lv1")}
+                                value={data?.open_item_lv3 || ""}
+                                onChange={(e) => onChangeInputEvent(e, "open_item_lv3")}
                             />
                         </div>
                     </Section>

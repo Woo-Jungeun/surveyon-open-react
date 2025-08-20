@@ -13,7 +13,6 @@ import { modalContext } from "@/components/common/Modal.jsx";
  * @author jewoo
  * @since 2025-08-12<br />
  */
-
 const OptionSettingTab2 = forwardRef((props, ref) => {
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
@@ -26,7 +25,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     */
     const [columns, setColumns] = useState([
         { field: "no", title: "no", show: true, editable: false, width: "100px" },
-        { field: "qnum_text", title: "문번호", show: true, editable: false },
+        // { field: "qnum_text", title: "문번호", show: true, editable: false },
         { field: "lv1code", title: "대분류 코드", show: true },
         { field: "lv1", title: "대분류", show: true },
         { field: "lv2code", title: "중분류 코드", show: true },
