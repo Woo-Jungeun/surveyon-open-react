@@ -22,7 +22,8 @@ const PreviousPromptPopup = (parentProps) => {
     if (typeof obj !== "object") return [];
     return Object.entries(obj)
       .filter(([k, v]) => k && v != null)
-      .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime());
+      // .sort((a, b) => new Date(a[0]).getTime() - new Date(b[0]).getTime()); //오름차순
+      .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());   //내림차순
   };
 
   const rowsRes = useMemo(() => parseToRows(previousPromptResValue), [previousPromptResValue]);
