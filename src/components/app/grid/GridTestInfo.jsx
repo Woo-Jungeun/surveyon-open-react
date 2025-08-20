@@ -5,6 +5,7 @@ import PreviousPromptPopup from "@/components/app/grid/PreviousPromptPopup";    
 import { Input } from "@progress/kendo-react-inputs";
 import { TextArea } from "@progress/kendo-react-inputs";
 import { GridTestApi } from "@/components/app/grid/GridTestApi.js";
+
 /**
  * 그리드 > 테스트 그리드 > 정보 영역
  *
@@ -52,7 +53,7 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
     const { getSampleData } = GridTestApi();
 
     useEffect(() => {
-        //버스번호 comboData
+        //분석 정보 데이터
         getSampleData.mutateAsync({
             params: {
                 user: "jewoo",
@@ -61,58 +62,105 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                 gb: "info",
             }
         }).then((res) => {
-            //   console.log("res:::::", res);
-            setData(res?.resultjson?.[0] || {});
-            setPreviousPromptExValue(res?.resultjson?.[0]?.prompt_text_ex_backup || ""); //보기 프롬프트 로그
-            setPreviousPromptResValue(res?.resultjson?.[0]?.prompt_text_res_backup || "");  //응답 프롬프트 로그
+            const d = res?.resultjson?.[0] || {};
+            setData(d);
+
+            setPreviousPromptExValue(d?.prompt_text_ex_backup || "");    //보기 프롬프트 로그
+            setPreviousPromptResValue(d?.prompt_text_res_backup || "");  //응답 프롬프트 로그
+
+            // 드롭다운 초기값 동기화
+            setApiKey(d?.listapikey?.[0]?.keycontent ?? "");
+            setLang(d?.result_lang ?? "");
+            setModel(d?.selapi_model ?? "");
         });
     }, []);
 
-   console.log("data", data);
+    console.log("data", data);
 
     /* 토글 on/off */
     const [openPrompt, setOpenPrompt] = useState(false);
     const [openOption, setOpenOption] = useState(false);
     const [openCounts, setOpenCounts] = useState(false);
 
-    // 프롬프트 지침 텍스트
-    const [promptText, setPromptText] = useState("");
-
-    /*todo api 연결 데이터 수정 필요!!!!*/
+    /*----TODO api 연결 데이터 수정 필요!!!!-----*/
     const API_KEY_OPTIONS = [
-        { label: "회사공용키(경영지원)", value: "mgmt-shared" },
+        { label: "회사공용키(경영지원)", value: "mgmt-shared" }, // value는 내부코드, label은 화면/서버 기준
         { label: "테스트 키", value: "test" },
     ];
 
     const LANG_OPTIONS = [
-        { label: "한국어 (Korean)", value: "ko" },
+        { label: "Korean", value: "ko" },   // <-- label을 Korean/English 로
         { label: "English", value: "en" },
     ];
+
     const MODEL_OPTIONS = [
-        { label: "GPT-4o", value: "gpt-4o" },
+        { label: "GPT-4o", value: "gpt-4o" },   // 서버 기본값 "GPT-4o"와 label 일치
         { label: "o3-mini", value: "o3-mini" },
     ];
+    /*----TODO api 연결 데이터 수정 필요!!!!-----*/
 
-    const [apiKey, setApiKey] = useState("mgmt-shared");
-    const [lang, setLang] = useState("ko");
-    const [model, setModel] = useState("gpt-4o");
+    const [apiKey, setApiKey] = useState("");
+    const [lang, setLang] = useState("");
+    const [model, setModel] = useState("");
 
-    //기존 버튼 팝업 show 
-    const [previousPromptShow, setPreviousPromptShow] = useState(false);      // 기존 프롬프트 팝업 popupShow
-    const [previousPromptExValue, setPreviousPromptExValue] = useState("");            // 기존 보기 프롬프트 로그 데이터
-    const [previousPromptResValue, setPreviousPromptResValue] = useState("");            // 기존 응답 프롬프트 로그 데이터
+    // 기존 버튼 팝업 show 
+    const [previousPromptShow, setPreviousPromptShow] = useState(false);        // 기존 프롬프트 팝업 popupShow
+    const [previousPromptExValue, setPreviousPromptExValue] = useState("");     // 기존 보기 프롬프트 로그 데이터
+    const [previousPromptResValue, setPreviousPromptResValue] = useState("");   // 기존 응답 프롬프트 로그 데이터
 
-    // onChange 핸들러
-    const onChangeEvent = (e, col) => {
-        //todo
-       // console.log(e, col)
+    // 팝업에서 '선택' 눌렀을 때: textarea에 적용하고 팝업 닫기
+    const handleSelectPrompt = ({ type, time, text }) => {
+        setData(prev => ({
+            ...prev,
+            prompt_text: String(text || "")
+        }));
+        setPreviousPromptShow(false);
+    };
+
+    // onChangeInputEvent 핸들러
+    const onChangeInputEvent = (e, col) => {
+        console.log("onChangeInputEvent", e, col)
+        const next = e?.value ?? e?.target?.value ?? "";
+        setData(prev => ({
+            ...prev,
+            [col]: next,
+        }));
     }
+
+    // onChangeDropdown 핸들러
+    const onChangeDropdown = (field) => (e) => {
+        //TODO apikey 바뀔때 listapikey값들 다 바껴야 함 
+        const item = e?.value;
+        const selectedLabel = item?.label ?? "";
+
+        if (field === "apiKey") setApiKey(selectedLabel);
+        if (field === "result_lang") setLang(selectedLabel);
+        if (field === "selapi_model") setModel(selectedLabel);
+
+        setData((prev) => {
+            if (field === "apiKey") {
+                return {
+                    ...prev,
+                    listapikey: [
+                        { ...(prev?.listapikey?.[0] || {}), keycontent: selectedLabel },
+                    ],
+                };
+            }
+            if (field === "result_lang") {
+                return { ...prev, result_lang: selectedLabel };
+            }
+            if (field === "selapi_model") {
+                return { ...prev, selapi_model: selectedLabel };
+            }
+            return prev;
+        });
+    };
 
     return (
         <Fragment>
             {/* << / >> 아주 작은 버튼 */}
             <div className="collapseBar">
-            {isOpen && <div className="collapseTitle">{data?.projectname || "-"}</div>}
+                {isOpen && <div className="collapseTitle">{data?.projectname || "-"}</div>}
                 <Button
                     type="button"
                     className="btnCollapse"
@@ -128,9 +176,6 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
             {isOpen && (
                 <div className="left-body">
                     <div className="mgB12">
-                        {/* 프로젝트/조사명 */}
-                        {/* <div className="txtTitL">{data?.projectname || "-"}</div> */}
-
                         {/* 문항 요약 */}
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">
@@ -139,7 +184,7 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                             <Input
                                 className="k-input k-input-solid"
                                 value={data?.question_fin || ""}
-                                onChange={(e) => onChangeEvent(e, "question_fin")}
+                                onChange={(e) => onChangeInputEvent(e, "question_fin")}
                             />
                         </div>
                     </div>
@@ -157,8 +202,8 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                                 className="promptBox"
                                 rows={5}
                                 placeholder="프롬프트 지침을 입력하세요."
-                                value={promptText}
-                                onChange={(e) => setPromptText(e.target.value)}
+                                value={data?.prompt_text || ""}
+                                onChange={(e) => onChangeInputEvent(e, "prompt_text")}
                             />
                         </div>
                     </Section>
@@ -173,12 +218,11 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">apikey</span>
                             <CustomDropDownList
-                                required={false}
                                 data={API_KEY_OPTIONS}
                                 textField="label"
-                                dataItemKey="value"
+                                dataItemKey="label"
                                 defaultValue={apiKey}
-                                onChange={(e) => setApiKey(e.value.value)}
+                                onChange={onChangeDropdown("apiKey")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
@@ -186,9 +230,9 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                             <CustomDropDownList
                                 data={LANG_OPTIONS}
                                 textField="label"
-                                dataItemKey="value"
+                                dataItemKey="label"
                                 defaultValue={lang}
-                                onChange={(e) => setLang(e.value.value)}
+                                onChange={onChangeDropdown("result_lang")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
@@ -196,9 +240,9 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                             <CustomDropDownList
                                 data={MODEL_OPTIONS}
                                 textField="label"
-                                dataItemKey="value"
+                                dataItemKey="label"
                                 defaultValue={model}
-                                onChange={(e) => setModel(e.value.value)}
+                                onChange={onChangeDropdown("selapi_model")}
                             />
                         </div>
                     </Section>
@@ -221,7 +265,7 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                                 className="k-input k-input-solid"
                                 // defaultValue={100} 
                                 value={data?.txtopen_item_lv3 || ""}
-                                onChange={(e) => onChangeEvent(e, "txtopen_item_lv3")}
+                                onChange={(e) => onChangeInputEvent(e, "txtopen_item_lv3")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
@@ -229,7 +273,7 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                             <Input
                                 className="k-input k-input-solid"
                                 value={data?.txtopen_item_lv2 || ""}
-                                onChange={(e) => onChangeEvent(e, "txtopen_item_lv2")}
+                                onChange={(e) => onChangeInputEvent(e, "txtopen_item_lv2")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
@@ -237,7 +281,7 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                             <Input
                                 className="k-input k-input-solid"
                                 value={data?.txtopen_item_lv1 || ""}
-                                onChange={(e) => onChangeEvent(e, "txtopen_item_lv1")}
+                                onChange={(e) => onChangeInputEvent(e, "txtopen_item_lv1")}
                             />
                         </div>
                     </Section>
@@ -247,12 +291,13 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                         <Button className="btnTxt">번역</Button>
                         <Button themeColor="primary">보기분석</Button>
                         <Button themeColor="primary">응답자분석(NEW)</Button>
+                        {/* <Button className="btnTxt">응답자 빈셀&기타</Button> */}
                     </div>
                     {/* 분석결과 */}
                     <div className="mgT16">
                         <div className="resultBox" aria-label="분석결과창" />
                         <div className="flexE mgT10">
-                            <Button className="btnTxt type02">운영삭제</Button>
+                            <Button className="btnTxt type02">문항삭제</Button>
                         </div>
                     </div>
                 </div>
@@ -262,10 +307,11 @@ const GridTestInfo = ({ isOpen, onToggle }) => {
                 <PreviousPromptPopup
                     popupShow={previousPromptShow}
                     setPopupShow={setPreviousPromptShow}
-                    previousPromptExValue={previousPromptExValue}   //보기 프롬프트 로그
-                    setPreviousPromptExValue={setPreviousPromptExValue}   //보기 프롬프트 로그
-                    previousPromptResValue={previousPromptResValue} //응답 프롬프트 로그
-                    setPreviousPromptResValue={setPreviousPromptResValue}   //보기 프롬프트 로그
+                    previousPromptExValue={previousPromptExValue}           //보기 프롬프트 로그
+                    setPreviousPromptExValue={setPreviousPromptExValue}
+                    previousPromptResValue={previousPromptResValue}         //응답 프롬프트 로그
+                    setPreviousPromptResValue={setPreviousPromptResValue}
+                    onSelectPrompt={handleSelectPrompt}
                 />
             }
         </Fragment>

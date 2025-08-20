@@ -33,7 +33,7 @@
     text-align: center !important;
 }
 
-.alRignt {
+.alRight {
     text-align: right !important;
 }
 
@@ -4187,6 +4187,7 @@ footer {
     caret-color: transparent;
     /* 캐럿 숨김 */
 }
+
 /*기존 프롬프트 팝업 css*/
 .secTitle {
     display: flex;
@@ -4219,10 +4220,10 @@ footer {
 /* 기존 프롬프트 팝업: 내용(오른쪽 칸)만 볼드 해제 */
 .modal .prompt-text,
 .modal .prompt-text * {
-  font-weight: 400 !important;
+    font-weight: 400 !important;
 }
 
-/* 혹시 서버에서 <b>/<strong>/<h*>로 내려오면 그것도 평문으로 */
+/* 서버에서 <b>/<strong>/<h*>로 내려오면 그것도 평문으로 */
 .modal .prompt-text b,
 .modal .prompt-text strong,
 .modal .prompt-text h1,
@@ -4231,5 +4232,61 @@ footer {
 .modal .prompt-text h4,
 .modal .prompt-text h5,
 .modal .prompt-text h6 {
-  font-weight: 400 !important;
+    font-weight: 400 !important;
 }
+
+/* --- 프롬프트 행: 두 줄 미리보기/토글 --- */
+.modal .prompt-text.clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+}
+
+.modal .prompt-text.expanded {
+    display: block;
+    /* 전체 표시 */
+}
+.modal .prompt-text, .prompt-text { white-space: pre-wrap; }
+/* 행 우측 액션 영역 */
+.modal .rowActions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+/* 토글 아이콘(기존 드롭다운 아이콘 재사용) */
+.modal .toggleBtn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid #d3d7d5;
+    border-radius: 6px;
+    background: url('../images/icon_dropdown.png') no-repeat center #fff;
+    background-size: 20px 20px;
+    transform: rotate(0deg);
+    transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+.modal .toggleBtn:hover {
+    background-color: #eafae5;
+}
+
+.modal .toggleBtn.on {
+    transform: rotate(180deg);
+}
+
+/* 선택 버튼은 존재하는 .btnMini 사용(이미지에 맞춰 가독성 약간 보강) */
+.modal .btnMini {
+    height: 28px;
+    padding: 0 10px;
+    font-size: 12px;
+    border-radius: 6px;
+}
+
+.prompt-text {
+    white-space: pre-wrap;  /* 줄바꿈과 공백 유지 */
+    word-break: break-word; /* 긴 단어 줄바꿈 */
+    line-height: 1.5;       /* 보기 좋게 줄 간격 */
+  }
