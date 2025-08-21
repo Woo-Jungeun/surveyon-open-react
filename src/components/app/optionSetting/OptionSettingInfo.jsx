@@ -51,6 +51,28 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
     const [data, setData] = useState({}); //데이터 
     const { getGridData } = OptionSettingApi();
 
+    // 배열 -> 옵션으로 변환
+    const toOptions = (arr) =>
+        (Array.isArray(arr) ? arr : []).map(x => ({
+            keyid: x.keyid,
+            value: x.keyvalue, // 드롭다운의 키값
+            text: x.keytext,  // 표시 텍스트
+            keyselected: x.keyselected ?? "", // 토큰 그대로 보관
+        }));
+
+    // keyselected 토큰으로 선택 항목 찾기 (value -> id -> text 순 매칭)
+    const pickSelected = (opts) => {
+        if (!opts.length) return null;
+        const token = String(opts[0].keyselected ?? ""); // 모든 항목에 같은 토큰이 들어오는 구조
+        if (!token) return null;
+        return (
+            opts.find(o => String(o.value) === token) ||
+            opts.find(o => String(o.keyid) === token) ||
+            opts.find(o => String(o.text) === token) ||
+            null
+        );
+    };
+
     useEffect(() => {
         //분석 정보 데이터
         getGridData.mutateAsync({
@@ -67,10 +89,36 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
             setPreviousPromptExValue(d?.prompt_string_ex_backup || "");    //보기 프롬프트 로그
             setPreviousPromptResValue(d?.prompt_string_res_backup || "");  //응답 프롬프트 로그
 
-            // 드롭다운 초기값 동기화
-            setApiKey(d?.apikey?.[0]?.keycontent ?? "");
-            setLang(d?.result_lang ?? "");
-            setModel(d?.model_select ?? "");
+            // --- apikey ---
+            const apiOpts = toOptions(d?.apikey);
+            setApiKeyOptions(apiOpts);
+            const apiInit = pickSelected(apiOpts) || apiOpts[0];
+            if (apiInit) {
+                setApiKeyValue(apiInit.value); // DropDownList에 넘길 키값
+                setData(prev => ({
+                    ...prev,
+                    apikeyid: apiInit.value, // keyvalue
+                    apikey: apiInit.keyid, // keyid
+                }));
+            }
+
+            // --- result_lang ---
+            const langOpts = toOptions(d?.result_lang);
+            setResultLangOptions(langOpts);
+            const langInit = pickSelected(langOpts) || langOpts[0];
+            if (langInit) {
+                setResultLangValue(langInit.value);
+                setData(prev => ({ ...prev, result_lang: langInit.value }));
+            }
+
+            // --- model_select ---
+            const modelOpts = toOptions(d?.model_select);
+            setModelOptions(modelOpts);
+            const modelInit = pickSelected(modelOpts) || modelOpts[0];
+            if (modelInit) {
+                setModelValue(modelInit.value);
+                setData(prev => ({ ...prev, model_select: modelInit.value }));
+            }
         });
     }, []);
 
@@ -81,26 +129,17 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
     const [openOption, setOpenOption] = useState(false);
     const [openCounts, setOpenCounts] = useState(false);
 
-    /*----TODO api 연결 데이터 수정 필요!!!!-----*/
-    const API_KEY_OPTIONS = [
-        { label: "회사공용키(경영지원)", value: "mgmt-shared" }, // value는 내부코드, label은 화면/서버 기준
-        { label: "테스트 키", value: "test" },
-    ];
+    //  API 키 드롭다운용 옵션/선택값
+    const [apiKeyOptions, setApiKeyOptions] = useState([]);
+    const [apiKeyValue, setApiKeyValue] = useState("");   // 드롭다운에 바인딩할 'value'는 keyvalue (문자열)
 
-    const LANG_OPTIONS = [
-        { label: "Korean", value: "ko" },   // <-- label을 Korean/English 로
-        { label: "English", value: "en" },
-    ];
+    //  결과언어
+    const [resultLangOptions, setResultLangOptions] = useState([]);
+    const [resultLangValue, setResultLangValue] = useState("");
 
-    const MODEL_OPTIONS = [
-        { label: "GPT-4o", value: "gpt-4o" },   // 서버 기본값 "GPT-4o"와 label 일치
-        { label: "o3-mini", value: "o3-mini" },
-    ];
-    /*----TODO api 연결 데이터 수정 필요!!!!-----*/
-
-    const [apiKey, setApiKey] = useState("");
-    const [lang, setLang] = useState("");
-    const [model, setModel] = useState("");
+    //  모델선택
+    const [modelOptions, setModelOptions] = useState([]);
+    const [modelValue, setModelValue] = useState("");
 
     // 기존 버튼 팝업 show 
     const [previousPromptShow, setPreviousPromptShow] = useState(false);        // 기존 프롬프트 팝업 popupShow
@@ -110,7 +149,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
     // 팝업에서 '선택' 눌렀을 때: textarea에 적용하고 팝업 닫기
     const handleSelectPrompt = ({ text }) => {
         setOpenPrompt(true);        // 프롬프트 섹션이 닫혀 있어도 자동으로 열기
-        
+
         setData(prev => ({
             ...prev,
             prompt_string: String(text || "")
@@ -128,38 +167,36 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
         }));
     }
 
-    // onChangeDropdown 핸들러
-    const onChangeDropdown = (field) => (e) => {
-        //TODO apikey 바뀔때 apikey값들 다 바껴야 함 
-        const item = e?.value;
-        const selectedLabel = item?.label ?? "";
+    // apikey 전용 변경 핸들러
+    const onChangeApiKey = (e) => {
+        const item = e?.value; // <-- 선택된 "객체"
+        if (!item) return;
+        setApiKeyValue(String(item.value)); // keyvalue
+        setData(prev => ({
+            ...prev,
+            apikeyid: item.value, // keyvalue
+            apikey: item.keyid,   // keyid
+        }));
+    };
 
-        if (field === "apiKey") setApiKey(selectedLabel);
-        if (field === "result_lang") setLang(selectedLabel);
-        if (field === "model_select") setModel(selectedLabel);
+    // result_lang 전용 변경 핸들러
+    const onChangeResultLang = (e) => {
+        const item = e?.value; // 객체
+        if (!item) return;
+        setResultLangValue(String(item.value));
+        setData(prev => ({ ...prev, result_lang: item.value }));
+    };
 
-        setData((prev) => {
-            if (field === "apiKey") {
-                return {
-                    ...prev,
-                    apikey: [
-                        { ...(prev?.apikey?.[0] || {}), keycontent: selectedLabel },
-                    ],
-                };
-            }
-            if (field === "result_lang") {
-                return { ...prev, result_lang: selectedLabel };
-            }
-            if (field === "model_select") {
-                return { ...prev, model_select: selectedLabel };
-            }
-            return prev;
-        });
+    // model_select 전용 변경 핸들러
+    const onChangeModel = (e) => {
+        const item = e?.value; // 객체
+        if (!item) return;
+        setModelValue(String(item.value));
+        setData(prev => ({ ...prev, model_select: item.value }));
     };
 
     return (
         <Fragment>
-            {/* << / >> 아주 작은 버튼 */}
             <div className="collapseBar">
                 {isOpen && <div className="collapseTitle">{data?.projectname || "-"}</div>}
                 <Button
@@ -219,31 +256,31 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">apikey</span>
                             <CustomDropDownList
-                                data={API_KEY_OPTIONS}
-                                textField="label"
-                                dataItemKey="label"
-                                defaultValue={apiKey}
-                                onChange={onChangeDropdown("apiKey")}
+                                data={apiKeyOptions}
+                                textField="text"        // 화면 표시: keytext
+                                dataItemKey="value"     // 고유키: keyvalue
+                                defaultValue={apiKeyValue}     // 현재 선택값: keyvalue
+                                onChange={onChangeApiKey}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">결과언어</span>
                             <CustomDropDownList
-                                data={LANG_OPTIONS}
-                                textField="label"
-                                dataItemKey="label"
-                                defaultValue={lang}
-                                onChange={onChangeDropdown("result_lang")}
+                                data={resultLangOptions}
+                                textField="text"
+                                dataItemKey="value"
+                                defaultValue={resultLangValue}
+                                onChange={onChangeResultLang}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">모델선택</span>
                             <CustomDropDownList
-                                data={MODEL_OPTIONS}
-                                textField="label"
-                                dataItemKey="label"
-                                defaultValue={model}
-                                onChange={onChangeDropdown("model_select")}
+                                data={modelOptions}
+                                textField="text"
+                                dataItemKey="value"
+                                defaultValue={modelValue}
+                                onChange={onChangeModel}
                             />
                         </div>
                     </Section>
