@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext } from "react";
+import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext, useMemo  } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -6,7 +6,7 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal.jsx";
-
+import { Input } from "@progress/kendo-react-inputs";
 /**
  * 분석 > 그리드 영역 > 보기 데이터
  *
@@ -18,6 +18,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "보기 데이터";
     let qnum = "";   //문번호
+  
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -167,10 +168,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         // 행 클릭 시 편집기능 open
         const onRowClick = useCallback((e) => {
             const clicked = e.dataItem;
-            
+
             // 보기유형이 survey면 편집 진입 막기 
             if (clicked?.ex_gubun === 'survey') return;
-            
+
             const clickedKey = getKey(clicked);
             setDataState(prev => ({
                 ...prev,
@@ -187,7 +188,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 0) 현재 그리드를 기반으로 최종 데이터 생성
             const prev = latestCtxRef.current?.dataState?.data ?? [];
 
-            // 1) 유효성 검사 (새 행만)
+            // 1) 유효성 검사
             const { ok, errors } = validateRows(prev);
             if (!ok) {
                 modal.showAlert("알림", errors.join("\n"));
@@ -246,20 +247,20 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             // 1) 필수값 체크 (survey 제외)
             rows.forEach((r) => {
-                if(r.ex_gubun !== "survey"){
+                if (r.ex_gubun !== "survey") {
                     const code3 = (r.lv321code || '').trim();
                     const name3 = (r.lv3 || '').trim();
-                    const finalCode = (r.lv123code || '').trim();
-                    if (!code3) modal.showAlert("알림", `소분류 코드는 필수입니다. (행 번호: ${r.no})`);
+                    if (!code3) {
+                        modal.showAlert("알림", `소분류 코드는 필수입니다. (행 번호: ${r.no})`);
+                    };
                     if (!name3) modal.showAlert("알림", `소분류 내용은 필수입니다. (행 번호: ${r.no})`);
-                    if (!finalCode) modal.showAlert("알림", `최종코드는 필수입니다. (행 번호: ${r.no})`);
                 }
             });
 
-            // 2) 최종코드 중복 체크(공백/대소문자 무시)
+            // 2) 소분류 중복 체크(공백/대소문자 무시) 
             const codeMap = {};
             rows.forEach((r) => {
-                const key = (r.lv123code || '').trim().toLowerCase();
+                const key = (r.lv321code || '').trim().toLowerCase();
                 if (!key) return; // 위에서 빈 값은 이미 에러 처리
                 if (!codeMap[key]) codeMap[key] = [];
                 codeMap[key].push(r.no);
@@ -267,7 +268,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             Object.keys(codeMap).forEach((k) => {
                 if (codeMap[k].length > 1) {
-                    modal.showAlert("알림", `최종코드 '${k}' 가 중복입니다. (행 번호: ${codeMap[k].join(', ')})`);
+                    modal.showAlert("알림", `소분류코드 '${k}' 가 중복입니다. (행 번호: ${codeMap[k].join(', ')})`);
                 }
             });
 
@@ -281,24 +282,24 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 .filter(r => r.__pendingDelete !== true)
                 .map((r, idx) => (
                     {
-                    // 엑셀 샘플 맞춘 필드들 (있는 값만 보냄)
-                    lv1: r.lv1 ?? "",
-                    lv2: r.lv2 ?? "",
-                    lv3: r.lv3 ?? "",
-                    qnum: qnum ?? "",
-                    lv1code: r.lv1code ?? "",
-                    lv2code: r.lv2code ?? "",
-                    lv321code: r.lv321code ?? "",
-                    lv123code: r.lv123code ?? "",
-                    ex_gubun: r.ex_gubun ?? "analysis",
+                        // 엑셀 샘플 맞춘 필드들 (있는 값만 보냄)
+                        lv1: r.lv1 ?? "",
+                        lv2: r.lv2 ?? "",
+                        lv3: r.lv3 ?? "",
+                        qnum: qnum ?? "",
+                        lv1code: r.lv1code ?? "",
+                        lv2code: r.lv2code ?? "",
+                        lv321code: r.lv321code ?? "",
+                        lv123code: r.lv123code ?? "",
+                        ex_gubun: r.ex_gubun ?? "analysis",
 
-                    // 필요 시 확장 필드(그리드에 있으면 포함, 없으면 생략)
-                    ...(r.summary ? { summary: r.summary } : {}),
-                    ...(r.lv23code? { lv23code: r.lv23code } : {}),
-                    ...(r.representative_response ? { representative_response: r.representative_response } : {}),
-                }));
+                        // 필요 시 확장 필드(그리드에 있으면 포함, 없으면 생략)
+                        ...(r.summary ? { summary: r.summary } : {}),
+                        ...(r.lv23code ? { lv23code: r.lv23code } : {}),
+                        ...(r.representative_response ? { representative_response: r.representative_response } : {}),
+                    }));
             return {
-                key:"",
+                key: "",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
@@ -306,12 +307,32 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 data: cleaned,
             };
         };
-
+      
+        // 삭제 안내 띄우기: 하나라도 __pendingDelete === true 이면 표시
+        const hasPendingDelete = useMemo(() => {
+            const rows = dataState?.data || [];
+            return rows.some(r => r?.__pendingDelete === true);
+        }, [dataState?.data]);
         return (
             <Fragment>
                 <p className="totalTxt">
                     총 <i className="fcGreen">{dataState?.data?.length || 0}</i>개
                 </p>
+                {/* 삭제 안내 배너 */}
+                {hasPendingDelete && (
+                <div style={{ textAlign: "right" }}>
+                    <span
+                    style={{
+                        color: "#E74C3C",
+                        padding: "6px 10px",
+                        fontSize: 15,
+                        fontWeight: 600,
+                    }}
+                    >
+                    삭제 시 해당 코드는 응답데이터에서도 초기화됩니다.
+                    </span>
+                </div>
+                )}
                 <div id="grid_01" className="cmn_grid">
                     <KendoGrid
                         parentProps={{
@@ -385,7 +406,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             menuTitle={MENU_TITLE}
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
-                key:"",
+                key: "",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
