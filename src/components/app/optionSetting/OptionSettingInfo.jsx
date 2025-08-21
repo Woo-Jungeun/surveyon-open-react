@@ -77,6 +77,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
         //분석 정보 데이터
         getGridData.mutateAsync({
             params: {
+                key:"",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
@@ -122,8 +123,6 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
         });
     }, []);
 
-    console.log("data", data);
-
     /* 토글 on/off */
     const [openPrompt, setOpenPrompt] = useState(false);
     const [openOption, setOpenOption] = useState(false);
@@ -159,7 +158,6 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
 
     // onChangeInputEvent 핸들러
     const onChangeInputEvent = (e, col) => {
-        console.log("onChangeInputEvent", e, col)
         const next = e?.value ?? e?.target?.value ?? "";
         setData(prev => ({
             ...prev,
@@ -167,32 +165,40 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
         }));
     }
 
-    // apikey 전용 변경 핸들러
-    const onChangeApiKey = (e) => {
-        const item = e?.value; // <-- 선택된 "객체"
+    // 공통 드롭다운 onChange 핸들러
+    const handleDropdownChange = (key) => (e) => {
+        const item = e?.value; // 선택 객체
         if (!item) return;
-        setApiKeyValue(String(item.value)); // keyvalue
-        setData(prev => ({
+    
+        switch (key) {
+        case "apikey":
+            setApiKeyValue(String(item.value));
+            setData((prev) => ({
             ...prev,
-            apikeyid: item.value, // keyvalue
-            apikey: item.keyid,   // keyid
-        }));
-    };
-
-    // result_lang 전용 변경 핸들러
-    const onChangeResultLang = (e) => {
-        const item = e?.value; // 객체
-        if (!item) return;
-        setResultLangValue(String(item.value));
-        setData(prev => ({ ...prev, result_lang: item.value }));
-    };
-
-    // model_select 전용 변경 핸들러
-    const onChangeModel = (e) => {
-        const item = e?.value; // 객체
-        if (!item) return;
-        setModelValue(String(item.value));
-        setData(prev => ({ ...prev, model_select: item.value }));
+            apikeyid: item.value,  // keyvalue
+            apikey: item.keyid,    // keyid
+            }));
+            break;
+    
+        case "result_lang":
+            setResultLangValue(String(item.value));
+            setData((prev) => ({
+            ...prev,
+            result_lang: item.value,
+            }));
+            break;
+    
+        case "model_select":
+            setModelValue(String(item.value));
+            setData((prev) => ({
+            ...prev,
+            model_select: item.value,
+            }));
+            break;
+    
+        default:
+            break;
+        }
     };
 
     return (
@@ -260,7 +266,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                                 textField="text"        // 화면 표시: keytext
                                 dataItemKey="value"     // 고유키: keyvalue
                                 defaultValue={apiKeyValue}     // 현재 선택값: keyvalue
-                                onChange={onChangeApiKey}
+                                onChange={handleDropdownChange("apikey")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
@@ -270,7 +276,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                                 textField="text"
                                 dataItemKey="value"
                                 defaultValue={resultLangValue}
-                                onChange={onChangeResultLang}
+                                onChange={handleDropdownChange("result_lang")}
                             />
                         </div>
                         <div className="cmn_pop_ipt">
@@ -280,7 +286,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                                 textField="text"
                                 dataItemKey="value"
                                 defaultValue={modelValue}
-                                onChange={onChangeModel}
+                                onChange={handleDropdownChange("model_select")}
                             />
                         </div>
                     </Section>
