@@ -84,6 +84,7 @@ const OptionSettingTab3 = () => {
             searchMutation={getGridData}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
+                key:"",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",

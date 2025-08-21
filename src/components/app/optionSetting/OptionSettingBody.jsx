@@ -16,10 +16,11 @@ const OptionSettingBody = () => {
   const TITLE_LIST = ["분석 대메뉴", "분석 메뉴", ""];
   const [tabDivision, setTabDivision] = useState("1");
   const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
+  const tab1Ref = useRef(null);
   const tab2Ref = useRef(null);
 
   /*버튼 이벤트 핸들러*/
-  const onTab1SaveClick = () => {};
+  const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();;
   const onTab2AddClick = () => tab2Ref.current?.addButtonClick?.();
   const onTab2SaveClick = () => tab2Ref.current?.saveChanges?.();
 
@@ -71,7 +72,7 @@ const OptionSettingBody = () => {
             </Button>
           </div>
 
-          {tabDivision === "1" ? <OptionSettingTab1 /> : tabDivision === "2" ? <OptionSettingTab2 ref={tab2Ref} /> : <OptionSettingTab3 />}
+          {tabDivision === "1" ? <OptionSettingTab1 ref={tab1Ref}/> : tabDivision === "2" ? <OptionSettingTab2 ref={tab2Ref} /> : <OptionSettingTab3 />}
         </div>
       </article>
     </Fragment>

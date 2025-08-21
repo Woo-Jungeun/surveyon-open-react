@@ -20,11 +20,6 @@ export default {
         return response.data || {};
     },
 
-    /* 노선관리 api */
-    async rmPost(data, url) {
-        const response = await apiAxios.post('/iksan-bms-api/route-management'+ url, data);
-        return response.data || {};
-    },
 
     async postAll(paramList) {
         const apis = paramList.map(param => apiAxios.post(VITE_DEFAULT_PATH + param.url, param.data))

@@ -32,15 +32,15 @@ export function OptionSettingApi() {
     //데이터 저장  
     const saveGridData = useMutation(
         async (data) => {
-            // loadingSpinner.show();
-            return await api.get(data, "/o/option_save_api.aspx");
+            loadingSpinner.show();
+            return await api.post(data, "/o/option_save_api.aspx");
         },
         {
             onSuccess: (res, data) => {
             },
             onSettled: (data, error, variables, context) => {
                 //do...
-                // loadingSpinner.hide();
+                loadingSpinner.hide();
             }
         }
     );

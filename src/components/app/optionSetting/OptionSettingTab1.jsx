@@ -1,14 +1,14 @@
-import React, { Fragment, useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, { Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
-import { GridColumn as Column, GridColumnMenuFilter } from "@progress/kendo-react-grid";
+import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-
+import { modalContext } from "@/components/common/Modal.jsx";
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -16,12 +16,21 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
  * @since 2025-08-11<br />
  */
 
-const OptionSettingTab1 = () => {
+const OptionSettingTab1 = forwardRef((props, ref) => {
+    const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["fixed_key", "cid"];
     const MENU_TITLE = "응답 데이터";
     const SELECTED_FIELD = "selected";
-    const { getGridData } = OptionSettingApi();
+    const { getGridData, saveGridData } = OptionSettingApi();
     const [editField] = useState("inEdit");
+
+    const saveChangesRef = useRef(() => { });   // 저장 로직 노출용
+
+    // 부모(OptionSettingBody.jsx) 에게 노출
+    useImperativeHandle(ref, () => ({
+        saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
+    }));
+
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -64,6 +73,7 @@ const OptionSettingTab1 = () => {
     useEffect(() => {
         getGridData.mutateAsync({
             params: {
+                key:"",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
@@ -105,7 +115,8 @@ const OptionSettingTab1 = () => {
             selectedState,
             setSelectedState,
             idGetter,
-            dataItemKey } = props;
+            dataItemKey,
+            handleSearch } = props;
 
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => {
@@ -397,6 +408,83 @@ const OptionSettingTab1 = () => {
             }
         }, [dataState?.data]);
 
+        /**
+         * rows: 그리드 행 배열(dataState.data)
+         * opts: { key, user, projectnum, qnum, gb }  // API 메타
+         */
+        // YYYY-MM-DD HH:mm:ss
+        const formatNow = (d = new Date()) => {
+            const p = (n) => String(n).padStart(2, "0");
+            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+        };
+
+        const buildSavePayload = (rows, opts) => {
+            const {
+                key = "",                // 응답자 토큰 (없으면 빈 문자열)
+                user = "",               // 예: "syhong"
+                projectnum = "",         // 예: "q250089uk"
+                qnum = "",               // 예: "A2-2"
+                gb = "in",               // 호출 구분자
+            } = opts || {};
+
+            const now = formatNow();
+
+            const data = (rows ?? []).map(r => ({
+                // 숫자 보장
+                cid: Number(r.cid) || 0,
+
+                // 스펙 컬럼 매핑
+                lv3: r.lv3 ?? "",
+                fixed_key: r.fixed_key ?? "",
+                lv123code: r.lv123code ?? "",
+                sentiment: r.sentiment ?? "",
+
+                // 체크박스 선택과 연동
+                recheckyn: r.selected ? "y" : (r.recheckyn ? r.recheckyn : ""),
+
+                // 응답(최종) 텍스트 — 그리드에 answer_fin 없으면 answer로 대체
+                answer_fin: (r.answer_fin ?? r.answer ?? ""),
+
+                // 저장 시각
+                update_date: now,
+            }));
+
+            return { key, user, projectnum, qnum, gb, data };
+        };
+
+        /* 저장: API 호출 */
+        const saveChanges = useCallback(async () => {
+            const rows = dataState?.data ?? [];
+            // selected → recheckyn 반영 + 페이로드 생성
+            const payload = buildSavePayload(rows, {
+                key: "",                 // 있으면 채워 넣기
+                user: "syhong",
+                projectnum: "q250089uk",
+                qnum: "A2-2",
+                gb: "in",
+            });
+
+            // 저장 API 호출
+            try {
+                const res = await saveGridData.mutateAsync(payload);
+                if (res?.success === "777") {
+                    modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
+                    handleSearch(); // 재조회 
+                } else {
+                    modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
+                    return; // 실패 시 그리드 상태 변경 안 함
+                }
+            } catch (err) {
+                console.error(err);
+                modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
+                return; // 실패 시 그리드 상태 변경 안 함
+            }
+        }, [dataState?.data, setDataState]);
+
+        // 부모에서 호출할 수 있도록 ref에 연결
+        saveChangesRef.current = saveChanges;
+
+        console.log(dataState?.data);
         return (
             <Fragment>
                 <p className="totalTxt">
@@ -595,6 +683,7 @@ const OptionSettingTab1 = () => {
             editField={editField}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
+                key:"",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
@@ -604,6 +693,6 @@ const OptionSettingTab1 = () => {
 
         />
     );
-};
+});
 
 export default OptionSettingTab1;
