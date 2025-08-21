@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle } from "react";
+import React, { Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -73,7 +73,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     useEffect(() => {
         getGridData.mutateAsync({
             params: {
-                key:"",
+                key: "",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
@@ -124,6 +124,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return row?.[dataItemKey];                                    // 단일키 필드
         }, [idGetter, dataItemKey]);
 
+
+
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
         const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
         const [lv3EditorKey, setLv3EditorKey] = useState(null);  // 드롭다운 보여줄 "대표" 셀의 키
@@ -132,7 +134,35 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const lastIndexRef = useRef(null);
         const lastFocusedKeyRef = useRef(null);
         const selectionModeRef = useRef(null);// 선택 동작 모드: 'drag' | 'range' | 'toggle'
+        const shouldAutoApplySelectionRef = useRef(true);
 
+        useLayoutEffect(() => {
+            const rows = dataState?.data ?? [];
+            if (!rows.length) return;
+
+            if (!shouldAutoApplySelectionRef.current) return; // 1회만 동작
+
+            //  recheckyn 정규화 + 키 일치
+            const nextSelected = {};
+            for (const r of rows) {
+                const yn = String(r?.recheckyn ?? "").trim().toLowerCase();
+                if (yn === "y") {
+                    const k = getKey(r);         // 반드시 idGetter(row)와 동일한 키
+                    if (k != null) nextSelected[k] = true;
+                }
+            }
+
+            //  내부 초기화가 끝난 다음 "마지막에" 내가 세팅 (덮어쓰기 방지)
+            const apply = () => setSelectedState(nextSelected);
+            // 1) 마이크로태스크 → 2) 다음 프레임 → 3) 그 다음 프레임에서 적용
+            Promise.resolve().then(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => apply());
+                });
+            });
+
+            shouldAutoApplySelectionRef.current = false;
+        }, [dataState?.data, getKey, setSelectedState]);
 
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
@@ -341,11 +371,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 inEdit: true, // 새 행 편집 모드
             };
 
-            // 그리드가 합성키 모드면(__rowKey) 새 행에도 키 주입
-            if (dataItemKey === "__rowKey") {
-                newRow.__rowKey = makeRowKey(newRow);
-            }
-
             // 클릭한 행 아래에 삽입
             current.splice(idx + 1, 0, newRow);
 
@@ -353,7 +378,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setDataState(prev => ({ ...prev, data: current }));
 
             // 새로 추가한 행을 선택 대상으로 지정 (드롭다운 enable)
-            const newKey = dataItemKey === "__rowKey" ? newRow.__rowKey : newRow[dataItemKey];
+            const newKey = newRow[dataItemKey]; // 배열 키면 그리드 쪽 idGetter로 처리됨
             setSelectedRowKey(newKey);
         }, [dataState?.data, getKey, dataItemKey, makeRowKey, setDataState, setSelectedRowKey]);
 
@@ -397,16 +422,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 선택된 lv3 셀 존재 여부
         const hasLv3CellSelection = lv3SelKeys.size > 0;
-        const gridElRef = useRef(null);
-
-        //전체 데이터 기준으로 정렬 체크박스 목록을 보여주기
-        const allRowsRef = useRef([]);
-        useEffect(() => {
-            const cur = dataState?.data ?? [];
-            if (cur.length && allRowsRef.current.length === 0) {
-                allRowsRef.current = cur; // 최초 로드본을 전체로 쓸 때
-            }
-        }, [dataState?.data]);
 
         /**
          * rows: 그리드 행 배열(dataState.data)
@@ -418,7 +433,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
         };
 
-        const buildSavePayload = (rows, opts) => {
+        const buildSavePayload = (rows, opts, { getKey, selectedState = {} }) => {
             const {
                 key = "",                // 응답자 토큰 (없으면 빈 문자열)
                 user = "",               // 예: "syhong"
@@ -429,25 +444,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             const now = formatNow();
 
-            const data = (rows ?? []).map(r => ({
-                // 숫자 보장
-                cid: Number(r.cid) || 0,
+            const data = (rows ?? []).map(r => {
+                const isChecked = !!selectedState[getKey(r)]; //  현재 체크박스 상태를 맵에서 직접 확인
+                return {
+                    cid: Number(r.cid) || 0,
+                    lv3: r.lv3 ?? "",
+                    fixed_key: r.fixed_key ?? "",
+                    lv123code: r.lv123code ?? "",
+                    sentiment: r.sentiment ?? "",
 
-                // 스펙 컬럼 매핑
-                lv3: r.lv3 ?? "",
-                fixed_key: r.fixed_key ?? "",
-                lv123code: r.lv123code ?? "",
-                sentiment: r.sentiment ?? "",
-
-                // 체크박스 선택과 연동
-                recheckyn: r.selected ? "y" : (r.recheckyn ? r.recheckyn : ""),
-
-                // 응답(최종) 텍스트 — 그리드에 answer_fin 없으면 answer로 대체
-                answer_fin: (r.answer_fin ?? r.answer ?? ""),
-
-                // 저장 시각
-                update_date: now,
-            }));
+                    //  체크 해제면 빈 문자열로 확실히 세팅
+                    recheckyn: isChecked ? "y" : "",
+                    answer_fin: (r.answer_fin ?? r.answer ?? ""),
+                    update_date: now,
+                };
+            });
 
             return { key, user, projectnum, qnum, gb, data };
         };
@@ -462,14 +473,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 projectnum: "q250089uk",
                 qnum: "A2-2",
                 gb: "in",
-            });
+            },
+                { getKey, selectedState }
+            );
 
             // 저장 API 호출
             try {
                 const res = await saveGridData.mutateAsync(payload);
                 if (res?.success === "777") {
                     modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
-                    handleSearch(); // 재조회 
+                    shouldAutoApplySelectionRef.current = true;
+                    setSelectedState({});           // 화면상의 기존 선택 초기화
+                    handleSearch();                 // 재조회
                 } else {
                     modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                     return; // 실패 시 그리드 상태 변경 안 함
@@ -479,18 +494,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                 return; // 실패 시 그리드 상태 변경 안 함
             }
-        }, [dataState?.data, setDataState]);
+        }, [dataState?.data, setDataState, selectedState, getKey]);
 
         // 부모에서 호출할 수 있도록 ref에 연결
         saveChangesRef.current = saveChanges;
 
-        console.log(dataState?.data);
+        //console.log(dataState?.data);
         return (
             <Fragment>
                 <p className="totalTxt">
                     총 <i className="fcGreen">{dataState?.data?.length || 0}</i>개
                 </p>
-                <div id="grid_01" ref={gridElRef} className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
+                <div id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
                     <KendoGrid
                         parentProps={{
                             data: dataState?.data,
@@ -604,13 +619,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         columnMenu={columnMenu}
                                         cell={(cellProps) => {
                                             const rowKey = getKey(cellProps.dataItem);                 // 합성키/단일키 공통
-                                            const isDisabled = rowKey !== selectedRowKey;              // 선택된 행만 활성
                                             const selectedOption =
                                                 sentimentOptions.find(o => o.codeId === (cellProps.dataItem.sentiment ?? "")) ?? null;
                                             return (
                                                 <td>
                                                     <CustomDropDownList
-                                                        // disabled={isDisabled}
                                                         data={sentimentOptions}
                                                         dataItemKey={"codeId"}
                                                         textField={"codeName"}
@@ -683,7 +696,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             editField={editField}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
-                key:"",
+                key: "",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
