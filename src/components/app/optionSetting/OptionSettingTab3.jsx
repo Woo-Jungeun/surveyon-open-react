@@ -4,6 +4,7 @@ import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
+import { Checkbox } from "@progress/kendo-react-inputs";
 
 /**
  * 분석 > 그리드 영역 > rawdata
@@ -96,6 +97,32 @@ const OptionSettingTab3 = (props) => {
                         }}
                     >
                         {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {
+                            if (c.field === "recheckyn") {
+                                return (
+                                  <Column
+                                    key={c.field}
+                                    field="recheckyn"
+                                    title={c.title}
+                                    width={c.width || "100px"}
+                                    columnMenu={columnMenu}
+                                    sortable
+                                    cell={(cellProps) => {
+                                      const checked = String(cellProps.dataItem?.recheckyn ?? "")
+                                        .trim()
+                                        .toLowerCase() === "y";
+                                      return (
+                                        <td
+                                          style={{ textAlign: "center" }}
+                                          onMouseDown={(e) => e.stopPropagation()}
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Checkbox checked={checked} disabled onChange={() => {}} />
+                                        </td>
+                                      );
+                                    }}
+                                  />
+                                );
+                              }
                             // 일반 텍스트 컬럼
                             return (
                                 <Column
