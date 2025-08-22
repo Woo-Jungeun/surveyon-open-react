@@ -17,6 +17,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
  */
 
 const OptionSettingTab1 = forwardRef((props, ref) => {
+    const lvCode = String(props.lvCode); // 분류 단계 코드
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["fixed_key", "cid"];
     const MENU_TITLE = "응답 데이터";
@@ -44,17 +45,51 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         { field: "lv1", title: "대분류", show: true, editable: false },
         { field: "lv2", title: "중분류", show: true, editable: false },
         { field: "lv3", title: "소분류", show: true, editable: true, width: "200px" },
-        { field: "lv123code", title: "lv123", show: true, editable: false },
-        { field: "lv23code", title: "lv23", show: true, editable: false },
+        // { field: "lv123code", title: "lv123", show: true, editable: false },
+        // { field: "lv23code", title: "lv23", show: true, editable: false },
         { field: "sentiment", title: "sentiment", show: true, editable: true, width: "150px", allowHide: false },
         { field: "add", title: "추가", show: true, editable: true, allowHide: false }
     ]);
+    // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
+    const forcedHidden = useMemo(() => {
+        const s = new Set();
+        if (lvCode === "1") { s.add("lv1"); s.add("lv2"); }
+        else if (lvCode === "2") { s.add("lv1"); }
+        return s;
+    }, [lvCode]);
+
+    // 단계 변경 시: 강제 숨김 컬럼은 항상 숨김, 그 외 컬럼은 보이도록 복구
+    useEffect(() => {
+        setColumns(prev =>
+            prev.map(c =>
+                forcedHidden.has(c.field)
+                    ? { ...c, show: false }
+                    : { ...c, show: true }
+            )
+        );
+    }, [forcedHidden]);
+
+    // 메뉴에 노출할 허용 컬럼만 추출
+    const menuColumns = useMemo(
+        () => columns.filter(c => !forcedHidden.has(c.field)),
+        [columns, forcedHidden]
+    );
+
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={columns}
-            onColumnsChange={setColumns}
+            columns={menuColumns}
+            onColumnsChange={(updated) => {
+                const updatedMap = new Map(updated.map(c => [c.field, c]));
+                setColumns(prev =>
+                    prev.map(c => {
+                        if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 유지
+                        const u = updatedMap.get(c.field);
+                        return u ? { ...c, ...u } : c;
+                    })
+                );
+            }}
         />
     );
 
@@ -507,6 +542,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 </p>
                 <div id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
                     <KendoGrid
+                        key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataState?.data,
                             dataItemKey: dataItemKey,
@@ -526,7 +562,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             filterable: true,                                   // 필터 허용
                         }}
                     >
-                        {columns.filter(c => c.show !== false).map((c) => {
+                        {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {
                             if (c.field === 'lv3') {
                                 return (
                                     <Column

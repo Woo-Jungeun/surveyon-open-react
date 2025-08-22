@@ -5,7 +5,7 @@ import OptionSettingTab1 from "@/components/app/optionSetting/OptionSettingTab1"
 import OptionSettingTab2 from "@/components/app/optionSetting/OptionSettingTab2";
 import OptionSettingTab3 from "@/components/app/optionSetting/OptionSettingTab3";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
-
+import { DropDownList } from "@progress/kendo-react-dropdowns";
 /**
  * 분석 > Body
  *
@@ -16,6 +16,7 @@ const OptionSettingBody = () => {
   const TITLE_LIST = ["분석 대메뉴", "분석 메뉴", ""];
   const [tabDivision, setTabDivision] = useState("1");
   const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
+
   const tab1Ref = useRef(null);
   const tab2Ref = useRef(null);
 
@@ -23,6 +24,13 @@ const OptionSettingBody = () => {
   const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();;
   const onTab2AddClick = () => tab2Ref.current?.addButtonClick?.();
   const onTab2SaveClick = () => tab2Ref.current?.saveChanges?.();
+
+  const LVCODE_OPTION = [
+    { text: "1단계", value: "1" },
+    { text: "2단계", value: "2" },
+    { text: "3단계", value: "3" }
+  ];
+  const [lvCode, setLvCode] = useState(LVCODE_OPTION[0]);
 
   return (
     <Fragment>
@@ -70,9 +78,19 @@ const OptionSettingBody = () => {
             <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("3")}>
               rawdata
             </Button>
+            <DropDownList
+              style={{ width: 140 }}
+              data={LVCODE_OPTION}
+              dataItemKey="value"
+              textField="text"
+              value={lvCode}
+              onChange={(e) => setLvCode(e.value)}   // e.value는 선택된 객체
+            />
           </div>
 
-          {tabDivision === "1" ? <OptionSettingTab1 ref={tab1Ref}/> : tabDivision === "2" ? <OptionSettingTab2 ref={tab2Ref} /> : <OptionSettingTab3 />}
+          {tabDivision === "1" ? <OptionSettingTab1 ref={tab1Ref} lvCode={lvCode.value} />
+            : tabDivision === "2" ? <OptionSettingTab2 ref={tab2Ref} lvCode={lvCode.value} />
+              : <OptionSettingTab3 lvCode={lvCode.value} />}
         </div>
       </article>
     </Fragment>

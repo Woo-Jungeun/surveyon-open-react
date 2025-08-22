@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext, useMemo  } from "react";
+import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext, useMemo, useEffect } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -14,11 +14,11 @@ import { Input } from "@progress/kendo-react-inputs";
  * @since 2025-08-12<br />
  */
 const OptionSettingTab2 = forwardRef((props, ref) => {
+    const lvCode = String(props.lvCode); // 분류 단계 코드
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "보기 데이터";
     let qnum = "";   //문번호
-  
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -26,7 +26,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     */
     const [columns, setColumns] = useState([
         { field: "no", title: "no", show: true, editable: false, width: "100px" },
-        // { field: "qnum", title: "문번호", show: true, editable: false },
+        { field: "qnum", title: "문번호", show: true, editable: false },
         { field: "lv1code", title: "대분류 코드", show: true },
         { field: "lv1", title: "대분류", show: true },
         { field: "lv2code", title: "중분류 코드", show: true },
@@ -34,19 +34,51 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         { field: "lv321code", title: "소분류 코드", show: true },
         { field: "lv3", title: "소분류", show: true },
         { field: "ex_sum", title: "집계현황", show: true, editable: false },
-        { field: "lv123code", title: "최종코드", show: true },
+        // { field: "lv123code", title: "최종코드", show: true },
         { field: "ex_gubun", title: "보기유형", show: true, editable: false },
         { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
     ]);
 
+    // 단계별 강제 숨김 컬럼
+    const forcedHidden = useMemo(() => {
+        const s = new Set();
+        if (lvCode === "1") { s.add("lv1"); s.add("lv1code"); s.add("lv2"); s.add("lv2code"); }
+        else if (lvCode === "2") { s.add("lv1"); s.add("lv1code"); }
+        return s;
+    }, [lvCode]);
+
+    // 단계 변경 시: 강제 숨김은 항상 숨김, 그 외는 보이도록 복구
+    useEffect(() => {
+        setColumns(prev =>
+            prev.map(c =>
+                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: true }
+            )
+        );
+    }, [forcedHidden]);
+
+    // 컬럼 메뉴에선 강제 숨김 컬럼은 아예 제외
+    const menuColumns = useMemo(
+        () => columns.filter(c => !forcedHidden.has(c.field)),
+        [columns, forcedHidden]
+    );
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={columns}
-            onColumnsChange={setColumns}
+            columns={menuColumns}
+            onColumnsChange={(updated) => {
+                const updatedMap = new Map(updated.map(c => [c.field, c]));
+                setColumns(prev =>
+                    prev.map(c => {
+                        if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 유지
+                        const u = updatedMap.get(c.field);
+                        return u ? { ...c, ...u } : c;
+                    })
+                );
+            }}
         />
     );
+
     const { getGridData, saveGridData } = OptionSettingApi();
     const [editField] = useState("inEdit");
 
@@ -307,7 +339,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 data: cleaned,
             };
         };
-      
+
         // 삭제 안내 띄우기: 하나라도 __pendingDelete === true 이면 표시
         const hasPendingDelete = useMemo(() => {
             const rows = dataState?.data || [];
@@ -320,21 +352,22 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 </p>
                 {/* 삭제 안내 배너 */}
                 {hasPendingDelete && (
-                <div style={{ textAlign: "right" }}>
-                    <span
-                    style={{
-                        color: "#E74C3C",
-                        padding: "6px 10px",
-                        fontSize: 15,
-                        fontWeight: 600,
-                    }}
-                    >
-                    삭제 시 해당 코드는 응답데이터에서도 초기화됩니다.
-                    </span>
-                </div>
+                    <div style={{ textAlign: "right" }}>
+                        <span
+                            style={{
+                                color: "#E74C3C",
+                                padding: "6px 10px",
+                                fontSize: 15,
+                                fontWeight: 600,
+                            }}
+                        >
+                            삭제 시 해당 코드는 응답데이터에서도 초기화됩니다.
+                        </span>
+                    </div>
                 )}
                 <div id="grid_01" className="cmn_grid">
                     <KendoGrid
+                        key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataState?.data,
                             dataItemKey: dataItemKey,
@@ -347,7 +380,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             onRowClick,
                         }}
                     >
-                        {columns.filter(c => c.show !== false).map((c) => {
+                        {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {
                             if (c.field === 'delete') {
                                 return (
                                     <Column

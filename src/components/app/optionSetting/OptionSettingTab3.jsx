@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useRef } from "react";
+import React, { Fragment, useState, useEffect, useRef, useMemo } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -11,7 +11,8 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
  * @author jewoo
  * @since 2025-08-12<br />
  */
-const OptionSettingTab3 = () => {
+const OptionSettingTab3 = (props) => {
+    const lvCode = String(props.lvCode); // 분류 단계 코드
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
     const MENU_TITLE = "rawdata";
 
@@ -27,13 +28,47 @@ const OptionSettingTab3 = () => {
         { field: "sentiment", title: "sentiment", show: true },
         { field: "recheckyn", title: "검증", show: true },
     ]);
+    
+    // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
+    const forcedHidden = useMemo(() => {
+        const s = new Set();
+        if (lvCode === "1") { s.add("lv1"); s.add("lv2"); }
+        else if (lvCode === "2") { s.add("lv1"); }
+        return s;
+    }, [lvCode]);
+
+    // 단계 변경 시: 강제 숨김 컬럼은 항상 숨김, 그 외 컬럼은 보이도록 복구
+    useEffect(() => {
+        setColumns(prev =>
+            prev.map(c =>
+                forcedHidden.has(c.field)
+                    ? { ...c, show: false }
+                    : { ...c, show: true }
+            )
+        );
+    }, [forcedHidden]);
+
+    // 메뉴에 노출할 허용 컬럼만 추출
+    const menuColumns = useMemo(
+        () => columns.filter(c => !forcedHidden.has(c.field)),
+        [columns, forcedHidden]
+    );
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={columns}
-            onColumnsChange={setColumns}
+            columns={menuColumns}
+            onColumnsChange={(updated) => {
+                const updatedMap = new Map(updated.map(c => [c.field, c]));
+                setColumns(prev =>
+                    prev.map(c => {
+                        if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 유지
+                        const u = updatedMap.get(c.field);
+                        return u ? { ...c, ...u } : c;
+                    })
+                );
+            }}
         />
     );
 
@@ -50,6 +85,7 @@ const OptionSettingTab3 = () => {
                 </p>
                 <div id="grid_01" className="cmn_grid">
                     <KendoGrid
+                        key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataState?.data,       // props에서 직접 전달
                             dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
@@ -59,7 +95,7 @@ const OptionSettingTab3 = () => {
                             idGetter                     // GridData가 만든 getter 그대로
                         }}
                     >
-                        {columns.filter(c => c.show !== false).map((c) => {
+                        {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {
                             // 일반 텍스트 컬럼
                             return (
                                 <Column
@@ -84,7 +120,7 @@ const OptionSettingTab3 = () => {
             searchMutation={getGridData}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
-                key:"",
+                key: "",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
