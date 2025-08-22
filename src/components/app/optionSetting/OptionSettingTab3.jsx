@@ -29,7 +29,7 @@ const OptionSettingTab3 = (props) => {
         { field: "sentiment", title: "sentiment", show: true },
         { field: "recheckyn", title: "검증", show: true },
     ]);
-    
+
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
     const forcedHidden = useMemo(() => {
         const s = new Set();
@@ -99,30 +99,30 @@ const OptionSettingTab3 = (props) => {
                         {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {
                             if (c.field === "recheckyn") {
                                 return (
-                                  <Column
-                                    key={c.field}
-                                    field="recheckyn"
-                                    title={c.title}
-                                    width={c.width || "100px"}
-                                    columnMenu={columnMenu}
-                                    sortable
-                                    cell={(cellProps) => {
-                                      const checked = String(cellProps.dataItem?.recheckyn ?? "")
-                                        .trim()
-                                        .toLowerCase() === "y";
-                                      return (
-                                        <td
-                                          style={{ textAlign: "center" }}
-                                          onMouseDown={(e) => e.stopPropagation()}
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <Checkbox checked={checked} disabled onChange={() => {}} />
-                                        </td>
-                                      );
-                                    }}
-                                  />
+                                    <Column
+                                        key={c.field}
+                                        field="recheckyn"
+                                        title={c.title}
+                                        width={c.width || "100px"}
+                                        columnMenu={columnMenu}
+                                        sortable
+                                        cell={(cellProps) => {
+                                            const checked = String(cellProps.dataItem?.recheckyn ?? "")
+                                                .trim()
+                                                .toLowerCase() === "y";
+                                            return (
+                                                <td
+                                                    style={{ textAlign: "center" }}
+                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <Checkbox checked={checked} disabled onChange={() => { }} />
+                                                </td>
+                                            );
+                                        }}
+                                    />
                                 );
-                              }
+                            }
                             // 일반 텍스트 컬럼
                             return (
                                 <Column
