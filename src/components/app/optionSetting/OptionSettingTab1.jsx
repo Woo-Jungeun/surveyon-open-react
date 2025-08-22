@@ -18,6 +18,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
+    const onInitLvCode = props.onInitLvCode; // 부모 콜백 참조
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["fixed_key", "cid"];
     const MENU_TITLE = "응답 데이터";
@@ -26,6 +27,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const [editField] = useState("inEdit");
 
     const saveChangesRef = useRef(() => { });   // 저장 로직 노출용
+    const reportedLvcodeRef = useRef(false);
 
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
@@ -134,6 +136,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     return acc;
                 }, []);
             setLv3Options(list);
+            // 분류 단계 구분값 OptionSettingBody에 올림
+            if (!reportedLvcodeRef.current && typeof onInitLvCode === "function") {
+                const fetchedLv = String(res?.lvcode ?? res?.resultjson?.[0]?.lvcode ?? "").trim();
+                if (["1", "2", "3"].includes(fetchedLv)) {
+                    onInitLvCode(fetchedLv);
+                    reportedLvcodeRef.current = true; // 다시 안 올리도록 고정
+                }
+            }
+
         })
             .catch(() => setLv3Options([]));
     }, []);
@@ -400,8 +411,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 answer_origin: clicked?.answer_origin,
                 answer: clicked?.answer,
                 lv1: "", lv2: "", lv3: "",
-                lv1code:"", lv2code:"", 
-                lv123code: "",  
+                lv1code: "", lv2code: "",
+                lv123code: "",
                 // lv23code: "",
                 sentiment: "",
                 selected: false,
@@ -497,8 +508,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     update_date: now,
                 };
             });
-
-            return { key, user, projectnum, qnum, gb, data };
+            return {
+                key,
+                user,
+                projectnum,
+                qnum,
+                gb,
+                lvcode: String(lvCode ?? ""), 
+                data,
+            };
         };
 
         /* 저장: API 호출 */

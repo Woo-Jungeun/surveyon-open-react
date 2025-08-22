@@ -1,4 +1,4 @@
-import React, { Fragment, useRef, useState } from "react";
+import React, { Fragment, useRef, useState, useCallback } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import OptionSettingInfo from "@/components/app/optionSetting/OptionSettingInfo";
 import OptionSettingTab1 from "@/components/app/optionSetting/OptionSettingTab1";
@@ -31,6 +31,13 @@ const OptionSettingBody = () => {
     { text: "3단계", value: "3" }
   ];
   const [lvCode, setLvCode] = useState(LVCODE_OPTION[0]);
+
+  // Tab1에서 최초 조회한 lvcode를 받아 드롭다운 값 세팅
+  const handleInitLvCode = useCallback((fetched) => {
+    const v = String(fetched ?? "").trim();
+    if (!["1", "2", "3"].includes(v)) return;
+    setLvCode(prev => (prev?.value === v ? prev : (LVCODE_OPTION.find(o => o.value === v) || prev)));
+  }, []);
 
   return (
     <Fragment>
@@ -88,7 +95,7 @@ const OptionSettingBody = () => {
             />
           </div>
 
-          {tabDivision === "1" ? <OptionSettingTab1 ref={tab1Ref} lvCode={lvCode.value} />
+          {tabDivision === "1" ? <OptionSettingTab1 ref={tab1Ref} lvCode={lvCode.value} onInitLvCode={handleInitLvCode}/>
             : tabDivision === "2" ? <OptionSettingTab2 ref={tab2Ref} lvCode={lvCode.value} />
               : <OptionSettingTab3 lvCode={lvCode.value} />}
         </div>
