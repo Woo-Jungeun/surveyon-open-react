@@ -42,34 +42,33 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         { field: "cid", title: "멀티", show: true, editable: false, width: "100px" },
         { field: "answer_origin", title: "원본내용", show: true, editable: false },
         { field: "answer", title: "응답내용", show: true, editable: false },
+        { field: "lv1code", title: "대분류 코드", show: true, editable: false },
         { field: "lv1", title: "대분류", show: true, editable: false },
+        { field: "lv2code", title: "중분류 코드", show: true, editable: false },
         { field: "lv2", title: "중분류", show: true, editable: false },
+        { field: "lv123code", title: "소분류 코드", show: true, editable: false },
         { field: "lv3", title: "소분류", show: true, editable: true, width: "200px" },
-        // { field: "lv123code", title: "lv123", show: true, editable: false },
-        // { field: "lv23code", title: "lv23", show: true, editable: false },
-        { field: "sentiment", title: "sentiment", show: true, editable: true, width: "150px", allowHide: false },
+        { field: "sentiment", title: "sentiment", show: true, editable: true, allowHide: false },
         { field: "add", title: "추가", show: true, editable: true, allowHide: false }
     ]);
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
     const forcedHidden = useMemo(() => {
         const s = new Set();
-        if (lvCode === "1") { s.add("lv1"); s.add("lv2"); }
-        else if (lvCode === "2") { s.add("lv1"); }
+        if (lvCode === "1") { s.add("lv1"); s.add("lv1code"); s.add("lv2"); s.add("lv2code"); }
+        else if (lvCode === "2") { s.add("lv1"); s.add("lv1code"); }
         return s;
     }, [lvCode]);
 
-    // 단계 변경 시: 강제 숨김 컬럼은 항상 숨김, 그 외 컬럼은 보이도록 복구
+    // 단계 변경 시: 강제 숨김은 항상 숨김, 그 외는 보이도록 복구
     useEffect(() => {
         setColumns(prev =>
             prev.map(c =>
-                forcedHidden.has(c.field)
-                    ? { ...c, show: false }
-                    : { ...c, show: true }
+                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: true }
             )
         );
     }, [forcedHidden]);
 
-    // 메뉴에 노출할 허용 컬럼만 추출
+    // 컬럼 메뉴에선 강제 숨김 컬럼은 아예 제외
     const menuColumns = useMemo(
         () => columns.filter(c => !forcedHidden.has(c.field)),
         [columns, forcedHidden]
@@ -130,7 +129,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         lv1: r?.lv1 ?? "",
                         lv2: r?.lv2 ?? "",
                         lv123code: r?.lv123code ?? "",
-                        lv23code: r?.lv23code ?? "",
+                        // lv23code: r?.lv23code ?? "",
                     });
                     return acc;
                 }, []);
@@ -324,8 +323,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             lv3: opt?.codeId ?? "",
                             lv1: opt?.lv1 ?? "",
                             lv2: opt?.lv2 ?? "",
+                            lv1code: r?.lv1code ?? "",
+                            lv2code: r?.lv2code ?? "",
                             lv123code: opt?.lv123code ?? "",
-                            lv23code: opt?.lv23code ?? "",
+                            // lv23code: opt?.lv23code ?? "",
                         }
                         : r
                 ),
@@ -399,7 +400,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 answer_origin: clicked?.answer_origin,
                 answer: clicked?.answer,
                 lv1: "", lv2: "", lv3: "",
-                lv123code: "", lv23code: "",
+                lv1code:"", lv2code:"", 
+                lv123code: "",  
+                // lv23code: "",
                 sentiment: "",
                 selected: false,
                 ip: "",

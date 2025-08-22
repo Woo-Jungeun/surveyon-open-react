@@ -31,10 +31,9 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         { field: "lv1", title: "대분류", show: true },
         { field: "lv2code", title: "중분류 코드", show: true },
         { field: "lv2", title: "중분류", show: true },
-        { field: "lv321code", title: "소분류 코드", show: true },
+        { field: "lv123code", title: "소분류 코드", show: true },
         { field: "lv3", title: "소분류", show: true },
         { field: "ex_sum", title: "집계현황", show: true, editable: false },
-        // { field: "lv123code", title: "최종코드", show: true },
         { field: "ex_gubun", title: "보기유형", show: true, editable: false },
         { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
     ]);
@@ -111,10 +110,9 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             lv1: "",
             lv2code: "",
             lv2: "",
-            lv321code: "",
+            lv123code: "",
             lv3: "",
             ex_sum: "0",
-            lv123code: "",
             ex_gubun: "analysis",
             inEdit: true, // 즉시 편집
             __isNew: true,  // 새로 추가된 행 표시 (삭제 버튼 숨김용)
@@ -280,7 +278,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 1) 필수값 체크 (survey 제외)
             rows.forEach((r) => {
                 if (r.ex_gubun !== "survey") {
-                    const code3 = (r.lv321code || '').trim();
+                    const code3 = (r.lv123code || '').trim();
                     const name3 = (r.lv3 || '').trim();
                     if (!code3) {
                         modal.showAlert("알림", `소분류 코드는 필수입니다. (행 번호: ${r.no})`);
@@ -292,7 +290,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 2) 소분류 중복 체크(공백/대소문자 무시) 
             const codeMap = {};
             rows.forEach((r) => {
-                const key = (r.lv321code || '').trim().toLowerCase();
+                const key = (r.lv123code || '').trim().toLowerCase();
                 if (!key) return; // 위에서 빈 값은 이미 에러 처리
                 if (!codeMap[key]) codeMap[key] = [];
                 codeMap[key].push(r.no);
@@ -321,7 +319,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         qnum: qnum ?? "",
                         lv1code: r.lv1code ?? "",
                         lv2code: r.lv2code ?? "",
-                        lv321code: r.lv321code ?? "",
                         lv123code: r.lv123code ?? "",
                         ex_gubun: r.ex_gubun ?? "analysis",
 
