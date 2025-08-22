@@ -86,6 +86,11 @@ apiAxios.interceptors.response.use(function (response) {
             deleteCookie("GS_RFT")
             return {data: {status: "NS_ER_AT_02", message: "중복 로그인이 감지되었습니다."}};
         }
+        //"보기 코드 중복, 빈값 발견"
+        if (data.success === "762") {
+            return {data: {success: "762", message: "필수값 누락 또는 중복 항목이 있습니다. 확인 후 다시 저장해 주세요."}};
+        }
+        
 
         return {data: {status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요."}};
 

@@ -135,22 +135,118 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter };    // 최신 컨텍스트 저장
 
-        // 데이터 변경 시 이벤트 (Kendo onItemChange)
+        // 대분류/중분류 코드값 텍스트 매핑
+        const buildMaps = (rows, codeField, textField) => {
+            const codeToText = new Map(); // code -> text
+            const textToCode = new Map(); // text(lower) -> code
+            (rows || []).forEach(r => {
+                const c = String(r?.[codeField] ?? "").trim();
+                const tRaw = String(r?.[textField] ?? "").trim();
+                const t = tRaw.toLowerCase();
+                if (c && tRaw) {
+                    if (!codeToText.has(c)) codeToText.set(c, tRaw);
+                    if (!textToCode.has(t)) textToCode.set(t, c);
+                }
+            });
+            return [codeToText, textToCode];
+        };
+
+        const [lv1CodeToText, lv1ToTextToCode] = useMemo(
+            () => buildMaps(dataState?.data, "lv1code", "lv1"),
+            [dataState?.data]
+        );
+        const [lv2CodeToText, lv2TextToCode] = useMemo(
+            () => buildMaps(dataState?.data, "lv2code", "lv2"),
+            [dataState?.data]
+        );
+        /**
+        * 코드/텍스트 동기화 공통 처리:
+        * - 코드 변경: 텍스트를 매핑해 채우고, 없으면 비움
+        * - 텍스트 변경:
+        *    · 비우면 코드도 비움
+        *    · 기존 텍스트면 기존 코드로
+        *    · 새 텍스트면 "그 행의 코드가 비어 있을 때만" max+1 한 번 배정
+        */
         const onItemChange = useCallback((e) => {
             const { dataItem, field, value } = e;
+            const rowKey = idGetter ? idGetter(dataItem) : dataItem?.[dataItemKey];
 
-            // 행의 고유 키 (GridData가 내려준 idGetter / dataItemKey 활용)
-            const targetId = idGetter ? idGetter(dataItem) : dataItem?.[dataItemKey];
+            setDataState(prev => {
+                const rows = prev.data || [];
+                const getKey = (r) => (idGetter ? idGetter(r) : r?.[dataItemKey]);
 
-            setDataState(prev => ({
-                ...prev,
-                data: prev.data.map(row =>
-                    (idGetter ? idGetter(row) : row?.[dataItemKey]) === targetId
-                        ? { ...row, [field]: value }   // 해당 행의 해당 필드만 변경
-                        : row
-                )
-            }));
-        }, [setDataState, idGetter, dataItemKey]);
+                // 현재 행 제외 후 해당 codeField의 숫자 최대값 + 1
+                const maxPlus1 = (codeField) =>
+                    String(
+                        Math.max(
+                            0,
+                            ...rows
+                                .filter(r => getKey(r) !== rowKey)
+                                .map(r => parseInt(String(r?.[codeField] ?? "").replace(/\D/g, ""), 10) || 0)
+                        ) + 1
+                    );
+
+                // 처리 대상(대/중분류) 쌍을 찾음
+                const PAIRS = [
+                    { code: "lv1code", text: "lv1", codeToText: lv1CodeToText, textToCode: lv1ToTextToCode },
+                    { code: "lv2code", text: "lv2", codeToText: lv2CodeToText, textToCode: lv2TextToCode },
+                ];
+
+                const data = rows.map(r => {
+                    if (getKey(r) !== rowKey) return r;
+
+                    const next = { ...r, [field]: value };
+                    const pair = PAIRS.find(p => p.code === field || p.text === field);
+                    if (!pair) return next; // 소분류나 다른 필드는 그대로
+
+                    const v = String(value ?? "").trim();
+
+                    // 1) 코드 입력 → 텍스트 동기화
+                    if (field === pair.code) {
+                        next[pair.text] = v ? (pair.codeToText.get(v) || "") : "";
+                        return next;
+                    }
+
+                    // 2) 텍스트 입력 → 코드 동기화
+                    if (!v) {                         // 빈 텍스트 → 코드도 비움
+                        next[pair.code] = "";
+                        return next;
+                    }
+
+                    const known = pair.textToCode.get(v.toLowerCase());
+                    if (known) {                      // 기존 텍스트 → 기존 코드로
+                        next[pair.code] = known;
+                        return next;
+                    }
+
+                    // 새 텍스트
+                    const curCode = String(r?.[pair.code] ?? "").trim();
+
+                    // 현재 코드가 다른 행에서 쓰이고 있다면 그 "기준 텍스트"를 하나 가져옴
+                    let otherText = "";
+                    if (curCode) {
+                        const other = rows.find(o =>
+                            getKey(o) !== rowKey && String(o?.[pair.code] ?? "").trim() === curCode
+                        );
+                        otherText = other ? String(other?.[pair.text] ?? "").trim() : "";
+                    }
+
+                    // (A) 코드가 없으면 → 최초 등록: max+1
+                    // (B) 코드가 있고, 그 코드의 기준 텍스트와 다르게 바꾸면 → 탈착: max+1
+                    // (C) 그 외(기준 없거나 동일) → 코드 유지 (타이핑 중 반복 증가 방지)
+                    if (!curCode || (otherText && otherText !== v)) {
+                        next[pair.code] = maxPlus1(pair.code);
+                    }
+
+                    return next;
+                });
+                return { ...prev, data };
+            });
+        }, [
+            setDataState, idGetter, dataItemKey,
+            lv1CodeToText, lv1ToTextToCode,
+            lv2CodeToText, lv2TextToCode
+        ]);
 
         // 키값
         const COMPOSITE_KEY_FIELD = "__rowKey";
@@ -215,6 +311,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
+            if (typeof document !== "undefined" && document.activeElement) {
+                document.activeElement.blur();
+            }
+
             // 0) 현재 그리드를 기반으로 최종 데이터 생성
             const prev = latestCtxRef.current?.dataState?.data ?? [];
 
@@ -242,22 +342,20 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             try {
                 const payload = buildSavePayload(normalized, qnum);
                 const res = await saveGridData.mutateAsync(payload);
+
                 if (res?.success == "777") {
                     modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
                     handleSearch(); // 재조회 
+                } else if (res?.success == "762") {
+                    modal.showErrorAlert("에러", res?.message); //"보기 코드 중복, 빈값 발견"
                 } else {
                     modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
-                }
-                modal.showAlert("알림", "저장되었습니다.");
+                };
             } catch (err) {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                 return; // 실패 시 그리드 상태 변경 안 함
             }
 
-
-            // 4) 그리드 상태 반영
-            setDataState(prevState => ({ ...prevState, data: normalized }));
-            setSelectedState?.({});   // 선택 해제
         }, [setDataState, setSelectedState]);
 
         // 부모에서 호출할 수 있도록 ref에 연결
@@ -270,38 +368,62 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
         }, []);
 
-        // 삭제 예정(__pendingDelete) 제외하고 전체 행 검증
+        // 유효성 체크
         const validateRows = (allRows) => {
+            // 1) 저장 대상만 추리기: 삭제 예정/설문(survey) 행 제외
+            const rows = (allRows || []).filter(
+                (r) => r?.__pendingDelete !== true && r?.ex_gubun !== "survey"
+            );
+
             const errors = [];
-            const rows = (allRows || []).filter(r => r.__pendingDelete !== true);
 
-            // 1) 필수값 체크 (survey 제외)
+            // 2) 단계별 필수 필드 정의
+            //    lvcode=1  → 소분류 코드/소분류만 필수
+            //    lvcode=2  → 중분류 코드/중분류 + 소분류 코드/소분류 필수
+            //    lvcode=3  → 대분류 코드/대분류 + 중분류 코드/중분류 + 소분류 코드/소분류 필수
+            const requiredFields =
+                lvCode === "1"
+                    ? [
+                        { f: "lv123code", label: "소분류 코드" },
+                        { f: "lv3", label: "소분류" },
+                    ]
+                    : lvCode === "2"
+                        ? [
+                            { f: "lv2code", label: "중분류 코드" },
+                            { f: "lv2", label: "중분류" },
+                            { f: "lv123code", label: "소분류 코드" },
+                            { f: "lv3", label: "소분류" },
+                        ]
+                        : [
+                            { f: "lv1code", label: "대분류 코드" },
+                            { f: "lv1", label: "대분류" },
+                            { f: "lv2code", label: "중분류 코드" },
+                            { f: "lv2", label: "중분류" },
+                            { f: "lv123code", label: "소분류 코드" },
+                            { f: "lv3", label: "소분류" },
+                        ];
+
+            // 3) 필수값 체크
             rows.forEach((r) => {
-                if (r.ex_gubun !== "survey") {
-                    const code3 = (r.lv123code || '').trim();
-                    const name3 = (r.lv3 || '').trim();
-                    if (!code3) {
-                        modal.showAlert("알림", `소분류 코드는 필수입니다. (행 번호: ${r.no})`);
-                    };
-                    if (!name3) modal.showAlert("알림", `소분류 내용은 필수입니다. (행 번호: ${r.no})`);
+                requiredFields.forEach(({ f, label }) => {
+                    const v = String(r?.[f] ?? "").trim();
+                    if (!v) errors.push(`[행 ${r?.no ?? "?"}] ${label}은(는) 필수입니다.`);
+                });
+            });
+
+            // 4) 중복 체크: 무조건 소분류코드(lv123code)만 검사
+            const dup = new Map(); // key -> [행번호...]
+            rows.forEach((r) => {
+                const key = String(r?.lv123code ?? "").trim().toLowerCase();
+                if (!key) return; // 빈 값은 위에서 잡힘
+                if (!dup.has(key)) dup.set(key, []);
+                dup.get(key).push(r?.no ?? "?");
+            });
+            dup.forEach((nos, k) => {
+                if (nos.length > 1) {
+                    errors.push(`소분류코드 '${k}'가 중복입니다. (행 번호: ${nos.join(", ")})`);
                 }
             });
-
-            // 2) 소분류 중복 체크(공백/대소문자 무시) 
-            const codeMap = {};
-            rows.forEach((r) => {
-                const key = (r.lv123code || '').trim().toLowerCase();
-                if (!key) return; // 위에서 빈 값은 이미 에러 처리
-                if (!codeMap[key]) codeMap[key] = [];
-                codeMap[key].push(r.no);
-            });
-
-            Object.keys(codeMap).forEach((k) => {
-                if (codeMap[k].length > 1) {
-                    modal.showAlert("알림", `소분류코드 '${k}' 가 중복입니다. (행 번호: ${codeMap[k].join(', ')})`);
-                }
-            });
-
             return { ok: errors.length === 0, errors };
         };
 
@@ -310,29 +432,30 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // __pendingDelete 행은 제외(=실제 삭제 반영), __isNew 플래그/로컬키는 서버로 안보냄
             const cleaned = (rows || [])
                 .filter(r => r.__pendingDelete !== true)
-                .map((r, idx) => (
-                    {
-                        // 엑셀 샘플 맞춘 필드들 (있는 값만 보냄)
-                        lv1: r.lv1 ?? "",
-                        lv2: r.lv2 ?? "",
-                        lv3: r.lv3 ?? "",
-                        qnum: qnum ?? "",
-                        lv1code: r.lv1code ?? "",
-                        lv2code: r.lv2code ?? "",
-                        lv123code: r.lv123code ?? "",
-                        ex_gubun: r.ex_gubun ?? "analysis",
+                .map((r) => ({
+                    lv1: String(r.lv1 ?? ""),
+                    lv2: String(r.lv2 ?? ""),
+                    lv3: String(r.lv3 ?? ""),
+                    qnum: String(qnum ?? ""),
+                    lv1code: String(r.lv1code ?? ""),
+                    lv2code: String(r.lv2code ?? ""),
+                    lv321code: "", // ← 항상 빈값
+                    summary: String(r.summary ?? ""),
+                    ex_gubun: String(r.ex_gubun ?? "analysis"),
+                    lv23code: String(r.lv23code ?? ""),
+                    lv123code: String(r.lv123code ?? ""),
+                    representative_response: String(r.representative_response ?? ""),
+                }));
 
-                        // 필요 시 확장 필드(그리드에 있으면 포함, 없으면 생략)
-                        ...(r.summary ? { summary: r.summary } : {}),
-                        ...(r.lv23code ? { lv23code: r.lv23code } : {}),
-                        ...(r.representative_response ? { representative_response: r.representative_response } : {}),
-                    }));
             return {
                 key: "",
                 user: "syhong",
+                // projectnum: "q250089uk",
+                // qnum: "A2-2",
                 projectnum: "q250089uk",
-                qnum: "A2-2",
+                qnum: "Z1",
                 gb: "lb",
+                lvcode: String(lvCode ?? ""),
                 data: cleaned,
             };
         };
@@ -342,6 +465,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const rows = dataState?.data || [];
             return rows.some(r => r?.__pendingDelete === true);
         }, [dataState?.data]);
+
+
         return (
             <Fragment>
                 <p className="totalTxt">
@@ -438,8 +563,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
+                // projectnum: "q250089uk",
+                // qnum: "A2-2",
                 projectnum: "q250089uk",
-                qnum: "A2-2",
+                qnum: "Z1",
                 gb: "lb",
             }}
             renderItem={(props) => <GridRenderer {...props} />}
