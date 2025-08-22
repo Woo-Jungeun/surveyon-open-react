@@ -15,6 +15,7 @@ import { Input } from "@progress/kendo-react-inputs";
  */
 const OptionSettingTab2 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
+    const { onUnsavedChange, onSaved } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "보기 데이터";
@@ -87,6 +88,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
     // 부모에서 호출할 추가 함수
     const addButtonClick = () => {
+        onUnsavedChange?.(true);
         const gridContext = latestCtxRef.current;   // 최신 그리드 상태/함수들을 가져옴
         // 그리드 컨텍스트가 없으면 종료
         if (!gridContext) return;
@@ -168,6 +170,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         *    · 새 텍스트면 "그 행의 코드가 비어 있을 때만" max+1 한 번 배정
         */
         const onItemChange = useCallback((e) => {
+            onUnsavedChange?.(true);
             const { dataItem, field, value } = e;
             const rowKey = idGetter ? idGetter(dataItem) : dataItem?.[dataItemKey];
 
@@ -263,6 +266,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글
         const onClickDeleteCell = useCallback((cellProps) => {
+            onUnsavedChange?.(true);
             const row = cellProps.dataItem;
             const key = getKey(row);
 
@@ -345,6 +349,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
                 if (res?.success == "777") {
                     modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
+                    onSaved?.();  // ← 미저장 플래그 해제 요청(부모)
                     handleSearch(); // 재조회 
                 } else if (res?.success == "762") {
                     modal.showErrorAlert("에러", res?.message); //"보기 코드 중복, 빈값 발견"

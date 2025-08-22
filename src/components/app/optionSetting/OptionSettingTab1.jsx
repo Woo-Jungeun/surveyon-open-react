@@ -19,6 +19,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const onInitLvCode = props.onInitLvCode; // 부모 콜백 참조
+    const onUnsavedChange = props.onUnsavedChange;
+    const onSaved = props.onSaved;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["fixed_key", "cid"];
     const MENU_TITLE = "응답 데이터";
@@ -163,12 +165,51 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             dataItemKey,
             handleSearch } = props;
 
+         // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
+        const suppressUnsavedSelectionRef = useRef(false);
+
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => {
             if (typeof idGetter === "function") return idGetter(row);     // (__rowKey 포함)
             return row?.[dataItemKey];                                    // 단일키 필드
         }, [idGetter, dataItemKey]);
 
+           // Kendo가 주는 setSelectedState를 감싸서
+           //  1) 사용자 액션이면 onUnsavedChange(true)
+           //  2) dataState.data의 recheckyn도 함께 동기화
+           const setSelectedStateGuarded = useCallback((next) => {
+             const computeNext = (prev) => (typeof next === "function" ? next(prev) : next || {});
+             const apply = (nextMap) => {
+               // 2-1) 그리드의 선택 상태 업데이트
+               setSelectedState(nextMap);
+               // 2-2) 행의 recheckyn 동기화
+               const selectedKeys = new Set(Object.keys(nextMap).filter((k) => nextMap[k]));
+               setDataState((prevDS) => ({
+                 ...prevDS,
+                 data: (prevDS?.data || []).map((r) => {
+                   const k = getKey(r);
+                   const checked = selectedKeys.has(k);
+                   // 이미 동일하면 그대로 두기 (불필요 렌더 최소화)
+                   if ((r?.recheckyn === "y") === checked) return r;
+                   return { ...r, recheckyn: checked ? "y" : "" };
+                 }),
+               }));
+             };
+             if (!suppressUnsavedSelectionRef.current) {
+               onUnsavedChange?.(true);
+             }
+             if (typeof next === "function") {
+               // 함수형 업데이트
+               setSelectedState((prev) => {
+                 const nm = computeNext(prev);
+                 apply(nm);
+                 // setSelectedState는 이미 호출되었지만 리액트 배치 고려해 nm 반환
+                 return nm;
+               });
+             } else {
+               apply(next || {});
+             }
+           }, [setSelectedState, setDataState, getKey, onUnsavedChange]);
 
 
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
@@ -198,7 +239,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
 
             //  내부 초기화가 끝난 다음 "마지막에" 내가 세팅 (덮어쓰기 방지)
-            const apply = () => setSelectedState(nextSelected);
+            const apply = () => {
+                suppressUnsavedSelectionRef.current = true;   // 미저장 X
+                setSelectedState(nextSelected);               // 원본 setter 그대로
+                suppressUnsavedSelectionRef.current = false;
+            };
+            
             // 1) 마이크로태스크 → 2) 다음 프레임 → 3) 그 다음 프레임에서 적용
             Promise.resolve().then(() => {
                 requestAnimationFrame(() => {
@@ -207,7 +253,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             });
 
             shouldAutoApplySelectionRef.current = false;
-        }, [dataState?.data, getKey, setSelectedState]);
+        }, [dataState?.data, getKey, setSelectedStateGuarded]);
 
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
@@ -325,6 +371,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 일괄 적용 (선택된 키들에 옵션 메타까지 모두 반영)
         const applyLv3To = useCallback((targetKeys, opt) => {
+            onUnsavedChange?.(true);
             setDataState((prev) => ({
                 ...prev,
                 data: prev.data.map((r) =>
@@ -361,6 +408,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 셀 값 변경 → 해당 행의 해당 필드만 업데이트
         const onItemChange = useCallback((e) => {
+            onUnsavedChange?.(true);
             const { dataItem, field, value } = e;
             const targetKey = getKey(dataItem);
 
@@ -376,6 +424,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 드롭다운 변경 핸들러 (선택 행만 갱신) 
         const onDropDownItemChange = useCallback((row, field, value) => {
+            onUnsavedChange?.(true);
             const key = getKey(row);
             setDataState(prev => ({
                 ...prev,
@@ -395,6 +444,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 추가 버튼 이벤트
         const handleAddButton = useCallback((cellProps) => {
+            onUnsavedChange?.(true);
             const clicked = cellProps.dataItem;
             const current = [...(dataState?.data ?? [])];// 현재 데이터 복사
             const clickedKey = getKey(clicked); // 선택 행 키는 공통 헬퍼로
@@ -514,7 +564,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 projectnum,
                 qnum,
                 gb,
-                lvcode: String(lvCode ?? ""), 
+                lvcode: String(lvCode ?? ""),
                 data,
             };
         };
@@ -538,8 +588,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const res = await saveGridData.mutateAsync(payload);
                 if (res?.success === "777") {
                     modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
-                    shouldAutoApplySelectionRef.current = true;
-                    setSelectedState({});           // 화면상의 기존 선택 초기화
+                    onSaved?.(); // ← 미저장 플래그 해제 요청(부모)
+                    shouldAutoApplySelectionRef.current = true;    // 재조회 시 recheckyn 기반 자동복원 다시 켜기
+                    suppressUnsavedSelectionRef.current = true;    // 리셋은 미저장 X
+                    setSelectedStateGuarded({});                    // 깔끔하게 비움
+                    suppressUnsavedSelectionRef.current = false;
                     handleSearch();                 // 재조회
                 } else {
                     modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
@@ -550,7 +603,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                 return; // 실패 시 그리드 상태 변경 안 함
             }
-        }, [dataState?.data, setDataState, selectedState, getKey]);
+        }, [dataState?.data, selectedState, getKey, setSelectedStateGuarded, onSaved]);
 
         // 부모에서 호출할 수 있도록 ref에 연결
         saveChangesRef.current = saveChanges;
@@ -572,7 +625,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             onRowClick,
                             selectedField: SELECTED_FIELD, // 체크박스 필드 지정 
                             selectedState,
-                            setSelectedState,
+                            setSelectedState: setSelectedStateGuarded,
                             idGetter,
                             multiSelect: true,
                             selectionColumnAfterField: "sentiment", // 체크박스 선택 컬럼을 원하는 위치에 삽입 
@@ -749,7 +802,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             dataItemKey={DATA_ITEM_KEY}
             searchMutation={getGridData}
             selectedField={SELECTED_FIELD}
-            multiSelect={false}
+            multiSelect={true}
             editField={editField}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
