@@ -15,7 +15,7 @@ import { Input } from "@progress/kendo-react-inputs";
  */
 const OptionSettingTab2 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onUnsavedChange, onSaved } = props;
+    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "보기 데이터";
@@ -25,7 +25,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
      * 숨김처리 여부 allowHide (true/false)
      * 편집 가능 여부 editable(true/false)
     */
-    const [columns, setColumns] = useState([
+    const [columns, setColumns] = useState(() =>
+        persistedPrefs?.columns ?? [
         { field: "no", title: "no", show: true, editable: false, width: "100px" },
         { field: "qnum", title: "문번호", show: true, editable: false },
         { field: "lv1code", title: "대분류 코드", show: true },
@@ -51,31 +52,36 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     useEffect(() => {
         setColumns(prev =>
             prev.map(c =>
-                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: true }
+                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: c.show !== false }
             )
         );
     }, [forcedHidden]);
+    // 정렬/필터를 controlled로
+    const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
+    const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
 
-    // 컬럼 메뉴에선 강제 숨김 컬럼은 아예 제외
-    const menuColumns = useMemo(
-        () => columns.filter(c => !forcedHidden.has(c.field)),
-        [columns, forcedHidden]
-    );
+    // 변경시 부모에 저장 (딜레이 없이 즉시 패치)
+    useEffect(() => { onPrefsChange?.({ sort }); }, [sort]);
+    useEffect(() => { onPrefsChange?.({ filter }); }, [filter]);
+
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={menuColumns}
+            columns={columns.filter(c => !forcedHidden.has(c.field))}
             onColumnsChange={(updated) => {
-                const updatedMap = new Map(updated.map(c => [c.field, c]));
-                setColumns(prev =>
-                    prev.map(c => {
-                        if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 유지
-                        const u = updatedMap.get(c.field);
-                        return u ? { ...c, ...u } : c;
-                    })
-                );
+                const map = new Map(updated.map(c => [c.field, c]));
+                const next = columns.map(c => {
+                    if (forcedHidden.has(c.field)) return { ...c, show: false };
+                    const u = map.get(c.field);
+                    return u ? { ...c, ...u } : c;
+                });
+                setColumns(next);
+                onPrefsChange?.({ columns: next }); // 부모에 저장
             }}
+            filter={filter}
+            onFilterChange={(e) => setFilter(e)}   // 필터 저장
+
         />
     );
 
@@ -505,6 +511,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             idGetter,
                             rowRender,
                             onRowClick,
+                            sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
+                            sort,                                 // controlled sort
+                            sortChange: (e) => setSort(e.sort),
+                            filterable: true,                                   // 필터 허용
+                            filter,                               // controlled filter
+                            filterChange: (e) => setFilter(e.filter),
                         }}
                     >
                         {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {

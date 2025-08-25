@@ -18,9 +18,10 @@ import { modalContext } from "@/components/common/Modal.jsx";
 
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const onInitLvCode = props.onInitLvCode; // 부모 콜백 참조
-    const onUnsavedChange = props.onUnsavedChange;
-    const onSaved = props.onSaved;
+    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange } = props;
+    // const onInitLvCode = props.onInitLvCode; // 부모 콜백 참조
+    // const onUnsavedChange = props.onUnsavedChange;
+    // const onSaved = props.onSaved;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["fixed_key", "cid"];
     const MENU_TITLE = "응답 데이터";
@@ -41,20 +42,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
      * 숨김처리 여부 allowHide (true/false)
      * 편집 가능 여부 editable(true/false)
     */
-    const [columns, setColumns] = useState([
-        { field: "fixed_key", title: "키", show: true, editable: false },
-        { field: "cid", title: "멀티", show: true, editable: false, width: "100px" },
-        { field: "answer_origin", title: "원본내용", show: true, editable: false },
-        { field: "answer", title: "응답내용", show: true, editable: false },
-        { field: "lv1code", title: "대분류 코드", show: true, editable: false },
-        { field: "lv1", title: "대분류", show: true, editable: false },
-        { field: "lv2code", title: "중분류 코드", show: true, editable: false },
-        { field: "lv2", title: "중분류", show: true, editable: false },
-        { field: "lv123code", title: "소분류 코드", show: true, editable: false },
-        { field: "lv3", title: "소분류", show: true, editable: true, width: "200px" },
-        { field: "sentiment", title: "sentiment", show: true, editable: true, allowHide: false },
-        { field: "add", title: "추가", show: true, editable: true, allowHide: false }
-    ]);
+    const [columns, setColumns] = useState(() =>
+        persistedPrefs?.columns ?? [
+            { field: "fixed_key", title: "키", show: true, editable: false },
+            { field: "cid", title: "멀티", show: true, editable: false, width: "100px" },
+            { field: "answer_origin", title: "원본내용", show: true, editable: false },
+            { field: "answer", title: "응답내용", show: true, editable: false },
+            { field: "lv1code", title: "대분류 코드", show: true, editable: false },
+            { field: "lv1", title: "대분류", show: true, editable: false },
+            { field: "lv2code", title: "중분류 코드", show: true, editable: false },
+            { field: "lv2", title: "중분류", show: true, editable: false },
+            { field: "lv123code", title: "소분류 코드", show: true, editable: false },
+            { field: "lv3", title: "소분류", show: true, editable: true, width: "200px" },
+            { field: "sentiment", title: "sentiment", show: true, editable: true, allowHide: false },
+            { field: "add", title: "추가", show: true, editable: true, allowHide: false }
+        ]);
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
     const forcedHidden = useMemo(() => {
         const s = new Set();
@@ -67,32 +69,38 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     useEffect(() => {
         setColumns(prev =>
             prev.map(c =>
-                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: true }
+                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: c.show !== false }
             )
         );
     }, [forcedHidden]);
 
-    // 컬럼 메뉴에선 강제 숨김 컬럼은 아예 제외
-    const menuColumns = useMemo(
-        () => columns.filter(c => !forcedHidden.has(c.field)),
-        [columns, forcedHidden]
-    );
+    // 정렬/필터를 controlled로
+    const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
+    const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
+
+    // 변경시 부모에 저장 (딜레이 없이 즉시 패치)
+    useEffect(() => { onPrefsChange?.({ sort }); }, [sort]);
+    useEffect(() => { onPrefsChange?.({ filter }); }, [filter]);
+
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={menuColumns}
+            columns={columns.filter(c => !forcedHidden.has(c.field))}
             onColumnsChange={(updated) => {
-                const updatedMap = new Map(updated.map(c => [c.field, c]));
-                setColumns(prev =>
-                    prev.map(c => {
-                        if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 유지
-                        const u = updatedMap.get(c.field);
-                        return u ? { ...c, ...u } : c;
-                    })
-                );
+                const map = new Map(updated.map(c => [c.field, c]));
+                const next = columns.map(c => {
+                    if (forcedHidden.has(c.field)) return { ...c, show: false };
+                    const u = map.get(c.field);
+                    return u ? { ...c, ...u } : c;
+                });
+                setColumns(next);
+                onPrefsChange?.({ columns: next }); // 부모에 저장
             }}
+            filter={filter}
+            onFilterChange={(e) => setFilter(e)}   // 필터 저장
+
         />
     );
 
@@ -167,7 +175,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             dataItemKey,
             handleSearch } = props;
 
-         // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
+        // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const suppressUnsavedSelectionRef = useRef(false);
 
         // 키 가져오기 헬퍼 
@@ -176,42 +184,42 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return row?.[dataItemKey];                                    // 단일키 필드
         }, [idGetter, dataItemKey]);
 
-           // Kendo가 주는 setSelectedState를 감싸서
-           //  1) 사용자 액션이면 onUnsavedChange(true)
-           //  2) dataState.data의 recheckyn도 함께 동기화
-           const setSelectedStateGuarded = useCallback((next) => {
-             const computeNext = (prev) => (typeof next === "function" ? next(prev) : next || {});
-             const apply = (nextMap) => {
-               // 2-1) 그리드의 선택 상태 업데이트
-               setSelectedState(nextMap);
-               // 2-2) 행의 recheckyn 동기화
-               const selectedKeys = new Set(Object.keys(nextMap).filter((k) => nextMap[k]));
-               setDataState((prevDS) => ({
-                 ...prevDS,
-                 data: (prevDS?.data || []).map((r) => {
-                   const k = getKey(r);
-                   const checked = selectedKeys.has(k);
-                   // 이미 동일하면 그대로 두기 (불필요 렌더 최소화)
-                   if ((r?.recheckyn === "y") === checked) return r;
-                   return { ...r, recheckyn: checked ? "y" : "" };
-                 }),
-               }));
-             };
-             if (!suppressUnsavedSelectionRef.current) {
-               onUnsavedChange?.(true);
-             }
-             if (typeof next === "function") {
-               // 함수형 업데이트
-               setSelectedState((prev) => {
-                 const nm = computeNext(prev);
-                 apply(nm);
-                 // setSelectedState는 이미 호출되었지만 리액트 배치 고려해 nm 반환
-                 return nm;
-               });
-             } else {
-               apply(next || {});
-             }
-           }, [setSelectedState, setDataState, getKey, onUnsavedChange]);
+        // Kendo가 주는 setSelectedState를 감싸서
+        //  1) 사용자 액션이면 onUnsavedChange(true)
+        //  2) dataState.data의 recheckyn도 함께 동기화
+        const setSelectedStateGuarded = useCallback((next) => {
+            const computeNext = (prev) => (typeof next === "function" ? next(prev) : next || {});
+            const apply = (nextMap) => {
+                // 2-1) 그리드의 선택 상태 업데이트
+                setSelectedState(nextMap);
+                // 2-2) 행의 recheckyn 동기화
+                const selectedKeys = new Set(Object.keys(nextMap).filter((k) => nextMap[k]));
+                setDataState((prevDS) => ({
+                    ...prevDS,
+                    data: (prevDS?.data || []).map((r) => {
+                        const k = getKey(r);
+                        const checked = selectedKeys.has(k);
+                        // 이미 동일하면 그대로 두기 (불필요 렌더 최소화)
+                        if ((r?.recheckyn === "y") === checked) return r;
+                        return { ...r, recheckyn: checked ? "y" : "" };
+                    }),
+                }));
+            };
+            if (!suppressUnsavedSelectionRef.current) {
+                onUnsavedChange?.(true);
+            }
+            if (typeof next === "function") {
+                // 함수형 업데이트
+                setSelectedState((prev) => {
+                    const nm = computeNext(prev);
+                    apply(nm);
+                    // setSelectedState는 이미 호출되었지만 리액트 배치 고려해 nm 반환
+                    return nm;
+                });
+            } else {
+                apply(next || {});
+            }
+        }, [setSelectedState, setDataState, getKey, onUnsavedChange]);
 
 
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
@@ -246,7 +254,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 setSelectedState(nextSelected);               // 원본 setter 그대로
                 suppressUnsavedSelectionRef.current = false;
             };
-            
+
             // 1) 마이크로태스크 → 2) 다음 프레임 → 3) 그 다음 프레임에서 적용
             Promise.resolve().then(() => {
                 requestAnimationFrame(() => {
@@ -637,7 +645,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
                             rowRender,
                             sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
+                            sort,                                 // controlled sort
+                            sortChange: (e) => setSort(e.sort),
                             filterable: true,                                   // 필터 허용
+                            filter,                               // controlled filter
+                            filterChange: (e) => setFilter(e.filter),
                         }}
                     >
                         {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {

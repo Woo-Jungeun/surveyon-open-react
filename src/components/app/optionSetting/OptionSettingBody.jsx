@@ -85,6 +85,18 @@ const OptionSettingBody = () => {
     return () => window.removeEventListener("beforeunload", handler);
   }, [unsaved]);
 
+  // 정렬, 필터, 컬럼 숨기기 상태 유지
+  const [gridPrefs, setGridPrefs] = useState({
+    "1": { columns: null, sort: [], filter: null }, // 탭1
+    "2": { columns: null, sort: [], filter: null }, // 탭2
+    "3": { columns: null, sort: [], filter: null }, // 탭3
+  });
+
+  // 공통 업데이트 헬퍼
+  const updateGridPrefs = useCallback((tab, patch) => {
+    setGridPrefs(prev => ({ ...prev, [tab]: { ...prev[tab], ...patch } }));
+  }, []);
+
   return (
     <Fragment>
       <article className="subTitWrap">
@@ -148,6 +160,8 @@ const OptionSettingBody = () => {
               onInitLvCode={handleInitLvCode}
               onUnsavedChange={(v) => markUnsaved("1", v)}
               onSaved={() => markUnsaved("1", false)}
+              persistedPrefs={gridPrefs["1"]}
+              onPrefsChange={(patch) => updateGridPrefs("1", patch)}
             />
           ) : tabDivision === "2" ? (
             <OptionSettingTab2
@@ -155,8 +169,14 @@ const OptionSettingBody = () => {
               lvCode={lvCode.value}
               onUnsavedChange={(v) => markUnsaved("2", v)}
               onSaved={() => markUnsaved("2", false)}
+              persistedPrefs={gridPrefs["2"]}
+              onPrefsChange={(patch) => updateGridPrefs("2", patch)}
             />
-          ) : <OptionSettingTab3 lvCode={lvCode.value} />}
+          ) : <OptionSettingTab3 
+                lvCode={lvCode.value} 
+                persistedPrefs={gridPrefs["3"]}
+                onPrefsChange={(patch) => updateGridPrefs("3", patch)}
+                />}
         </div>
       </article>
     </Fragment>

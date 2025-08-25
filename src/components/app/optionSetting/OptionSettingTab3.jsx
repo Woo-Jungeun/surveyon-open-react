@@ -14,10 +14,12 @@ import { Checkbox } from "@progress/kendo-react-inputs";
  */
 const OptionSettingTab3 = (props) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
+    const { persistedPrefs, onPrefsChange } = props;
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
     const MENU_TITLE = "rawdata";
 
-    const [columns, setColumns] = useState([
+    const [columns, setColumns] = useState(() =>
+        persistedPrefs?.columns ?? [
         { field: "pid", title: "PID", show: true },
         { field: "qnum", title: "문번호", show: true },
         { field: "cid", title: "멀티", show: true },
@@ -38,38 +40,41 @@ const OptionSettingTab3 = (props) => {
         return s;
     }, [lvCode]);
 
-    // 단계 변경 시: 강제 숨김 컬럼은 항상 숨김, 그 외 컬럼은 보이도록 복구
+    // 단계 변경 시: 강제 숨김은 항상 숨김, 그 외는 보이도록 복구
     useEffect(() => {
         setColumns(prev =>
             prev.map(c =>
-                forcedHidden.has(c.field)
-                    ? { ...c, show: false }
-                    : { ...c, show: true }
+                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: c.show !== false }
             )
         );
     }, [forcedHidden]);
 
-    // 메뉴에 노출할 허용 컬럼만 추출
-    const menuColumns = useMemo(
-        () => columns.filter(c => !forcedHidden.has(c.field)),
-        [columns, forcedHidden]
-    );
+    // 정렬/필터를 controlled로
+    const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
+    const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
+
+    // 변경시 부모에 저장 (딜레이 없이 즉시 패치)
+    useEffect(() => { onPrefsChange?.({ sort }); }, [sort]);
+    useEffect(() => { onPrefsChange?.({ filter }); }, [filter]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={menuColumns}
+            columns={columns.filter(c => !forcedHidden.has(c.field))}
             onColumnsChange={(updated) => {
-                const updatedMap = new Map(updated.map(c => [c.field, c]));
-                setColumns(prev =>
-                    prev.map(c => {
-                        if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 유지
-                        const u = updatedMap.get(c.field);
-                        return u ? { ...c, ...u } : c;
-                    })
-                );
+                const map = new Map(updated.map(c => [c.field, c]));
+                const next = columns.map(c => {
+                    if (forcedHidden.has(c.field)) return { ...c, show: false };
+                    const u = map.get(c.field);
+                    return u ? { ...c, ...u } : c;
+                });
+                setColumns(next);
+                onPrefsChange?.({ columns: next }); // 부모에 저장
             }}
+            filter={filter}
+            onFilterChange={(e) => setFilter(e)}   // 필터 저장
+
         />
     );
 
@@ -93,7 +98,13 @@ const OptionSettingTab3 = (props) => {
                             selectedState,
                             setSelectedState,
                             selectedField,               //  선택 필드 전달
-                            idGetter                     // GridData가 만든 getter 그대로
+                            idGetter,                     // GridData가 만든 getter 그대로
+                            sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
+                            sort,                                 // controlled sort
+                            sortChange: (e) => setSort(e.sort),
+                            filterable: true,                                   // 필터 허용
+                            filter,                               // controlled filter
+                            filterChange: (e) => setFilter(e.filter),
                         }}
                     >
                         {columns.filter(c => c.show !== false && !forcedHidden.has(c.field)).map((c) => {
@@ -149,10 +160,10 @@ const OptionSettingTab3 = (props) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
-                // projectnum: "q250089uk",
-                // qnum: "A2-2",
                 projectnum: "q250089uk",
-                qnum: "Z1",
+                qnum: "A2-2",
+                // projectnum: "q250089uk",
+                // qnum: "Z1",
                 gb: "list",
             }}
             renderItem={(props) => <GridRenderer {...props} />}

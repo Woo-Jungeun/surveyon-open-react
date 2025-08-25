@@ -23,6 +23,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
     const filter = parentProps?.filter;
     const sort = parentProps?.sort;
     const sortChange = parentProps?.sortChange;
+    const filterChange = parentProps?.filterChange; 
     const page = parentProps?.page;
     const pageChange = parentProps?.pageChange;
     const selectedState = parentProps?.selectedState || {};
@@ -203,12 +204,35 @@ const KendoGrid = ({ parentProps, children, processData }) => {
         childCols.splice(insertAt, 0, selectionCol);
     }
 
+    // 외부에서 내려온 sort/filter를 gridState로 동기화 (클라 처리 모드일 때)
+    useEffect(() => {
+        if (!useClientProcessing) return;
+        // 배열/undefined 안정화
+        const next = Array.isArray(sort) ? sort : [];
+        setGridState(s => (s.sort === next ? s : { ...s, sort: next }));
+    }, [useClientProcessing, sort]);
+    
+    useEffect(() => {
+        if (!useClientProcessing) return;
+        setGridState(s => {
+        const next = filter ?? undefined;
+        // 얕은 비교로도 충분 (필요하면 deepEqual 추가)
+        if (s.filter === next) return s;
+        return { ...s, filter: next };
+        });
+    }, [useClientProcessing, filter]);
     return (
         <Grid
             data={processedData}
-            // ✅ 클라이언트 처리 모드일 때만 내부 gridState 바인딩
+            // 클라이언트 처리 모드일 때만 내부 gridState 바인딩
             {...(useClientProcessing ? gridState : {})}
-            onDataStateChange={useClientProcessing ? (e) => setGridState(e.dataState) : undefined}
+            onDataStateChange={useClientProcessing ? (e) => {
+                setGridState(e.dataState);
+              
+                // 부모에도 반영 (persistedPrefs 갱신용)
+                sortChange?.({ sort: e.dataState.sort ?? [] });
+                filterChange?.({ filter: e.dataState.filter ?? undefined });
+              } : undefined}
 
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}
