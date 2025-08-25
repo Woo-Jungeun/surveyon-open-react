@@ -5,7 +5,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Checkbox } from "@progress/kendo-react-inputs";
-
+import { filterBy } from "@progress/kendo-data-query";
 /**
  * 분석 > 그리드 영역 > rawdata
  *
@@ -19,17 +19,17 @@ const OptionSettingTab3 = (props) => {
 
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-        { field: "pid", title: "PID", show: true },
-        { field: "qnum", title: "문번호", show: true },
-        { field: "cid", title: "멀티", show: true },
-        { field: "answer_origin", title: "원본 내용", show: true },
-        { field: "answerfin", title: "응답 내용", show: true },
-        { field: "lv1", title: "대분류", show: true },
-        { field: "lv2", title: "중분류", show: true },
-        { field: "lv3", title: "소분류", show: true },
-        { field: "sentiment", title: "sentiment", show: true },
-        { field: "recheckyn", title: "검증", show: true },
-    ]);
+            { field: "pid", title: "PID", show: true },
+            { field: "qnum", title: "문번호", show: true },
+            { field: "cid", title: "멀티", show: true },
+            { field: "answer_origin", title: "원본 내용", show: true },
+            { field: "answerfin", title: "응답 내용", show: true },
+            { field: "lv1", title: "대분류", show: true },
+            { field: "lv2", title: "중분류", show: true },
+            { field: "lv3", title: "소분류", show: true },
+            { field: "sentiment", title: "sentiment", show: true },
+            { field: "recheckyn", title: "검증", show: true },
+        ]);
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -65,10 +65,14 @@ const OptionSettingTab3 = (props) => {
     const GridRenderer = (props) => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
 
+        //그리드 표출 데이터 총 갯수  
+        const visibleCount = filter ? filterBy(dataState?.data || [], filter).length
+            : (dataState?.data?.length || 0);
+
         return (
             <Fragment>
                 <p className="totalTxt">
-                    총 <i className="fcGreen">{dataState?.totalSize || 0}</i>개
+                    총 <i className="fcGreen">{visibleCount}</i>개
                 </p>
                 <div id="grid_01" className="cmn_grid">
                     <KendoGrid
