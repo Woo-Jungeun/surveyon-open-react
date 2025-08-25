@@ -67,12 +67,25 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     // 단계 변경 시: 강제 숨김은 항상 숨김, 그 외는 보이도록 복구
     useEffect(() => {
-        setColumns(prev =>
-            prev.map(c =>
-                forcedHidden.has(c.field) ? { ...c, show: false } : { ...c, show: c.show !== false }
-            )
-        );
-    }, [forcedHidden]);
+        const stageFields = new Set(["lv1", "lv1code", "lv2", "lv2code"]);
+        setColumns(prev => {
+          const next = prev.map(c => {
+            // 단계 규칙으로 숨김 강제
+            if (forcedHidden.has(c.field)) return { ...c, show: false };
+      
+            // 단계 컬럼들은 허용되는 단계에선 항상 표시
+            if (stageFields.has(c.field)) return { ...c, show: true };
+      
+            // 그 외 컬럼은 기존 선택 유지(수동 숨김 유지)
+            return { ...c, show: c.show !== false };
+          });
+      
+          // (선택) 부모에 즉시 반영해 prefs도 동기화
+          onPrefsChange?.({ columns: next });
+      
+          return next;
+        });
+      }, [forcedHidden, onPrefsChange]);
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
