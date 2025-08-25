@@ -125,6 +125,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         const insertIndex = data.length;    //마지막 행 뒤 행 추가 
 
+        // 소분류 코드 최대값 + 1 계산
+        const maxLv123 = Math.max(
+            0,
+            ...data.map(r => parseInt(String(r?.lv123code ?? "").replace(/\D/g, ""), 10) || 0)
+        );
+        const nextLv123 = String(maxLv123 + 1);
+
         // 임시 고유키(변하지 않게 랜덤/UUID 사용)
         const tmpKey =
             (typeof crypto !== 'undefined' && crypto.randomUUID)
@@ -138,7 +145,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             lv1: "",
             lv2code: "",
             lv2: "",
-            lv123code: "",
+            lv123code: nextLv123,
             lv3: "",
             ex_sum: "0",
             ex_gubun: "analysis",
