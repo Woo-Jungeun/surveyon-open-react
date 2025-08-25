@@ -149,7 +149,10 @@ const OptionSettingBody = () => {
               dataItemKey="value"
               textField="text"
               value={lvCode}
-              onChange={(e) => setLvCode(e.value)}   // e.value는 선택된 객체
+              disabled={tabDivision === "3"}           //탭3에서 비활성화
+              onChange={(e) => {
+                if (tabDivision !== "3") setLvCode(e.value); // 혹시 모를 이벤트 가드
+              }}
             />
           </div>
 
@@ -173,7 +176,6 @@ const OptionSettingBody = () => {
               onPrefsChange={(patch) => updateGridPrefs("2", patch)}
             />
           ) : <OptionSettingTab3 
-                lvCode={lvCode.value} 
                 persistedPrefs={gridPrefs["3"]}
                 onPrefsChange={(patch) => updateGridPrefs("3", patch)}
                 />}
