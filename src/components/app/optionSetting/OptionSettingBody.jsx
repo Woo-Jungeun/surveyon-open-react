@@ -33,13 +33,18 @@ const OptionSettingBody = () => {
     { text: "2단계", value: "2" },
     { text: "3단계", value: "3" }
   ];
-  const [lvCode, setLvCode] = useState(LVCODE_OPTION[0]);
+
+  const [lvCodeCommitted, setLvCodeCommitted] = useState(LVCODE_OPTION[0]);
+  const [lvCodeDraft, setLvCodeDraft] = useState(LVCODE_OPTION[0]);
 
   // Tab1에서 최초 조회한 lvcode를 받아 드롭다운 값 세팅
   const handleInitLvCode = useCallback((fetched) => {
     const v = String(fetched ?? "").trim();
     if (!["1", "2", "3"].includes(v)) return;
-    setLvCode(prev => (prev?.value === v ? prev : (LVCODE_OPTION.find(o => o.value === v) || prev)));
+    const next = LVCODE_OPTION.find(o => o.value === v);
+    if (!next) return;
+    setLvCodeCommitted(prev => (prev?.value === v ? prev : next));
+    setLvCodeDraft(prev => (prev?.value === v ? prev : next));
   }, []);
 
   // 탭별 더티 상태 관리
@@ -67,12 +72,16 @@ const OptionSettingBody = () => {
   const trySwitchTab = useCallback(async (next) => {
     if (next === tabDivision) return;
     const cur = tabDivision;
+
     if (unsaved[cur]) {
       const ok = await confirmNavigate("저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?");
       if (!ok) return; // 취소 → 현 탭 유지
 
       // 사용자가 "이동(=변경 사항 버리기)" 를 선택했으므로 현재 탭의 더티 플래그를 즉시 해제
       setUnsaved(prev => ({ ...prev, [cur]: false }));
+
+      // draft로만 들고 있던 단계 변경도 함께 롤백
+      setLvCodeDraft(lvCodeCommitted);
     }
     setTabDivision(next);
   }, [tabDivision, unsaved, confirmNavigate, setUnsaved]);
@@ -152,13 +161,13 @@ const OptionSettingBody = () => {
               data={LVCODE_OPTION}
               dataItemKey="value"
               textField="text"
-              value={lvCode}
+              value={lvCodeDraft}
               disabled={tabDivision === "3"}           //탭3에서 비활성화
               onChange={(e) => {
                 if (tabDivision !== "3") {
-                  setLvCode(e.value);
-                  // 단계 변경도 '저장 필요'로 본다 → 탭 이동 시 경고
-                  setUnsaved(prev => ({ ...prev, ["1"]: true }));
+                  setLvCodeDraft(e.value);
+                  //  단계만 바꿔도 "변경사항 있음"으로 판단
+                  setUnsaved(prev => ({ ...prev, [tabDivision]: true }));
                 }
               }}
             />
@@ -167,19 +176,27 @@ const OptionSettingBody = () => {
           {tabDivision === "1" ? (
             <OptionSettingTab1
               ref={tab1Ref}
-              lvCode={lvCode.value}
+              lvCode={lvCodeDraft.value}
               onInitLvCode={handleInitLvCode}
               onUnsavedChange={(v) => markUnsaved("1", v)}
-              onSaved={() => markUnsaved("1", false)}
+              onSaved={() => {
+                // 저장 성공 → 더티 해제 + 단계 커밋
+                markUnsaved("1", false);
+                setLvCodeCommitted(lvCodeDraft);
+              }}
               persistedPrefs={gridPrefs["1"]}
               onPrefsChange={(patch) => updateGridPrefs("1", patch)}
             />
           ) : tabDivision === "2" ? (
             <OptionSettingTab2
               ref={tab2Ref}
-              lvCode={lvCode.value}
+              lvCode={lvCodeDraft.value}
               onUnsavedChange={(v) => markUnsaved("2", v)}
-              onSaved={() => markUnsaved("2", false)}
+              onSaved={() => {
+                // 저장 성공 → 더티 해제 + 단계 커밋
+                markUnsaved("2", false);
+                setLvCodeCommitted(lvCodeDraft);
+              }}
               persistedPrefs={gridPrefs["2"]}
               onPrefsChange={(patch) => updateGridPrefs("2", patch)}
             />
