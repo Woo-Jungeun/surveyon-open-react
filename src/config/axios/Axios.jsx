@@ -87,7 +87,7 @@ apiAxios.interceptors.response.use(function (response) {
             return {data: {status: "NS_ER_AT_02", message: "중복 로그인이 감지되었습니다."}};
         }
         //"보기 코드 중복, 빈값 발견"
-        if (data.success === "762") {
+        if (data.success === "762" ||data.success === "763") {
             return {data: {success: "762", message: "필수값 누락 또는 중복 항목이 있습니다. 확인 후 다시 저장해 주세요."}};
         }
         
