@@ -38,6 +38,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
     const onCellClose = parentProps?.onCellClose;
     const editCell = parentProps?.editCell;
     //const processedData = parentProps?.data ?? [];
+    
     // 원본 배열
     const rawData = Array.isArray(parentProps?.data) ? parentProps.data : [];
 
@@ -221,6 +222,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
         return { ...s, filter: next };
         });
     }, [useClientProcessing, filter]);
+
     return (
         <Grid
             data={processedData}
@@ -237,16 +239,6 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}
             rowRender={rowRender}
-
-            // sort={sort}
-            // filter={filter}
-            // pageable={isPage ? { info: false } : false}
-            // onSortChange={sortChange}
-            // skip={page?.skip}
-            // take={page?.take}
-            // total={parentData?.totalSize}
-            // onPageChange={pageChange}
-
             dataItemKey={dataItemKey}
             selectedField={selectedField}
             selectable={{ enabled: true, mode: selectMode }}
@@ -258,7 +250,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             onCellClose={onCellClose}
             editCell={editCell}
 
-            // ✅ 서버/외부 제어 모드일 때만 다시 붙여주기
+            // 서버/외부 제어 모드일 때만 다시 붙여주기
             {
             ...(!useClientProcessing ? {
                 sort,
