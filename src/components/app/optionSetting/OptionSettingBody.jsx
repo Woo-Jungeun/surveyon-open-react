@@ -67,7 +67,7 @@ const OptionSettingBody = () => {
   const trySwitchTab = useCallback(async (next) => {
     if (next === tabDivision) return;
     if (unsaved[tabDivision]) {
-      const ok = await confirmNavigate("미저장 변경 사항이 있습니다.\n저장하지 않고 이동할까요?");
+      const ok = await confirmNavigate("저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?");
       if (!ok) return; // 취소 → 현 탭 유지
     }
     setTabDivision(next);
