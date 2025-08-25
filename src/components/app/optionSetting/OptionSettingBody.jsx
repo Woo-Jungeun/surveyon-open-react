@@ -66,12 +66,16 @@ const OptionSettingBody = () => {
 
   const trySwitchTab = useCallback(async (next) => {
     if (next === tabDivision) return;
-    if (unsaved[tabDivision]) {
+    const cur = tabDivision;
+    if (unsaved[cur]) {
       const ok = await confirmNavigate("저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?");
       if (!ok) return; // 취소 → 현 탭 유지
+
+      // 사용자가 "이동(=변경 사항 버리기)" 를 선택했으므로 현재 탭의 더티 플래그를 즉시 해제
+      setUnsaved(prev => ({ ...prev, [cur]: false }));
     }
     setTabDivision(next);
-  }, [tabDivision, unsaved, confirmNavigate]);
+  }, [tabDivision, unsaved, confirmNavigate, setUnsaved]);
 
   // 새로고침/창닫기 가드 (브라우저 네이티브)
   useEffect(() => {
@@ -151,7 +155,11 @@ const OptionSettingBody = () => {
               value={lvCode}
               disabled={tabDivision === "3"}           //탭3에서 비활성화
               onChange={(e) => {
-                if (tabDivision !== "3") setLvCode(e.value); // 혹시 모를 이벤트 가드
+                if (tabDivision !== "3") {
+                  setLvCode(e.value);
+                  // 단계 변경도 '저장 필요'로 본다 → 탭 이동 시 경고
+                  setUnsaved(prev => ({ ...prev, ["1"]: true }));
+                }
               }}
             />
           </div>
@@ -175,10 +183,10 @@ const OptionSettingBody = () => {
               persistedPrefs={gridPrefs["2"]}
               onPrefsChange={(patch) => updateGridPrefs("2", patch)}
             />
-          ) : <OptionSettingTab3 
-                persistedPrefs={gridPrefs["3"]}
-                onPrefsChange={(patch) => updateGridPrefs("3", patch)}
-                />}
+          ) : <OptionSettingTab3
+            persistedPrefs={gridPrefs["3"]}
+            onPrefsChange={(patch) => updateGridPrefs("3", patch)}
+          />}
         </div>
       </article>
     </Fragment>
