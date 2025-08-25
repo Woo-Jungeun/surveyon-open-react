@@ -623,9 +623,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         //console.log(dataState?.data);
         return (
             <Fragment>
-                <p className="totalTxt">
-                    총 <i className="fcGreen">{dataState?.data?.length || 0}</i>개
-                </p>
+                <div
+                    className="gridHeaderBar"
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}
+                >
+                    <p className="totalTxt">
+                        총 <i className="fcGreen">{dataState?.data?.length || 0}</i>개
+                    </p>
+                    <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
+                        <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
+                        <div>분석현황: 10/100</div>
+                    </div>
+                </div>
                 <div id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
                     <KendoGrid
                         key={`lv-${lvCode}`}

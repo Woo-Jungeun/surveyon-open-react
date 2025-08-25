@@ -27,18 +27,18 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     */
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-        { field: "no", title: "no", show: true, editable: false, width: "100px" },
-        { field: "qnum", title: "문번호", show: true, editable: false },
-        { field: "lv1code", title: "대분류 코드", show: true },
-        { field: "lv1", title: "대분류", show: true },
-        { field: "lv2code", title: "중분류 코드", show: true },
-        { field: "lv2", title: "중분류", show: true },
-        { field: "lv123code", title: "소분류 코드", show: true },
-        { field: "lv3", title: "소분류", show: true },
-        { field: "ex_sum", title: "집계현황", show: true, editable: false },
-        { field: "ex_gubun", title: "보기유형", show: true, editable: false },
-        { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
-    ]);
+            { field: "no", title: "no", show: true, editable: false, width: "100px" },
+            { field: "qnum", title: "문번호", show: true, editable: false },
+            { field: "lv1code", title: "대분류 코드", show: true },
+            { field: "lv1", title: "대분류", show: true },
+            { field: "lv2code", title: "중분류 코드", show: true },
+            { field: "lv2", title: "중분류", show: true },
+            { field: "lv123code", title: "소분류 코드", show: true },
+            { field: "lv3", title: "소분류", show: true },
+            { field: "ex_sum", title: "집계현황", show: true, editable: false },
+            { field: "ex_gubun", title: "보기유형", show: true, editable: false },
+            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
+        ]);
 
     // 단계별 강제 숨김 컬럼
     const forcedHidden = useMemo(() => {
@@ -480,9 +480,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <p className="totalTxt">
-                    총 <i className="fcGreen">{dataState?.data?.length || 0}</i>개
-                </p>
+                <div
+                    className="gridHeaderBar"
+                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}
+                >
+                    <p className="totalTxt">
+                        총 <i className="fcGreen">{dataState?.data?.length || 0}</i>개
+                    </p>
+                    <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
+                        <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
+                    </div>
+                </div>
                 {/* 삭제 안내 배너 */}
                 {hasPendingDelete && (
                     <div style={{ textAlign: "right" }}>
