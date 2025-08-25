@@ -5,7 +5,6 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Checkbox } from "@progress/kendo-react-inputs";
-import { filterBy } from "@progress/kendo-data-query";
 /**
  * 분석 > 그리드 영역 > rawdata
  *
@@ -65,15 +64,8 @@ const OptionSettingTab3 = (props) => {
     const GridRenderer = (props) => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
 
-        //그리드 표출 데이터 총 갯수  
-        const visibleCount = filter ? filterBy(dataState?.data || [], filter).length
-            : (dataState?.data?.length || 0);
-
         return (
             <Fragment>
-                <p className="totalTxt">
-                    총 <i className="fcGreen">{visibleCount}</i>개
-                </p>
                 <div id="grid_01" className="cmn_grid">
                     <KendoGrid
                         parentProps={{

@@ -9,7 +9,6 @@ import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
-import { filterBy } from "@progress/kendo-data-query";
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -34,7 +33,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
     }));
-
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -88,7 +86,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     // 변경시 부모에 저장 (딜레이 없이 즉시 패치)
     useEffect(() => { onPrefsChange?.({ sort }); }, [sort]);
     useEffect(() => { onPrefsChange?.({ filter }); }, [filter]);
-
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
@@ -195,10 +192,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             idGetter,
             dataItemKey,
             handleSearch } = props;
-            
-        //그리드 표출 데이터 총 갯수  
-        const visibleCount = filter ? filterBy(dataState?.data || [], filter).length
-            : (dataState?.data?.length || 0);
 
         // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const suppressUnsavedSelectionRef = useRef(false);
@@ -648,17 +641,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         //console.log(dataState?.data);
         return (
             <Fragment>
-                <div
-                    className="gridHeaderBar"
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}
-                >
-                    <p className="totalTxt">
-                        총 <i className="fcGreen">{visibleCount}</i>개
-                    </p>
-                    <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
-                        <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
-                        <div>분석현황: 10/100</div>
-                    </div>
+                <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
+                    <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
+                    <div>분석현황: 10/100</div>
                 </div>
                 <div id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
                     <KendoGrid

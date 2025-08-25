@@ -6,7 +6,6 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal.jsx";
-import { filterBy } from "@progress/kendo-data-query";
 /**
  * 분석 > 그리드 영역 > 보기 데이터
  *
@@ -161,10 +160,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     //grid rendering 
     const GridRenderer = (props) => {
         const { dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch } = props;
-
-        //그리드 표출 데이터 총 갯수  
-        const visibleCount = filter ? filterBy(dataState?.data || [], filter).length
-            : (dataState?.data?.length || 0);
 
         qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter };    // 최신 컨텍스트 저장
@@ -506,16 +501,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <div
-                    className="gridHeaderBar"
-                    style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}
-                >
-                    <p className="totalTxt">
-                        총 <i className="fcGreen">{visibleCount}</i>개
-                    </p>
-                    <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
-                        <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
-                    </div>
+                <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
+                    <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
                 </div>
                 {/* 삭제 안내 배너 */}
                 {hasPendingDelete && (
