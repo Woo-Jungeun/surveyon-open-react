@@ -113,8 +113,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             params: {
                 key: "",
                 user: "syhong",
+                // projectnum: "q250089uk",
+                // qnum: "A2-2",
                 projectnum: "q250089uk",
-                qnum: "A2-2",
+                qnum: "Z1",
                 gb: "lb",
             }
         }).then((res) => {
@@ -576,8 +578,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const payload = buildSavePayload(rows, {
                 key: "",                 // 있으면 채워 넣기
                 user: "syhong",
+                // projectnum: "q250089uk",
+                // qnum: "A2-2",
                 projectnum: "q250089uk",
-                qnum: "A2-2",
+                qnum: "Z1",
                 gb: "in",
             },
                 { getKey, selectedState }
@@ -808,8 +812,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
+                // projectnum: "q250089uk",
+                // qnum: "A2-2",
                 projectnum: "q250089uk",
-                qnum: "A2-2",
+                qnum: "Z1",
                 gb: "in",
             }}
             renderItem={(props) => <GridRenderer {...props} />}

@@ -149,8 +149,10 @@ const OptionSettingTab3 = (props) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
+                // projectnum: "q250089uk",
+                // qnum: "A2-2",
                 projectnum: "q250089uk",
-                qnum: "A2-2",
+                qnum: "Z1",
                 gb: "list",
             }}
             renderItem={(props) => <GridRenderer {...props} />}
