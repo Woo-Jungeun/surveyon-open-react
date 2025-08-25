@@ -501,8 +501,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
-                    <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
+                <div className="meta2">
+                    <div className="row1">업데이트 날짜: {dataState?.data?.[0]?.update_date?? '-'}</div>
                 </div>
                 {/* 삭제 안내 배너 */}
                 {hasPendingDelete && (

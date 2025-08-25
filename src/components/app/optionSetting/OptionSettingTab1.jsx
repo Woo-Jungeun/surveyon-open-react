@@ -239,6 +239,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [setSelectedState, setDataState, getKey, onUnsavedChange]);
 
+        const rows = dataState?.data ?? [];
+        const total = rows.length;  //총 갯수
+        const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석
+        const verified = rows.filter(r => String(r.recheckyn).toLowerCase() === 'y').length;    //검증
+        const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
 
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
         const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
@@ -251,9 +256,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const shouldAutoApplySelectionRef = useRef(true);
 
         useLayoutEffect(() => {
-            const rows = dataState?.data ?? [];
             if (!rows.length) return;
-
             if (!shouldAutoApplySelectionRef.current) return; // 1회만 동작
 
             //  recheckyn 정규화 + 키 일치
@@ -599,7 +602,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         /* 저장: API 호출 */
         const saveChanges = useCallback(async () => {
-            const rows = dataState?.data ?? [];
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows, {
                 key: "",                 // 있으면 채워 넣기
@@ -641,9 +643,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         //console.log(dataState?.data);
         return (
             <Fragment>
-                <div className="statusMeta" style={{ textAlign: "right", lineHeight: 1.4 }}>
-                    <div>업데이트 날짜 : {dataState?.data?.[0]?.update_date ?? "-"}</div>
-                    <div>분석현황: 10/100</div>
+                <div className="meta2">
+                    <div className="row1">업데이트 날짜: {updatedAt}</div>
+                    <div className="row2">
+                        분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b>
+                    </div>
                 </div>
                 <div id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
                     <KendoGrid
