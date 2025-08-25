@@ -4290,3 +4290,6 @@ footer {
     word-break: break-word; /* 긴 단어 줄바꿈 */
     line-height: 1.5;       /* 보기 좋게 줄 간격 */
   }
+
+.gridHeaderBar { margin-top: 4px; }
+.statusMeta { font-size: 14px; color: #333; }
