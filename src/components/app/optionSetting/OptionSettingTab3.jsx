@@ -12,6 +12,7 @@ import { Checkbox } from "@progress/kendo-react-inputs";
  * @since 2025-08-12<br />
  */
 const OptionSettingTab3 = (props) => {
+    const lvCode = String(props.lvCode); // 분류 단계 코드
     const { persistedPrefs, onPrefsChange } = props;
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
     const MENU_TITLE = "rawdata";
@@ -30,6 +31,32 @@ const OptionSettingTab3 = (props) => {
             { field: "recheckyn", title: "검증", show: true },
         ]);
 
+    // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
+    const forcedHidden = useMemo(() => {
+        const s = new Set();
+        if (lvCode === "1") { s.add("lv1"); s.add("lv1code"); s.add("lv2"); s.add("lv2code"); }
+        else if (lvCode === "2") { s.add("lv1"); s.add("lv1code"); }
+        return s;
+    }, [lvCode]);
+
+    // 단계 컬럼 집합 (대/중분류 코드/이름)
+    const stageFields = useMemo(() =>
+        new Set(["lv1", "lv1code", "lv2", "lv2code"]), []);
+
+    // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
+    const effectiveColumns = useMemo(() => {
+        return columns.map(c => {
+            if (forcedHidden.has(c.field)) {
+                return { ...c, show: false, allowHide: false };
+            }
+            if (stageFields.has(c.field)) {
+                // 해당 단계에서 허용되면 무조건 보여주고, 토글도 막음
+                return { ...c, show: true, allowHide: false };
+            }
+            return c;
+        });
+    }, [columns, forcedHidden, stageFields]);
+
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
     const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
@@ -42,12 +69,18 @@ const OptionSettingTab3 = (props) => {
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={columns}
+            columns={columns
+                .filter(c => !forcedHidden.has(c.field))
+                .map(c => stageFields.has(c.field) ? { ...c, allowHide: false } : c)
+              }
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map(c => [c.field, c]));
                 const next = columns.map(c => {
+                    if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 숨김
                     const u = map.get(c.field);
-                    return u ? { ...c, ...u } : c;
+                    const merged = u ? { ...c, ...u } : c;
+                    // 단계 컬럼은 허용 시 항상 보이게 고정
+                    return stageFields.has(c.field) ? { ...merged, show: true, allowHide: false } : merged;
                 });
                 setColumns(next);
                 onPrefsChange?.({ columns: next }); // 부모에 저장
@@ -68,6 +101,7 @@ const OptionSettingTab3 = (props) => {
             <Fragment>
                 <div id="grid_01" className="cmn_grid">
                     <KendoGrid
+                        key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataState?.data,       // props에서 직접 전달
                             dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
@@ -83,7 +117,7 @@ const OptionSettingTab3 = (props) => {
                             filterChange: (e) => setFilter(e.filter),
                         }}
                     >
-                        {columns.filter(c => c.show !== false).map((c) => {
+                        {effectiveColumns.filter(c => c.show !== false).map((c) => {
                             if (c.field === "recheckyn") {
                                 return (
                                     <Column
@@ -136,10 +170,10 @@ const OptionSettingTab3 = (props) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
-                projectnum: "q250089uk",
-                qnum: "A2-2",
                 // projectnum: "q250089uk",
-                // qnum: "Z1",
+                // qnum: "A2-2",
+                projectnum: "q250089uk",
+                qnum: "Z1",
                 gb: "list",
             }}
             renderItem={(props) => <GridRenderer {...props} />}

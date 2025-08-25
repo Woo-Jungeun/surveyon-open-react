@@ -201,6 +201,7 @@ const OptionSettingBody = () => {
               onPrefsChange={(patch) => updateGridPrefs("2", patch)}
             />
           ) : <OptionSettingTab3
+            lvCode={lvCodeDraft.value}
             persistedPrefs={gridPrefs["3"]}
             onPrefsChange={(patch) => updateGridPrefs("3", patch)}
           />}
