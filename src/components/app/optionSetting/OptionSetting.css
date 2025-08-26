@@ -78,3 +78,66 @@
   pointer-events: none;
   opacity: 0.6;
 }
+
+/* ==== 오버레이 내부 DDL을 '투명한 박스'처럼 보이게 ==== */
+.lv3-editor.lv3-overlay .k-dropdownlist,
+.lv3-editor.lv3-overlay .k-picker,
+.lv3-editor.lv3-overlay .k-input,
+.lv3-editor.lv3-overlay .k-input-inner,
+.lv3-editor.lv3-overlay .k-input-button,
+.lv3-editor.lv3-overlay .k-select,
+.lv3-editor.lv3-overlay .k-button {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* 포커스 링/아웃라인(테마에 따라 .k-focus, :focus, :focus-within로 들어옴) 제거 */
+.lv3-editor.lv3-overlay .k-dropdownlist.k-focus,
+.lv3-editor.lv3-overlay .k-picker.k-focus,
+.lv3-editor.lv3-overlay .k-input.k-focus,
+.lv3-editor.lv3-overlay .k-dropdownlist:focus,
+.lv3-editor.lv3-overlay .k-picker:focus,
+.lv3-editor.lv3-overlay .k-input:focus,
+.lv3-editor.lv3-overlay .k-dropdownlist:focus-within,
+.lv3-editor.lv3-overlay .k-picker:focus-within,
+.lv3-editor.lv3-overlay .k-input:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 드롭다운 버튼 영역도 테두리 생기는 테마가 있어 같이 무력화 */
+.lv3-editor.lv3-overlay .k-input-button,
+.lv3-editor.lv3-overlay .k-input-button:focus,
+.lv3-editor.lv3-overlay .k-input-button.k-focus {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 높이 100% 채우기 유지 */
+.lv3-editor.lv3-overlay .lv3-editor-ddl,
+.lv3-editor.lv3-overlay .lv3-editor-ddl .k-picker,
+.lv3-editor.lv3-overlay .lv3-editor-ddl .k-input,
+.lv3-editor.lv3-overlay .lv3-editor-ddl .k-input-inner,
+.lv3-editor.lv3-overlay .lv3-editor-ddl .k-input-button {
+  height: 100%;
+}
+
+/* ✅ 오버레이가 열린 "그 셀"만 숨김 */
+.cmn_grid.lv3-dd-open td.lv3-active .lv3-opener {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* 오버레이 드롭다운은 셀 크기에 딱 맞추고, 내부 테두리/그림자 제거 */
+.lv3-editor.lv3-overlay { box-sizing: border-box; }
+.lv3-editor.lv3-overlay .k-dropdownlist,
+.lv3-editor.lv3-overlay .k-picker,
+.lv3-editor.lv3-overlay .k-input,
+.lv3-editor.lv3-overlay .k-input-inner,
+.lv3-editor.lv3-overlay .k-input-button {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
