@@ -141,3 +141,20 @@
   box-shadow: none !important;
   background: transparent !important;
 }
+
+/* 드래그 중 텍스트 파란 선택 방지 */
+.cmn_grid.is-dragging,
+.cmn_grid.is-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
+/* 소분류 일괄 선택된 행 전체 노랑 하이라이트 */
+.cmn_grid .k-grid tbody tr.lv3-row-selected > td {
+  background-color: #fff7c4 !important; /* 연한 노랑 */
+}
+
+/* (선택) 테두리 살짝 강조하고 싶으면 */
+.cmn_grid .k-grid tbody tr.lv3-row-selected {
+  box-shadow: inset 0 0 0 1px #f1e08a;
+}

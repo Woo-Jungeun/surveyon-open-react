@@ -259,7 +259,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const verified = rows.filter(r => String(r.recheckyn).toLowerCase() === 'y').length;    //검증
         const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
         const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
-
+        const [isDragging, setIsDragging] = useState(false);
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
         const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
         const [lv3EditorKey, setLv3EditorKey] = useState(null);  // 드롭다운 보여줄 "대표" 셀의 키
@@ -303,7 +303,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             shouldAutoApplySelectionRef.current = false;
         }, [dataState?.data, getKey, setSelectedState, setDataState]);
-  
+
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
             const min = Math.min(a, b);
@@ -317,6 +317,70 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data, getKey])
 
         const lastCellRectRef = useRef(null); //마지막 셀의 DOM 좌표 기억용 ref 추가
+
+        // tr 드래그 제외 대상(클릭해도 드래그로 취급하지 않음)
+        const rowExclusionSelector =
+            '.lv3-popup,.lv3-editor,.lv3-opener,.k-animation-container,.k-input,' +
+            '.k-dropdownlist,.k-checkbox,.k-button,input,button,select,textarea';
+        // 행에서 드래그/범위/토글 선택 시작
+        const onRowMouseDown = useCallback((rowProps, e) => {
+            if (e.target.closest(rowExclusionSelector)) return; // 인터랙션 요소는 패스
+
+            const idx = rowProps.dataIndex;
+            const row = rowProps.dataItem;
+            const key = getKey(row);
+
+            lastFocusedKeyRef.current = key;
+            setLv3EditorKey(null); // 새 동작 → 에디터 닫기
+
+            // 이 행의 lv3 셀(td) 위치를 찾아 앵커로 기억(드롭다운 위치 계산용)
+            const td = document.querySelector(`[data-lv3-key="${String(key)}"]`);
+            if (td) {
+                lastCellElRef.current = td;
+                lastCellRectRef.current = td.getBoundingClientRect();
+            }
+
+            if (e.shiftKey && anchorIndexRef.current != null) {
+                selectionModeRef.current = 'range';
+                rangeToKeys(anchorIndexRef.current, idx);
+                lastIndexRef.current = idx;
+                return;
+            }
+
+            if (e.ctrlKey || e.metaKey) {
+                selectionModeRef.current = 'toggle';
+                setLv3SelKeys(prev => {
+                    const next = new Set(prev);
+                    next.has(key) ? next.delete(key) : next.add(key);
+                    return next;
+                });
+                anchorIndexRef.current = idx;
+                lastIndexRef.current = idx;
+                return;
+            }
+
+            // 기본: 드래그 시작
+            selectionModeRef.current = 'drag';
+            draggingRef.current = true;
+            setIsDragging(true);
+            anchorIndexRef.current = idx;
+            lastIndexRef.current = idx;
+            setLv3SelKeys(new Set([key]));
+        }, [getKey, rangeToKeys]);
+
+        // 드래그 중 행 위로 진입할 때 범위 갱신
+        const onRowMouseEnter = useCallback((rowProps, e) => {
+            if (!draggingRef.current || anchorIndexRef.current == null) return;
+
+            const idx = rowProps.dataIndex;
+            lastIndexRef.current = idx;
+            rangeToKeys(anchorIndexRef.current, idx);
+
+            // 지나간 행의 lv3 셀 위치를 계속 최신화(나중에 드롭다운 열 위치 정확도 ↑)
+            const key = getKey(rowProps.dataItem);
+            const td = document.querySelector(`[data-lv3-key="${String(key)}"]`);
+            if (td) lastCellRectRef.current = td.getBoundingClientRect();
+        }, [rangeToKeys, getKey]);
 
         // 마우스 다운: Ctrl(=toggle) / Shift(=range) / 그 외(=drag)
         const onLv3MouseDown = useCallback((idx, e, row) => {
@@ -387,25 +451,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const end = () => {
                 if (!draggingRef.current) return;
                 draggingRef.current = false;
-                const mode = selectionModeRef.current;
+                // 드래그/범위 선택 상태만 종료. 자동 오픈은 하지 않음
                 selectionModeRef.current = null;
-
-                // 드래그 또는 쉬프트-범위 선택이 끝났다면 마지막 인덱스 기준으로 오픈
-                if (mode === 'drag' || mode === 'range') {
-                    const i = lastIndexRef.current ?? anchorIndexRef.current;
-                    if (i != null && dataState?.data?.[i]) {
-                        const targetKey = getKey(dataState.data[i]);
-                        // // 다음 프레임에 오버레이 위치 설정  에디터 오픈
-                        const rect = lastCellRectRef.current;
-                        requestAnimationFrame(() => {
-                            if (rect) {
-                                setLv3AnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
-                            }
-                            // rect가 없어도 openLv3EditorAtKey가 DOM에서 찾아서 세팅해줌
-                            openLv3EditorAtKey(targetKey);
-                        });
-                    }
-                }
+                setIsDragging(false);
             };
             window.addEventListener('mouseup', end);
             return () => window.removeEventListener('mouseup', end);
@@ -607,17 +655,22 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const rowRender = useCallback((trEl, rowProps) => {
             const key = getKey(rowProps?.dataItem);
             const clicked = key === selectedRowKey;
-          
-            // Kendo가 선택행에 자동으로 넣는 클래스를 제거해서 배경색 적용을 차단
+            const selectedByBatch = lv3SelKeys.has(key);   // 행이 일괄 선택 대상이면
+
+            // Kendo 기본 선택 클래스 제거(배경 겹침 방지)
             const base = (trEl.props.className || '')
-              .replace(/\bk-selected\b/g, '')
-              .replace(/\bk-state-selected\b/g, '');
-          
-            // 연두색(검증 하이라이트)도 더 이상 넣지 않음
-            const cls = `${base} ${clicked ? 'row-clicked' : ''}`.trim();
-          
-            return React.cloneElement(trEl, { ...trEl.props, className: cls });
-          }, [selectedRowKey, getKey]);
+                .replace(/\bk-selected\b/g, '')
+                .replace(/\bk-state-selected\b/g, '');
+
+            const cls = `${base} ${clicked ? 'row-clicked' : ''} ${selectedByBatch ? 'lv3-row-selected' : ''}`.trim();
+
+            return React.cloneElement(trEl, {
+                ...trEl.props,
+                className: cls,
+                onMouseDown: (e) => onRowMouseDown(rowProps, e),   // tr 레벨 드래그/범위/토글
+                onMouseEnter: (e) => onRowMouseEnter(rowProps, e),
+            });
+        }, [selectedRowKey, lv3SelKeys, getKey, onRowMouseDown, onRowMouseEnter]);
 
         // 클릭 하이라이트(색상) 제거: 선택된 행 key/편집상태 모두 해제
         const clearRowHighlight = useCallback(() => {
@@ -782,7 +835,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const anchorField = useMemo(() => {
             const vis = effectiveColumns.filter(c => c.show !== false);
             return vis.length ? vis[vis.length - 2].field : undefined; // 항상 추가 왼쪽에
-          }, [effectiveColumns]);
+        }, [effectiveColumns]);
 
         return (
             <Fragment>
@@ -792,7 +845,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b>
                     </div>
                 </div>
-                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
+                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""} ${isDragging ? "is-dragging" : ""}`}>
                     <KendoGrid
                         key={`lv-${lvCode}-${anchorField ?? 'none'}`}
                         parentProps={{
@@ -880,8 +933,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                     ref={(el) => { if (isActiveCell) lv3AnchorElRef.current = el; }}
                                                     className={`${isSelectedCell ? "lv3-selected" : ""} ${isActiveCell ? "lv3-active" : ""}`}
                                                     tabIndex={0}
-                                                    onMouseDown={(e) => onLv3MouseDown(cellProps.dataIndex, e, cellProps.dataItem)}
-                                                    onMouseEnter={(e) => onLv3MouseEnter(cellProps.dataIndex, e)}
                                                     onKeyDown={handleKeyDown}
                                                     style={baseStyle}
                                                     title={currentValue}
@@ -892,54 +943,20 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         onClick={(e) => {
                                                             e.stopPropagation();
 
-                                                            // 클릭한 셀의 위치를 항상 기억 (Ctrl/Shift 선택일 때도)
                                                             const td = e.currentTarget.closest('td');
                                                             const rect = td?.getBoundingClientRect?.();
-                                                            if (rect) {
-                                                                lastCellRectRef.current = rect;
-                                                            }
+                                                            if (rect) lastCellRectRef.current = rect;
 
-                                                            const idx = cellProps.dataIndex;
-                                                            const isCtrlLike = e.ctrlKey || e.metaKey;
-                                                            const isShift = e.shiftKey;
-
-                                                            // 무조건 마지막 포커스 갱신
+                                                            // 포커스/인덱스 최신화(엔터로 열기 등)
                                                             lastFocusedKeyRef.current = rowKey;
-                                                            anchorIndexRef.current = idx;
-                                                            lastIndexRef.current = idx;
-
-                                                            /* Ctrl/⌘ 클릭: 노란 강조(토글)만 되고 드롭다운은 안 열림.
-                                                            * Shift 클릭: 구간 선택만 되고 드롭다운은 안 열림.
-                                                            * 일반 클릭: 단일 선택 + 드롭다운 열림.
-                                                            * 선택 후 Enter 눌러서 열 수도 있고, 다시 수정키 없이 클릭해도 열림.
-                                                            **/
-                                                            if (isShift && anchorIndexRef.current != null) {
-                                                                // Shift = 구간 선택만
-                                                                selectionModeRef.current = 'range';
-                                                                rangeToKeys(anchorIndexRef.current, idx);
-                                                                return;
-                                                            }
-
-                                                            if (isCtrlLike) {
-                                                                // Ctrl = 토글 선택만
-                                                                selectionModeRef.current = 'toggle';
-                                                                setLv3SelKeys(prev => {
-                                                                    const next = new Set(prev);
-                                                                    next.has(rowKey) ? next.delete(rowKey) : next.add(rowKey);
-                                                                    return next;
-                                                                });
-                                                                return;
-                                                            }
-
-                                                            // 일반 클릭 = 단일 선택 + 드롭다운 열기
-                                                            selectionModeRef.current = 'click';
-                                                            setLv3SelKeys(new Set([rowKey]));
+                                                            anchorIndexRef.current = cellProps.dataIndex;
+                                                            lastIndexRef.current = cellProps.dataIndex;
 
                                                             if (td) {
                                                                 lastCellElRef.current = td;
                                                                 lv3AnchorElRef.current = td;
-                                                                const rect = td.getBoundingClientRect();
-                                                                setLv3AnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+                                                                const r = td.getBoundingClientRect();
+                                                                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
                                                             }
                                                             openLv3EditorAtKey(rowKey);
                                                         }}
