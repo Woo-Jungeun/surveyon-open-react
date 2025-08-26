@@ -162,9 +162,9 @@ const OptionSettingBody = () => {
               dataItemKey="value"
               textField="text"
               value={lvCodeDraft}
-              disabled={tabDivision === "3"}           //탭3에서 비활성화
+              disabled={tabDivision !== "2"}           //탭2에서 활성화
               onChange={(e) => {
-                if (tabDivision !== "3") {
+                if (tabDivision === "2") {
                   setLvCodeDraft(e.value);
                   //  단계만 바꿔도 "변경사항 있음"으로 판단
                   setUnsaved(prev => ({ ...prev, [tabDivision]: true }));
@@ -180,9 +180,8 @@ const OptionSettingBody = () => {
               onInitLvCode={handleInitLvCode}
               onUnsavedChange={(v) => markUnsaved("1", v)}
               onSaved={() => {
-                // 저장 성공 → 더티 해제 + 단계 커밋
+                // 저장 성공 → 더티 해제
                 markUnsaved("1", false);
-                setLvCodeCommitted(lvCodeDraft);
               }}
               persistedPrefs={gridPrefs["1"]}
               onPrefsChange={(patch) => updateGridPrefs("1", patch)}
