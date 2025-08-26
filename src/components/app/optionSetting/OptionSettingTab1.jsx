@@ -20,7 +20,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange } = props;
     const modal = useContext(modalContext);
-    const DATA_ITEM_KEY = ["fixed_key", "cid"];
+    const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
     const SELECTED_FIELD = "selected";
     const { getGridData, saveGridData } = OptionSettingApi();
@@ -193,10 +193,31 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const suppressUnsavedSelectionRef = useRef(false);
 
         // 키 가져오기 헬퍼 
-        const getKey = useCallback((row) => {
-            if (typeof idGetter === "function") return idGetter(row);     // (__rowKey 포함)
-            return row?.[dataItemKey];                                    // 단일키 필드
-        }, [idGetter, dataItemKey]);
+        const getKey = useCallback((row) => row?.__rowKey, []);
+        
+        // dataState.data 안에 __rowKey 없는 행이 있으면 고유키를 생성해서 state에 다시 세팅
+        useEffect(() => {
+            const rows = dataState?.data ?? [];
+            if (!rows.length) return;
+            // 하나라도 __rowKey 없는 행이 있으면 일괄 보정
+            if (rows.some(r => !r?.__rowKey)) {
+                setDataState(prev => ({
+                    ...prev,
+                    data: (prev?.data ?? []).map((r, i) =>
+                        r?.__rowKey
+                            ? r
+                            : {
+                                ...r,
+                                __rowKey:
+                                    (r.fixed_key != null && r.cid != null)
+                                        ? `${String(r.fixed_key)}::${String(r.cid)}`
+                                        : `__tmp__${Date.now()}__${i}__${Math.random()}`
+                            }
+                    ),
+                }));
+            }
+        }, [dataState?.data, setDataState]);
+
 
         // Kendo가 주는 setSelectedState를 감싸서
         //  1) 사용자 액션이면 onUnsavedChange(true)
@@ -492,35 +513,46 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const handleAddButton = useCallback((cellProps) => {
             onUnsavedChange?.(true);
             const clicked = cellProps.dataItem;
-            const current = [...(dataState?.data ?? [])];// 현재 데이터 복사
-            const clickedKey = getKey(clicked); // 선택 행 키는 공통 헬퍼로
-            setSelectedRowKey(clickedKey); // sentiment 드롭다운 on/off 기준
+            const clickedKey = getKey(clicked);
+            setSelectedRowKey(clickedKey);
 
-            // 클릭한 행의 인덱스 찾기 (합성키도 OK)
-            const idx = current.findIndex(r => getKey(r) === clickedKey);
-            if (idx === -1) return;
+            setDataState((prev) => {
+                const prevData = prev?.data ?? [];
+                const idx = prevData.findIndex(r => getKey(r) === clickedKey);
+                if (idx === -1) return prev; // 대상 행 못찾으면 원본 유지
 
-            // 새 행 기본값
-            const newRow = {
-                fixed_key: clicked?.fixed_key,
-                cid: (Number(clicked?.cid) || 0) + 1,
-                answer_origin: clicked?.answer_origin,
-                answer: clicked?.answer,
-                lv1: "", lv2: "", lv3: "",
-                lv1code: "", lv2code: "",
-                lv123code: "",
-                sentiment: "",
-                selected: false,
-                ip: "",
-                inEdit: true, // 새 행 편집 모드
-            };
+                // 같은 fixed_key 그룹 내에서 "현재 prev.data" 기준으로 max cid 계산
+                const fk = clicked?.fixed_key;
+                const curMax = prevData.reduce((m, r) => {
+                    if (r.fixed_key !== fk) return m;
+                    const n = Number(r.cid) || 0;
+                    return n > m ? n : m;
+                }, 0);
+                const nextCid = String(curMax + 1); // 문자열로 저장(키 일관성)
 
-            // 클릭한 행 아래에 삽입
-            current.splice(idx + 1, 0, newRow);
+                // 새 행 기본값
+                const newRow = {
+                    fixed_key: fk,
+                    cid: nextCid,
+                    answer_origin: clicked?.answer_origin,
+                    answer: clicked?.answer,
+                    lv1: "", lv2: "", lv3: "",
+                    lv1code: "", lv2code: "",
+                    lv123code: "",
+                    sentiment: "",
+                    selected: false,
+                    ip: "",
+                    inEdit: true,
+                    __rowKey: `${String(fk)}::${nextCid}::${Date.now()}::${Math.random()}`, // ← 고유키
+                };
 
-            // 상태 반영
-            setDataState(prev => ({ ...prev, data: current }));
-        }, [dataState?.data, getKey, dataItemKey, setDataState, setSelectedRowKey]);
+                // 클릭한 행 아래에 삽입
+                const nextData = [...prevData];
+                nextData.splice(idx + 1, 0, newRow);
+
+                return { ...prev, data: nextData };
+            });
+        }, [getKey, onUnsavedChange, setDataState, setSelectedRowKey]);
 
         // 같은 fixed_key에서 가장 큰 cid 계산 => 추가 버튼 생성을 위해
         const maxCidByFixedKey = useMemo(() => {
@@ -727,6 +759,27 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             selectionModeRef.current = null; // 모드 초기화
         }, []);
 
+        // dataState.data의 각 행에 __rowKey(고유키)를 보장해서 반환하는 메모이제이션 처리
+        const normalizedData = useMemo(() => {
+            const src = dataState?.data ?? [];
+            if (!src.length) return src;
+            let changed = false;
+            const out = src.map((r, i) => {
+                if (r?.__rowKey) return r;
+                // 가능하면 고정 합성키, 없으면 임시 고유키
+                const composed =
+                    r?.fixed_key != null && r?.cid != null
+                        ? `${String(r.fixed_key)}::${String(r.cid)}`
+                        : null;
+                changed = true;
+                return {
+                    ...r,
+                    __rowKey: composed ?? `__tmp__${Date.now()}__${i}__${Math.random()}`
+                };
+            });
+            return changed ? out : src;
+        }, [dataState?.data]);
+
         return (
             <Fragment>
                 <div className="meta2">
@@ -739,15 +792,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
-                            data: dataState?.data,
-                            dataItemKey: dataItemKey,
+                           data: normalizedData,            // ← 아래 3번에서 추가하는 메모 값 사용
+                            dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
                             editField,
                             onItemChange,
                             onRowClick,
                             selectedField: SELECTED_FIELD, // 체크박스 필드 지정 
                             selectedState,
                             setSelectedState: setSelectedStateGuarded,
-                            idGetter,
+                            idGetter: (r) => r.__rowKey,
                             multiSelect: true,
                             selectionColumnAfterField: "sentiment", // 체크박스 선택 컬럼을 원하는 위치에 삽입 
                             linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
