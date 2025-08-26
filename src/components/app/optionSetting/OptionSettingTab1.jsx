@@ -603,18 +603,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
             return m;
         }, [dataState?.data]);
-
-        // 클릭된 행을 강조(hover처럼 유지)
+        // 클릭 행 
         const rowRender = useCallback((trEl, rowProps) => {
             const key = getKey(rowProps?.dataItem);
-
             const clicked = key === selectedRowKey;
-            const verified = String(rowProps?.dataItem?.recheckyn).toLowerCase() === "y";
-
-            const cls = `${trEl.props.className || ''} ${clicked ? 'row-clicked' : ''} ${verified ? 'row-verified' : ''}`;
-
+          
+            // Kendo가 선택행에 자동으로 넣는 클래스를 제거해서 배경색 적용을 차단
+            const base = (trEl.props.className || '')
+              .replace(/\bk-selected\b/g, '')
+              .replace(/\bk-state-selected\b/g, '');
+          
+            // 연두색(검증 하이라이트)도 더 이상 넣지 않음
+            const cls = `${base} ${clicked ? 'row-clicked' : ''}`.trim();
+          
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
-        }, [selectedRowKey, getKey]);
+          }, [selectedRowKey, getKey]);
 
         // 클릭 하이라이트(색상) 제거: 선택된 행 key/편집상태 모두 해제
         const clearRowHighlight = useCallback(() => {
