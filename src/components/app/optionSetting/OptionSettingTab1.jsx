@@ -138,8 +138,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             params: {
                 key: "",
                 user: "syhong",
-                // projectnum: "q250089uk",
-                // qnum: "A2-2",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",
@@ -194,9 +192,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => row?.__rowKey, []);
-        
+
         // dataState.data 안에 __rowKey 없는 행이 있으면 고유키를 생성해서 state에 다시 세팅
-        useEffect(() => {
+        useLayoutEffect(() => {
             const rows = dataState?.data ?? [];
             if (!rows.length) return;
             // 하나라도 __rowKey 없는 행이 있으면 일괄 보정
@@ -217,7 +215,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 }));
             }
         }, [dataState?.data, setDataState]);
-
 
         // Kendo가 주는 setSelectedState를 감싸서
         //  1) 사용자 액션이면 onUnsavedChange(true)
@@ -261,6 +258,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석
         const verified = rows.filter(r => String(r.recheckyn).toLowerCase() === 'y').length;    //검증
         const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
+        const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
 
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
         const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
@@ -271,10 +269,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const lastFocusedKeyRef = useRef(null);
         const selectionModeRef = useRef(null);// 선택 동작 모드: 'drag' | 'range' | 'toggle'
         const shouldAutoApplySelectionRef = useRef(true);
+        const justClosedAtRef = useRef(0);
+        const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
 
         useLayoutEffect(() => {
             if (!rows.length) return;
             if (!shouldAutoApplySelectionRef.current) return; // 1회만 동작
+            if (rows.some(r => !r?.__rowKey)) return;
 
             // recheckyn 정규화 + 키 일치
             const nextSelected = {};
@@ -301,8 +302,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             });
 
             shouldAutoApplySelectionRef.current = false;
-        }, [dataState?.data, getKey, setSelectedStateGuarded]);
-
+        }, [dataState?.data, getKey, setSelectedState, setDataState]);
+  
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
             const min = Math.min(a, b);
@@ -355,6 +356,23 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setLv3SelKeys(new Set([key]));
         }, [getKey, rangeToKeys]);
 
+        // 열기 가드
+        const openLv3EditorAtKey = useCallback((targetKey) => {
+            if (!targetKey) return;
+            if (Date.now() - justClosedAtRef.current < 80) return;
+            if (lv3EditorKey === targetKey) return;
+
+            // 항상 DOM에서 대상 셀을 찾아 anchor & rect 먼저 세팅
+            const sel = `[data-lv3-key="${String(targetKey)}"]`;
+            const el = document.querySelector(sel);
+            if (el) {
+                lv3AnchorElRef.current = el;
+                const r = el.getBoundingClientRect();
+                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+            }
+            // 그런 다음 에디터 키 세팅
+            setLv3EditorKey(targetKey);
+        }, [lv3EditorKey]);
         // 드래그 중 셀 진입 → 범위 갱신
         const onLv3MouseEnter = useCallback((idx, e) => {
             if (!draggingRef.current || anchorIndexRef.current == null) return;
@@ -393,46 +411,66 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return () => window.removeEventListener('mouseup', end);
         }, []);
 
-        // 전역 Enter 리스너 추가
+        // 최신 값들을 ref에 동기화 (렌더마다 가벼운 할당만)
+        useEffect(() => {
+            keyHandlerStateRef.current = {
+                lv3SelKeys,
+                lv3EditorKey,
+                data: dataState?.data,
+                getKey,
+                openLv3EditorAtKey,
+                setLv3AnchorRect,
+                // 아래 4개는 기존 로직에서 쓰던 포커스/인덱스/엘리먼트 정보
+                lastFocusedKey: lastFocusedKeyRef.current,
+                anchorIndex: anchorIndexRef.current,
+                lastIndex: lastIndexRef.current,
+                lastCellEl: lastCellElRef.current,
+                lastCellRect: lastCellRectRef.current,
+            };
+        }, [lv3SelKeys, lv3EditorKey, dataState?.data, getKey, openLv3EditorAtKey, setLv3AnchorRect]);
+
+        // 전역 Enter 리스너: 마운트 시 1회 등록 (최신 값은 keyHandlerStateRef로 접근)
         useEffect(() => {
             const onKey = (e) => {
-                if (e.key !== 'Enter') return;// 입력창/드롭다운 포커스면 무시
+                if (e.key !== 'Enter') return;
                 const tag = document.activeElement?.tagName?.toLowerCase();
                 if (['input', 'select', 'textarea'].includes(tag)) return;
-                if (lv3EditorKey != null) return; // 이미 열려있으면 무시
 
-                // 우선순위: (선택 영역의 마지막 인덱스) → (마지막 포커스 셀)
-                const i = lastIndexRef.current ?? anchorIndexRef.current;
+                const s = keyHandlerStateRef.current;
+                if (!s || s.lv3EditorKey != null) return;
+
+                // 타겟 키 결정: 선택영역 마지막 인덱스 우선, 없으면 마지막 포커스
+                const i = s.lastIndex ?? s.anchorIndex;
                 let targetKey = null;
-
-                if (lv3SelKeys.size > 0 && i != null && dataState?.data?.[i]) {
-                    targetKey = getKey(dataState.data[i]);
+                if (s.lv3SelKeys && s.lv3SelKeys.size > 0 && i != null && s.data?.[i]) {
+                    targetKey = s.getKey(s.data[i]);
                 } else {
-                    targetKey = lastFocusedKeyRef.current;
+                    targetKey = s.lastFocusedKey;
                 }
                 if (!targetKey) return;
 
-                e.preventDefault();
-                e.stopPropagation();
-
-                // 마지막 셀 엘리먼트가 있으면 그것을 앵커로 사용
-                const el = lastCellElRef.current;
-                if (el && document.body.contains(el)) {
-                    lv3AnchorElRef.current = el;
-                    const r = el.getBoundingClientRect();
-                    setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-                } else {
-                    // fallback: 기존 rect 사용
-                    const rect = lastCellRectRef.current;
-                    if (rect) setLv3AnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+                // 앵커 엘리먼트/좌표 보정
+                let el = s.lastCellEl;
+                if (!el || !document.body.contains(el)) {
+                    el = document.querySelector(`[data-lv3-key="${String(targetKey)}"]`);
+                }
+                let rect = s.lastCellRect;
+                if (el) rect = el.getBoundingClientRect();
+                if (rect) {
+                    s.setLv3AnchorRect({
+                        top: rect.top,
+                        left: rect.left,
+                        width: rect.width,
+                        height: rect.height,
+                    });
                 }
 
-                requestAnimationFrame(() => openLv3EditorAtKey(targetKey));
+                // 다음 프레임에 오픈
+                requestAnimationFrame(() => s.openLv3EditorAtKey(targetKey));
             };
-            // 캡처 단계로 등록해야 Kendo의 내부 핸들러보다 먼저 잡음
             window.addEventListener('keydown', onKey, true);
             return () => window.removeEventListener('keydown', onKey, true);
-        }, [lv3SelKeys, lv3EditorKey, dataState?.data, getKey]);
+        }, []);
 
         // 바깥 클릭 닫기 이펙트
         useEffect(() => {
@@ -640,8 +678,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const payload = buildSavePayload(rows, {
                 key: "",                 // 있으면 채워 넣기
                 user: "syhong",
-                // projectnum: "q250089uk",
-                // qnum: "A2-2",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "in",
@@ -688,28 +724,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [lv3EditorKey]);
 
-        // 컴포넌트 상단
-        const justClosedAtRef = useRef(0);
-
-        // 열기 가드
-        const openLv3EditorAtKey = useCallback((targetKey) => {
-            if (!targetKey) return;
-            if (Date.now() - justClosedAtRef.current < 80) return;
-            if (lv3EditorKey === targetKey) return;
-
-            // 항상 DOM에서 대상 셀을 찾아 anchor & rect 먼저 세팅
-            const sel = `[data-lv3-key="${String(targetKey)}"]`;
-            const el = document.querySelector(sel);
-            if (el) {
-                lv3AnchorElRef.current = el;
-                const r = el.getBoundingClientRect();
-                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-            }
-            // 그런 다음 에디터 키 세팅
-            setLv3EditorKey(targetKey);
-        }, [lv3EditorKey]);
-
-        const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
 
         useEffect(() => {
@@ -759,26 +773,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             selectionModeRef.current = null; // 모드 초기화
         }, []);
 
-        // dataState.data의 각 행에 __rowKey(고유키)를 보장해서 반환하는 메모이제이션 처리
-        const normalizedData = useMemo(() => {
-            const src = dataState?.data ?? [];
-            if (!src.length) return src;
-            let changed = false;
-            const out = src.map((r, i) => {
-                if (r?.__rowKey) return r;
-                // 가능하면 고정 합성키, 없으면 임시 고유키
-                const composed =
-                    r?.fixed_key != null && r?.cid != null
-                        ? `${String(r.fixed_key)}::${String(r.cid)}`
-                        : null;
-                changed = true;
-                return {
-                    ...r,
-                    __rowKey: composed ?? `__tmp__${Date.now()}__${i}__${Math.random()}`
-                };
-            });
-            return changed ? out : src;
-        }, [dataState?.data]);
+        const lv3OptionMap = useMemo(() => new Map(lv3Options.map(o => [o.codeId, o])), [lv3Options]);
 
         return (
             <Fragment>
@@ -792,7 +787,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
-                           data: normalizedData,            // ← 아래 3번에서 추가하는 메모 값 사용
+                            data: dataState?.data,
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
                             editField,
                             onItemChange,
@@ -829,7 +824,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                             const isSelectedCell = lv3SelKeys.has(rowKey);
                                             const isActiveCell = lv3EditorKey === rowKey;
                                             const currentValue = cellProps.dataItem.lv3 ?? "";
-                                            const selectedOption = lv3Options.find(o => o.codeId === currentValue) ?? null;
+                                            const selectedOption = lv3OptionMap.get(currentValue) || null;
 
                                             const baseStyle = {
                                                 userSelect: "none",
@@ -1095,8 +1090,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
-                // projectnum: "q250089uk",
-                // qnum: "A2-2",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "in",

@@ -76,7 +76,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             columns={ columns
                     // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
                     .filter(c => !forcedHidden.has(c.field))
-                    // 단계 컬럼도 메뉴에 표시 + 숨김 가능(🔓)
+                    // 단계 컬럼도 메뉴에 표시 + 숨김 가능
                     .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
             }
             onColumnsChange={(updated) => {
@@ -480,8 +480,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return {
                 key: "",
                 user: "syhong",
-                // projectnum: "q250089uk",
-                // qnum: "A2-2",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",
@@ -599,8 +597,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
-                // projectnum: "q250089uk",
-                // qnum: "A2-2",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",
