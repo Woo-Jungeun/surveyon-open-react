@@ -44,17 +44,13 @@ const OptionSettingTab3 = (props) => {
 
     // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
     const effectiveColumns = useMemo(() => {
-        return columns.map(c => {
-            if (forcedHidden.has(c.field)) {
-                return { ...c, show: false, allowHide: false };
-            }
-            if (stageFields.has(c.field)) {
-                // 해당 단계에서 허용되면 무조건 보여주고, 토글도 막음
-                return { ...c, show: true, allowHide: false };
-            }
-            return c;
-        });
+        return columns.map(c =>
+            forcedHidden.has(c.field)
+                ? { ...c, show: false, allowHide: false }
+                : c
+        );
     }, [columns, forcedHidden, stageFields]);
+
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -69,23 +65,24 @@ const OptionSettingTab3 = (props) => {
         <ExcelColumnMenu
             {...menuProps}
             columns={columns
+                // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
                 .filter(c => !forcedHidden.has(c.field))
-                .map(c => stageFields.has(c.field) ? { ...c, allowHide: false } : c)
-              }
+                // 단계 컬럼도 메뉴에 표시 + 숨김 가능
+                .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
+            }
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map(c => [c.field, c]));
                 const next = columns.map(c => {
-                    if (forcedHidden.has(c.field)) return { ...c, show: false }; // 강제 숨김
+                    if (forcedHidden.has(c.field)) return { ...c, show: false }; // 단계상 강제 숨김
                     const u = map.get(c.field);
-                    const merged = u ? { ...c, ...u } : c;
-                    // 단계 컬럼은 허용 시 항상 보이게 고정
-                    return stageFields.has(c.field) ? { ...merged, show: true, allowHide: false } : merged;
+                    return u ? { ...c, ...u } : c
                 });
                 setColumns(next);
                 onPrefsChange?.({ columns: next }); // 부모에 저장
+                onUnsavedChange?.(true); // ← 사용자 설정 변경은 저장 대상
             }}
             filter={filter}
-            onFilterChange={(e) => setFilter(e)}   // 필터 저장
+            onFilterChange={(e) => { setFilter(e); onUnsavedChange?.(true); }}   // 필터 저장
 
         />
     );
@@ -143,8 +140,6 @@ const OptionSettingTab3 = (props) => {
             initialParams={{             /*초기파라미터 설정*/
                 key: "",
                 user: "syhong",
-                // projectnum: "q250089uk",
-                // qnum: "A2-2",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "list",
