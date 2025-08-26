@@ -32,10 +32,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             { field: "lv1", title: "대분류", show: true },
             { field: "lv2code", title: "중분류 코드", show: true },
             { field: "lv2", title: "중분류", show: true },
-            { field: "lv123code", title: "소분류 코드", show: true },
-            { field: "lv3", title: "소분류", show: true },
-            { field: "ex_sum", title: "집계현황", show: true, editable: false },
-            { field: "ex_gubun", title: "보기유형", show: true, editable: false },
+            { field: "lv123code", title: "소분류 코드", show: true, allowHide: false },
+            { field: "lv3", title: "소분류", show: true, allowHide: false },
+            { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false },
+            { field: "ex_gubun", title: "보기유형", show: true, editable: false, allowHide: false },
             { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
         ]);
 
