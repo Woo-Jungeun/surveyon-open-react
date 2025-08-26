@@ -775,6 +775,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         const lv3OptionMap = useMemo(() => new Map(lv3Options.map(o => [o.codeId, o])), [lv3Options]);
 
+        // 검증 체크박스 위치 고정시키기 위함 (임시)
+        const anchorField = useMemo(() => {
+            const vis = effectiveColumns.filter(c => c.show !== false);
+            return vis.length ? vis[vis.length - 2].field : undefined; // 항상 추가 왼쪽에
+          }, [effectiveColumns]);
+
         return (
             <Fragment>
                 <div className="meta2">
@@ -785,7 +791,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 </div>
                 <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""}`}>
                     <KendoGrid
-                        key={`lv-${lvCode}`}
+                        key={`lv-${lvCode}-${anchorField ?? 'none'}`}
                         parentProps={{
                             data: dataState?.data,
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
@@ -797,7 +803,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             setSelectedState: setSelectedStateGuarded,
                             idGetter: (r) => r.__rowKey,
                             multiSelect: true,
-                            selectionColumnAfterField: "sentiment", // 체크박스 선택 컬럼을 원하는 위치에 삽입 
+                            selectionColumnAfterField: anchorField, // 체크박스 선택 컬럼을 원하는 위치에 삽입 
                             linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
                             selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
                             rowRender,
