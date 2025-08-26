@@ -9,13 +9,13 @@ import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
+
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
  * @author jewoo
  * @since 2025-08-11<br />
  */
-
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange } = props;
@@ -33,7 +33,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     /**
      * rows: 그리드 행 배열(dataState.data)
-     * opts: { key, user, projectnum, qnum, gb }  // API 메타
+     * opts: { key, user, projectnum, qnum, gb }  // API
      */
     // YYYY-MM-DD HH:mm:ss
     const formatNow = (d = new Date()) => {
@@ -65,6 +65,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             { field: "sentiment", title: "sentiment", show: true, editable: true, allowHide: false },
             { field: "add", title: "추가", show: true, editable: true, allowHide: false }
         ]);
+
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
     const forcedHidden = useMemo(() => {
         const s = new Set();
@@ -74,8 +75,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     }, [lvCode]);
 
     // 단계 컬럼 집합 (대/중분류 코드/이름)
-    const stageFields = useMemo(() =>
-        new Set(["lv1", "lv1code", "lv2", "lv2code"]), []);
+    const stageFields = useMemo(() => new Set(["lv1", "lv1code", "lv2", "lv2code"]), []);
 
     // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
     const effectiveColumns = useMemo(() => {
@@ -98,11 +98,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={ columns
-                    // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
-                    .filter(c => !forcedHidden.has(c.field))
-                    // 단계 컬럼도 메뉴에 표시 + 숨김 가능(🔓)
-                    .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
+            columns={columns
+                // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
+                .filter(c => !forcedHidden.has(c.field))
+                // 단계 컬럼도 메뉴에 표시 + 숨김 가능
+                .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
             }
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map(c => [c.field, c]));
@@ -120,7 +120,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 setFilter(e);
                 onUnsavedChange?.(true); // ← 필터 변경도 저장 대상
             }}
-
         />
     );
 
@@ -130,9 +129,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             { codeId: "neutral", codeName: "neutral" },
             { codeId: "positive", codeName: "positive" },
             { codeId: "negative", codeName: "negative" }
-        ],
-        []
-    );
+        ], []);
 
     // 소분류 드롭다운 데이터 + 메타 기능
     const [lv3Options, setLv3Options] = useState([]);
@@ -175,9 +172,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     reportedLvcodeRef.current = true; // 다시 안 올리도록 고정
                 }
             }
-
-        })
-            .catch(() => setLv3Options([]));
+        }).catch(() => setLv3Options([]));
     }, []);
 
     /* 선택된 행 key */
@@ -260,7 +255,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (!rows.length) return;
             if (!shouldAutoApplySelectionRef.current) return; // 1회만 동작
 
-            //  recheckyn 정규화 + 키 일치
+            // recheckyn 정규화 + 키 일치
             const nextSelected = {};
             for (const r of rows) {
                 const yn = String(r?.recheckyn ?? "").trim().toLowerCase();
@@ -270,7 +265,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 }
             }
 
-            //  내부 초기화가 끝난 다음 "마지막에" 내가 세팅 (덮어쓰기 방지)
+            // 내부 초기화가 끝난 다음 "마지막에" 내가 세팅 (덮어쓰기 방지)
             const apply = () => {
                 suppressUnsavedSelectionRef.current = true;   // 미저장 X
                 setSelectedState(nextSelected);               // 원본 setter 그대로
@@ -361,14 +356,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     const i = lastIndexRef.current ?? anchorIndexRef.current;
                     if (i != null && dataState?.data?.[i]) {
                         const targetKey = getKey(dataState.data[i]);
+                        // // 다음 프레임에 오버레이 위치 설정  에디터 오픈
                         const rect = lastCellRectRef.current;
-                        // 다음 프레임에 오버레이 위치 설정  에디터 오픈
                         requestAnimationFrame(() => {
                             if (rect) {
-                                setLv3AnchorRect({
-                                    top: rect.top, left: rect.left, width: rect.width, height: rect.height
-                                });
+                                setLv3AnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
                             }
+                            // rect가 없어도 openLv3EditorAtKey가 DOM에서 찾아서 세팅해줌
                             openLv3EditorAtKey(targetKey);
                         });
                     }
@@ -668,9 +662,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 열기 가드
         const openLv3EditorAtKey = useCallback((targetKey) => {
             if (!targetKey) return;
-            // 닫힌 직후 80ms 이내 재오픈 금지
             if (Date.now() - justClosedAtRef.current < 80) return;
             if (lv3EditorKey === targetKey) return;
+
+            // 항상 DOM에서 대상 셀을 찾아 anchor & rect 먼저 세팅
+            const sel = `[data-lv3-key="${String(targetKey)}"]`;
+            const el = document.querySelector(sel);
+            if (el) {
+                lv3AnchorElRef.current = el;
+                const r = el.getBoundingClientRect();
+                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+            }
+            // 그런 다음 에디터 키 세팅
             setLv3EditorKey(targetKey);
         }, [lv3EditorKey]);
 
