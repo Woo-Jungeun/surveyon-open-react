@@ -52,18 +52,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         new Set(["lv1", "lv1code", "lv2", "lv2code"]), []);
 
     // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
-    const effectiveColumns = useMemo(() => {
-        return columns.map(c => {
-            if (forcedHidden.has(c.field)) {
-                return { ...c, show: false, allowHide: false };
-            }
-            if (stageFields.has(c.field)) {
-                // 해당 단계에서 허용되면 무조건 보여주고, 토글도 막음
-                return { ...c, show: true, allowHide: false };
-            }
-            return c;
-        });
-    }, [columns, forcedHidden, stageFields]);
+     const effectiveColumns = useMemo(() => {
+         return columns.map(c =>
+             forcedHidden.has(c.field)
+                 ? { ...c, show: false, allowHide: false }
+                 : c
+         );
+     }, [columns, forcedHidden, stageFields]);
+ 
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -77,27 +73,22 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={columns
-                .filter(c => !forcedHidden.has(c.field))
-                .map(c => stageFields.has(c.field) ? { ...c, allowHide: false } : c)
+            columns={ columns
+                    // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
+                    .filter(c => !forcedHidden.has(c.field))
+                    // 단계 컬럼도 메뉴에 표시 + 숨김 가능(🔓)
+                    .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
             }
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map(c => [c.field, c]));
-                const stageFields = new Set(["lv1", "lv1code", "lv2", "lv2code"]);
                 const next = columns.map(c => {
                     if (forcedHidden.has(c.field)) return { ...c, show: false }; // 단계상 강제 숨김
                     const u = map.get(c.field);
-                    // 업데이트가 있어도, 단계 컬럼은 허용된 단계면 항상 표시
-                    if (stageFields.has(c.field)) {
-                        return { ...(u ? { ...c, ...u } : c), show: true };
-                    }
-                    const merged = u ? { ...c, ...u } : c;
-                    // 단계 컬럼은 설령 메뉴에서 조작해도 최종 저장 상태에선 show를 유지
-                    return stageFields.has(c.field) ? { ...merged, show: true } : merged;
+                    return u ? { ...c, ...u } : c
                 });
                 setColumns(next);
                 onPrefsChange?.({ columns: next }); // 부모에 저장
-                onUnsavedChange?.(true);   // ← 사용자 설정 변경은 저장 대상
+                onUnsavedChange?.(true); // ← 사용자 설정 변경은 저장 대상
             }}
             filter={filter}
             onFilterChange={(e) => { setFilter(e); onUnsavedChange?.(true); }}   // 필터 저장
