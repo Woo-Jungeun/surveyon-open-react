@@ -31,7 +31,16 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
 
-
+    /**
+     * rows: 그리드 행 배열(dataState.data)
+     * opts: { key, user, projectnum, qnum, gb }  // API 메타
+     */
+    // YYYY-MM-DD HH:mm:ss
+    const formatNow = (d = new Date()) => {
+        const p = (n) => String(n).padStart(2, "0");
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    };
+    
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
@@ -164,7 +173,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         lv1: r?.lv1 ?? "",
                         lv2: r?.lv2 ?? "",
                         lv123code: r?.lv123code ?? "",
-                        // lv23code: r?.lv23code ?? "",
                     });
                     return acc;
                 }, []);
@@ -449,7 +457,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             lv1code: r?.lv1code ?? "",
                             lv2code: r?.lv2code ?? "",
                             lv123code: opt?.lv123code ?? "",
-                            // lv23code: opt?.lv23code ?? "",
                         }
                         : r
                 ),
@@ -518,7 +525,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 lv1: "", lv2: "", lv3: "",
                 lv1code: "", lv2code: "",
                 lv123code: "",
-                // lv23code: "",
                 sentiment: "",
                 selected: false,
                 ip: "",
@@ -551,7 +557,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const clicked = key === selectedRowKey;
             const verified = String(rowProps?.dataItem?.recheckyn).toLowerCase() === "y";
 
-            const cls = `${trEl.props.className || ''} ${(clicked || verified) ? 'k-selected row-active' : ''}`;
+            const cls = `${trEl.props.className || ''} ${clicked ? 'row-clicked' : ''} ${verified ? 'row-verified' : ''}`;
 
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
         }, [selectedRowKey, getKey]);
@@ -574,16 +580,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 선택된 lv3 셀 존재 여부
         const hasLv3CellSelection = lv3SelKeys.size > 0;
-
-        /**
-         * rows: 그리드 행 배열(dataState.data)
-         * opts: { key, user, projectnum, qnum, gb }  // API 메타
-         */
-        // YYYY-MM-DD HH:mm:ss
-        const formatNow = (d = new Date()) => {
-            const p = (n) => String(n).padStart(2, "0");
-            return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-        };
 
         const buildSavePayload = (rows, opts, { getKey, selectedState = {} }) => {
             const {
@@ -645,7 +641,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     onSaved?.(); // ← 미저장 플래그 해제 요청(부모)
                     shouldAutoApplySelectionRef.current = true;    // 재조회 시 recheckyn 기반 자동복원 다시 켜기
                     suppressUnsavedSelectionRef.current = true;    // 리셋은 미저장 X
-                    setSelectedStateGuarded({});                    // 깔끔하게 비움
+                    setSelectedStateGuarded({});                    // 초기화
                     suppressUnsavedSelectionRef.current = false;
                     handleSearch();                 // 재조회
                 } else {
@@ -687,7 +683,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (lv3EditorKey === targetKey) return;
             setLv3EditorKey(targetKey);
         }, [lv3EditorKey]);
-
 
         const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
