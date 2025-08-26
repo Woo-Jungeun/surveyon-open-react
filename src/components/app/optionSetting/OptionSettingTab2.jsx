@@ -382,7 +382,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 const res = await saveGridData.mutateAsync(payload);
 
                 if (res?.success == "777") {
-                    modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
+                    modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
                     onSaved?.();  // ← 미저장 플래그 해제 요청(부모)
                     handleSearch(); // 재조회 
                 } else if (res?.success == "762") {
