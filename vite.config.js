@@ -23,12 +23,12 @@ export default defineConfig(({ mode }) => {
                     target: env.VITE_PROXY_URL,
                     changeOrigin: true,
                     secure: false,
-                    rewrite: (path) => path.replace(/^\/survey-on-open/, "")
+                    rewrite: (p) => p.replace(/^\/survey-on-open/, "")
                 },
                 "/map": {
                     target: "http://map.daumcdn.net",
                     changeOrigin: true,
-                    rewrite: (path) => path.replace(/^\/map/, "")
+                    rewrite: (p) => p.replace(/^\/map/, "")
 
                 }
             }
