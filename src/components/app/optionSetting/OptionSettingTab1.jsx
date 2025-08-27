@@ -113,12 +113,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 });
                 setColumns(next);
                 onPrefsChange?.({ columns: next }); // 부모에 저장
-                onUnsavedChange?.(true); // ← 사용자 설정 변경은 저장 대상
             }}
             filter={filter}
             onFilterChange={(e) => {
                 setFilter(e);
-                onUnsavedChange?.(true); // ← 필터 변경도 저장 대상
+                onPrefsChange?.({ filter: e });      
             }}
         />
     );
@@ -931,10 +930,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             rowRender,
                             sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
                             sort,                                 // controlled sort
-                            sortChange: (e) => { setSort(e.sort); onUnsavedChange?.(true); },
+                            sortChange: (e) => { setSort(e.sort); onPrefsChange?.({ sort: e.sort }); },
                             filterable: true,                                   // 필터 허용
                             filter,                               // controlled filter
-                            filterChange: (e) => { setFilter(e.filter); onUnsavedChange?.(true); },
+                            filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter });},
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {

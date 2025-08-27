@@ -88,11 +88,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 });
                 setColumns(next);
                 onPrefsChange?.({ columns: next }); // 부모에 저장
-                onUnsavedChange?.(true); // ← 사용자 설정 변경은 저장 대상
             }}
             filter={filter}
-            onFilterChange={(e) => { setFilter(e); onUnsavedChange?.(true); }}   // 필터 저장
-
+            onFilterChange={(e) => {
+                setFilter(e);
+                onPrefsChange?.({ filter: e });
+            }}
         />
     );
 
@@ -550,7 +551,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         return (
             <Fragment>
                 <div className="meta2">
-                    <div className="row1">업데이트 날짜: {dataState?.data?.[0]?.update_date?? '-'}</div>
+                    <div className="row1">업데이트 날짜: {dataState?.data?.[0]?.update_date ?? '-'}</div>
                 </div>
                 {/* 삭제 안내 배너 */}
                 {hasPendingDelete && (
@@ -582,10 +583,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             onRowClick,
                             sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
                             sort,                                 // controlled sort
-                            sortChange: (e) => { setSort(e.sort); onUnsavedChange?.(true); },
+                            sortChange: (e) => { setSort(e.sort); onPrefsChange?.({ sort: e.sort }); },
                             filterable: true,                                   // 필터 허용
                             filter,                               // controlled filter
-                            filterChange: (e) => { setFilter(e.filter); onUnsavedChange?.(true); },
+                            filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter }); },
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
