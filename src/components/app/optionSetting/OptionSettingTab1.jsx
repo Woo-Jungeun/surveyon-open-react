@@ -349,13 +349,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             if (e.ctrlKey || e.metaKey) {
                 selectionModeRef.current = 'toggle';
+                /* CTRL 토글 시에도 마지막 인덱스/앵커 최신화 (Enter 직후 사용됨) */
+                anchorIndexRef.current = idx;
+                lastIndexRef.current = idx;
+
                 setLv3SelKeys(prev => {
                     const next = new Set(prev);
                     next.has(key) ? next.delete(key) : next.add(key);
                     return next;
                 });
-                anchorIndexRef.current = idx;
-                lastIndexRef.current = idx;
                 return;
             }
 
@@ -488,13 +490,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 if (!s || s.lv3EditorKey != null) return;
 
                 // 타겟 키 결정: 선택영역 마지막 인덱스 우선, 없으면 마지막 포커스
+                //1) lastIndex/anchorIndex 우선
+                //2) 없으면 마지막 포커스
+                //3) 그래도 없으면 선택집합(lv3SelKeys)의 마지막 요소 사용 */
                 const i = s.lastIndex ?? s.anchorIndex;
                 let targetKey = null;
-                if (s.lv3SelKeys && s.lv3SelKeys.size > 0 && i != null && s.data?.[i]) {
+                if (i != null && s.data?.[i]) {
                     targetKey = s.getKey(s.data[i]);
-                } else {
+                } else if (s.lastFocusedKey) {
                     targetKey = s.lastFocusedKey;
+                } else if (s.lv3SelKeys && s.lv3SelKeys.size > 0) {
+                    // Set → 배열 변환 뒤 마지막 요소 사용
+                    const arr = Array.from(s.lv3SelKeys);
+                    targetKey = arr[arr.length - 1];
                 }
+
                 if (!targetKey) return;
 
                 // 앵커 엘리먼트/좌표 보정
@@ -651,6 +661,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
             return m;
         }, [dataState?.data]);
+
         // 클릭 행 
         const rowRender = useCallback((trEl, rowProps) => {
             const key = getKey(rowProps?.dataItem);
@@ -663,12 +674,41 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 .replace(/\bk-state-selected\b/g, '');
 
             const cls = `${base} ${clicked ? 'row-clicked' : ''} ${selectedByBatch ? 'lv3-row-selected' : ''}`.trim();
+            /* 선택된 상태에서 행을 일반 클릭하면(= Drag 아님, 수정키 없음) 해당 행의 lv3 셀 기준으로 DDL 오픈 */
+            const handleRowClickOpenIfSelected = (e) => {
+                // 인터랙션 요소 클릭은 제외
+                if (e.target.closest(rowExclusionSelector)) return;
+                // 드래그 제스처 중이면 열지 않음
+                if (draggingRef.current) return;
+                // CTRL 다중선택이 1개 이상일 때만 동작, 그리고 수정키 없이 단순 클릭이어야 함
+                if (lv3SelKeys.size === 0 || e.shiftKey || e.ctrlKey || e.metaKey) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const k = getKey(rowProps.dataItem);
+                // 포커스/인덱스/엘리먼트 최신화
+                lastFocusedKeyRef.current = k;
+                anchorIndexRef.current = rowProps.dataIndex;
+                lastIndexRef.current = rowProps.dataIndex;
+
+                // 해당 행의 lv3 셀을 찾아 앵커 세팅
+                const td = document.querySelector(`[data-lv3-key="${String(k)}"]`);
+                if (td) {
+                    lastCellElRef.current = td;
+                    lv3AnchorElRef.current = td;
+                    const r = td.getBoundingClientRect();
+                    setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+                }
+                openLv3EditorAtKey(k);
+            };
 
             return React.cloneElement(trEl, {
                 ...trEl.props,
                 className: cls,
                 onMouseDown: (e) => onRowMouseDown(rowProps, e),   // tr 레벨 드래그/범위/토글
                 onMouseEnter: (e) => onRowMouseEnter(rowProps, e),
+                onClick: handleRowClickOpenIfSelected,
             });
         }, [selectedRowKey, lv3SelKeys, getKey, onRowMouseDown, onRowMouseEnter]);
 
