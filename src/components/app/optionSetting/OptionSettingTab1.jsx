@@ -296,23 +296,28 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     if (k != null) nextSelected[k] = true;
                 }
             }
+            // 검증 체크 박스 느림 이슈로 인한 수정사항 
+            const isSame = (() => {
+                const a = selectedState || {};
+                const b = nextSelected || {};
+                const aKeys = Object.keys(a);
+                const bKeys = Object.keys(b);
+                if (aKeys.length !== bKeys.length) return false;
+                for (const k of aKeys) if (!!a[k] !== !!b[k]) return false;
+                return true;
+            })();
+            if (isSame) return; // [추가] 플래그 유지 → 이후 실제 데이터 들어오면 다시 시도
 
-            // 내부 초기화가 끝난 다음 "마지막에" 내가 세팅 (덮어쓰기 방지)
-            const apply = () => {
-                suppressUnsavedSelectionRef.current = true;   // 미저장 X
-                setSelectedState(nextSelected);               // 원본 setter 그대로
-                suppressUnsavedSelectionRef.current = false;
-            };
+            /* 즉시 적용(첫 페인트 전) */
+            suppressUnsavedSelectionRef.current = true;   // 미저장 X
+            setSelectedState(nextSelected);
+            suppressUnsavedSelectionRef.current = false;
 
-            // 1) 마이크로태스크 → 2) 다음 프레임 → 3) 그 다음 프레임에서 적용
-            Promise.resolve().then(() => {
-                requestAnimationFrame(() => {
-                    requestAnimationFrame(() => apply());
-                });
-            });
-
-            shouldAutoApplySelectionRef.current = false;
-        }, [dataState?.data, getKey, setSelectedState, setDataState]);
+            // '비어있지 않은' 복원을 했을 때만 1회 플래그를 끔
+            if (Object.keys(nextSelected).length > 0) {
+                shouldAutoApplySelectionRef.current = false;
+            }
+        }, [dataState?.data, getKey, setSelectedState, setDataState, selectedState]);
 
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
