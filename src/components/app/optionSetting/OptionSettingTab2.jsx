@@ -52,14 +52,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         new Set(["lv1", "lv1code", "lv2", "lv2code"]), []);
 
     // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
-     const effectiveColumns = useMemo(() => {
-         return columns.map(c =>
-             forcedHidden.has(c.field)
-                 ? { ...c, show: false, allowHide: false }
-                 : c
-         );
-     }, [columns, forcedHidden, stageFields]);
- 
+    const effectiveColumns = useMemo(() => {
+        return columns.map(c =>
+            forcedHidden.has(c.field)
+                ? { ...c, show: false, allowHide: false }
+                : c
+        );
+    }, [columns, forcedHidden, stageFields]);
+
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -73,11 +73,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={ columns
-                    // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
-                    .filter(c => !forcedHidden.has(c.field))
-                    // 단계 컬럼도 메뉴에 표시 + 숨김 가능
-                    .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
+            columns={columns
+                // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
+                .filter(c => !forcedHidden.has(c.field))
+                // 단계 컬럼도 메뉴에 표시 + 숨김 가능
+                .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
             }
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map(c => [c.field, c]));
@@ -186,6 +186,43 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             () => buildMaps(dataState?.data, "lv2code", "lv2"),
             [dataState?.data]
         );
+
+        // 소분류코드(lv123code) 중복 찾기 (보류삭제(__pendingDelete) 행 제외)
+        const findLv123Duplicates = useCallback((rows = []) => {
+            const map = new Map(); // code -> [행번호...]
+            (rows || []).forEach((r) => {
+                if (r?.__pendingDelete === true) return; // 🔸중복 체크 대상에서 제외
+                const code = String(r?.lv123code ?? "").trim();
+                if (!code) return;
+                const no = r?.no ?? "?";
+                if (!map.has(code)) map.set(code, []);
+                map.get(code).push(no);
+            });
+            const dups = [];
+            map.forEach((nos, code) => {
+                if (nos.length > 1) dups.push({ code, nos });
+            });
+            return dups;
+        }, []);
+
+        // 알림 한 번만 띄우도록 간단한 가드
+        const lastWarnRef = useRef(0);
+        const warnIfDuplicateLv123 = useCallback(() => {
+            const rowsNow = latestCtxRef.current?.dataState?.data || dataState?.data || [];
+            const dups = findLv123Duplicates(rowsNow);
+            if (!dups.length) return false;
+            const now = Date.now();
+            if (now - lastWarnRef.current < 300) return true; // 연타 방지
+            lastWarnRef.current = now;
+            const msg = dups
+                .map(d => `소분류코드 '${d.code}' 중복 (행: ${d.nos.join(", ")})`)
+                .join("\n");
+            modal.showAlert("알림", msg);
+            return true;
+        }, [dataState?.data, findLv123Duplicates, modal]);
+
+        const gridRootRef = useRef(null);
+
         /**
         * 코드/텍스트 동기화 공통 처리:
         * - 코드 변경: 텍스트를 매핑해 채우고, 없으면 비움
@@ -326,6 +363,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             // 보기유형이 survey면 편집 진입 막기 
             if (clicked?.ex_gubun === 'survey') return;
+            // 행 바꾸기 전에 중복 경고 (행 이동은 막지 않음)
+            warnIfDuplicateLv123();
 
             const clickedKey = getKey(clicked);
             setDataState(prev => ({
@@ -336,7 +375,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     inEdit: getKey(r) === clickedKey
                 }))
             }));
-        }, [setDataState, getKey]);
+        }, [setDataState, getKey, warnIfDuplicateLv123]);
 
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
@@ -494,6 +533,19 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return rows.some(r => r?.__pendingDelete === true);
         }, [dataState?.data]);
 
+        // 포커스가 그리드 바깥으로 완전히 이탈하면 한 번 검사
+        useEffect(() => {
+            const root = gridRootRef.current;
+            if (!root) return;
+            const onFocusOut = (e) => {
+                const next = e.relatedTarget; // 다음 포커스 타겟
+                if (!root.contains(next)) {
+                    warnIfDuplicateLv123();
+                }
+            };
+            root.addEventListener("focusout", onFocusOut, true); // 캡처 단계
+            return () => root.removeEventListener("focusout", onFocusOut, true);
+        }, [warnIfDuplicateLv123]);
 
         return (
             <Fragment>
@@ -515,7 +567,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         </span>
                     </div>
                 )}
-                <div id="grid_01" className="cmn_grid">
+                <div id="grid_01" className="cmn_grid" ref={gridRootRef}>
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
