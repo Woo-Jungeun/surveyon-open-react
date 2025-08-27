@@ -47,7 +47,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
     const [data, setData] = useState({}); //데이터 
     const { getGridData } = OptionSettingApi();
 
@@ -357,7 +357,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                         <Button className="btnTxt">번역</Button>
                         <Button themeColor="primary">보기분석</Button>
                         <Button themeColor="primary">응답자분석(NEW)</Button>
-                        {/* <Button className="btnTxt">응답자 빈셀&기타</Button> */}
+                        {showEmptyEtcBtn && <Button className="btnTxt">응답자 빈셀&기타</Button>}
                     </div>
                     {/* 분석결과 */}
                     <div className="mgT16">

@@ -19,6 +19,7 @@ const OptionSettingBody = () => {
   const TITLE_LIST = ["분석 대메뉴", "분석 메뉴", ""];
   const [tabDivision, setTabDivision] = useState("1");
   const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
+  const [analysisCount, setAnalysisCount] = useState(null); // 최초 분석값 저장
 
   const tab1Ref = useRef(null);
   const tab2Ref = useRef(null);
@@ -142,6 +143,7 @@ const OptionSettingBody = () => {
           <OptionSettingInfo
             isOpen={isLeftOpen}
             onToggle={() => setIsLeftOpen(v => !v)}
+            showEmptyEtcBtn={analysisCount !== 0}
           />
         </div>
 
@@ -185,6 +187,7 @@ const OptionSettingBody = () => {
               }}
               persistedPrefs={gridPrefs["1"]}
               onPrefsChange={(patch) => updateGridPrefs("1", patch)}
+              onInitialAnalysisCount={(n) => setAnalysisCount(n)} //최초 분석값 존재 여부 확인
             />
           ) : tabDivision === "2" ? (
             <OptionSettingTab2

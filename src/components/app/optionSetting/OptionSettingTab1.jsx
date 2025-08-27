@@ -18,7 +18,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
  */
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange } = props;
+    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
@@ -199,6 +199,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const justClosedAtRef = useRef(0);
         const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
+        const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
+        
+        // 최초 로드 시 분석값 있는지 체크 
+        useEffect(() => {
+            if (reportedInitialAnalysisRef.current) return;
+            // rows가 한 번이라도 로드되면 최초 보고로 간주
+            if (Array.isArray(rows) && rows.length > 0) {
+                onInitialAnalysisCount?.(analyzed);
+                reportedInitialAnalysisRef.current = true;
+            }
+        }, [rows, onInitialAnalysisCount]);
 
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => row?.__rowKey, []);
