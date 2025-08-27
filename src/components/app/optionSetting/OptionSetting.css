@@ -1,15 +1,22 @@
-/* 셀 강조(노란색) — 원하는 색상으로 바꾸세요 */
-#grid_01 .lv3-selected {
-  background-color: #FFF3BF !important;
+
+/* 공통 하이라이트 변수: 한 줄로 전체 색상 변경 가능 */
+#grid_01 {
+  --grid-hl: #eafae5;         /* 하이라이트(배경) */
+  --grid-hl-border: #b7eec7;  /* 테두리 톤 */
 }
 
-/* 일반 클릭 행 강조 (연두색) */
+/* 셀 강조 (소분류 셀 선택 등) */
+#grid_01 .lv3-selected {
+  background-color: var(--grid-hl) !important;
+}
+
+/* 행 강조 (일반 클릭 / Kendo selected) */
 #grid_01 .k-table-tbody tr.row-active,
 #grid_01 .k-table-tbody tr.k-selected {
-  background: #eafae5 !important;
+  background: var(--grid-hl) !important;
 }
 
-/* lv3 셀 선택 중(드래그/토글 등)엔 행 강조/호버/선택 배경 제거 */
+/* lv3 셀 선택/편집 중엔 Kendo 기본 선택 배경 제거(겹침 방지) */
 #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row.k-selected,
 #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row[aria-selected="true"],
 #grid_01.lv3-cell-select .k-table-tbody tr.k-table-row:hover,
@@ -21,28 +28,27 @@
   background: transparent !important;
 }
 
-/* 일부 테마 변수 사용 시 대비 */
+/* 테마 변수 대비 */
 #grid_01.lv3-cell-select,
 #grid_01.lv3-dd-open {
   --kendo-selected-bg: transparent !important;
 }
 
-/*컬럼 숨기기*/
+/* (선택) 필터 행 숨김 */
 .k-grid .k-filter-row {
   display: none;
 }
 
-/* 혹시 헤더가 overflow로 잘리는 테마일 때 대비 */
+/* 헤더 잘림 방지 */
 #grid_01 .k-table-thead th,
 #grid_01 .k-table-thead [role="columnheader"] {
   overflow: visible;
 }
-
 #grid_01 .k-table-thead [role="columnheader"] span {
   white-space: nowrap;
 }
 
-/* 모든 체크박스(행 + 헤더) 동일 스타일 */
+/* 체크박스 스타일(행 + 헤더 공통) */
 .k-table .k-checkbox-wrap .k-checkbox[type='checkbox'] {
   display: inline-block;
   border: 1px solid #a5e2c5;
@@ -50,14 +56,11 @@
   height: 20px;
   cursor: pointer;
   appearance: none;
-  /* 브라우저 기본 스타일 제거 */
   -webkit-appearance: none;
   -moz-appearance: none;
   background: #fff;
   border-radius: 4px;
 }
-
-/* 체크 상태 */
 .k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:checked {
   border: 1px solid #00b272;
   background: url(/src/assets/images/checkbox_on.png) no-repeat center #fff;
@@ -72,7 +75,6 @@
 #grid_01 .k-table-tbody tr.row-pending-delete td {
   text-decoration: line-through;
 }
-
 /* 편집/클릭 방지(삭제/취소 버튼은 가능) */
 #grid_01 .k-table-tbody tr.row-pending-delete td *:not(button):not(.k-button) {
   pointer-events: none;
@@ -91,8 +93,7 @@
   box-shadow: none !important;
   background: transparent !important;
 }
-
-/* 포커스 링/아웃라인(테마에 따라 .k-focus, :focus, :focus-within로 들어옴) 제거 */
+/* 포커스 링 제거 */
 .lv3-editor.lv3-overlay .k-dropdownlist.k-focus,
 .lv3-editor.lv3-overlay .k-picker.k-focus,
 .lv3-editor.lv3-overlay .k-input.k-focus,
@@ -105,16 +106,14 @@
   outline: none !important;
   box-shadow: none !important;
 }
-
-/* 드롭다운 버튼 영역도 테두리 생기는 테마가 있어 같이 무력화 */
+/* 드롭다운 버튼 테두리 무력화 */
 .lv3-editor.lv3-overlay .k-input-button,
 .lv3-editor.lv3-overlay .k-input-button:focus,
 .lv3-editor.lv3-overlay .k-input-button.k-focus {
   border: 0 !important;
   box-shadow: none !important;
 }
-
-/* 높이 100% 채우기 유지 */
+/* 높이 100% 채우기 */
 .lv3-editor.lv3-overlay .lv3-editor-ddl,
 .lv3-editor.lv3-overlay .lv3-editor-ddl .k-picker,
 .lv3-editor.lv3-overlay .lv3-editor-ddl .k-input,
@@ -123,14 +122,14 @@
   height: 100%;
 }
 
-/* ✅ 오버레이가 열린 "그 셀"만 숨김 */
+/* 오버레이가 열린 "그 셀"만 숨김 */
 .cmn_grid.lv3-dd-open td.lv3-active .lv3-opener {
   visibility: hidden !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-/* 오버레이 드롭다운은 셀 크기에 딱 맞추고, 내부 테두리/그림자 제거 */
+/* 오버레이 크기/테두리 */
 .lv3-editor.lv3-overlay { box-sizing: border-box; }
 .lv3-editor.lv3-overlay .k-dropdownlist,
 .lv3-editor.lv3-overlay .k-picker,
@@ -142,19 +141,18 @@
   background: transparent !important;
 }
 
-/* 드래그 중 텍스트 파란 선택 방지 */
+/* 드래그 중 텍스트 선택 방지 */
 .cmn_grid.is-dragging,
 .cmn_grid.is-dragging * {
   user-select: none !important;
   -webkit-user-select: none !important;
 }
 
-/* 소분류 일괄 선택된 행 전체 노랑 하이라이트 */
+/* 소분류 일괄 선택된 행 전체 강조 (통일 색) */
 .cmn_grid .k-grid tbody tr.lv3-row-selected > td {
-  background-color: #fff7c4 !important; /* 연한 노랑 */
+  background-color: var(--grid-hl) !important;
 }
-
-/* (선택) 테두리 살짝 강조하고 싶으면 */
+/* (선택) 살짝 테두리 */
 .cmn_grid .k-grid tbody tr.lv3-row-selected {
-  box-shadow: inset 0 0 0 1px #f1e08a;
+  box-shadow: inset 0 0 0 1px var(--grid-hl-border);
 }

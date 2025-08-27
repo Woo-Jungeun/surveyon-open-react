@@ -178,17 +178,27 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     //grid rendering 
     const GridRenderer = (props) => {
-        const {
-            dataState,
-            setDataState,
-            selectedState,
-            setSelectedState,
-            idGetter,
-            dataItemKey,
-            handleSearch } = props;
 
-        // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
-        const suppressUnsavedSelectionRef = useRef(false);
+        const { dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch } = props;
+        const rows = dataState?.data ?? [];
+        const total = rows.length;  //총 갯수
+        const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석
+        const verified = rows.filter(r => String(r.recheckyn).toLowerCase() === 'y').length;    //검증
+        const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
+        const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
+        const [isDragging, setIsDragging] = useState(false);
+        /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
+        const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
+        const [lv3EditorKey, setLv3EditorKey] = useState(null);  // 드롭다운 보여줄 "대표" 셀의 키
+        const draggingRef = useRef(false);
+        const anchorIndexRef = useRef(null);
+        const lastIndexRef = useRef(null);
+        const lastFocusedKeyRef = useRef(null);
+        const selectionModeRef = useRef(null);// 선택 동작 모드: 'drag' | 'range' | 'toggle'
+        const shouldAutoApplySelectionRef = useRef(true);
+        const justClosedAtRef = useRef(0);
+        const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
+        const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
 
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => row?.__rowKey, []);
@@ -216,61 +226,61 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [dataState?.data, setDataState]);
 
-        // Kendo가 주는 setSelectedState를 감싸서
-        //  1) 사용자 액션이면 onUnsavedChange(true)
-        //  2) dataState.data의 recheckyn도 함께 동기화
         const setSelectedStateGuarded = useCallback((next) => {
-            const computeNext = (prev) => (typeof next === "function" ? next(prev) : next || {});
-            const apply = (nextMap) => {
-                // 2-1) 그리드의 선택 상태 업데이트
-                setSelectedState(nextMap);
-                // 2-2) 행의 recheckyn 동기화
-                const selectedKeys = new Set(Object.keys(nextMap).filter((k) => nextMap[k]));
+            // 단일 토글 감지 & 선택집합(lv3SelKeys) 배치 확장 유틸
+            const expandWithBatchIfNeeded = (prevMap, nextMap) => {
+                try {
+                    const prevKeys = new Set(Object.keys(prevMap || {}));
+                    const nextKeys = new Set(Object.keys(nextMap || {}));
+                    const all = new Set([...prevKeys, ...nextKeys]);
+                    const changed = [];
+                    for (const k of all) {
+                        if (!!prevMap?.[k] !== !!nextMap?.[k]) changed.push(k);
+                    }
+                    // [설명] 체크박스 '한 개'만 토글된 상황이고,
+                    //        그 키가 현재 lv3 셀 선택집합 안에 있을 때 → 배치로 확장
+                    if (changed.length === 1 && lv3SelKeys.size > 0) {
+                        const toggledKey = changed[0];
+                        const toggledVal = !!nextMap[toggledKey];
+                        if (lv3SelKeys.has(toggledKey)) {
+                            const expanded = { ...(prevMap || {}) };
+                            // 선택집합 전체를 동일 값으로
+                            lv3SelKeys.forEach((k) => {
+                                expanded[k] = toggledVal;
+                            });
+                            return expanded;
+                        }
+                    }
+                } catch { /* noop */ }
+                return nextMap;
+            };
+
+            if (!suppressUnsavedSelectionRef.current) {
+                onUnsavedChange?.(true);
+            }
+
+            // 항상 함수형 업데이트로 prev를 확보하여 단일 토글 감지
+            setSelectedState((prev) => {
+                const computed = (typeof next === "function" ? next(prev) : (next || {}));
+                const maybeBatched = expandWithBatchIfNeeded(prev, computed);
+
+                // 그리드의 선택 상태 업데이트 (setSelectedState는 우리가 반환하는 값으로 반영됨)
+                // 행의 recheckyn 동기화
+                const selectedKeys = new Set(Object.keys(maybeBatched).filter((k) => maybeBatched[k]));
                 setDataState((prevDS) => ({
                     ...prevDS,
                     data: (prevDS?.data || []).map((r) => {
                         const k = getKey(r);
                         const checked = selectedKeys.has(k);
-                        // 이미 동일하면 그대로 두기 (불필요 렌더 최소화)
                         if ((r?.recheckyn === "y") === checked) return r;
                         return { ...r, recheckyn: checked ? "y" : "" };
                     }),
                 }));
-            };
-            if (!suppressUnsavedSelectionRef.current) {
-                onUnsavedChange?.(true);
-            }
-            if (typeof next === "function") {
-                // 함수형 업데이트
-                setSelectedState((prev) => {
-                    const nm = computeNext(prev);
-                    apply(nm);
-                    // setSelectedState는 이미 호출되었지만 리액트 배치 고려해 nm 반환
-                    return nm;
-                });
-            } else {
-                apply(next || {});
-            }
-        }, [setSelectedState, setDataState, getKey, onUnsavedChange]);
 
-        const rows = dataState?.data ?? [];
-        const total = rows.length;  //총 갯수
-        const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석
-        const verified = rows.filter(r => String(r.recheckyn).toLowerCase() === 'y').length;    //검증
-        const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
-        const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
-        const [isDragging, setIsDragging] = useState(false);
-        /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
-        const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
-        const [lv3EditorKey, setLv3EditorKey] = useState(null);  // 드롭다운 보여줄 "대표" 셀의 키
-        const draggingRef = useRef(false);
-        const anchorIndexRef = useRef(null);
-        const lastIndexRef = useRef(null);
-        const lastFocusedKeyRef = useRef(null);
-        const selectionModeRef = useRef(null);// 선택 동작 모드: 'drag' | 'range' | 'toggle'
-        const shouldAutoApplySelectionRef = useRef(true);
-        const justClosedAtRef = useRef(0);
-        const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
+                return maybeBatched;
+            });
+        }, [setSelectedState, setDataState, getKey, onUnsavedChange, lv3SelKeys]);
+
 
         useLayoutEffect(() => {
             if (!rows.length) return;
