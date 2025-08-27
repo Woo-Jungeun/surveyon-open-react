@@ -77,7 +77,7 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
         //분석 정보 데이터
         getGridData.mutateAsync({
             params: {
-                key:"",
+                key: "",
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "A2-2",
@@ -158,7 +158,18 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
 
     // onChangeInputEvent 핸들러
     const onChangeInputEvent = (e, col) => {
-        const next = e?.value ?? e?.target?.value ?? "";
+        let next = e?.value ?? e?.target?.value ?? "";
+        
+        // temperature라면 숫자로 변환 후 소수점 한 자리 고정
+        if (col === "temperature") {
+            const num = parseFloat(next);
+            if (!isNaN(num)) {
+                next = parseFloat(num.toFixed(1)); // 0.1 단위로 고정
+            } else {
+                next = ""; // 숫자가 아니면 빈 값
+            }
+        }
+
         setData(prev => ({
             ...prev,
             [col]: next,
@@ -169,35 +180,35 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
     const handleDropdownChange = (key) => (e) => {
         const item = e?.value; // 선택 객체
         if (!item) return;
-    
+
         switch (key) {
-        case "apikey":
-            setApiKeyValue(String(item.value));
-            setData((prev) => ({
-            ...prev,
-            apikeyid: item.value,  // keyvalue
-            apikey: item.keyid,    // keyid
-            }));
-            break;
-    
-        case "result_lang":
-            setResultLangValue(String(item.value));
-            setData((prev) => ({
-            ...prev,
-            result_lang: item.value,
-            }));
-            break;
-    
-        case "model_select":
-            setModelValue(String(item.value));
-            setData((prev) => ({
-            ...prev,
-            model_select: item.value,
-            }));
-            break;
-    
-        default:
-            break;
+            case "apikey":
+                setApiKeyValue(String(item.value));
+                setData((prev) => ({
+                    ...prev,
+                    apikeyid: item.value,  // keyvalue
+                    apikey: item.keyid,    // keyid
+                }));
+                break;
+
+            case "result_lang":
+                setResultLangValue(String(item.value));
+                setData((prev) => ({
+                    ...prev,
+                    result_lang: item.value,
+                }));
+                break;
+
+            case "model_select":
+                setModelValue(String(item.value));
+                setData((prev) => ({
+                    ...prev,
+                    model_select: item.value,
+                }));
+                break;
+
+            default:
+                break;
         }
     };
 
@@ -289,9 +300,20 @@ const OptionSettingInfo = ({ isOpen, onToggle }) => {
                                 onChange={handleDropdownChange("model_select")}
                             />
                         </div>
+                        <div className="cmn_pop_ipt">
+                            <span className="iptTit">창의성 조절</span>
+                            <Input
+                                type="number"
+                                min={0}              // 최소값
+                                max={1}              // 최대값
+                                step={0.1}           // 증감 단위
+                                value={data?.temperature ?? 0} // 상태 값
+                                onChange={(e) => onChangeInputEvent(e, "temperature")}
+                            />
+                        </div>
                     </Section>
 
-                    {/* 분류개수 설정 (+ 작은 안내문) */}
+                    {/* 분류개수 설정 */}
                     <Section
                         id="sec-counts"
                         title={
