@@ -795,6 +795,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         /* 저장: API 호출 */
         const saveChanges = useCallback(async () => {
+            // 저장 전에 유효성 검사 (소분류 필수)
+            const errors = [];
+            for (const r of rows) {
+                const v = String(r.lv3 || "").trim();
+                if (!v) {
+                    errors.push(`소분류 값은 필수입니다.`);
+                }
+            }
+            if (errors.length > 0) {
+                modal.showAlert("알림", errors.join("\n"));
+                return; // 저장 중단
+            }
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows, {
                 key: "",                 // 있으면 채워 넣기
@@ -933,7 +945,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             sortChange: (e) => { setSort(e.sort); onPrefsChange?.({ sort: e.sort }); },
                             filterable: true,                                   // 필터 허용
                             filter,                               // controlled filter
-                            filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter });},
+                            filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter }); },
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
