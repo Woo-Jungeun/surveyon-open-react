@@ -117,11 +117,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             filter={filter}
             onFilterChange={(e) => {
                 setFilter(e);
-                onPrefsChange?.({ filter: e });      
+                onPrefsChange?.({ filter: e });
             }}
         />
     ), [columns, forcedHidden, stageFields, filter, onPrefsChange]);
-    
+
     // 검증 드롭다운 데이터
     const sentimentOptions = useMemo(
         () => [
@@ -194,7 +194,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
-        
+
         // 최초 로드 시 분석값 있는지 체크 
         useEffect(() => {
             if (reportedInitialAnalysisRef.current) return;
@@ -215,10 +215,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const keysOnPage = new Set(rows.map(getKey));
             let count = 0;
             for (const k in (selectedState || {})) {
-              if (selectedState[k] && keysOnPage.has(k)) count++;
+                if (selectedState[k] && keysOnPage.has(k)) count++;
             }
             return count;
-          }, [rows, selectedState, getKey]); 
+        }, [rows, selectedState, getKey]);
 
         // dataState.data 안에 __rowKey 없는 행이 있으면 고유키를 생성해서 state에 다시 세팅
         useLayoutEffect(() => {
@@ -246,38 +246,38 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const setSelectedStateGuarded = useCallback((next) => {
             // (A) 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
             const expandWithBatchIfNeeded = (prevMap, nextMap) => {
-              try {
-                const prevKeys = new Set(Object.keys(prevMap || {}));
-                const nextKeys = new Set(Object.keys(nextMap || {}));
-                const all = new Set([...prevKeys, ...nextKeys]);
-                const changed = [];
-                for (const k of all) {
-                  if (!!prevMap?.[k] !== !!nextMap?.[k]) changed.push(k);
-                }
-                // 체크박스 하나만 바뀌었고, 그 키가 현재 선택집합 안에 있으면 → 선택집합 전체에 동일값 적용
-                if (changed.length === 1 && lv3SelKeys.size > 0) {
-                  const toggledKey = changed[0];
-                  const toggledVal = !!nextMap[toggledKey];
-                  if (lv3SelKeys.has(toggledKey)) {
-                    const expanded = { ...(prevMap || {}) };
-                    lv3SelKeys.forEach((k) => { expanded[k] = toggledVal; });
-                    return expanded;
-                  }
-                }
-              } catch {}
-              return nextMap;
+                try {
+                    const prevKeys = new Set(Object.keys(prevMap || {}));
+                    const nextKeys = new Set(Object.keys(nextMap || {}));
+                    const all = new Set([...prevKeys, ...nextKeys]);
+                    const changed = [];
+                    for (const k of all) {
+                        if (!!prevMap?.[k] !== !!nextMap?.[k]) changed.push(k);
+                    }
+                    // 체크박스 하나만 바뀌었고, 그 키가 현재 선택집합 안에 있으면 → 선택집합 전체에 동일값 적용
+                    if (changed.length === 1 && lv3SelKeys.size > 0) {
+                        const toggledKey = changed[0];
+                        const toggledVal = !!nextMap[toggledKey];
+                        if (lv3SelKeys.has(toggledKey)) {
+                            const expanded = { ...(prevMap || {}) };
+                            lv3SelKeys.forEach((k) => { expanded[k] = toggledVal; });
+                            return expanded;
+                        }
+                    }
+                } catch { }
+                return nextMap;
             };
-          
+
             if (!suppressUnsavedSelectionRef.current) {
-              onUnsavedChange?.(true);
+                onUnsavedChange?.(true);
             }
-          
+
             setSelectedState((prev) => {
-              const computed = (typeof next === "function" ? next(prev) : (next || {}));
-              const maybeBatched = expandWithBatchIfNeeded(prev, computed);
-              return maybeBatched;
+                const computed = (typeof next === "function" ? next(prev) : (next || {}));
+                const maybeBatched = expandWithBatchIfNeeded(prev, computed);
+                return maybeBatched;
             });
-          }, [setSelectedState, onUnsavedChange, lv3SelKeys]);
+        }, [setSelectedState, onUnsavedChange, lv3SelKeys]);
 
         useLayoutEffect(() => {
             if (!rows.length) return;
@@ -783,15 +783,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         /* 저장: API 호출 */
         const saveChanges = useCallback(async () => {
             // 저장 전에 유효성 검사 (소분류 필수)
-            const errors = [];
-            for (const r of rows) {
-                const v = String(r.lv3 || "").trim();
-                if (!v) {
-                    errors.push(`소분류 값은 필수입니다.`);
-                }
-            }
-            if (errors.length > 0) {
-                modal.showAlert("알림", errors.join("\n"));
+            const hasEmptyLv3 = rows.some(r => String(r.lv3 || "").trim() === "");
+            if (hasEmptyLv3) {
+                modal.showAlert("알림", "소분류 값은 필수입니다.");
                 return; // 저장 중단
             }
             // selected → recheckyn 반영 + 페이로드 생성
