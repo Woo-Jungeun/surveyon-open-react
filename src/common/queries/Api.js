@@ -10,12 +10,12 @@ export default {
     },
 
     async post(data, url) {
-        const response = await apiAxios.post(VITE_DEFAULT_PATH + url, data);
+        const response = await apiAxios.post(url, data);
         return response.data || {};
     },
 
     async get(data, url) {
-        const response = await apiAxios.get(VITE_DEFAULT_PATH + url, data);
+        const response = await apiAxios.get (url, data);
         // console.log("response", response)
         return response.data || {};
     },

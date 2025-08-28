@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "baseUrl": "./",
+        "baseUrl": "./o2",
         "paths": {
             "@/*": [
                 "src/*"
