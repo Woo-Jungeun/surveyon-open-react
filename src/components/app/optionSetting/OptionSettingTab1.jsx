@@ -95,7 +95,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     useEffect(() => { onPrefsChange?.({ filter }); }, [filter]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
-    const columnMenu = (menuProps) => (
+    const columnMenu = useCallback((menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
             columns={columns
@@ -120,8 +120,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 onPrefsChange?.({ filter: e });      
             }}
         />
-    );
-
+    ), [columns, forcedHidden, stageFields, filter, onPrefsChange]);
+    
     // 검증 드롭다운 데이터
     const sentimentOptions = useMemo(
         () => [
@@ -177,13 +177,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     //grid rendering 
     const GridRenderer = (props) => {
-
         const { dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch } = props;
         const rows = dataState?.data ?? [];
-        const total = rows.length;  //총 갯수
-        const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석
-        const verified = rows.filter(r => String(r.recheckyn).toLowerCase() === 'y').length;    //검증
-        const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
         const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
         const [isDragging, setIsDragging] = useState(false);
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
@@ -213,6 +208,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => row?.__rowKey, []);
 
+        const total = rows.length;  //총 갯수
+        const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석값
+        const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
+        const verified = useMemo(() => {//검증값
+            const keysOnPage = new Set(rows.map(getKey));
+            let count = 0;
+            for (const k in (selectedState || {})) {
+              if (selectedState[k] && keysOnPage.has(k)) count++;
+            }
+            return count;
+          }, [rows, selectedState, getKey]); 
+
         // dataState.data 안에 __rowKey 없는 행이 있으면 고유키를 생성해서 state에 다시 세팅
         useLayoutEffect(() => {
             const rows = dataState?.data ?? [];
@@ -237,60 +244,40 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data, setDataState]);
 
         const setSelectedStateGuarded = useCallback((next) => {
-            // 단일 토글 감지 & 선택집합(lv3SelKeys) 배치 확장 유틸
+            // (A) 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
             const expandWithBatchIfNeeded = (prevMap, nextMap) => {
-                try {
-                    const prevKeys = new Set(Object.keys(prevMap || {}));
-                    const nextKeys = new Set(Object.keys(nextMap || {}));
-                    const all = new Set([...prevKeys, ...nextKeys]);
-                    const changed = [];
-                    for (const k of all) {
-                        if (!!prevMap?.[k] !== !!nextMap?.[k]) changed.push(k);
-                    }
-                    // [설명] 체크박스 '한 개'만 토글된 상황이고,
-                    //        그 키가 현재 lv3 셀 선택집합 안에 있을 때 → 배치로 확장
-                    if (changed.length === 1 && lv3SelKeys.size > 0) {
-                        const toggledKey = changed[0];
-                        const toggledVal = !!nextMap[toggledKey];
-                        if (lv3SelKeys.has(toggledKey)) {
-                            const expanded = { ...(prevMap || {}) };
-                            // 선택집합 전체를 동일 값으로
-                            lv3SelKeys.forEach((k) => {
-                                expanded[k] = toggledVal;
-                            });
-                            return expanded;
-                        }
-                    }
-                } catch { /* noop */ }
-                return nextMap;
+              try {
+                const prevKeys = new Set(Object.keys(prevMap || {}));
+                const nextKeys = new Set(Object.keys(nextMap || {}));
+                const all = new Set([...prevKeys, ...nextKeys]);
+                const changed = [];
+                for (const k of all) {
+                  if (!!prevMap?.[k] !== !!nextMap?.[k]) changed.push(k);
+                }
+                // 체크박스 하나만 바뀌었고, 그 키가 현재 선택집합 안에 있으면 → 선택집합 전체에 동일값 적용
+                if (changed.length === 1 && lv3SelKeys.size > 0) {
+                  const toggledKey = changed[0];
+                  const toggledVal = !!nextMap[toggledKey];
+                  if (lv3SelKeys.has(toggledKey)) {
+                    const expanded = { ...(prevMap || {}) };
+                    lv3SelKeys.forEach((k) => { expanded[k] = toggledVal; });
+                    return expanded;
+                  }
+                }
+              } catch {}
+              return nextMap;
             };
-
+          
             if (!suppressUnsavedSelectionRef.current) {
-                onUnsavedChange?.(true);
+              onUnsavedChange?.(true);
             }
-
-            // 항상 함수형 업데이트로 prev를 확보하여 단일 토글 감지
+          
             setSelectedState((prev) => {
-                const computed = (typeof next === "function" ? next(prev) : (next || {}));
-                const maybeBatched = expandWithBatchIfNeeded(prev, computed);
-
-                // 그리드의 선택 상태 업데이트 (setSelectedState는 우리가 반환하는 값으로 반영됨)
-                // 행의 recheckyn 동기화
-                const selectedKeys = new Set(Object.keys(maybeBatched).filter((k) => maybeBatched[k]));
-                setDataState((prevDS) => ({
-                    ...prevDS,
-                    data: (prevDS?.data || []).map((r) => {
-                        const k = getKey(r);
-                        const checked = selectedKeys.has(k);
-                        if ((r?.recheckyn === "y") === checked) return r;
-                        return { ...r, recheckyn: checked ? "y" : "" };
-                    }),
-                }));
-
-                return maybeBatched;
+              const computed = (typeof next === "function" ? next(prev) : (next || {}));
+              const maybeBatched = expandWithBatchIfNeeded(prev, computed);
+              return maybeBatched;
             });
-        }, [setSelectedState, setDataState, getKey, onUnsavedChange, lv3SelKeys]);
-
+          }, [setSelectedState, onUnsavedChange, lv3SelKeys]);
 
         useLayoutEffect(() => {
             if (!rows.length) return;
