@@ -64,7 +64,10 @@ export default function ExcelColumnMenu(props) {
 
   // --------- Columns Chooser 관련 ---------
   const [q, setQ] = useState('');
-  const hiddenCount = useMemo(() => columns.filter(c => c.show === false).length, [columns]);
+  const hiddenCount = useMemo(
+    () => columns.filter(c => c.allowHide !== false && c.show === false).length,
+    [columns]
+  );
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return columns;
@@ -113,7 +116,7 @@ export default function ExcelColumnMenu(props) {
       <div>
         <div style={styles.headerRow}>
           <div style={{ fontSize: 12, opacity: 0.8 }}>
-            Columns {hiddenCount > 0 && <span style={styles.badge}>숨김 {hiddenCount}</span>}
+            Columns
           </div>
           <div style={styles.controls}>
             <Button size="small" fillMode="flat" onClick={() => setAll(true)}>모두 표시</Button>
@@ -123,22 +126,21 @@ export default function ExcelColumnMenu(props) {
 
         <Input value={q} onChange={(e) => setQ(e.value)} placeholder="컬럼 검색" style={{ marginBottom: 8 }} />
 
-        {filtered.map(c => {
-          const hidden = c.show === false;
-          const locked = c.allowHide === false;
-          return (
-            <label key={c.field} style={styles.listRow(hidden, locked)}>
-              <Checkbox
-                checked={c.show !== false}
-                disabled={locked}
-                onChange={(e) => toggle(c.field, e.value)}
-              />
-              <span>{c.title ?? c.field}</span>
-              {locked && <span style={{ marginLeft: 6, fontSize: 12, opacity: 0.8 }}>🔒</span>}
-              {hidden && <span style={styles.badge}>숨김</span>}
-            </label>
-          );
-        })}
+        {filtered
+          .filter(c => c.allowHide !== false)  // 🔒 컬럼은 목록에서 제외
+          .map(c => {
+            const hidden = c.show === false;
+            return (
+              <label key={c.field} style={styles.listRow(hidden, /*locked*/ false)}>
+                <Checkbox
+                  checked={c.show !== false}
+                  onChange={(e) => toggle(c.field, e.value)}
+                />
+                <span>{c.title ?? c.field}</span>
+                {hidden && <span style={styles.badge}>숨김</span>}
+              </label>
+            );
+          })}
       </div>
     </div>
   );
