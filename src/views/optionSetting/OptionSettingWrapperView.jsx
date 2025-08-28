@@ -9,7 +9,7 @@ const OptionSettingWrapperView = () => {
      */
     return (
         <Routes>
-            <Route path={"/option-setting"} element={<OptionSettingBody/>} />
+            <Route path={"/"} element={<OptionSettingBody/>} />
         </Routes>
     );
 };

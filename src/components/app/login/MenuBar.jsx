@@ -109,7 +109,7 @@ const MenuBar = ({authMenuList, setAuthMenuList, setMenuData}) => {
                             <a>분석 대메뉴</a> 
                             <ul key={"ul-1"} className="depth02">
                                 <li key={"li-1-1"}>
-                                    <NavLink to={"/o2/option-setting"}>분석 메뉴</NavLink>
+                                    <NavLink to={"/"}>분석 메뉴</NavLink>
                                 </li>
                             </ul>
                         </li>
