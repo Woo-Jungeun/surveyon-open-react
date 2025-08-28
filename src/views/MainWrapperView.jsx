@@ -18,7 +18,7 @@ const MainWrapperView = (props) => {
             <Header index={index} authMenuList={authMenuList} setAuthMenuList={setAuthMenuList} setMenuData={setMenuData} {...props} />
             <section>
                 <Routes>
-                    <Route path={"/o/*"} element={<OptionSettingWrapperView/>}/>
+                    <Route path={"/o2/*"} element={<OptionSettingWrapperView/>}/>
                     {/* 화면 라우팅 예외처리
                             1. 특정 메인 화면으로 이동
                             2. NOTFOUND 페이지로 이동  */}
