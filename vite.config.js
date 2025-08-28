@@ -17,12 +17,12 @@ export default defineConfig(({ mode }) => {
         server: {
             host: true,
             proxy: {
-                "/survey-on-open": {
+                "/o": {
                     // target: 'http://211.41.186.152:13333',
                     target: env.VITE_PROXY_URL,
                     changeOrigin: true,
                     secure: false,
-                    rewrite: (p) => p.replace(/^\/survey-on-open/, "")
+               
                 },
             }
         }

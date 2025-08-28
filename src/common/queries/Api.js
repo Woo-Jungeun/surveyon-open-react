@@ -1,11 +1,11 @@
 import { apiAxios } from "@/config/axios/Axios.jsx";
 import moment from "moment";
 
-const { VITE_DEFAULT_PATH } = import.meta.env;
+// const { VITE_DEFAULT_PATH } = import.meta.env;
 
 export default {
     async publicKey() {
-        const response = await apiAxios.post(VITE_DEFAULT_PATH + `/v1/public-key`);
+        const response = await apiAxios.post(`/v1/public-key`);
         return response.data.item.publicKey;
     },
 
@@ -22,13 +22,13 @@ export default {
 
 
     async postAll(paramList) {
-        const apis = paramList.map(param => apiAxios.post(VITE_DEFAULT_PATH + param.url, param.data))
+        const apis = paramList.map(param => apiAxios.post(param.url, param.data))
         const response = await Promise.all(apis);
         return response.map(res => res.data ?? [])
     },
 
     async form(data, url) {
-        const response = await apiAxios.post(VITE_DEFAULT_PATH + url, data, {
+        const response = await apiAxios.post(url, data, {
             headers: {
                 "Accept": "*/*",
                 "Content-Type": "multipart/form-data"
@@ -39,7 +39,7 @@ export default {
     },
 
     async file(data, url) {
-        const response = await apiAxios.post(VITE_DEFAULT_PATH + url, data, {responseType : 'blob'});
+        const response = await apiAxios.post(url, data, {responseType : 'blob'});
         return response;
     }
 };
