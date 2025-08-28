@@ -25,12 +25,6 @@ export default defineConfig(({ mode }) => {
                     secure: false,
                     rewrite: (p) => p.replace(/^\/survey-on-open/, "")
                 },
-                "/map": {
-                    target: "http://map.daumcdn.net",
-                    changeOrigin: true,
-                    rewrite: (p) => p.replace(/^\/map/, "")
-
-                }
             }
         }
 
