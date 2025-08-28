@@ -785,7 +785,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // 저장 전에 유효성 검사 (소분류 필수)
             const hasEmptyLv3 = rows.some(r => String(r.lv3 || "").trim() === "");
             if (hasEmptyLv3) {
-                modal.showAlert("알림", "소분류 값은 필수입니다.");
+                modal.showErrorAlert("알림", "소분류 값은 필수입니다.");
                 return; // 저장 중단
             }
             // selected → recheckyn 반영 + 페이로드 생성

@@ -245,7 +245,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const msg = dups
                 .map(d => `소분류코드 '${d.code}' 중복 (행: ${d.nos.join(", ")})`)
                 .join("\n");
-            modal.showAlert("알림", msg);
+            modal.showErrorAlert("알림", msg);
             return true;
         }, [dataState?.data, findLv123Duplicates, modal]);
 
@@ -417,7 +417,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 1) 유효성 검사
             const { ok, errors } = validateRows(prev);
             if (!ok) {
-                modal.showAlert("알림", errors.join("\n"));
+                modal.showErrorAlert("알림", errors.join("\n"));
                 return; // 저장 중단
             }
 
