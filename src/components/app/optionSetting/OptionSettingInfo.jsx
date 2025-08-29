@@ -3,8 +3,9 @@ import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
 import { Input } from "@progress/kendo-react-inputs";
-import { TextArea } from "@progress/kendo-react-inputs";
+import { TextArea, Slider, NumericTextBox } from "@progress/kendo-react-inputs";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
+import "@/components/app/optionSetting/OptionSetting.css";
 
 /**
  * 분석 > 정보 영역
@@ -212,6 +213,22 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
         }
     };
 
+    /*창의성 조절*/
+    const TEMP_MIN = 0;
+    const TEMP_MAX = 1;
+    const TEMP_STEP = 0.1;
+    const TEMP_DEFAULT = 0.2;
+    const sliderValue = typeof data?.temperature === "number" ? Number(data.temperature.toFixed(1)) : TEMP_DEFAULT; // 슬라이드 값 표출 
+
+    useEffect(() => {
+        setData(prev => {
+            const v = prev?.temperature;
+            return (v === undefined || v === null || v === "")
+                ? { ...prev, temperature: TEMP_DEFAULT }
+                : prev;
+        });
+    }, []);
+
     return (
         <Fragment>
             <div className="collapseBar">
@@ -302,14 +319,25 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
                         </div>
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">창의성 조절</span>
-                            <Input
-                                type="number"
-                                min={0}              // 최소값
-                                max={1}              // 최대값
-                                step={0.1}           // 증감 단위
-                                value={data?.temperature ?? 0} // 상태 값
-                                onChange={(e) => onChangeInputEvent(e, "temperature")}
-                            />
+
+                            <div className="tempCtrl" style={{ display: "flex", alignItems: "center", gap: 8, width: "100%" }}>
+                                <Slider
+                                    min={TEMP_MIN}
+                                    max={TEMP_MAX}
+                                    step={TEMP_STEP}
+                                    buttons={false}                 // 좌우 +/− 버튼 숨김 (원하면 true)
+                                    value={
+                                        typeof data?.temperature === "number"
+                                            ? Number(data.temperature.toFixed(1))
+                                            : TEMP_DEFAULT
+                                    }
+                                    onChange={(e) => onChangeInputEvent(e, "temperature")}   // e.value 사용
+                                    style={{ flex: 1 }}
+                                />
+                                <span className="tempValue">
+                                    {sliderValue.toFixed(1)}
+                                </span>
+                            </div>
                         </div>
                     </Section>
 

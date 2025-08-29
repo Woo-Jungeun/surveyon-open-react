@@ -158,3 +158,20 @@
 }
 
 .row-pending-delete { opacity: .55; } 
+
+/* 슬라이드 */
+/* 선택(채워진) 트랙 */
+.tempCtrl .k-slider-selection,
+.tempCtrl .k-slider .k-selected-range {          /* 테마/버전에 따라 쓰이는 경우 */
+  background-color: #00b272 !important;
+}
+
+/* 핸들(엄지) */
+.tempCtrl .k-draghandle,
+.tempCtrl .k-slider .k-draghandle,
+.tempCtrl .k-slider .k-draghandle::before,       /* 일부 테마는 ::before에 색을 줌 */
+.tempCtrl .k-slider .k-draghandle-icon,          /* 아이콘 엘리먼트가 있는 테마 */
+.tempCtrl .k-slider .k-thumb {                    /* 어떤 테마는 k-thumb 클래스 사용 */
+  background-color: #00b272 !important;
+  border-color: #00b272 !important;
+}
