@@ -195,6 +195,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
+        const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
 
         // 최초 로드 시 분석값 있는지 체크 
         useEffect(() => {
@@ -353,11 +354,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // Kendo 입력류
             '.k-input', '.k-dropdownlist', '.k-button',
             // Kendo 선택컬럼/체크박스의 모든 가능 타깃
-            '.k-selectioncheckbox', '.k-grid-selection', '.k-cell-selection', '.k-checkbox-cell',
+            '.k-selectioncheckbox', '.k-checkbox-cell',
             '.k-checkbox', '.k-checkbox-box', '.k-checkbox-wrap',
             'label.k-checkbox-label', 'label[for]',
             'input[type="checkbox"]', '[role="checkbox"]'
         ].join(',');
+
         // 행에서 드래그/범위/토글 선택 시작
         const onRowMouseDown = useCallback((rowProps, e) => {
             if (e.target.closest(rowExclusionSelector)) return; // 인터랙션 요소는 패스
@@ -374,6 +376,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (td) {
                 lastCellElRef.current = td;
                 lastCellRectRef.current = td.getBoundingClientRect();
+            }
+
+            //  Ctrl/Shift 없이 "이미 선택된 행"을 클릭하면 선택 유지(리셋 금지)
+            if (!e.shiftKey && !e.ctrlKey && !e.metaKey && lv3SelKeys.size > 0 && lv3SelKeys.has(key)) {
+                anchorIndexRef.current = idx;
+                lastIndexRef.current = idx;
+                // 드래그 시작/리셋 안 함
+                return;
             }
 
             if (e.shiftKey && anchorIndexRef.current != null) {
@@ -394,6 +404,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     next.has(key) ? next.delete(key) : next.add(key);
                     return next;
                 });
+                // Kendo의 단일선택/리셋 기본 동작 차단 (행 클릭 시 선택 유지)
+                e.preventDefault();
+                e.stopPropagation();
+                suppressNextClickRef.current = true; //Ctrl 토글 후 Kendo 기본 click 한 번 차단
                 return;
             }
 
@@ -419,44 +433,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const td = document.querySelector(`[data-lv3-key="${String(key)}"]`);
             if (td) lastCellRectRef.current = td.getBoundingClientRect();
         }, [rangeToKeys, getKey]);
-
-        // 마우스 다운: Ctrl(=toggle) / Shift(=range) / 그 외(=drag)
-        const onLv3MouseDown = useCallback((idx, e, row) => {
-            if (e.target.closest('.lv3-opener')) return;
-
-            e.currentTarget?.focus();   // 클릭한 td에 포커스
-            const key = getKey(row);
-            lastFocusedKeyRef.current = key;   // 마지막 포커스 셀 기억
-            setLv3EditorKey(null); // 새 동작 시작하면 에디터 닫기
-            lastCellElRef.current = e.currentTarget;
-            lastCellRectRef.current = e.currentTarget.getBoundingClientRect();// 클릭 시작한 셀의 위치도 기억
-
-            if (e.shiftKey && anchorIndexRef.current != null) {
-                selectionModeRef.current = 'range';
-                rangeToKeys(anchorIndexRef.current, idx);
-                lastIndexRef.current = idx;
-                return;
-            }
-
-            if (e.ctrlKey || e.metaKey) {
-                selectionModeRef.current = 'toggle';
-                setLv3SelKeys(prev => {
-                    const next = new Set(prev);
-                    next.has(key) ? next.delete(key) : next.add(key);
-                    return next;
-                });
-                anchorIndexRef.current = idx;
-                lastIndexRef.current = idx;
-                return;
-            }
-
-            // 기본: 드래그
-            selectionModeRef.current = 'drag';
-            draggingRef.current = true;
-            anchorIndexRef.current = idx;
-            lastIndexRef.current = idx;
-            setLv3SelKeys(new Set([key]));
-        }, [getKey, rangeToKeys]);
 
         // 열기 가드
         const openLv3EditorAtKey = useCallback((targetKey) => {
@@ -758,9 +734,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return React.cloneElement(trEl, {
                 ...trEl.props,
                 className: cls,
-                onMouseDown: (e) => { trEl.props.onMouseDown?.(e); if (!e.defaultPrevented) onRowMouseDown(rowProps, e); },
-                onMouseEnter: (e) => { trEl.props.onMouseEnter?.(e); if (!e.defaultPrevented) onRowMouseEnter(rowProps, e); },
-                onClick: (e) => { trEl.props.onClick?.(e); if (!e.defaultPrevented) handleRowClickOpenIfSelected(e); },
+                onMouseDown: (e) => { onRowMouseDown(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseDown?.(e); },
+                onMouseEnter: (e) => { onRowMouseEnter(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseEnter?.(e); },
+                onClick: (e) => {
+                    if (suppressNextClickRef.current) {
+                        suppressNextClickRef.current = false;
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return; // Kendo 기본 클릭(선택 리셋) 방지
+                    }
+                    handleRowClickOpenIfSelected(e);
+                    if (!e.defaultPrevented) trEl.props.onClick?.(e);
+                },
             });
         }, [selectedRowKey, lv3SelKeys, getKey, onRowMouseDown, onRowMouseEnter]);
 
