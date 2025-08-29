@@ -935,7 +935,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 검증 체크박스 위치 고정시키기 위함 (임시)
         const anchorField = useMemo(() => {
             const vis = effectiveColumns.filter(c => c.show !== false);
-            return vis.length >= 2 ? vis[vis.length - 2].field : undefined; // 항상 추가 왼쪽에
+            return vis.length >= 3 ? vis[vis.length - 3].field : undefined; // 항상 추가 왼쪽에
         }, [effectiveColumns]);
 
         // fixed_key 그룹별 유효 행 수 (보류삭제 제외)
