@@ -63,7 +63,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             { field: "lv123code", title: "소분류 코드", show: true, editable: false, allowHide: false },
             { field: "lv3", title: "소분류", show: true, editable: true, width: "200px", allowHide: false },
             { field: "sentiment", title: "sentiment", show: true, editable: true },
-            { field: "add", title: "추가", show: true, editable: true, allowHide: false }
+            { field: "add", title: "추가", show: true, editable: true, allowHide: false },
+            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
         ]);
 
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
@@ -617,6 +618,25 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }));
         }, [getKey, setDataState]);
 
+        const recomputeCidForGroup = useCallback((fk, data) => {
+            // 1) 보류삭제 아닌 행만 모아서 정렬
+            const alive = (data || [])
+                .filter(r => r.fixed_key === fk && r.__pendingDelete !== true)
+                .sort((a, b) => Number(a.cid) - Number(b.cid));
+
+            // 2) 새 cid 매핑 (보류삭제 행은 기존 cid 유지)
+            const newCidByRowKey = new Map();
+            let i = 1;
+            for (const r of alive) newCidByRowKey.set(getKey(r), String(i++));
+
+            // 3) data에 반영
+            return (data || []).map(r =>
+                r.fixed_key === fk && newCidByRowKey.has(getKey(r))
+                    ? { ...r, cid: newCidByRowKey.get(getKey(r)) }
+                    : r
+            );
+        }, [getKey]);
+
         // 추가 버튼 이벤트
         const handleAddButton = useCallback((cellProps) => {
             onUnsavedChange?.(true);
@@ -628,15 +648,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const prevData = prev?.data ?? [];
                 const idx = prevData.findIndex(r => getKey(r) === clickedKey);
                 if (idx === -1) return prev; // 대상 행 못찾으면 원본 유지
-
                 // 같은 fixed_key 그룹 내에서 "현재 prev.data" 기준으로 max cid 계산
                 const fk = clicked?.fixed_key;
-                const curMax = prevData.reduce((m, r) => {
-                    if (r.fixed_key !== fk) return m;
-                    const n = Number(r.cid) || 0;
-                    return n > m ? n : m;
-                }, 0);
-                const nextCid = String(curMax + 1); // 문자열로 저장(키 일관성)
+                const nextCid = getNextCid(fk, prevData);
 
                 // 새 행 기본값
                 const newRow = {
@@ -651,6 +665,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     selected: false,
                     ip: "",
                     inEdit: true,
+                    __isNew: true,
                     __rowKey: `${String(fk)}::${nextCid}::${Date.now()}::${Math.random()}`, // ← 고유키
                 };
 
@@ -658,7 +673,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const nextData = [...prevData];
                 nextData.splice(idx + 1, 0, newRow);
 
-                return { ...prev, data: nextData };
+                // 추가 후 cid 재배열(보류삭제 제외)
+                const recomputed = recomputeCidForGroup(fk, nextData);
+
+                return { ...prev, data: recomputed };
             });
         }, [getKey, onUnsavedChange, setDataState, setSelectedRowKey]);
 
@@ -679,13 +697,19 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const key = getKey(rowProps?.dataItem);
             const clicked = key === selectedRowKey;
             const selectedByBatch = lv3SelKeys.has(key);   // 행이 일괄 선택 대상이면
+            const pending = rowProps?.dataItem?.__pendingDelete === true;
 
             // Kendo 기본 선택 클래스 제거(배경 겹침 방지)
             const base = (trEl.props.className || '')
                 .replace(/\bk-selected\b/g, '')
                 .replace(/\bk-state-selected\b/g, '');
 
-            const cls = `${base} ${clicked ? 'row-clicked' : ''} ${selectedByBatch ? 'lv3-row-selected' : ''}`.trim();
+            const cls = `${base} ${clicked ? 'row-clicked' : ''} ${selectedByBatch ? 'lv3-row-selected' : ''} ${pending ? 'row-pending-delete' : ''}`.trim();
+            
+            // Kendo가 붙여둔 원래 이벤트 핸들러 백업
+            const orig = trEl.props;
+
+
             /* 선택된 상태에서 행을 일반 클릭하면(= Drag 아님, 수정키 없음) 해당 행의 lv3 셀 기준으로 DDL 오픈 */
             const handleRowClickOpenIfSelected = (e) => {
                 // 인터랙션 요소 클릭은 제외
@@ -783,14 +807,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         /* 저장: API 호출 */
         const saveChanges = useCallback(async () => {
             // 저장 전에 유효성 검사 (소분류 필수)
-            const hasEmptyLv3 = rows.some(r => String(r.lv3 || "").trim() === "");
+            const hasEmptyLv3 = rows
+                .filter(r => r.__pendingDelete !== true)          // 보류 삭제 제외
+                .some(r => String(r.lv3 || "").trim() === "");
+
             if (hasEmptyLv3) {
                 modal.showErrorAlert("알림", "소분류 값은 필수입니다.");
                 return; // 저장 중단
             }
             // selected → recheckyn 반영 + 페이로드 생성
-            const payload = buildSavePayload(rows, {
-                key: "",                 // 있으면 채워 넣기
+            const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
+                key: "",                 // 있으면 채워 넣기 
                 user: "syhong",
                 projectnum: "q250089uk",
                 qnum: "Z1",
@@ -894,6 +921,82 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const vis = effectiveColumns.filter(c => c.show !== false);
             return vis.length >= 2 ? vis[vis.length - 2].field : undefined; // 항상 추가 왼쪽에
         }, [effectiveColumns]);
+
+        // fixed_key 그룹별 유효 행 수 (보류삭제 제외)
+        const groupSizeByFixedKey = useMemo(() => {
+            const m = new Map();
+            for (const r of (dataState?.data ?? [])) {
+                const fk = r?.fixed_key;
+                if (fk == null) continue;
+                if (r.__pendingDelete === true) continue; // 보류 삭제 제외
+                m.set(fk, (m.get(fk) ?? 0) + 1);
+            }
+            return m;
+        }, [dataState?.data]);
+
+        const onClickDeleteCell = useCallback((cellProps) => {
+            onUnsavedChange?.(true);
+            const row = cellProps.dataItem;
+            const key = getKey(row);
+            const fk = row?.fixed_key;
+            // 새 행은 즉시 제거
+            if (row.__isNew) {
+                setDataState(prev => {
+                    const kept = (prev.data || []).filter(r => getKey(r) !== key);
+                    // 제거 후 재배열
+                    const recomputed = recomputeCidForGroup(fk, kept);
+
+                    return { ...prev, data: recomputed };
+                });
+                return;
+            }
+
+            // 기존 행은 보류삭제 토글
+            setDataState(prev => {
+                const toggled = (prev.data || []).map(r =>
+                    getKey(r) === key ? { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false } : r
+                );
+                // 토글 후 재배열(보류삭제 제외)
+                const recomputed = recomputeCidForGroup(fk, toggled);
+                return { ...prev, data: recomputed };
+            });
+
+        }, [getKey, setDataState, onUnsavedChange]);
+        // "min-gap" (비어있는 가장 작은 수) or "max+1"
+        const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
+
+        const getNextCid = useCallback((fk, data, mode = NEXT_CID_MODE) => {
+            const nums = (data || [])
+                .filter(r => r.fixed_key === fk && r.__pendingDelete !== true) // 보류 삭제 제외
+                .map(r => Number(r.cid))
+                .filter(n => Number.isFinite(n))
+                .sort((a, b) => a - b);
+
+            if (mode === "min-gap") {
+                let expect = 1;
+                for (const n of nums) {
+                    if (n === expect) expect++;
+                    else if (n > expect) break;   // 구멍 발견
+                }
+                return String(expect); // 1,2,3,.. 가운데 비어있는 가장 작은 값
+            }
+            // default: max+1
+            const max = nums.length ? nums[nums.length - 1] : 0;
+            return String(max + 1);
+        }, []);
+
+        // 추가 버튼은 “보류삭제 아닌 마지막 cid”에서만
+        const lastVisibleCidByFixedKey = useMemo(() => {
+            const m = new Map();
+            for (const r of (dataState?.data ?? [])) {
+                if (r.__pendingDelete === true) continue;
+                const fk = r?.fixed_key;
+                const c = Number(r?.cid ?? -Infinity);
+                if (fk == null) continue;
+                if (!m.has(fk) || c > m.get(fk)) m.set(fk, c);
+            }
+            return m;
+        }, [dataState?.data]);
 
         return (
             <Fragment>
@@ -1076,12 +1179,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         columnMenu={undefined}
                                         cell={(props) => {
                                             const row = props.dataItem;
-                                            const maxCid = maxCidByFixedKey.get(row?.fixed_key);
-                                            const isLastForKey = Number(row?.cid) === maxCid;
+                                            const fk = row?.fixed_key;
+                                            const isLastVisible = row.__pendingDelete !== true
+                                                && Number(row?.cid) === (lastVisibleCidByFixedKey.get(fk) ?? -1);
+
 
                                             return (
                                                 <td style={{ textAlign: "center" }}>
-                                                    {isLastForKey && (
+                                                    {isLastVisible && (
                                                         <Button
                                                             className={"btnM"}
                                                             themeColor={"primary"}
@@ -1090,6 +1195,39 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                             추가
                                                         </Button>
                                                     )}
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
+                            if (c.field === 'delete') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field="delete"
+                                        title={c.title}
+                                        sortable={false}
+                                        columnMenu={undefined}
+                                        cell={(props) => {
+                                            const row = props.dataItem;
+                                            const pending = row.__pendingDelete === true;
+
+                                            // 멀티값이 1이면 항상 숨김 
+                                            const isMultiOne = Number(row?.cid) === 1;
+                                            if (isMultiOne) return <td />;
+
+                                            return (
+                                                <td style={{ textAlign: "center" }}
+                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                    onClick={(e) => e.stopPropagation()}>
+                                                    <Button
+                                                        className="btnM"
+                                                        themeColor={pending ? "secondary" : "primary"}
+                                                        onClick={() => onClickDeleteCell(props)}
+                                                    >
+                                                        {pending ? "취소" : "삭제"}
+                                                    </Button>
                                                 </td>
                                             );
                                         }}
