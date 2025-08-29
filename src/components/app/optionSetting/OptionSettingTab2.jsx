@@ -354,14 +354,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 .map(v => encodeURIComponent(String(v)))
                 .join("__");
 
-        // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글
+        // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글 (단, 해제 시 중복이면 토글 차단)
         const onClickDeleteCell = useCallback((cellProps) => {
-            onUnsavedChange?.(true);
             const row = cellProps.dataItem;
             const key = getKey(row);
 
-            // 새 행은 제거 
+            // 새 행은 제거
             if (row.__isNew) {
+                onUnsavedChange?.(true);
                 setDataState(prev => {
                     const kept = prev.data.filter(r => getKey(r) !== key);
                     const reindexed = kept.map((r, idx) => {
@@ -374,7 +374,31 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 return;
             }
 
-            // 기존 행은 삭제 토글
+            // ▶ 삭제대기 해제(=현재 __pendingDelete 가 true) 시, 해제하면 중복 생기는지 사전검사
+            if (row.__pendingDelete === true) {
+                const prevRows = latestCtxRef.current?.dataState?.data || [];
+                // "해제"가 된 것으로 가정하고 시뮬레이션
+                const simulated = prevRows.map(r =>
+                    getKey(r) === key ? { ...r, __pendingDelete: false } : r
+                );
+
+                // pending 제외 기준으로 중복 체크하되, 방금 해제한 행은 포함됨
+                const dups = findLv123Duplicates(simulated);
+                const code = String(row.lv123code ?? "").trim();
+                const hasDupOnTarget = !!code && dups.some(d => d.code === code);
+
+                if (hasDupOnTarget) {
+                    // 🔸해제 금지: 행은 계속 "삭제대기(취소 버튼)" 상태 유지
+                    modal.showErrorAlert(
+                        "알림",
+                        `소분류코드 '${code}'가 이미 다른 행에 존재합니다.\n삭제 취소를 할 수 없습니다.`
+                    );
+                    return;
+                }
+            }
+
+            // 여기까지 왔으면 토글 허용
+            onUnsavedChange?.(true);
             setDataState(prev => ({
                 ...prev,
                 data: prev.data.map(r =>
@@ -383,8 +407,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         : r
                 )
             }));
-        }, [getKey, setDataState]);
-
+        }, [getKey, setDataState, onUnsavedChange, modal, findLv123Duplicates]);
         // 행 클릭 시 편집기능 open
         const onRowClick = useCallback((e) => {
             const clicked = e.dataItem;
