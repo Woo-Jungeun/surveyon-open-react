@@ -52,7 +52,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     */
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "fixed_key", title: "키", show: false, editable: false },
+            // { field: "fixed_key", title: "키", show: false, editable: false },
             { field: "answer_origin", title: "원본내용", show: true, editable: false },
             { field: "cid", title: "멀티", show: true, editable: false, width: "100px", allowHide: false },
             { field: "answer", title: "응답내용", show: true, editable: false, allowHide: false },
@@ -892,7 +892,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 검증 체크박스 위치 고정시키기 위함 (임시)
         const anchorField = useMemo(() => {
             const vis = effectiveColumns.filter(c => c.show !== false);
-            return vis.length ? vis[vis.length - 2].field : undefined; // 항상 추가 왼쪽에
+            return vis.length >= 2 ? vis[vis.length - 2].field : undefined; // 항상 추가 왼쪽에
         }, [effectiveColumns]);
 
         return (
