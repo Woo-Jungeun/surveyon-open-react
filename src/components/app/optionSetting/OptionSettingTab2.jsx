@@ -251,12 +251,26 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const msg = dups
                 .map(d => `소분류코드 '${d.code}' 중복 (행: ${d.nos.join(", ")})`)
                 .join("\n");
+            focusFirstErrorCell(); 
             modal.showErrorAlert("알림", msg);
             return true;
         }, [dataState?.data, findLv123Duplicates, modal]);
 
         const gridRootRef = useRef(null);
         const [errorMarks, setErrorMarks] = useState(new Map());
+        // 화면에 보이는 첫 번째 에러 셀로 포커스(+부드러운 스크롤)
+        const focusFirstErrorCell = useCallback(() => {
+            // setState → 페인트 이후를 보장하기 위해 rAF 2번
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const root = gridRootRef.current || document;
+                const td = root.querySelector('td.cell-error');
+                if (!td) return;
+                if (!td.hasAttribute('tabindex')) td.setAttribute('tabindex', '0');
+                td.focus({ preventScroll: false });
+                td.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+            }));
+        }, []);
+
         // ["lv123code","no"] 기준
         const makeRowKey = (row) =>
             [row?.lv123code ?? "", row?.no ?? ""]
@@ -275,7 +289,15 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const rowHit = item?.__errors?.has?.(field);
             if (!mapHit && !rowHit) return td;
             const style = { ...td.props.style, boxShadow: "inset 0 0 0 2px #E74C3C" };
-            return React.cloneElement(td, { ...td.props, style });
+            const className = `${td.props.className || ''} cell-error`;
+            return React.cloneElement(td, {
+                ...td.props,
+                style,
+                className,
+                tabIndex: 0,
+                'data-err-field': field,
+                'data-err-key': key
+            });
         }, [errorMarks, keyOf]);
 
         /**
@@ -519,6 +541,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     });
                     return { ...prevState, data: nextRows };
                 });
+                focusFirstErrorCell(); 
                 modal.showErrorAlert("알림", errors.join("\n"));
                 return; // 저장 중단
             }
