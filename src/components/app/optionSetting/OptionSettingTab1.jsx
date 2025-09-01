@@ -210,6 +210,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => row?.__rowKey, []);
 
+        // ✅ lv3 필수값 마크를 행들의 __errors(Set)로 갱신
+        const applyRequiredMarksLv3 = useCallback((rows = []) => {
+            return (rows || []).map(r => {
+                const need = r.__pendingDelete !== true && String(r?.lv3 ?? '').trim() === '';
+                const nextErrs = new Set(r.__errors ?? []);
+                if (need) nextErrs.add('lv3'); else nextErrs.delete('lv3');
+                if (nextErrs.size === 0) {
+                    if (!r.__errors) return r; // 변경 없음
+                    const { __errors, ...rest } = r;
+                    return rest;               // __errors 제거
+                }
+                return { ...r, __errors: nextErrs };
+            });
+        }, []);
+
         const total = rows.length;  //총 갯수
         const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석값
         const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
@@ -558,9 +573,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 일괄 적용 (선택된 키들에 옵션 메타까지 모두 반영)
         const applyLv3To = useCallback((targetKeys, opt) => {
             onUnsavedChange?.(true);
-            setDataState((prev) => ({
-                ...prev,
-                data: prev.data.map((r) =>
+            setDataState(prev => {
+                const updated = prev.data.map(r =>
                     targetKeys.has(getKey(r))
                         ? {
                             ...r,
@@ -572,8 +586,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             lv123code: opt?.lv123code ?? "",
                         }
                         : r
-                ),
-            }));
+                );
+                return { ...prev, data: applyRequiredMarksLv3(updated) };
+            });
         }, [setDataState, getKey]);
         /*----------소분류 드래그-------*/
 
@@ -813,6 +828,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 .some(r => String(r.lv3 || "").trim() === "");
 
             if (hasEmptyLv3) {
+                setDataState(prev => ({ ...prev, data: applyRequiredMarksLv3(prev.data) }));
                 modal.showErrorAlert("알림", "소분류 값은 필수입니다.");
                 return; // 저장 중단
             }
@@ -947,7 +963,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     // 제거 후 재배열
                     const recomputed = recomputeCidForGroup(fk, kept);
 
-                    return { ...prev, data: recomputed };
+                    return { ...prev, data: applyRequiredMarksLv3(recomputed) };
                 });
                 return;
             }
@@ -959,7 +975,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 );
                 // 토글 후 재배열(보류삭제 제외)
                 const recomputed = recomputeCidForGroup(fk, toggled);
-                return { ...prev, data: recomputed };
+                return { ...prev, data: applyRequiredMarksLv3(recomputed) };
             });
 
         }, [getKey, setDataState, onUnsavedChange]);
@@ -1055,6 +1071,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 cursor: "default",
                                                 outline: "none",
                                             };
+                                            const hasReqError = cellProps.dataItem?.__errors?.has?.('lv3');
+                                            const tdStyle = hasReqError
+                                                ? { ...baseStyle, boxShadow: "inset 0 0 0 2px #E74C3C" }
+                                                : baseStyle;
 
                                             // Enter 키 핸들러
                                             const handleKeyDown = (e) => {
@@ -1096,7 +1116,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                     className={`${isSelectedCell ? "lv3-selected" : ""} ${isActiveCell ? "lv3-active" : ""}`}
                                                     tabIndex={0}
                                                     onKeyDown={handleKeyDown}
-                                                    style={baseStyle}
+                                                    style={tdStyle}
                                                     title={currentValue}
                                                 >
                                                     <div
