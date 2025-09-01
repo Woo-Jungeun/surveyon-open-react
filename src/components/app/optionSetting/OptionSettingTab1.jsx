@@ -210,18 +210,29 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 키 가져오기 헬퍼 
         const getKey = useCallback((row) => row?.__rowKey, []);
 
-        // ✅ lv3 필수값 마크를 행들의 __errors(Set)로 갱신
+        // lv3 필수값 마크를 행들의 __errors(Set)로 갱신
         const applyRequiredMarksLv3 = useCallback((rows = []) => {
             return (rows || []).map(r => {
                 const need = r.__pendingDelete !== true && String(r?.lv3 ?? '').trim() === '';
+
+                // __errors 갱신
                 const nextErrs = new Set(r.__errors ?? []);
                 if (need) nextErrs.add('lv3'); else nextErrs.delete('lv3');
-                if (nextErrs.size === 0) {
-                    if (!r.__errors) return r; // 변경 없음
+
+                // __errorKinds 갱신 (배지 라벨 표시용)
+                const nextKinds = { ...(r.__errorKinds ?? {}) };
+                if (need) nextKinds.lv3 = 'required'; else delete nextKinds.lv3;
+
+                const base = nextErrs.size ? { ...r, __errors: nextErrs } : (() => {
+                    if (!r.__errors) return r;
                     const { __errors, ...rest } = r;
-                    return rest;               // __errors 제거
-                }
-                return { ...r, __errors: nextErrs };
+                    return rest;
+                })();
+
+                return Object.keys(nextKinds).length ? { ...base, __errorKinds: nextKinds } : (() => {
+                    const { __errorKinds, ...rest } = base;
+                    return rest;
+                })();
             });
         }, []);
 
@@ -899,7 +910,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 if (key) openLv3EditorAtKey(key); // 원하면 주석 처리해도 됨(포커스만 이동)
             }));
         }, [openLv3EditorAtKey]);
-        
+
         useEffect(() => {
             if (lv3EditorKey == null) return;
 
@@ -1088,10 +1099,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 outline: "none",
                                             };
                                             const hasReqError = cellProps.dataItem?.__errors?.has?.('lv3');
+                                            const labelKind = cellProps.dataItem?.__errorKinds?.lv3; // 'required' 예상
+                                            const labelText = labelKind === 'required' ? '빈값' : '오류';
+
                                             const tdStyle = hasReqError
                                                 ? { ...baseStyle, boxShadow: "inset 0 0 0 2px #E74C3C" }
                                                 : baseStyle;
-                                            const tdClasses = `${isSelectedCell ? "lv3-selected" : ""} ${isActiveCell ? "lv3-active" : ""} ${hasReqError ? "lv3-error" : ""}`.trim();
+                                            const tdClasses = `${isSelectedCell ? "lv3-selected" : ""} ${isActiveCell ? "lv3-active" : ""} ${hasReqError ? "lv3-error cell-error" : ""}`.trim();
                                             // Enter 키 핸들러
                                             const handleKeyDown = (e) => {
                                                 if (e.key === "Enter") {
@@ -1170,6 +1184,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                             style={{ pointerEvents: "none", width: "100%" }}
                                                         />
                                                     </div>
+                                                    {/* 필수값 오류 배지 */}
+                                                    {hasReqError && <span className="cell-error-badge">{labelText}</span>}
                                                 </td>
                                             );
                                         }}
@@ -1185,7 +1201,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         width={c.width}
                                         columnMenu={columnMenu}
                                         cell={(cellProps) => {
-                                            const rowKey = getKey(cellProps.dataItem);                 // 합성키/단일키 공통
                                             const selectedOption =
                                                 sentimentOptions.find(o => o.codeId === (cellProps.dataItem.sentiment ?? "")) ?? null;
                                             return (
