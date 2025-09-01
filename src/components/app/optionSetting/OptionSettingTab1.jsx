@@ -829,9 +829,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             if (hasEmptyLv3) {
                 setDataState(prev => ({ ...prev, data: applyRequiredMarksLv3(prev.data) }));
+                focusFirstLv3ErrorCell();   // 에러 중 첫번째 셀로 포커스 이동
                 modal.showErrorAlert("알림", "소분류 값은 필수입니다.");
                 return; // 저장 중단
             }
+
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
                 key: "",                 // 있으면 채워 넣기 
@@ -884,6 +886,20 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
 
+        // 화면에 보이는 첫 번째 에러(lv3) 셀로 포커스(중앙 스크롤) → 필요 시 DDL 자동 오픈
+        const focusFirstLv3ErrorCell = useCallback(() => {
+            // setState 직후 렌더 보장용 두 번의 rAF
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const root = gridRootRef.current || document;
+                const td = root.querySelector('td.lv3-error'); // DOM 상 가장 위(첫번째)
+                if (!td) return;
+                td.focus({ preventScroll: false });
+                td.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+                const key = td.getAttribute('data-lv3-key');
+                if (key) openLv3EditorAtKey(key); // 원하면 주석 처리해도 됨(포커스만 이동)
+            }));
+        }, [openLv3EditorAtKey]);
+        
         useEffect(() => {
             if (lv3EditorKey == null) return;
 
@@ -1075,7 +1091,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                             const tdStyle = hasReqError
                                                 ? { ...baseStyle, boxShadow: "inset 0 0 0 2px #E74C3C" }
                                                 : baseStyle;
-
+                                            const tdClasses = `${isSelectedCell ? "lv3-selected" : ""} ${isActiveCell ? "lv3-active" : ""} ${hasReqError ? "lv3-error" : ""}`.trim();
                                             // Enter 키 핸들러
                                             const handleKeyDown = (e) => {
                                                 if (e.key === "Enter") {
@@ -1113,7 +1129,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 <td
                                                     data-lv3-key={rowKey}
                                                     ref={(el) => { if (isActiveCell) lv3AnchorElRef.current = el; }}
-                                                    className={`${isSelectedCell ? "lv3-selected" : ""} ${isActiveCell ? "lv3-active" : ""}`}
+                                                    className={tdClasses}
                                                     tabIndex={0}
                                                     onKeyDown={handleKeyDown}
                                                     style={tdStyle}
