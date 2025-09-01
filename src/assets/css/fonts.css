@@ -1,0 +1,26 @@
+/* Noto Sans KR – regular(400), bold(700) */
+@font-face {
+    font-family: "Noto Sans KR";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("../font/notosanskr-regular.woff2") format("woff2"),
+         url("../font/notosanskr-regular.woff") format("woff");
+  }
+  
+  @font-face {
+    font-family: "Noto Sans KR";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("../font/notosanskr-bold.woff2") format("woff2"),
+         url("../font/notosanskr-bold.woff") format("woff");
+  }
+  
+  /* 필요하면 전체 기본 폰트도 여기서 지정 */
+  html, body {
+    font-family: "Noto Sans KR", system-ui, -apple-system, "Segoe UI",
+                 Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo",
+                 "Noto Sans CJK KR", "맑은 고딕", "Malgun Gothic", sans-serif;
+  }
+  
