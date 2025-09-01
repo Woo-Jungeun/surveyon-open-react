@@ -239,23 +239,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return dups;
         }, []);
 
-        // 알림 한 번만 띄우도록 간단한 가드
-        const lastWarnRef = useRef(0);
-        const warnIfDuplicateLv123 = useCallback(() => {
-            const rowsNow = latestCtxRef.current?.dataState?.data || dataState?.data || [];
-            const dups = findLv123Duplicates(rowsNow);
-            if (!dups.length) return false;
-            const now = Date.now();
-            if (now - lastWarnRef.current < 300) return true; // 연타 방지
-            lastWarnRef.current = now;
-            const msg = dups
-                .map(d => `소분류코드 '${d.code}' 중복 (행: ${d.nos.join(", ")})`)
-                .join("\n");
-            focusFirstErrorCell(); 
-            modal.showErrorAlert("알림", msg);
-            return true;
-        }, [dataState?.data, findLv123Duplicates, modal]);
-
         const gridRootRef = useRef(null);
         const [errorMarks, setErrorMarks] = useState(new Map());
         // 화면에 보이는 첫 번째 에러 셀로 포커스(+부드러운 스크롤)
@@ -465,8 +448,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             // 보기유형이 survey면 편집 진입 막기 
             if (clicked?.ex_gubun === 'survey') return;
-            // 행 바꾸기 전에 중복 경고 (행 이동은 막지 않음)
-            warnIfDuplicateLv123();
 
             const clickedKey = getKey(clicked);
             setDataState(prev => ({
@@ -477,7 +458,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     inEdit: getKey(r) === clickedKey
                 }))
             }));
-        }, [setDataState, getKey, warnIfDuplicateLv123]);
+        }, [setDataState, getKey]);
 
         // 현재 rows 기준으로 lv123code 중복 셀만 __errors에 반영
         const applyLiveDupMarks = useCallback((rows = []) => {
@@ -695,20 +676,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const rows = dataState?.data || [];
             return rows.some(r => r?.__pendingDelete === true);
         }, [dataState?.data]);
-
-        // 포커스가 그리드 바깥으로 완전히 이탈하면 한 번 검사
-        useEffect(() => {
-            const root = gridRootRef.current;
-            if (!root) return;
-            const onFocusOut = (e) => {
-                const next = e.relatedTarget; // 다음 포커스 타겟
-                if (!root.contains(next)) {
-                    warnIfDuplicateLv123();
-                }
-            };
-            root.addEventListener("focusout", onFocusOut, true); // 캡처 단계
-            return () => root.removeEventListener("focusout", onFocusOut, true);
-        }, [warnIfDuplicateLv123]);
 
         return (
             <Fragment>
