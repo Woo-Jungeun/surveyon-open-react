@@ -186,6 +186,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     //grid rendering 
     const GridRenderer = (props) => {
         const { dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch } = props;
+        // 키값
+        const COMPOSITE_KEY_FIELD = "__rowKey";
+        const getKey = useCallback(
+            (row) => (typeof idGetter === "function" ? idGetter(row) : row?.[dataItemKey]),
+            [idGetter, dataItemKey]
+        );
 
         qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter };    // 최신 컨텍스트 저장
@@ -250,6 +256,27 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         }, [dataState?.data, findLv123Duplicates, modal]);
 
         const gridRootRef = useRef(null);
+        const [errorMarks, setErrorMarks] = useState(new Map());
+        // ["lv123code","no"] 기준
+        const makeRowKey = (row) =>
+            [row?.lv123code ?? "", row?.no ?? ""]
+                .map(v => encodeURIComponent(String(v)))
+                .join("__");
+
+        const keyOf = useCallback((row) => row?.__rowKey || makeRowKey(row), []);
+        // 에러 셀 테두리 강조 (내용은 그대로, 껍데기만 스타일 덧입힘)
+        const cellRender = useCallback((td, cellProps) => {
+            const field = cellProps?.field;
+            if (!field) return td;
+            const item = cellProps.dataItem;
+            const key = keyOf(item);
+            // Map으로 찍은 마크  행 내장 __errors 둘 다 인식
+            const mapHit = errorMarks.get(key)?.has(field);
+            const rowHit = item?.__errors?.has?.(field);
+            if (!mapHit && !rowHit) return td;
+            const style = { ...td.props.style, boxShadow: "inset 0 0 0 2px #E74C3C" };
+            return React.cloneElement(td, { ...td.props, style });
+        }, [errorMarks, keyOf]);
 
         /**
         * 코드/텍스트 동기화 공통 처리:
@@ -262,7 +289,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         const onItemChange = useCallback((e) => {
             onUnsavedChange?.(true);
             const { dataItem, field, value } = e;
-            const rowKey = idGetter ? idGetter(dataItem) : dataItem?.[dataItemKey];
+            const rowKey = keyOf(dataItem);
+
+            // 에러 테두리 제거: 사용자가 값을 수정하는 즉시 해당 셀의 마크를 지움
+            setErrorMarks(prev => {
+                if (!field || !prev.has(rowKey)) return prev;
+                const next = new Map(prev);
+                const set = new Set(next.get(rowKey));
+                set.delete(field);
+                if (set.size === 0) next.delete(rowKey); else next.set(rowKey, set);
+                return next;
+            });
 
             setDataState(prev => {
                 const rows = prev.data || [];
@@ -289,6 +326,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     if (getKey(r) !== rowKey) return r;
 
                     const next = { ...r, [field]: value };
+                    if (next.__errors?.has?.(field)) {
+                        const copy = new Set(next.__errors);
+                        copy.delete(field);
+                        next.__errors = copy.size ? copy : undefined;
+                    }
                     const pair = PAIRS.find(p => p.code === field || p.text === field);
                     if (!pair) return next; // 소분류나 다른 필드는 그대로
 
@@ -333,48 +375,35 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
                     return next;
                 });
-                return { ...prev, data };
+                // 중복 마크 실시간 재계산
+                const withDup = applyLiveDupMarks(data);
+                return { ...prev, data: withDup };
             });
         }, [
-            setDataState, idGetter, dataItemKey,
+            setDataState, keyOf,
             lv1CodeToText, lv1ToTextToCode,
             lv2CodeToText, lv2TextToCode
         ]);
-
-        // 키값
-        const COMPOSITE_KEY_FIELD = "__rowKey";
-        const getKey = useCallback(
-            (row) => (typeof idGetter === "function" ? idGetter(row) : row?.[dataItemKey]),
-            [idGetter, dataItemKey]
-        );
-
-        // ["lv123code","no"] 기준
-        const makeRowKey = (row) =>
-            [row?.lv123code ?? "", row?.no ?? ""]
-                .map(v => encodeURIComponent(String(v)))
-                .join("__");
-
         // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글 (단, 해제 시 중복이면 토글 차단)
         const onClickDeleteCell = useCallback((cellProps) => {
             const row = cellProps.dataItem;
-            const key = getKey(row);
-
+            const key = keyOf(row);
             // 새 행은 제거
             if (row.__isNew) {
                 onUnsavedChange?.(true);
                 setDataState(prev => {
-                    const kept = prev.data.filter(r => getKey(r) !== key);
+                    const kept = prev.data.filter(r => keyOf(r) !== key);
                     const reindexed = kept.map((r, idx) => {
                         const next = { ...r, no: idx + 1 };
                         next[COMPOSITE_KEY_FIELD] = makeRowKey(next);
                         return next;
                     });
-                    return { ...prev, data: reindexed };
+                    return { ...prev, data: applyLiveDupMarks(reindexed) };
                 });
                 return;
             }
 
-            // ▶ 삭제대기 해제(=현재 __pendingDelete 가 true) 시, 해제하면 중복 생기는지 사전검사
+            // 삭제대기 해제(=현재 __pendingDelete 가 true) 시, 해제하면 중복 생기는지 사전검사
             if (row.__pendingDelete === true) {
                 const prevRows = latestCtxRef.current?.dataState?.data || [];
                 // "해제"가 된 것으로 가정하고 시뮬레이션
@@ -399,14 +428,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             // 여기까지 왔으면 토글 허용
             onUnsavedChange?.(true);
-            setDataState(prev => ({
-                ...prev,
-                data: prev.data.map(r =>
+            setDataState(prev => {
+                const next = prev.data.map(r =>
                     getKey(r) === key
                         ? { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false }
                         : r
-                )
-            }));
+                );
+                return { ...prev, data: applyLiveDupMarks(next) };
+            });
         }, [getKey, setDataState, onUnsavedChange, modal, findLv123Duplicates]);
         // 행 클릭 시 편집기능 open
         const onRowClick = useCallback((e) => {
@@ -428,6 +457,40 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             }));
         }, [setDataState, getKey, warnIfDuplicateLv123]);
 
+        // 현재 rows 기준으로 lv123code 중복 셀만 __errors에 반영
+        const applyLiveDupMarks = useCallback((rows = []) => {
+            // 삭제대기/설문 행 제외  코드가 있는 것만
+            const eligible = rows.filter(r =>
+                r?.__pendingDelete !== true &&
+                r?.ex_gubun !== "survey" &&
+                String(r?.lv123code ?? "").trim() !== ""
+            );
+
+            // code -> key(Set) 매핑
+            const byCode = new Map();
+            eligible.forEach(r => {
+                const code = String(r.lv123code).trim().toLowerCase();
+                const key = keyOf(r);
+                const set = byCode.get(code) ?? new Set();
+                set.add(key);
+                byCode.set(code, set);
+            });
+
+            // 중복된 key 모으기
+            const dupKeys = new Set();
+            byCode.forEach(set => { if (set.size > 1) set.forEach(k => dupKeys.add(k)); });
+
+            // 각 행의 __errors 업데이트 (lv123code만 터치)
+            return rows.map(r => {
+                const k = keyOf(r);
+                const next = { ...r };
+                const errs = new Set(next.__errors ?? []);
+                if (dupKeys.has(k)) errs.add("lv123code"); else errs.delete("lv123code");
+                next.__errors = errs.size ? errs : undefined;
+                return next;
+            });
+        }, [keyOf]);
+
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
             if (typeof document !== "undefined" && document.activeElement) {
@@ -438,8 +501,24 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const prev = latestCtxRef.current?.dataState?.data ?? [];
 
             // 1) 유효성 검사
-            const { ok, errors } = validateRows(prev);
+            const { ok, errors, rowMarks } = validateRows(prev);
             if (!ok) {
+                setErrorMarks(new Map());
+                // 행 객체 기준으로 바로 __errors 세팅
+                setDataState(prevState => {
+                    const nextRows = (prevState?.data || []).map(r => {
+                        const set = rowMarks.get(r);
+                        if (!set) {
+                            if (r.__errors) {
+                                const { __errors, ...rest } = r;
+                                return rest;              // 이전 에러 제거
+                            }
+                            return r;
+                        }
+                        return { ...r, __errors: new Set(set) }; // 표시 대상
+                    });
+                    return { ...prevState, data: nextRows };
+                });
                 modal.showErrorAlert("알림", errors.join("\n"));
                 return; // 저장 중단
             }
@@ -463,6 +542,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 const res = await saveGridData.mutateAsync(payload);
 
                 if (res?.success == "777") {
+                    setErrorMarks(new Map());   //에러 초기화
                     modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
                     onSaved?.();  // ← 미저장 플래그 해제 요청(부모)
                     handleSearch(); // 재조회 
@@ -496,7 +576,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             );
 
             const errors = [];
-
+            const rowMarks = new WeakMap(); // WeakMap<object, Set<string>>
+            const mark = (row, field, message) => {
+                const set = rowMarks.get(row) ?? new Set();
+                set.add(field);
+                rowMarks.set(row, set);
+                if (message) errors.push(message);
+            };
             // 2) 단계별 필수 필드 정의
             //    lvcode=1  → 소분류 코드/소분류만 필수
             //    lvcode=2  → 중분류 코드/중분류 + 소분류 코드/소분류 필수
@@ -527,24 +613,27 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             rows.forEach((r) => {
                 requiredFields.forEach(({ f, label }) => {
                     const v = String(r?.[f] ?? "").trim();
-                    if (!v) errors.push(`[행 ${r?.no ?? "?"}] ${label}은(는) 필수입니다.`);
+                    if (!v) mark(r, f, `${label}은(는) 필수입니다. (행 번호: ${r?.no ?? "?"})`);
                 });
             });
 
             // 4) 중복 체크: 무조건 소분류코드(lv123code)만 검사
-            const dup = new Map(); // key -> [행번호...]
+            const codeToRows = new Map(); // code -> row[]
             rows.forEach((r) => {
-                const key = String(r?.lv123code ?? "").trim().toLowerCase();
-                if (!key) return; // 빈 값은 위에서 잡힘
-                if (!dup.has(key)) dup.set(key, []);
-                dup.get(key).push(r?.no ?? "?");
+                const c = String(r?.lv123code ?? "").trim().toLowerCase();
+                if (!c) return;
+                if (!codeToRows.has(c)) codeToRows.set(c, []);
+                codeToRows.get(c).push(r);
             });
-            dup.forEach((nos, k) => {
-                if (nos.length > 1) {
-                    errors.push(`소분류코드 '${k}'가 중복입니다. (행 번호: ${nos.join(", ")})`);
+            codeToRows.forEach((arr, code) => {
+                if (arr.length > 1) {
+                    const nos = arr.map(r => r?.no ?? "?").join(", ");
+                    // 해당 코드가 있는 모든 행의 'lv123code' 셀에 마크
+                    arr.forEach(r => mark(r, "lv123code"));
+                    errors.push(`소분류코드 '${code}'가 중복입니다. (행 번호: ${nos})`);
                 }
             });
-            return { ok: errors.length === 0, errors };
+            return { ok: errors.length === 0, errors, rowMarks };
         };
 
         // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
@@ -630,6 +719,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             setSelectedState,
                             idGetter,
                             rowRender,
+                            cellRender,
                             onRowClick,
                             sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
                             sort,                                 // controlled sort

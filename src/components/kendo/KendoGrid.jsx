@@ -38,7 +38,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
     const onCellClose = parentProps?.onCellClose;
     const editCell = parentProps?.editCell;
     //const processedData = parentProps?.data ?? [];
-    
+    const cellRender = parentProps?.cellRender;
     // 원본 배열
     const rawData = Array.isArray(parentProps?.data) ? parentProps.data : [];
 
@@ -249,7 +249,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             onRowClick={onRowClickWrapper}
             onCellClose={onCellClose}
             editCell={editCell}
-
+            cellRender={cellRender}
             // 서버/외부 제어 모드일 때만 다시 붙여주기
             {
             ...(!useClientProcessing ? {
