@@ -260,27 +260,43 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 .map(v => encodeURIComponent(String(v)))
                 .join("__");
 
+        // 각 행의 고유키를 계산(서버키 없을 때 __rowKey → 없으면 makeRowKey로 대체)
         const keyOf = useCallback((row) => row?.__rowKey || makeRowKey(row), []);
-        // 에러 셀 테두리 강조 (내용은 그대로, 껍데기만 스타일 덧입힘)
+
+        /**
+         * 검증 오류가 있는 셀에 빨간 테두리(className)와 배지(중복/빈값)를 붙임임
+         * - 셀의 원래 컨텐츠(td.props.children)는 그대로 유지
+         */ 
         const cellRender = useCallback((td, cellProps) => {
+            if (!React.isValidElement(td)) return td;
+
             const field = cellProps?.field;
             if (!field) return td;
-            const item = cellProps.dataItem;
+
+            const item = cellProps?.dataItem;
             const key = keyOf(item);
-            // Map으로 찍은 마크  행 내장 __errors 둘 다 인식
-            const mapHit = errorMarks.get(key)?.has(field);
-            const rowHit = item?.__errors?.has?.(field);
-            if (!mapHit && !rowHit) return td;
-            const style = { ...td.props.style, boxShadow: "inset 0 0 0 2px #E74C3C" };
-            const className = `${td.props.className || ''} cell-error`;
-            return React.cloneElement(td, {
-                ...td.props,
-                style,
-                className,
-                tabIndex: 0,
-                'data-err-field': field,
-                'data-err-key': key
-            });
+
+            const hasError =
+                errorMarks.get(key)?.has(field) || item?.__errors?.has?.(field);
+            if (!hasError) return td;  // 오류가 없으면 원본 td 그대로 반환
+
+            const kind = item?.__errorKinds?.[field] ?? (field === 'lv123code' ? 'dup' : 'required');
+            const label = kind === 'dup' ? '중복' : '빈값';
+
+            return React.cloneElement(
+                td,
+                {
+                    ...td.props,
+                    className: `${td.props.className || ''} cell-error`,
+                    tabIndex: 0,
+                    'data-err-field': field,
+                    'data-err-key': key
+                },
+                <>
+                    {td.props.children}
+                  <span className="cell-error-badge">{label}</span>   {/* 오류 배지 */}
+                </>
+            );
         }, [errorMarks, keyOf]);
 
         /**
@@ -335,6 +351,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         const copy = new Set(next.__errors);
                         copy.delete(field);
                         next.__errors = copy.size ? copy : undefined;
+                    }
+                    if (next.__errorKinds?.[field]) {
+                        const kinds = { ...next.__errorKinds };
+                        delete kinds[field];
+                        next.__errorKinds = Object.keys(kinds).length ? kinds : undefined;
                     }
                     const pair = PAIRS.find(p => p.code === field || p.text === field);
                     if (!pair) return next; // 소분류나 다른 필드는 그대로
@@ -488,8 +509,16 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 const k = keyOf(r);
                 const next = { ...r };
                 const errs = new Set(next.__errors ?? []);
-                if (dupKeys.has(k)) errs.add("lv123code"); else errs.delete("lv123code");
+                const kinds = { ...(next.__errorKinds ?? {}) };
+                if (dupKeys.has(k)) {
+                    errs.add("lv123code");
+                    kinds.lv123code = "dup";           // ← 중복
+                } else {
+                    errs.delete("lv123code");
+                    if (kinds.lv123code) delete kinds.lv123code;
+                }
                 next.__errors = errs.size ? errs : undefined;
+                next.__errorKinds = Object.keys(kinds).length ? kinds : undefined;
                 return next;
             });
         }, [keyOf]);
@@ -504,13 +533,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const prev = latestCtxRef.current?.dataState?.data ?? [];
 
             // 1) 유효성 검사
-            const { ok, errors, rowMarks } = validateRows(prev);
+            const { ok, errors, rowMarks, rowKinds } = validateRows(prev);
             if (!ok) {
                 setErrorMarks(new Map());
                 // 행 객체 기준으로 바로 __errors 세팅
                 setDataState(prevState => {
                     const nextRows = (prevState?.data || []).map(r => {
                         const set = rowMarks.get(r);
+                        const kinds = rowKinds.get(r);
                         if (!set) {
                             if (r.__errors) {
                                 const { __errors, ...rest } = r;
@@ -518,11 +548,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             }
                             return r;
                         }
-                        return { ...r, __errors: new Set(set) }; // 표시 대상
+                        return { ...r, __errors: new Set(set), __errorKinds: kinds }; // 표시 대상
                     });
                     return { ...prevState, data: nextRows };
                 });
-                focusFirstErrorCell(); 
+                focusFirstErrorCell();
                 modal.showErrorAlert("알림", errors.join("\n"));
                 return; // 저장 중단
             }
@@ -581,10 +611,16 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             const errors = [];
             const rowMarks = new WeakMap(); // WeakMap<object, Set<string>>
-            const mark = (row, field, message) => {
+            const rowKinds = new WeakMap(); // row -> { [field]: 'required'|'dup' };
+            const mark = (row, field, message, kind) => {
                 const set = rowMarks.get(row) ?? new Set();
                 set.add(field);
                 rowMarks.set(row, set);
+
+                const kinds = rowKinds.get(row) ?? {};
+                if (kind) kinds[field] = kind;
+                rowKinds.set(row, kinds);
+
                 if (message) errors.push(message);
             };
             // 2) 단계별 필수 필드 정의
@@ -617,7 +653,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             rows.forEach((r) => {
                 requiredFields.forEach(({ f, label }) => {
                     const v = String(r?.[f] ?? "").trim();
-                    if (!v) mark(r, f, `${label}은(는) 필수입니다. (행 번호: ${r?.no ?? "?"})`);
+                    if (!v) mark(r, f, `${label}은(는) 필수입니다. (행 번호: ${r?.no ?? "?"})`, "required");
                 });
             });
 
@@ -637,7 +673,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     errors.push(`소분류코드 '${code}'가 중복입니다. (행 번호: ${nos})`);
                 }
             });
-            return { ok: errors.length === 0, errors, rowMarks };
+            return { ok: errors.length === 0, errors, rowMarks, rowKinds };
         };
 
         // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
