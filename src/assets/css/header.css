@@ -162,4 +162,16 @@
    
    /* 수평 스크롤 방지 */
    html, body { overflow-x:hidden; }
-   
+/* 레거시 전역 header 규칙을 초기화 (연두 배경 차단) */
+   header.smopen-header {
+    background: none !important;
+    background-image: none !important;
+  }
+  
+/* 과거 전역 header 규칙 초기화(연두 배경 차단) */
+header.smopen-header { background: none !important; background-image: none !important; }
+
+/* 최종 우리 헤더 배경 강제 */
+.smopen-header {
+  background-image: linear-gradient(to right,#d8f9d3,#e9f5cf 26%,#d3eee5 52%,#d5eaff 75%,#ccdaff) !important;
+}

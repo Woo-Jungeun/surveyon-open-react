@@ -1,8 +1,12 @@
-import {Fragment} from "react";
+import { Fragment } from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App.jsx";
 import { BrowserRouter } from "react-router-dom";
-// import '@progress/kendo-theme-default/dist/all.css'
+
+import '@progress/kendo-theme-default/dist/all.css'
+import "@/assets/css/common.css";
+import "@/assets/css/kendo_custom.css";
+import '@/assets/css/header.css';
 
 /* 기본 contextAPI 컴포넌트 */
 import ModalProvider from "@/components/common/Modal";
@@ -32,7 +36,7 @@ import { load } from "@progress/kendo-react-intl";
 import language from "@/config/kendo/language.json"
 load(likelySubtags, currencyData, weekData, bgLocalCurrency, bgNumbers, bgCaGregorian, bgDateFields, deLocalCurrency, deNumbers, deCaGregorian, deDateFields);
 
-import {QueryClient, QueryClientProvider} from "react-query";
+import { QueryClient, QueryClientProvider } from "react-query";
 const queryClient = new QueryClient();
 
 loadMessages(language, "ko")

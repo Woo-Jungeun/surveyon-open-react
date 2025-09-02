@@ -5,8 +5,10 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), "");
+    const isDev = mode === "development";
     return {
         // Vite
+        base: isDev ? "/" : "/o2/",   // dev에서는 /, prod에서는 /o2/
         plugins: [react()],
         resolve: {
             alias: {
@@ -15,9 +17,10 @@ export default defineConfig(({ mode }) => {
         },
 
         server: {
-            host: true,
+            host: true, 
+            open: "/o2/",
             proxy: {
-                "/o": {
+                "/o/": {
                     // target: 'http://211.41.186.152:13333',
                     target: env.VITE_PROXY_URL,
                     changeOrigin: true,

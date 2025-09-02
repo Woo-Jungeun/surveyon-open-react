@@ -1,33 +1,29 @@
 import { useSelector } from "react-redux";
 import Login from "@/components/app/login/Login.jsx";
-import {Navigate, Route, Routes} from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { Fragment } from "react";
 import MainWrapperView from "@/views/MainWrapperView";
-import '@progress/kendo-theme-default/dist/all.css'
-import "@/assets/css/common.css";
-import "@/assets/css/kendo_custom.css";
 import { useCookies } from "react-cookie";
 import { jwtDecode } from "jwt-decode";
 import PageNotFound from "./components/app/pageNotFound/PageNotFound";
-
+import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapperView.jsx";
 function App() {
     const [cookies] = useCookies();
     const auth = useSelector((store) => store.auth);
 
     return (
         <Fragment>
-            <Routes><Route path={"/*"} element={<MainWrapperView />} /></Routes>
-            {/* {(auth.isLogin && (auth?.user?.userId === (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT || ""))?.sub)))
-                ? <Routes><Route path={"/*"} element={<MainWrapperView />} /></Routes>
-                : <Fragment>
-                    {(!auth.isLogin || (auth?.user?.userId !== (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT||""))?.sub)) ) && <Navigate replace to={"/login"}></Navigate>}
-                    <Routes>
-                        <Route path={"/"} element={<Login />} />
-                        <Route path={"/login"} element={<Login />} />
-                        <Route path={"/*"} element={<PageNotFound />} />
-                    </Routes>
-                </Fragment>
-            } */}
+            <Routes>
+                {/* /o2 아래가 우리 앱 루트 */}
+                <Route path="/o2" element={<MainWrapperView />}>
+                    <Route index element={<OptionSettingWrapperView />} />       {/* /o2 */}
+                    <Route path="login" element={<Navigate to="/o2" replace />} />
+                    <Route path="*" element={<PageNotFound />} />
+                    {/* <Route path="*" element={<Navigate to="/o2" replace />} /> */}
+                </Route>
+                {/* /o2 외 경로로 오면 /o2로 돌려 */}
+                <Route path="*" element={<Navigate to="/o2" replace />} />
+            </Routes>
         </Fragment>
     );
 }
