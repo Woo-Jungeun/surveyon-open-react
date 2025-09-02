@@ -192,6 +192,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const selectionModeRef = useRef(null);// 선택 동작 모드: 'drag' | 'range' | 'toggle'
         const shouldAutoApplySelectionRef = useRef(true);
         const justClosedAtRef = useRef(0);
+        const justOpenedAtRef = useRef(0); // 최초 오픈 직후 바깥 클릭 무시 가드
         const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
@@ -474,8 +475,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const r = el.getBoundingClientRect();
                 setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
             }
-            // 그런 다음 에디터 키 세팅
-            setLv3EditorKey(targetKey);
+            justOpenedAtRef.current = Date.now(); // 오픈 직후 닫힘 가드 시작
+            setLv3EditorKey(targetKey); // 에디터 키 세팅
         }, [lv3EditorKey]);
         // 드래그 중 셀 진입 → 범위 갱신
         const onLv3MouseEnter = useCallback((idx, e) => {
@@ -572,6 +573,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         useEffect(() => {
             const handleDocMouseDown = (e) => {
                 if (lv3EditorKey == null) return;
+                if (Date.now() - justOpenedAtRef.current < 120) return; // 오픈 직후 즉시 닫힘 방지
                 const t = e.target;
                 if (t.closest('.lv3-editor') || t.closest('.lv3-popup') || t.closest('.lv3-opener') || t.closest('.k-animation-container')) return;
                 justClosedAtRef.current = Date.now();
@@ -784,12 +786,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }));
         }, [setDataState]);
 
-        // 드롭다운을 열 때만(= 대표 셀이 정해졌을 때) 클릭 하이라이트 제거
+        // 같은 행에서 여는 경우(특히 추가행) 즉시 하이라이트 해제하지 않음 → 닫힐 때 정리
         useEffect(() => {
-            if (lv3EditorKey != null) {
-                clearRowHighlight();
-            }
-        }, [lv3EditorKey, clearRowHighlight]);
+            if (lv3EditorKey == null) return;
+            const editingRow = (dataState?.data || []).find(r => r.inEdit === true); // [추가]
+            if (editingRow && getKey(editingRow) === lv3EditorKey) return;            // 같은 행이면 유지
+            clearRowHighlight();
+        }, [lv3EditorKey, clearRowHighlight, dataState?.data, getKey]);
 
         // 선택된 lv3 셀 존재 여부
         const hasLv3CellSelection = lv3SelKeys.size > 0;
@@ -1336,12 +1339,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                     const opt = e?.value;
                                     const targets = lv3SelKeys.size ? lv3SelKeys : new Set([lv3EditorKey]);
                                     applyLv3To(targets, opt);
-                                    clearLv3Selection();        // 노란 선택(셀 강조) 제거
+                                    clearLv3Selection();        // 셀 강조 제거
+                                    clearRowHighlight();           // 수정 완료 시 하이라이트 해제
                                     setLv3EditorKey(null);
                                     setLv3AnchorRect(null);
                                 }}
                                 onClose={() => {
-                                    clearLv3Selection();        // 노란 선택(셀 강조) 제거
+                                    clearLv3Selection();        // 셀 강조 제거
+                                    clearRowHighlight();           // 수정 완료 시 하이라이트 해제
                                     setLv3EditorKey(null);
                                     setLv3AnchorRect(null);
                                 }}
