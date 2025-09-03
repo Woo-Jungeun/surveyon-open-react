@@ -50,7 +50,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
     const [data, setData] = useState({}); //데이터 
-    const { getGridData } = OptionSettingApi();
+    const { getGridData, saveGridData } = OptionSettingApi();
 
     // 배열 -> 옵션으로 변환
     const toOptions = (arr) =>
@@ -75,7 +75,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
     };
 
     useEffect(() => {
-        //분석 정보 데이터
+        //분석 정보 데이터 조회
         getGridData.mutateAsync({
             params: {
                 key: "",
@@ -86,7 +86,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
             }
         }).then((res) => {
             const d = res?.resultjson?.[0] || {};
-            setData(d);
+            setData({ ...d, temperature: parseTemp(d?.temperature) });
 
             setPreviousPromptExValue(d?.prompt_string_ex_backup || "");    //보기 프롬프트 로그
             setPreviousPromptResValue(d?.prompt_string_res_backup || "");  //응답 프롬프트 로그
@@ -146,6 +146,23 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
     const [previousPromptExValue, setPreviousPromptExValue] = useState("");     // 기존 보기 프롬프트 로그 데이터
     const [previousPromptResValue, setPreviousPromptResValue] = useState("");   // 기존 응답 프롬프트 로그 데이터
 
+    const [saving, setSaving] = useState(false); //저장 API가 진행 중인지 표시하는 플래그
+
+    /*창의성 조절*/
+    const TEMP_MIN = 0;
+    const TEMP_MAX = 1;
+    const TEMP_STEP = 0.1;
+    const TEMP_DEFAULT = 0.2;
+
+    // temperature 입력(문자열/숫자)을 0~1 범위로 클램프하고 소수점 1자리로 반올림해 숫자로 반환
+    const parseTemp = (v, def = TEMP_DEFAULT) => {
+        const n = typeof v === "number" ? v : parseFloat(v);
+        if (!Number.isFinite(n)) return def;
+        // 0~1 범위로 클램프 + 소수 1자리 고정
+        const clamped = Math.max(TEMP_MIN, Math.min(TEMP_MAX, n));
+        return Math.round(clamped * 10) / 10;
+    };
+
     // 팝업에서 '선택' 눌렀을 때: textarea에 적용하고 팝업 닫기
     const handleSelectPrompt = ({ text }) => {
         setOpenPrompt(true);        // 프롬프트 섹션이 닫혀 있어도 자동으로 열기
@@ -160,16 +177,9 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
     // onChangeInputEvent 핸들러
     const onChangeInputEvent = (e, col) => {
         let next = e?.value ?? e?.target?.value ?? "";
-        
+
         // temperature라면 숫자로 변환 후 소수점 한 자리 고정
-        if (col === "temperature") {
-            const num = parseFloat(next);
-            if (!isNaN(num)) {
-                next = parseFloat(num.toFixed(1)); // 0.1 단위로 고정
-            } else {
-                next = ""; // 숫자가 아니면 빈 값
-            }
-        }
+        if (col === "temperature") next = parseTemp(next);
 
         setData(prev => ({
             ...prev,
@@ -213,13 +223,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
         }
     };
 
-    /*창의성 조절*/
-    const TEMP_MIN = 0;
-    const TEMP_MAX = 1;
-    const TEMP_STEP = 0.1;
-    const TEMP_DEFAULT = 0.2;
-    const sliderValue = typeof data?.temperature === "number" ? Number(data.temperature.toFixed(1)) : TEMP_DEFAULT; // 슬라이드 값 표출 
-
     useEffect(() => {
         setData(prev => {
             const v = prev?.temperature;
@@ -229,6 +232,66 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
         });
     }, []);
 
+    // payload 생성
+    const buildInfoPayload = () => {
+        const projectnum = String(data?.projectnum || "q250089uk");
+        const qnum = String(data?.qnum || "A2-2");
+        console.log("data", data)
+        const info = {
+            apikeyid: String(data?.apikeyid || ""),
+            apikey: String(data?.apikey || ""),
+            data_type: "DB",
+            projectnum,
+            result_lang: String(data?.result_lang || "Korean"),
+            select_rows: "",
+            model_select: String(data?.model_select || ""),
+            open_item_lv1: String(data?.open_item_lv1 ?? ""),
+            open_item_lv2: String(data?.open_item_lv2 ?? ""),
+            open_item_lv3: String(data?.open_item_lv3 ?? ""),
+            prompt_string: String(data?.prompt_string || ""),
+            keyword_string: String(data?.keyword_string || ""),
+            select_column_id: "pid",
+            select_column_title: qnum,
+            temperature: parseTemp(data?.temperature),
+            prompt_string_ex_backup: data?.prompt_string_ex_backup ?? {},
+            prompt_string_res_backup: data?.prompt_string_res_backup ?? {},
+        };
+
+        return {
+            key: "",
+            user: "syhong",
+            projectnum,
+            qnum,
+            gb: "info",
+            data: [info],
+        };
+    };
+
+    // 공통 저장 실행
+    const runInfoSave = async (type) => {
+        console.log("type", type)
+        if (saving) return false;
+        setSaving(true);
+        try {
+            const payload = buildInfoPayload();
+            console.log("payload", payload)
+            const res = await saveGridData.mutateAsync(payload);
+            const ok = res?.success === "777";
+            console.log("ok", ok)
+            if (ok) {
+                console.log(`[INFO][${type}] saved (777)`, res);
+            } else {
+                console.log(`[INFO][${type}] save failed`, res);
+            }
+            return ok;
+        } catch (e) {
+            console.error(`[INFO][${type}] save error`, e);
+            return false;
+        } finally {
+            setSaving(false);
+        }
+    };
+    
     return (
         <Fragment>
             <div className="collapseBar">
@@ -326,16 +389,12 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
                                     max={TEMP_MAX}
                                     step={TEMP_STEP}
                                     buttons={false}                 // 좌우 +/− 버튼 숨김 (원하면 true)
-                                    value={
-                                        typeof data?.temperature === "number"
-                                            ? Number(data.temperature.toFixed(1))
-                                            : TEMP_DEFAULT
-                                    }
+                                    value={parseTemp(data?.temperature)}
                                     onChange={(e) => onChangeInputEvent(e, "temperature")}   // e.value 사용
                                     style={{ flex: 1 }}
                                 />
                                 <span className="tempValue">
-                                    {sliderValue.toFixed(1)}
+                                    {parseTemp(data?.temperature).toFixed(1)}
                                 </span>
                             </div>
                         </div>
@@ -382,10 +441,27 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
 
                     {/* 버튼 3개 */}
                     <div className="btnWrap type01 btnRowFit">
-                        <Button className="btnTxt">번역</Button>
-                        <Button themeColor="primary">보기분석</Button>
-                        <Button themeColor="primary">응답자분석(NEW)</Button>
-                        {showEmptyEtcBtn && <Button className="btnTxt">응답자 빈셀&기타</Button>}
+                        <Button className="btnTxt" disabled={saving}
+                            onClick={() => runInfoSave("translateResponse")}>
+                            번역
+                        </Button>
+
+                        <Button themeColor="primary" disabled={saving}
+                            onClick={() => runInfoSave("classified")}>
+                            보기분석
+                        </Button>
+
+                        <Button themeColor="primary" disabled={saving}
+                            onClick={() => runInfoSave("response")}>
+                            응답자분석(NEW)
+                        </Button>
+
+                        {showEmptyEtcBtn && (
+                            <Button className="btnTxt" disabled={saving}
+                                onClick={() => runInfoSave("recallResponse")}>
+                                응답자 빈셀&기타
+                            </Button>
+                        )}
                     </div>
                     {/* 분석결과 */}
                     <div className="mgT16">
