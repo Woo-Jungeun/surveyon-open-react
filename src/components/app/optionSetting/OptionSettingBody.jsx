@@ -54,38 +54,68 @@ const OptionSettingBody = () => {
     setUnsaved(prev => (prev[tab] === v ? prev : { ...prev, [tab]: v }));
   }, []);
 
-  // 공용 모달로 확인창
-  const confirmNavigate = useCallback((message) => {
+  // 공용 모달로 확인창 (취소 | 이동 | 저장 후 이동)
+  const confirmNavigate = useCallback((message, canSave = true) => {
     return new Promise((resolve) => {
-      modal.showConfirm(
-        "알림",
-        message,
-        {
-          btns: [
-            { title: "취소", click: () => resolve(false) },
-            { title: "이동", click: () => resolve(true) },
-          ],
-        }
-      );
+      modal.showConfirm("알림", message, {
+        btns: [
+          { title: "취소", click: () => resolve("cancel") },
+          { title: "이동", click: () => resolve("go") },
+          // 저장 가능한 탭(1,2)에서만 노출
+          ...(canSave ? [{ title: "저장 후 이동", click: () => resolve("saveThenGo") }] : [])
+        ],
+      });
     });
   }, [modal]);
 
+  // 현재 탭 저장 실행 => 성공(true)만 이동 허용
+  const saveTab = useCallback(async (tab) => {
+    if (tab === "1") {
+      const ret = tab1Ref.current?.saveChanges?.();
+      return ret && typeof ret.then === "function" ? !!(await ret) : false;
+    }
+    if (tab === "2") {
+      const ret = tab2Ref.current?.saveChanges?.();
+      return ret && typeof ret.then === "function" ? !!(await ret) : false;
+    }
+    return false; // 탭3은 저장 없음
+  }, []);
+
   const trySwitchTab = useCallback(async (next) => {
     if (next === tabDivision) return;
+  
     const cur = tabDivision;
-
     if (unsaved[cur]) {
-      const ok = await confirmNavigate("저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?");
-      if (!ok) return; // 취소 → 현 탭 유지
-
-      // 사용자가 "이동(=변경 사항 버리기)" 를 선택했으므로 현재 탭의 더티 플래그를 즉시 해제
-      setUnsaved(prev => ({ ...prev, [cur]: false }));
-
-      // draft로만 들고 있던 단계 변경도 함께 롤백
-      setLvCodeDraft(lvCodeCommitted);
+      const action = await confirmNavigate(
+        "저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?",
+        /* canSave */ (cur === "1" || cur === "2")
+      );
+  
+      if (action === "cancel") return;
+  
+      if (action === "go") {
+        // 버리고 이동
+        setUnsaved(prev => ({ ...prev, [cur]: false }));
+        setLvCodeDraft(lvCodeCommitted); // 단계 변경도 롤백
+        setTabDivision(next);
+        return;
+      }
+  
+      if (action === "saveThenGo") {
+        const ok = await saveTab(cur);      // ← 저장 API 실행
+        if (!ok) return;                    // 실패면 그대로 머무름
+  
+        // 성공: 더티 플래그 해제 + (탭2면) 드롭다운 커밋
+        setUnsaved(prev => ({ ...prev, [cur]: false }));
+        if (cur === "2") setLvCodeCommitted(lvCodeDraft);
+  
+        setTabDivision(next);
+        return;
+      }
+    } else {
+      setTabDivision(next);
     }
-    setTabDivision(next);
-  }, [tabDivision, unsaved, confirmNavigate, setUnsaved]);
+  }, [tabDivision, unsaved, confirmNavigate, lvCodeCommitted, lvCodeDraft, saveTab]);
 
   // 새로고침/창닫기 가드 (브라우저 네이티브)
   useEffect(() => {

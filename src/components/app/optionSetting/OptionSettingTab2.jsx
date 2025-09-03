@@ -129,7 +129,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
     // GridData가 내려주는 최신 컨텍스트를 저장
     const latestCtxRef = useRef(null);
-    const saveChangesRef = useRef(() => { });   // 저장 로직 노출용
+    const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
 
     // 부모에서 호출할 추가 함수
     const addButtonClick = () => {
@@ -542,11 +542,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         const set = rowMarks.get(r);
                         const kinds = rowKinds.get(r);
                         if (!set) {
-                            if (r.__errors) {
+                            // if (r.__errors) {
                                 const { __errors, ...rest } = r;
                                 return rest;              // 이전 에러 제거
-                            }
-                            return r;
+                            // }
+                            // return r;
                         }
                         return { ...r, __errors: new Set(set), __errorKinds: kinds }; // 표시 대상
                     });
@@ -554,7 +554,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 });
                 focusFirstErrorCell();
                 modal.showErrorAlert("알림", errors.join("\n"));
-                return; // 저장 중단
+                return false; // 저장 중단
             }
 
             // 2) 보류 삭제 반영 + 재번호 + 키/플래그 정리
@@ -580,14 +580,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
                     onSaved?.();  // ← 미저장 플래그 해제 요청(부모)
                     handleSearch(); // 재조회 
+                    return true;  //성공
                 } else if (res?.success == "762") {
                     modal.showErrorAlert("에러", res?.message); //"보기 코드 중복, 빈값 발견"
+                    return false;  
                 } else {
                     modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
+                    return false;  
                 };
             } catch (err) {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
-                return; // 실패 시 그리드 상태 변경 안 함
+                return false;   // 실패 시 그리드 상태 변경 안 함
             }
 
         }, [setDataState, setSelectedState]);

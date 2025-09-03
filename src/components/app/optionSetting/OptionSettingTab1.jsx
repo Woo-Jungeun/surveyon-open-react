@@ -26,7 +26,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const { getGridData, saveGridData } = OptionSettingApi();
     const [editField] = useState("inEdit");
 
-    const saveChangesRef = useRef(() => { });   // 저장 로직 노출용
+    const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
     const reportedLvcodeRef = useRef(false);
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
@@ -845,7 +845,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 setDataState(prev => ({ ...prev, data: applyRequiredMarksLv3(prev.data) }));
                 focusFirstLv3ErrorCell();   // 에러 중 첫번째 셀로 포커스 이동
                 modal.showErrorAlert("알림", "소분류 값은 필수입니다.");
-                return; // 저장 중단
+                return false; // 저장 중단
             }
 
             // selected → recheckyn 반영 + 페이로드 생성
@@ -870,14 +870,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     setSelectedStateGuarded({});                    // 초기화
                     suppressUnsavedSelectionRef.current = false;
                     handleSearch();                 // 재조회
+                    return true; // 성공
                 } else {
                     modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
-                    return; // 실패 시 그리드 상태 변경 안 함
+                    return false; // 실패 시 그리드 상태 변경 안 함
                 }
             } catch (err) {
                 console.error(err);
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
-                return; // 실패 시 그리드 상태 변경 안 함
+                return false; // 실패 시 그리드 상태 변경 안 함
             }
         }, [dataState?.data, selectedState, getKey, setSelectedStateGuarded, onSaved]);
 
