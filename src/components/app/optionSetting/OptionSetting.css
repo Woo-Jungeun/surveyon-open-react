@@ -200,3 +200,15 @@
   pointer-events: none;  /* 입력 방해 X */
   white-space: nowrap;
 }
+
+/*분석 결과창*/
+.resultBox {
+   height: 320px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    background: #000;
+    color: #3cff6b;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  }

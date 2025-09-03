@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
                     target: env.VITE_PROXY_URL,
                     changeOrigin: true,
                     secure: false,
-               
+                    ws: true,                    // WebSocket 프록시 활성화 (SignalR에 중요)
                 },
             }
         }

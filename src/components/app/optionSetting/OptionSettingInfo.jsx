@@ -1,12 +1,13 @@
-import React, { Fragment, useState, useEffect, useContext } from "react";
+import React, { Fragment, useState, useEffect, useContext, useRef } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
 import { Input } from "@progress/kendo-react-inputs";
-import { TextArea, Slider, NumericTextBox } from "@progress/kendo-react-inputs";
+import { TextArea, Slider } from "@progress/kendo-react-inputs";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import "@/components/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
+import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
 
 /**
  * 분석 > 정보 영역
@@ -14,6 +15,14 @@ import { modalContext } from "@/components/common/Modal.jsx";
  * @author jewoo
  * @since 2025-08-19<br />
 */
+
+// 버튼 정의
+const ACTION_LABEL = {
+    translateResponse: "번역",
+    classified: "보기분석",
+    response: "응답자분석(NEW)",
+    recallResponse: "응답자 빈셀&기타",
+};
 
 /*섹션 영역 */
 const Section = ({ id, title, first, open, onToggle, headerAddon, children }) => (
@@ -53,7 +62,13 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab }) => {
     const modal = useContext(modalContext);
     const [data, setData] = useState({}); //데이터 
-    const { optionEditData, optionSaveData, optionAnalysisData } = OptionSettingApi();
+    const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus } = OptionSettingApi();
+
+    // SignalR 훅
+    const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
+        hubUrl: "/o/signalr",
+        hubName: "workerlog",
+    });
 
     // 배열 -> 옵션으로 변환
     const toOptions = (arr) =>
@@ -278,7 +293,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             user: "syhong",
             projectnum,
             qid: data?.qid,
-            action: "start",      // todo: start, status, clear
+            action: "start",
         };
 
         switch (type) {
@@ -299,9 +314,27 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         }
     };
 
+    // status/clear 호출용 (projectnum 스코프 보정)
+    const buildStatusPayload = (job) => {
+        const projectnum = String(data?.projectnum);
+        return {
+            key: "",
+            user: "syhong",
+            projectnum,
+            qid: String(data?.qid),
+            action: "status",
+            job,
+        };
+    };
+
     // 공통 버튼 실행
     const runInfoSave = async (type) => {
         if (saving) return false;
+        const projectnum = String(data?.projectnum || "q250089uk");
+        if (!data?.qid || !projectnum) {
+            modal.showErrorAlert("안내", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.");
+            return false;
+        }
         setSaving(true);
         try {
             // 1) 옵션 정보 저장
@@ -311,25 +344,41 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                 modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
                 return false;
             }
-            console.log(`[INFO][${type}] saved (777)`, saveRes);
+           // console.log(`[INFO][${type}] saved (777)`, saveRes);
 
             // 2) 저장 성공 시 → 분석 API 호출
             const analysisPayload = buildAnalysisPayload(type);
-            const analysisRes = await optionAnalysisData.mutateAsync(analysisPayload);
-            console.log(`analysisRes`, analysisRes);
-            if (analysisRes?.success === "777") {
-                // 버튼 type에 따른 재조회, 탭 이동
-                if (type === "classified") {
-                    onNavigateTab?.("2");   // 보기 데이터 탭으로
-                } else {
-                    onNavigateTab?.("1");   // 응답 데이터 탭으로
-                }
-                return true;
-            } else {
-                modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
+            const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
+
+            const ok = analysisRes?.success === "777" || analysisRes?.ok === true;
+            const job = analysisRes?.job || analysisRes?.contents?.job || analysisRes?.data?.job;
+
+            if (!ok) {
+                modal.showErrorAlert("에러", "오류가 발생했습니다.");
                 return false;
             }
+            const text = ACTION_LABEL[type] ?? type;  // 라벨 추출
+            // 분석 결과창 표출
+            appendLog(`== ${text} 시작 ==\n`);
 
+            if (job) {
+                // 허브 조인
+                const joined = await joinJob(job);
+                if (!joined) appendLog("[WARN] 실시간 로그 연결 실패(작업은 진행 중)\n");
+
+                // (선택) 누락 로그 보정: status 호출
+                try {
+                    const r = await optionAnalysisStatus.mutateAsync(buildStatusPayload(job));
+                    if (r?.output) appendLog(String(r.output));
+                } catch { }
+            } else {
+                appendLog("[INFO] job 키가 없어 실시간 로그 조인을 생략합니다.\n");
+            }
+            // 탭 이동
+            if (type === "classified") onNavigateTab?.("2");
+            else onNavigateTab?.("1");
+
+            return true;
         } catch (e) {
             console.log(e)
             modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
@@ -338,6 +387,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             setSaving(false);
         }
     };
+
+    const logRef = useRef(null);
+    // 로그가 바뀔 때(추가될 때) 바닥에 붙여 주기
+    useEffect(() => {
+        const el = logRef.current;
+        if (!el) return;
+        // 로그가 추가될 때마다 항상 맨 아래로
+        el.scrollTop = el.scrollHeight;
+    }, [logText]);
 
     return (
         <Fragment>
@@ -512,9 +570,12 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                     </div>
                     {/* 분석결과 */}
                     <div className="mgT16">
-                        <div className="resultBox" aria-label="분석결과창" />
+                        <div ref={logRef} className="resultBox" aria-label="분석결과창">
+                            {logText}
+                        </div>
                         <div className="flexE mgT10">
                             <Button className="btnTxt type02">문항삭제</Button>
+                            <Button className="btnTxt type02" onClick={clearLog}>로그 지우기</Button>
                         </div>
                     </div>
                 </div>

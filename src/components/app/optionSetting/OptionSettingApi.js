@@ -45,25 +45,32 @@ export function OptionSettingApi() {
         }
     );
 
-    // 번역/보기/응답자New/추가 버튼 이벤트 API
-    const optionAnalysisData = useMutation(
+    // 분석 시작(start) - x-www-form-urlencoded
+    const optionAnalysisStart = useMutation(
         async (data) => {
             loadingSpinner.show();
-            return await api.post(data, "/o/option_analysis_api.aspx");
+            return await api.urlencoded("/o/option_analysis_api.aspx", data);
         },
         {
-            onSuccess: (res, data) => {
-            },
-            onSettled: (data, error, variables, context) => {
-                //do...
-                loadingSpinner.hide();
-            }
+            onSettled: () => loadingSpinner.hide()
         }
+    );
+
+    // 상태(status) - GET ?action=status&job=...
+    const optionAnalysisStatus = useMutation(
+        async (params) => await api.getWithParams("/o/option_analysis_api.aspx", params)
+    );
+
+    // 초기화(clear) - GET ?action=clear&job=...
+    const optionAnalysisClear = useMutation(
+        async (params) => await api.getWithParams("/o/option_analysis_api.aspx", params)
     );
 
     return {
         optionEditData,
         optionSaveData,
-        optionAnalysisData
+        optionAnalysisStart,
+        optionAnalysisStatus,
+        optionAnalysisClear,
     };
 }
