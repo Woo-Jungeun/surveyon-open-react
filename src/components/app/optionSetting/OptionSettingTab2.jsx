@@ -181,6 +181,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         addButtonClick,
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
+        reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
     }));
 
     //grid rendering 
@@ -194,7 +195,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         );
 
         qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
-        latestCtxRef.current = { dataState, setDataState, selectedState, idGetter };    // 최신 컨텍스트 저장
+        latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
 
         // 대분류/중분류 코드값 텍스트 매핑
         const buildMaps = (rows, codeField, textField) => {

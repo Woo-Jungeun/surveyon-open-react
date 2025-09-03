@@ -83,16 +83,16 @@ const OptionSettingBody = () => {
 
   const trySwitchTab = useCallback(async (next) => {
     if (next === tabDivision) return;
-  
+
     const cur = tabDivision;
     if (unsaved[cur]) {
       const action = await confirmNavigate(
         "저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?",
-        /* canSave */ (cur === "1" || cur === "2")
+        /* canSave */(cur === "1" || cur === "2")
       );
-  
+
       if (action === "cancel") return;
-  
+
       if (action === "go") {
         // 버리고 이동
         setUnsaved(prev => ({ ...prev, [cur]: false }));
@@ -100,15 +100,15 @@ const OptionSettingBody = () => {
         setTabDivision(next);
         return;
       }
-  
+
       if (action === "saveThenGo") {
         const ok = await saveTab(cur);      // ← 저장 API 실행
         if (!ok) return;                    // 실패면 그대로 머무름
-  
+
         // 성공: 더티 플래그 해제 + (탭2면) 드롭다운 커밋
         setUnsaved(prev => ({ ...prev, [cur]: false }));
         if (cur === "2") setLvCodeCommitted(lvCodeDraft);
-  
+
         setTabDivision(next);
         return;
       }
@@ -174,6 +174,14 @@ const OptionSettingBody = () => {
             isOpen={isLeftOpen}
             onToggle={() => setIsLeftOpen(v => !v)}
             showEmptyEtcBtn={analysisCount !== 0}
+            onNavigateTab={(nextTab) => {                        // 좌측 패널에서 탭 이동 요청 처리 같은 탭이면 reload
+              if (tabDivision === nextTab) {
+                if (nextTab === "1") tab1Ref.current?.reload?.();
+                else if (nextTab === "2") tab2Ref.current?.reload?.();
+              } else {
+                trySwitchTab(nextTab);
+              }
+            }}
           />
         </div>
 

@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect } from "react";
+import React, { Fragment, useState, useEffect, useContext } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
@@ -6,6 +6,7 @@ import { Input } from "@progress/kendo-react-inputs";
 import { TextArea, Slider, NumericTextBox } from "@progress/kendo-react-inputs";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import "@/components/app/optionSetting/OptionSetting.css";
+import { modalContext } from "@/components/common/Modal.jsx";
 
 /**
  * 분석 > 정보 영역
@@ -13,6 +14,7 @@ import "@/components/app/optionSetting/OptionSetting.css";
  * @author jewoo
  * @since 2025-08-19<br />
 */
+
 /*섹션 영역 */
 const Section = ({ id, title, first, open, onToggle, headerAddon, children }) => (
     <div className={`leftInfo ${open ? "on" : ""}`}>
@@ -48,9 +50,10 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab }) => {
+    const modal = useContext(modalContext);
     const [data, setData] = useState({}); //데이터 
-    const { optionEditData, optionSaveData } = OptionSettingApi();
+    const { optionEditData, optionSaveData, optionAnalysisData } = OptionSettingApi();
 
     // 배열 -> 옵션으로 변환
     const toOptions = (arr) =>
@@ -236,7 +239,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
     const buildInfoPayload = () => {
         const projectnum = String(data?.projectnum || "q250089uk");
         const qnum = String(data?.qnum || "A2-2");
-        console.log("data", data)
         const info = {
             apikeyid: String(data?.apikeyid || ""),
             apikey: String(data?.apikey || ""),
@@ -267,25 +269,70 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
         };
     };
 
-    // 공통 저장 실행
+    // 버튼 별 api payload 생성 
+    const buildAnalysisPayload = (type) => {
+        const projectnum = String(data?.projectnum || "q250089uk");
+        const base = {
+            key: "",
+            token: "",
+            user: "syhong",
+            projectnum,
+            qid: data?.qid,
+            action: "start",      // todo: start, status, clear
+        };
+
+        switch (type) {
+            case "translateResponse":      // 번역
+                return { ...base, translateResponse: "Y" };
+
+            case "classified":             // 보기분석
+                return { ...base, classified: "Y", opencodeCategory: "Y" };
+
+            case "response":               // 응답자분석(NEW)
+                return { ...base, response: "Y", opencodeResponse: "Y" };
+
+            case "recallResponse":         // 응답자 기타&빈셀
+                return { ...base, recallResponse: "Y" };
+
+            default:
+                return base;
+        }
+    };
+
+    // 공통 버튼 실행
     const runInfoSave = async (type) => {
-        console.log("type", type)
         if (saving) return false;
         setSaving(true);
         try {
+            // 1) 옵션 정보 저장
             const payload = buildInfoPayload();
-            console.log("payload", payload)
-            const res = await optionSaveData.mutateAsync(payload);
-            const ok = res?.success === "777";
-            console.log("ok", ok)
-            if (ok) {
-                console.log(`[INFO][${type}] saved (777)`, res);
-            } else {
-                console.log(`[INFO][${type}] save failed`, res);
+            const saveRes = await optionSaveData.mutateAsync(payload);
+            if (saveRes?.success !== "777") {
+                modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
+                return false;
             }
-            return ok;
+            console.log(`[INFO][${type}] saved (777)`, saveRes);
+
+            // 2) 저장 성공 시 → 분석 API 호출
+            const analysisPayload = buildAnalysisPayload(type);
+            const analysisRes = await optionAnalysisData.mutateAsync(analysisPayload);
+            console.log(`analysisRes`, analysisRes);
+            if (analysisRes?.success === "777") {
+                // 버튼 type에 따른 재조회, 탭 이동
+                if (type === "classified") {
+                    onNavigateTab?.("2");   // 보기 데이터 탭으로
+                } else {
+                    onNavigateTab?.("1");   // 응답 데이터 탭으로
+                }
+                return true;
+            } else {
+                modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
+                return false;
+            }
+
         } catch (e) {
-            console.error(`[INFO][${type}] save error`, e);
+            console.log(e)
+            modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
             return false;
         } finally {
             setSaving(false);

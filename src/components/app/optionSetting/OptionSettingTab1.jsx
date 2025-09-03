@@ -30,6 +30,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const reportedLvcodeRef = useRef(false);
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
+    const latestCtxRef = useRef(null);
 
     /**
      * rows: 그리드 행 배열(dataState.data)
@@ -44,6 +45,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
+        reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
     }));
 
     /**
@@ -197,6 +199,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
         const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
+        
+         // 부모가 reload()를 부르면 GridData의 handleSearch를 실행할 수 있도록 ref에 최신 핸들러 보관
+        useEffect(() => {
+            latestCtxRef.current = { handleSearch };
+        }, [handleSearch]);
 
         // 최초 로드 시 분석값 있는지 체크 
         useEffect(() => {
