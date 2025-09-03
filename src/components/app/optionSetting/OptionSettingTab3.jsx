@@ -4,7 +4,7 @@ import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-import { Checkbox } from "@progress/kendo-react-inputs";
+
 /**
  * 분석 > 그리드 영역 > rawdata
  *
