@@ -89,7 +89,7 @@ const OptionSettingTab3 = (props) => {
         />
     );
 
-    const { getGridData } = OptionSettingApi();
+    const { optionEditData } = OptionSettingApi();
 
     //grid rendering 
     const GridRenderer = (props) => {
@@ -137,7 +137,7 @@ const OptionSettingTab3 = (props) => {
     return (
         <GridData
             dataItemKey={DATA_ITEM_KEY}
-            searchMutation={getGridData}
+            searchMutation={optionEditData}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 key: "",

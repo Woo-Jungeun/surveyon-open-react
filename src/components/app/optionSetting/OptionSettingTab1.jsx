@@ -23,7 +23,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
     const SELECTED_FIELD = "selected";
-    const { getGridData, saveGridData } = OptionSettingApi();
+    const { optionEditData, optionSaveData } = OptionSettingApi();
     const [editField] = useState("inEdit");
 
     const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
@@ -134,7 +134,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     // 소분류 드롭다운 데이터 + 메타 기능
     const [lv3Options, setLv3Options] = useState([]);
     useEffect(() => {
-        getGridData.mutateAsync({
+        optionEditData.mutateAsync({
             params: {
                 key: "",
                 user: "syhong",
@@ -861,7 +861,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             // 저장 API 호출
             try {
-                const res = await saveGridData.mutateAsync(payload);
+                const res = await optionSaveData.mutateAsync(payload);
                 if (res?.success === "777") {
                     modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
                     onSaved?.(); // ← 미저장 플래그 해제 요청(부모)
@@ -1362,7 +1362,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     return (
         <GridData
             dataItemKey={DATA_ITEM_KEY}
-            searchMutation={getGridData}
+            searchMutation={optionEditData}
             selectedField={SELECTED_FIELD}
             multiSelect={true}
             editField={editField}

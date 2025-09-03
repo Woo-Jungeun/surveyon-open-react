@@ -1,7 +1,7 @@
 import { useMutation } from "react-query";
 import api from "@/common/queries/Api.js";
-import {useContext} from "react";
-import {loadingSpinnerContext} from "@/components/common/LoadingSpinner.jsx";
+import { useContext } from "react";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 /**
  *  분석 > API
@@ -13,8 +13,8 @@ export function OptionSettingApi() {
 
     const loadingSpinner = useContext(loadingSpinnerContext);
 
-    //데이터 가져오기 
-    const getGridData = useMutation(
+    // 데이터 조회 API
+    const optionEditData = useMutation(
         async (data) => {
             // loadingSpinner.show();
             return await api.get(data, "/o/option_edit_api.aspx");
@@ -29,8 +29,8 @@ export function OptionSettingApi() {
         }
     );
 
-    //데이터 저장  
-    const saveGridData = useMutation(
+    // 데이터 저장 API
+    const optionSaveData = useMutation(
         async (data) => {
             loadingSpinner.show();
             return await api.post(data, "/o/option_save_api.aspx");
@@ -45,8 +45,25 @@ export function OptionSettingApi() {
         }
     );
 
+    // 번역/보기/응답자New/추가 버튼 이벤트 API
+    const optionAnalysisData = useMutation(
+        async (data) => {
+            loadingSpinner.show();
+            return await api.post(data, "/o/option_analysis_api.aspx");
+        },
+        {
+            onSuccess: (res, data) => {
+            },
+            onSettled: (data, error, variables, context) => {
+                //do...
+                loadingSpinner.hide();
+            }
+        }
+    );
+
     return {
-        getGridData,
-        saveGridData
+        optionEditData,
+        optionSaveData,
+        optionAnalysisData
     };
 }

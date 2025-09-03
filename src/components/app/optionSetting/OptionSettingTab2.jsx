@@ -124,7 +124,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         />
     );
 
-    const { getGridData, saveGridData } = OptionSettingApi();
+    const { optionEditData, optionSaveData } = OptionSettingApi();
     const [editField] = useState("inEdit");
 
     // GridData가 내려주는 최신 컨텍스트를 저장
@@ -573,7 +573,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 3) 저장 API 호출
             try {
                 const payload = buildSavePayload(normalized, qnum);
-                const res = await saveGridData.mutateAsync(payload);
+                const res = await optionSaveData.mutateAsync(payload);
 
                 if (res?.success == "777") {
                     setErrorMarks(new Map());   //에러 초기화
@@ -813,7 +813,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         <GridData
             dataItemKey={DATA_ITEM_KEY}
             rowNumber={"no"}
-            searchMutation={getGridData}
+            searchMutation={optionEditData}
             menuTitle={MENU_TITLE}
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/

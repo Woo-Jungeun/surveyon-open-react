@@ -50,7 +50,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
     const [data, setData] = useState({}); //데이터 
-    const { getGridData, saveGridData } = OptionSettingApi();
+    const { optionEditData, optionSaveData } = OptionSettingApi();
 
     // 배열 -> 옵션으로 변환
     const toOptions = (arr) =>
@@ -76,7 +76,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
 
     useEffect(() => {
         //분석 정보 데이터 조회
-        getGridData.mutateAsync({
+        optionEditData.mutateAsync({
             params: {
                 key: "",
                 user: "syhong",
@@ -275,7 +275,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
         try {
             const payload = buildInfoPayload();
             console.log("payload", payload)
-            const res = await saveGridData.mutateAsync(payload);
+            const res = await optionSaveData.mutateAsync(payload);
             const ok = res?.success === "777";
             console.log("ok", ok)
             if (ok) {
@@ -291,7 +291,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn }) => {
             setSaving(false);
         }
     };
-    
+
     return (
         <Fragment>
             <div className="collapseBar">
