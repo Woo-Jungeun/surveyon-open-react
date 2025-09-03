@@ -32,7 +32,7 @@ export function OptionSettingApi() {
     // 데이터 저장 API
     const optionSaveData = useMutation(
         async (data) => {
-            loadingSpinner.show();
+            if (data?.gb !== "info") loadingSpinner.show(); //분석정보 저장 시 로딩바 표출X
             return await api.post(data, "/o/option_save_api.aspx");
         },
         {
@@ -40,7 +40,7 @@ export function OptionSettingApi() {
             },
             onSettled: (data, error, variables, context) => {
                 //do...
-                loadingSpinner.hide();
+                if (variables?.gb !== "info") loadingSpinner.hide();
             }
         }
     );
@@ -48,11 +48,11 @@ export function OptionSettingApi() {
     // 분석 시작(start) - x-www-form-urlencoded
     const optionAnalysisStart = useMutation(
         async (data) => {
-            loadingSpinner.show();
+            //loadingSpinner.show();
             return await api.urlencoded("/o/option_analysis_api.aspx", data);
         },
         {
-            onSettled: () => loadingSpinner.hide()
+            //onSettled: () => loadingSpinner.hide()
         }
     );
 
