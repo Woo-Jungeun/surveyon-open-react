@@ -870,7 +870,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             try {
                 const res = await optionSaveData.mutateAsync(payload);
                 if (res?.success === "777") {
-                    modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
+                    // modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
                     onSaved?.(); // ← 미저장 플래그 해제 요청(부모)
                     shouldAutoApplySelectionRef.current = true;    // 재조회 시 recheckyn 기반 자동복원 다시 켜기
                     suppressUnsavedSelectionRef.current = true;    // 리셋은 미저장 X
