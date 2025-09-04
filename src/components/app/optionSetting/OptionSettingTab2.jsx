@@ -36,7 +36,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             { field: "lv3", title: "소분류", show: true, allowHide: false },
             { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false },
             { field: "ex_gubun", title: "보기유형", show: true, editable: false, allowHide: false },
-            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
+            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false },
+            { field: "add", title: "추가", show: true, editable: true, allowHide: false },
         ]);
 
     // 단계별 강제 숨김 컬럼
@@ -131,7 +132,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const latestCtxRef = useRef(null);
     const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
 
-    // 부모에서 호출할 추가 함수
+    // 추가 버튼 함수
     const addButtonClick = () => {
         onUnsavedChange?.(true);
         const gridContext = latestCtxRef.current;   // 최신 그리드 상태/함수들을 가져옴
@@ -179,7 +180,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
-        addButtonClick,
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
         reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
     }));
@@ -295,7 +295,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 },
                 <>
                     {td.props.children}
-                  <span className="cell-error-badge">{label}</span>   {/* 오류 배지 */}
+                    <span className="cell-error-badge">{label}</span>   {/* 오류 배지 */}
                 </>
             );
         }, [errorMarks, keyOf]);
@@ -544,8 +544,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         const kinds = rowKinds.get(r);
                         if (!set) {
                             // if (r.__errors) {
-                                const { __errors, ...rest } = r;
-                                return rest;              // 이전 에러 제거
+                            const { __errors, ...rest } = r;
+                            return rest;              // 이전 에러 제거
                             // }
                             // return r;
                         }
@@ -717,6 +717,20 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return rows.some(r => r?.__pendingDelete === true);
         }, [dataState?.data]);
 
+        // 마지막 행 key (삭제대기/설문 제외) => 추가버튼 표출
+        const lastAddableKey = useMemo(() => {
+            const rows = dataState?.data || [];
+            // 뒤에서부터 훑어서 삭제대기/설문 제외한 마지막 유효 행을 찾음
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const r = rows[i];
+                if (r?.__pendingDelete === true) continue;
+                if (r?.ex_gubun === "survey") continue;
+                return keyOf(r);
+            }
+            // 전부 삭제대기/설문이면 물리적 마지막 행을 fallback(없으면 null)
+            return rows.length ? keyOf(rows[rows.length - 1]) : null;
+        }, [dataState?.data, keyOf]);
+        
         return (
             <Fragment>
                 <div className="meta2">
@@ -787,6 +801,34 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                                     >
                                                         {pending ? "취소" : "삭제"}
                                                     </Button>
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
+                            if (c.field === 'add') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field="add"
+                                        title={c.title}
+                                        sortable={false}
+                                        columnMenu={undefined}
+                                        cell={(props) => {
+                                            const row = props.dataItem;
+                                            const isLast = keyOf(row) === lastAddableKey;
+                                            return (
+                                                <td
+                                                    style={{ textAlign: "center" }}
+                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {isLast ? (
+                                                        <Button className="btnM" themeColor="primary" onClick={addButtonClick}>
+                                                            추가
+                                                        </Button>
+                                                    ) : null}
                                                 </td>
                                             );
                                         }}

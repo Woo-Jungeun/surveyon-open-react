@@ -25,8 +25,7 @@ const OptionSettingBody = () => {
   const tab2Ref = useRef(null);
 
   /*버튼 이벤트 핸들러*/
-  const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();;
-  const onTab2AddClick = () => tab2Ref.current?.addButtonClick?.();
+  const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();
   const onTab2SaveClick = () => tab2Ref.current?.saveChanges?.();
 
   const LVCODE_OPTION = [
@@ -160,7 +159,6 @@ const OptionSettingBody = () => {
           )}
           {tabDivision === "2" && (
             <div className="btnWrap">
-              <GridHeaderBtnPrimary onClick={onTab2AddClick}>추가</GridHeaderBtnPrimary>
               <GridHeaderBtnPrimary onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
             </div>
           )}
