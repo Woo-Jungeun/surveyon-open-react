@@ -95,7 +95,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     /* 토글 on/off */
     const [openPrompt, setOpenPrompt] = useState(false);
     const [openOption, setOpenOption] = useState(false);
-    const [openCounts, setOpenCounts] = useState(false);
+    const [openCounts, setOpenCounts] = useState(true);
 
     //  API 키 드롭다운용 옵션/선택값
     const [apiKeyOptions, setApiKeyOptions] = useState([]);
@@ -116,6 +116,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     const [saving, setSaving] = useState(false); //저장 API가 진행 중인지 표시하는 플래그
 
+    // 분류 개수 빈값인지 체크
+    const orIfEmpty = (v, fallback) =>
+        (v === undefined || v === null || String(v).trim() === "") ? fallback : v;
+
     /*창의성 조절*/
     const TEMP_MIN = 0;
     const TEMP_MAX = 1;
@@ -133,7 +137,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // 옵션 상태 반영
     const applySearchResult = (d = {}) => {
-        setData(prev => ({ ...prev, ...d, temperature: parseTemp(d?.temperature) }));
+        setData(prev => ({
+            ...prev,
+            ...d,
+            temperature: parseTemp(d?.temperature),
+            // 분류 개수 빈값이면 기본값
+            open_item_lv1: orIfEmpty(d?.open_item_lv1, "0~50"),
+            open_item_lv2: orIfEmpty(d?.open_item_lv2, "0"),
+            open_item_lv3: orIfEmpty(d?.open_item_lv3, "0"),
+        }));
 
         setPreviousPromptExValue(d?.prompt_string_ex_backup || "");
         setPreviousPromptResValue(d?.prompt_string_res_backup || "");
@@ -168,7 +180,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // 조회/재조회 공용
     const searchInfo = useCallback(async (over = {}) => {
-        console.log("searchInfo")
         const projectnum = String(over.projectnum ?? data?.projectnum ?? "q250089uk");
         const qnum = String(over.qnum ?? data?.qnum ?? "A2-2");
 
@@ -333,10 +344,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // 공통 버튼 실행
     const runInfoSave = async (type) => {
+        /*유효성 체크 */
         if (saving) return false;
         const projectnum = String(data?.projectnum || "q250089uk");
         if (!data?.qid || !projectnum) {
             modal.showAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.");
+            return false;
+        }
+        if (!String(data?.open_item_lv1 ?? "").trim()) {
+            modal.showErrorAlert("에러", "소분류 개수를 입력하세요.");
             return false;
         }
         setSaving(true);
@@ -462,7 +478,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                         open={openOption}
                         onToggle={() => setOpenOption(v => !v)}
                     >
-                        <div className="cmn_pop_ipt">
+                        {/* <div className="cmn_pop_ipt">
                             <span className="iptTit">apikey</span>
                             <CustomDropDownList
                                 data={apiKeyOptions}
@@ -471,7 +487,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                                 defaultValue={apiKeyValue}     // 현재 선택값: keyvalue
                                 onChange={handleDropdownChange("apikey")}
                             />
-                        </div>
+                        </div> */}
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">결과언어</span>
                             <CustomDropDownList
