@@ -64,17 +64,11 @@ export default function ExcelColumnMenu(props) {
 
   // --------- Columns Chooser 관련 ---------
   const [q, setQ] = useState('');
-  const hiddenCount = useMemo(
-    () => columns.filter(c => c.allowHide !== false && c.show === false).length,
+ 
+  const hideables = useMemo(
+    () => columns.filter(c => c.allowHide !== false),
     [columns]
   );
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return columns;
-    return columns.filter(c => (c.title || c.field).toLowerCase().includes(term));
-  }, [columns, q]);
-
-  const hideables = useMemo(() => columns.filter(c => c.allowHide !== false), [columns]);
 
   const setAll = (show) => {
     if (!onColumnsChange) return;
@@ -113,35 +107,45 @@ export default function ExcelColumnMenu(props) {
       </div>
 
       {/* Columns Chooser */}
-      <div>
-        <div style={styles.headerRow}>
-          <div style={{ fontSize: 12, opacity: 0.8 }}>
-            Columns
+      {hideables.length > 0 && (
+        <div>
+          <div style={styles.headerRow}>
+            <div style={{ fontSize: 12, opacity: 0.8 }}>
+              Columns
+            </div>
+            <div style={styles.controls}>
+              <Button size="small" fillMode="flat" onClick={() => setAll(true)}>모두 표시</Button>
+              <Button size="small" fillMode="flat" onClick={() => setAll(false)}>모두 숨김</Button>
+            </div>
           </div>
-          <div style={styles.controls}>
-            <Button size="small" fillMode="flat" onClick={() => setAll(true)}>모두 표시</Button>
-            <Button size="small" fillMode="flat" onClick={() => setAll(false)} disabled={hideables.length === 0}>모두 숨김</Button>
-          </div>
+
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.value)}
+            placeholder="컬럼 검색"
+            style={{ marginBottom: 8 }}
+          />
+
+          {hideables
+            .filter(c => {
+              const term = q.trim().toLowerCase();
+              return !term || (c.title || c.field).toLowerCase().includes(term);
+            })
+            .map(c => {
+              const hidden = c.show === false;
+              return (
+                <label key={c.field} style={styles.listRow(hidden, false)}>
+                  <Checkbox
+                    checked={c.show !== false}
+                    onChange={(e) => toggle(c.field, e.value)}
+                  />
+                  <span>{c.title ?? c.field}</span>
+                  {hidden && <span style={styles.badge}>숨김</span>}
+                </label>
+              );
+            })}
         </div>
-
-        <Input value={q} onChange={(e) => setQ(e.value)} placeholder="컬럼 검색" style={{ marginBottom: 8 }} />
-
-        {filtered
-          .filter(c => c.allowHide !== false)  // 🔒 컬럼은 목록에서 제외
-          .map(c => {
-            const hidden = c.show === false;
-            return (
-              <label key={c.field} style={styles.listRow(hidden, /*locked*/ false)}>
-                <Checkbox
-                  checked={c.show !== false}
-                  onChange={(e) => toggle(c.field, e.value)}
-                />
-                <span>{c.title ?? c.field}</span>
-                {hidden && <span style={styles.badge}>숨김</span>}
-              </label>
-            );
-          })}
-      </div>
+      )}
     </div>
   );
 }

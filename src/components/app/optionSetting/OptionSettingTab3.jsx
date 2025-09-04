@@ -19,15 +19,15 @@ const OptionSettingTab3 = (props) => {
 
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "pid", title: "PID", show: true },
-            { field: "qnum", title: "문번호", show: true },
-            { field: "cid", title: "멀티", show: true },
-            { field: "answer_origin", title: "원본 내용", show: true },
-            { field: "answerfin", title: "응답 내용", show: true },
-            { field: "lv1", title: "대분류", show: true },
-            { field: "lv2", title: "중분류", show: true },
-            { field: "lv3", title: "소분류", show: true },
-            { field: "sentiment", title: "sentiment", show: true }
+            { field: "pid", title: "PID", show: true, allowHide: false },
+            { field: "qnum", title: "문번호", show: true, allowHide: false },
+            { field: "cid", title: "멀티", show: true, allowHide: false },
+            { field: "answer_origin", title: "원본 내용", show: true, allowHide: false },
+            { field: "answerfin", title: "응답 내용", show: true, allowHide: false },
+            { field: "lv1", title: "대분류", show: true, allowHide: false },
+            { field: "lv2", title: "중분류", show: true, allowHide: false },
+            { field: "lv3", title: "소분류", show: true, allowHide: false },
+            { field: "sentiment", title: "sentiment", show: true, allowHide: false }
         ]);
 
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
