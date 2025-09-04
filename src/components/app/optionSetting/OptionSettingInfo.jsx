@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useEffect, useContext, useRef } from "react";
+import React, { Fragment, useState, useEffect, useContext, useRef, useCallback } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
@@ -92,56 +92,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         );
     };
 
-    useEffect(() => {
-        //분석 정보 데이터 조회
-        optionEditData.mutateAsync({
-            params: {
-                key: "",
-                user: "syhong",
-                projectnum: "q250089uk",
-                qnum: "A2-2",
-                gb: "info",
-            }
-        }).then((res) => {
-            const d = res?.resultjson?.[0] || {};
-            setData({ ...d, temperature: parseTemp(d?.temperature) });
-
-            setPreviousPromptExValue(d?.prompt_string_ex_backup || "");    //보기 프롬프트 로그
-            setPreviousPromptResValue(d?.prompt_string_res_backup || "");  //응답 프롬프트 로그
-
-            // --- apikey ---
-            const apiOpts = toOptions(d?.apikey);
-            setApiKeyOptions(apiOpts);
-            const apiInit = pickSelected(apiOpts) || apiOpts[0];
-            if (apiInit) {
-                setApiKeyValue(apiInit.value); // DropDownList에 넘길 키값
-                setData(prev => ({
-                    ...prev,
-                    apikeyid: apiInit.value, // keyvalue
-                    apikey: apiInit.keyid, // keyid
-                }));
-            }
-
-            // --- result_lang ---
-            const langOpts = toOptions(d?.result_lang);
-            setResultLangOptions(langOpts);
-            const langInit = pickSelected(langOpts) || langOpts[0];
-            if (langInit) {
-                setResultLangValue(langInit.value);
-                setData(prev => ({ ...prev, result_lang: langInit.value }));
-            }
-
-            // --- model_select ---
-            const modelOpts = toOptions(d?.model_select);
-            setModelOptions(modelOpts);
-            const modelInit = pickSelected(modelOpts) || modelOpts[0];
-            if (modelInit) {
-                setModelValue(modelInit.value);
-                setData(prev => ({ ...prev, model_select: modelInit.value }));
-            }
-        });
-    }, []);
-
     /* 토글 on/off */
     const [openPrompt, setOpenPrompt] = useState(false);
     const [openOption, setOpenOption] = useState(false);
@@ -180,6 +130,60 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         const clamped = Math.max(TEMP_MIN, Math.min(TEMP_MAX, n));
         return Math.round(clamped * 10) / 10;
     };
+
+    // 옵션 상태 반영
+    const applySearchResult = (d = {}) => {
+        setData(prev => ({ ...prev, ...d, temperature: parseTemp(d?.temperature) }));
+
+        setPreviousPromptExValue(d?.prompt_string_ex_backup || "");
+        setPreviousPromptResValue(d?.prompt_string_res_backup || "");
+
+        // --- apikey ---
+        const apiOpts = toOptions(d?.apikey);
+        setApiKeyOptions(apiOpts);
+        const apiInit = pickSelected(apiOpts) || apiOpts[0];
+        if (apiInit) {
+            setApiKeyValue(String(apiInit.value));
+            setData(prev => ({ ...prev, apikeyid: apiInit.value, apikey: apiInit.keyid }));
+        }
+
+        // --- result_lang ---
+        const langOpts = toOptions(d?.result_lang);
+        setResultLangOptions(langOpts);
+        const langInit = pickSelected(langOpts) || langOpts[0];
+        if (langInit) {
+            setResultLangValue(String(langInit.value));
+            setData(prev => ({ ...prev, result_lang: langInit.value }));
+        }
+
+        // --- model_select ---
+        const modelOpts = toOptions(d?.model_select);
+        setModelOptions(modelOpts);
+        const modelInit = pickSelected(modelOpts) || modelOpts[0];
+        if (modelInit) {
+            setModelValue(String(modelInit.value));
+            setData(prev => ({ ...prev, model_select: modelInit.value }));
+        }
+    };
+
+    // 조회/재조회 공용
+    const searchInfo = useCallback(async (over = {}) => {
+        console.log("searchInfo")
+        const projectnum = String(over.projectnum ?? data?.projectnum ?? "q250089uk");
+        const qnum = String(over.qnum ?? data?.qnum ?? "A2-2");
+
+        const res = await optionEditData.mutateAsync({
+            params: { key: "", user: "syhong", projectnum, qnum, gb: "info" },
+        });
+
+        const d = res?.resultjson?.[0] || {};
+        applySearchResult(d);
+        return d;
+    }, [optionEditData, data?.projectnum, data?.qnum]);
+
+    useEffect(() => {
+        searchInfo();   // 최초 조회
+    }, []);
 
     // 팝업에서 '선택' 눌렀을 때: textarea에 적용하고 팝업 닫기
     const handleSelectPrompt = ({ text }) => {
@@ -332,7 +336,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         if (saving) return false;
         const projectnum = String(data?.projectnum || "q250089uk");
         if (!data?.qid || !projectnum) {
-            modal.showErrorAlert("안내", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.");
+            modal.showAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.");
             return false;
         }
         setSaving(true);
@@ -344,7 +348,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                 modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
                 return false;
             }
-           // console.log(`[INFO][${type}] saved (777)`, saveRes);
+            // console.log(`[INFO][${type}] saved (777)`, saveRes);
+
+            // 저장 성공 시 서버 기준 최신값으로 재조회
+            await searchInfo();
 
             // 2) 저장 성공 시 → 분석 API 호출
             const analysisPayload = buildAnalysisPayload(type);
@@ -435,7 +442,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                         first
                         open={openPrompt}
                         onToggle={() => setOpenPrompt(v => !v)}
-                        headerAddon={<Button className="btnMini" onClick={(e) => { setPreviousPromptShow(true) }}>기존</Button>}
+                        headerAddon={<Button className="btnMini" onClick={() => { setPreviousPromptShow(true) }}>기존</Button>}
                     >
                         <div className="promptArea">
                             <TextArea
