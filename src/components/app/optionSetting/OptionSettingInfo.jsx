@@ -266,9 +266,18 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     }, []);
 
     // payload 생성
-    const buildInfoPayload = () => {
+    const buildInfoPayload = (type) => {
         const projectnum = String(data?.projectnum || "q250089uk");
         const qnum = String(data?.qnum || "A2-2");
+
+        // type → ev 매핑
+        const typeToEv = {
+            translateResponse: "1",
+            classified: "2",
+            response: "3",
+            recallResponse: "4",
+        };
+
         const info = {
             apikeyid: String(data?.apikeyid || ""),
             apikey: String(data?.apikey || ""),
@@ -296,6 +305,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             qnum,
             gb: "info",
             data: [info],
+            ev: typeToEv[type], //버튼 구분
         };
     };
 
@@ -358,7 +368,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         setSaving(true);
         try {
             // 1) 옵션 정보 저장
-            const payload = buildInfoPayload();
+            const payload = buildInfoPayload(type);
             const saveRes = await optionSaveData.mutateAsync(payload);
             if (saveRes?.success !== "777") {
                 modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
