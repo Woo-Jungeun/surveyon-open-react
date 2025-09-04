@@ -407,7 +407,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             } else {
                 appendLog("[INFO] job 키가 없어 실시간 로그 조인을 생략합니다.\n");
             }
-            // 탭 이동
+            // 분석완료 팝업 표출 -> 탭 이동 -> 재조회
+            modal.showAlert("알림", "분석이 완료되었습니다.");
             if (type === "classified") onNavigateTab?.("2");
             else onNavigateTab?.("1");
 
