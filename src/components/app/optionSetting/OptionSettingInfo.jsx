@@ -116,7 +116,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
             // 출력 헬퍼
             const put = (s) => appendLog(s.endsWith("\n") ? s : s + "\n");
-
             // 분석 결과창에 출력
             if (isRunning) {
                 put("분석중입니다...");
@@ -126,6 +125,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                 }
             } else if (isDone) {
                 put("분석이 완료되었습니다.");
+                modal.showAlert("알림", "분석이 완료되었습니다.");
             }
 
         } catch {
