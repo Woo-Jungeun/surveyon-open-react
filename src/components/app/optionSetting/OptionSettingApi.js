@@ -69,7 +69,6 @@ export function OptionSettingApi() {
     // 분석 상태값 api
     const optionStatus = useMutation(
         async (params) => {
-            console.log(params);
             return await api.getWithParams("/o/option_status_api.aspx", params);
         }
     );
