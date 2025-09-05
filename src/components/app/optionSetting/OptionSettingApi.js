@@ -65,6 +65,14 @@ export function OptionSettingApi() {
     const optionAnalysisClear = useMutation(
         async (params) => await api.getWithParams("/o/option_analysis_api.aspx", params)
     );
+    
+    // 분석 상태값 api
+    const optionStatus = useMutation(
+        async (params) => {
+            console.log(params);
+            return await api.getWithParams("/o/option_status_api.aspx", params);
+        }
+    );
 
     return {
         optionEditData,
@@ -72,5 +80,6 @@ export function OptionSettingApi() {
         optionAnalysisStart,
         optionAnalysisStatus,
         optionAnalysisClear,
+        optionStatus
     };
 }

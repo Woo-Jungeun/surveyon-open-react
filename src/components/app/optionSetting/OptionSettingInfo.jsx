@@ -63,7 +63,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     const modal = useContext(modalContext);
     const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
     const [data, setData] = useState({}); //데이터 
-    const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus } = OptionSettingApi();
+    const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
 
     // SignalR 훅
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
@@ -73,15 +73,79 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             // 분석 완료 시 팝업 표출 
             if (completedOnceRef.current) return;
             completedOnceRef.current = true;
-             setTimeout(() => {
+
+
+            setTimeout(() => {
                 if (hasError) {
                     modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.");
                 } else {
                     modal.showAlert("알림", "분석이 완료되었습니다.");
                 }
             }, 0);
+
         }
     });
+
+    const initStatusCheckedRef = useRef(false);
+
+    // 최초 진입 시 현재 분석 상태 조회
+    const checkInitialStatus = useCallback(async () => {
+
+        const projectnum = String(data?.projectnum ?? "q250089uk");
+        const qid = String(data?.qid || "");
+        console.log("checkInitialStatus", projectnum, qid);
+        if (!projectnum || !qid) return; // 데이터 준비 전이면 스킵
+
+        try {
+            const payload = { key: "", user: "syhong", projectnum, qid };
+            const r = await optionStatus.mutateAsync(payload);
+
+            // 상태 텍스트 파싱
+            const raw = String(r?.output ?? "").trim();
+            const norm = raw.replace(/\s+/g, "");      // 공백 제거
+            const isRunning = /분석중/.test(norm);
+            const isDone = /분석완료/.test(norm);
+
+            // 진행 중 job 키(있으면 실시간 조인)
+            const job =
+                r?.job ??
+                r?.contents?.job ??
+                r?.data?.job ??
+                r?.currentJob ??
+                null;
+
+            // 출력 헬퍼
+            const put = (s) => appendLog(s.endsWith("\n") ? s : s + "\n");
+
+            // 분석 결과창에 출력
+            if (isRunning) {
+                put("분석중입니다...");
+                if (job) {
+                    const ok = await joinJob(job);
+                    put(ok ? "== 실시간 로그 연결됨 ==\n" : "[WARN] 실시간 로그 연결 실패(상태 조회)\n");
+                }
+            } else if (isDone) {
+                put("분석이 완료되었습니다.");
+            }
+
+        } catch {
+            appendLog("[ERR] 상태 조회 실패\n");
+        }
+    }, [data?.projectnum, data?.qid, optionStatus, appendLog, clearLog, joinJob]);
+
+    // 최초 진입 시 현재 분석 상태 조회
+    useEffect(() => {
+        console.log("useEffect", data)
+        const proj = data?.projectnum || "q250089uk";
+        const qid = data?.qid;
+        if (!proj || !qid) return;     // 준비 안 됐으면 대기
+
+        if (initStatusCheckedRef.current) return;
+        //   if (data?.projectnum && data?.qid) {   //todo 나중에 주석 풀기
+        initStatusCheckedRef.current = true;
+        checkInitialStatus();
+        //   }
+    }, [data?.projectnum, data?.qid]);
 
     // 배열 -> 옵션으로 변환
     const toOptions = (arr) =>
@@ -362,6 +426,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             qid: String(data?.qid),
             action: "status",
             job,
+            // ...(job ? { job } : {}),  // ← job이 있을 때만 포함
         };
     };
 
