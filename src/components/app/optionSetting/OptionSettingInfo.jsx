@@ -8,6 +8,7 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
 import "@/components/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 /**
  * 분석 > 정보 영역
@@ -61,19 +62,31 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab }) => {
     const modal = useContext(modalContext);
+    const loading = useContext(loadingSpinnerContext);  // ← 추가
     const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
     const [data, setData] = useState({}); //데이터 
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
+    const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
+
+    const setAnalyzing = useCallback((on) => {
+        if (!loading) return;
+        on ? loading.show({ content: "분석중입니다...",  variant: "none"}) : loading.hide();
+    }, [loading]);
 
     // SignalR 훅
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
         hubUrl: "/o/signalr",
         hubName: "workerlog",
-        onCompleted: ({ hasError }) => {
+        onCompleted: ({ hasError, jobKey }) => {
             // 분석 완료 시 팝업 표출 
             if (completedOnceRef.current) return;
             completedOnceRef.current = true;
 
+            // 진행중인 그 job에 대한 완료면 로딩 off
+            if (!activeJobRef.current || activeJobRef.current === jobKey) {
+                setAnalyzing(false);
+                activeJobRef.current = null;
+            }
 
             setTimeout(() => {
                 if (hasError) {
@@ -93,7 +106,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
         const projectnum = String(data?.projectnum ?? "q250089uk");
         const qid = String(data?.qid || "");
-        console.log("checkInitialStatus", projectnum, qid);
         if (!projectnum || !qid) return; // 데이터 준비 전이면 스킵
 
         try {
@@ -119,11 +131,13 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             // 분석 결과창에 출력
             if (isRunning) {
                 put("분석중입니다...");
+                setAnalyzing(true);              // 로딩바 on
                 if (job) {
                     const ok = await joinJob(job);
                     put(ok ? "== 실시간 로그 연결됨 ==\n" : "[WARN] 실시간 로그 연결 실패(상태 조회)\n");
                 }
             } else if (isDone) {
+                setAnalyzing(false);              // 로딩바 off
                 put("분석이 완료되었습니다.");
                 modal.showAlert("알림", "분석이 완료되었습니다.");
             }
@@ -133,9 +147,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         }
     }, [data?.projectnum, data?.qid, optionStatus, appendLog, clearLog, joinJob]);
 
+    useEffect(() => {
+        return () => {
+            setAnalyzing(false);
+            activeJobRef.current = null;
+        };
+    }, [setAnalyzing]);
+
     // 최초 진입 시 현재 분석 상태 조회
     useEffect(() => {
-        console.log("useEffect", data)
         const proj = data?.projectnum || "q250089uk";
         const qid = data?.qid;
         if (!proj || !qid) return;     // 준비 안 됐으면 대기
@@ -475,7 +495,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             appendLog(`== ${text} 시작 ==\n`);
 
             if (job) {
-                // 허브 조인
+                // 허브 조인 + 로딩 on
+                activeJobRef.current = job;
+                setAnalyzing(true);
+
                 const joined = await joinJob(job);
                 if (!joined) appendLog("[WARN] 실시간 로그 연결 실패(작업은 진행 중)\n");
 
@@ -493,8 +516,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
             return true;
         } catch (e) {
-            console.log(e)
             modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
+            setAnalyzing(false);      // 에러 즉시 off
             return false;
         } finally {
             setSaving(false);
