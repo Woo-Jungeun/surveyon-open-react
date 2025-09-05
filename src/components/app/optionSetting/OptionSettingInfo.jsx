@@ -61,6 +61,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab }) => {
     const modal = useContext(modalContext);
+    const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
     const [data, setData] = useState({}); //데이터 
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus } = OptionSettingApi();
 
@@ -68,6 +69,18 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
         hubUrl: "/o/signalr",
         hubName: "workerlog",
+        onCompleted: ({ hasError }) => {
+            // 분석 완료 시 팝업 표출 
+            if (completedOnceRef.current) return;
+            completedOnceRef.current = true;
+             setTimeout(() => {
+                if (hasError) {
+                    modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.");
+                } else {
+                    modal.showAlert("알림", "분석이 완료되었습니다.");
+                }
+            }, 0);
+        }
     });
 
     // 배열 -> 옵션으로 변환
@@ -356,6 +369,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     const runInfoSave = async (type) => {
         /*유효성 체크 */
         if (saving) return false;
+        completedOnceRef.current = false;  // 새 작업 시작 시 리셋
         const projectnum = String(data?.projectnum || "q250089uk");
         if (!data?.qid || !projectnum) {
             modal.showAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.");
@@ -390,6 +404,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                 modal.showErrorAlert("에러", "오류가 발생했습니다.");
                 return false;
             }
+
             const text = ACTION_LABEL[type] ?? type;  // 라벨 추출
             // 분석 결과창 표출
             appendLog(`== ${text} 시작 ==\n`);
@@ -407,8 +422,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             } else {
                 appendLog("[INFO] job 키가 없어 실시간 로그 조인을 생략합니다.\n");
             }
-            // 분석완료 팝업 표출 -> 탭 이동 -> 재조회
-            modal.showAlert("알림", "분석이 완료되었습니다.");
+            // 탭 이동 -> 재조회
             if (type === "classified") onNavigateTab?.("2");
             else onNavigateTab?.("1");
 
