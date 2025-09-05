@@ -67,10 +67,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     const [data, setData] = useState({}); //데이터 
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
     const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
+    const nextTabRef = useRef(null);    //탭 이동
 
     const setAnalyzing = useCallback((on) => {
         if (!loading) return;
-        on ? loading.show({ content: "분석중입니다...",  variant: "none"}) : loading.hide();
+        on ? loading.show({ content: "분석중입니다...", variant: "none" }) : loading.hide();
     }, [loading]);
 
     // SignalR 훅
@@ -87,15 +88,23 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
                 setAnalyzing(false);
                 activeJobRef.current = null;
             }
+            // 탭 이동
+            const goNextTab = () => {
+                if (nextTabRef.current) onNavigateTab?.(nextTabRef.current);
+                nextTabRef.current = null;
+            };
 
-            setTimeout(() => {
-                if (hasError) {
-                    modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.");
-                } else {
-                    modal.showAlert("알림", "분석이 완료되었습니다.");
-                }
-            }, 0);
+            // 팝업 띄우고 → 닫힌 뒤 이동 (Promise 지원 시)
+            const show = hasError
+                ? modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.")
+                : modal.showAlert("알림", "분석이 완료되었습니다.");
 
+            // 1) showAlert/showErrorAlert가 Promise를 반환하는 경우
+            if (show && typeof show.then === "function") {
+                show.finally(goNextTab);
+            } else {
+                setTimeout(goNextTab, 0);
+            }
         }
     });
 
@@ -510,9 +519,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             } else {
                 appendLog("[INFO] job 키가 없어 실시간 로그 조인을 생략합니다.\n");
             }
-            // 탭 이동 -> 재조회
-            if (type === "classified") onNavigateTab?.("2");
-            else onNavigateTab?.("1");
+            // 탭 이동 
+            nextTabRef.current = (type === "classified") ? "2" : "1";
 
             return true;
         } catch (e) {
