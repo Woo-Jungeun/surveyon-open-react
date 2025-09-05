@@ -21,7 +21,7 @@ function LoadingProvider(props) {
         loading: false,
         content: null,
         target: null,
-        variant: "none",     // 기본값
+        variant: undefined,     // 기본값
     });
 
     /**
@@ -44,7 +44,7 @@ function LoadingProvider(props) {
             loading: true,
             content: (param && param.content !== undefined && param.content !== null) ? param.content : spinner.content,
             target: (param && param.target !== undefined && param.target !== null) ? param.target : spinner.target,
-            variant: param?.variant ?? "none",
+            variant: param?.variant,
         });
     }
 
@@ -67,7 +67,7 @@ function LoadingProvider(props) {
                 ...spinner,
                 loading: false,
                 content: null,
-                variant: "none",
+                variant: undefined,
             });
         }
     }
@@ -111,14 +111,14 @@ function LoadingProvider(props) {
  * @history :
 **/
 function LoadingSpinner(props) {
-    const { loading, content, target, variant = "none" } = props;
-
+    const { loading, content, target, variant } = props;
     let maskStyle;
     if (target) {
         const rect = target.getBoundingClientRect();
         maskStyle = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
     }
 
+    // 기본(dim) ↔ no-dim 선택
     const overlayClass = `modal on ${variant === "none" ? "no-dim" : `dim-${variant}`}`;
 
     return (
