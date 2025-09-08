@@ -20,7 +20,7 @@ const OptionSettingBody = () => {
   const [tabDivision, setTabDivision] = useState("1");
   const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
   const [analysisCount, setAnalysisCount] = useState(null); // 최초 분석값 저장
-
+  const [canSave, setCanSave] = useState({ "1": false, "2": false }); // 히스토리 변화가 있을 때만 true
   const tab1Ref = useRef(null);
   const tab2Ref = useRef(null);
 
@@ -37,6 +37,7 @@ const OptionSettingBody = () => {
   const [lvCodeCommitted, setLvCodeCommitted] = useState(LVCODE_OPTION[0]);
   const [lvCodeDraft, setLvCodeDraft] = useState(LVCODE_OPTION[0]);
   const stageHistRef = useRef({ back: [LVCODE_OPTION[0]], fwd: [] }); // 단계 드롭다운 undo/redo 스택
+  const stageChanged = lvCodeDraft?.value !== lvCodeCommitted?.value; // 단계설정 수정했는지 확인
 
   // Tab1에서 최초 조회한 lvcode를 받아 드롭다운 값 세팅
   const handleInitLvCode = useCallback((fetched) => {
@@ -202,12 +203,12 @@ const OptionSettingBody = () => {
 
           {tabDivision === "1" && (
             <div className="btnWrap">
-              <GridHeaderBtnPrimary onClick={onTab1SaveClick}>저장</GridHeaderBtnPrimary>
+              <GridHeaderBtnPrimary disabled={!canSave["1"]} onClick={onTab1SaveClick}>저장</GridHeaderBtnPrimary>
             </div>
           )}
           {tabDivision === "2" && (
             <div className="btnWrap">
-              <GridHeaderBtnPrimary onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
+              <GridHeaderBtnPrimary  disabled={!(canSave["2"] || stageChanged)} onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
             </div>
           )}
         </div>
@@ -272,6 +273,7 @@ const OptionSettingBody = () => {
               lvCode={lvCodeDraft.value}
               onInitLvCode={handleInitLvCode}
               onUnsavedChange={(v) => markUnsaved("1", v)}
+              onHasEditLogChange={(v) => setCanSave(prev => ({ ...prev, "1": !!v }))}
               onSaved={() => {
                 // 저장 성공 → 더티 해제
                 markUnsaved("1", false);
@@ -285,6 +287,7 @@ const OptionSettingBody = () => {
               ref={tab2Ref}
               lvCode={lvCodeDraft.value}
               onUnsavedChange={(v) => markUnsaved("2", v)}
+              onHasEditLogChange={(v) => setCanSave(prev => ({ ...prev, "2": !!v }))}
               onSaved={() => {
                 // 저장 성공 → 더티 해제 + 단계 커밋
                 markUnsaved("2", false);

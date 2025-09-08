@@ -16,7 +16,7 @@ import useUpdateHistory from "@/hooks/useUpdateHistory";
  */
 const OptionSettingTab2 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange } = props;
+    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "보기 데이터";
@@ -193,6 +193,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 baselineSigRef.current = makeTab2Signature(rowsNow);
                 sigStackRef.current = [];
                 onUnsavedChange?.(false);
+                onHasEditLogChange?.(false);
             }
         }, [dataState?.data, hist, makeTab2Signature, onUnsavedChange]);
 
@@ -206,6 +207,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 1) 동일 스냅샷이면 스택/더티 변화 없음
             if (newSig === top) {
                 onUnsavedChange?.(stack.length > 0);
+                onHasEditLogChange?.(stack.length > 0);
                 return;
             }
             // 2) 베이스라인으로 완전 복귀
@@ -213,19 +215,22 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 hist.reset(updatedRows);
                 stack.length = 0;
                 onUnsavedChange?.(false);
+                onHasEditLogChange?.(false);
                 return;
             }
             // 3) 직전 단계로의 되돌림(예: 삭제 → 취소)
             if (newSig === prev) {
                 hist.undo();
                 stack.pop(); // 스택에서 하나 제거
-                onUnsavedChange?.(stack.length > 0); // ← 여기! 동기적으로 확정
+                onUnsavedChange?.(stack.length > 0); // 동기적으로 확정
+                onHasEditLogChange?.(stack.length > 0);
                 return;
             }
             // 4) 일반 커밋
             hist.commit(updatedRows);
             stack.push(newSig);
             onUnsavedChange?.(true);
+            onHasEditLogChange?.(true);
         }, [hist, makeTab2Signature, onUnsavedChange]);
 
         //ctrl+z, ctrl+y
@@ -237,16 +242,18 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     const snap = hist.undo();
                     if (snap) {
                         setDataState((prev) => ({ ...prev, data: snap }));
-                        // 스냅샷 서명으로 즉시 판단
-                        onUnsavedChange?.(makeTab2Signature(snap) !== baselineSigRef.current);
-                        // 스택 미러링은 hist가 관리, 우리 스택은 commitSmart 경로만 조작
+                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                        onUnsavedChange?.(dirty);
+                        onHasEditLogChange?.(dirty);
                     }
                 } else if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
                     e.preventDefault();
                     const snap = hist.redo?.();
                     if (snap) {
                         setDataState((prev) => ({ ...prev, data: snap }));
-                        onUnsavedChange?.(makeTab2Signature(snap) !== baselineSigRef.current);
+                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                        onUnsavedChange?.(dirty);
+                        onHasEditLogChange?.(dirty);
                     }
                 }
             };
@@ -675,6 +682,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     // modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
                     onSaved?.();  // 미저장 플래그 해제 요청(부모)
                     onUnsavedChange?.(false);                // 미저장 해제
+                    onHasEditLogChange?.(false);
                     baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
                     handleSearch(); // 재조회 
                     return true;  //성공

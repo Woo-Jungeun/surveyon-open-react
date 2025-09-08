@@ -19,7 +19,7 @@ import useUpdateHistory from "@/hooks/useUpdateHistory";
  */
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount } = props;
+    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange  } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
@@ -239,6 +239,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 baselineSigRef.current = makeTab1Signature(rowsNow);
                 sigStackRef.current = [];
                 onUnsavedChange?.(false);
+                onHasEditLogChange?.(false);
             }
         }, [dataState?.data, hasAllRowKeys, hist, makeTab1Signature, onUnsavedChange]);
         
@@ -250,13 +251,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const prev = stack[stack.length - 2] ?? baselineSigRef.current;
 
             // 1) 동일 스냅샷이면 무시
-            if (newSig === top) { onUnsavedChange?.(hist.hasChanges); return; }
+            if (newSig === top) { 
+                onUnsavedChange?.(hist.hasChanges); 
+                onHasEditLogChange?.(hist.hasChanges);
+                return; 
+            }
 
             // 2) 베이스라인으로 완전 복귀한 경우: 히스토리를 0으로 초기화
             if (newSig === baselineSigRef.current) {
                 hist.reset(updatedRows);          // 내부 스택을 비우고 현재를 베이스라인으로
                 stack.length = 0;                 // 우리 서명 스택도 비우기
                 onUnsavedChange?.(false);         // 미저장 플래그 해제
+                onHasEditLogChange?.(false);
                 return;
             }
 
@@ -265,12 +271,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 hist.undo();      // 커서만 되돌리는 히스토리 구현이어도 OK
                 stack.pop();      // 우리는 실제로 스택에서 하나 제거
                 onUnsavedChange?.(hist.hasChanges);
+                onHasEditLogChange?.(hist.hasChanges);
                 return;
             }
 
             hist.commit(updatedRows);
             stack.push(newSig);
             onUnsavedChange?.(true);
+            onHasEditLogChange?.(true);
         }, [hist, makeTab1Signature, onUnsavedChange]);
 
         //ctrl+z, ctrl+y
@@ -286,6 +294,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 if (snap) {
                   setDataState((prev) => ({ ...prev, data: snap }));
                   onUnsavedChange?.(hist.hasChanges);
+                  onHasEditLogChange?.(hist.hasChanges);
                 }
                 return;
               }
@@ -297,6 +306,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 if (snap) {
                   setDataState((prev) => ({ ...prev, data: snap }));
                   onUnsavedChange?.(hist.hasChanges);
+                  onHasEditLogChange?.(hist.hasChanges);
                 }
                 return;
               }
@@ -995,6 +1005,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     // modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
                     onSaved?.(); // ← 미저장 플래그 해제 요청(부모)
                     onUnsavedChange?.(false);
+                    onHasEditLogChange?.(false);
                     shouldAutoApplySelectionRef.current = true;    // 재조회 시 recheckyn 기반 자동복원 다시 켜기
                     suppressUnsavedSelectionRef.current = true;    // 리셋은 미저장 X
                     setSelectedStateGuarded({});                    // 초기화
