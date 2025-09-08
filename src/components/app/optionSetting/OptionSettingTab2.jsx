@@ -181,7 +181,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         );
         qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
-        
+
         // 데이터가 로드되면 베이스라인/스택 초기화 (저장 후 재조회 포함)
         useEffect(() => {
             const rowsNow = dataState?.data || [];
@@ -366,14 +366,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         // 현재 rows 기준으로 lv123code 중복 셀만 __errors에 반영
         const applyLiveDupMarks = useCallback((rows = []) => {
-            // 삭제대기/설문 행 제외  코드가 있는 것만
+            // 대상 키 집합 계산
             const eligible = rows.filter(r =>
                 r?.__pendingDelete !== true &&
                 r?.ex_gubun !== "survey" &&
                 String(r?.lv123code ?? "").trim() !== ""
             );
-
-            // code -> key(Set) 매핑
             const byCode = new Map();
             eligible.forEach(r => {
                 const code = String(r.lv123code).trim().toLowerCase();
@@ -382,29 +380,62 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 set.add(key);
                 byCode.set(code, set);
             });
-
-            // 중복된 key 모으기
             const dupKeys = new Set();
             byCode.forEach(set => { if (set.size > 1) set.forEach(k => dupKeys.add(k)); });
 
-            // 각 행의 __errors 업데이트 (lv123code만 터치)
             return rows.map(r => {
                 const k = keyOf(r);
-                const next = { ...r };
-                const errs = new Set(next.__errors ?? []);
-                const kinds = { ...(next.__errorKinds ?? {}) };
-                if (dupKeys.has(k)) {
+                const hadErr = !!r.__errors?.has?.("lv123code");
+                const willErr = dupKeys.has(k);
+                const curKinds = r.__errorKinds ?? {};
+                const hadKind = curKinds.lv123code === "dup";
+
+                // 변화 없음 → 원래 객체 그대로 반환 (포커스/에디터 보존에 매우 중요!)
+                if (hadErr === willErr && hadKind === willErr) return r;
+
+                // 변화가 있는 행만 복제해서 수정
+                const errs = new Set(r.__errors ?? []);
+                const kinds = { ...curKinds };
+                if (willErr) {
                     errs.add("lv123code");
-                    kinds.lv123code = "dup";           // ← 중복
+                    kinds.lv123code = "dup";
                 } else {
                     errs.delete("lv123code");
-                    if (kinds.lv123code) delete kinds.lv123code;
+                    delete kinds.lv123code;
                 }
+                const next = { ...r };
                 next.__errors = errs.size ? errs : undefined;
                 next.__errorKinds = Object.keys(kinds).length ? kinds : undefined;
                 return next;
             });
         }, [keyOf]);
+
+        const pendingTypingRef = useRef(false); // 사용자가 셀에 입력 중인지 여부를 추적하는 ref
+        const debounceTimerRef = useRef(null); // 디바운스 타이머 id를 저장하는 ref
+
+        // 타이핑 중 변경된 데이터를 실제 state에 반영하고 중복 마킹 + 히스토리 커밋까지 수행하는 함수
+        const flushTyping = useCallback(() => {
+            if (!latestCtxRef.current) return;
+            const rowsNow = latestCtxRef.current.dataState?.data || [];
+            // 중복마크 계산
+            const withDup = applyLiveDupMarks(rowsNow);
+            // 변경이 있으면 반영
+            if (withDup !== rowsNow) {
+                latestCtxRef.current.setDataState(prev => ({ ...prev, data: withDup }));
+            }
+            // 히스토리 커밋
+            commitSmart(withDup);
+            // 더 이상 대기중인 타이핑 없음 표시
+            pendingTypingRef.current = false;
+        }, [applyLiveDupMarks, commitSmart]);
+
+        // flushTyping을 일정 시간(200ms) 지연 실행하기 위한 스케줄 함수
+        // 사용자가 연속으로 입력할 때 불필요하게 매번 커밋되는 걸 방지 (디바운스)
+        const scheduleFlush = useCallback(() => {
+            pendingTypingRef.current = true;     // 기존 타이머 있으면 취소
+            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);  // 새 타이머 설정 → 200ms 후 flushTyping 실행
+            debounceTimerRef.current = setTimeout(flushTyping, 200);
+        }, [flushTyping]);
 
         /**
         * 코드/텍스트 동기화 공통 처리:
@@ -507,15 +538,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
                     return next;
                 });
-                // 중복 마크 실시간 재계산
-                const withDup = applyLiveDupMarks(data);
-                commitSmart(withDup);
-                return { ...prev, data: withDup };
+                // 타이핑 중엔 중복마킹/히스토리 지연
+                scheduleFlush();
+                return { ...prev, data };
             });
         }, [
             setDataState, keyOf,
             lv1CodeToText, lv1ToTextToCode,
-            lv2CodeToText, lv2TextToCode
+            lv2CodeToText, lv2TextToCode, scheduleFlush
         ]);
         // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글 (단, 해제 시 중복이면 토글 차단)
         const onClickDeleteCell = useCallback((cellProps) => {
