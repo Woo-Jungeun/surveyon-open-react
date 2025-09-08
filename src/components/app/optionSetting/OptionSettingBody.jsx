@@ -36,6 +36,7 @@ const OptionSettingBody = () => {
 
   const [lvCodeCommitted, setLvCodeCommitted] = useState(LVCODE_OPTION[0]);
   const [lvCodeDraft, setLvCodeDraft] = useState(LVCODE_OPTION[0]);
+  const stageHistRef = useRef({ back: [LVCODE_OPTION[0]], fwd: [] }); // 단계 드롭다운 undo/redo 스택
 
   // Tab1에서 최초 조회한 lvcode를 받아 드롭다운 값 세팅
   const handleInitLvCode = useCallback((fetched) => {
@@ -45,6 +46,8 @@ const OptionSettingBody = () => {
     if (!next) return;
     setLvCodeCommitted(prev => (prev?.value === v ? prev : next));
     setLvCodeDraft(prev => (prev?.value === v ? prev : next));
+    // 단계 히스토리 초기화
+    stageHistRef.current = { back: [next], fwd: [] };
   }, []);
 
   // 탭별 더티 상태 관리
@@ -96,6 +99,7 @@ const OptionSettingBody = () => {
         // 버리고 이동
         setUnsaved(prev => ({ ...prev, [cur]: false }));
         setLvCodeDraft(lvCodeCommitted); // 단계 변경도 롤백
+        stageHistRef.current = { back: [lvCodeCommitted], fwd: [] }; // 히스토리도 롤백
         setTabDivision(next);
         return;
       }
@@ -139,6 +143,50 @@ const OptionSettingBody = () => {
   const updateGridPrefs = useCallback((tab, patch) => {
     setGridPrefs(prev => ({ ...prev, [tab]: { ...prev[tab], ...patch } }));
   }, []);
+
+  // 단계 드롭다운 전용 Ctrl+Z/Y (드롭다운에 포커스 있을 때만)
+  useEffect(() => {
+    const isStageDropdownFocused = () => {
+      const ae = document.activeElement;
+      return !!(ae && ae.closest && ae.closest(".k-dropdownlist"));
+    };
+
+    const onKey = (e) => {
+      if (tabDivision !== "2") return;
+      const key = e.key?.toLowerCase?.();
+      if (!key) return;
+
+      // 드롭다운 포커스 아닐 땐 패스 (그리드 undo와 충돌 방지)
+      if (!isStageDropdownFocused()) return;
+
+      const h = stageHistRef.current;
+
+      // Undo
+      if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
+        if (h.back.length > 1) {
+          e.preventDefault();
+          const cur = h.back.pop();           // 현재
+          h.fwd.push(cur);                    // redo 스택에 푸시
+          const prev = h.back[h.back.length - 1]; // 이전 상태
+          setLvCodeDraft(prev);
+          setUnsaved(u => ({ ...u, ["2"]: prev.value !== lvCodeCommitted.value }));
+        }
+      }
+      // Redo
+      else if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
+        if (h.fwd.length > 0) {
+          e.preventDefault();
+          const next = h.fwd.pop();
+          h.back.push(next);
+          setLvCodeDraft(next);
+          setUnsaved(u => ({ ...u, ["2"]: next.value !== lvCodeCommitted.value }));
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKey, true); // capture=true
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [tabDivision, lvCodeCommitted]);
 
   return (
     <Fragment>
@@ -203,9 +251,16 @@ const OptionSettingBody = () => {
               disabled={tabDivision !== "2"}           //탭2에서 활성화
               onChange={(e) => {
                 if (tabDivision === "2") {
-                  setLvCodeDraft(e.value);
-                  //  단계만 바꿔도 "변경사항 있음"으로 판단
-                  setUnsaved(prev => ({ ...prev, [tabDivision]: true }));
+                  const next = e.value;
+                  setLvCodeDraft(next);
+                  setUnsaved(prev => ({ ...prev, [tabDivision]: next?.value !== lvCodeCommitted?.value }));
+                  // 히스토리에 현재 선택을 push (중복 방지)
+                  const h = stageHistRef.current;
+                  const last = h.back[h.back.length - 1];
+                  if (!last || last.value !== next.value) {
+                    h.back.push(next);
+                    h.fwd.length = 0;
+                  }
                 }
               }}
             />
@@ -234,6 +289,8 @@ const OptionSettingBody = () => {
                 // 저장 성공 → 더티 해제 + 단계 커밋
                 markUnsaved("2", false);
                 setLvCodeCommitted(lvCodeDraft);
+                // 저장된 값을 기준으로 히스토리 재설정
+                stageHistRef.current = { back: [lvCodeDraft], fwd: [] };
               }}
               persistedPrefs={gridPrefs["2"]}
               onPrefsChange={(patch) => updateGridPrefs("2", patch)}

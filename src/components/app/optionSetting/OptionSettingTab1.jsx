@@ -9,6 +9,7 @@ import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
+import useUpdateHistory from "@/hooks/useUpdateHistory";
 
 /**
  * 분석 > 그리드 영역 > 응답 데이터
@@ -178,10 +179,36 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     /* 선택된 행 key */
     const [selectedRowKey, setSelectedRowKey] = useState(null);
 
+    /*-----수정 로그 관련-----*/
+    const makeTab1Signature = useCallback((rows = []) => {
+        const acc = [];
+        for (const r of rows ?? []) {
+            const k = r?.__rowKey; if (!k) continue;
+            const del = r?.__pendingDelete ? '1' : '0';
+            const re = (String(r?.recheckyn ?? '').toLowerCase() === 'y') ? '1' : '0';
+            const lv3 = String(r?.lv3 ?? '').trim();
+            acc.push(`${k}:${del}:${re}:${lv3}`);
+        }
+        acc.sort();
+        return acc.join('|');
+    }, []);
+
+    const hist = useUpdateHistory(`tab1:${lvCode}`, { max: 100, signature: makeTab1Signature });
+    const baselineDidRef = useRef(false);           // 베이스라인 이미 셋
+    const baselineAfterReloadRef = useRef(false);   // 저장 후 재조회 베이스라인 리셋 필요
+    const baselineSigRef = useRef('');   // 현재 베이스라인의 시그니처
+    const sigStackRef = useRef([]);      // 베이스라인 이후 커밋들의 시그니처 스택
+    /*-----수정 로그 관련-----*/
+
     //grid rendering 
     const GridRenderer = (props) => {
-        const { dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch } = props;
+        const { dataState, setDataState, selectedState, setSelectedState,
+            idGetter, dataItemKey, handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
+            sigStackRef, makeTab1Signature,
+        } = props;
+
         const rows = dataState?.data ?? [];
+        const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey),[dataState?.data]);
         const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
         const [isDragging, setIsDragging] = useState(false);
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
@@ -199,8 +226,87 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
         const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
+
+        useEffect(() => {
+            const rowsNow = dataState?.data || [];
+            if (!rowsNow.length || !hasAllRowKeys) return; 
+
+            if (!baselineDidRef.current || baselineAfterReloadRef.current) {
+                hist.reset(rowsNow);
+                baselineDidRef.current = true;
+                baselineAfterReloadRef.current = false;
+                // 베이스라인/스택 초기화
+                baselineSigRef.current = makeTab1Signature(rowsNow);
+                sigStackRef.current = [];
+                onUnsavedChange?.(false);
+            }
+        }, [dataState?.data, hasAllRowKeys, hist, makeTab1Signature, onUnsavedChange]);
         
-         // 부모가 reload()를 부르면 GridData의 handleSearch를 실행할 수 있도록 ref에 최신 핸들러 보관
+        // 수정로그 commit 
+        const commitSmart = useCallback((updatedRows) => {
+            const newSig = makeTab1Signature(updatedRows);
+            const stack = sigStackRef.current;
+            const top = stack[stack.length - 1] ?? null;
+            const prev = stack[stack.length - 2] ?? baselineSigRef.current;
+
+            // 1) 동일 스냅샷이면 무시
+            if (newSig === top) { onUnsavedChange?.(hist.hasChanges); return; }
+
+            // 2) 베이스라인으로 완전 복귀한 경우: 히스토리를 0으로 초기화
+            if (newSig === baselineSigRef.current) {
+                hist.reset(updatedRows);          // 내부 스택을 비우고 현재를 베이스라인으로
+                stack.length = 0;                 // 우리 서명 스택도 비우기
+                onUnsavedChange?.(false);         // 미저장 플래그 해제
+                return;
+            }
+
+            // 3) 직전 단계로의 되돌림이면 undo로 처리(길이 -1처럼 보이게)
+            if (newSig === prev) {
+                hist.undo();      // 커서만 되돌리는 히스토리 구현이어도 OK
+                stack.pop();      // 우리는 실제로 스택에서 하나 제거
+                onUnsavedChange?.(hist.hasChanges);
+                return;
+            }
+
+            hist.commit(updatedRows);
+            stack.push(newSig);
+            onUnsavedChange?.(true);
+        }, [hist, makeTab1Signature, onUnsavedChange]);
+
+        //ctrl+z, ctrl+y
+        useEffect(() => {
+            const onKey = (e) => {
+              const key = e.key?.toLowerCase?.();
+              if (!key) return;
+          
+              // Undo: Ctrl/Cmd + Z (Shift 미포함)
+              if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
+                e.preventDefault();
+                const snap = hist.undo();
+                if (snap) {
+                  setDataState((prev) => ({ ...prev, data: snap }));
+                  onUnsavedChange?.(hist.hasChanges);
+                }
+                return;
+              }
+          
+              // Redo: Ctrl/Cmd + Y  또는  Shift + Ctrl/Cmd + Z
+              if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
+                e.preventDefault();
+                const snap = hist.redo?.();
+                if (snap) {
+                  setDataState((prev) => ({ ...prev, data: snap }));
+                  onUnsavedChange?.(hist.hasChanges);
+                }
+                return;
+              }
+            };
+          
+            window.addEventListener("keydown", onKey, true);
+            return () => window.removeEventListener("keydown", onKey, true);
+          }, [hist, setDataState, onUnsavedChange]);
+
+        // 부모가 reload()를 부르면 GridData의 handleSearch를 실행할 수 있도록 ref에 최신 핸들러 보관
         useEffect(() => {
             latestCtxRef.current = { handleSearch };
         }, [handleSearch]);
@@ -304,32 +410,36 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 return nextMap;
             };
 
-            if (!suppressUnsavedSelectionRef.current) {
-                onUnsavedChange?.(true);
-            }
-
             setSelectedState((prev) => {
                 const computed = (typeof next === "function" ? next(prev) : (next || {}));
                 const maybeBatched = expandWithBatchIfNeeded(prev, computed);
 
                 // 행의 recheckyn(필요시 selected 필드도) 즉시 동기화
                 const selectedKeys = new Set(Object.keys(maybeBatched).filter(k => !!maybeBatched[k]));
-                setDataState(prevDS => ({
-                    ...prevDS,
-                    data: (prevDS?.data || []).map(r => {
+
+                setDataState(prevDS => {
+                    let changed = false;
+                    const updated = (prevDS?.data || []).map(r => {
                         const k = getKey(r);
                         const checked = selectedKeys.has(k);
                         const nextRe = checked ? 'y' : '';
-                        // selectedField를 Kendo가 참조한다면 아래도 유지
                         const nextSel = checked;
                         if ((r.recheckyn ?? '') === nextRe && (r.selected ?? false) === nextSel) return r;
+                        changed = true;
                         return { ...r, recheckyn: nextRe, selected: nextSel };
-                    })
-                }));
+                    });
+
+                    if (changed) {
+                        // 스냅샷은 실제 변경이 있을 때만 푸시
+                        commitSmart(updated);
+                        return { ...prevDS, data: updated };
+                    }
+                    return prevDS; // 변경 없으면 그대로
+                });
 
                 return maybeBatched;
             });
-        }, [setSelectedState, onUnsavedChange, lv3SelKeys]);
+        }, [setSelectedState, setDataState, lv3SelKeys, getKey, commitSmart]);
 
         useLayoutEffect(() => {
             if (!rows.length) return;
@@ -594,6 +704,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const applyLv3To = useCallback((targetKeys, opt) => {
             onUnsavedChange?.(true);
             setDataState(prev => {
+                // 선택된 키들에 값 반영
                 const updated = prev.data.map(r =>
                     targetKeys.has(getKey(r))
                         ? {
@@ -607,9 +718,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         }
                         : r
                 );
-                return { ...prev, data: applyRequiredMarksLv3(updated) };
+
+                // 필수값(오류) 마크를 먼저 적용한 스냅샷을 만든다
+                const marked = applyRequiredMarksLv3(updated);
+                // 되돌림 시 +1/-1 맞추기 위해 push 대신 commit 사용
+                commitSmart(marked);
+                // 상태 적용
+                return { ...prev, data: marked };
             });
-        }, [setDataState, getKey]);
+        }, [setDataState, getKey, applyRequiredMarksLv3, hist, onUnsavedChange]);
         /*----------소분류 드래그-------*/
 
         // 행 클릭 이벤트 → 해당 행만 inEdit=true
@@ -634,11 +751,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             setDataState(prev => ({
                 ...prev,
-                data: prev.data.map(row =>
-                    getKey(row) === targetKey
-                        ? { ...row, [field]: value }
-                        : row
-                )
+                data: (() => {
+                    const nextRows = prev.data.map(row => getKey(row) === targetKey ? { ...row, [field]: value } : row);
+                    commitSmart(nextRows);
+                    return nextRows;
+                })()
             }));
         }, [getKey, setDataState]);
 
@@ -648,7 +765,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const key = getKey(row);
             setDataState(prev => ({
                 ...prev,
-                data: prev.data.map(r => (getKey(r) === key ? { ...r, [field]: value } : r)),
+                data: (() => {
+                    const nextRows = prev.data.map(r => (getKey(r) === key ? { ...r, [field]: value } : r));
+                    commitSmart(nextRows);
+                    return nextRows;
+                })(),
             }));
         }, [getKey, setDataState]);
 
@@ -707,12 +828,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const nextData = [...prevData];
                 nextData.splice(idx + 1, 0, newRow);
 
-                // 추가 후 cid 재배열(보류삭제 제외)
                 const recomputed = recomputeCidForGroup(fk, nextData);
-
-                return { ...prev, data: recomputed };
+                // 새 행은 lv3가 비어있으므로 즉시 필수값 마킹을 반영한 스냅샷으로 커밋
+                const marked = applyRequiredMarksLv3(recomputed);
+                commitSmart(marked);
+                return { ...prev, data: marked };
             });
-        }, [getKey, onUnsavedChange, setDataState, setSelectedRowKey]);
+        }, [getKey, onUnsavedChange, setDataState, setSelectedRowKey, recomputeCidForGroup, applyRequiredMarksLv3, hist]);
 
         // 같은 fixed_key에서 가장 큰 cid 계산 => 추가 버튼 생성을 위해
         const maxCidByFixedKey = useMemo(() => {
@@ -872,10 +994,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 if (res?.success === "777") {
                     // modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
                     onSaved?.(); // ← 미저장 플래그 해제 요청(부모)
+                    onUnsavedChange?.(false);
                     shouldAutoApplySelectionRef.current = true;    // 재조회 시 recheckyn 기반 자동복원 다시 켜기
                     suppressUnsavedSelectionRef.current = true;    // 리셋은 미저장 X
                     setSelectedStateGuarded({});                    // 초기화
                     suppressUnsavedSelectionRef.current = false;
+                    baselineAfterReloadRef.current = true;
                     handleSearch();                 // 재조회
                     return true; // 성공
                 } else {
@@ -989,19 +1113,24 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return m;
         }, [dataState?.data]);
 
+        // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
             onUnsavedChange?.(true);
             const row = cellProps.dataItem;
             const key = getKey(row);
             const fk = row?.fixed_key;
+
             // 새 행은 즉시 제거
             if (row.__isNew) {
                 setDataState(prev => {
                     const kept = (prev.data || []).filter(r => getKey(r) !== key);
-                    // 제거 후 재배열
+                    // 제거 후 cid 재배열(보류삭제 제외)
                     const recomputed = recomputeCidForGroup(fk, kept);
-
-                    return { ...prev, data: applyRequiredMarksLv3(recomputed) };
+                    // 필수값 마킹을 적용한 최종 스냅샷
+                    const marked = applyRequiredMarksLv3(recomputed);
+                    // 되돌리기 카운트가 정확히 맞도록 최종 스냅샷을 커밋
+                    commitSmart(marked);
+                    return { ...prev, data: marked };
                 });
                 return;
             }
@@ -1009,14 +1138,20 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // 기존 행은 보류삭제 토글
             setDataState(prev => {
                 const toggled = (prev.data || []).map(r =>
-                    getKey(r) === key ? { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false } : r
+                    getKey(r) === key
+                        ? { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false }
+                        : r
                 );
-                // 토글 후 재배열(보류삭제 제외)
-                const recomputed = recomputeCidForGroup(fk, toggled);
-                return { ...prev, data: applyRequiredMarksLv3(recomputed) };
-            });
 
-        }, [getKey, setDataState, onUnsavedChange]);
+                // 토글 후 cid 재배열(보류삭제 제외)
+                const recomputed = recomputeCidForGroup(fk, toggled);
+                // 필수값 마킹을 적용한 최종 스냅샷
+                const marked = applyRequiredMarksLv3(recomputed);
+                // 히스토리에는 항상 최종 스냅샷을 커밋
+                commitSmart(marked);
+                return { ...prev, data: marked };
+            });
+        }, [getKey, setDataState, onUnsavedChange, recomputeCidForGroup, applyRequiredMarksLv3, hist]);
         // "min-gap" (비어있는 가장 작은 수) or "max+1"
         const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
 
@@ -1063,7 +1198,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 </div>
                 <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""} ${isDragging ? "is-dragging" : ""}`}>
                     <KendoGrid
-                        key={`lv-${lvCode}-${anchorField ?? 'none'}`}
+                        key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataState?.data,
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
@@ -1381,7 +1516,16 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 qnum: "Z1",
                 gb: "in",
             }}
-            renderItem={(props) => <GridRenderer {...props} />}
+            renderItem={(props) =>
+                <GridRenderer
+                    {...props}
+                    hist={hist}
+                    baselineDidRef={baselineDidRef}
+                    baselineAfterReloadRef={baselineAfterReloadRef}
+                    baselineSigRef={baselineSigRef}
+                    sigStackRef={sigStackRef}
+                    makeTab1Signature={makeTab1Signature}
+                />}
 
         />
     );
