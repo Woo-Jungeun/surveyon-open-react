@@ -39,6 +39,15 @@ const OptionSettingBody = () => {
   const stageHistRef = useRef({ back: [LVCODE_OPTION[0]], fwd: [] }); // 단계 드롭다운 undo/redo 스택
   const stageChanged = lvCodeDraft?.value !== lvCodeCommitted?.value; // 단계설정 수정했는지 확인
 
+  // 부모로 올리는 콜백을 “렌더 뒤”로 미루기 (defer)
+  const useDeferred = () => {
+    const defer = useCallback((fn) => (...args) => {
+      setTimeout(() => fn?.(...args), 0);
+    }, []);
+    return defer;
+  };
+  const defer = useDeferred();
+
   // Tab1에서 최초 조회한 lvcode를 받아 드롭다운 값 세팅
   const handleInitLvCode = useCallback((fetched) => {
     const v = String(fetched ?? "").trim();
@@ -208,7 +217,7 @@ const OptionSettingBody = () => {
           )}
           {tabDivision === "2" && (
             <div className="btnWrap">
-              <GridHeaderBtnPrimary  disabled={!(canSave["2"] || stageChanged)} onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
+              <GridHeaderBtnPrimary disabled={!(canSave["2"] || stageChanged)} onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
             </div>
           )}
         </div>
@@ -272,22 +281,20 @@ const OptionSettingBody = () => {
               ref={tab1Ref}
               lvCode={lvCodeDraft.value}
               onInitLvCode={handleInitLvCode}
-              onUnsavedChange={(v) => markUnsaved("1", v)}
-              onHasEditLogChange={(v) => setCanSave(prev => ({ ...prev, "1": !!v }))}
               onSaved={() => {
                 // 저장 성공 → 더티 해제
                 markUnsaved("1", false);
               }}
-              persistedPrefs={gridPrefs["1"]}
-              onPrefsChange={(patch) => updateGridPrefs("1", patch)}
               onInitialAnalysisCount={(n) => setAnalysisCount(n)} //최초 분석값 존재 여부 확인
+              onUnsavedChange={defer((v) => markUnsaved("1", v))}
+              onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "1": !!v })))}
+              persistedPrefs={gridPrefs["1"]}
+              onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
             />
           ) : tabDivision === "2" ? (
             <OptionSettingTab2
               ref={tab2Ref}
               lvCode={lvCodeDraft.value}
-              onUnsavedChange={(v) => markUnsaved("2", v)}
-              onHasEditLogChange={(v) => setCanSave(prev => ({ ...prev, "2": !!v }))}
               onSaved={() => {
                 // 저장 성공 → 더티 해제 + 단계 커밋
                 markUnsaved("2", false);
@@ -295,14 +302,17 @@ const OptionSettingBody = () => {
                 // 저장된 값을 기준으로 히스토리 재설정
                 stageHistRef.current = { back: [lvCodeDraft], fwd: [] };
               }}
+              onUnsavedChange={defer((v) => markUnsaved("2", v))}
+              onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "2": !!v })))}
               persistedPrefs={gridPrefs["2"]}
-              onPrefsChange={(patch) => updateGridPrefs("2", patch)}
+              onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
             />
           ) : <OptionSettingTab3
-            lvCode={lvCodeDraft.value}
-            persistedPrefs={gridPrefs["3"]}
-            onPrefsChange={(patch) => updateGridPrefs("3", patch)}
-          />}
+                lvCode={lvCodeDraft.value}
+                persistedPrefs={gridPrefs["3"]}
+                onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
+              />
+          }
         </div>
       </article>
     </Fragment>
