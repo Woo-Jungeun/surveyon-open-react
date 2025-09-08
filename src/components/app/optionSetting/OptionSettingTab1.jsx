@@ -187,7 +187,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const del = r?.__pendingDelete ? '1' : '0';
             const re = (String(r?.recheckyn ?? '').toLowerCase() === 'y') ? '1' : '0';
             const lv3 = String(r?.lv3 ?? '').trim();
-            acc.push(`${k}:${del}:${re}:${lv3}`);
+            const sen = String(r?.sentiment ?? '').trim();    
+            acc.push(`${k}:${del}:${re}:${lv3}:${sen}`);
         }
         acc.sort();
         return acc.join('|');
