@@ -485,7 +485,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // 초기에 한 번만 돌고 종료 (비어있어도 끈다)
             shouldAutoApplySelectionRef.current = false;
         }, [rows, getKey, setSelectedState]);
-        //}, [dataState?.data, getKey, setSelectedState, setDataState, selectedState]);
 
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
@@ -605,14 +604,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             justOpenedAtRef.current = Date.now(); // 오픈 직후 닫힘 가드 시작
             setLv3EditorKey(targetKey); // 에디터 키 세팅
         }, [lv3EditorKey]);
-        // 드래그 중 셀 진입 → 범위 갱신
-        const onLv3MouseEnter = useCallback((idx, e) => {
-            if (!draggingRef.current || anchorIndexRef.current == null) return;
-            lastIndexRef.current = idx;
-            lastCellElRef.current = e.currentTarget;
-            lastCellRectRef.current = e.currentTarget.getBoundingClientRect();   // 마지막 셀 좌표 갱신
-            rangeToKeys(anchorIndexRef.current, idx);
-        }, [rangeToKeys]);
 
         // mouseup(드래그 종료): 자동으로 에디터 열지 않음 (중복 오픈 방지)
         useEffect(() => {
@@ -845,18 +836,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 return { ...prev, data: marked };
             });
         }, [getKey, onUnsavedChange, setDataState, setSelectedRowKey, recomputeCidForGroup, applyRequiredMarksLv3, hist]);
-
-        // 같은 fixed_key에서 가장 큰 cid 계산 => 추가 버튼 생성을 위해
-        const maxCidByFixedKey = useMemo(() => {
-            const m = new Map();
-            for (const r of (dataState?.data ?? [])) {
-                const fk = r?.fixed_key;
-                const c = Number(r?.cid ?? -Infinity);
-                if (fk == null) continue;
-                if (!m.has(fk) || c > m.get(fk)) m.set(fk, c);
-            }
-            return m;
-        }, [dataState?.data]);
 
         // 클릭 행 
         const rowRender = useCallback((trEl, rowProps) => {
@@ -1111,18 +1090,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const vis = effectiveColumns.filter(c => c.show !== false);
             return vis.length >= 3 ? vis[vis.length - 3].field : undefined; // 항상 추가 왼쪽에
         }, [effectiveColumns]);
-
-        // fixed_key 그룹별 유효 행 수 (보류삭제 제외)
-        const groupSizeByFixedKey = useMemo(() => {
-            const m = new Map();
-            for (const r of (dataState?.data ?? [])) {
-                const fk = r?.fixed_key;
-                if (fk == null) continue;
-                if (r.__pendingDelete === true) continue; // 보류 삭제 제외
-                m.set(fk, (m.get(fk) ?? 0) + 1);
-            }
-            return m;
-        }, [dataState?.data]);
 
         // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
