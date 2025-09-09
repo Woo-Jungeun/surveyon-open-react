@@ -814,6 +814,52 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return { ok: errors.length === 0, errors, rowMarks, rowKinds };
         };
 
+        // 컬럼 name
+        const NAMED_FIELDS = new Set([
+            "lv1", "lv1code",
+            "lv2", "lv2code",
+            "lv3", "lv123code",
+          ]);
+          
+          /** inEdit일 때 id/name 달아서 렌더하는 텍스트 에디터 셀 */
+          const NamedTextCell = useCallback((cellProps) => {
+            const { dataItem, field } = cellProps;
+            const editable = dataItem?.inEdit && NAMED_FIELDS.has(field);
+          
+            // 편집 아님 → 기본 셀
+            if (!editable) {
+              return <td>{dataItem?.[field]}</td>;
+            }
+          
+            const rowKey = keyOf(dataItem);
+            const inputId = `${field}-${rowKey}`;   // 고유 id
+            const value = dataItem?.[field] ?? "";
+          
+            const handleChange = (e) => {
+              cellProps.onChange?.({
+                dataItem,
+                field,
+                value: e.target.value,
+              });
+            };
+          
+            return (
+              <td onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                {/* label은 시각적으로 숨김(접근성+Issues 해결) */}
+                <label htmlFor={inputId} className="hidden">{field}</label>
+                <input
+                  id={inputId}
+                  name={field}               // ← name 부여 (폼 전송/자동완성에 도움)
+                  value={value}
+                  onChange={handleChange}
+                  autoComplete="on"          // 필요 시 구체 값으로 변경 가능 (e.g., "organization-title")
+                  className="k-input k-input-solid"
+                  style={{ width: "100%" }}
+                />
+              </td>
+            );
+          }, [keyOf]);
+
         // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
         const buildSavePayload = (rows, qnum) => {
             // __pendingDelete 행은 제외(=실제 삭제 반영), __isNew 플래그/로컬키는 서버로 안보냄
@@ -969,6 +1015,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                     />
                                 );
                             }
+                            const useNamed = ["lv1","lv1code","lv2","lv2code","lv3","lv123code"].includes(c.field);
                             return (
                                 <Column
                                     key={c.field}
@@ -977,6 +1024,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                     width={c.width}
                                     editable={c.editable}
                                     columnMenu={columnMenu}
+                                    {...(useNamed ? { cell: NamedTextCell } : {})}
                                 />
                             );
                         })}
