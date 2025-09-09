@@ -19,7 +19,7 @@ import useUpdateHistory from "@/hooks/useUpdateHistory";
  */
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange  } = props;
+    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
@@ -187,7 +187,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const del = r?.__pendingDelete ? '1' : '0';
             const re = (String(r?.recheckyn ?? '').toLowerCase() === 'y') ? '1' : '0';
             const lv3 = String(r?.lv3 ?? '').trim();
-            const sen = String(r?.sentiment ?? '').trim();    
+            const sen = String(r?.sentiment ?? '').trim();
             acc.push(`${k}:${del}:${re}:${lv3}:${sen}`);
         }
         acc.sort();
@@ -209,7 +209,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         } = props;
 
         const rows = dataState?.data ?? [];
-        const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey),[dataState?.data]);
+        const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
         const [isDragging, setIsDragging] = useState(false);
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
@@ -230,10 +230,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         useEffect(() => {
             const rowsNow = dataState?.data || [];
-            if (!rowsNow.length || !hasAllRowKeys) return; 
+            if (!rowsNow.length || !hasAllRowKeys) return;
 
             if (!baselineDidRef.current || baselineAfterReloadRef.current) {
                 hist.reset(rowsNow);
+                applySelectedFromRows(rowsNow);
+
                 baselineDidRef.current = true;
                 baselineAfterReloadRef.current = false;
                 // 베이스라인/스택 초기화
@@ -243,7 +245,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 onHasEditLogChange?.(false);
             }
         }, [dataState?.data, hasAllRowKeys, hist, makeTab1Signature, onUnsavedChange]);
-        
+
         // 수정로그 commit 
         const commitSmart = useCallback((updatedRows) => {
             const newSig = makeTab1Signature(updatedRows);
@@ -252,10 +254,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const prev = stack[stack.length - 2] ?? baselineSigRef.current;
 
             // 1) 동일 스냅샷이면 무시
-            if (newSig === top) { 
-                onUnsavedChange?.(hist.hasChanges); 
+            if (newSig === top) {
+                onUnsavedChange?.(hist.hasChanges);
                 onHasEditLogChange?.(hist.hasChanges);
-                return; 
+                return;
             }
 
             // 2) 베이스라인으로 완전 복귀한 경우: 히스토리를 0으로 초기화
@@ -285,37 +287,39 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         //ctrl+z, ctrl+y
         useEffect(() => {
             const onKey = (e) => {
-              const key = e.key?.toLowerCase?.();
-              if (!key) return;
-          
-              // Undo: Ctrl/Cmd + Z (Shift 미포함)
-              if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
-                e.preventDefault();
-                const snap = hist.undo();
-                if (snap) {
-                  setDataState((prev) => ({ ...prev, data: snap }));
-                  onUnsavedChange?.(hist.hasChanges);
-                  onHasEditLogChange?.(hist.hasChanges);
+                const key = e.key?.toLowerCase?.();
+                if (!key) return;
+
+                // Undo: Ctrl/Cmd + Z (Shift 미포함)
+                if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
+                    e.preventDefault();
+                    const snap = hist.undo();
+                    if (snap) {
+                        setDataState((prev) => ({ ...prev, data: snap }));
+                        applySelectedFromRows(snap);
+                        onUnsavedChange?.(hist.hasChanges);
+                        onHasEditLogChange?.(hist.hasChanges);
+                    }
+                    return;
                 }
-                return;
-              }
-          
-              // Redo: Ctrl/Cmd + Y  또는  Shift + Ctrl/Cmd + Z
-              if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
-                e.preventDefault();
-                const snap = hist.redo?.();
-                if (snap) {
-                  setDataState((prev) => ({ ...prev, data: snap }));
-                  onUnsavedChange?.(hist.hasChanges);
-                  onHasEditLogChange?.(hist.hasChanges);
+
+                // Redo: Ctrl/Cmd + Y  또는  Shift + Ctrl/Cmd + Z
+                if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
+                    e.preventDefault();
+                    const snap = hist.redo?.();
+                    if (snap) {
+                        setDataState((prev) => ({ ...prev, data: snap }));
+                        applySelectedFromRows(snap);
+                        onUnsavedChange?.(hist.hasChanges);
+                        onHasEditLogChange?.(hist.hasChanges);
+                    }
+                    return;
                 }
-                return;
-              }
             };
-          
+
             window.addEventListener("keydown", onKey, true);
             return () => window.removeEventListener("keydown", onKey, true);
-          }, [hist, setDataState, onUnsavedChange]);
+        }, [hist, setDataState, onUnsavedChange]);
 
         // 부모가 reload()를 부르면 GridData의 handleSearch를 실행할 수 있도록 ref에 최신 핸들러 보관
         useEffect(() => {
@@ -360,6 +364,23 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 })();
             });
         }, []);
+
+        const buildSelectedMapFromRows = useCallback((rows = []) => {
+            const next = {};
+            for (const r of rows) {
+                const k = getKey(r);
+                if (!k) continue;
+                if (String(r?.recheckyn ?? '').toLowerCase() === 'y') next[k] = true;
+            }
+            return next;
+        }, [getKey]);
+
+        // 자동 동기화 시에는 미저장 플래그/히스토리 커밋 안 나가게 가드
+        const applySelectedFromRows = useCallback((rows = []) => {
+            suppressUnsavedSelectionRef.current = true;
+            setSelectedState(buildSelectedMapFromRows(rows));
+            suppressUnsavedSelectionRef.current = false;
+        }, [setSelectedState, buildSelectedMapFromRows]);
 
         const total = rows.length;  //총 갯수
         const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석값
@@ -1022,6 +1043,41 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [lv3EditorKey]);
 
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
+           // 셀 안의 input/textarea 에 대해 id/name 자동 부여
+        useEffect(() => {
+            const root = gridRootRef.current;
+            if (!root) return;
+
+            const apply = (scope) => {
+                const nodes = scope.querySelectorAll(
+                    'td[data-field][data-rowkey] input:not([name]):not([type="hidden"]), ' +
+                    'td[data-field][data-rowkey] textarea:not([name])'
+                );
+                nodes.forEach((el) => {
+                    const td = el.closest('td[data-field][data-rowkey]');
+                    if (!td) return;
+                    const field = td.getAttribute('data-field');
+                    const rowKey = td.getAttribute('data-rowkey') || 'row';
+                    if (!el.getAttribute('name')) el.setAttribute('name', field);
+                    if (!el.getAttribute('id')) el.setAttribute('id', `${field}__${rowKey}`);
+                });
+            };
+
+            // 최초 1회
+            apply(root);
+
+            // 이후 DOM 변화 감시(편집 시작/팝업/페이지네이션 등)
+            const obs = new MutationObserver((muts) => {
+                muts.forEach((m) => {
+                    m.addedNodes.forEach((n) => {
+                        if (n.nodeType === 1) apply(n);
+                    });
+                });
+            });
+            obs.observe(root, { childList: true, subtree: true });
+
+            return () => obs.disconnect();
+        }, []);
 
         // 화면에 보이는 첫 번째 에러(lv3) 셀로 포커스(중앙 스크롤) → 필요 시 DDL 자동 오픈
         const focusFirstLv3ErrorCell = useCallback(() => {
@@ -1199,6 +1255,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             filterable: true,                                   // 필터 허용
                             filter,                               // controlled filter
                             filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter }); },
+                            cellRender: (td, cellProps) => {
+                                if (!React.isValidElement(td)) return td;
+                                const f = cellProps?.field;
+                                if (!f) return td;
+                                const k = cellProps?.dataItem?.__rowKey;
+                                return React.cloneElement(td, {
+                                    ...td.props,
+                                    'data-field': f,
+                                    'data-rowkey': k,
+                                });
+                            },
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
@@ -1300,6 +1367,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                     >
                                                         {/* 모양만 보여주는 DropDownList */}
                                                         <DropDownList
+                                                            id={`lv3_display__${rowKey}`}
+                                                            name="lv3_display"
                                                             data={lv3Options}
                                                             dataItemKey="codeId"
                                                             textField="codeName"
@@ -1331,6 +1400,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                             return (
                                                 <td>
                                                     <CustomDropDownList
+                                                        id={`sentiment__${getKey(cellProps.dataItem)}`}
+                                                        name="sentiment"
                                                         data={sentimentOptions}
                                                         dataItemKey={"codeId"}
                                                         textField={"codeName"}
@@ -1441,6 +1512,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             <DropDownList
                                 ref={openedLv3DDLRef}
                                 opened={true}
+                                id={`lv3_editor__${lv3EditorKey}`}
+                                name="lv3"
                                 data={lv3Options}
                                 dataItemKey="codeId"
                                 textField="codeName"
