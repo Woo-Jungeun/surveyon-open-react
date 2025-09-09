@@ -126,7 +126,7 @@ const MenuBar = ({ authMenuList, setAuthMenuList, setMenuData }) => {
 
             </li>
             <li key={"li-3"}>
-              <NavLink to="/o2" className={({ isActive }) => (isActive ? "on" : undefined)}>분석</NavLink>
+              <NavLink to="/o2" end className={({ isActive }) => (isActive ? "on" : undefined)}>분석</NavLink>
             </li>
           </ul>
         </div>
