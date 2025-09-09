@@ -1,4 +1,4 @@
-import { createContext, Fragment, useState } from "react";
+import {createContext, Fragment, useState} from "react";
 import { ClipLoader } from "react-spinners";
 
 //context 생성
@@ -18,9 +18,9 @@ let cnt = 0;
 function LoadingProvider(props) {
     //state 설정
     const [spinner, setSpinner] = useState({
-        loading: false,
-        content: null,
-        target: null,
+        loading : false,
+        content : null,
+        target : null,
         variant: undefined,     // 기본값
     });
 
@@ -41,9 +41,9 @@ function LoadingProvider(props) {
         cnt++;
 
         setSpinner({
-            loading: true,
-            content: (param && param.content !== undefined && param.content !== null) ? param.content : spinner.content,
-            target: (param && param.target !== undefined && param.target !== null) ? param.target : spinner.target,
+            loading : true,
+            content : (param && param.content !== undefined && param.content !== null) ? param.content : spinner.content,
+            target :  (param && param.target !== undefined && param.target !== null) ? param.target : spinner.target,
             variant: param?.variant,
         });
     }
@@ -61,7 +61,7 @@ function LoadingProvider(props) {
     **/
     const hide = () => {
         cnt--;
-        if (cnt <= 0) {
+        if(cnt <= 0) {
             cnt = 0;
             setSpinner({
                 ...spinner,
@@ -89,7 +89,7 @@ function LoadingProvider(props) {
     }
 
     return (
-        <loadingSpinnerContext.Provider value={{ show, hide, clear }} {...props}>
+        <loadingSpinnerContext.Provider value={{show, hide, clear}} {...props}>
             {props.children}
             <LoadingSpinner
                 loading={spinner.loading}
@@ -111,15 +111,26 @@ function LoadingProvider(props) {
  * @history :
 **/
 function LoadingSpinner(props) {
-    const { loading, content, target, variant } = props;
-    let maskStyle;
-    if (target) {
-        const rect = target.getBoundingClientRect();
-        maskStyle = { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-    }
+    const {loading, content, target, variant} = props;
 
-    // 기본(dim) ↔ no-dim 선택
-    const overlayClass = `modal on ${variant === "none" ? "no-dim" : `dim-${variant}`}`;
+    let maskStyle;
+
+    if (target == null) {
+        // maskStyle = { backgroundColor:"transparent"};
+    }
+        //target이 있을 경우,
+    //target 영역에 loading spinner를 생성하기 위해 영역 계산
+    else {
+        const rect = target.getBoundingClientRect();
+        maskStyle = {
+            top : rect.top,
+            left : rect.left,
+            width : rect.width,
+            height : rect.height
+        };
+    }
+  // 기본(dim) ↔ no-dim 선택
+  const overlayClass = `modal on ${variant === "none" && "no-dim"}`;
 
     return (
         <Fragment>
