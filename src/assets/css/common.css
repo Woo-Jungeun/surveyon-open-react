@@ -2960,7 +2960,7 @@ footer {
     transform: translateX(-50%)translateY(-50%);
 }
 
-.loading::Before {
+.loading::before {
     content: "";
     display: block;
     width: 140px;
