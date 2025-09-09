@@ -6,7 +6,6 @@ import { BrowserRouter } from "react-router-dom";
 import '@progress/kendo-theme-default/dist/all.css'
 import "@/assets/css/common.css";
 import "@/assets/css/kendo_custom.css";
-import '@/assets/css/header.css';
 
 /* 기본 contextAPI 컴포넌트 */
 import ModalProvider from "@/components/common/Modal";
