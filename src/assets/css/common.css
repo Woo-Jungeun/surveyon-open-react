@@ -423,7 +423,8 @@ header .logo .fcG {
     color: #343b37;
 }
 
-.navWrap .nav.depth01>li.on>a {
+.navWrap .nav.depth01>li.on>a,
+.navWrap .nav.depth01>li>a.on {
     color: #00b272;
 }
 
@@ -2968,6 +2969,7 @@ footer {
     background: url('../images/bus_loading.gif')no-repeat;
     background-size: 140px 140px;
 }
+
 /* 기본(dim) 오버레이 = 예전 스타일 */
 .modal.on {
     position: fixed;
@@ -2976,23 +2978,30 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(15, 23, 42, 0.55); /* 어두운 반투명 */
+    background: rgba(15, 23, 42, 0.55);
+    /* 어두운 반투명 */
     pointer-events: all;
-  }
+}
 
-  /* 투명 오버레이 카드 */
-  .modal.on.no-dim {
-    background: transparent;         /* dim 제거 */
-  }
-  .modal.on.no-dim .loading {
-    background: rgba(255,255,255,0.92);
-    color: #111;                     /* 글씨 검정 */
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+/* 투명 오버레이 카드 */
+.modal.on.no-dim {
+    background: transparent;
+    /* dim 제거 */
+}
+
+.modal.on.no-dim .loading {
+    background: rgba(255, 255, 255, 0.92);
+    color: #111;
+    /* 글씨 검정 */
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
     backdrop-filter: blur(8px);
-  }
-  .modal.on.no-dim .loading p {
-    color: #111;                     /* 가독성 보장 */
-  }
+}
+
+.modal.on.no-dim .loading p {
+    color: #111;
+    /* 가독성 보장 */
+}
+
 /* error page */
 .cmn_err_wrap,
 .errTxtWrap {
@@ -4272,7 +4281,12 @@ footer {
     display: block;
     /* 전체 표시 */
 }
-.modal .prompt-text, .prompt-text { white-space: pre-wrap; }
+
+.modal .prompt-text,
+.prompt-text {
+    white-space: pre-wrap;
+}
+
 /* 행 우측 액션 영역 */
 .modal .rowActions {
     display: flex;
@@ -4310,10 +4324,24 @@ footer {
 }
 
 .prompt-text {
-    white-space: pre-wrap;  /* 줄바꿈과 공백 유지 */
-    word-break: break-word; /* 긴 단어 줄바꿈 */
-    line-height: 1.5;       /* 보기 좋게 줄 간격 */
-  }
-  .meta2{ text-align:right; margin-bottom:8px; font-size:13px }
-  .meta2 .row1{ color:#6b7b8a }
-  .meta2 b{ font-weight:700 }
+    white-space: pre-wrap;
+    /* 줄바꿈과 공백 유지 */
+    word-break: break-word;
+    /* 긴 단어 줄바꿈 */
+    line-height: 1.5;
+    /* 보기 좋게 줄 간격 */
+}
+
+.meta2 {
+    text-align: right;
+    margin-bottom: 8px;
+    font-size: 13px
+}
+
+.meta2 .row1 {
+    color: #6b7b8a
+}
+
+.meta2 b {
+    font-weight: 700
+}
