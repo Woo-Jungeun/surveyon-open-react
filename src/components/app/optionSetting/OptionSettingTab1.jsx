@@ -243,6 +243,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 sigStackRef.current = [];
                 onUnsavedChange?.(false);
                 onHasEditLogChange?.(false);
+
+                // 이제 자동복원 끝났으므로 행 동기화 다시 허용
+                suppressUnsavedSelectionRef.current = false;
             }
         }, [dataState?.data, hasAllRowKeys, hist, makeTab1Signature, onUnsavedChange]);
 
@@ -446,9 +449,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const computed = (typeof next === "function" ? next(prev) : (next || {}));
                 const maybeBatched = expandWithBatchIfNeeded(prev, computed);
 
-                // 행의 recheckyn(필요시 selected 필드도) 즉시 동기화
-                const selectedKeys = new Set(Object.keys(maybeBatched).filter(k => !!maybeBatched[k]));
+                // 자동 동기화 중에는 데이터/히스토리 건드리지 않고 선택맵만 바꾼다
+                if (suppressUnsavedSelectionRef.current) {
+                    return maybeBatched;
+                }
 
+                // 일반 사용자 조작일 때만 rows에 즉시 반영
+                const selectedKeys = new Set(Object.keys(maybeBatched).filter(k => !!maybeBatched[k]));
                 setDataState(prevDS => {
                     let changed = false;
                     const updated = (prevDS?.data || []).map(r => {
@@ -460,15 +467,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         changed = true;
                         return { ...r, recheckyn: nextRe, selected: nextSel };
                     });
-
                     if (changed) {
-                        // 스냅샷은 실제 변경이 있을 때만 푸시
                         commitSmart(updated);
                         return { ...prevDS, data: updated };
                     }
-                    return prevDS; // 변경 없으면 그대로
+                    return prevDS;
                 });
-
                 return maybeBatched;
             });
         }, [setSelectedState, setDataState, lv3SelKeys, getKey, commitSmart]);
@@ -709,19 +713,49 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return () => window.removeEventListener('keydown', onKey, true);
         }, []);
 
-        // 바깥 클릭 닫기 이펙트
+        // 소분류 선택 해제
+        const clearLv3Selection = useCallback(() => {
+            setLv3SelKeys(new Set());        // 노란 선택 해제
+            anchorIndexRef.current = null;   // 범위 시작점 초기화
+            lastIndexRef.current = null;     // 마지막 인덱스 초기화
+            lastCellRectRef.current = null;  // 마지막 셀 위치 초기화
+            lastFocusedKeyRef.current = null;
+            selectionModeRef.current = null; // 모드 초기화
+        }, []);
+
+        // 클릭 하이라이트(색상) 제거: 선택된 행 key/편집상태 모두 해제
+        const clearRowHighlight = useCallback(() => {
+            setSelectedRowKey(null);
+            setDataState(prev => ({
+                ...prev,
+                data: prev.data.map(r => (r.inEdit ? { ...r, inEdit: false } : r))
+            }));
+        }, [setDataState]);
+
         useEffect(() => {
-            const handleDocMouseDown = (e) => {
+            const onDocClick = (e) => {
                 if (lv3EditorKey == null) return;
-                if (Date.now() - justOpenedAtRef.current < 120) return; // 오픈 직후 즉시 닫힘 방지
-                const t = e.target;
-                if (t.closest('.lv3-editor') || t.closest('.lv3-popup') || t.closest('.lv3-opener') || t.closest('.k-animation-container')) return;
+                // 오픈 직후 오동작 방지
+                if (Date.now() - justOpenedAtRef.current < 350) return;
+                const path = e.composedPath?.() || [];
+                const isInside = path.some((el) => {
+                    return el && el.nodeType === 1 && (
+                        el.classList?.contains('lv3-editor') ||
+                        el.classList?.contains('lv3-popup') ||
+                        el.classList?.contains('lv3-opener') ||
+                        el.classList?.contains('k-animation-container')
+                    );
+                });
+                if (isInside) return;
                 justClosedAtRef.current = Date.now();
                 setLv3EditorKey(null);
+                setLv3AnchorRect(null);
+                clearLv3Selection();
+                clearRowHighlight();
             };
-            document.addEventListener('mousedown', handleDocMouseDown, true);
-            return () => document.removeEventListener('mousedown', handleDocMouseDown, true);
-        }, [lv3EditorKey]);
+            document.addEventListener('click', onDocClick); // 버블 단계
+            return () => document.removeEventListener('click', onDocClick);
+        }, [lv3EditorKey, clearLv3Selection, clearRowHighlight]);
 
         // 일괄 적용 (선택된 키들에 옵션 메타까지 모두 반영)
         const applyLv3To = useCallback((targetKeys, opt) => {
@@ -902,8 +936,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return React.cloneElement(trEl, {
                 ...trEl.props,
                 className: cls,
-                onMouseDown: (e) => { onRowMouseDown(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseDown?.(e); },
-                onMouseEnter: (e) => { onRowMouseEnter(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseEnter?.(e); },
+                // onMouseDown: (e) => { onRowMouseDown(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseDown?.(e); },
+                // onMouseEnter: (e) => { onRowMouseEnter(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseEnter?.(e); },
+                onPointerDown: (e) => { onRowMouseDown(rowProps, e); trEl.props.onPointerDown?.(e); },
+                onPointerEnter: (e) => { onRowMouseEnter(rowProps, e); trEl.props.onPointerEnter?.(e); },
+                onDragStart: (e) => e.preventDefault(), // 네이티브 드래그로 텍스트 선택되는 것 방지
                 onClick: (e) => {
                     if (suppressNextClickRef.current) {
                         suppressNextClickRef.current = false;
@@ -917,14 +954,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             });
         }, [selectedRowKey, lv3SelKeys, getKey, onRowMouseDown, onRowMouseEnter]);
 
-        // 클릭 하이라이트(색상) 제거: 선택된 행 key/편집상태 모두 해제
-        const clearRowHighlight = useCallback(() => {
-            setSelectedRowKey(null);
-            setDataState(prev => ({
-                ...prev,
-                data: prev.data.map(r => (r.inEdit ? { ...r, inEdit: false } : r))
-            }));
-        }, [setDataState]);
+        // // 클릭 하이라이트(색상) 제거: 선택된 행 key/편집상태 모두 해제
+        // const clearRowHighlight = useCallback(() => {
+        //     setSelectedRowKey(null);
+        //     setDataState(prev => ({
+        //         ...prev,
+        //         data: prev.data.map(r => (r.inEdit ? { ...r, inEdit: false } : r))
+        //     }));
+        // }, [setDataState]);
 
         // 같은 행에서 여는 경우(특히 추가행) 즉시 하이라이트 해제하지 않음 → 닫힐 때 정리
         useEffect(() => {
@@ -1004,16 +1041,22 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const res = await optionSaveData.mutateAsync(payload);
                 if (res?.success === "777") {
                     // modal.showAlert("알림", "저장되었습니다."); // 성공 팝업 표출
-                    onSaved?.(); // ← 미저장 플래그 해제 요청(부모)
+                    onSaved?.();
                     onUnsavedChange?.(false);
                     onHasEditLogChange?.(false);
-                    shouldAutoApplySelectionRef.current = true;    // 재조회 시 recheckyn 기반 자동복원 다시 켜기
-                    suppressUnsavedSelectionRef.current = true;    // 리셋은 미저장 X
-                    setSelectedStateGuarded({});                    // 초기화
-                    suppressUnsavedSelectionRef.current = false;
-                    baselineAfterReloadRef.current = true;
-                    handleSearch();                 // 재조회
-                    return true; // 성공
+
+                    setLv3EditorKey(null);
+                    setLv3AnchorRect(null);
+                    clearLv3Selection();
+                    clearRowHighlight();
+
+                    shouldAutoApplySelectionRef.current = true;   // 재조회 후 recheckyn 1회 자동복원
+                    suppressUnsavedSelectionRef.current = true;   // 새 데이터 자리잡을 때까지 행 수정 금지
+                    setSelectedStateGuarded({});                  // 선택맵 초기화
+
+                    baselineAfterReloadRef.current = true;       // 다음 로드에서 베이스라인 리셋
+                    handleSearch();                              // 재조회
+                    return true;
                 } else {
                     modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                     return false; // 실패 시 그리드 상태 변경 안 함
@@ -1043,41 +1086,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [lv3EditorKey]);
 
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
-           // 셀 안의 input/textarea 에 대해 id/name 자동 부여
-        useEffect(() => {
-            const root = gridRootRef.current;
-            if (!root) return;
-
-            const apply = (scope) => {
-                const nodes = scope.querySelectorAll(
-                    'td[data-field][data-rowkey] input:not([name]):not([type="hidden"]), ' +
-                    'td[data-field][data-rowkey] textarea:not([name])'
-                );
-                nodes.forEach((el) => {
-                    const td = el.closest('td[data-field][data-rowkey]');
-                    if (!td) return;
-                    const field = td.getAttribute('data-field');
-                    const rowKey = td.getAttribute('data-rowkey') || 'row';
-                    if (!el.getAttribute('name')) el.setAttribute('name', field);
-                    if (!el.getAttribute('id')) el.setAttribute('id', `${field}__${rowKey}`);
-                });
-            };
-
-            // 최초 1회
-            apply(root);
-
-            // 이후 DOM 변화 감시(편집 시작/팝업/페이지네이션 등)
-            const obs = new MutationObserver((muts) => {
-                muts.forEach((m) => {
-                    m.addedNodes.forEach((n) => {
-                        if (n.nodeType === 1) apply(n);
-                    });
-                });
-            });
-            obs.observe(root, { childList: true, subtree: true });
-
-            return () => obs.disconnect();
-        }, []);
 
         // 화면에 보이는 첫 번째 에러(lv3) 셀로 포커스(중앙 스크롤) → 필요 시 DDL 자동 오픈
         const focusFirstLv3ErrorCell = useCallback(() => {
@@ -1129,16 +1137,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 window.removeEventListener('resize', updatePos, true);
             };
         }, [lv3EditorKey]);
-
-        // 소분류 선택 해제
-        const clearLv3Selection = useCallback(() => {
-            setLv3SelKeys(new Set());        // 노란 선택 해제
-            anchorIndexRef.current = null;   // 범위 시작점 초기화
-            lastIndexRef.current = null;     // 마지막 인덱스 초기화
-            lastCellRectRef.current = null;  // 마지막 셀 위치 초기화
-            lastFocusedKeyRef.current = null;
-            selectionModeRef.current = null; // 모드 초기화
-        }, []);
 
         const lv3OptionMap = useMemo(() => new Map(lv3Options.map(o => [o.codeId, o])), [lv3Options]);
 
@@ -1362,7 +1360,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                                 const r = td.getBoundingClientRect();
                                                                 setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
                                                             }
-                                                            openLv3EditorAtKey(rowKey);
+                                                            // 같은 클릭 버블이 끝난 다음 프레임에서 오픈
+                                                            requestAnimationFrame(() => {
+                                                                requestAnimationFrame(() => openLv3EditorAtKey(rowKey));
+                                                            });
                                                         }}
                                                     >
                                                         {/* 모양만 보여주는 DropDownList */}
@@ -1539,12 +1540,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                     setLv3EditorKey(null);
                                     setLv3AnchorRect(null);
                                 }}
-                                onClose={() => {
-                                    clearLv3Selection();        // 셀 강조 제거
-                                    clearRowHighlight();           // 수정 완료 시 하이라이트 해제
-                                    setLv3EditorKey(null);
-                                    setLv3AnchorRect(null);
-                                }}
+                            // onClose={() => {
+                            //     clearLv3Selection();        // 셀 강조 제거
+                            //     clearRowHighlight();           // 수정 완료 시 하이라이트 해제
+                            //     setLv3EditorKey(null);
+                            //     setLv3AnchorRect(null);
+                            // }}
                             />
                         </div>
                     )}
