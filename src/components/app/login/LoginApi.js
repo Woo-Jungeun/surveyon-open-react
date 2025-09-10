@@ -51,7 +51,7 @@ export function LoginApi() {
                     );
                     // 2) 쿠키 저장 (로그인키)
                     if (loginkey) {
-                        setCookie("token", loginkey, { path: "/", sameSite: "Lax" }); // 필요시 secure:true
+                        setCookie("TOKEN", loginkey, { path: "/", sameSite: "Lax" }); // 필요시 secure:true
                       }
                 }
                 // else if (res.status === "NS_ER_AT_02") {
@@ -133,7 +133,7 @@ export function LoginApi() {
                     const resultData = await logoutMutation.mutateAsync()
                     if (resultData.status === "NS_OK") {
                         await persistor.purge();
-                        removeCookie("GS_RFT", { path: '/' });
+                        removeCookie("TOKEN", { path: '/' });
                     }
                     modal.showAlert("알림", "비밀번호를 변경하였습니다. 다시 로그인 해주세요.");
                 } else if (res.status === "NS_ER_AT_05") {
@@ -179,7 +179,7 @@ export function LoginApi() {
                             userNm: jwtDecode(res?.item?.refreshToken)?.name || '',
                             userAuth: jwtDecode(res?.item?.refreshToken)?.auth || ''
                         }));
-                        setCookie("GS_RFT", btoa(res?.item?.refreshToken), { path: "/" });
+                        setCookie("TOKEN", btoa(res?.item?.refreshToken), { path: "/" });
                     }
                 }
             },

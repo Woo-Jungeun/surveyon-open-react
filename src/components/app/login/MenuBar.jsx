@@ -74,7 +74,7 @@ const MenuBar = ({ authMenuList, setAuthMenuList, setMenuData }) => {
               const result = await logoutMutation.mutateAsync();
               if (result.status === "NS_OK") {
                 await persistor.purge();
-                removeCookie("GS_RFT", { path: '/' });
+                removeCookie("TOKEN", { path: '/' });
               } else {
                 modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
               }

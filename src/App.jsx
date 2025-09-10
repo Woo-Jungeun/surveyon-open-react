@@ -10,10 +10,11 @@ import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapper
 function App() {
     const [cookies] = useCookies();
     const auth = useSelector((store) => store.auth);
-    //console.log("cookies", cookies)
+    console.log("cookies", cookies)
+    console.log("auth", auth)
     return (
         <Fragment>
-            {(auth.isLogin && (auth?.user?.userId === (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT || ""))?.sub)))
+            {(auth.isLogin && (auth?.user?.userId === (cookies.TOKEN && jwtDecode(atob(cookies.TOKEN || ""))?.sub)))
                 ?
                 <Routes>
                     <Route path="/o2" element={<MainWrapperView />}>
@@ -26,7 +27,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/o2" replace />} />
                 </Routes>
                 : <Fragment>
-                    {(!auth.isLogin || (auth?.user?.userId !== (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT || ""))?.sub))) && <Navigate replace to={"/o2/login"}></Navigate>}
+                    {(!auth.isLogin || (auth?.user?.userId !== (cookies.TOKEN && jwtDecode(atob(cookies.TOKEN || ""))?.sub))) && <Navigate replace to={"/o2/login"}></Navigate>}
                     <Routes>
                         <Route path={"/"} element={<Login />} />
                         <Route path={"/o2/login"} element={<Login />} />

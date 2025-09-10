@@ -51,21 +51,21 @@ apiAxios.interceptors.response.use(function (response) {
     const {status, data, headers, config} = response;
     if (data.status === "NS_ER_AT_03") {
         if (!config.headers.get('Authorization')) { /* refreshToken 없으면 request header에 refreshToken 셋팅 후 api 재요청*/
-            config.headers.set('Authorization', "Bearer " + atob(getCookie("GS_RFT")))//refreshToken 셋팅
+            config.headers.set('Authorization', "Bearer " + atob(getCookie("TOKEN")))//refreshToken 셋팅
             return apiAxios.request(config);   // api 재조회
         } else {        /* refreshToken 있으면 로그인화면으로 이동 */
             persistor.purge();
-            deleteCookie("GS_RFT")
+            deleteCookie("TOKEN")
         }
     }
 
     if (data.status === "NS_ER_AT_01") {
         // 권한 없을 시 로그아웃(NS_ER_AT_01: token없음, NS_ER_AT_02: 중복 로그인)
-        deleteCookie("GS_RFT")
+        deleteCookie("TOKEN")
         persistor.purge();
     }else if(data.status === "NS_ER_AT_02"){
         persistor.purge();
-        deleteCookie("GS_RFT")
+        deleteCookie("TOKEN")
         return {data: {status: "NS_ER_AT_02", message: "중복 로그인이 감지되었습니다."}};
     }
     if (data.status === "NS_ER_CT_01") {
@@ -79,11 +79,11 @@ apiAxios.interceptors.response.use(function (response) {
         const {status, data, headers, config} = error.response;
         if (data.status === "NS_ER_AT_01") {
             // 권한 없을 시 로그아웃(NS_ER_AT_01: token없음, NS_ER_AT_02: 중복 로그인)
-            deleteCookie("GS_RFT")
+            deleteCookie("TOKEN")
             persistor.purge();
         }else if(data.status === "NS_ER_AT_02"){
             persistor.purge();
-            deleteCookie("GS_RFT")
+            deleteCookie("TOKEN")
             return {data: {status: "NS_ER_AT_02", message: "중복 로그인이 감지되었습니다."}};
         }
         //"보기 코드 중복, 빈값 발견"
@@ -95,7 +95,7 @@ apiAxios.interceptors.response.use(function (response) {
         return {data: {status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요."}};
 
     } catch (e) {
-        deleteCookie("GS_RFT")
+        deleteCookie("TOKEN")
         persistor.purge();
         return {data: {status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요."}};
     }
