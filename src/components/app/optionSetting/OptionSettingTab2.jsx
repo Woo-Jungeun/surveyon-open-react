@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext, useMemo, useEffect } from "react";
+import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext, useMemo, useEffect, useLayoutEffect } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -175,12 +175,23 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         } = props;
         // 키값
         const COMPOSITE_KEY_FIELD = "__rowKey";
-        const getKey = useCallback(
-            (row) => (typeof idGetter === "function" ? idGetter(row) : row?.[dataItemKey]),
-            [idGetter, dataItemKey]
-        );
+        const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row),[]);
         qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
+        
+        // 행마다 __rowKey가 없으면 만들어서 주입 (lv123code + no 기반)
+        useLayoutEffect(() => {
+            const rows = dataState?.data ?? [];
+            if (!rows.length) return;
+            if (rows.some(r => !r?.__rowKey)) {
+                setDataState(prev => ({
+                    ...prev,
+                    data: (prev?.data ?? []).map(r =>
+                        r?.__rowKey ? r : { ...r, __rowKey: makeRowKey(r) }
+                    ),
+                }));
+            }
+        }, [dataState?.data, setDataState]);
 
         // 데이터가 로드되면 베이스라인/스택 초기화 (저장 후 재조회 포함)
         useEffect(() => {
@@ -236,7 +247,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         //ctrl+z, ctrl+y
         useEffect(() => {
             const onKey = (e) => {
-                const key = e.key.toLowerCase();
+                const key = e.key?.toLowerCase?.();
+                if (!key) return; // key 없으면 바로 종료 (예외 방지)
                 if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
                     e.preventDefault();
                     const snap = hist.undo();
@@ -819,46 +831,46 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             "lv1", "lv1code",
             "lv2", "lv2code",
             "lv3", "lv123code",
-          ]);
-          
-          /** inEdit일 때 id/name 달아서 렌더하는 텍스트 에디터 셀 */
-          const NamedTextCell = useCallback((cellProps) => {
+        ]);
+
+        /** inEdit일 때 id/name 달아서 렌더하는 텍스트 에디터 셀 */
+        const NamedTextCell = useCallback((cellProps) => {
             const { dataItem, field } = cellProps;
             const editable = dataItem?.inEdit && NAMED_FIELDS.has(field);
-          
+
             // 편집 아님 → 기본 셀
             if (!editable) {
-              return <td>{dataItem?.[field]}</td>;
+                return <td>{dataItem?.[field]}</td>;
             }
-          
+
             const rowKey = keyOf(dataItem);
             const inputId = `${field}-${rowKey}`;   // 고유 id
             const value = dataItem?.[field] ?? "";
-          
+
             const handleChange = (e) => {
-              cellProps.onChange?.({
-                dataItem,
-                field,
-                value: e.target.value,
-              });
+                cellProps.onChange?.({
+                    dataItem,
+                    field,
+                    value: e.target.value,
+                });
             };
-          
+
             return (
-              <td onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                {/* label은 시각적으로 숨김(접근성+Issues 해결) */}
-                <label htmlFor={inputId} className="hidden">{field}</label>
-                <input
-                  id={inputId}
-                  name={field}               // ← name 부여 (폼 전송/자동완성에 도움)
-                  value={value}
-                  onChange={handleChange}
-                  autoComplete="on"          // 필요 시 구체 값으로 변경 가능 (e.g., "organization-title")
-                  className="k-input k-input-solid"
-                  style={{ width: "100%" }}
-                />
-              </td>
+                <td onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                    {/* label은 시각적으로 숨김(접근성+Issues 해결) */}
+                    <label htmlFor={inputId} className="hidden">{field}</label>
+                    <input
+                        id={inputId}
+                        name={field}               // name 부여 (폼 전송/자동완성에 도움)
+                        value={value}
+                        onChange={handleChange}
+                        autoComplete="on"          // 필요 시 구체 값으로 변경 가능 (e.g., "organization-title")
+                        className="k-input k-input-solid"
+                        style={{ width: "100%" }}
+                    />
+                </td>
             );
-          }, [keyOf]);
+        }, [keyOf]);
 
         // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
         const buildSavePayload = (rows, qnum) => {
@@ -936,12 +948,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataState?.data,
-                            dataItemKey: dataItemKey,
+                            dataItemKey: "__rowKey",   
+                            idGetter: (r) => r.__rowKey, 
                             editField,
                             onItemChange,
                             selectedState,
                             setSelectedState,
-                            idGetter,
                             rowRender,
                             cellRender,
                             onRowClick,
@@ -1015,7 +1027,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                     />
                                 );
                             }
-                            const useNamed = ["lv1","lv1code","lv2","lv2code","lv3","lv123code"].includes(c.field);
+                            const useNamed = ["lv1", "lv1code", "lv2", "lv2code", "lv3", "lv123code"].includes(c.field);
                             return (
                                 <Column
                                     key={c.field}
