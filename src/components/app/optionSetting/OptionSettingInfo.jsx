@@ -9,7 +9,7 @@ import "@/components/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
-
+import {useSelector} from "react-redux";
 /**
  * 분석 > 정보 영역
  *
@@ -61,6 +61,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 );
 
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab }) => {
+    const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loading = useContext(loadingSpinnerContext);  // ← 추가
     const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
@@ -118,7 +119,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         if (!projectnum || !qid) return; // 데이터 준비 전이면 스킵
 
         try {
-            const payload = { key: "", user: "syhong", projectnum, qid };
+            const payload = { user: auth?.user?.userNm || "", projectnum, qid };
             const r = await optionStatus.mutateAsync(payload);
 
             // 상태 텍스트 파싱
@@ -290,7 +291,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         const qnum = String(over.qnum ?? data?.qnum ?? "A2-2");
 
         const res = await optionEditData.mutateAsync({
-            params: { key: "", user: "syhong", projectnum, qnum, gb: "info" },
+            params: { user:auth?.user?.userNm || "", projectnum, qnum, gb: "info" },
         });
 
         const d = res?.resultjson?.[0] || {};
@@ -405,8 +406,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         };
 
         return {
-            key: "",
-            user: "syhong",
+            user: auth?.user?.userNm || "",
             projectnum,
             qnum,
             gb: "info",
@@ -419,9 +419,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     const buildAnalysisPayload = (type) => {
         const projectnum = String(data?.projectnum || "q250089uk");
         const base = {
-            key: "",
             token: "",
-            user: "syhong",
+            user: auth?.user?.userNm || "",
             projectnum,
             qid: data?.qid,
             action: "start",
@@ -449,8 +448,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     const buildStatusPayload = (job) => {
         const projectnum = String(data?.projectnum);
         return {
-            key: "",
-            user: "syhong",
+            user: auth?.user?.userNm || "",
             projectnum,
             qid: String(data?.qid),
             action: "status",

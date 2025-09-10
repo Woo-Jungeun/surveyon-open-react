@@ -10,7 +10,7 @@ import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
-
+import {useSelector} from "react-redux";
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -18,6 +18,7 @@ import useUpdateHistory from "@/hooks/useUpdateHistory";
  * @since 2025-08-11<br />
  */
 const OptionSettingTab1 = forwardRef((props, ref) => {
+    const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange } = props;
     const modal = useContext(modalContext);
@@ -139,8 +140,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     useEffect(() => {
         optionEditData.mutateAsync({
             params: {
-                key: "",
-                user: "syhong",
+                user: auth?.user?.userNm || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",
@@ -976,8 +976,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         const buildSavePayload = (rows, opts, { getKey, selectedState = {} }) => {
             const {
-                key = "",                // 응답자 토큰 (없으면 빈 문자열)
-                user = "",               // 예: "syhong"
+                user = "",               // 예: "jewoo"
                 projectnum = "",         // 예: "q250089uk"
                 qnum = "",               // 예: "A2-2"
                 gb = "in",               // 호출 구분자
@@ -1027,8 +1026,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
-                key: "",                 // 있으면 채워 넣기 
-                user: "syhong",
+                user: auth?.user?.userNm || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "in",
@@ -1563,8 +1561,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             editField={editField}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
-                key: "",
-                user: "syhong",
+                user: auth?.user?.userNm || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "in",

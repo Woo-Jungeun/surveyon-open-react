@@ -24,7 +24,7 @@ const MenuBar = ({ authMenuList, setAuthMenuList, setMenuData }) => {
   useEffect(() => {
     //로그인 성공 시 아이디 별 메뉴 권한 리스트
     if (auth.isLogin) {
-      menuListFunc().then();
+      //menuListFunc().then();
     }
   }, []);
 
@@ -71,13 +71,13 @@ const MenuBar = ({ authMenuList, setAuthMenuList, setMenuData }) => {
           title: "로그아웃",
           click: async () => {
             try {
-              const result = await logoutMutation.mutateAsync();
-              if (result.status === "NS_OK") {
+          //    const result = await logoutMutation.mutateAsync();
+           //   if (result.status === "NS_OK") {
                 await persistor.purge();
                 removeCookie("TOKEN", { path: '/' });
-              } else {
-                modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
-              }
+              // } else {
+              //   modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
+              // }
 
             } catch (err) {
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");

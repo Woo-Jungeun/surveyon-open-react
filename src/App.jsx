@@ -4,17 +4,15 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Fragment } from "react";
 import MainWrapperView from "@/views/MainWrapperView";
 import { useCookies } from "react-cookie";
-import { jwtDecode } from "jwt-decode";
 import PageNotFound from "./components/app/pageNotFound/PageNotFound";
 import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapperView.jsx";
+
 function App() {
     const [cookies] = useCookies();
     const auth = useSelector((store) => store.auth);
-    console.log("cookies", cookies)
-    console.log("auth", auth)
     return (
         <Fragment>
-            {(auth.isLogin && (auth?.user?.userId === (cookies.TOKEN && jwtDecode(atob(cookies.TOKEN || ""))?.sub)))
+            {(auth?.isLogin && cookies?.TOKEN)
                 ?
                 <Routes>
                     <Route path="/o2" element={<MainWrapperView />}>
@@ -27,7 +25,7 @@ function App() {
                     <Route path="*" element={<Navigate to="/o2" replace />} />
                 </Routes>
                 : <Fragment>
-                    {(!auth.isLogin || (auth?.user?.userId !== (cookies.TOKEN && jwtDecode(atob(cookies.TOKEN || ""))?.sub))) && <Navigate replace to={"/o2/login"}></Navigate>}
+                    <Navigate replace to="/o2/login" />
                     <Routes>
                         <Route path={"/"} element={<Login />} />
                         <Route path={"/o2/login"} element={<Login />} />

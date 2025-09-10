@@ -7,7 +7,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
-
+import {useSelector} from "react-redux";
 /**
  * 분석 > 그리드 영역 > 보기 데이터
  *
@@ -15,6 +15,7 @@ import useUpdateHistory from "@/hooks/useUpdateHistory";
  * @since 2025-08-12<br />
  */
 const OptionSettingTab2 = forwardRef((props, ref) => {
+    const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange } = props;
     const modal = useContext(modalContext);
@@ -893,8 +894,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 }));
 
             return {
-                key: "",
-                user: "syhong",
+                user: auth?.user?.userNm || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",
@@ -1054,8 +1054,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             menuTitle={MENU_TITLE}
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
-                key: "",
-                user: "syhong",
+                user: auth?.user?.userNm || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",

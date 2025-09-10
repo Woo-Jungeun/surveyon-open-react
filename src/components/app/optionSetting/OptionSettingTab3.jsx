@@ -4,7 +4,7 @@ import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-
+import {useSelector} from "react-redux";
 /**
  * 분석 > 그리드 영역 > rawdata
  *
@@ -12,6 +12,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
  * @since 2025-08-12<br />
  */
 const OptionSettingTab3 = (props) => {
+    const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { persistedPrefs, onPrefsChange } = props;
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
@@ -140,8 +141,7 @@ const OptionSettingTab3 = (props) => {
             searchMutation={optionEditData}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
-                key: "",
-                user: "syhong",
+                user: auth?.user?.userNm || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "list",
