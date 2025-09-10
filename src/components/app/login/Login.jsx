@@ -87,7 +87,7 @@ const Login = ({
                                     <main className="loginWrap">
                                         <div className="loginContents">
                                             <h1 className="loginLogo">
-                                                익산시 <span className="fcGreen">BMS</span>
+                                                설문온 <span className="fcGreen">OPEN</span>
                                             </h1>
                                             <fieldset className="loginForm">
                                                 <Input

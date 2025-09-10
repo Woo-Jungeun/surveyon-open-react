@@ -10,20 +10,30 @@ import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapper
 function App() {
     const [cookies] = useCookies();
     const auth = useSelector((store) => store.auth);
-
+    //console.log("cookies", cookies)
     return (
         <Fragment>
-            <Routes>
-                {/* /o2 아래가 우리 앱 루트 */}
-                <Route path="/o2" element={<MainWrapperView />}>
-                    <Route index element={<OptionSettingWrapperView />} />       {/* /o2 */}
-                    <Route path="login" element={<Navigate to="/o2" replace />} />
-                    <Route path="*" element={<PageNotFound />} />
-                    {/* <Route path="*" element={<Navigate to="/o2" replace />} /> */}
-                </Route>
-                {/* /o2 외 경로로 오면 /o2로 돌려 */}
-                <Route path="*" element={<Navigate to="/o2" replace />} />
-            </Routes>
+            {!(auth.isLogin && (auth?.user?.userId === (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT || ""))?.sub)))
+                ?
+                <Routes>
+                    <Route path="/o2" element={<MainWrapperView />}>
+                        <Route index element={<OptionSettingWrapperView />} />       {/* /o2 */}
+                        <Route path="login" element={<Navigate to="/o2" replace />} />
+                        <Route path="*" element={<PageNotFound />} />
+                        {/* <Route path="*" element={<Navigate to="/o2" replace />} /> */}
+                    </Route>
+                    {/* /o2 외 경로로 오면 /o2로 돌려 */}
+                    <Route path="*" element={<Navigate to="/o2" replace />} />
+                </Routes>
+                : <Fragment>
+                    {(!auth.isLogin || (auth?.user?.userId !== (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT || ""))?.sub))) && <Navigate replace to={"/o2/login"}></Navigate>}
+                    <Routes>
+                        <Route path={"/"} element={<Login />} />
+                        <Route path={"/o2/login"} element={<Login />} />
+                        <Route path={"/*"} element={<PageNotFound />} />
+                    </Routes>
+                </Fragment>
+            }
         </Fragment>
     );
 }
