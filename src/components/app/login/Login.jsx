@@ -13,11 +13,11 @@ const Login = ({
                }) => {
     const {loginMutation} = LoginApi();
     const [formData, setFormData] = useState({
-        id: localStorage.getItem("savedId") !== null ? localStorage.getItem("savedId") : "",
-        password: null
+        user: localStorage.getItem("savedId") !== null ? localStorage.getItem("savedId") : "",
+        pass: null
     });
     //체크박스 상태
-    const [isSavedId, setIsSavedId] = useState(formData.id !== null && formData.id !== "");
+    const [isSavedId, setIsSavedId] = useState(formData.user !== null && formData.user !== "");
 
     const modal = useContext(modalContext);
     /**
@@ -28,22 +28,21 @@ const Login = ({
      */
     const doLogin = async () => {
         const payload = {
-            id: formData.id,
-            password: formData.password
+            user: formData.user,
+            pass: formData.pass
         };
 
         const result = await loginMutation.mutateAsync(payload);
-
-        if (result.status === "NS_OK") {
+        if (result.success === "777") {
             // 아이디 기억하기
             if (isSavedId) {
-                localStorage.setItem("savedId", formData.id);
+                localStorage.setItem("savedId", formData.user);
             }
 
             //코드가져오기
-            await loadCode();
+           // await loadCode();
         }else{
-            modal.showErrorAlert(result?.status, result?.message); //오류 팝업 표출
+            modal.showErrorAlert(result?.success, result?.message); //오류 팝업 표출
         }
     };
 
@@ -91,23 +90,23 @@ const Login = ({
                                             </h1>
                                             <fieldset className="loginForm">
                                                 <Input
-                                                    name={"id"}
+                                                    name={"user"}
                                                     type={"text"}
                                                     placeholder={"아이디를 입력해주세요."}
                                                     // minLength={4}
                                                     // maxByte={12}
                                                     required={true}
-                                                    value={formData.id}
-                                                    onChange={(event) => onChangeHandler("id", event)}
+                                                    value={formData.user}
+                                                    onChange={(event) => onChangeHandler("user", event)}
                                                 />
                                                 <Input
-                                                    name={"password"}
+                                                    name={"pass"}
                                                     type={"password"}
                                                     placeholder={"비밀번호를 입력해주세요"}
                                                     minLength={4}
                                                     maxLength={16}
                                                     required={true}
-                                                    onChange={(event) => onChangeHandler("password", event)}
+                                                    onChange={(event) => onChangeHandler("pass", event)}
                                                 />
                                             </fieldset>
                                             <div className="loginBtm">

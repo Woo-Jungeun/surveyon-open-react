@@ -53,8 +53,7 @@ function ModalProvider(props) {
      *   @since 2024-05-04<br />
      **/
     const showErrorAlert = (status, msg) => {
-
-        if (status === "NS_OK")
+        if (status === "777")
             return;
 
         setModal(prevState => ({

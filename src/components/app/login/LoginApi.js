@@ -3,11 +3,12 @@ import { useDispatch } from "react-redux";
 import { encryptText } from "@/config/axios/Encrypt.jsx";
 import { useMutation } from "react-query";
 import { login } from "@/common/redux/action/AuthAction";
-import { useCookies  } from 'react-cookie';
+import { useCookies } from 'react-cookie';
 import { jwtDecode } from "jwt-decode";
-import {persistor} from "@/common/redux/store/StorePersist.jsx";
-import {useContext} from "react";
-import {modalContext} from "@/components/common/Modal.jsx";
+import { persistor } from "@/common/redux/store/StorePersist.jsx";
+import { useContext } from "react";
+import { modalContext } from "@/components/common/Modal.jsx";
+import { AES256 } from "@/common/utils/AES256"
 
 export function LoginApi() {
     const dispatch = useDispatch();
@@ -19,32 +20,56 @@ export function LoginApi() {
      * */
     const loginMutation = useMutation(
         async (data) => {
-            /*encryptText 적용*/
-            const publicKey = await api.publicKey();
-
-            return await api.post({
-                id: data?.id,
-                password: encryptText(publicKey, data?.password)
-            }, "/v1/login");
+            const payload = {
+                user: data?.user ?? "",
+                pass: AES256.Crypto.encryptAES256(String(data?.pass ?? "")),    //암호화
+            };
+            return await api.post(payload, "/o/pro_login_api.aspx");
         },
         {
-            onSuccess: async (res, v) => {
-                if (res.status === "NS_OK") {
-                    dispatch(login({
-                        userId: jwtDecode(res?.item?.refreshToken)?.sub,
-                        userNm: jwtDecode(res?.item?.refreshToken)?.name || '',
-                        userAuth: jwtDecode(res?.item?.refreshToken)?.auth || ''
-                    }));
-                    setCookie("GS_RFT", btoa(res?.item?.refreshToken), {path: "/"});
-                }else if(res.status === "NS_ER_AT_02") {
-                    modal.showErrorAlert(res.status, "중복 로그인이 감지되었습니다.");
+            onSuccess: (res, v) => {
+                const parseOutput = (out) => {
+                    if (!out) return null;
+                    if (typeof out === "string") {
+                        try { return JSON.parse(out); } catch { return null; }
+                    }
+                    return out;
+                };
+                if (res?.success === "777") {
+                    // 성공 처리: 스토어/쿠키/세션 동기화
+                    const out = parseOutput(res?.output);
+                    const info = Array.isArray(out) ? out[0] : out || {};
+                    const { username = "", groupposition = "", loginkey = "", expiration = "" } = info;
+
+                    // 1) redux 저장
+                    dispatch(
+                        login({
+                            userId: v?.user ?? "",       // mutate 시 넘긴 값
+                            userNm: username,
+                            userAuth: groupposition,
+                        })
+                    );
+                    // 2) 쿠키 저장 (로그인키)
+                    if (loginkey) {
+                        setCookie("token", loginkey, { path: "/", sameSite: "Lax" }); // 필요시 secure:true
+                      }
                 }
-                ({...res});
-                v?.options?.onSuccess?.();
+                // else if (res.status === "NS_ER_AT_02") {
+                //     modal.showErrorAlert(res.status, "중복 로그인이 감지되었습니다.");    //axios에서 처리
+                // }
+
             },
-            onError: (_, v) => {
-                v?.options?.onError?.();
+            onError: (err, v) => {
+                modal?.showErrorAlert?.("NETWORK", "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+               // v?.options?.onError?.(err);
+              },
+            onMutate: () => {
+                // loadingSpinner.show();
             },
+            onSettled: () => {
+                // loadingSpinner.hide();
+            },
+
         }
     );
 
@@ -57,7 +82,7 @@ export function LoginApi() {
         },
         {
             onSuccess: (res, v) => {
-                if(res.status === "NS_ER_AT_02") {
+                if (res.status === "NS_ER_AT_02") {
                     modal.showErrorAlert(res.status, "중복 로그인이 감지되었습니다.");
                 }
                 ({ ...res });
@@ -108,11 +133,11 @@ export function LoginApi() {
                     const resultData = await logoutMutation.mutateAsync()
                     if (resultData.status === "NS_OK") {
                         await persistor.purge();
-                        removeCookie("GS_RFT", {path: '/'});
+                        removeCookie("GS_RFT", { path: '/' });
                     }
                     modal.showAlert("알림", "비밀번호를 변경하였습니다. 다시 로그인 해주세요.");
                 } else if (res.status === "NS_ER_AT_05") {
-                   // modal.showAlert("알림", "기존 비밀번호를 확인해주세요.");
+                    // modal.showAlert("알림", "기존 비밀번호를 확인해주세요.");
                     modal.showErrorAlert(res.status, "기존 비밀번호를 확인해주세요.");
                 } else {
                     modal.showErrorAlert(res.status, "비밀번호를 변경하지 못했습니다. 다시한번 시도해주세요."); //오류 팝업 표출
@@ -148,13 +173,13 @@ export function LoginApi() {
             onSuccess: (res, data) => {
                 //내 정보 수정 성공 시 리프레시 토큰 변경
                 if (res.status === "NS_OK") {
-                    if(res?.item?.refreshToken){
+                    if (res?.item?.refreshToken) {
                         dispatch(login({
                             userId: jwtDecode(res?.item?.refreshToken)?.sub,
                             userNm: jwtDecode(res?.item?.refreshToken)?.name || '',
                             userAuth: jwtDecode(res?.item?.refreshToken)?.auth || ''
                         }));
-                        setCookie("GS_RFT", btoa(res?.item?.refreshToken),{path:"/"});
+                        setCookie("GS_RFT", btoa(res?.item?.refreshToken), { path: "/" });
                     }
                 }
             },

@@ -4,10 +4,6 @@ import moment from "moment";
 // const { VITE_DEFAULT_PATH } = import.meta.env;
 
 export default {
-    async publicKey() {
-        const response = await apiAxios.post(`/v1/public-key`);
-        return response.data.item.publicKey;
-    },
 
     async post(data, url) {
         const response = await apiAxios.post(url, data);

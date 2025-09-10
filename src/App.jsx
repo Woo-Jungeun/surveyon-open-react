@@ -13,7 +13,7 @@ function App() {
     //console.log("cookies", cookies)
     return (
         <Fragment>
-            {!(auth.isLogin && (auth?.user?.userId === (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT || ""))?.sub)))
+            {(auth.isLogin && (auth?.user?.userId === (cookies.GS_RFT && jwtDecode(atob(cookies.GS_RFT || ""))?.sub)))
                 ?
                 <Routes>
                     <Route path="/o2" element={<MainWrapperView />}>
