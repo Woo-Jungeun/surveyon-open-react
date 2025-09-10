@@ -140,7 +140,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     useEffect(() => {
         optionEditData.mutateAsync({
             params: {
-                user: auth?.user?.userNm || "",
+                user: auth?.user?.userId || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",
@@ -1000,7 +1000,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 };
             });
             return {
-                key,
                 user,
                 projectnum,
                 qnum,
@@ -1026,7 +1025,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
-                user: auth?.user?.userNm || "",
+                user: auth?.user?.userId || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "in",
@@ -1561,7 +1560,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             editField={editField}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
-                user: auth?.user?.userNm || "",
+                user: auth?.user?.userId || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "in",

@@ -1,74 +1,80 @@
 import axios from "axios";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
 
-//axios.defaults.baseURL = API_URL;
 axios.defaults.withCredentials = true;
 axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8';
-axios.defaults.headers['Access-Control-Allow-Origin'] = '*';
 axios.defaults.timeout = 1000000000;
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
 export const apiAxios = axios.create({
-     baseURL,
+    baseURL,
 });
 
-apiAxios.interceptors.request.use(function (config) {
-    //운송사 id
-    return config;
-}, function (error) {
-    return Promise.reject(error);
-});
-
-function setCookie(cookieName, cookieValue, cookieExpire, cookiePath, cookieDomain, cookieSecure){
-    let cookieText=escape(cookieName)+'='+escape(cookieValue);
-    cookieText+=(cookieExpire ? '; EXPIRES='+cookieExpire.toGMTString() : '');
-    cookieText+=(cookiePath ? '; PATH='+cookiePath : '');
-    cookieText+=(cookieDomain ? '; DOMAIN='+cookieDomain : '');
-    cookieText+=(cookieSecure ? '; SECURE' : '');
-    document.cookie=cookieText;
-}
-
-function getCookie(cookieName){
-    let cookieValue=null;
-    if(document.cookie){
-        const array=document.cookie.split((escape(cookieName)+'='));
-        if(array.length >= 2){
-            const arraySub=array[1].split(';');
-            cookieValue=unescape(arraySub[0]);
+apiAxios.interceptors.request.use(
+    (config) => {
+        const token = getCookie("TOKEN"); // 대문자 TOKEN 사용
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`; // atob/jwtDecode 불필요
         }
-    }
-    return cookieValue;
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+const isHTTPS = typeof window !== "undefined" && location.protocol === "https:";
+
+function setCookie(name, value, {
+    maxAge,          // 초 단위 (예: 60*60*24*7 = 7일)
+    expires,         // Date 객체 (maxAge 대신 절대 만료시각 지정)
+    path = "/",
+    domain,
+    sameSite = "Lax",
+    secure = isHTTPS,
+} = {}) {
+    let cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}`;
+    if (Number.isFinite(maxAge)) cookie += `; Max-Age=${Math.floor(maxAge)}`;
+    if (expires instanceof Date) cookie += `; Expires=${expires.toUTCString()}`;
+    if (path) cookie += `; Path=${path}`;
+    if (domain) cookie += `; Domain=${domain}`;
+    if (sameSite) cookie += `; SameSite=${sameSite}`;
+    if (secure) cookie += `; Secure`;
+    document.cookie = cookie;
 }
 
-function deleteCookie(cookieName){
-    var temp=getCookie(cookieName);
-    if(temp){
-        setCookie(cookieName,temp,(new Date(1)));
-    }
+/** 쿠키 읽기 */
+function getCookie(name) {
+    // 이름 특수문자 이스케이프
+    const safe = name.replace(/([.$?*|{}()[\]\\/+^])/g, "\\$1");
+    const match = document.cookie.match(
+        new RegExp(`(?:^|; )${safe}=([^;]*)`)
+    );
+    return match ? decodeURIComponent(match[1]) : null;
+}
+
+/** 쿠키 삭제 */
+function deleteCookie(name, { path = "/", domain } = {}) {
+    document.cookie =
+        `${encodeURIComponent(name)}=` +
+        `; Expires=Thu, 01 Jan 1970 00:00:00 GMT` +
+        `; Path=${path}` +
+        (domain ? `; Domain=${domain}` : "");
 }
 
 apiAxios.interceptors.response.use(function (response) {
-    const {status, data, headers, config} = response;
-    if (data.status === "NS_ER_AT_03") {
-        if (!config.headers.get('Authorization')) { /* refreshToken 없으면 request header에 refreshToken 셋팅 후 api 재요청*/
-            config.headers.set('Authorization', "Bearer " + atob(getCookie("TOKEN")))//refreshToken 셋팅
-            return apiAxios.request(config);   // api 재조회
-        } else {        /* refreshToken 있으면 로그인화면으로 이동 */
-            persistor.purge();
+    console.log("interceptors.response", response);
+    const { status, data, headers, config } = response;
+    if (data?.success !== "777") {
+        if (data?.success === "710") {
             deleteCookie("TOKEN")
+            persistor.purge();
+            return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+        } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
+            // return {data: {status: data?.succes, message: data?.message}};
+            return { data: { status: "오류", message: data?.message } };
         }
     }
-
-    if (data.status === "NS_ER_AT_01") {
-        // 권한 없을 시 로그아웃(NS_ER_AT_01: token없음, NS_ER_AT_02: 중복 로그인)
-        deleteCookie("TOKEN")
-        persistor.purge();
-    }else if(data.status === "NS_ER_AT_02"){
-        persistor.purge();
-        deleteCookie("TOKEN")
-        return {data: {status: "NS_ER_AT_02", message: "중복 로그인이 감지되었습니다."}};
-    }
-    if (data.status === "NS_ER_CT_01") {
+    if (data.success === "404") {
         // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
         window.location.href = '/pageNotFound/PageNotFound'
     }
@@ -76,27 +82,26 @@ apiAxios.interceptors.response.use(function (response) {
 
 }, function (error) {
     try {
-        const {status, data, headers, config} = error.response;
-        if (data.status === "NS_ER_AT_01") {
-            // 권한 없을 시 로그아웃(NS_ER_AT_01: token없음, NS_ER_AT_02: 중복 로그인)
-            deleteCookie("TOKEN")
-            persistor.purge();
-        }else if(data.status === "NS_ER_AT_02"){
-            persistor.purge();
-            deleteCookie("TOKEN")
-            return {data: {status: "NS_ER_AT_02", message: "중복 로그인이 감지되었습니다."}};
+        const { status, data, headers, config } = error.response;
+        if (data?.success !== "777") {
+            if (data?.success === "710") {
+                deleteCookie("TOKEN")
+                persistor.purge();
+                return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+            } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
+                // return {data: {status: data?.succes, message: data?.message}};
+                return { data: { status: "오류", message: data?.message } };
+            }
         }
-        //"보기 코드 중복, 빈값 발견"
-        if (data.success === "762" ||data.success === "763") {
-            return {data: {success: "762", message: "필수값 누락 또는 중복 항목이 있습니다. 확인 후 다시 저장해 주세요."}};
+        if (data.success === "404") {
+            // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
+            window.location.href = '/pageNotFound/PageNotFound'
         }
-        
-
-        return {data: {status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요."}};
+        return { data: { status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요." } };
 
     } catch (e) {
         deleteCookie("TOKEN")
         persistor.purge();
-        return {data: {status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요."}};
+        return { data: { status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요." } };
     }
 });

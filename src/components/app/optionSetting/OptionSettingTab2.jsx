@@ -894,7 +894,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 }));
 
             return {
-                user: auth?.user?.userNm || "",
+                user: auth?.user?.userId || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",
@@ -1054,7 +1054,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             menuTitle={MENU_TITLE}
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
-                user: auth?.user?.userNm || "",
+                user: auth?.user?.userId || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "lb",

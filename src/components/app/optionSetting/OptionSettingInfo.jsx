@@ -119,7 +119,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         if (!projectnum || !qid) return; // 데이터 준비 전이면 스킵
 
         try {
-            const payload = { user: auth?.user?.userNm || "", projectnum, qid };
+            const payload = { user: auth?.user?.userId || "", projectnum, qid };
             const r = await optionStatus.mutateAsync(payload);
 
             // 상태 텍스트 파싱
@@ -291,7 +291,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         const qnum = String(over.qnum ?? data?.qnum ?? "A2-2");
 
         const res = await optionEditData.mutateAsync({
-            params: { user:auth?.user?.userNm || "", projectnum, qnum, gb: "info" },
+            params: { user:auth?.user?.userId || "", projectnum, qnum, gb: "info" },
         });
 
         const d = res?.resultjson?.[0] || {};
@@ -406,7 +406,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         };
 
         return {
-            user: auth?.user?.userNm || "",
+            user: auth?.user?.userId || "",
             projectnum,
             qnum,
             gb: "info",
@@ -420,7 +420,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         const projectnum = String(data?.projectnum || "q250089uk");
         const base = {
             token: "",
-            user: auth?.user?.userNm || "",
+            user: auth?.user?.userId || "",
             projectnum,
             qid: data?.qid,
             action: "start",
@@ -448,7 +448,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
     const buildStatusPayload = (job) => {
         const projectnum = String(data?.projectnum);
         return {
-            user: auth?.user?.userNm || "",
+            user: auth?.user?.userId || "",
             projectnum,
             qid: String(data?.qid),
             action: "status",

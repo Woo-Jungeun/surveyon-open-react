@@ -141,7 +141,7 @@ const OptionSettingTab3 = (props) => {
             searchMutation={optionEditData}
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
-                user: auth?.user?.userNm || "",
+                user: auth?.user?.userId || "",
                 projectnum: "q250089uk",
                 qnum: "Z1",
                 gb: "list",
