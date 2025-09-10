@@ -15,37 +15,31 @@ export function OptionSettingApi() {
 
     // 데이터 조회 API
     const optionEditData = useMutation(
-        async (data) => {
-            // loadingSpinner.show();
-            return await api.get(data, "/o/option_edit_api.aspx");
-        },
+        async (data) => await api.get(data, "/o/option_edit_api.aspx"),
         {
-            onSuccess: (res, data) => {
-            },
-            onSettled: (data, error, variables, context) => {
-                //do...
-                // loadingSpinner.hide();
-            }
+         onMutate: (vars) => { 
+            //loadingSpinner.show(); 
+        },
+         onSettled: () => {  
+            //loadingSpinner.hide(); 
+        }
         }
     );
-
+    
     // 데이터 저장 API
     const optionSaveData = useMutation(
-        async (data) => {
-            if (data?.gb !== "info") loadingSpinner.show(); //분석정보 저장 시 로딩바 표출X
-            return await api.post(data, "/o/option_save_api.aspx");
-        },
+        (data) => api.post(data, "/o/option_save_api.aspx"),
         {
-            onSuccess: (res, data) => {
+            onMutate: (variables) => {
+                if (variables?.gb !== "info") loadingSpinner.show();
             },
-            onSettled: (data, error, variables, context) => {
-                //do...
+            onSettled: (data, error, variables) => {
                 if (variables?.gb !== "info") loadingSpinner.hide();
             }
         }
     );
 
-    // 분석 시작(start) - x-www-form-urlencoded
+    // // 분석 시작(start) - x-www-form-urlencoded
     const optionAnalysisStart = useMutation(
         async (data) => {
             //loadingSpinner.show();
@@ -65,7 +59,7 @@ export function OptionSettingApi() {
     const optionAnalysisClear = useMutation(
         async (params) => await api.getWithParams("/o/option_analysis_api.aspx", params)
     );
-    
+
     // 분석 상태값 api
     const optionStatus = useMutation(
         async (params) => {
