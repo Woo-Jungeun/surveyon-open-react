@@ -62,7 +62,6 @@ function deleteCookie(name, { path = "/", domain } = {}) {
 }
 
 apiAxios.interceptors.response.use(function (response) {
-    console.log("interceptors.response", response);
     const { status, data, headers, config } = response;
     if (data?.success !== "777") {
         if (data?.success === "710") {
