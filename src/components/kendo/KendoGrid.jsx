@@ -225,6 +225,8 @@ const KendoGrid = ({ parentProps, children, processData }) => {
 
     return (
         <Grid
+            scrollable="scrollable" 
+            style={{ height: "645px" }} 
             data={processedData}
             // 클라이언트 처리 모드일 때만 내부 gridState 바인딩
             {...(useClientProcessing ? gridState : {})}
