@@ -2962,12 +2962,11 @@ footer {
 }
 
 .loading::before {
-    content: "";
-    display: block;
-    width: 140px;
-    height: 140px;
-    background: url('../images/bus_loading.gif')no-repeat;
-    background-size: 140px 140px;
+    content: none !important;
+    background: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    display: none !important;
 }
 
 /* 기본(dim) 오버레이 = 예전 스타일 */

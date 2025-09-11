@@ -1,5 +1,5 @@
-import { createContext, Fragment, useState } from "react";
-import { ClipLoader } from "react-spinners";
+import { createContext, Fragment, useState, useEffect } from "react";
+import busGif from "@/assets/images/bus_loading.gif";
 
 //context 생성
 //context를 생성해야지만 전역으로 사용할 수 있음
@@ -23,6 +23,18 @@ function LoadingProvider(props) {
         target: null,
         variant: undefined,     // 기본값
     });
+
+    // GIF 사전 로드 상태
+    const [gifReady, setGifReady] = useState(false);
+    useEffect(() => {
+        let alive = true;
+        const img = new Image();
+        img.src = busGif;
+        // decode()가 있으면 페인트 전에 디코딩 완료까지 기다림
+        const done = img.decode ? img.decode() : Promise.resolve();
+        done.catch(() => { }).finally(() => { if (alive) setGifReady(true); });
+        return () => { alive = false; };
+    }, []);
 
     /**
      * @funcName : show
@@ -92,6 +104,7 @@ function LoadingProvider(props) {
                 content={spinner.content}
                 target={spinner.target}
                 variant={spinner.variant}
+                gifReady={gifReady}
             />
         </loadingSpinnerContext.Provider>
     )
@@ -107,16 +120,11 @@ function LoadingProvider(props) {
  * @history :
 **/
 function LoadingSpinner(props) {
-    const { loading, content, target, variant } = props;
+    const { loading, content, target, variant, gifReady } = props;
 
     let maskStyle;
 
-    if (target == null) {
-        // maskStyle = { backgroundColor:"transparent"};
-    }
-    //target이 있을 경우,
-    //target 영역에 loading spinner를 생성하기 위해 영역 계산
-    else {
+    if (target !== null) {
         const rect = target.getBoundingClientRect();
         maskStyle = {
             top: rect.top,
@@ -134,6 +142,9 @@ function LoadingSpinner(props) {
                 loading
                     ? <article className={overlayClass} style={maskStyle}>
                         <div className="loading">
+                            {gifReady && (
+                                <img src={busGif} alt="" width={140} height={140} style={{ display: "block", margin: "0 auto" }}/>
+                            )}
                             {content ? <p>{content}</p> : <p>화면을 갱신중입니다.</p>}
                         </div>
                     </article>

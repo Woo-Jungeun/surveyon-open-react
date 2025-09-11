@@ -1,15 +1,28 @@
 import { useSelector } from "react-redux";
 import Login from "@/components/app/login/Login.jsx";
 import { Navigate, Route, Routes } from "react-router-dom";
-import { Fragment } from "react";
+import { Fragment, useEffect } from "react";
 import MainWrapperView from "@/views/MainWrapperView";
 import { useCookies } from "react-cookie";
 import PageNotFound from "./components/app/pageNotFound/PageNotFound";
 import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapperView.jsx";
+import busGif from "@/assets/images/bus_loading.gif";
 
 function App() {
     const [cookies] = useCookies();
     const auth = useSelector((store) => store.auth);
+    useEffect(() => {
+        const link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.href = busGif; // Vite가 빌드 시 해시가 붙은 실제 URL로 변환됨
+        document.head.appendChild(link);
+    
+        return () => {
+          document.head.removeChild(link);
+        };
+      }, []);
+
     return (
         <Fragment>
             {(auth?.isLogin && cookies?.TOKEN)
