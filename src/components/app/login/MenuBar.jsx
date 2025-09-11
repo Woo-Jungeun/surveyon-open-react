@@ -119,14 +119,14 @@ const MenuBar = ({ authMenuList, setAuthMenuList, setMenuData }) => {
         <div className="navWrap">
           <ul className="nav depth01">
             <li key={"li-1"}>
-              <NavLink to="/o2/main_list" className={({ isActive }) => (isActive ? "on" : undefined)}>프로젝트 목록</NavLink>
+              <NavLink to="/main_list" className={({ isActive }) => (isActive ? "on" : undefined)}>프로젝트 목록</NavLink>
             </li>
             <li key={"li-2"}>
-              <NavLink to="/o2/pro_list" className={({ isActive }) => (isActive ? "on" : undefined)}>문항 목록</NavLink>
+              <NavLink to="/pro_list" className={({ isActive }) => (isActive ? "on" : undefined)}>문항 목록</NavLink>
 
             </li>
             <li key={"li-3"}>
-              <NavLink to="/o2" end className={({ isActive }) => (isActive ? "on" : undefined)}>분석</NavLink>
+              <NavLink to="/" end className={({ isActive }) => (isActive ? "on" : undefined)}>분석</NavLink>
             </li>
           </ul>
         </div>

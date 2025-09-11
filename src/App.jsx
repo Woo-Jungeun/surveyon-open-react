@@ -28,20 +28,20 @@ function App() {
             {(auth?.isLogin && cookies?.TOKEN)
                 ?
                 <Routes>
-                    <Route path="/o2" element={<MainWrapperView />}>
-                        <Route index element={<OptionSettingWrapperView />} />       {/* /o2 */}
-                        <Route path="login" element={<Navigate to="/o2" replace />} />
+                    <Route path="/" element={<MainWrapperView />}>
+                        <Route index element={<OptionSettingWrapperView />} />      
+                        <Route path="login" element={<Navigate to="/" replace />} />
                         <Route path="*" element={<PageNotFound />} />
-                        {/* <Route path="*" element={<Navigate to="/o2" replace />} /> */}
+                        {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
                     </Route>
-                    {/* /o2 외 경로로 오면 /o2로 돌려 */}
-                    <Route path="*" element={<Navigate to="/o2" replace />} />
+                    {/* / 외 경로로 오면 /로 돌려 */}
+                    <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
                 : <Fragment>
-                    <Navigate replace to="/o2/login" />
+                    <Navigate replace to="/login" />
                     <Routes>
                         <Route path={"/"} element={<Login />} />
-                        <Route path={"/o2/login"} element={<Login />} />
+                        <Route path={"/login"} element={<Login />} />
                         <Route path={"/*"} element={<PageNotFound />} />
                     </Routes>
                 </Fragment>
