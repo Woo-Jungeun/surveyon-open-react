@@ -24,7 +24,7 @@ export function LoginApi() {
                 user: data?.user ?? "",
                 pass: AES256.Crypto.encryptAES256(String(data?.pass ?? "")),    //암호화
             };
-            return await api.post(payload, "/o/pro_login_api.aspx");
+            return await api.post(payload, "/pro_login_api.aspx");
         },
         {
             onSuccess: (res, v) => {

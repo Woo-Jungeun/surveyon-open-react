@@ -15,7 +15,7 @@ export function OptionSettingApi() {
 
     // 데이터 조회 API
     const optionEditData = useMutation(
-        async (data) => await api.get(data, "/o/option_edit_api.aspx"),
+        async (data) => await api.get(data, "/option_edit_api.aspx"),
         {
          onMutate: (vars) => { 
             //loadingSpinner.show(); 
@@ -28,7 +28,7 @@ export function OptionSettingApi() {
     
     // 데이터 저장 API
     const optionSaveData = useMutation(
-        (data) => api.post(data, "/o/option_save_api.aspx"),
+        (data) => api.post(data, "/option_save_api.aspx"),
         {
             onMutate: (variables) => {
                 if (variables?.gb !== "info") loadingSpinner.show();
@@ -63,7 +63,7 @@ export function OptionSettingApi() {
     // 분석 상태값 api
     const optionStatus = useMutation(
         async (params) => {
-            return await api.getWithParams("/o/option_status_api.aspx", params);
+            return await api.getWithParams("/option_status_api.aspx", params);
         }
     );
 
