@@ -67,7 +67,7 @@ apiAxios.interceptors.response.use(function (response) {
         if (data?.success === "710") {
             deleteCookie("TOKEN")
             persistor.purge();
-            return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+           // return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
         } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
             // return {data: {status: data?.succes, message: data?.message}};
             return { data: { status: "오류", message: data?.message } };
@@ -86,7 +86,7 @@ apiAxios.interceptors.response.use(function (response) {
             if (data?.success === "710") {
                 deleteCookie("TOKEN")
                 persistor.purge();
-                return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+                //return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
             } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
                 // return {data: {status: data?.succes, message: data?.message}};
                 return { data: { status: "오류", message: data?.message } };
