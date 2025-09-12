@@ -6,7 +6,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { MainListApi } from "@/components/app/mainList/MainListApi.js";
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-
+import { Button } from "@progress/kendo-react-buttons";
 /**
  * 문항 목록
  *
@@ -19,12 +19,12 @@ const ProList = () => {
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
     const MENU_TITLE = "문항 목록";
-    const { state } = useLocation();   
-    const projectnum = state?.projectnum;      
+    const { state } = useLocation();
+    const projectnum = state?.projectnum;
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
-    
+
     const { mainListData } = MainListApi();
 
     const [columns, setColumns] = useState(() =>
@@ -40,13 +40,14 @@ const ProList = () => {
             { field: "project_update_date", title: "업데이트일자", show: true, editable: false, allowHide: false },
             { field: "project_status", title: "작업현황", show: true, editable: true, allowHide: false },
             { field: "usergroup", title: "권한정보", show: true, editable: true, width: "200px", allowHide: false },
+            { field: "button", title: "분석(임시)", show: true, editable: true, width: "200px", allowHide: false },
         ]);
 
-    // 행 클릭 → /pro_list 로 이동
+    // 행 클릭 → /open-setting 로 이동
     const onRowClick = useCallback((e) => {
-        const projectnum = e?.dataItem?.projectnum;
-        if (!projectnum) return;
-        navigate('/pro_list', { state: { projectnum } });
+        // const projectnum = e?.dataItem?.projectnum;
+        // if (!projectnum) return;
+        navigate('/open-setting');
     }, [navigate]);
 
     // ...
@@ -65,12 +66,12 @@ const ProList = () => {
             }}
             filter={filter}
             onFilterChange={(e) => {
-                setFilter(e);    
+                setFilter(e);
             }}
 
         />
     );
-
+    
     //grid rendering 
     const GridRenderer = (props) => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
@@ -105,6 +106,31 @@ const ProList = () => {
                                     }}
                                 >
                                     {columns.filter(c => c.show !== false).map((c) => {
+                                        if (c.field === 'button') {
+                                            return (
+                                                <Column
+                                                    key={c.field}
+                                                    field="button"
+                                                    title={c.title}
+                                                    sortable={false}
+                                                    columnMenu={undefined}
+                                                    cell={(props) => {
+                                                        return (
+                                                            <td style={{ textAlign: "center" }}>
+                                                                    <Button
+                                                                        className={"btnM"}
+                                                                        themeColor={"primary"}
+                                                                        onClick={() => onRowClick(props)}
+                                                                    >
+                                                                        분석
+                                                                    </Button>
+                                                              
+                                                            </td>
+                                                        );
+                                                    }}
+                                                />
+                                            );
+                                        }
                                         // 일반 텍스트 컬럼
                                         return (
                                             <Column
