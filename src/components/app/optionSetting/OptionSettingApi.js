@@ -15,7 +15,7 @@ export function OptionSettingApi() {
 
     // 데이터 조회 API
     const optionEditData = useMutation(
-        async (data) => await api.get(data, "/option_edit_api.aspx"),
+        async (data) => await api.post(data.params, "/option_edit_api.aspx"),
         {
          onMutate: (vars) => { 
             //loadingSpinner.show(); 
