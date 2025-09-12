@@ -4042,7 +4042,7 @@ footer {
 
 /* 분석결과 검은 박스 (스크린샷 스타일) */
 .resultBox {
-    height: 220px;
+    height: 215px;
     border: 1px solid #111;
     background: #000;
     color: #0f0;
@@ -4344,3 +4344,67 @@ footer {
 .meta2 b {
     font-weight: 700
 }
+
+
+/* ---메뉴바--- */
+/* 공통 아이콘 버튼 */
+.iconBtn, .userBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 8px;
+  }
+  .iconBtn:hover, .userBtn:hover {
+    background: rgba(0,0,0,0.05);
+  }
+  
+  /* 드롭다운 컨테이너 */
+  .menu-dd {
+    position: relative;
+  }
+  
+  /* 카드 드롭다운 */
+  .dropdown-card {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 160px;
+    background: #fff;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    z-index: 1000;
+  }
+  
+  /* 항목 */
+  .dd-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 14px;
+  }
+  .dd-item:hover {
+    background: rgba(0,0,0,0.06);
+  }
+  .dd-item.only {
+    justify-content: flex-start;
+  }
+  
+  /* 아이콘 자리 */
+  .dd-icon {
+    width: 22px;
+    display: inline-flex;
+    justify-content: center;
+  }
+  
