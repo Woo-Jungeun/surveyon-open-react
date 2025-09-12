@@ -93,8 +93,6 @@ const Login = ({
                                                     name={"user"}
                                                     type={"text"}
                                                     placeholder={"아이디를 입력해주세요."}
-                                                    // minLength={4}
-                                                    // maxByte={12}
                                                     required={true}
                                                     value={formData.user}
                                                     onChange={(event) => onChangeHandler("user", event)}
@@ -103,8 +101,6 @@ const Login = ({
                                                     name={"pass"}
                                                     type={"password"}
                                                     placeholder={"비밀번호를 입력해주세요"}
-                                                    minLength={4}
-                                                    maxLength={16}
                                                     required={true}
                                                     onChange={(event) => onChangeHandler("pass", event)}
                                                 />
