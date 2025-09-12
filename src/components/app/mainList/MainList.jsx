@@ -23,7 +23,7 @@ const MainList = () => {
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
-    
+
     const { mainListData } = MainListApi();
 
     const [columns, setColumns] = useState(() =>
@@ -95,10 +95,10 @@ const MainList = () => {
                                         idGetter,                     // GridData가 만든 getter 그대로
                                         sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
                                         sort,                                 // controlled sort
-                                        sortChange: (e) => { setSort(e.sort); onPrefsChange?.({ sort: e.sort }); },
+                                        sortChange: (e) => { setSort(e.sort); },
                                         filterable: true,                                   // 필터 허용
                                         filter,                               // controlled filter
-                                        filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter }); },
+                                        filterChange: (e) => { setFilter(e.filter); },
                                         onRowClick,
                                     }}
                                 >
