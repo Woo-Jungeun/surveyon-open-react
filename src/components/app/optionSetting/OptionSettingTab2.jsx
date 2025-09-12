@@ -7,7 +7,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 /**
  * 분석 > 그리드 영역 > 보기 데이터
  *
@@ -91,6 +91,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         });
         // forcedHidden이 lvCode에 의존하므로 lvCode/forcedHidden/stageFields 변경 시 동작
     }, [lvCode, forcedHidden, stageFields, onPrefsChange]);
+
+    // 단계(lvCode) 바뀔 때 히스토리/베이스라인 상태를 새로 시작하도록 강제 초기화
+    useEffect(() => {
+        baselineDidRef.current = false;
+        baselineAfterReloadRef.current = false;
+        baselineSigRef.current = '';
+        sigStackRef.current = [];
+    }, [lvCode]);
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -176,10 +184,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         } = props;
         // 키값
         const COMPOSITE_KEY_FIELD = "__rowKey";
-        const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row),[]);
+        const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row), []);
         qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
-        
+
         // 행마다 __rowKey가 없으면 만들어서 주입 (lv123code + no 기반)
         useLayoutEffect(() => {
             const rows = dataState?.data ?? [];
@@ -248,31 +256,56 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         //ctrl+z, ctrl+y
         useEffect(() => {
             const onKey = (e) => {
-                const key = e.key?.toLowerCase?.();
-                if (!key) return; // key 없으면 바로 종료 (예외 방지)
-                if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
-                    e.preventDefault();
-                    const snap = hist.undo();
-                    if (snap) {
-                        setDataState((prev) => ({ ...prev, data: snap }));
-                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                        onUnsavedChange?.(dirty);
-                        onHasEditLogChange?.(dirty);
-                    }
-                } else if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
-                    e.preventDefault();
-                    const snap = hist.redo?.();
-                    if (snap) {
-                        setDataState((prev) => ({ ...prev, data: snap }));
-                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                        onUnsavedChange?.(dirty);
-                        onHasEditLogChange?.(dirty);
-                    }
+              const key = e.key?.toLowerCase?.();
+              if (!key) return;
+          
+              const cancelPendingTyping = () => {
+                if (debounceTimerRef.current) {
+                  clearTimeout(debounceTimerRef.current);
+                  debounceTimerRef.current = null;
                 }
+                pendingTypingRef.current = false;
+              };
+          
+              // Ctrl/Cmd + Z (Undo)
+              if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
+                e.preventDefault();
+                cancelPendingTyping();
+          
+                const snap = hist.undo();
+                if (Array.isArray(snap)) {
+                  const curLen = latestCtxRef.current?.dataState?.data?.length ?? 0;
+                  // 안전장치: 현재 데이터가 있는데 빈 스냅샷으로 되돌리려 하면 무시
+                  if (snap.length === 0 && curLen > 0) return;
+          
+                  setDataState((prev) => ({ ...prev, data: snap }));
+                  const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                  onUnsavedChange?.(dirty);
+                  onHasEditLogChange?.(dirty);
+                }
+                return;
+              }
+          
+              // Ctrl/Cmd + Y  또는 Shift + Ctrl/Cmd + Z (Redo)
+              if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
+                e.preventDefault();
+                cancelPendingTyping();
+          
+                const snap = hist.redo?.();
+                if (Array.isArray(snap)) {
+                  setDataState((prev) => ({ ...prev, data: snap }));
+                  const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                  onUnsavedChange?.(dirty);
+                  onHasEditLogChange?.(dirty);
+                }
+                return;
+              }
             };
+          
             window.addEventListener("keydown", onKey, true);
             return () => window.removeEventListener("keydown", onKey, true);
-        }, [hist, setDataState, onUnsavedChange, makeTab2Signature]);
+          }, [hist, setDataState, onUnsavedChange, makeTab2Signature, onHasEditLogChange]);
+          
 
         // 대분류/중분류 코드값 텍스트 매핑
         const buildMaps = (rows, codeField, textField) => {
@@ -923,6 +956,26 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return rows.length ? keyOf(rows[rows.length - 1]) : null;
         }, [dataState?.data, keyOf]);
 
+        // hist 인스턴스가 바뀌면(단계 전환 등) 베이스라인/스택도 초기화
+        const histRef = useRef(hist);
+        useEffect(() => {
+            if (histRef.current !== hist) {
+                baselineDidRef.current = false;
+                baselineSigRef.current = '';
+                sigStackRef.current = [];
+                histRef.current = hist;
+            }
+        }, [hist]);
+
+        useEffect(() => {
+            return () => {
+              if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+                debounceTimerRef.current = null;
+              }
+            };
+          }, []);
+          
         return (
             <Fragment>
                 <div className="meta2">
@@ -948,8 +1001,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataState?.data,
-                            dataItemKey: "__rowKey",   
-                            idGetter: (r) => r.__rowKey, 
+                            dataItemKey: "__rowKey",
+                            idGetter: (r) => r.__rowKey,
                             editField,
                             onItemChange,
                             selectedState,
