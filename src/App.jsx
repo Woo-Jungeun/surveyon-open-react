@@ -7,6 +7,7 @@ import { useCookies } from "react-cookie";
 import PageNotFound from "./components/app/pageNotFound/PageNotFound";
 import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapperView.jsx";
 import MainListWrapperView from "@/views/mainList/MainListWrapperView.jsx";
+import ProListWrapperView from "@/views/proList/ProListWrapperView.jsx";
 import busGif from "@/assets/images/bus_loading.gif";
 
 function App() {
@@ -31,7 +32,7 @@ function App() {
                 <Routes>
                        <Route path="/" element={<MainWrapperView />}>
                        <Route index element={<MainListWrapperView />} />
-                       <Route path="pro_list" element={<OptionSettingWrapperView />} />      
+                       <Route path="pro_list" element={<ProListWrapperView />} />      
                         <Route path="open-setting" element={<OptionSettingWrapperView />} />      
                         <Route path="login" element={<Navigate to="/" replace />} />
                         <Route path="*" element={<PageNotFound />} />

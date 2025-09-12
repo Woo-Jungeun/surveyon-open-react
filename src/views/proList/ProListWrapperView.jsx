@@ -1,17 +1,17 @@
 import { Route, Routes } from "react-router-dom";
 import { useSelector } from "react-redux";
-import MainList from "@/components/app/mainList/MainList.jsx";
-const MainListWrapperView = () => {
+import ProList from "@/components/app/proList/ProList.jsx";
+const ProListWrapperView = () => {
     const auth = useSelector((store) => store.auth);
 
     /**
-     * MainList
+     * ProList
      */
     return (
         <Routes>
-            <Route path={"/"} element={<MainList />} />
+            <Route path={"/"} element={<ProList />} />
         </Routes>
     );
 };
 
-export default MainListWrapperView;
+export default ProListWrapperView;
