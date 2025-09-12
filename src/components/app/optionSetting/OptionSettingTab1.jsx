@@ -100,10 +100,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
     const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
 
-    // 변경시 부모에 저장 (딜레이 없이 즉시 패치)
-    useEffect(() => { onPrefsChange?.({ sort }); }, [sort]);
-    useEffect(() => { onPrefsChange?.({ filter }); }, [filter]);
-
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = useCallback((menuProps) => (
         <ExcelColumnMenu

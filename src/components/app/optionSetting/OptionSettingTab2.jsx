@@ -21,7 +21,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "보기 데이터";
-    let qnum = "";   //문번호
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -62,7 +61,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 ? { ...c, show: false, allowHide: false }
                 : c
         );
-    }, [columns, forcedHidden, stageFields]);
+    }, [columns, forcedHidden]);
 
     /**
      * 단계 변경 시 컬럼 상태 정규화:
@@ -104,9 +103,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
     const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
 
-    // 변경시 부모에 저장 (딜레이 없이 즉시 패치)
-    useEffect(() => { onPrefsChange?.({ sort }); }, [sort]);
-    useEffect(() => { onPrefsChange?.({ filter }); }, [filter]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
@@ -185,7 +181,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         // 키값
         const COMPOSITE_KEY_FIELD = "__rowKey";
         const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row), []);
-        qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
+        const qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
 
         // 행마다 __rowKey가 없으면 만들어서 주입 (lv123code + no 기반)
@@ -215,7 +211,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 onUnsavedChange?.(false);
                 onHasEditLogChange?.(false);
             }
-        }, [dataState?.data, hist, makeTab2Signature, onUnsavedChange]);
+        }, [dataState?.data, hist, makeTab2Signature, onUnsavedChange, onHasEditLogChange]);
 
         // 수정로그 commit 
         const commitSmart = useCallback((updatedRows) => {
@@ -251,7 +247,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             stack.push(newSig);
             onUnsavedChange?.(true);
             onHasEditLogChange?.(true);
-        }, [hist, makeTab2Signature, onUnsavedChange]);
+        }, [hist, makeTab2Signature, onUnsavedChange, onHasEditLogChange]);
 
         //ctrl+z, ctrl+y
         useEffect(() => {
@@ -507,7 +503,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             setDataState(prev => {
                 const rows = prev.data || [];
-                const getKey = (r) => (idGetter ? idGetter(r) : r?.[dataItemKey]);
+                const getKey = (r) => r?.__rowKey;
 
                 // 현재 행 제외 후 해당 codeField의 숫자 최대값 + 1
                 const maxPlus1 = (codeField) =>
@@ -955,17 +951,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 전부 삭제대기/설문이면 물리적 마지막 행을 fallback(없으면 null)
             return rows.length ? keyOf(rows[rows.length - 1]) : null;
         }, [dataState?.data, keyOf]);
-
-        // hist 인스턴스가 바뀌면(단계 전환 등) 베이스라인/스택도 초기화
-        const histRef = useRef(hist);
-        useEffect(() => {
-            if (histRef.current !== hist) {
-                baselineDidRef.current = false;
-                baselineSigRef.current = '';
-                sigStackRef.current = [];
-                histRef.current = hist;
-            }
-        }, [hist]);
 
         useEffect(() => {
             return () => {
