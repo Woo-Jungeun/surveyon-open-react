@@ -10,7 +10,7 @@ import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -33,7 +33,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
     const latestCtxRef = useRef(null);
-
+    // 클라이언트 전용 표시/편집 플래그 제거
+    const stripLocalFlags = (rows = []) =>
+        (rows || []).map(r => {
+            const { __pendingDelete, __errors, __errorKinds, inEdit, selected, __isNew, ...rest } = r;
+            return rest;
+        });
     /**
      * rows: 그리드 행 배열(dataState.data)
      * opts: { key, user, projectnum, qnum, gb }  // API
@@ -227,19 +232,31 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
         const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
-
+        const [gridEpoch, setGridEpoch] = useState(0);
         useEffect(() => {
             const rowsNow = dataState?.data || [];
             if (!rowsNow.length || !hasAllRowKeys) return;
 
             if (!baselineDidRef.current || baselineAfterReloadRef.current) {
-                hist.reset(rowsNow);
-                applySelectedFromRows(rowsNow);
+                // 새로 들어온 데이터에 남아있는 로컬 플래그를 제거
+                const needClean = rowsNow.some(r =>
+                    r?.__pendingDelete === true || r?.inEdit || r?.selected ||
+                    r?.__errors || r?.__errorKinds || r?.__isNew
+                );
+                const base = needClean ? stripLocalFlags(rowsNow) : rowsNow;
+                if (needClean) {
+                    // 자동 동기화 중에는 더티/히스토리 흔들림 방지
+                    suppressUnsavedSelectionRef.current = true;
+                    setDataState(prev => ({ ...prev, data: base }));
+                    suppressUnsavedSelectionRef.current = false;
+                }
+                hist.reset(base);
+                applySelectedFromRows(base);
 
                 baselineDidRef.current = true;
                 baselineAfterReloadRef.current = false;
                 // 베이스라인/스택 초기화
-                baselineSigRef.current = makeTab1Signature(rowsNow);
+                baselineSigRef.current = makeTab1Signature(base);
                 sigStackRef.current = [];
                 onUnsavedChange?.(false);
                 onHasEditLogChange?.(false);
@@ -884,10 +901,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 // 클릭한 행 아래에 삽입
                 const nextData = [...prevData];
                 nextData.splice(idx + 1, 0, newRow);
-
-                const recomputed = recomputeCidForGroup(fk, nextData);
-                // 새 행은 lv3가 비어있으므로 즉시 필수값 마킹을 반영한 스냅샷으로 커밋
-                const marked = applyRequiredMarksLv3(recomputed);
+                const marked = applyRequiredMarksLv3(nextData);
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
@@ -1052,6 +1066,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     setSelectedStateGuarded({});                  // 선택맵 초기화
 
                     baselineAfterReloadRef.current = true;       // 다음 로드에서 베이스라인 리셋
+
+                    // 화면에서 바로 없애기(낙관적): 보류삭제 행 제거 + 로컬플래그 제거
+                    setDataState(prev => {
+                        const kept = (prev.data || []).filter(r => r.__pendingDelete !== true);
+                        const cleaned = stripLocalFlags(kept);
+                        return { ...prev, data: cleaned };
+                    });
+
+                    // Kendo 그리드 강제 리마운트(가상화/재사용 캐시 끊기)
+                    setGridEpoch(e => e + 1);
+
                     handleSearch();                              // 재조회
                     return true;
                 } else {
@@ -1173,11 +1198,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         : r
                 );
 
-                // 토글 후 cid 재배열(보류삭제 제외)
-                const recomputed = recomputeCidForGroup(fk, toggled);
-                // 필수값 마킹을 적용한 최종 스냅샷
-                const marked = applyRequiredMarksLv3(recomputed);
                 // 히스토리에는 항상 최종 스냅샷을 커밋
+                const marked = applyRequiredMarksLv3(toggled);
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
@@ -1228,7 +1250,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 </div>
                 <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""} ${isDragging ? "is-dragging" : ""}`}>
                     <KendoGrid
-                        key={`lv-${lvCode}`}
+                        key={`lv-${lvCode}-${gridEpoch}`}
                         parentProps={{
                             data: dataState?.data,
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
