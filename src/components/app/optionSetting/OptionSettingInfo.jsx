@@ -8,7 +8,7 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
 import "@/components/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
-import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { loadingSpinnerContext } from "@/components/common/AnalysisLoadingSpinner.jsx";
 import { useSelector } from "react-redux";
 /**
  * 분석 > 정보 영역
@@ -23,6 +23,11 @@ const ACTION_LABEL = {
     classified: "보기분석",
     response: "응답자분석(NEW)",
     recallResponse: "응답자 빈셀&기타",
+};
+const MODAL_SCOPE = {
+    visibleOn: "/open-setting",
+    autoCloseOnRouteChange: true,
+    // zIndex: 2000, // 필요하면 추가
 };
 
 /*섹션 영역 */
@@ -84,7 +89,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     const setAnalyzing = useCallback((on) => {
         if (!loading) return;
-        on ? loading.show({ content: "분석중입니다...", variant: "none" }) : loading.hide();
+        on ? loading.show() : loading.hide();
     }, [loading]);
 
     // 최종 완료 처리 (팝업, 로딩 off, 탭 이동)
@@ -100,15 +105,14 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             nextTabRef.current = null;
         };
 
-        const show = hasError
-            ? modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.")
-            : modal.showAlert("알림", "분석이 완료되었습니다.");
-
-        if (show && typeof show.then === "function") {
-            show.finally(goNextTab);
+        if (hasError) {
+            modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.", MODAL_SCOPE);
         } else {
-            setTimeout(goNextTab, 0);
+            modal.showAlert("알림", "분석이 완료되었습니다.", MODAL_SCOPE);
         }
+
+        setTimeout(goNextTab, 0);
+
     }, [modal, onNavigateTab, setAnalyzing]);
 
 
@@ -235,7 +239,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             } else if (isDone) {
                 setAnalyzing(false);              // 로딩바 off
                 put("분석이 완료되었습니다.");
-                modal.showAlert("알림", "분석이 완료되었습니다.");
+                modal.showAlert("알림", "분석이 완료되었습니다.", MODAL_SCOPE);
             }
 
         } catch {
@@ -540,11 +544,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         completedOnceRef.current = false;  // 새 작업 시작 시 리셋
         const projectnum = String(data?.projectnum || "q250089uk");
         if (!data?.qid || !projectnum) {
-            modal.showAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.");
+            modal.showAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.", MODAL_SCOPE);
             return false;
         }
         if (!String(data?.open_item_lv1 ?? "").trim()) {
-            modal.showErrorAlert("에러", "소분류 개수를 입력하세요.");
+            modal.showErrorAlert("에러", "소분류 개수를 입력하세요.", MODAL_SCOPE);
             return false;
         }
         setSaving(true);
@@ -553,7 +557,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             const payload = buildInfoPayload(type);
             const saveRes = await optionSaveData.mutateAsync(payload);
             if (saveRes?.success !== "777") {
-                modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
+                modal.showErrorAlert("에러", "오류가 발생했습니다.", MODAL_SCOPE); //오류 팝업 표출
                 return false;
             }
             // console.log(`[INFO][${type}] saved (777)`, saveRes);
@@ -569,7 +573,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             const job = analysisRes?.job || analysisRes?.contents?.job || analysisRes?.data?.job;
 
             if (!ok) {
-                modal.showErrorAlert("에러", "오류가 발생했습니다.");
+                modal.showErrorAlert("에러", "오류가 발생했습니다.", MODAL_SCOPE);
                 return false;
             }
 
@@ -597,7 +601,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
             return true;
         } catch (e) {
-            modal.showErrorAlert("에러", "오류가 발생했습니다."); //오류 팝업 표출
+            modal.showErrorAlert("에러", "오류가 발생했습니다.", MODAL_SCOPE); //오류 팝업 표출
             setAnalyzing(false);      // 에러 즉시 off
             return false;
         } finally {

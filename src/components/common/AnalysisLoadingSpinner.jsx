@@ -1,8 +1,8 @@
 import { createContext, Fragment, useState, useEffect } from "react";
 import busGif from "@/assets/images/bus_loading.gif";
 
-//context 생성
-//context를 생성해야지만 전역으로 사용할 수 있음
+// 분석 전용 로딩바 
+// context를 생성해야지만 전역으로 사용할 수 있음
 export const loadingSpinnerContext = createContext(null);
 
 /**
@@ -130,17 +130,17 @@ function LoadingSpinner(props) {
             height: rect.height
         };
     }
-    
+
     return (
         <Fragment>
             {
                 loading
-                    ? <article className={"modal on"} style={maskStyle}>
+                    ? <article className={"modal on no-dim"} style={maskStyle}>
                         <div className="loading">
                             {gifReady && (
                                 <img src={busGif} alt="" width={140} height={140} style={{ display: "block", margin: "0 auto" }}/>
                             )}
-                            {content ? <p>{content}</p> : <p>화면을 갱신중입니다.</p>}
+                            <p>분석중입니다...</p>
                         </div>
                     </article>
                     : null

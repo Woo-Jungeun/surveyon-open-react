@@ -47,13 +47,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                     <IntlProvider locale={'ko-KR'}>
                         <LoadingProvider>
                             <QueryClientProvider client={queryClient}>
-                                <ModalProvider>
-                                    <WindowPopupProvider>
-                                        <BrowserRouter>
-                                            <App/>
-                                        </BrowserRouter>
-                                    </WindowPopupProvider>
-                                </ModalProvider>
+                                <BrowserRouter>
+                                    <ModalProvider>
+                                        <WindowPopupProvider>
+                                            <App />
+                                        </WindowPopupProvider>
+                                    </ModalProvider>
+                                </BrowserRouter>
                             </QueryClientProvider>
                         </LoadingProvider>
                     </IntlProvider>

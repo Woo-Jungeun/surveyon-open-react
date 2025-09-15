@@ -1,6 +1,7 @@
-import {createContext, Fragment, useLayoutEffect, useRef, useState} from "react";
-import {Window} from "@progress/kendo-react-dialogs";
-import {Button} from "@progress/kendo-react-buttons";
+import { createContext, Fragment, useLayoutEffect, useRef, useState, useEffect } from "react";
+import { Window } from "@progress/kendo-react-dialogs";
+import { Button } from "@progress/kendo-react-buttons";
+import { useLocation } from "react-router-dom";
 
 //context 생성
 //context를 생성해야지만 전역으로 사용할 수 있음
@@ -24,9 +25,28 @@ function ModalProvider(props) {
         confirmCallback: null,
         options: null,
         width: 400,
-        code: ""
+        code: "",
+        visibleOn: null,             // string | RegExp | (path)=>boolean | null
+        autoCloseOnRouteChange: true,// 라우트 바뀌면 자동 닫기
+        zIndex: undefined            // 필요시 z-index 제어
     });
+    const { pathname } = useLocation();
 
+    const matchPath = (rule) => {
+        if (!rule) return true;                 // 제한 없음 → 어디서든 표시
+        if (typeof rule === "string") return pathname === rule;
+        if (rule instanceof RegExp) return rule.test(pathname);
+        if (typeof rule === "function") return !!rule(pathname);
+        return true;
+    };
+
+    // 라우트가 바뀌면: (1) 해당 라우트가 아니면 렌더 차단, (2) autoClose면 상태도 닫기
+    useEffect(() => {
+        if (modal.show && modal.autoCloseOnRouteChange && !matchPath(modal.visibleOn)) {
+            setModal((m) => ({ ...m, show: false }));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pathname]);
     /**
      *  Alert를 화면에 표출한다.
      *
@@ -42,7 +62,10 @@ function ModalProvider(props) {
             show: true,
             confirmCallback: (callback != null && callback instanceof Function) ? callback : null,
             isBtnHide: options && options.isBtnHide ? options.isBtnHide : false,
-            width: 400
+            width: 400,
+            visibleOn: options?.visibleOn ?? null,
+            autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
+            zIndex: options?.zIndex ?? undefined
         }));
     }
 
@@ -52,7 +75,7 @@ function ModalProvider(props) {
      *  @author jewoo
      *   @since 2024-05-04<br />
      **/
-    const showErrorAlert = (status, msg) => {
+    const showErrorAlert = (status, msg, options) => {
         if (status === "777")
             return;
 
@@ -65,7 +88,10 @@ function ModalProvider(props) {
             confirmCallback: null,
             isBtnHide: false,
             width: 400,
-            code: status
+            code: status,
+            visibleOn: options?.visibleOn ?? null,
+            autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
+            zIndex: options?.zIndex ?? undefined
         }));
     }
 
@@ -75,7 +101,7 @@ function ModalProvider(props) {
      *  @author jewoo
      *   @since 2024-05-04<br />
      **/
-    const showReqConfirm = (reqNm, type, callback) => {
+    const showReqConfirm = (reqNm, type, callback, options) => {
         let typeNm = '';
         switch (type) {
             case 'I':
@@ -115,7 +141,10 @@ function ModalProvider(props) {
             show: true,
             isBtnHide: false,
             confirmCallback: null,
-            width: 400
+            width: 400,
+            visibleOn: options?.visibleOn ?? null,
+            autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
+            zIndex: options?.zIndex ?? undefined
         }));
     }
 
@@ -125,7 +154,7 @@ function ModalProvider(props) {
      *  @author jewoo
      *   @since 2024-05-04<br />
      **/
-    const showReqResult = (reqNm, type, success) => {
+    const showReqResult = (reqNm, type, success, options) => {
         let typeNm = '';
         switch (type) {
             case 'I':
@@ -151,7 +180,10 @@ function ModalProvider(props) {
                 show: true,
                 confirmCallback: null,
                 isBtnHide: false,
-                width: 400
+                width: 400,
+                visibleOn: options?.visibleOn ?? null,
+                autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
+                zIndex: options?.zIndex ?? undefined
             }));
         else
             setModal(prevState => ({
@@ -162,7 +194,10 @@ function ModalProvider(props) {
                 show: true,
                 confirmCallback: null,
                 isBtnHide: false,
-                width: 400
+                width: 400,
+                visibleOn: options?.visibleOn ?? null,
+                autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
+                zIndex: options?.zIndex ?? undefined
             }));
     }
 
@@ -172,7 +207,7 @@ function ModalProvider(props) {
      *  @author jewoo
      *   @since 2024-05-04<br />
      **/
-    const showConfirm = (title, content, btnOptions) => {
+    const showConfirm = (title, content, btnOptions = {}) => {
         setModal(prevState => ({
             ...prevState,
             type: "confirm",
@@ -182,7 +217,10 @@ function ModalProvider(props) {
             show: true,
             isBtnHide: btnOptions && btnOptions.isBtnHide ? btnOptions.isBtnHide : false,
             confirmCallback: null,
-            width: 400
+            width: 400,
+            visibleOn: btnOptions.visibleOn ?? null,
+            autoCloseOnRouteChange: btnOptions.autoCloseOnRouteChange ?? true,
+            zIndex: btnOptions.zIndex ?? undefined
         }));
     }
 
@@ -190,13 +228,16 @@ function ModalProvider(props) {
     /**
      * 팝업 오픈
      * */
-    const showContents = (content, option) => {
+    const showContents = (content, option = {}) => {
         setModal(prevState => ({
             ...prevState,
             type: "contents",
             content: content,
             show: true,
-            width: isNaN(option && option.width) ? 400 : option.width
+            width: isNaN(option && option.width) ? 400 : option.width,
+            visibleOn: option?.visibleOn ?? null,
+            autoCloseOnRouteChange: option?.autoCloseOnRouteChange ?? true,
+            zIndex: option?.zIndex ?? undefined
         }));
     }
 
@@ -253,7 +294,10 @@ function ModalProvider(props) {
                 width={modal.width}
                 onConfirm={confirm}
                 onClose={close}
-                code={modal.code} />
+                code={modal.code}
+                allowRender={matchPath(modal.visibleOn)}
+                zIndex={modal.zIndex}
+            />
         </modalContext.Provider>
     );
 }
@@ -267,6 +311,7 @@ function ModalProvider(props) {
 function Modal(props) {
     //window popup ref
     const windowRef = useRef();
+    if (!props.allowRender) return null; // 라우트가 안 맞으면 표시 자체를 안 함
     return (
         <div>
             {
@@ -277,8 +322,10 @@ function Modal(props) {
                         // 3. confirm 일 경우, btn 파라미터가 있는지 판별하고
                         //    있을 경우, btns의 갯수만큼 버튼 생성
                         //    없을 경우, 확인/취소 버튼을 default로 생성
-                        <article className="modal on">
-                            <div className={"cmn_popup"} style={{width: "480px"}}>
+                        <article className="modal on"
+                            style={props.zIndex != null ? { zIndex: props.zIndex } : undefined}
+                        >
+                            <div className={"cmn_popup"} style={{ width: "480px" }}>
 
                                 {/*팝업 top*/}
                                 <div className="popTit">
@@ -293,9 +340,9 @@ function Modal(props) {
                                     <p className="popTxt">
                                         {props?.content !== undefined
                                             ? props?.content?.split("\n")?.map((item, idx) => {
-                                                return (<Fragment key={idx}>{item}<br/></Fragment>)
+                                                return (<Fragment key={idx}>{item}<br /></Fragment>)
                                             })
-                                            : <Fragment key={"error"}> 요청한 서비스에 문제가 발생했습니다.<br/> 잠시 후에 다시 시도해 주세요.<br/></Fragment>
+                                            : <Fragment key={"error"}> 요청한 서비스에 문제가 발생했습니다.<br /> 잠시 후에 다시 시도해 주세요.<br /></Fragment>
                                         }
                                     </p>
                                 </div>
@@ -305,44 +352,44 @@ function Modal(props) {
                                     <div className="btnWrap type04">
                                         {props.type === "alert" || props.type === "error"
                                             ? <Button className={"btnM " + (props.type !== "error" ? "" : "btnType01")}
-                                                      themeColor={"primary"}
-                                                      onClick={(event) => {
-                                                          event.preventDefault();
-                                                          event.stopPropagation();
-                                                          props.onConfirm(event);
-                                                      }}>확인</Button>
+                                                themeColor={"primary"}
+                                                onClick={(event) => {
+                                                    event.preventDefault();
+                                                    event.stopPropagation();
+                                                    props.onConfirm(event);
+                                                }}>확인</Button>
                                             : (props.btns != null
-                                                    ? <Fragment>
-                                                        {
-                                                            props.btns.map((item, idx) => {
-                                                                return <Button key={idx}
-                                                                               className={"btnM " + (idx != props.btns.length - 1 ? "btnTxt type01" : "")}
-                                                                               themeColor={idx != props.btns.length - 1 ? null : "primary"}
-                                                                               onClick={(event) => {
-                                                                                   if ((item.click !== null || item.click !== undefined) && item.click instanceof Function) {
-                                                                                       event.preventDefault();
-                                                                                       event.stopPropagation();
-                                                                                       item.click.call(undefined, event);
-                                                                                   }
-                                                                                   props.onClose(event);
-                                                                               }}>{item.title}</Button>
-                                                            })
-                                                        }
-                                                    </Fragment>
-                                                    : <Fragment>
-                                                        <Button className={"btnM btnTxt type01"}
+                                                ? <Fragment>
+                                                    {
+                                                        props.btns.map((item, idx) => {
+                                                            return <Button key={idx}
+                                                                className={"btnM " + (idx != props.btns.length - 1 ? "btnTxt type01" : "")}
+                                                                themeColor={idx != props.btns.length - 1 ? null : "primary"}
                                                                 onClick={(event) => {
-                                                                    event.preventDefault();
-                                                                    event.stopPropagation();
+                                                                    if ((item.click !== null || item.click !== undefined) && item.click instanceof Function) {
+                                                                        event.preventDefault();
+                                                                        event.stopPropagation();
+                                                                        item.click.call(undefined, event);
+                                                                    }
                                                                     props.onClose(event);
-                                                                }}>취소</Button>
-                                                        <Button className={"btnM"} themeColor={"primary"}
-                                                                onClick={(event) => {
-                                                                    event.preventDefault();
-                                                                    event.stopPropagation();
-                                                                    props.onConfirm(event);
-                                                                }}>확인</Button>
-                                                    </Fragment>
+                                                                }}>{item.title}</Button>
+                                                        })
+                                                    }
+                                                </Fragment>
+                                                : <Fragment>
+                                                    <Button className={"btnM btnTxt type01"}
+                                                        onClick={(event) => {
+                                                            event.preventDefault();
+                                                            event.stopPropagation();
+                                                            props.onClose(event);
+                                                        }}>취소</Button>
+                                                    <Button className={"btnM"} themeColor={"primary"}
+                                                        onClick={(event) => {
+                                                            event.preventDefault();
+                                                            event.stopPropagation();
+                                                            props.onConfirm(event);
+                                                        }}>확인</Button>
+                                                </Fragment>
                                             )
                                         }
 
@@ -361,7 +408,9 @@ function Modal(props) {
                             resizable={false}
                             draggable={false}
                             doubleClickStageChange={false}
-                            onClose={props.onClose}>
+                            onClose={props.onClose}
+                            style={props.zIndex != null ? { zIndex: props.zIndex } : undefined}
+                            >
                             {
                                 props.content
                             }
