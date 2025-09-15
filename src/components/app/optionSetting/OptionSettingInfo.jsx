@@ -9,7 +9,7 @@ import "@/components/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 /**
  * 분석 > 정보 영역
  *
@@ -63,51 +63,136 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
-    const loading = useContext(loadingSpinnerContext);  // ← 추가
+    const loading = useContext(loadingSpinnerContext);
     const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
+    const logTextRef = useRef("");   // 최신 로그 문자열 저장용
+    // 로그 안정성 체크용 ref
+    const lineCountRef = useRef(0);   // 마지막 라인 수
+    const lastStableRef = useRef(0);  // 연속 안정 횟수
     const [data, setData] = useState({}); //데이터 
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
     const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
     const nextTabRef = useRef(null);    //탭 이동
+    // 유틸: 짧게 기다리기
+    const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+    // 유틸: 로그 라인 수/문자 수 계산
+    const getLogMetrics = (s) => ({
+        lines: String(s ?? "").split("\n").length,
+        chars: String(s ?? "").length,
+    });
 
     const setAnalyzing = useCallback((on) => {
         if (!loading) return;
         on ? loading.show({ content: "분석중입니다...", variant: "none" }) : loading.hide();
     }, [loading]);
 
+    // 최종 완료 처리 (팝업, 로딩 off, 탭 이동)
+    const finalizeCompletion = useCallback((hasError) => {
+        if (completedOnceRef.current) return;  // 중복 방지
+        completedOnceRef.current = true;
+
+        setAnalyzing(false);
+        activeJobRef.current = null;
+
+        const goNextTab = () => {
+            if (nextTabRef.current) onNavigateTab?.(nextTabRef.current);
+            nextTabRef.current = null;
+        };
+
+        const show = hasError
+            ? modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.")
+            : modal.showAlert("알림", "분석이 완료되었습니다.");
+
+        if (show && typeof show.then === "function") {
+            show.finally(goNextTab);
+        } else {
+            setTimeout(goNextTab, 0);
+        }
+    }, [modal, onNavigateTab, setAnalyzing]);
+
+
+    // status 호출용
+    const buildStatusPayload = (job) => {
+        const projectnum = String(data?.projectnum || "q250089uk"); // 기본값 보강
+        const qid = String(data?.qid || "");
+        // 필수값/잡키 없으면 status 치지 않음
+        if (!projectnum || !qid || !job) return null;
+        return {
+            user: auth?.user?.userId || "",
+            projectnum,
+            qid,
+            action: "status",
+            job: String(job),
+        };
+    };
+
+    // SignalR 완료 콜백 직후, 
+    // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
+    // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
+    const confirmEndByStatusAndSnapshot = useCallback(
+        async ({ maxTries = 4, interval = 350, hasError = false }) => {
+            lastStableRef.current = 0;
+            // 변경: logText -> logTextRef.current
+            lineCountRef.current = getLogMetrics(logTextRef.current).lines;
+
+            for (let i = 0; i < maxTries; i++) {
+                try {
+                    const payload = buildStatusPayload(activeJobRef.current);
+                    if (!payload) {            // 필수 파라미터 없으면 400 방지
+                        finalizeCompletion(hasError);
+                        return;
+                    }
+                    const r = await optionAnalysisStatus.mutateAsync(payload);
+                    const raw = String(r?.output ?? "").replace(/\s+/g, "");
+                    const stateDone =
+                        /분석완료/.test(raw) || /completed/i.test(raw) || r?.state === "completed";
+
+                    // 변경: logText -> logTextRef.current
+                    const { lines } = getLogMetrics(logTextRef.current);
+                    const stableNow = lines === lineCountRef.current;
+                    lineCountRef.current = lines;
+
+                    if (stateDone && stableNow) {
+                        lastStableRef.current += 1;
+                    } else {
+                        lastStableRef.current = 0;
+                    }
+
+                    if (lastStableRef.current >= 2) {
+                        finalizeCompletion(hasError);
+                        return;
+                    }
+                } catch {
+                    // 무시하고 다음 루프
+                }
+                await sleep(interval);
+            }
+            finalizeCompletion(hasError);
+        },
+        [optionAnalysisStatus, buildStatusPayload, finalizeCompletion]
+    );
+
     // SignalR 훅
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
         hubUrl: "/o/signalr",
         hubName: "workerlog",
         onCompleted: ({ hasError, jobKey }) => {
-            // 분석 완료 시 팝업 표출 
             if (completedOnceRef.current) return;
-            completedOnceRef.current = true;
-
-            // 진행중인 그 job에 대한 완료면 로딩 off
+            // status 호출에 job 누락되지 않도록 보강
+            if (!activeJobRef.current && jobKey) {
+                activeJobRef.current = String(jobKey);
+            }
             if (!activeJobRef.current || activeJobRef.current === jobKey) {
-                setAnalyzing(false);
-                activeJobRef.current = null;
+                // 여기서 바로 팝업 X → 확정 체크 함수 호출
+                confirmEndByStatusAndSnapshot({ hasError });
             }
-            // 탭 이동
-            const goNextTab = () => {
-                if (nextTabRef.current) onNavigateTab?.(nextTabRef.current);
-                nextTabRef.current = null;
-            };
-
-            // 팝업 띄우고 → 닫힌 뒤 이동 (Promise 지원 시)
-            const show = hasError
-                ? modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.")
-                : modal.showAlert("알림", "분석이 완료되었습니다.");
-
-            // 1) showAlert/showErrorAlert가 Promise를 반환하는 경우
-            if (show && typeof show.then === "function") {
-                show.finally(goNextTab);
-            } else {
-                setTimeout(goNextTab, 0);
-            }
-        }
+        },
     });
+    // 최신 logText를 ref에 반영
+    useEffect(() => {
+        logTextRef.current = String(logText ?? "");
+    }, [logText]);
 
     const initStatusCheckedRef = useRef(false);
 
@@ -291,7 +376,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         const qnum = String(over.qnum ?? data?.qnum ?? "A2-2");
 
         const res = await optionEditData.mutateAsync({
-            params: { user:auth?.user?.userId || "", projectnum, qnum, gb: "info" },
+            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "info" },
         });
 
         const d = res?.resultjson?.[0] || {};
@@ -444,21 +529,12 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         }
     };
 
-    // status/clear 호출용 (projectnum 스코프 보정)
-    const buildStatusPayload = (job) => {
-        const projectnum = String(data?.projectnum);
-        return {
-            user: auth?.user?.userId || "",
-            projectnum,
-            qid: String(data?.qid),
-            action: "status",
-            job,
-            // ...(job ? { job } : {}),  // ← job이 있을 때만 포함
-        };
-    };
-
     // 공통 버튼 실행
     const runInfoSave = async (type) => {
+        // 새 작업 시작 시 초기화
+        completedOnceRef.current = false;
+        lastStableRef.current = 0;
+        lineCountRef.current = getLogMetrics(logTextRef.current).lines;
         /*유효성 체크 */
         if (saving) return false;
         completedOnceRef.current = false;  // 새 작업 시작 시 리셋
