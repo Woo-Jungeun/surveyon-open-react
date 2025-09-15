@@ -262,7 +262,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         if (initStatusCheckedRef.current) return;
         //   if (data?.projectnum && data?.qid) {   //todo 나중에 주석 풀기
         initStatusCheckedRef.current = true;
-        checkInitialStatus();
+     //todo 임시주석   checkInitialStatus();
         //   }
     }, [data?.projectnum, data?.qid]);
 
