@@ -252,56 +252,56 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         //ctrl+z, ctrl+y
         useEffect(() => {
             const onKey = (e) => {
-              const key = e.key?.toLowerCase?.();
-              if (!key) return;
-          
-              const cancelPendingTyping = () => {
-                if (debounceTimerRef.current) {
-                  clearTimeout(debounceTimerRef.current);
-                  debounceTimerRef.current = null;
+                const key = e.key?.toLowerCase?.();
+                if (!key) return;
+
+                const cancelPendingTyping = () => {
+                    if (debounceTimerRef.current) {
+                        clearTimeout(debounceTimerRef.current);
+                        debounceTimerRef.current = null;
+                    }
+                    pendingTypingRef.current = false;
+                };
+
+                // Ctrl/Cmd + Z (Undo)
+                if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
+                    e.preventDefault();
+                    cancelPendingTyping();
+
+                    const snap = hist.undo();
+                    if (Array.isArray(snap)) {
+                        const curLen = latestCtxRef.current?.dataState?.data?.length ?? 0;
+                        // 안전장치: 현재 데이터가 있는데 빈 스냅샷으로 되돌리려 하면 무시
+                        if (snap.length === 0 && curLen > 0) return;
+
+                        setDataState((prev) => ({ ...prev, data: snap }));
+                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                        onUnsavedChange?.(dirty);
+                        onHasEditLogChange?.(dirty);
+                    }
+                    return;
                 }
-                pendingTypingRef.current = false;
-              };
-          
-              // Ctrl/Cmd + Z (Undo)
-              if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
-                e.preventDefault();
-                cancelPendingTyping();
-          
-                const snap = hist.undo();
-                if (Array.isArray(snap)) {
-                  const curLen = latestCtxRef.current?.dataState?.data?.length ?? 0;
-                  // 안전장치: 현재 데이터가 있는데 빈 스냅샷으로 되돌리려 하면 무시
-                  if (snap.length === 0 && curLen > 0) return;
-          
-                  setDataState((prev) => ({ ...prev, data: snap }));
-                  const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                  onUnsavedChange?.(dirty);
-                  onHasEditLogChange?.(dirty);
+
+                // Ctrl/Cmd + Y  또는 Shift + Ctrl/Cmd + Z (Redo)
+                if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
+                    e.preventDefault();
+                    cancelPendingTyping();
+
+                    const snap = hist.redo?.();
+                    if (Array.isArray(snap)) {
+                        setDataState((prev) => ({ ...prev, data: snap }));
+                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                        onUnsavedChange?.(dirty);
+                        onHasEditLogChange?.(dirty);
+                    }
+                    return;
                 }
-                return;
-              }
-          
-              // Ctrl/Cmd + Y  또는 Shift + Ctrl/Cmd + Z (Redo)
-              if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
-                e.preventDefault();
-                cancelPendingTyping();
-          
-                const snap = hist.redo?.();
-                if (Array.isArray(snap)) {
-                  setDataState((prev) => ({ ...prev, data: snap }));
-                  const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                  onUnsavedChange?.(dirty);
-                  onHasEditLogChange?.(dirty);
-                }
-                return;
-              }
             };
-          
+
             window.addEventListener("keydown", onKey, true);
             return () => window.removeEventListener("keydown", onKey, true);
-          }, [hist, setDataState, onUnsavedChange, makeTab2Signature, onHasEditLogChange]);
-          
+        }, [hist, setDataState, onUnsavedChange, makeTab2Signature, onHasEditLogChange]);
+
 
         // 대분류/중분류 코드값 텍스트 매핑
         const buildMaps = (rows, codeField, textField) => {
@@ -954,13 +954,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         useEffect(() => {
             return () => {
-              if (debounceTimerRef.current) {
-                clearTimeout(debounceTimerRef.current);
-                debounceTimerRef.current = null;
-              }
+                if (debounceTimerRef.current) {
+                    clearTimeout(debounceTimerRef.current);
+                    debounceTimerRef.current = null;
+                }
             };
-          }, []);
-          
+        }, []);
+
         return (
             <Fragment>
                 <div className="meta2">
@@ -995,12 +995,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             rowRender,
                             cellRender,
                             onRowClick,
-                            sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
-                            sort,                                 // controlled sort
-                            sortChange: (e) => { setSort(e.sort); onPrefsChange?.({ sort: e.sort }); },
-                            filterable: true,                                   // 필터 허용
-                            filter,                               // controlled filter
-                            filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter }); },
+                            useClientProcessing: true,                         // 클라 처리
+                            sortable: { mode: "multiple", allowUnsort: true },
+                            filterable: true,
+                            initialSort: sort,
+                            initialFilter: filter,
+                            sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
+                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {

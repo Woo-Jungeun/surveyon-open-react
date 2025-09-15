@@ -94,11 +94,11 @@ const MainList = () => {
                                         selectedField,               //  선택 필드 전달
                                         idGetter,                     // GridData가 만든 getter 그대로
                                         sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
-                                        sort,                                 // controlled sort
-                                        sortChange: (e) => { setSort(e.sort); },
-                                        filterable: true,                                   // 필터 허용
-                                        filter,                               // controlled filter
-                                        filterChange: (e) => { setFilter(e.filter); },
+                                        filterable: true,              // 필터 허용
+                                        sortChange: ({ sort }) => setSort(sort ?? []),
+                                        filterChange: ({ filter }) => setFilter(filter ?? undefined),
+                                        initialSort: sort,
+                                        initialFilter: filter,
                                         onRowClick,
                                     }}
                                 >

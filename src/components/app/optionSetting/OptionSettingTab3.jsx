@@ -4,7 +4,7 @@ import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-import {useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 /**
  * 분석 > 그리드 영역 > rawdata
  *
@@ -80,7 +80,7 @@ const OptionSettingTab3 = (props) => {
             filter={filter}
             onFilterChange={(e) => {
                 setFilter(e);
-                onPrefsChange?.({ filter: e });      
+                onPrefsChange?.({ filter: e });
             }}
 
         />
@@ -104,12 +104,13 @@ const OptionSettingTab3 = (props) => {
                             setSelectedState,
                             selectedField,               //  선택 필드 전달
                             idGetter,                     // GridData가 만든 getter 그대로
-                            sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
-                            sort,                                 // controlled sort
-                            sortChange: (e) => { setSort(e.sort); onPrefsChange?.({ sort: e.sort }); },
-                            filterable: true,                                   // 필터 허용
-                            filter,                               // controlled filter
-                            filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter });},
+                            useClientProcessing: true,                         // 클라 처리
+                            sortable: { mode: "multiple", allowUnsort: true },
+                            filterable: true,
+                            initialSort: sort,                               // 1회 초기값
+                            initialFilter: filter,
+                            sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
+                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {

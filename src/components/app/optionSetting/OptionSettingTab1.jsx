@@ -1262,12 +1262,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
                             selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
                             rowRender,
-                            sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
-                            sort,                                 // controlled sort
-                            sortChange: (e) => { setSort(e.sort); onPrefsChange?.({ sort: e.sort }); },
-                            filterable: true,                                   // 필터 허용
-                            filter,                               // controlled filter
-                            filterChange: (e) => { setFilter(e.filter); onPrefsChange?.({ filter: e.filter }); },
+                            useClientProcessing: true,
+                            sortable: { mode: "multiple", allowUnsort: true },
+                            filterable: true,
+                            initialSort: sort,
+                            initialFilter: filter,
+                            sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
+                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                             cellRender: (td, cellProps) => {
                                 if (!React.isValidElement(td)) return td;
                                 const f = cellProps?.field;

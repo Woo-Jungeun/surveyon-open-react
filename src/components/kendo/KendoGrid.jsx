@@ -20,10 +20,10 @@ import { process } from "@progress/kendo-data-query";
  */
 const KendoGrid = ({ parentProps, children, processData }) => {
     const parentData = parentProps?.data || { data: [], totalSize: 0 };
-    const filter = parentProps?.filter;
-    const sort = parentProps?.sort;
     const sortChange = parentProps?.sortChange;
-    const filterChange = parentProps?.filterChange; 
+    const filterChange = parentProps?.filterChange;
+    const initialSort = parentProps?.initialSort;
+    const initialFilter = parentProps?.initialFilter;
     const page = parentProps?.page;
     const pageChange = parentProps?.pageChange;
     const selectedState = parentProps?.selectedState || {};
@@ -49,8 +49,8 @@ const KendoGrid = ({ parentProps, children, processData }) => {
 
     // Grid 상태 (정렬/필터/페이징)
     const [gridState, setGridState] = useState({
-        sort: [],
-        filter: undefined,
+        sort: initialSort ?? [],
+        filter: initialFilter ?? undefined,
         skip: 0,
         take: rawData.length, // 페이징 미사용시 전체
     });
@@ -131,52 +131,52 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             (col.props?.field ? `col:${col.props.field}` : `col-idx:${idx}`);
         return cloneElement(col, { key: safeKey });
     });
-    
+
     if (parentProps?.multiSelect) {
         // 헤더: 라벨 + 체크박스 (indeterminate 지원)
         const SelectionHeaderCell = () => {
             const ref = useRef(null);
-        
+
             // indeterminate는 DOM property로 설정해야 함 (attribute로 쓰면 경고 발생)
             useEffect(() => {
-            if (ref.current) {
-                ref.current.indeterminate = headerSomeSelected; // 일부만 체크 시 하이픈 상태
-            }
+                if (ref.current) {
+                    ref.current.indeterminate = headerSomeSelected; // 일부만 체크 시 하이픈 상태
+                }
             }, [headerSomeSelected]);
-        
+
             const stop = (e) => e.stopPropagation(); // 헤더 클릭이 정렬/필터로 전파되는 것 방지
-        
+
             return (
-            <div
-                onClick={stop}
-                style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 6,
-                width: "100%",
-                }}
-            >
-                {/* 헤더 라벨(컬럼명) */}
-                <span>{selectionHeaderTitle}</span>
-        
-                {/* 네이티브 체크박스 (경고 없음) */}
-                <div className="k-checkbox-wrap">
-                    <input
-                    ref={ref}
-                    type="checkbox"
-                    className="k-checkbox"   
-                    checked={!!headerSelectionValue}
-                    onChange={(e) => {
-                        onHeaderSelectionChange({
-                        syntheticEvent: { target: { checked: e.target.checked } },
-                        dataItems: viewItems, // ← 현재 화면에 보이는 아이템들만 대상으로
-                        });
+                <div
+                    onClick={stop}
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        gap: 6,
+                        width: "100%",
                     }}
-                    aria-label="Select all rows"
-                    />
+                >
+                    {/* 헤더 라벨(컬럼명) */}
+                    <span>{selectionHeaderTitle}</span>
+
+                    {/* 네이티브 체크박스 (경고 없음) */}
+                    <div className="k-checkbox-wrap">
+                        <input
+                            ref={ref}
+                            type="checkbox"
+                            className="k-checkbox"
+                            checked={!!headerSelectionValue}
+                            onChange={(e) => {
+                                onHeaderSelectionChange({
+                                    syntheticEvent: { target: { checked: e.target.checked } },
+                                    dataItems: viewItems, // ← 현재 화면에 보이는 아이템들만 대상으로
+                                });
+                            }}
+                            aria-label="Select all rows"
+                        />
+                    </div>
                 </div>
-            </div>
             );
         };
 
@@ -205,38 +205,20 @@ const KendoGrid = ({ parentProps, children, processData }) => {
         childCols.splice(insertAt, 0, selectionCol);
     }
 
-    // 외부에서 내려온 sort/filter를 gridState로 동기화 (클라 처리 모드일 때)
-    useEffect(() => {
-        if (!useClientProcessing) return;
-        // 배열/undefined 안정화
-        const next = Array.isArray(sort) ? sort : [];
-        setGridState(s => (s.sort === next ? s : { ...s, sort: next }));
-    }, [useClientProcessing, sort]);
-    
-    useEffect(() => {
-        if (!useClientProcessing) return;
-        setGridState(s => {
-        const next = filter ?? undefined;
-        // 얕은 비교로도 충분 (필요하면 deepEqual 추가)
-        if (s.filter === next) return s;
-        return { ...s, filter: next };
-        });
-    }, [useClientProcessing, filter]);
-
     return (
         <Grid
-            scrollable="scrollable" 
-            style={{ height: "625px" }} 
+            scrollable="scrollable"
+            style={{ height: "625px" }}
             data={processedData}
             // 클라이언트 처리 모드일 때만 내부 gridState 바인딩
             {...(useClientProcessing ? gridState : {})}
             onDataStateChange={useClientProcessing ? (e) => {
                 setGridState(e.dataState);
-              
+
                 // 부모에도 반영 (persistedPrefs 갱신용)
                 sortChange?.({ sort: e.dataState.sort ?? [] });
                 filterChange?.({ filter: e.dataState.filter ?? undefined });
-              } : undefined}
+            } : undefined}
 
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}
