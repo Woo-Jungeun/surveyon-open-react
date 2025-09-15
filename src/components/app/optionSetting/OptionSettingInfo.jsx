@@ -139,9 +139,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             for (let i = 0; i < maxTries; i++) {
                 try {
                     const payload = buildStatusPayload(activeJobRef.current);
-                    if (!payload) {            // 필수 파라미터 없으면 400 방지
-                        finalizeCompletion(hasError);
-                        return;
+                    if (!payload) {
+                        // 아직 job/qid가 안 들어온 타이밍 → 잠깐 대기 후 다시 확인
+                        await sleep(interval);
+                        continue;
                     }
                     const r = await optionAnalysisStatus.mutateAsync(payload);
                     const raw = String(r?.output ?? "").replace(/\s+/g, "");
@@ -244,10 +245,9 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     useEffect(() => {
         return () => {
-            setAnalyzing(false);
             activeJobRef.current = null;
         };
-    }, [setAnalyzing]);
+    }, []); // 언마운트에서만 실행
 
     // 최초 진입 시 현재 분석 상태 조회
     useEffect(() => {
@@ -580,8 +580,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
             if (job) {
                 // 허브 조인 + 로딩 on
                 activeJobRef.current = job;
-                setAnalyzing(true);
-
+                setAnalyzing(true); // 먼저 ON
                 const joined = await joinJob(job);
                 if (!joined) appendLog("[WARN] 실시간 로그 연결 실패(작업은 진행 중)\n");
 
