@@ -478,25 +478,49 @@ div.k-grid-norecords {width: 100% !important;}
   border-top: none;
   border-bottom: 1px solid #012011;
 }
-
-/* 문항통합저장 리프 헤더 숨김(EDIT 2단까지만 보이게) */
-.cmn_grid.multihead th.no-leaf-header {
-    height: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
+/* 부모(서브그룹) 아래줄 제거 → 한 칸처럼 보이게 (문항최종 등) */
+.cmn_grid.multihead .k-grid .k-grid-header .k-table-thead th.sub-no-bottom-border{
+    border-bottom: 0 !important;
   }
-  .cmn_grid.multihead th.no-leaf-header .k-cell-inner { display: none !important; }
-/* 문항통합저장 리프 헤더만 숨김 (EDIT → 문항통합저장까지만 보이게) */
-.cmn_grid.multihead .k-grid .k-grid-header th.no-leaf-header {
-    height: 0 !important;
-    padding: 0 !important;
-    border: 0 !important;
-  }
-  .cmn_grid.multihead .k-grid .k-grid-header th.no-leaf-header .k-cell-inner {
+  
+  /* 문항최종: 자식(leaf) 헤더셀 자체 제거 → 3번째 줄이 생성되지 않음 */
+  .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead th.no-leaf-header{
     display: none !important;
   }
   
-  /* (안전망) 2번째 헤더 줄은 높이 유지 */
-  .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead tr:nth-child(2) {
-    height: auto !important;
+  /* ADMIN/EDIT: 2번째 줄(서브그룹 제목) 자체를 접어 올림 */
+  .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead th.collapse-subgroup-title{
+    padding: 0 !important;
+    height: 0 !important;
+    line-height: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+  /* (경계선이 남는 브라우저 대비) 2행 위치의 보더도 한번 더 제거 */
+  .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead tr:nth-child(2) > th.collapse-subgroup-title{
+    border-bottom: 0 !important;
+  }
+  
+  /* (옵션) 1행 그룹 타이틀 중앙 정렬 */
+  .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead tr:first-child th.k-header .k-cell-inner{
+    display:flex; justify-content:center; align-items:center;
+  }
+  
+  /* 멀티헤더 테이블 고정폭 레이아웃 + 말줄임 */
+  .cmn_grid.multihead .k-grid-header table,
+  .cmn_grid.multihead .k-grid-content table{
+    table-layout: fixed;
+    width: 100%;
+  }
+  .cmn_grid.multihead .k-grid .k-table-th,
+  .cmn_grid.multihead .k-grid .k-table-td{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  /* 헤더 버튼이 폭을 밀지 않도록 */
+  .cmn_grid.multihead .k-grid .k-grid-header th.k-header .k-button.btnS{
+    max-width: 100%;
+    padding: 0 8px;
   }

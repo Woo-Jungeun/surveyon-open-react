@@ -37,6 +37,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
     const onItemChange = parentProps?.onItemChange;
     const onCellClose = parentProps?.onCellClose;
     const editCell = parentProps?.editCell;
+    const height = parentProps?.height;
     //const processedData = parentProps?.data ?? [];
     const columnVirtualization = parentProps?.columnVirtualization ?? false;
     const cellRender = parentProps?.cellRender;
@@ -121,47 +122,33 @@ const KendoGrid = ({ parentProps, children, processData }) => {
     }, [processedData, selectedState, idGetter]);
 
     //헤더 인디터미넌트 계산(일부만 체크)
-    const headerSomeSelected =
-        (viewItems.some((item) => selectedState[idGetter(item)]) && !headerSelectionValue);
+    const headerSomeSelected = (viewItems.some((item) => selectedState[idGetter(item)]) && !headerSelectionValue);
 
-    // 체크박스 선택 컬럼을 원하는 위치에 삽입
-    // => 모든 컬럼에 안정적인 key를 강제로 부여
-    const childCols = Children.toArray(children).map((col, idx) => {
-        const safeKey =
-            col.key ??
-            (col.props?.field ? `col:${col.props.field}` : `col-idx:${idx}`);
-        return cloneElement(col, { key: safeKey });
-    });
+    // 트리를 보존하면서 재귀적으로 key만 부여
+    const addKeysRecursively = (nodes) =>
+        Children.map(nodes, (node, idx) => {
+            if (!node || typeof node !== 'object') return node;
+            const safeKey =
+                node.key ?? (node.props?.field ? `col:${node.props.field}` : `col-idx:${idx}`);
+            return cloneElement(
+                node,
+                { key: safeKey },
+                node.props?.children ? addKeysRecursively(node.props.children) : undefined
+            );
+        });
 
+    let childColsTree = addKeysRecursively(children);
+    // 멀티선택이면: 헤더셀 정의 -> selectionCol 생성 -> 루트 레벨에 삽입
     if (parentProps?.multiSelect) {
-        // 헤더: 라벨 + 체크박스 (indeterminate 지원)
         const SelectionHeaderCell = () => {
             const ref = useRef(null);
-
-            // indeterminate는 DOM property로 설정해야 함 (attribute로 쓰면 경고 발생)
             useEffect(() => {
-                if (ref.current) {
-                    ref.current.indeterminate = headerSomeSelected; // 일부만 체크 시 하이픈 상태
-                }
+                if (ref.current) ref.current.indeterminate = headerSomeSelected;
             }, [headerSomeSelected]);
-
-            const stop = (e) => e.stopPropagation(); // 헤더 클릭이 정렬/필터로 전파되는 것 방지
-
+            const stop = (e) => e.stopPropagation();
             return (
-                <div
-                    onClick={stop}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 6,
-                        width: "100%",
-                    }}
-                >
-                    {/* 헤더 라벨(컬럼명) */}
+                <div onClick={stop} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%' }}>
                     <span>{selectionHeaderTitle}</span>
-
-                    {/* 네이티브 체크박스 (경고 없음) */}
                     <div className="k-checkbox-wrap">
                         <input
                             ref={ref}
@@ -171,7 +158,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
                             onChange={(e) => {
                                 onHeaderSelectionChange({
                                     syntheticEvent: { target: { checked: e.target.checked } },
-                                    dataItems: viewItems, // ← 현재 화면에 보이는 아이템들만 대상으로
+                                    dataItems: viewItems,
                                 });
                             }}
                             aria-label="Select all rows"
@@ -183,9 +170,9 @@ const KendoGrid = ({ parentProps, children, processData }) => {
 
         const selectionCol = (
             <Column
-                key="__selection_col"   // 고정 고유키
+                key="__selection_col"
                 field={selectedField}
-                width="120px"
+                width={parentProps?.selectionColumnWidth ?? "120px"}
                 headerCell={SelectionHeaderCell}
                 sortable={false}
                 filterable={false}
@@ -193,23 +180,27 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             />
         );
 
+        // 루트 레벨에만 삽입
+        const roots = Children.toArray(childColsTree);
         const afterField = parentProps?.selectionColumnAfterField;
         const atIndex = parentProps?.selectionColumnIndex;
 
-        let insertAt = 0; // 기본: 맨 왼쪽
-        if (typeof atIndex === "number") {
-            insertAt = Math.max(0, Math.min(childCols.length, atIndex));
+        let insertAt = 0;
+        if (typeof atIndex === 'number') {
+            insertAt = Math.max(0, Math.min(roots.length, atIndex));
         } else if (afterField) {
-            const idx = childCols.findIndex((c) => c?.props?.field === afterField);
-            insertAt = idx >= 0 ? idx + 1 : 0;
+            const i = roots.findIndex((c) => c?.props?.field === afterField);
+            insertAt = i >= 0 ? i + 1 : 0;
         }
-        childCols.splice(insertAt, 0, selectionCol);
+
+        roots.splice(insertAt, 0, selectionCol);
+        childColsTree = roots;
     }
 
     return (
         <Grid
             scrollable="scrollable"
-            style={{ height: "625px" }}
+            style={{ height: height || "625px" }}
             data={processedData}
             // 클라이언트 처리 모드일 때만 내부 gridState 바인딩
             {...(useClientProcessing ? gridState : {})}
@@ -263,7 +254,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             <GridNoRecords>
                 조회된 데이터가 없습니다.
             </GridNoRecords>
-            {childCols}
+            {childColsTree}
         </Grid>
     );
 };
