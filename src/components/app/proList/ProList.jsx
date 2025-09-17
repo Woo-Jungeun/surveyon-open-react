@@ -693,7 +693,7 @@ const ProList = () => {
                             <div id="grid_01" className="cmn_grid multihead">
                                 <KendoGrid
                                     parentProps={{
-                                        height: "800px",
+                                        height: "750px",
                                         data: dataState?.data,       // props에서 직접 전달
                                         dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                                         selectedState,
