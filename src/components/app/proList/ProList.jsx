@@ -8,6 +8,7 @@ import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/components/app/proList/ProListPopup";    // 필터문항설정 팝업
+import "@/components/app/proList/ProList.css";
 
 /**
  * 문항 목록
@@ -96,28 +97,107 @@ const ProList = () => {
 
     //grid rendering 
     const GridRenderer = (props) => {
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
+        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch } = props;
         const groupOrder = ["VIEW", "ADMIN", "EDIT"]; // 상단 그룹 순서
 
-        // 행 잠금상태: id -> boolean(잠금여부)
-        const [locksById, setLocksById] = useState(new Map());
+        const [locksById, setLocksById] = useState(new Map());          // 행 잠금상태
+        const [excludedById, setExcludedById] = useState(new Map());    // 분석/제외 토글 상태
 
+        // ---------------- analysis helpers ----------------
+        // useYN 기반으로 제외 여부 파싱
+        const deriveExcluded = (row) => {
+            const u = String(row?.useYN ?? "").trim();
+            if (u === "제외") return true;       // 제외
+            return false;                        // '분석', '머지', 공백 등은 포함
+        };
+
+        // 초기화: API 데이터 들어올 때 한 번 세팅
+        useEffect(() => {
+            const m = new Map();
+            (dataState?.data ?? []).forEach((row) => {
+                m.set(row?.id, deriveExcluded(row));
+            });
+            setExcludedById(m);
+        }, [dataState?.data]);
+
+        const isExcluded = (row) =>
+            excludedById.has(row?.id) ? !!excludedById.get(row?.id) : deriveExcluded(row);
+
+        const setExcluded = (row, excluded) => {
+            const id = row?.id;
+            setExcludedById((m) => {
+                const next = new Map(m);
+                next.set(id, excluded);
+                return next;
+            });
+        };
+
+        // API 호출 (row / all)
+        const sendAnalysis = async ({ scope, excluded, id }) => {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: scope === "row" ? "analysis" : "allanalysis",
+                columnname: "useyn",
+                val: excluded ? "제외" : "분석",
+                ...(scope === "row" ? { qid: id } : {}),
+            };
+            const res = await editMutation.mutateAsync(payload);
+            if (res?.success === "777") {
+                handleSearch?.();   // 재조회
+            }
+        };
+
+        // 행 토글
+        const toggleExcluded = async (row) => {
+            const prev = isExcluded(row);
+            setExcluded(row, !prev); // 낙관적
+            try {
+                await sendAnalysis({ scope: "row", excluded: !prev, id: row?.id });
+            } catch (e) {
+                setExcluded(row, prev); // 실패 롤백
+                console.error(e);
+            }
+        };
+
+        // 머지 여부
+        const isMergeRow = (row) => String(row?.useYN ?? '').trim() === '머지';
+
+        // 전체 토글
+        const bulkSetExcluded = async (excluded) => {
+            const rows = dataState?.data ?? [];
+            const prev = new Map(excludedById);
+
+            // 머지 행은 기존 상태 유지
+            const next = new Map(
+                rows.map((r) => [r?.id, isMergeRow(r) ? isExcluded(r) : excluded])
+            );
+            setExcludedById(next);
+
+            try {
+                await sendAnalysis({ scope: 'all', excluded });
+            } catch (e) {
+                setExcludedById(prev);
+                console.error(e);
+            }
+        };
+
+        // ---------------- lock helpers ----------------
         // 행별 잠금상태 초기화: API의 project_lock 값에 맞춤
         useEffect(() => {
             const map = new Map();
             (dataState?.data ?? []).forEach((row) => {
-                // "수정"이면 unlocked(false), "수정불가"면 locked(true)
                 const locked = row?.project_lock === "수정불가";
-                map.set(idGetter(row), locked);
+                map.set(row?.id, locked);
             });
             setLocksById(map);
         }, [dataState?.data, idGetter]);
 
-        const isLocked = (row) => !!locksById.get(idGetter(row));
+        const isLocked = (row) => !!locksById.get(row?.id);
         const setRowLocked = (row, locked) =>
             setLocksById((m) => {
                 const next = new Map(m);
-                next.set(idGetter(row), locked);
+                next.set(row?.id, locked);
                 return next;
             });
 
@@ -127,11 +207,14 @@ const ProList = () => {
                 user: auth?.user?.userId || "",
                 projectnum,
                 gb: gbVal,
-                columname: "project_lock",
+                columnname: "project_lock",
                 val: lockVal,
                 ...(gbVal === "rowEdit" ? { qid: id } : {}),
             };
-            await editMutation.mutateAsync(payload);
+            const res = await editMutation.mutateAsync(payload);
+            if (res?.success === "777") {
+                handleSearch?.();   // 재조회
+            }
         };
 
         // 수정 잠금 api 구분
@@ -141,8 +224,8 @@ const ProList = () => {
             unlockOne: (id) => sendLock("rowEdit", "수정", id),
 
             // 전체 잠금/해제
-            lockAll: (_ids) => sendLock("allEdit", "수정불가"),
-            unlockAll: (_ids) => sendLock("allEdit", "수정"),
+            lockAll: () => sendLock("allEdit", "수정불가"),
+            unlockAll: () => sendLock("allEdit", "수정"),
         };
 
         const toggleRowLock = async (row) => {
@@ -172,8 +255,8 @@ const ProList = () => {
         // ---------------- header/action helpers ----------------
         // 개별 컬럼 렌더 공통 함수
         const actions = {
-            onHeaderUseYN: () => console.log('헤더: 분석 버튼 클릭'),
-            onHeaderExclude: () => console.log('헤더: 제외 버튼 클릭'),
+            onHeaderUseYN: () => bulkSetExcluded(false), // 전체 분석
+            onHeaderExclude: () => bulkSetExcluded(true), // 전체 제외
             onHeaderMergeSave: () => console.log('헤더: 문항통합저장 실행'),
             onHeaderEditLockAll: () => bulkSetLock(true),
             onHeaderEditUnlockAll: () => bulkSetLock(false),
@@ -198,7 +281,7 @@ const ProList = () => {
             </div>
         );
 
-        // 라벨 + 버튼그룹(세로 스택)  ← 새로 추가
+        // 라벨 + 버튼그룹(세로 스택)
         const HeaderLabeledBtnGroup = ({ label, buttons }) => (
             <div
                 onClick={(e) => e.stopPropagation()}
@@ -209,12 +292,18 @@ const ProList = () => {
             </div>
         );
 
-        // 컬럼에서 wrap이면 멀티라인 셀 사용
+        // 컬럼에서 wrap이면 멀티라인 셀 사용 => 문항 최종 
         const WrapCell = (field) => (cellProps) => (
             <td className="cell-wrap">{cellProps.dataItem?.[field]}</td>
         );
 
         const renderLeafColumn = (c) => {
+            // 분석 상태가 머지일 경우 숨길 컬럼 
+            const BlankWhenMergeCell = (field) => (cellProps) => {
+                const row = cellProps.dataItem;
+                return <td>{isMergeRow(row) ? '' : row?.[field]}</td>;
+            };
+
             // ADMIN: 분석(버튼 헤더)
             if (c.field === 'useYN') {
                 return (
@@ -231,6 +320,29 @@ const ProList = () => {
                                 분석
                             </HeaderBtn>
                         )}
+                        cell={(cellProps) => {
+                            const row = cellProps.dataItem;
+                            const excluded = isExcluded(row);
+                          
+                            // 포함 상태일 때 표시 텍스트: '머지'면 '머지', 아니면 '분석'
+                            const includeLabel = String(row?.useYN ?? '').trim() === '머지' ? '머지' : '분석';
+                          
+                            // 최종 라벨/스타일
+                            const state = excluded ? 'exclude' : (includeLabel === '머지' ? 'merge' : 'analysis');
+                            const label = excluded ? '제외' : includeLabel;
+                          
+                            // 디자인 칩 클래스 (색상 매칭)
+                            const cls = `chip chip--${state}`;
+                          
+                            return (
+                              <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                                <Button className={cls} onClick={() => toggleExcluded(row)}>
+                                <span className="chip-check" aria-hidden>✓</span>
+                                <span className="chip-label">{label}</span>
+                                </Button>
+                              </td>
+                            );
+                          }}
                     />
                 );
             }
@@ -251,17 +363,22 @@ const ProList = () => {
                             </HeaderBtn>
                         )}
                         cell={(cellProps) => {
-                            const { qnum } = cellProps.dataItem;
+                            const row = cellProps.dataItem;
+                            const { qnum } = row;
+                            const excluded = isExcluded(row); // ← 기존에 만든 함수 사용
                             return (
-                                <td style={{ textAlign: 'center' }}>
-                                    <Button
-                                        className="btnM"
-                                        themeColor="primary"
-                                        onClick={(e) => { e.stopPropagation(); goOpenSetting(qnum); }}
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                    >
-                                        분석
-                                    </Button>
+                                <td style={{ textAlign: 'center' }}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => e.stopPropagation()}>
+                                    {!excluded && (
+                                        <Button
+                                            className="btnM"
+                                            themeColor="primary"
+                                            onClick={() => goOpenSetting(qnum)}
+                                        >
+                                            분석
+                                        </Button>
+                                    )}
                                 </td>
                             );
                         }}
@@ -348,6 +465,50 @@ const ProList = () => {
                         headerCell={() => <></>}       // 헤더 콘텐츠 자체 미렌더
                         headerClassName="no-leaf-header"
                         cell={c.wrap ? WrapCell(c.field) : undefined}   // wrap이면 멀티라인 셀 사용
+                    />
+                );
+            }
+            if (c.field === 'status_cnt_duplicated') {
+                return (
+                    <Column
+                        key={c.field}
+                        field={c.field}
+                        title={c.title}
+                        columnMenu={columnMenu}
+                        cell={BlankWhenMergeCell('status_cnt_duplicated')}
+                    />
+                );
+            }
+            if (c.field === 'status_cnt_fin') {
+                return (
+                    <Column
+                        key={c.field}
+                        field={c.field}
+                        title={c.title}
+                        columnMenu={columnMenu}
+                        cell={BlankWhenMergeCell('status_cnt_fin')}
+                    />
+                );
+            }
+            if (c.field === 'status_text') {
+                return (
+                    <Column
+                        key={c.field}
+                        field={c.field}
+                        title={c.title}
+                        columnMenu={columnMenu}
+                        cell={BlankWhenMergeCell('status_text')}
+                    />
+                );
+            }
+            if (c.field === 'tokens_text') {
+                return (
+                    <Column
+                        key={c.field}
+                        field={c.field}
+                        title={c.title}
+                        columnMenu={columnMenu}
+                        cell={BlankWhenMergeCell('tokens_text')}
                     />
                 );
             }
