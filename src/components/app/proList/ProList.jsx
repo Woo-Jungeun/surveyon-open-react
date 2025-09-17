@@ -129,7 +129,7 @@ const ProList = () => {
                 gb: gbVal,
                 columname: "project_lock",
                 val: lockVal,
-                ...(scope === "row" ? { qid: id } : {}),
+                ...(gbVal === "rowEdit" ? { qid: id } : {}),
             };
             await editMutation.mutateAsync(payload);
         };
