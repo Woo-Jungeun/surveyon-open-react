@@ -24,7 +24,16 @@ const ProList = () => {
     const SELECTED_FIELD = "selected";
     const MENU_TITLE = "문항 목록";
     const { state } = useLocation();
-    const projectnum = state?.projectnum;  // 프로젝트 번호 
+    const projectnumFromState = state?.projectnum;
+    const [projectnum, setProjectnum] = useState(() =>
+        projectnumFromState ?? sessionStorage.getItem("projectnum") ?? ""   //프로젝트 번호 없으면 세션에서 가져옴
+    );
+    useEffect(() => {
+        if (projectnumFromState) {
+            setProjectnum(projectnumFromState);
+            sessionStorage.setItem("projectnum", projectnumFromState);
+        }
+    }, [projectnumFromState]);
 
     // 정렬/필터를 controlled
     const [sort, setSort] = useState([]);
@@ -71,7 +80,7 @@ const ProList = () => {
 
     // 행 클릭 → /open-setting 로 이동
     const goOpenSetting = useCallback(
-        (qnum) => navigate('/open-setting', { state: { projectnum: projectnum, qnum: qnum } }),
+        (qnum) => navigate('/open-setting', { state: { projectnum, qnum } }),
         [navigate]
     );
 
@@ -801,7 +810,7 @@ const ProList = () => {
             searchMutation={proListData}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
-                projectnum: projectnum,
+                projectnum: projectnum || "",
                 gb: "select"
             }}
             renderItem={(props) => <GridRenderer {...props} />}

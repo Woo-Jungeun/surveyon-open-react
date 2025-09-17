@@ -19,7 +19,16 @@ import { modalContext } from "@/components/common/Modal.jsx";
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
   const { state } = useLocation();
-  const { projectnum, qnum } = state;
+  const projectnumFromState = state?.projectnum ?? sessionStorage.getItem("projectnum") ?? "";
+  const qnum = state?.qnum; 
+  const projectnum = projectnumFromState;
+  
+  useEffect(() => {
+    if (projectnumFromState) {
+      sessionStorage.setItem("projectnum", projectnumFromState); //진입 시 projectnum을 세션에 보관
+    }
+  }, [projectnumFromState]);
+
   const TITLE_LIST = ["분석 대메뉴", "분석 메뉴", ""];
   const [tabDivision, setTabDivision] = useState("1");
   const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
