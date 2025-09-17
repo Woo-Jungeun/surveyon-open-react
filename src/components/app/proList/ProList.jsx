@@ -71,7 +71,7 @@ const ProList = () => {
 
     // 행 클릭 → /open-setting 로 이동
     const goOpenSetting = useCallback(
-        (qnum) => navigate('/open-setting', { state: { qnum } }),
+        (qnum) => navigate('/open-setting', { state: { projectnum: projectnum, qnum: qnum } }),
         [navigate]
     );
 

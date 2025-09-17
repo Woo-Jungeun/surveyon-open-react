@@ -1,5 +1,6 @@
 import React, { Fragment, useRef, useState, useCallback, useContext, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
+import { useNavigate, useLocation } from "react-router-dom";
 import OptionSettingInfo from "@/components/app/optionSetting/OptionSettingInfo";
 import OptionSettingTab1 from "@/components/app/optionSetting/OptionSettingTab1";
 import OptionSettingTab2 from "@/components/app/optionSetting/OptionSettingTab2";
@@ -7,6 +8,8 @@ import OptionSettingTab3 from "@/components/app/optionSetting/OptionSettingTab3"
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { modalContext } from "@/components/common/Modal.jsx";
+
+
 /**
  * 분석 > Body
  *
@@ -15,7 +18,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
  */
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
-
+  const { state } = useLocation();
+  const { projectnum, qnum } = state;
   const TITLE_LIST = ["분석 대메뉴", "분석 메뉴", ""];
   const [tabDivision, setTabDivision] = useState("1");
   const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
@@ -228,6 +232,8 @@ const OptionSettingBody = () => {
         <div className="subCont subContL">
           <OptionSettingInfo
             isOpen={isLeftOpen}
+            projectnum={projectnum}
+            qnum={qnum}
             onToggle={() => setIsLeftOpen(v => !v)}
             showEmptyEtcBtn={analysisCount !== 0}
             onNavigateTab={(nextTab) => {                        // 좌측 패널에서 탭 이동 요청 처리 같은 탭이면 reload
@@ -279,6 +285,8 @@ const OptionSettingBody = () => {
           {tabDivision === "1" ? (
             <OptionSettingTab1
               ref={tab1Ref}
+              projectnum={projectnum}
+              qnum={qnum}
               lvCode={lvCodeDraft.value}
               onInitLvCode={handleInitLvCode}
               onSaved={() => {
@@ -294,6 +302,8 @@ const OptionSettingBody = () => {
           ) : tabDivision === "2" ? (
             <OptionSettingTab2
               ref={tab2Ref}
+              projectnum={projectnum}
+              qnum={qnum}
               lvCode={lvCodeDraft.value}
               onSaved={() => {
                 // 저장 성공 → 더티 해제 + 단계 커밋
@@ -308,10 +318,12 @@ const OptionSettingBody = () => {
               onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
             />
           ) : <OptionSettingTab3
-                lvCode={lvCodeDraft.value}
-                persistedPrefs={gridPrefs["3"]}
-                onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
-              />
+              lvCode={lvCodeDraft.value}
+              projectnum={projectnum}
+              qnum={qnum}
+              persistedPrefs={gridPrefs["3"]}
+              onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
+            />
           }
         </div>
       </article>

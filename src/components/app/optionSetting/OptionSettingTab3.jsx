@@ -14,7 +14,7 @@ import { useSelector } from "react-redux";
 const OptionSettingTab3 = (props) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { persistedPrefs, onPrefsChange } = props;
+    const { persistedPrefs, onPrefsChange, projectnum, qnum } = props;
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
     const MENU_TITLE = "rawdata";
 
@@ -139,8 +139,8 @@ const OptionSettingTab3 = (props) => {
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
-                projectnum: "q250089uk",
-                qnum: "Z1",
+                projectnum: projectnum,
+                qnum: qnum,
                 gb: "list",
             }}
             renderItem={(props) => <GridRenderer {...props} />}

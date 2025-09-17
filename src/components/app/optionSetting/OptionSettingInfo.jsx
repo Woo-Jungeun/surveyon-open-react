@@ -65,7 +65,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loading = useContext(loadingSpinnerContext);
@@ -118,7 +118,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // status 호출용
     const buildStatusPayload = (job) => {
-        const projectnum = String(data?.projectnum || "q250089uk"); // 기본값 보강
         const qid = String(data?.qid || "");
         // 필수값/잡키 없으면 status 치지 않음
         if (!projectnum || !qid || !job) return null;
@@ -203,8 +202,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // 최초 진입 시 현재 분석 상태 조회
     const checkInitialStatus = useCallback(async () => {
-
-        const projectnum = String(data?.projectnum ?? "q250089uk");
         const qid = String(data?.qid || "");
         if (!projectnum || !qid) return; // 데이터 준비 전이면 스킵
 
@@ -245,7 +242,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         } catch {
             appendLog("[ERR] 상태 조회 실패\n");
         }
-    }, [data?.projectnum, data?.qid, optionStatus, appendLog, clearLog, joinJob]);
+    }, [projectnum, data?.qid, optionStatus, appendLog, clearLog, joinJob]);
 
     useEffect(() => {
         return () => {
@@ -255,16 +252,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // 최초 진입 시 현재 분석 상태 조회
     useEffect(() => {
-        const proj = data?.projectnum || "q250089uk";
         const qid = data?.qid;
-        if (!proj || !qid) return;     // 준비 안 됐으면 대기
+        if (!projectnum || !qid) return;     // 준비 안 됐으면 대기
 
         if (initStatusCheckedRef.current) return;
-        //   if (data?.projectnum && data?.qid) {   //todo 나중에 주석 풀기
+        //   if (projectnum && data?.qid) {   //todo 나중에 주석 풀기
         initStatusCheckedRef.current = true;
      //todo 임시주석   checkInitialStatus();
         //   }
-    }, [data?.projectnum, data?.qid]);
+    }, [projectnum, data?.qid]);
 
     // 배열 -> 옵션으로 변환
     const toOptions = (arr) =>
@@ -376,9 +372,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // 조회/재조회 공용
     const searchInfo = useCallback(async (over = {}) => {
-        const projectnum = String(over.projectnum ?? data?.projectnum ?? "q250089uk");
-        const qnum = String(over.qnum ?? data?.qnum ?? "A2-2");
-
         const res = await optionEditData.mutateAsync({
             params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "info" },
         });
@@ -386,7 +379,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         const d = res?.resultjson?.[0] || {};
         applySearchResult(d);
         return d;
-    }, [optionEditData, data?.projectnum, data?.qnum]);
+    }, [optionEditData, projectnum, qnum]);
 
     useEffect(() => {
         searchInfo();   // 최초 조회
@@ -463,9 +456,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // payload 생성
     const buildInfoPayload = (type) => {
-        const projectnum = String(data?.projectnum || "q250089uk");
-        const qnum = String(data?.qnum || "A2-2");
-
         // type → ev 매핑
         const typeToEv = {
             translateResponse: "1",
@@ -506,7 +496,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
 
     // 버튼 별 api payload 생성 
     const buildAnalysisPayload = (type) => {
-        const projectnum = String(data?.projectnum || "q250089uk");
         const base = {
             token: "",
             user: auth?.user?.userId || "",
@@ -542,7 +531,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab })
         /*유효성 체크 */
         if (saving) return false;
         completedOnceRef.current = false;  // 새 작업 시작 시 리셋
-        const projectnum = String(data?.projectnum || "q250089uk");
         if (!data?.qid || !projectnum) {
             modal.showAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.", MODAL_SCOPE);
             return false;

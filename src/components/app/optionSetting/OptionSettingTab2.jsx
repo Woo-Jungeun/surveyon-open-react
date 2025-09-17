@@ -17,7 +17,7 @@ import { useSelector } from "react-redux";
 const OptionSettingTab2 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange } = props;
+    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "no"];
     const MENU_TITLE = "보기 데이터";
@@ -924,8 +924,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
             return {
                 user: auth?.user?.userId || "",
-                projectnum: "q250089uk",
-                qnum: "Z1",
+                projectnum: projectnum,
+                qnum: qnum,
                 gb: "lb",
                 lvcode: String(lvCode ?? ""),
                 data: cleaned,
@@ -1094,8 +1094,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
-                projectnum: "q250089uk",
-                qnum: "Z1",
+                projectnum: projectnum,
+                qnum: qnum,
                 gb: "lb",
             }}
             renderItem={(props) => (

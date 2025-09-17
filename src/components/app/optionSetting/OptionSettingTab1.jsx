@@ -20,7 +20,7 @@ import { useSelector } from "react-redux";
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange } = props;
+    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
@@ -142,8 +142,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         optionEditData.mutateAsync({
             params: {
                 user: auth?.user?.userId || "",
-                projectnum: "q250089uk",
-                qnum: "Z1",
+                projectnum: projectnum,
+                qnum: qnum,
                 gb: "lb",
             }
         }).then((res) => {
@@ -986,9 +986,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         const buildSavePayload = (rows, opts, { getKey, selectedState = {} }) => {
             const {
-                user = "",               // 예: "jewoo"
-                projectnum = "",         // 예: "q250089uk"
-                qnum = "",               // 예: "A2-2"
+                user = "",               
+                projectnum = "",         
+                qnum = "",            
                 gb = "in",               // 호출 구분자
             } = opts || {};
 
@@ -1036,8 +1036,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
                 user: auth?.user?.userId || "",
-                projectnum: "q250089uk",
-                qnum: "Z1",
+                projectnum: projectnum,
+                qnum: qnum,
                 gb: "in",
             },
                 { getKey, selectedState }
@@ -1580,8 +1580,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
-                projectnum: "q250089uk",
-                qnum: "Z1",
+                projectnum: projectnum,
+                qnum: qnum,
                 gb: "in",
             }}
             renderItem={(props) =>
