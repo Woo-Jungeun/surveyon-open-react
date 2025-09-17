@@ -524,3 +524,15 @@ div.k-grid-norecords {width: 100% !important;}
     max-width: 100%;
     padding: 0 8px;
   }
+  /* 문항최종(멀티라인) 셀만 줄바꿈/자동높이로 */
+.cmn_grid.multihead .k-grid .cell-wrap{
+    white-space: pre-wrap !important;  /* 개행 보존 + 줄바꿈 */
+    word-break: break-word;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    height: auto !important;
+    line-height: 1.4;
+    padding-top: 8px;                   /* 보기 좋게 약간의 상하 패딩 */
+    padding-bottom: 8px;
+  }
+  

@@ -23,13 +23,13 @@ const ProList = () => {
     const MENU_TITLE = "문항 목록";
     const { state } = useLocation();
     const projectnum = state?.projectnum;  // 프로젝트 번호 
-    // 정렬/필터를 controlled로
+
+    // 정렬/필터를 controlled
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
-    // 필터문항설정 버튼 팝업 show 
     const [popupShow, setPopupShow] = useState(false);        // 필터문항설정 팝업 popupShow
 
-    const { proListData } = ProListApi();
+    const { proListData, editMutation } = ProListApi();
 
     // 서브그룹으로 묶으면서 리프 헤더를 숨기는 헬퍼
     const withSubgroup = (sub, leafOrder = 0) => (col) => ({
@@ -46,8 +46,8 @@ const ProList = () => {
         { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "150px" },
 
         // 문항최종(이미 묶음)
-        withSubgroup("문항최종", 1)({ field: "qnum_text", title: "문항최종번호", group: "VIEW", show: true, allowHide: false, order: 4, width: "150px" }),
-        withSubgroup("문항최종", 2)({ field: "question_fin", title: "문항최종", group: "VIEW", show: true, allowHide: false, order: 4, width: "300px" }),
+        withSubgroup("문항최종", 1)({ field: "qnum_text", title: "문항최종번호", group: "VIEW", show: true, allowHide: false, order: 4 }),
+        withSubgroup("문항최종", 2)({ field: "question_fin", title: "문항최종", group: "VIEW", show: true, allowHide: false, order: 4, width: "350px", wrap: true }),
 
         { field: "status_cnt", title: "응답자수", group: "VIEW", show: true, allowHide: false, order: 5 },
         { field: "status_cnt_duplicated", title: "분석대상수", group: "VIEW", show: true, allowHide: false, order: 6 },
@@ -57,12 +57,14 @@ const ProList = () => {
         { field: "tokens_text", title: "예상비용", group: "VIEW", show: true, allowHide: false, order: 10 },
 
         // ----- ADMIN → "분석/제외"로 합치기 -----
-        { field: "useYN", title: "분석", group: "ADMIN", show: true, order: 1, width: "72px" },
-        { field: "exclude", title: "제외", group: "ADMIN", show: true, order: 2, width: "72px" },
+        { field: "useYN", title: "분석", group: "ADMIN", show: true, order: 1 },
+        { field: "exclude", title: "제외", group: "ADMIN", show: true, order: 2 },
 
         // ----- EDIT  → "문항통합"으로 합치기 -----
-        { field: "merge_qnum", title: "문항통합저장", group: "EDIT", show: true, order: 1, width: "160px" },
-        { field: "project_lock", title: "수정", group: "EDIT", show: true, order: 2, width: "120px" },
+        withSubgroup("문항통합저장", 1)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
+        withSubgroup("문항통합저장", 2)({ field: "merge_qnum_check", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
+
+        { field: "project_lock", title: "수정", group: "EDIT", show: true, order: 2 },
     ]);
 
     // 행 클릭 → /open-setting 로 이동
@@ -97,16 +99,17 @@ const ProList = () => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
         const groupOrder = ["VIEW", "ADMIN", "EDIT"]; // 상단 그룹 순서
 
-        // -------------------------------
-        // 🔐 잠금 상태: 행별 lock map (key = dataItemKey)
-        // -------------------------------
         // 행 잠금상태: id -> boolean(잠금여부)
         const [locksById, setLocksById] = useState(new Map());
 
-        // 데이터 로드 시 모두 잠금으로 초기화 (원하면 서버 값으로 세팅)
+        // 행별 잠금상태 초기화: API의 project_lock 값에 맞춤
         useEffect(() => {
             const map = new Map();
-            (dataState?.data ?? []).forEach((row) => map.set(idGetter(row), true));
+            (dataState?.data ?? []).forEach((row) => {
+                // "수정"이면 unlocked(false), "수정불가"면 locked(true)
+                const locked = row?.project_lock === "수정불가";
+                map.set(idGetter(row), locked);
+            });
             setLocksById(map);
         }, [dataState?.data, idGetter]);
 
@@ -118,28 +121,36 @@ const ProList = () => {
                 return next;
             });
 
-        // === API 자리 ===
-        const api = {
-            lockOne: async (id) => {
-                // TODO: await fetch('/api/lock', { method:'POST', body: JSON.stringify({ id, locked:true }) })
-            },
-            unlockOne: async (id) => {
-                // TODO: await fetch('/api/lock', { method:'POST', body: JSON.stringify({ id, locked:false }) })
-            },
-            lockAll: async (ids) => {
-                // TODO: await fetch('/api/lock/bulk', { method:'POST', body: JSON.stringify({ ids, locked:true }) })
-            },
-            unlockAll: async (ids) => {
-                // TODO: await fetch('/api/lock/bulk', { method:'POST', body: JSON.stringify({ ids, locked:false }) })
-            },
+        // 수정 잠금 api 연결     
+        const sendLock = async (gbVal, lockVal, id) => {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: gbVal,
+                columname: "project_lock",
+                val: lockVal,
+                ...(scope === "row" ? { qid: id } : {}),
+            };
+            await editMutation.mutateAsync(payload);
+        };
+
+        // 수정 잠금 api 구분
+        const lockApi = {
+            // 행 하나 잠금/해제
+            lockOne: (id) => sendLock("rowEdit", "수정불가", id),
+            unlockOne: (id) => sendLock("rowEdit", "수정", id),
+
+            // 전체 잠금/해제
+            lockAll: (_ids) => sendLock("allEdit", "수정불가"),
+            unlockAll: (_ids) => sendLock("allEdit", "수정"),
         };
 
         const toggleRowLock = async (row) => {
-            const id = idGetter(row);
+            const id = row?.id;
             const prev = isLocked(row);
-            setRowLocked(row, !prev);               // 낙관적 업데이트
+            setRowLocked(row, !prev);
             try {
-                await (prev ? api.unlockOne(id) : api.lockOne(id));
+                await (prev ? lockApi.unlockOne(id) : lockApi.lockOne(id));
             } catch (e) {
                 setRowLocked(row, prev);              // 실패 시 롤백
                 console.error(e);
@@ -147,26 +158,23 @@ const ProList = () => {
         };
 
         const bulkSetLock = async (locked) => {
-            const ids = (dataState?.data ?? []).map((r) => idGetter(r));
+            const ids = (dataState?.data ?? []).map((r) => r.id);
             const prev = new Map(locksById);
-            // 낙관적 업데이트
             setLocksById(new Map(ids.map((id) => [id, locked])));
             try {
-                await (locked ? api.lockAll(ids) : api.unlockAll(ids));
+                await (locked ? lockApi.lockAll() : lockApi.unlockAll());
             } catch (e) {
                 setLocksById(prev);                   // 실패 시 롤백
                 console.error(e);
             }
         };
 
-
         // ---------------- header/action helpers ----------------
         // 개별 컬럼 렌더 공통 함수
         const actions = {
             onHeaderUseYN: () => console.log('헤더: 분석 버튼 클릭'),
-            onHeaderExclude: (e) => console.log('헤더: 제외 버튼 클릭'),
-            onHeaderMergeChk: () => console.log('헤더: 문항통합저장 클릭'),
-            // 수정 헤더: X = 전체 잠금, O = 전체 해제
+            onHeaderExclude: () => console.log('헤더: 제외 버튼 클릭'),
+            onHeaderMergeSave: () => console.log('헤더: 문항통합저장 실행'),
             onHeaderEditLockAll: () => bulkSetLock(true),
             onHeaderEditUnlockAll: () => bulkSetLock(false),
         };
@@ -199,6 +207,11 @@ const ProList = () => {
                 <span style={{ fontWeight: 500 }}>{label}</span>
                 <HeaderBtnGroup buttons={buttons} />
             </div>
+        );
+
+        // 컬럼에서 wrap이면 멀티라인 셀 사용
+        const WrapCell = (field) => (cellProps) => (
+            <td className="cell-wrap">{cellProps.dataItem?.[field]}</td>
         );
 
         const renderLeafColumn = (c) => {
@@ -255,25 +268,6 @@ const ProList = () => {
                     />
                 );
             }
-            // EDIT: 문항통합저장(버튼 헤더)
-            if (c.field === 'merge_qnum') {
-                return (
-                    <Column
-                        key={c.field}
-                        field={c.field}
-                        title={c.title}
-                        width={c.width ?? '160px'}
-                        sortable={false}
-                        filterable={false}
-                        columnMenu={undefined}
-                        headerCell={() => (
-                            <HeaderBtn className="btnS btnType04" onClick={actions.onHeaderMergeChk}>
-                                문항통합저장
-                            </HeaderBtn>
-                        )}
-                    />
-                );
-            }
             // EDIT: 수정(헤더에 버튼 2개)
             if (c.field === 'project_lock') {
                 return (
@@ -288,8 +282,8 @@ const ProList = () => {
                             <HeaderLabeledBtnGroup
                                 label="수정"
                                 buttons={[
-                                    { text: 'X', className: 'btnS btnTxt type02', onClick: actions.onHeaderEditLockAll },
-                                    { text: 'O', className: 'btnS btnType02', onClick: actions.onHeaderEditUnlockAll },
+                                    { text: 'X', className: 'btnS btnTxt type02', onClick: () => bulkSetLock(true) },
+                                    { text: 'O', className: 'btnS btnType02', onClick: () => bulkSetLock(false) },
                                 ]}
                             />
                         )}
@@ -353,6 +347,7 @@ const ProList = () => {
                         columnMenu={undefined}         // 컬럼 메뉴 끔
                         headerCell={() => <></>}       // 헤더 콘텐츠 자체 미렌더
                         headerClassName="no-leaf-header"
+                        cell={c.wrap ? WrapCell(c.field) : undefined}   // wrap이면 멀티라인 셀 사용
                     />
                 );
             }
@@ -384,7 +379,6 @@ const ProList = () => {
             })
             .filter(g => g.inGroup.length > 0);
 
-        const MERGED_SUBGROUPS = new Set(["문항최종"]);
         return (
             <Fragment>
                 <article className="subTitWrap">
@@ -465,11 +459,22 @@ const ProList = () => {
                                                         : (
                                                             <Column
                                                                 key={`sub:${g.name}:${it.sub}`}
-                                                                title={it.sub}
+                                                                // 문항최종은 기존처럼 텍스트 유지 + 아래줄 제거
+                                                                title={it.sub === "문항최종" ? "문항최종" : ""}
                                                                 headerClassName={[
-                                                                    MERGED_SUBGROUPS.has(it.sub) ? "sub-no-bottom-border" : "",
-                                                                    (it.sub === "분석/제외" || it.sub === "문항통합") ? "collapse-subgroup-title" : ""
+                                                                    it.sub === "문항최종" ? "sub-no-bottom-border" : "",
                                                                 ].filter(Boolean).join(" ")}
+                                                                headerCell={
+                                                                    it.sub === "문항통합저장"
+                                                                        ? () => (
+                                                                            <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", justifyContent: "center" }}>
+                                                                                <Button className="btnS btnType04" onClick={actions.onHeaderMergeSave}>
+                                                                                    문항통합저장
+                                                                                </Button>
+                                                                            </div>
+                                                                        )
+                                                                        : undefined
+                                                                }
                                                             >
                                                                 {it.cols.map(renderLeafColumn)}
                                                             </Column>

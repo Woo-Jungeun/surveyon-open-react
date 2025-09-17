@@ -25,8 +25,21 @@ export function ProListApi() {
         }
         }
     );
+    // 수정/수정불가, 분석/제외, 문항통합저장버튼
+    const editMutation = useMutation(
+        async (data) => await api.post(data, "/pro_list_api.aspx"),
+        {
+         onMutate: (vars) => { 
+            //loadingSpinner.show(); 
+        },
+         onSettled: () => {  
+            //loadingSpinner.hide(); 
+        }
+        }
+    );
 
     return {
-        proListData
+        proListData,
+        editMutation
     };
 }
