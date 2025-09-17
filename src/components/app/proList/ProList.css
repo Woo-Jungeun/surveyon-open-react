@@ -1,46 +1,74 @@
-/* 색상만 바꾸고 싶으면 여기만 바꿔도 됨 */
+/* 색상 변수 */
 :root{
-  --chip-blue:  #2563eb; /* 분석 */
-  --chip-gray:  #6b7280; /* 머지 */
-  --chip-red:   #ef4444; /* 제외 */
+  --chip-blue:     #2563eb; /* 분석 */
+  --chip-gray:     #6b7280; /* 머지 */
+  --chip-red:      #ef4444; /* 제외 */
+  --chip-disabled: #9ca3af; /* 잠금(비활성) */
 }
 
-/* Kendo Button을 텍스트 칩으로 */
+/* 텍스트 칩 버튼 기본 */
 .cmn_grid.multihead .k-button.chip{
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-
   padding: 0 !important;
   min-width: 0 !important;
   height: auto !important;
-
   display: inline-flex;
   align-items: center;
-  gap: 6px;                /* 체크와 라벨 간격 */
+  gap: 6px;
   line-height: 1.1;
   font-size: 12px;
   font-weight: 700;
-  text-transform: none;
   cursor: pointer;
 }
 
-/* 상태별 글자색만 */
+/* 상태별 색 */
 .cmn_grid.multihead .k-button.chip--analysis{ color: var(--chip-blue) !important; }
 .cmn_grid.multihead .k-button.chip--merge{    color: var(--chip-gray) !important; }
 .cmn_grid.multihead .k-button.chip--exclude{  color: var(--chip-red)  !important; }
 
-/* hover/focus도 텍스트만 */
-.cmn_grid.multihead .k-button.chip:hover,
-.cmn_grid.multihead .k-button.chip:focus{
-  text-decoration: underline;
-  outline: none !important;
-  box-shadow: none !important;
+/* 잠금(비활성) 처리 */
+.cmn_grid.multihead .k-button.chip--disabled,
+.cmn_grid.multihead .k-button.chip[disabled]{
+  color: var(--chip-disabled) !important;
+  cursor: not-allowed;
+  opacity: .6;
+  text-decoration: none !important;
 }
 
-/* 체크 아이콘 (앞쪽) */
+/* 체크 아이콘 */
 .cmn_grid.multihead .k-button.chip .chip-check{
   font-weight: 800;
   font-size: 12px;
   line-height: 1;
+}
+
+/* 문항통합저장 두번째 컬럼: 값 다를 때 노란색 */
+.cell-merge-diff { background: #fff7b0 !important; }
+
+/* 인풋 */
+.merge-input{
+  width: 100%;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 4px 6px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.merge-input:focus{
+  border-color: #7aa8ff;
+  box-shadow: 0 0 0 2px rgba(122,168,255,0.15);
+}
+.merge-input:disabled{
+  background: #f5f5f7;
+  color: #999;
+  cursor: not-allowed;
+}
+
+/* ─── 헤더 하단 선 제거: 문항최종 / 문항통합저장 ─── */
+.cmn_grid.multihead .k-grid-header .k-header.sub-no-bottom-border,
+.cmn_grid.multihead thead th.sub-no-bottom-border{
+  border-bottom: 0 !important;
 }

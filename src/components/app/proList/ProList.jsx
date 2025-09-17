@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useCallback, useEffect } from "react";
+import React, { Fragment, useState, useCallback, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -9,7 +9,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/components/app/proList/ProListPopup";    // 필터문항설정 팝업
 import "@/components/app/proList/ProList.css";
-
+import { modalContext } from "@/components/common/Modal.jsx";
 /**
  * 문항 목록
  *
@@ -18,6 +18,7 @@ import "@/components/app/proList/ProList.css";
  */
 const ProList = () => {
     const auth = useSelector((store) => store.auth);
+    const modal = useContext(modalContext);
     const navigate = useNavigate();
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
@@ -102,6 +103,72 @@ const ProList = () => {
 
         const [locksById, setLocksById] = useState(new Map());          // 행 잠금상태
         const [excludedById, setExcludedById] = useState(new Map());    // 분석/제외 토글 상태
+        const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
+
+        // ---------------- merge helpers ----------------
+        // 데이터 들어올 때 최초값을 편집상태에 채움(이미 편집한 값은 보존)
+        useEffect(() => {
+            const rows = dataState?.data ?? [];
+            setMergeEditsById(prev => {
+                const next = new Map(prev);
+                rows.forEach(r => {
+                    if (!next.has(r.id)) next.set(r.id, r?.merge_qnum_check ?? "");
+                });
+                return next;
+            });
+        }, [dataState?.data]);
+
+        const norm = (s) => String(s ?? "").trim();
+        const getMergeVal = (row) =>
+            mergeEditsById.has(row?.id) ? mergeEditsById.get(row?.id) : (row?.merge_qnum_check ?? "");
+        const setMergeVal = (row, v) =>
+            setMergeEditsById(m => { const n = new Map(m); n.set(row?.id, v); return n; });
+        // 변경된 셀만 모아 객체 { [qid]: value }
+        const getMergeChanges = () => {
+            const rows = dataState?.data ?? [];
+            const changed = {};
+            rows.forEach(r => {
+                if (isLocked(r)) return;                      // 수정불가 제외
+                const base = norm(r?.merge_qnum ?? "");
+                const cur = norm(getMergeVal(r));
+                if (cur !== base) changed[r.id] = cur;        // qid = row.id
+            });
+            return changed;
+        };
+
+        const sendMergeAll = async (changes) => {
+            const ids = Object.keys(changes);
+            if (ids.length === 0) {
+                modal.showErrorAlert("알림", "변경된 항목이 없습니다.");
+                return;
+            }
+            // id -> no 매핑
+            const idToNo = new Map((dataState?.data ?? []).map(r => [String(r.id), r.no]));
+            // 빈값(공백 포함)인 변경건 수집
+            const blankIds = ids.filter((qid) => norm(changes[qid]) === "");
+            if (blankIds.length > 0) {
+                const blankNos = blankIds
+                    .map((qid) => idToNo.get(String(qid)))
+                    .filter((v) => v !== undefined);
+                modal.showErrorAlert(
+                    "알림",
+                    `[행: ${blankNos.join(", ")}] 분석을 위해 '문항통합'란을 입력해 주세요.`
+                );
+                return;
+            }
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: "allmerge",
+                val: changes,   // { qid: "값", ... }
+            };
+            const res = await editMutation.mutateAsync(payload);
+            if (res?.success === "777") {
+                handleSearch?.();                          // 저장 성공 → 재조회
+            } else {
+                modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
+            }
+        };
 
         // ---------------- analysis helpers ----------------
         // useYN 기반으로 제외 여부 파싱
@@ -123,14 +190,8 @@ const ProList = () => {
         const isExcluded = (row) =>
             excludedById.has(row?.id) ? !!excludedById.get(row?.id) : deriveExcluded(row);
 
-        const setExcluded = (row, excluded) => {
-            const id = row?.id;
-            setExcludedById((m) => {
-                const next = new Map(m);
-                next.set(id, excluded);
-                return next;
-            });
-        };
+        const setExcluded = (row, excluded) =>
+            setExcludedById(m => { const n = new Map(m); n.set(row.id, excluded); return n; });
 
         // API 호출 (row / all)
         const sendAnalysis = async ({ scope, excluded, id }) => {
@@ -145,6 +206,8 @@ const ProList = () => {
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
                 handleSearch?.();   // 재조회
+            } else {
+                modal.showErrorAlert("에러", "오류가 발생했습니다.");
             }
         };
 
@@ -187,8 +250,7 @@ const ProList = () => {
         useEffect(() => {
             const map = new Map();
             (dataState?.data ?? []).forEach((row) => {
-                const locked = row?.project_lock === "수정불가";
-                map.set(row?.id, locked);
+                map.set(row?.id, row?.project_lock === "수정불가");
             });
             setLocksById(map);
         }, [dataState?.data, idGetter]);
@@ -214,6 +276,8 @@ const ProList = () => {
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
                 handleSearch?.();   // 재조회
+            } else {
+                modal.showErrorAlert("에러", "오류가 발생했습니다.");
             }
         };
 
@@ -229,11 +293,10 @@ const ProList = () => {
         };
 
         const toggleRowLock = async (row) => {
-            const id = row?.id;
             const prev = isLocked(row);
             setRowLocked(row, !prev);
             try {
-                await (prev ? lockApi.unlockOne(id) : lockApi.lockOne(id));
+                await (prev ? lockApi.unlockOne(row?.id) : lockApi.lockOne(row?.id));
             } catch (e) {
                 setRowLocked(row, prev);              // 실패 시 롤백
                 console.error(e);
@@ -257,7 +320,7 @@ const ProList = () => {
         const actions = {
             onHeaderUseYN: () => bulkSetExcluded(false), // 전체 분석
             onHeaderExclude: () => bulkSetExcluded(true), // 전체 제외
-            onHeaderMergeSave: () => console.log('헤더: 문항통합저장 실행'),
+            onHeaderMergeSave: () => sendMergeAll(getMergeChanges()),
             onHeaderEditLockAll: () => bulkSetLock(true),
             onHeaderEditUnlockAll: () => bulkSetLock(false),
         };
@@ -323,26 +386,27 @@ const ProList = () => {
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
                             const excluded = isExcluded(row);
-                          
+                            const locked = isLocked(row); // 잠금 여부
+
                             // 포함 상태일 때 표시 텍스트: '머지'면 '머지', 아니면 '분석'
                             const includeLabel = String(row?.useYN ?? '').trim() === '머지' ? '머지' : '분석';
-                          
+
                             // 최종 라벨/스타일
                             const state = excluded ? 'exclude' : (includeLabel === '머지' ? 'merge' : 'analysis');
                             const label = excluded ? '제외' : includeLabel;
-                          
+
                             // 디자인 칩 클래스 (색상 매칭)
-                            const cls = `chip chip--${state}`;
-                          
+                            const cls = `chip chip--${state} ${locked ? 'chip--disabled' : ''}`;
+
                             return (
-                              <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                                <Button className={cls} onClick={() => toggleExcluded(row)}>
-                                <span className="chip-check" aria-hidden>✓</span>
-                                <span className="chip-label">{label}</span>
-                                </Button>
-                              </td>
+                                <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                                    <Button className={cls} disabled={locked} onClick={() => { if (!locked) toggleExcluded(row); }}>
+                                        <span className="chip-check" aria-hidden>✓</span>
+                                        <span className="chip-label">{label}</span>
+                                    </Button>
+                                </td>
                             );
-                          }}
+                        }}
                     />
                 );
             }
@@ -365,16 +429,18 @@ const ProList = () => {
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
                             const { qnum } = row;
-                            const excluded = isExcluded(row); // ← 기존에 만든 함수 사용
+                            const excluded = isExcluded(row);
+                            const locked = isLocked(row);
                             return (
                                 <td style={{ textAlign: 'center' }}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}>
                                     {!excluded && (
                                         <Button
-                                            className="btnM"
-                                            themeColor="primary"
-                                            onClick={() => goOpenSetting(qnum)}
+                                            className={`btnM ${locked ? 'btnM--disabled' : ''}`}
+                                            themeColor={locked ? 'base' : 'primary'}
+                                            disabled={locked}
+                                            onClick={() => { if (!locked) goOpenSetting(qnum); }}
                                         >
                                             분석
                                         </Button>
@@ -451,7 +517,7 @@ const ProList = () => {
                 );
             }
             // 문항최종 subgroup 아래의 리프 헤더 숨김
-            if (c.noLeafHeader) {
+            if (c.noLeafHeader && c.subgroup === "문항최종") {
                 return (
                     <Column
                         key={c.field}
@@ -512,6 +578,70 @@ const ProList = () => {
                     />
                 );
             }
+            // 1번째 컬럼은 그대로(텍스트)
+            if (c.field === 'merge_qnum') {
+                return (
+                    <Column
+                        key={c.field}
+                        field={c.field}
+                        title=""
+                        sortable={false}
+                        filterable={false}
+                        columnMenu={undefined}
+                        headerCell={() => <></>}
+                    />
+                );
+            }
+            // 2번째 컬럼 = 입력 가능 + 값 다르면 노란색
+            if (c.field === 'merge_qnum_check') {
+                return (
+                    <Column
+                        key={c.field}
+                        field={c.field}
+                        title=""
+                        sortable={false}
+                        filterable={false}
+                        columnMenu={undefined}
+                        headerCell={() => <></>}
+                        cell={(cellProps) => {
+                            const row = cellProps.dataItem;
+                            const base = norm(row?.merge_qnum ?? "");        // 1번째 컬럼(기준값)
+                            const initial = getMergeVal(row);                // 편집 시작값
+                            const tdRef = React.useRef(null);
+                            const locked = isLocked(row); // "수정불가"면 true
+
+                            return (
+                                <td
+                                    ref={tdRef}
+                                    className={norm(initial) !== base ? 'cell-merge-diff' : ''}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <input
+                                        type="text"
+                                        className="merge-input"
+                                        defaultValue={initial}              // uncontrolled
+                                        disabled={locked}
+                                        placeholder="번호 입력"
+                                        onChange={(e) => {                  // 리렌더 없이 노란색 토글
+                                            const now = norm(e.target.value);
+                                            if (!tdRef.current) return;
+                                            if (now !== base) tdRef.current.classList.add('cell-merge-diff');
+                                            else tdRef.current.classList.remove('cell-merge-diff');
+                                        }}
+                                        onBlur={(e) => {                    // 포커스 빠질 때만 상태 저장
+                                            setMergeVal(row, e.target.value);
+                                        }}
+                                        onKeyDown={(e) => {                 // Enter로 저장
+                                            if (e.key === 'Enter') e.currentTarget.blur();
+                                        }}
+                                    />
+                                </td>
+                            );
+                        }}
+                    />
+                );
+            }
             // 나머지는 기본 헤더
             return (
                 <Column
@@ -544,8 +674,7 @@ const ProList = () => {
             <Fragment>
                 <article className="subTitWrap">
                     <div className="subTit">
-                        {/* <h2 className="titTxt">프로젝트 목록</h2> */}
-                        <h2 className="titTxt">{projectnum}</h2>
+                        <h2 className="titTxt">문항 목록</h2>
                     </div>
                 </article>
 
@@ -572,7 +701,7 @@ const ProList = () => {
                                         columnVirtualization: false,    // 멀티 헤더에서 가상화는 끄는 걸 권장
                                     }}
                                 >
-                                    {/* 단일 컬럼들: (no, 모델, 문번호, 문항최종) → 헤더가 2행을 세로로 차지 */}
+                                    {/* 단일 컬럼들: (no, 모델, 문번호) → 헤더가 2행을 세로로 차지 */}
                                     {roots.map(renderLeafColumn)}
 
                                     {/* 그룹 헤더 */}
@@ -623,7 +752,9 @@ const ProList = () => {
                                                                 // 문항최종은 기존처럼 텍스트 유지 + 아래줄 제거
                                                                 title={it.sub === "문항최종" ? "문항최종" : ""}
                                                                 headerClassName={[
-                                                                    it.sub === "문항최종" ? "sub-no-bottom-border" : "",
+                                                                    (it.sub === "문항최종" || it.sub === "문항통합저장")
+                                                                        ? "sub-no-bottom-border"
+                                                                        : "",
                                                                 ].filter(Boolean).join(" ")}
                                                                 headerCell={
                                                                     it.sub === "문항통합저장"
