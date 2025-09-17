@@ -118,13 +118,8 @@ const ProList = () => {
         // 데이터 들어올 때 최초값을 편집상태에 채움(이미 편집한 값은 보존)
         useEffect(() => {
             const rows = dataState?.data ?? [];
-            setMergeEditsById(prev => {
-                const next = new Map(prev);
-                rows.forEach(r => {
-                    if (!next.has(r.id)) next.set(r.id, r?.merge_qnum_check ?? "");
-                });
-                return next;
-            });
+            // 서버값으로 전체 리셋 (재조회 시 인풋도 최신값 반영)
+            setMergeEditsById(new Map(rows.map(r => [r.id, r?.merge_qnum_check ?? ""])));
         }, [dataState?.data]);
 
         const norm = (s) => String(s ?? "").trim();
@@ -145,7 +140,8 @@ const ProList = () => {
             return changed;
         };
 
-        const sendMergeAll = async (changes) => {
+        const sendMergeAll = async () => {
+            const changes = getMergeChanges();
             const ids = Object.keys(changes);
             if (ids.length === 0) {
                 modal.showErrorAlert("알림", "변경된 항목이 없습니다.");
@@ -173,6 +169,7 @@ const ProList = () => {
             };
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
+                console.log("!!!!재조회")
                 handleSearch?.();                          // 저장 성공 → 재조회
             } else {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
@@ -329,7 +326,7 @@ const ProList = () => {
         const actions = {
             onHeaderUseYN: () => bulkSetExcluded(false), // 전체 분석
             onHeaderExclude: () => bulkSetExcluded(true), // 전체 제외
-            onHeaderMergeSave: () => sendMergeAll(getMergeChanges()),
+            onHeaderMergeSave: () => sendMergeAll(),
             onHeaderEditLockAll: () => bulkSetLock(true),
             onHeaderEditUnlockAll: () => bulkSetLock(false),
         };
@@ -614,36 +611,34 @@ const ProList = () => {
                         headerCell={() => <></>}
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
-                            const base = norm(row?.merge_qnum ?? "");        // 1번째 컬럼(기준값)
-                            const initial = getMergeVal(row);                // 편집 시작값
+                            const original = norm(row?.merge_qnum_check ?? "");
+                            const cur = getMergeVal(row);     // controlled value          
                             const tdRef = React.useRef(null);
                             const locked = isLocked(row); // "수정불가"면 true
 
                             return (
                                 <td
                                     ref={tdRef}
-                                    className={norm(initial) !== base ? 'cell-merge-diff' : ''}
+                                    className={norm(cur) !== original ? 'cell-merge-diff' : ''}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <input
                                         type="text"
                                         className="merge-input"
-                                        defaultValue={initial}              // uncontrolled
+                                        key={`${row.id}:${cur}`}     // 재조회로 값이 바뀌면 인풋을 리마운트
+                                        defaultValue={cur}           // 타이핑 중에는 리렌더 안 일어남(포커스 유지)
                                         disabled={locked}
                                         placeholder="번호 입력"
-                                        onChange={(e) => {                  // 리렌더 없이 노란색 토글
-                                            const now = norm(e.target.value);
+
+                                        onInput={(e) => {
+                                            const now = norm(e.currentTarget.value);
                                             if (!tdRef.current) return;
-                                            if (now !== base) tdRef.current.classList.add('cell-merge-diff');
+                                            if (now !== original) tdRef.current.classList.add('cell-merge-diff');
                                             else tdRef.current.classList.remove('cell-merge-diff');
                                         }}
-                                        onBlur={(e) => {                    // 포커스 빠질 때만 상태 저장
-                                            setMergeVal(row, e.target.value);
-                                        }}
-                                        onKeyDown={(e) => {                 // Enter로 저장
-                                            if (e.key === 'Enter') e.currentTarget.blur();
-                                        }}
+                                        onBlur={(e) => setMergeVal(row, e.currentTarget.value)} // 포커스 빠질 때만 저장
+                                        onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
                                     />
                                 </td>
                             );
