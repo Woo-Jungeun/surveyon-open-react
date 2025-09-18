@@ -1,37 +1,25 @@
 import axios from "axios";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
 
-/** 모드별 baseURL 계산 (dev: 프록시 타도록 "/o", prod: 절대 URL) */
-function joinURL(base, path) {
-  if (!base && !path) return "";
-  if (!base) return path || "";
-  if (!path) return base || "";
-  return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
-}
+axios.defaults.withCredentials = true;
+axios.defaults.headers['Content-Type'] = 'application/json;charset=utf-8';
+axios.defaults.timeout = 1000000000;
 
-const BASE_URL = import.meta.env.DEV
-  ? "" // dev/dev-local은 프록시를 타니까 baseURL 비움
-  : joinURL(import.meta.env.VITE_API_BASE_URL, import.meta.env.VITE_DEFAULT_PATH); // prod는 절대경로 + /o
-
-/** axios 인스턴스 (글로벌 defaults 대신 인스턴스에만 설정) */
+const baseURL = import.meta.env.VITE_API_BASE_URL;
 export const apiAxios = axios.create({
-  baseURL: BASE_URL,                 // dev: "/o", prod: "https://son.hrc.kr/o"
-  withCredentials: true,             // 쿠키/세션 인증이면 true
-  timeout: 1000000000,        
-  headers: { "Content-Type": "application/json;charset=utf-8" },
+    baseURL,
 });
 
-/** 요청 인터셉터 (쿠키의 TOKEN → Authorization 헤더) */
 apiAxios.interceptors.request.use(
-  (config) => {
-    const token = getCookie("TOKEN"); // 아래에 이미 정의된 getCookie 사용
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
+    (config) => {
+        const token = getCookie("TOKEN"); // 대문자 TOKEN 사용
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`; // atob/jwtDecode 불필요
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
 
 const isHTTPS = typeof window !== "undefined" && location.protocol === "https:";
