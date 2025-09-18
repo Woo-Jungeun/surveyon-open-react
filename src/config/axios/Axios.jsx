@@ -8,10 +8,9 @@ function joinURL(base, path) {
   if (!path) return base || "";
   return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
 }
-
 const BASE_URL = import.meta.env.DEV
-  ? "" // dev/dev-local은 프록시를 타니까 baseURL 비움
-  : joinURL(import.meta.env.VITE_API_BASE_URL, import.meta.env.VITE_DEFAULT_PATH); // prod는 절대경로 + /o
+  ? ""                                  // 로컬은 프록시 타니까 baseURL 비움
+  : (import.meta.env.VITE_API_BASE_URL || "https://son.hrc.kr"); // 운영 호스트만(뒤에 /o 넣지 말기!)
 
 /** axios 인스턴스 (글로벌 defaults 대신 인스턴스에만 설정) */
 export const apiAxios = axios.create({
