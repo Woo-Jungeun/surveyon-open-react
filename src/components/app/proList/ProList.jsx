@@ -800,6 +800,7 @@ const ProList = () => {
         <GridData
             dataItemKey={DATA_ITEM_KEY}
             rowNumber={"no"}
+            rowNumberOrder="desc"
             selectedField={SELECTED_FIELD}
             menuTitle={MENU_TITLE}
             searchMutation={proListData}

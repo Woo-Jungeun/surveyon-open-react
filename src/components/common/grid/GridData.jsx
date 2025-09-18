@@ -32,6 +32,7 @@ const GridData = ({
     type, //엑셀 파일 명
     multiSelect = false,
     rowNumber,
+    rowNumberOrder = "asc",
     isPage = true,
     renderItem,
     initialParams   // 초기 조회용 파라미터 
@@ -139,24 +140,53 @@ const GridData = ({
     };
 
     const fetchData = async (payload) => {
-        if (searchMutation) {
-            const res = await searchMutation.mutateAsync(payload);
-            if (res.success !== "777") {
-                throw new Error();
-            }
-            const raw = res?.resultjson ?? [];
-            // 복합키면 __rowKey 주입 + rowNumber 처리
-            const keyed = raw.map((item, idx) => {
-                const next = { ...item };
-                if (isCompositeKey) next[COMPOSITE_KEY_FIELD] = buildCompositeKey(item);
-                if (rowNumber && typeof rowNumber === "string") next[rowNumber] = idx+1; //  문자열일 때만 추가
-                return next;
-            });
-            const totalSize = keyed.length;
-            setData({ totalSize, data: keyed });
-        }
-    };
+        if (!searchMutation) return;
     
+        const res = await searchMutation.mutateAsync(payload);
+        if (res.success !== "777") {
+          throw new Error();
+        }
+    
+        const raw = res?.resultjson ?? [];
+    
+        // 서버가 전체 개수를 내려주는 키가 있다면 탐지
+        const serverTotal =
+          typeof res?.totalSize === "number"
+            ? res.totalSize
+            : (typeof res?.totalCount === "number"
+                ? res.totalCount
+                : (typeof res?.total === "number" ? res.total : undefined));
+    
+        // 현재 페이지 skip (서버 페이징일 때 의미)
+        const pageSkip = isPage ? (payload?.skip ?? payload?.page?.skip ?? 0) : 0;
+    
+        const keyed = raw.map((item, idx) => {
+          const next = { ...item };
+    
+          // 복합키 → __rowKey 주입
+          if (isCompositeKey) {
+            next[COMPOSITE_KEY_FIELD] = buildCompositeKey(item);
+          }
+    
+          // 행번호 부여 (asc/desc)
+          if (rowNumber && typeof rowNumber === "string") {
+            if (rowNumberOrder === "desc") {
+              // 전체 개수 있으면 전역 역순, 없으면 현재 페이지 내 역순
+              const totalForNumbering = serverTotal ?? raw.length;
+              const n = totalForNumbering - pageSkip - idx;
+              next[rowNumber] = n > 0 ? n : 0;
+            } else {
+              // asc: 페이징 고려 (skip + idx + 1). 페이징 아니면 idx+1
+              next[rowNumber] = (isPage ? pageSkip : 0) + idx + 1;
+            }
+          }
+    
+          return next;
+        });
+    
+        const totalSize = serverTotal ?? keyed.length;
+        setData({ totalSize, data: keyed });
+      };
     const handleSearch = (param) => {
         const _noOffsetFilter = param?.noOffsetFilter;
         const _filter = param?.filter;
