@@ -13,7 +13,6 @@ const OptionSettingWrapperView = () => {
                     <OptionSettingBody />
                 </LoadingProvider>
             } />
-            <Route path={"/"} element={<OptionSettingBody />} />
         </Routes>
     );
 };

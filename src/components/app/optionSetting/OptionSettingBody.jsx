@@ -16,13 +16,28 @@ import { modalContext } from "@/components/common/Modal.jsx";
  * @author jewoo
  * @since 2025-08-14<br />
  */
+
+function openCenteredPopup(url, title = "viewer", w = 1280, h = 800) {
+  const dualLeft = window.screenLeft ?? window.screenX ?? 0;
+  const dualTop = window.screenTop ?? window.screenY ?? 0;
+  const width = window.innerWidth ?? document.documentElement.clientWidth ?? screen.width;
+  const height = window.innerHeight ?? document.documentElement.clientHeight ?? screen.height;
+  const systemZoom = width / (window.screen?.availWidth || width);
+  const left = (width - w) / 2 / systemZoom + dualLeft;
+  const top = (height - h) / 2 / systemZoom + dualTop;
+  const features = `scrollbars=yes,resizable=yes,width=${w},height=${h},top=${top},left=${left}`;
+  const win = window.open(url, title, features);
+  try { win?.focus?.(); } catch { }
+  return win;
+}
+
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
   const { state } = useLocation();
   const projectnumFromState = state?.projectnum ?? sessionStorage.getItem("projectnum") ?? "";
-  const qnum = state?.qnum; 
+  const qnum = state?.qnum;
   const projectnum = projectnumFromState;
-  
+
   useEffect(() => {
     if (projectnumFromState) {
       sessionStorage.setItem("projectnum", projectnumFromState); //진입 시 projectnum을 세션에 보관
@@ -211,6 +226,17 @@ const OptionSettingBody = () => {
     return () => window.removeEventListener("keydown", onKey, true);
   }, [tabDivision, lvCodeCommitted]);
 
+  // 보기불러오기 탭 클릭 시 새창 띄우기 
+  const openExloadWindow = useCallback(() => {
+    const params = new URLSearchParams({
+      projectnum: projectnum ?? "",
+      qnum: (qnum ?? "") + "",
+      lv: lvCodeDraft?.value ?? "1",
+    });
+    const url = `${window.location.origin}/viewer?${params.toString()}`;
+    openCenteredPopup(url);
+  }, [projectnum, qnum, lvCodeDraft]);
+
   return (
     <Fragment>
       <article className="subTitWrap">
@@ -266,6 +292,9 @@ const OptionSettingBody = () => {
             </Button>
             <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("3")}>
               rawdata
+            </Button>
+            <Button className="btnTab" onClick={openExloadWindow}>
+              보기불러오기
             </Button>
             <DropDownList
               style={{ width: 140 }}
@@ -327,12 +356,12 @@ const OptionSettingBody = () => {
               onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
             />
           ) : <OptionSettingTab3
-              lvCode={lvCodeDraft.value}
-              projectnum={projectnum}
-              qnum={qnum}
-              persistedPrefs={gridPrefs["3"]}
-              onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
-            />
+            lvCode={lvCodeDraft.value}
+            projectnum={projectnum}
+            qnum={qnum}
+            persistedPrefs={gridPrefs["3"]}
+            onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
+          />
           }
         </div>
       </article>

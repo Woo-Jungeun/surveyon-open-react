@@ -6,6 +6,7 @@ import MainWrapperView from "@/views/MainWrapperView";
 import { useCookies } from "react-cookie";
 import PageNotFound from "./components/app/pageNotFound/PageNotFound";
 import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapperView.jsx";
+import OptionSettingExloadWrapperView from "@/views/optionSetting/OptionSettingExloadWrapperView.jsx";
 import MainListWrapperView from "@/views/mainList/MainListWrapperView.jsx";
 import ProListWrapperView from "@/views/proList/ProListWrapperView.jsx";
 import busGif from "@/assets/images/bus_loading.gif";
@@ -33,7 +34,8 @@ function App() {
                        <Route path="/" element={<MainWrapperView />}>
                        <Route index element={<MainListWrapperView />} />
                        <Route path="pro_list" element={<ProListWrapperView />} />      
-                        <Route path="open-setting" element={<OptionSettingWrapperView />} />      
+                        <Route path="open-setting" element={<OptionSettingWrapperView />} />   
+                        <Route path="viewer" element={<OptionSettingExloadWrapperView />} />         
                         <Route path="login" element={<Navigate to="/" replace />} />
                         <Route path="*" element={<PageNotFound />} />
                         {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
