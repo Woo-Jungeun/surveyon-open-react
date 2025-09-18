@@ -26,7 +26,7 @@ const ACTION_LABEL = {
     recallResponse: "응답자 빈셀&기타",
 };
 const MODAL_SCOPE = {
-    visibleOn: "/open-setting",
+    visibleOn: "/open_setting",
     autoCloseOnRouteChange: true,
     // zIndex: 2000, // 필요하면 추가
 };

@@ -78,9 +78,9 @@ const ProList = () => {
         { field: "project_lock", title: "수정", group: "EDIT", show: true, order: 2 },
     ]);
 
-    // 행 클릭 → /open-setting 로 이동
+    // 행 클릭 → /open_setting 로 이동
     const goOpenSetting = useCallback(
-        (qnum) => navigate('/open-setting', { state: { projectnum, qnum } }),
+        (qnum) => navigate('/open_setting', { state: { projectnum, qnum } }),
         [navigate]
     );
 

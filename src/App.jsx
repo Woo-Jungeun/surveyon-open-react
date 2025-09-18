@@ -4,7 +4,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Fragment, useEffect } from "react";
 import MainWrapperView from "@/views/MainWrapperView";
 import { useCookies } from "react-cookie";
-import PageNotFound from "./components/app/pageNotFound/PageNotFound";
+import PageNotFound from "@/components/app/pageNotFound/PageNotFound";
 import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapperView.jsx";
 import OptionSettingExloadWrapperView from "@/views/optionSetting/OptionSettingExloadWrapperView.jsx";
 import MainListWrapperView from "@/views/mainList/MainListWrapperView.jsx";
@@ -33,24 +33,23 @@ function App() {
                 <Routes>
                        <Route path="/" element={<MainWrapperView />}>
                        <Route index element={<MainListWrapperView />} />
-                       <Route path="pro_list" element={<ProListWrapperView />} />      
-                        <Route path="open-setting" element={<OptionSettingWrapperView />} />   
-                        <Route path="viewer" element={<OptionSettingExloadWrapperView />} />         
-                        <Route path="login" element={<Navigate to="/" replace />} />
+                       <Route path="pro_list/*" element={<ProListWrapperView />} />      
+                        <Route path="open_setting/*" element={<OptionSettingWrapperView />} />   
+                        <Route path="viewer/*" element={<OptionSettingExloadWrapperView />} />         
+                        <Route path="login/*" element={<Navigate to="/" replace />} />
                         <Route path="*" element={<PageNotFound />} />
                         {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
                     </Route>
                     {/* / 외 경로로 오면 /로 돌려 */}
                     <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
-                : <Fragment>
-                    <Navigate replace to="/login" />
+                : (
                     <Routes>
-                        <Route path={"/"} element={<Login />} />
-                        <Route path={"/login"} element={<Login />} />
-                        <Route path={"/*"} element={<PageNotFound />} />
+                      <Route path="/login" element={<Login />} />
+                      {/* 그 외 모든 경로는 /login으로 보냄 (404 없음) */}
+                      <Route path="*" element={<Navigate to="/login" replace />} />
                     </Routes>
-                </Fragment>
+                  )
             }
         </Fragment>
     );

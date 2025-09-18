@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import OptionSettingBody from "@/components/app/optionSetting/OptionSettingBody.jsx";
 import LoadingProvider from "@/components/common/AnalysisLoadingSpinner";
+import PageNotFound from "@/components/app/pageNotFound/PageNotFound";
 const OptionSettingWrapperView = () => {
 
     /**
@@ -8,11 +9,12 @@ const OptionSettingWrapperView = () => {
      */
     return (
         <Routes>
-            <Route path="/" element={
+            <Route index element={
                 <LoadingProvider>
                     <OptionSettingBody />
                 </LoadingProvider>
             } />
+           <Route path="*" element={<PageNotFound />} />
         </Routes>
     );
 };

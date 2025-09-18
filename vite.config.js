@@ -30,7 +30,7 @@ export default defineConfig(({ mode }) => {
             proxy: useProxy
                 ? {
                     // /o 로 시작하는 모든 요청을 백엔드로 프록시
-                    "^/o": {
+                   "^/o(?:/|$)": {
                         target: env.VITE_PROXY_URL,  // dev-local: https://localhost , dev: https://son.hrc.kr
                         changeOrigin: true,
                         secure: false,               // 자체서명/개발용 인증서면 false

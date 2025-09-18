@@ -8,12 +8,12 @@ import { useCookies } from "react-cookie";
 /**
  * 프로젝트 목록 클릭 시 → 탭: ["/"]
  * 문항 목록 이동 시 → 탭: ["/", "/pro_list"]
- * 분석 이동 시 → 탭: ["/", "/pro_list", "/open-setting"]
+ * 분석 이동 시 → 탭: ["/", "/pro_list", "/open_setting"]
 */
 const ROUTE_LABEL = {
   "/": "프로젝트 목록",
   "/pro_list": "문항 목록",
-  "/open-setting": "분석",
+  "/open_setting": "분석",
 };
 
 // 현재 경로를 1뎁스로 정규화
@@ -25,7 +25,7 @@ const normalize = (p) => {
 
 // 현재 경로에 맞는 탭 트레일 계산
 const trailFor = (key) => {
-  if (key === "/open-setting") return ["/", "/pro_list", "/open-setting"];
+  if (key === "/open_setting") return ["/", "/pro_list", "/open_setting"];
   if (key === "/pro_list") return ["/", "/pro_list"];
   return ["/"];
 };

@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { useSelector } from "react-redux";
 import ProList from "@/components/app/proList/ProList.jsx";
+import PageNotFound from "@/components/app/pageNotFound/PageNotFound";
 const ProListWrapperView = () => {
     const auth = useSelector((store) => store.auth);
 
@@ -9,7 +10,8 @@ const ProListWrapperView = () => {
      */
     return (
         <Routes>
-            <Route path={"/"} element={<ProList />} />
+            <Route index element={<ProList />} />
+            <Route path="*" element={<PageNotFound />} />
         </Routes>
     );
 };
