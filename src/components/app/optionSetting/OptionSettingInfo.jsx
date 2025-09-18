@@ -8,6 +8,7 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
 import "@/components/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useWorkerLogSignalR from "@/hooks/useWorkerLogSignalR";
+import { HUB_URL, HUB_NAME } from "@/config/signalr/signalr.js";
 import { loadingSpinnerContext } from "@/components/common/AnalysisLoadingSpinner.jsx";
 import { useSelector } from "react-redux";
 /**
@@ -179,8 +180,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
     // SignalR 훅
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
-        hubUrl: "/o/signalr",
-        hubName: "workerlog",
+        hubUrl: HUB_URL,      // ✅ 운영: https://son.hrc.kr/o/signalr / dev: /o/signalr
+        hubName: HUB_NAME,    // 서버 허브 이름
         onCompleted: ({ hasError, jobKey }) => {
             if (completedOnceRef.current) return;
             // status 호출에 job 누락되지 않도록 보강
@@ -609,7 +610,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     return (
         <Fragment>
             <div className="collapseBar">
-                {isOpen && <div className="collapseTitle">{data?.projectname || "-"}</div>}
+                {isOpen && <div className="collapseTitle">{projectnum || "-"}</div>}
                 <Button
                     type="button"
                     className="btnCollapse"
@@ -628,7 +629,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         {/* 문항 요약 */}
                         <div className="cmn_pop_ipt">
                             <span className="iptTit">
-                                {(data?.qnum_text ? `${data?.qnum_text} ` : "")}문항
+                                {(qnum ? `${qnum} ` : "")}문항
                             </span>
                             <Input
                                 className="k-input k-input-solid"

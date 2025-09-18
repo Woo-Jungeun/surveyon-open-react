@@ -2,6 +2,7 @@ import { apiAxios } from "@/config/axios/Axios.jsx";
 import moment from "moment";
 
 const { VITE_DEFAULT_PATH } = import.meta.env;
+const join = (p) => (VITE_DEFAULT_PATH.replace(/\/+$/,'') + '/' + String(p).replace(/^\/+/, ''));
 
 export default {
 
@@ -14,12 +15,6 @@ export default {
         const response = await apiAxios.get(VITE_DEFAULT_PATH + url, data);
         // console.log("response", response)
         return response.data || {};
-    },
-
-    async postAll(paramList) {
-        const apis = paramList.map(param => apiAxios.post(param.url, param.data))
-        const response = await Promise.all(apis);
-        return response.map(res => res.data ?? [])
     },
 
     async form(data, url) {
@@ -50,7 +45,7 @@ export default {
     async urlencoded(url, data) {
         const u = new URLSearchParams();
         Object.entries(data || {}).forEach(([k, v]) => u.append(k, v == null ? "" : String(v)));
-        const res = await apiAxios.post(url, u, {
+        const res = await apiAxios.post(join(url), u, {
             headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" }
         });
         return res.data || {};
@@ -64,7 +59,7 @@ export default {
      * @param {Object} params   쿼리 파라미터 객체 (예: { action: "status", job })
      */
     async getWithParams(url, params) {
-        const res = await apiAxios.get(url, { params: params || {} });
+        const res = await apiAxios.get(join(url), { params: params || {} });
         return res.data || {};
     }
 };
