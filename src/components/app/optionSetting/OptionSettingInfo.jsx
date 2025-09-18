@@ -124,7 +124,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (!projectnum || !qid || !job) return null;
         return {
             user: auth?.user?.userId || "",
-            projectnum,
+            projectnum:"q250089uk",
             qid,
             action: "status",
             job: String(job),
@@ -374,7 +374,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     // 조회/재조회 공용
     const searchInfo = useCallback(async (over = {}) => {
         const res = await optionEditData.mutateAsync({
-            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "info" },
+            params: { user: auth?.user?.userId || "", projectnum:"q250089uk", qnum:"A2-2", gb: "info" },
         });
 
         const d = res?.resultjson?.[0] || {};
@@ -487,8 +487,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
         return {
             user: auth?.user?.userId || "",
-            projectnum,
-            qnum,
+            projectnum:"q250089uk",
+            qnum:"A2-2",
             gb: "info",
             data: [info],
             ev: typeToEv[type], //버튼 구분
@@ -500,7 +500,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         const base = {
             token: "",
             user: auth?.user?.userId || "",
-            projectnum,
+            projectnum:"q250089uk",
             qid: data?.qid,
             action: "start",
         };

@@ -43,7 +43,7 @@ export function OptionSettingApi() {
     const optionAnalysisStart = useMutation(
         async (data) => {
             //loadingSpinner.show();
-            return await api.urlencoded("/o/option_analysis_api.aspx", data);
+            return await api.urlencoded("/option_analysis_api.aspx", data);
         },
         {
             //onSettled: () => loadingSpinner.hide()
@@ -52,12 +52,12 @@ export function OptionSettingApi() {
 
     // 상태(status) - GET ?action=status&job=...
     const optionAnalysisStatus = useMutation(
-        async (params) => await api.getWithParams("/o/option_analysis_api.aspx", params)
+        async (params) => await api.getWithParams("/option_analysis_api.aspx", params)
     );
 
     // 초기화(clear) - GET ?action=clear&job=...
     const optionAnalysisClear = useMutation(
-        async (params) => await api.getWithParams("/o/option_analysis_api.aspx", params)
+        async (params) => await api.getWithParams("/option_analysis_api.aspx", params)
     );
 
     // 분석 상태값 api
