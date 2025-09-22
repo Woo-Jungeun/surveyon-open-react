@@ -42,7 +42,7 @@ const ProList = () => {
 
     const { proListData, editMutation } = ProListApi();
 
-   //재조회 후 그리드 업데이트트 플래그
+    //재조회 후 그리드 업데이트트 플래그
     const [gridDataKey, setGridDataKey] = useState(0);
     const [timeStamp, setTimeStamp] = useState(0); // cache buster
 
@@ -82,9 +82,10 @@ const ProList = () => {
         { field: "project_lock", title: "수정", group: "EDIT", show: true, order: 2 },
     ]);
 
+
     // 행 클릭 → /open_setting 로 이동
     const goOpenSetting = useCallback(
-        (qnum) => navigate('/open_setting', { state: { projectnum, qnum } }),
+        (merge_qnum) => navigate('/open_setting', { state: { projectnum, qnum: merge_qnum } }),
         [navigate]
     );
 
@@ -545,7 +546,7 @@ const ProList = () => {
                         )}
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
-                            const { qnum } = row;
+                            const { merge_qnum } = row;
                             const excluded = isExcluded(row);
                             const locked = isLocked(row);
                             return (
@@ -557,7 +558,7 @@ const ProList = () => {
                                             className={`btnM ${locked ? 'btnM--disabled' : ''}`}
                                             themeColor={locked ? 'base' : 'primary'}
                                             disabled={locked}
-                                            onClick={() => { if (!locked) goOpenSetting(qnum); }}
+                                            onClick={() => { if (!locked) goOpenSetting(merge_qnum); }}
                                         >
                                             분석
                                         </Button>
