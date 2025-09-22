@@ -76,8 +76,8 @@ const ProList = () => {
         { field: "exclude", title: "제외", group: "ADMIN", show: true, order: 2 },
 
         // ----- EDIT  → "문항통합"으로 합치기 -----
-        withSubgroup("문항통합저장", 1)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
-        withSubgroup("문항통합저장", 2)({ field: "merge_qnum_check", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
+        withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
+        withSubgroup("문항통합저장", 2)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
 
         { field: "project_lock", title: "수정", group: "EDIT", show: true, order: 2 },
     ]);
@@ -124,7 +124,7 @@ const ProList = () => {
         // ---------------- merge helpers ----------------
         const norm = (s) => String(s ?? "").trim();
         const getMergeVal = (row) =>
-            mergeEditsById.has(row?.id) ? mergeEditsById.get(row?.id) : (row?.merge_qnum_check ?? "");
+            mergeEditsById.has(row?.id) ? mergeEditsById.get(row?.id) : (row?.merge_qnum ?? "");
         const setMergeVal = (row, v) =>
             setMergeEditsById(m => { const n = new Map(m); n.set(row?.id, v); return n; });
 
@@ -134,23 +134,23 @@ const ProList = () => {
             setMergeEditsById(prev => {
                 if (pendingFlushRef.current) {
                     pendingFlushRef.current = false;
-                    return new Map(rows.map(r => [r.id, r?.merge_qnum_check ?? ""]));
+                    return new Map(rows.map(r => [r.id, r?.merge_qnum ?? ""]));
                 }
                 const next = new Map(prev);
-                rows.forEach(r => { if (!next.has(r.id)) next.set(r.id, r?.merge_qnum_check ?? ""); });
+                rows.forEach(r => { if (!next.has(r.id)) next.set(r.id, r?.merge_qnum ?? ""); });
                 const live = new Set(rows.map(r => r.id));
                 for (const id of next.keys()) if (!live.has(id)) next.delete(id);
                 return next;
             });
         }, [dataState?.data]);
 
-        // 변경 검출 기준 = 서버값 merge_qnum_check
+        // 변경 검출 기준 = 서버값 merge_qnum
         const getMergeChanges = () => {
             const rows = dataState?.data ?? [];
             const changed = {};
             rows.forEach(r => {
                 if (isLocked(r)) return;
-                const base = norm(r?.merge_qnum_check ?? "");
+                const base = norm(r?.merge_qnum ?? "");
                 const cur = norm(getMergeVal(r));
                 if (cur !== base) changed[r.id] = cur;
             });
@@ -211,7 +211,7 @@ const ProList = () => {
                 });
                 return m;
             };
-            const serverGroups = buildGroups(rows, r => r.merge_qnum_check); // 이전
+            const serverGroups = buildGroups(rows, r => r.merge_qnum); // 이전
             const uiGroups = buildGroups(rows, r => getMergeVal(r));     // 현재(입력)
 
             // toCall = (수정한 행) ∪ (상태가 실제 바뀐 행)
@@ -234,7 +234,7 @@ const ProList = () => {
             for (const id of changedIds) {
                 const r = rows.find(x => Number(x.id) === id);
                 if (!r) continue;
-                const oldKey = norm(r.merge_qnum_check);
+                const oldKey = norm(r.merge_qnum);
                 const newKey = norm(getMergeVal(r));
                 (serverGroups.get(oldKey) || []).forEach(x => affectedIds.add(Number(x.id)));
                 (uiGroups.get(newKey) || []).forEach(x => affectedIds.add(Number(x.id)));
@@ -697,7 +697,7 @@ const ProList = () => {
                 );
             }
             // 1번째 컬럼은 그대로(텍스트)
-            if (c.field === 'merge_qnum') {
+            if (c.field === 'qnum_text') {
                 return (
                     <Column
                         key={c.field}
@@ -711,7 +711,7 @@ const ProList = () => {
                 );
             }
             // 2번째 컬럼 = 입력 가능 + 값 다르면 노란색
-            if (c.field === 'merge_qnum_check') {
+            if (c.field === 'merge_qnum') {
                 return (
                     <Column
                         key={c.field}
@@ -723,7 +723,7 @@ const ProList = () => {
                         headerCell={() => <></>}
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
-                            const original = norm(row?.merge_qnum_check ?? "");
+                            const original = norm(row?.merge_qnum ?? "");
                             const cur = getMergeVal(row);     // controlled value          
                             const tdRef = React.useRef(null);
                             const locked = isLocked(row); // "수정불가"면 true
@@ -789,7 +789,7 @@ const ProList = () => {
         const gridKey = useMemo(() => {
             const rows = dataState?.data ?? [];
             // 필요하면 필드 더 넣어도 OK (성능상 문제 있으면 해시로 바꿔도 됨)
-            return rows.map(r => `${r.id}:${r.useYN ?? ''}:${r.merge_qnum_check ?? ''}`).join('|');
+            return rows.map(r => `${r.id}:${r.useYN ?? ''}:${r.merge_qnum ?? ''}`).join('|');
         }, [dataState?.data]);
 
         return (
