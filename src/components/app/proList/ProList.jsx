@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useCallback, useEffect, useContext } from "react";
+import React, { Fragment, useState, useCallback, useEffect, useContext, useRef, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -41,6 +41,10 @@ const ProList = () => {
     const [popupShow, setPopupShow] = useState(false);        // 필터문항설정 팝업 popupShow
 
     const { proListData, editMutation } = ProListApi();
+
+   //재조회 후 그리드 업데이트트 플래그
+    const [gridDataKey, setGridDataKey] = useState(0);
+    const [timeStamp, setTimeStamp] = useState(0); // cache buster
 
     // 서브그룹으로 묶으면서 리프 헤더를 숨기는 헬퍼
     const withSubgroup = (sub, leafOrder = 0) => (col) => ({
@@ -114,64 +118,166 @@ const ProList = () => {
         const [excludedById, setExcludedById] = useState(new Map());    // 분석/제외 토글 상태
         const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
 
-        // ---------------- merge helpers ----------------
-        // 데이터 들어올 때 최초값을 편집상태에 채움(이미 편집한 값은 보존)
-        useEffect(() => {
-            const rows = dataState?.data ?? [];
-            // 서버값으로 전체 리셋 (재조회 시 인풋도 최신값 반영)
-            setMergeEditsById(new Map(rows.map(r => [r.id, r?.merge_qnum_check ?? ""])));
-        }, [dataState?.data]);
+        const pendingFlushRef = useRef(false); // 저장 후 1회 입력 캐시 초기화 플래그
 
+        // ---------------- merge helpers ----------------
         const norm = (s) => String(s ?? "").trim();
         const getMergeVal = (row) =>
             mergeEditsById.has(row?.id) ? mergeEditsById.get(row?.id) : (row?.merge_qnum_check ?? "");
         const setMergeVal = (row, v) =>
             setMergeEditsById(m => { const n = new Map(m); n.set(row?.id, v); return n; });
-        // 변경된 셀만 모아 객체 { [qid]: value }
+
+        // 재조회 시: 저장 직후 1회만 서버값으로 완전 초기화, 그 외에는 증분 유지
+        useEffect(() => {
+            const rows = dataState?.data ?? [];
+            setMergeEditsById(prev => {
+                if (pendingFlushRef.current) {
+                    pendingFlushRef.current = false;
+                    return new Map(rows.map(r => [r.id, r?.merge_qnum_check ?? ""]));
+                }
+                const next = new Map(prev);
+                rows.forEach(r => { if (!next.has(r.id)) next.set(r.id, r?.merge_qnum_check ?? ""); });
+                const live = new Set(rows.map(r => r.id));
+                for (const id of next.keys()) if (!live.has(id)) next.delete(id);
+                return next;
+            });
+        }, [dataState?.data]);
+
+        // 변경 검출 기준 = 서버값 merge_qnum_check
         const getMergeChanges = () => {
             const rows = dataState?.data ?? [];
             const changed = {};
             rows.forEach(r => {
-                if (isLocked(r)) return;                      // 수정불가 제외
-                const base = norm(r?.merge_qnum ?? "");
+                if (isLocked(r)) return;
+                const base = norm(r?.merge_qnum_check ?? "");
                 const cur = norm(getMergeVal(r));
-                if (cur !== base) changed[r.id] = cur;        // qid = row.id
+                if (cur !== base) changed[r.id] = cur;
             });
             return changed;
         };
+        // 현재 입력 기준 그룹 계산(화면 순서 유지)
+        const dupGroups = useMemo(() => {
+            const rows = dataState?.data ?? [];
+            const map = new Map(); // key -> Row[]
+            rows.forEach(r => {
+                const key = norm(getMergeVal(r));
+                if (!key) return;
+                if (!map.has(key)) map.set(key, []);
+                map.get(key).push(r); // 화면 순서 유지
+            });
+            const firstOfGroup = new Set();
+            const restOfGroup = new Set();
+            for (const [, arr] of map) {
+                if (arr.length >= 2) {
+                    firstOfGroup.add(arr[0].id);
+                    for (let i = 1; i < arr.length; i++) restOfGroup.add(arr[i].id);
+                }
+            }
+            return { firstOfGroup, restOfGroup, map };
+        }, [dataState?.data, mergeEditsById]);
 
+        // 표출 머지 여부는 "현재 입력" 기준으로 계산
+        const isMergeRow = (row) => dupGroups.restOfGroup.has(row?.id);
+
+        // 문항통합저장: "수정한 행" ∪ "그로 인해 실제 상태가 바뀐 행"만 호출
         const sendMergeAll = async () => {
-            const changes = getMergeChanges();
-            const ids = Object.keys(changes);
-            if (ids.length === 0) {
+            const rows = dataState?.data ?? [];
+            const changesObj = getMergeChanges();                 // { id: "텍스트" }
+            const changedIds = new Set(Object.keys(changesObj).map(n => Number(n))); // [추가]
+
+            if (changedIds.size === 0) {
                 modal.showErrorAlert("알림", "변경된 항목이 없습니다.");
                 return;
             }
-            // id -> no 매핑
-            const idToNo = new Map((dataState?.data ?? []).map(r => [String(r.id), r.no]));
-            // 빈값(공백 포함)인 변경건 수집
-            const blankIds = ids.filter((qid) => norm(changes[qid]) === "");
+
+            // 빈 값 검증
+            const idToNo = new Map(rows.map(r => [String(r.id), r.no]));
+            const blankIds = [...changedIds].filter((qid) => norm(changesObj[qid]) === "");
             if (blankIds.length > 0) {
-                const blankNos = blankIds
-                    .map((qid) => idToNo.get(String(qid)))
-                    .filter((v) => v !== undefined);
-                modal.showErrorAlert(
-                    "알림",
-                    `[행: ${blankNos.join(", ")}] 분석을 위해 '문항통합'란을 입력해 주세요.`
-                );
+                const blankNos = blankIds.map((qid) => idToNo.get(String(qid))).filter(Boolean);
+                modal.showErrorAlert("알림", `[행: ${blankNos.join(", ")}] 분석을 위해 '문항통합'란을 입력해 주세요.`);
                 return;
             }
-            const payload = {
-                user: auth?.user?.userId || "",
-                projectnum,
-                gb: "allmerge",
-                val: changes,   // { qid: "값", ... }
+
+            // 서버 그룹(이전) & UI 그룹(현재 입력) 빌드
+            const buildGroups = (items, getter) => {
+                const m = new Map(); // key -> Row[]
+                items.forEach(r => {
+                    const key = norm(getter(r));
+                    if (!key) return;
+                    if (!m.has(key)) m.set(key, []);
+                    m.get(key).push(r); // 화면 순서 유지
+                });
+                return m;
             };
-            const res = await editMutation.mutateAsync(payload);
-            if (res?.success === "777") {
-                console.log("!!!!재조회")
-                handleSearch?.();                          // 저장 성공 → 재조회
-            } else {
+            const serverGroups = buildGroups(rows, r => r.merge_qnum_check); // 이전
+            const uiGroups = buildGroups(rows, r => getMergeVal(r));     // 현재(입력)
+
+            // toCall = (수정한 행) ∪ (상태가 실제 바뀐 행)
+            const toCall = new Map(); // id -> '분석' | '머지'
+
+            // 1) 수정한 행은 무조건 후보에 포함 (요구사항 반영)
+            for (const id of changedIds) {
+                const r = rows.find(x => Number(x.id) === id);
+                if (!r) continue;
+                if (String(r?.useYN ?? "").trim() === "제외") continue; // 제외는 스킵
+                const key = norm(getMergeVal(r));
+                const g = uiGroups.get(key) || [];
+                const target = (g.length >= 2 && g[0]?.id !== r.id) ? "머지" : "분석";
+                toCall.set(r.id, target);
+            }
+
+            // 2) 그 변경으로 인해 '분석/머지' 상태가 바뀐 행만 추가
+            //    (= 서버 상태 vs 현재 입력 기준 target 이 달라진 경우만)
+            const affectedIds = new Set();
+            for (const id of changedIds) {
+                const r = rows.find(x => Number(x.id) === id);
+                if (!r) continue;
+                const oldKey = norm(r.merge_qnum_check);
+                const newKey = norm(getMergeVal(r));
+                (serverGroups.get(oldKey) || []).forEach(x => affectedIds.add(Number(x.id)));
+                (uiGroups.get(newKey) || []).forEach(x => affectedIds.add(Number(x.id)));
+            }
+
+            for (const r of rows) {
+                if (!affectedIds.has(Number(r.id))) continue;
+                if (String(r?.useYN ?? "").trim() === "제외") continue; // 제외는 건드리지 않음
+                if (isLocked(r)) continue;
+
+                const key = norm(getMergeVal(r));
+                const g = uiGroups.get(key) || [];
+                const target = (g.length >= 2 && g[0]?.id !== r.id) ? "머지" : "분석";
+
+                // 서버 상태와 다를 때만 추가 (실제 바뀐 행만)
+                if (normalizeUseYN(r) !== target) {
+                    toCall.set(r.id, target); // set이라 중복 덮어쓰기 OK
+                }
+            }
+
+            try {
+                // 3) 문항통합 저장
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    gb: "allmerge",
+                    val: changesObj,
+                };
+                const res = await editMutation.mutateAsync(payload);
+                if (res?.success !== "777") throw new Error("merge 저장 실패");
+
+                // 4) 선택된 행들만 useYN 동기화
+                for (const [id, target] of toCall.entries()) {
+                    await sendAnalysis({ scope: "row", id, valOverride: target, refresh: false });
+                }
+
+                // 5) 다음 재조회에서 1회 입력 캐시 초기화 + 재조회
+                // pendingFlushRef.current = true;
+                // handleSearch?.();
+                pendingFlushRef.current = true;
+                setTimeStamp(Date.now());     // 캐시 무력화 파라미터 갱신
+                setGridDataKey((k) => k + 1);   // GridData 재마운트 유도
+            } catch (e) {
+                console.error(e);
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
             }
         };
@@ -200,18 +306,22 @@ const ProList = () => {
             setExcludedById(m => { const n = new Map(m); n.set(row.id, excluded); return n; });
 
         // API 호출 (row / all)
-        const sendAnalysis = async ({ scope, excluded, id }) => {
+        // '머지'까지 강제 지정 가능하도록 valOverride 지원
+        const sendAnalysis = async ({ scope, id, valOverride, excluded, refresh = true }) => {
             const payload = {
                 user: auth?.user?.userId || "",
                 projectnum,
                 gb: scope === "row" ? "analysis" : "allanalysis",
                 columnname: "useyn",
-                val: excluded ? "제외" : "분석",
+                val: valOverride ?? (excluded ? "제외" : "분석"), // [수정] '머지' 허용
                 ...(scope === "row" ? { qid: id } : {}),
             };
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
-                handleSearch?.();   // 재조회
+                if (refresh) {
+                    setTimeStamp(Date.now());
+                    setGridDataKey((k) => k + 1);
+                }
             } else {
                 modal.showErrorAlert("에러", "오류가 발생했습니다.");
             }
@@ -229,8 +339,14 @@ const ProList = () => {
             }
         };
 
-        // 머지 여부
-        const isMergeRow = (row) => String(row?.useYN ?? '').trim() === '머지';
+        // 서버 useYN → '분석' | '머지' | '제외'
+        const normalizeUseYN = (row) => {
+            const u = String(row?.useYN ?? '').trim();
+            if (u === '제외') return '제외';
+            if (u === '머지') return '머지';
+            return '분석';
+        };
+
 
         // 전체 토글
         const bulkSetExcluded = async (excluded) => {
@@ -392,16 +508,11 @@ const ProList = () => {
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
                             const excluded = isExcluded(row);
-                            const locked = isLocked(row); // 잠금 여부
+                            const locked = isLocked(row);
 
-                            // 포함 상태일 때 표시 텍스트: '머지'면 '머지', 아니면 '분석'
-                            const includeLabel = String(row?.useYN ?? '').trim() === '머지' ? '머지' : '분석';
-
-                            // 최종 라벨/스타일
+                            const includeLabel = isMergeRow(row) ? '머지' : '분석'; // [수정] 입력 기준 표출
                             const state = excluded ? 'exclude' : (includeLabel === '머지' ? 'merge' : 'analysis');
                             const label = excluded ? '제외' : includeLabel;
-
-                            // 디자인 칩 클래스 (색상 매칭)
                             const cls = `chip chip--${state} ${locked ? 'chip--disabled' : ''}`;
 
                             return (
@@ -441,7 +552,7 @@ const ProList = () => {
                                 <td style={{ textAlign: 'center' }}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}>
-                                    {!excluded && (
+                                    {!excluded && !isMergeRow(row) && ( // 머지 행이면 숨김
                                         <Button
                                             className={`btnM ${locked ? 'btnM--disabled' : ''}`}
                                             themeColor={locked ? 'base' : 'primary'}
@@ -674,6 +785,12 @@ const ProList = () => {
             })
             .filter(g => g.inGroup.length > 0);
 
+        const gridKey = useMemo(() => {
+            const rows = dataState?.data ?? [];
+            // 필요하면 필드 더 넣어도 OK (성능상 문제 있으면 해시로 바꿔도 됨)
+            return rows.map(r => `${r.id}:${r.useYN ?? ''}:${r.merge_qnum_check ?? ''}`).join('|');
+        }, [dataState?.data]);
+
         return (
             <Fragment>
                 <article className="subTitWrap">
@@ -687,6 +804,7 @@ const ProList = () => {
                         <div className="cmn_gird_wrap">
                             <div id="grid_01" className="cmn_grid multihead">
                                 <KendoGrid
+                                    key={gridKey}
                                     parentProps={{
                                         height: "750px",
                                         data: dataState?.data,       // props에서 직접 전달
@@ -798,6 +916,7 @@ const ProList = () => {
 
     return (
         <GridData
+            key={gridDataKey}
             dataItemKey={DATA_ITEM_KEY}
             rowNumber={"no"}
             rowNumberOrder="desc"
@@ -807,7 +926,8 @@ const ProList = () => {
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 projectnum: projectnum || "",
-                gb: "select"
+                gb: "select",
+                _ts: timeStamp, // 캐시 버스터
             }}
             renderItem={(props) => <GridRenderer {...props} />}
         />
