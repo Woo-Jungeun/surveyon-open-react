@@ -267,8 +267,11 @@ const ProList = () => {
                 if (res?.success !== "777") throw new Error("merge 저장 실패");
 
                 // 4) 선택된 행들만 useYN 동기화
-                for (const [id, target] of toCall.entries()) {
-                    await sendAnalysis({ scope: "row", id, valOverride: target, refresh: false });
+                for (const r of rows) {
+                    if (!affectedIds.has(Number(r.id))) continue;
+                    if (String(r?.useYN ?? "").trim() === "제외") continue; // 제외는 건드리지 않음
+                    if (isLocked(r)) continue;
+                    await sendAnalysis({ scope: "row", id: r.id, excluded: false, refresh: false });
                 }
 
                 // 5) 다음 재조회에서 1회 입력 캐시 초기화 + 재조회
@@ -307,14 +310,13 @@ const ProList = () => {
             setExcludedById(m => { const n = new Map(m); n.set(row.id, excluded); return n; });
 
         // API 호출 (row / all)
-        // '머지'까지 강제 지정 가능하도록 valOverride 지원
-        const sendAnalysis = async ({ scope, id, valOverride, excluded, refresh = true }) => {
+        const sendAnalysis = async ({ scope, id, excluded, refresh = true }) => {
             const payload = {
                 user: auth?.user?.userId || "",
                 projectnum,
                 gb: scope === "row" ? "analysis" : "allanalysis",
                 columnname: "useyn",
-                val: valOverride ?? (excluded ? "제외" : "분석"), // [수정] '머지' 허용
+                val: excluded ? "제외" : "분석",
                 ...(scope === "row" ? { qid: id } : {}),
             };
             const res = await editMutation.mutateAsync(payload);
@@ -511,7 +513,7 @@ const ProList = () => {
                             const excluded = isExcluded(row);
                             const locked = isLocked(row);
 
-                            const includeLabel = isMergeRow(row) ? '머지' : '분석'; // [수정] 입력 기준 표출
+                            const includeLabel = isMergeRow(row) ? '머지' : '분석'; // 입력 기준 표출
                             const state = excluded ? 'exclude' : (includeLabel === '머지' ? 'merge' : 'analysis');
                             const label = excluded ? '제외' : includeLabel;
                             const cls = `chip chip--${state} ${locked ? 'chip--disabled' : ''}`;
