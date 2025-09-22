@@ -418,6 +418,7 @@ const ProList = () => {
         };
 
         const toggleRowLock = async (row) => {
+            if (isExcluded(row)) return; // 제외 상태에서는 아무 것도 하지 않음
             const prev = isLocked(row);
             setRowLocked(row, !prev);
             try {
@@ -593,6 +594,8 @@ const ProList = () => {
                         cell={(cellProps) => {
                             const { dataItem } = cellProps;
                             const locked = isLocked(dataItem);
+                            const excluded = isExcluded(dataItem);
+                            const disabled = excluded; // 제외면 비활성
                             return (
                                 <td
                                     style={{ textAlign: 'center' }}
@@ -600,9 +603,12 @@ const ProList = () => {
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <Button
-                                        className="btnS k-icon-button"
-                                        onClick={() => toggleRowLock(dataItem)}
-                                        title={locked ? '잠금 해제' : '잠금'}
+                                        className={`btnS k-icon-button${disabled ? ' btnS--disabled' : ''}`}
+                                        disabled={disabled}
+                                        onClick={() => { if (!disabled) toggleRowLock(dataItem); }}
+                                        title={
+                                            disabled ? '제외 상태' : (locked ? '잠금 해제' : '잠금')
+                                        }
                                     >
                                         <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden="true">{locked ? '🔒' : '🔓'}</span>
                                         <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
@@ -727,13 +733,15 @@ const ProList = () => {
                             const row = cellProps.dataItem;
                             const original = norm(row?.merge_qnum ?? "");
                             const cur = getMergeVal(row);     // controlled value          
-                            const tdRef = React.useRef(null);
+                            const tdRef = useRef(null);
                             const locked = isLocked(row); // "수정불가"면 true
+                            const excluded = isExcluded(row);
+                            const disabled = locked || excluded;
 
                             return (
                                 <td
                                     ref={tdRef}
-                                    className={norm(cur) !== original ? 'cell-merge-diff' : ''}
+                                    className={!disabled && norm(cur) !== original ? 'cell-merge-diff' : ''}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
                                 >
@@ -742,12 +750,13 @@ const ProList = () => {
                                         className="merge-input"
                                         key={`${row.id}:${cur}`}     // 재조회로 값이 바뀌면 인풋을 리마운트
                                         defaultValue={cur}           // 타이핑 중에는 리렌더 안 일어남(포커스 유지)
-                                        disabled={locked}
+                                        disabled={disabled}
                                         placeholder="번호 입력"
 
                                         onInput={(e) => {
                                             const now = norm(e.currentTarget.value);
                                             if (!tdRef.current) return;
+                                            if (disabled) return;
                                             if (now !== original) tdRef.current.classList.add('cell-merge-diff');
                                             else tdRef.current.classList.remove('cell-merge-diff');
                                         }}
