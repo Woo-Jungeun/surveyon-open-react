@@ -120,6 +120,23 @@ const ProList = () => {
         const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
 
         const pendingFlushRef = useRef(false); // 저장 후 1회 입력 캐시 초기화 플래그
+        
+        // 저장 여부 확인 
+        const blockWhenDirty = useCallback(() => {
+            // 블러된 변경: 상태 기반
+            const changed = getMergeChanges();
+            const hasChanged = Object.keys(changed).length > 0;
+          
+            // 블러 전 변경: 셀에 붙여둔 .cell-merge-diff 존재 여부
+            const gridEl = document.getElementById('grid_01');
+            const hasDirtyCell = !!(gridEl && gridEl.querySelector('.cell-merge-diff'));
+          
+            if (hasChanged || hasDirtyCell) {
+                modal.showErrorAlert("알림", "문항통합 입력에 저장되지 않은 내용이 있습니다.\n[문항통합저장]을 먼저 눌러 저장해 주세요.");
+              return true; // block
+            }
+            return false; // proceed
+          }, [dataState?.data, mergeEditsById, modal]);
 
         // ---------------- merge helpers ----------------
         const norm = (s) => String(s ?? "").trim();
@@ -332,6 +349,7 @@ const ProList = () => {
 
         // 행 토글
         const toggleExcluded = async (row) => {
+            if (blockWhenDirty()) return;
             const prev = isExcluded(row);
             setExcluded(row, !prev); // 낙관적
             try {
@@ -418,6 +436,7 @@ const ProList = () => {
         };
 
         const toggleRowLock = async (row) => {
+            if (blockWhenDirty()) return;
             if (isExcluded(row)) return; // 제외 상태에서는 아무 것도 하지 않음
             const prev = isLocked(row);
             setRowLocked(row, !prev);
@@ -430,6 +449,7 @@ const ProList = () => {
         };
 
         const bulkSetLock = async (locked) => {
+            if (blockWhenDirty()) return;
             const ids = (dataState?.data ?? []).map((r) => r.id);
             const prev = new Map(locksById);
             setLocksById(new Map(ids.map((id) => [id, locked])));
@@ -444,11 +464,11 @@ const ProList = () => {
         // ---------------- header/action helpers ----------------
         // 개별 컬럼 렌더 공통 함수
         const actions = {
-            onHeaderUseYN: () => bulkSetExcluded(false), // 전체 분석
-            onHeaderExclude: () => bulkSetExcluded(true), // 전체 제외
+            onHeaderUseYN: () => { if (!blockWhenDirty()) bulkSetExcluded(false); },
+            onHeaderExclude: () => { if (!blockWhenDirty()) bulkSetExcluded(true); },
             onHeaderMergeSave: () => sendMergeAll(),
-            onHeaderEditLockAll: () => bulkSetLock(true),
-            onHeaderEditUnlockAll: () => bulkSetLock(false),
+            onHeaderEditLockAll: () => { if (!blockWhenDirty()) bulkSetLock(true); },
+            onHeaderEditUnlockAll: () => { if (!blockWhenDirty()) bulkSetLock(false); },
         };
 
         // 헤더 버튼(단일)
@@ -561,7 +581,9 @@ const ProList = () => {
                                             className={`btnM ${locked ? 'btnM--disabled' : ''}`}
                                             themeColor={locked ? 'base' : 'primary'}
                                             disabled={locked}
-                                            onClick={() => { if (!locked) goOpenSetting(merge_qnum); }}
+                                            onClick={() => { 
+                                                if (!locked && !blockWhenDirty()) goOpenSetting(merge_qnum);
+                                            }}
                                         >
                                             분석
                                         </Button>
