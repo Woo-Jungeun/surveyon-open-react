@@ -16,6 +16,36 @@ import { modalContext } from "@/components/common/Modal.jsx";
  * @author jewoo
  * @since 2025-09-12<br />
  */
+
+//--------- 권한 레벨 --------- 
+const PERM = { READ: 0, WRITE: 1, MANAGE: 2 };
+
+function roleToPerm(usergroup) {
+    switch (usergroup) {
+        case "관리자(관리,읽기,쓰기)":
+        case "제작자(관리,읽기,쓰기)":
+        case "오픈팀(관리,읽기,쓰기)":
+            return PERM.MANAGE;
+        case "연구원(읽기,쓰기)":
+            return PERM.WRITE;
+        case "일반(읽기)":
+        default:
+            return PERM.READ;
+    }
+}
+const hasPerm = (userPerm, need) => userPerm >= need;
+
+const GROUP_MIN_PERM = {
+    VIEW: PERM.READ,
+    ADMIN: PERM.WRITE,
+    EDIT: PERM.MANAGE,
+};
+const FIELD_MIN_PERM = {
+    tokens_text: PERM.READ,
+    filterSetting: PERM.WRITE,
+    project_lock: PERM.MANAGE,
+};
+
 const ProList = () => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
@@ -45,6 +75,13 @@ const ProList = () => {
     //재조회 후 그리드 업데이트트 플래그
     const [gridDataKey, setGridDataKey] = useState(0);
     const [timeStamp, setTimeStamp] = useState(0); // cache buster
+
+    //컬럼 표출 권한 체크
+    const [userPerm, setUserPerm] = useState(PERM.READ);
+    useEffect(() => {
+        const ug = proListData?.data?.usergroup;  
+        if (ug) setUserPerm(roleToPerm(ug));
+    }, [proListData?.data?.usergroup]);
 
     // 서브그룹으로 묶으면서 리프 헤더를 숨기는 헬퍼
     const withSubgroup = (sub, leafOrder = 0) => (col) => ({
@@ -93,7 +130,7 @@ const ProList = () => {
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
-            columns={columns}
+            columns={columnsForPerm}
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map(c => [c.field, c]));
                 const next = columns.map(c => {
@@ -120,23 +157,23 @@ const ProList = () => {
         const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
 
         const pendingFlushRef = useRef(false); // 저장 후 1회 입력 캐시 초기화 플래그
-        
+
         // 저장 여부 확인 
         const blockWhenDirty = useCallback(() => {
             // 블러된 변경: 상태 기반
             const changed = getMergeChanges();
             const hasChanged = Object.keys(changed).length > 0;
-          
+
             // 블러 전 변경: 셀에 붙여둔 .cell-merge-diff 존재 여부
             const gridEl = document.getElementById('grid_01');
             const hasDirtyCell = !!(gridEl && gridEl.querySelector('.cell-merge-diff'));
-          
+
             if (hasChanged || hasDirtyCell) {
                 modal.showErrorAlert("알림", "문항통합 입력에 저장되지 않은 내용이 있습니다.\n[문항통합저장]을 먼저 눌러 저장해 주세요.");
-              return true; // block
+                return true; // block
             }
             return false; // proceed
-          }, [dataState?.data, mergeEditsById, modal]);
+        }, [dataState?.data, mergeEditsById, modal]);
 
         // ---------------- merge helpers ----------------
         const norm = (s) => String(s ?? "").trim();
@@ -347,8 +384,13 @@ const ProList = () => {
             }
         };
 
+        const guard = (need, fn) => (...args) => {
+            if (!hasPerm(userPerm, need)) return; // 권한 없으면 noop
+            return fn?.(...args);
+        };
+
         // 행 토글
-        const toggleExcluded = async (row) => {
+        const toggleExcluded = guard(PERM.WRITE, async (row) => {
             if (blockWhenDirty()) return;
             const prev = isExcluded(row);
             setExcluded(row, !prev); // 낙관적
@@ -358,7 +400,7 @@ const ProList = () => {
                 setExcluded(row, prev); // 실패 롤백
                 console.error(e);
             }
-        };
+        });
 
         // 서버 useYN → '분석' | '머지' | '제외'
         const normalizeUseYN = (row) => {
@@ -435,7 +477,7 @@ const ProList = () => {
             unlockAll: () => sendLock("allEdit", "수정"),
         };
 
-        const toggleRowLock = async (row) => {
+        const toggleRowLock = guard(PERM.MANAGE, async (row) => {
             if (blockWhenDirty()) return;
             if (isExcluded(row)) return; // 제외 상태에서는 아무 것도 하지 않음
             const prev = isLocked(row);
@@ -446,7 +488,7 @@ const ProList = () => {
                 setRowLocked(row, prev);              // 실패 시 롤백
                 console.error(e);
             }
-        };
+        });
 
         const bulkSetLock = async (locked) => {
             if (blockWhenDirty()) return;
@@ -464,11 +506,11 @@ const ProList = () => {
         // ---------------- header/action helpers ----------------
         // 개별 컬럼 렌더 공통 함수
         const actions = {
-            onHeaderUseYN: () => { if (!blockWhenDirty()) bulkSetExcluded(false); },
-            onHeaderExclude: () => { if (!blockWhenDirty()) bulkSetExcluded(true); },
-            onHeaderMergeSave: () => sendMergeAll(),
-            onHeaderEditLockAll: () => { if (!blockWhenDirty()) bulkSetLock(true); },
-            onHeaderEditUnlockAll: () => { if (!blockWhenDirty()) bulkSetLock(false); },
+            onHeaderUseYN: guard(PERM.WRITE, () => { if (!blockWhenDirty()) bulkSetExcluded(false); }),
+            onHeaderExclude: guard(PERM.WRITE, () => { if (!blockWhenDirty()) bulkSetExcluded(true); }),
+            onHeaderMergeSave: guard(PERM.MANAGE, () => sendMergeAll()),
+            onHeaderEditLockAll: guard(PERM.MANAGE, () => { if (!blockWhenDirty()) bulkSetLock(true); }),
+            onHeaderEditUnlockAll: guard(PERM.MANAGE, () => { if (!blockWhenDirty()) bulkSetLock(false); }),
         };
 
         // 헤더 버튼(단일)
@@ -581,7 +623,7 @@ const ProList = () => {
                                             className={`btnM ${locked ? 'btnM--disabled' : ''}`}
                                             themeColor={locked ? 'base' : 'primary'}
                                             disabled={locked}
-                                            onClick={() => { 
+                                            onClick={() => {
                                                 if (!locked && !blockWhenDirty()) goOpenSetting(merge_qnum);
                                             }}
                                         >
@@ -804,8 +846,18 @@ const ProList = () => {
             );
         };
 
-        // 화면에 보일 컬럼만
-        const visible = columns.filter(c => c.show !== false);
+        // 권한 반영 컬럼 배열
+        const columnsForPerm = useMemo(() => {
+            return columns.map((c) => {
+                const need = (FIELD_MIN_PERM[c.field] ?? GROUP_MIN_PERM[c.group || "VIEW"] ?? PERM.READ);
+                const canSee = hasPerm(userPerm, need);
+                return { ...c, show: (c.show !== false) && canSee };
+            });
+        }, [columns, userPerm]);
+
+
+
+        const visible = columnsForPerm.filter(c => c.show !== false);
 
         // 상위로 묶지 않는 단일 컬럼
         const roots = visible.filter(c => !c.group);
@@ -820,11 +872,10 @@ const ProList = () => {
             .filter(g => g.inGroup.length > 0);
 
         const gridKey = useMemo(() => {
-            const rows = dataState?.data ?? [];
-            // 필요하면 필드 더 넣어도 OK (성능상 문제 있으면 해시로 바꿔도 됨)
-            return rows.map(r => `${r.id}:${r.useYN ?? ''}:${r.merge_qnum ?? ''}`).join('|');
-        }, [dataState?.data]);
-
+            const rowsSig = (dataState?.data ?? []).map(r => `${r.id}:${r.useYN ?? ''}:${r.merge_qnum ?? ''}`).join('|');
+            const colsSig = visible.map(c => `${c.group}|${c.subgroup ?? ''}|${c.field}`).join(',');
+            return `${rowsSig}::${userPerm}::${colsSig}`;   // 권한/컬럼 시그니처 포함
+        }, [dataState?.data, visible, userPerm]);
         return (
             <Fragment>
                 <article className="subTitWrap">
