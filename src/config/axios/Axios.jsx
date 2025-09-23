@@ -3,34 +3,41 @@ import { persistor } from "@/common/redux/store/StorePersist.jsx";
 
 /** 모드별 baseURL 계산 (dev: 프록시 타도록 "/o", prod: 절대 URL) */
 function joinURL(base, path) {
-  if (!base && !path) return "";
-  if (!base) return path || "";
-  if (!path) return base || "";
-  return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
+    if (!base && !path) return "";
+    if (!base) return path || "";
+    if (!path) return base || "";
+    return base.replace(/\/+$/, "") + "/" + path.replace(/^\/+/, "");
 }
 const BASE_URL = import.meta.env.DEV
-  ? ""                                  // 로컬은 프록시 타니까 baseURL 비움
-  : (import.meta.env.VITE_API_BASE_URL || "https://son.hrc.kr"); // 운영 호스트만(뒤에 /o 넣지 말기!)
+    ? ""                                  // 로컬은 프록시 타니까 baseURL 비움
+    : (import.meta.env.VITE_API_BASE_URL || "https://son.hrc.kr"); // 운영 호스트만(뒤에 /o 넣지 말기!)
 
 /** axios 인스턴스 (글로벌 defaults 대신 인스턴스에만 설정) */
 export const apiAxios = axios.create({
-  baseURL: BASE_URL,                 // dev: "/o", prod: "https://son.hrc.kr/o"
-  withCredentials: true,             // 쿠키/세션 인증이면 true
-  timeout: 1000000000,        
-  headers: { "Content-Type": "application/json;charset=utf-8" },
+    baseURL: BASE_URL,                 // dev: "/o", prod: "https://son.hrc.kr/o"
+    withCredentials: true,             // 쿠키/세션 인증이면 true
+    timeout: 1000000000,
+    headers: { "Content-Type": "application/json;charset=utf-8" },
 });
 
 /** 요청 인터셉터 (쿠키의 TOKEN → Authorization 헤더) */
 apiAxios.interceptors.request.use(
-  (config) => {
-    const token = getCookie("TOKEN"); // 아래에 이미 정의된 getCookie 사용
-    if (token) {
-      config.headers = config.headers || {};
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
+    (config) => {
+        const token = getCookie("TOKEN"); // 아래에 이미 정의된 getCookie 사용
+        if (token) {
+            config.headers = config.headers || {};
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        // FormData면 JSON 헤더 제거 → 브라우저가 boundary 포함해서 자동 세팅
+        if (config.data instanceof FormData) {
+            const h = (config.headers ||= {});
+            delete h["Content-Type"]; delete h["content-type"];
+            if (h.common) delete h.common["Content-Type"];
+            if (h.post)   delete h.post["Content-Type"];
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
 );
 
 const isHTTPS = typeof window !== "undefined" && location.protocol === "https:";
@@ -78,7 +85,7 @@ apiAxios.interceptors.response.use(function (response) {
         if (data?.success === "710") {
             deleteCookie("TOKEN")
             persistor.purge();
-           // return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+            // return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
         } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
             // return {data: {status: data?.succes, message: data?.message}};
             return { data: { status: "오류", message: data?.message } };

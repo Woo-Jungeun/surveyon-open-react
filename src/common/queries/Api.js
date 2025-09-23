@@ -2,37 +2,47 @@ import { apiAxios } from "@/config/axios/Axios.jsx";
 import moment from "moment";
 
 const { VITE_DEFAULT_PATH } = import.meta.env;
-const join = (p) => (VITE_DEFAULT_PATH.replace(/\/+$/,'') + '/' + String(p).replace(/^\/+/, ''));
+const join = (p) => (VITE_DEFAULT_PATH.replace(/\/+$/, '') + '/' + String(p).replace(/^\/+/, ''));
 
 export default {
 
     async post(data, url) {
-        const response = await apiAxios.post(VITE_DEFAULT_PATH + url, data);
+        const response = await apiAxios.post(join(url), data);
         return response.data || {};
     },
 
     async get(data, url) {
-        const response = await apiAxios.get(VITE_DEFAULT_PATH + url, data);
+        const response = await apiAxios.get(join(url), data);
         // console.log("response", response)
         return response.data || {};
     },
 
-    async form(data, url) {
-        const response = await apiAxios.post(url, data, {
-            headers: {
-                "Accept": "*/*",
-                "Content-Type": "multipart/form-data"
-            }
-        });
+    async form(data, url, config = {}) {
+        const body = (data instanceof FormData)
+            ? data
+            : (() => {
+                const f = new FormData();
+                Object.entries(data || {}).forEach(([k, v]) => f.append(k, v ?? ""));
+                return f;
+            })();
 
-        return response.data;
+        const response = await apiAxios.post(join(url), body, config);
+        return response.data ?? response;
     },
 
+    // 파일 다운로드(Blob)용
     async file(data, url) {
-        const response = await apiAxios.post(url, data, { responseType: 'blob' });
+        const response = await apiAxios.post(
+          join(url),
+          data,
+          {
+            headers: { "Content-Type": "application/json" },
+            responseType: "blob",
+          }
+        );
         return response;
-    },
-    
+      },
+
     /*signalR 기능 시 사용*/
     /**
      * application/x-www-form-urlencoded 방식으로 POST 요청을 보냅니다.

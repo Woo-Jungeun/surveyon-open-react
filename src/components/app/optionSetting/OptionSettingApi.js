@@ -93,6 +93,32 @@ export function OptionSettingApi() {
         }
     );
 
+    // 샘플 다운로드 
+    const sampleDownloadData = useMutation(
+        async (data) => await api.file(data, "/pro_exload_api.aspx"),
+        {
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
+        }
+    );
+
+    // 업로드 api 
+    const uploadData = useMutation(
+        async (data) => await api.form(data, "/pro_exload_api.aspx"),
+        {
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
+        }
+    );
+
     return {
         optionEditData,
         optionSaveData,
@@ -101,6 +127,8 @@ export function OptionSettingApi() {
         optionAnalysisClear,
         optionStatus,
         projectListData,
-        excelListData
+        excelListData,
+        sampleDownloadData,
+        uploadData
     };
 }

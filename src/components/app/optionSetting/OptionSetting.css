@@ -224,9 +224,21 @@
 /* 자식 패널이 그리드 안에서 넘치지 않도록 */
 .two-grid-layout .panel { min-width: 0; }
 
-/*(선택) 좁은 화면에선 1열로 쌓기 */
+/* (선택) 좁은 화면에선 1열로 쌓기 */
 @media (max-width: 1200px) {
   .two-grid-layout {
     grid-template-columns: 1fr;
   }
 }
+/* 헤더에 버튼을 오른쪽으로 붙이기 */
+.subTit.subTit--with-actions{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;  /* 왼쪽 텍스트 / 오른쪽 버튼 */
+  width:100%;
+}
+.subTit.subTit--with-actions .actions{
+  display:flex;
+  gap:8px;
+}
+
