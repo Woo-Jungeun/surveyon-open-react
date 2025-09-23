@@ -17,15 +17,15 @@ export function OptionSettingApi() {
     const optionEditData = useMutation(
         async (data) => await api.post(data.params, "/option_edit_api.aspx"),
         {
-         onMutate: (vars) => { 
-            //loadingSpinner.show(); 
-        },
-         onSettled: () => {  
-            //loadingSpinner.hide(); 
-        }
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
         }
     );
-    
+
     // 데이터 저장 API
     const optionSaveData = useMutation(
         (data) => api.post(data, "/option_save_api.aspx"),
@@ -67,12 +67,40 @@ export function OptionSettingApi() {
         }
     );
 
+    // 보기 불러오기 api -projectlist
+    const projectListData = useMutation(
+        async (data) => await api.post(data.params, "/pro_exload_api.aspx"),
+        {
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
+        }
+    );
+
+    // 보기 불러오기 api -excellist
+    const excelListData = useMutation(
+        async (data) => await api.post(data, "/pro_exload_api.aspx"),
+        {
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
+        }
+    );
+
     return {
         optionEditData,
         optionSaveData,
         optionAnalysisStart,
         optionAnalysisStatus,
         optionAnalysisClear,
-        optionStatus
+        optionStatus,
+        projectListData,
+        excelListData
     };
 }

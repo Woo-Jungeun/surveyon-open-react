@@ -17,7 +17,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
  * @since 2025-08-14<br />
  */
 
-function openCenteredPopup(url, title = "viewer", w = 1280, h = 800) {
+function openCenteredPopup(url, title = "viewer", w = 2000, h = 800) {
   const dualLeft = window.screenLeft ?? window.screenX ?? 0;
   const dualTop = window.screenTop ?? window.screenY ?? 0;
   const width = window.innerWidth ?? document.documentElement.clientWidth ?? screen.width;
