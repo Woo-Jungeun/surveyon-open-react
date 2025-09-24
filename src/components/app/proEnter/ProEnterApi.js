@@ -18,10 +18,10 @@ export function ProEnterApi() {
         async (data) => await api.post(data.params, "/pro_enter_api.aspx"),
         {
          onMutate: (vars) => { 
-            //loadingSpinner.show(); 
+            loadingSpinner.show(); 
         },
          onSettled: () => {  
-            //loadingSpinner.hide(); 
+            loadingSpinner.hide(); 
         }
         }
     );

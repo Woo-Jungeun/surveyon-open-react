@@ -18,10 +18,10 @@ export function MainListApi() {
         async (data) => await api.post(data.params, "/main_list_api.aspx"),
         {
          onMutate: (vars) => { 
-            //loadingSpinner.show(); 
+            loadingSpinner.show(); 
         },
          onSettled: () => {  
-            //loadingSpinner.hide(); 
+            loadingSpinner.hide(); 
         }
         }
     );

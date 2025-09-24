@@ -18,10 +18,10 @@ export function OptionSettingApi() {
         async (data) => await api.post(data.params, "/option_edit_api.aspx"),
         {
             onMutate: (vars) => {
-                //loadingSpinner.show(); 
+                loadingSpinner.show(); 
             },
             onSettled: () => {
-                //loadingSpinner.hide(); 
+                loadingSpinner.hide(); 
             }
         }
     );
