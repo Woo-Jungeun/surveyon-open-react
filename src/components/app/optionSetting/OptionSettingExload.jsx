@@ -78,6 +78,7 @@ const OptionSettingExload = () => {
         { field: "lv123code", title: "소분류코드", width: "130px", show: true },
         { field: "lv1code", title: "대분류코드", show: false },
         { field: "lv2code", title: "중분류코드", show: false },
+        { field: "ex_gubun", title: "ex_gubun", show: false },
     ]);
 
     // 좌측 컬럼 메뉴
@@ -177,127 +178,116 @@ const OptionSettingExload = () => {
         fileInputRef.current?.click();
     }, []);
 
-    // 보기 엑셀 업로드 
-    // const handleFileChange = useCallback(async (e) => {
-    //     const file = e.target.files?.[0];
-    //     console.log(file)
-    //     e.target.value = ""; // 같은 파일 재선택 가능하게 초기화
-    //     if (!file) return;
+    // 공통: 트림/노멀라이즈
+    const norm = (v) => (typeof v === "string" ? v.trim() : (v ?? ""));
 
-    //     const sel = getSel();
-    //     if (!sel.select_projectnum || !sel.select_qnum) {
-    //         alert("좌측에서 프로젝트/문항을 먼저 선택하세요.");
-    //         return;
-    //     }
-    //     // if (modal.showAlert("알림", "엑셀 업로드 데이터를 대체 하시겠습니까?")) return;
-    //     modal.showConfirm(
-    //         "알림",
-    //         "엑셀 업로드 데이터를 대체 하시겠습니까?",
-    //         {
-    //             btns: [
-    //                 {
-    //                     title: "취소",
-    //                     class: "popup__btn popup__btn--gray"
-    //                 },
-    //                 {
-    //                     title: "확인",
-    //                     click: async () => {
-    //                         // api
+    // 첫 시트에서 A1/B1(혹은 A1 단일 문자열) → {xlsProject, xlsQnum} 얻기
+    function readHeaderIds(ws) {
+        const a1 = norm(ws?.A1?.w ?? ws?.A1?.v ?? "");
+        const b1 = norm(ws?.B1?.w ?? ws?.B1?.v ?? "");
+        if (a1 && b1) return { xlsProject: a1, xlsQnum: b1 };
 
-    //                         try {
-    //                             const form = new FormData();
-    //                             form.append("gb", "excel_upload");
-    //                             form.append("user", auth?.user?.userId || "");
-    //                             form.append("projectnum", sel.projectnum);
-    //                             // form.append("select_projectnum", sel.select_projectnum);
-    //                             // form.append("select_qnum", sel.select_qnum);
-    //                             // form.append("qid", sel.qid || "");
-    //                             form.append("files", file, file.name);
+        // A1에 "프로젝트 공백 문번호" 형태로 붙어있는 경우
+        if (a1) {
+            const parts = a1.split(/\s+/).filter(Boolean);
+            if (parts.length >= 2) return { xlsProject: parts[0], xlsQnum: parts[1] };
+            // 혹시 "q250089uk:A2-2" 처럼 기호로 붙으면 기호로도 분리
+            const byPunct = a1.split(/[\s,:;|]+/).filter(Boolean);
+            if (byPunct.length >= 2) return { xlsProject: byPunct[0], xlsQnum: byPunct[1] };
+        }
+        return { xlsProject: "", xlsQnum: "" };
+    }
 
+    // A3:G* 영역만 표로 변환
+    function sheetRangeToRows(ws, lastRowIdxZeroBase) {
+        const XLSrange = XLSX.utils.encode_range({
+            s: { r: 2, c: 0 },                  // r=2 → 3행(A3)
+            e: { r: lastRowIdxZeroBase, c: 6 }, // c=6 → G열
+        });
+        // 고정 헤더명으로 직접 지정
+        const rows = XLSX.utils.sheet_to_json(ws, {
+            range: XLSrange,
+            header: ["lv1", "lv1code", "lv2", "lv2code", "lv3", "lv123code", "ex_gubun"],
+            blankrows: false,
+            defval: "",
+            raw: false,
+        });
+        return rows;
+    }
 
-    //                             const res = await uploadData.mutateAsync(form);
-    //                             const data = res?.data ?? res;
-
-    //                             if (data?.success === "777") {
-    //                                 setRightRows(mapToRightRow(data?.resultjson || []));
-    //                                 modal.showAlert("알림", "업로드가 완료되었습니다.");
-    //                             } else if (data?.success === "762") {
-    //                                 // 보기중복
-    //                                 const dup = data?.jsondata || data?.resultjson || [];
-    //                                 setRightRows(mapToRightRow(dup));
-    //                                 modal.showErrorAlert("알림", "중복 코드가 있습니다. 그리드에서 확인하세요.");
-    //                             } else {
-
-    //                                 modal.showErrorAlert("에러", "업로드 중 오류가 발생했습니다.");
-    //                             }
-    //                         } catch (e) {
-    //                             const r = err?.response;
-    //                             if (r?.data instanceof Blob) {
-    //                                 const text = await r.data.text();
-    //                                 console.log("SERVER ERROR BODY >>>", text);
-    //                             } else {
-    //                                 console.log("UPLOAD ERROR >>>", err);
-    //                             }
-    //                             console.error(e);
-    //                             modal.showErrorAlert("알림", "업로드 중 오류가 발생했습니다.");
-    //                         }
-    //                     }
-    //                 }
-    //             ]
-    //         }
-    //     );
-
-    // }, [excelListData, auth?.user?.userId, projectnum, selectedProject, qnum]);
-    // 엑셀 파일을 읽어 우측 그리드 스키마로 변환
-    async function parseExcelFileToRows(file) {
+    // 첫 시트만 읽어서 검증 후, A3:G*를 우측 그리드 스키마로 표출
+    async function parseExcelFileToRows_firstSheetOnly(file, selProject, selQnum) {
         const buf = await file.arrayBuffer();
         const wb = XLSX.read(buf, { type: "array" });
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        // defval: 빈 셀도 키가 있게, raw:false: 값 문자열화(날짜/숫자도 보기 좋게)
-        const rows = XLSX.utils.sheet_to_json(ws, { defval: "", raw: false });
+        const wsName = wb.SheetNames[0];           // 첫 번째 시트 고정
+        const ws = wb.Sheets[wsName];
+        if (!ws) throw new Error("엑셀 첫 번째 시트를 찾을 수 없습니다.");
 
-        const norm = (v) => (typeof v === "string" ? v.trim() : v ?? "");
-        const pick = (row, keys) => {
-            for (const k of keys) if (row[k] !== undefined) return row[k];
-            return "";
-        };
+        // 1) A1/B1(또는 A1 단일)에서 프로젝트/문번호 읽기
+        const { xlsProject, xlsQnum } = readHeaderIds(ws);
 
-        // 헤더 매핑(영문/국문 둘 다 시도)
-        return rows
+        const pScreen = norm(selProject);
+        const qScreen = norm(selQnum);
+        const pXls = norm(xlsProject);
+        const qXls = norm(xlsQnum);
+
+        if (!pXls || !qXls) {
+            throw new Error("엑셀 1행(A1/B1)에 웹프로젝트번호/문번호가 없습니다.");
+        }
+        // 대소문자/공백 무시 비교
+        if (pScreen.toLowerCase() !== pXls.toLowerCase() || qScreen.toLowerCase() !== qXls.toLowerCase()) {
+            throw new Error(`엑셀 헤더 값이 화면값과 다릅니다.\n화면: ${pScreen} / ${qScreen}\n엑셀: ${pXls} / ${qXls}`);
+        }
+
+        // 2) A3:G* 만 읽기
+        // 끝행은 시트 범위에서 얻음
+        const ref = ws["!ref"] ? XLSX.utils.decode_range(ws["!ref"]) : null;
+        const lastR = ref ? ref.e.r : 10000; // fallback
+
+        const rawRows = sheetRangeToRows(ws, lastR);
+
+        // 3) 우측 그리드 스키마로 매핑(no, qnum 포함)
+        const rows = rawRows
             .map((r, i) => ({
                 no: i + 1,
-                qnum: sel.select_qnum,
-                lv1: norm(pick(r, ["lv1", "대분류", "대분류(lv1)"])),
-                lv2: norm(pick(r, ["lv2", "중분류", "중분류(lv2)"])),
-                lv3: norm(pick(r, ["lv3", "소분류", "소분류(lv3)"])),
-                lv123code: String(pick(r, ["lv123code", "소분류코드", "lv123Code"] || "")),
-                lv1code: norm(pick(r, ["lv1code", "대분류코드"])),
-                lv2code: norm(pick(r, ["lv2code", "중분류코드"])),
+                qnum: qScreen,                             // 현재 문번호 고정
+                lv1: norm(r.lv1),
+                lv1code: norm(r.lv1code),
+                lv2: norm(r.lv2),
+                lv2code: norm(r.lv2code),
+                lv3: norm(r.lv3),
+                lv123code: String(norm(r.lv123code)),
+                ex_gubun: norm(r.ex_gubun),
             }))
             // 완전 공백 행 제거
-            .filter(row => row.qnum || row.lv1 || row.lv2 || row.lv3 || row.lv123code);
+            .filter(x => x.lv1 || x.lv2 || x.lv3 || x.lv123code);
+
+        return rows;
     }
-    
+
+    // 파일 선택
     const handleFileChange = useCallback(async (e) => {
         const file = e.target.files?.[0];
-        e.target.value = "";            // 같은 파일 재선택 가능
+        e.target.value = ""; // 같은 파일 재선택 허용
         if (!file) return;
 
+        // 화면(또는 좌측 선택)의 기준값
+        const sel = getSel();
+        const selProject = sel.select_projectnum || projectnum;
+        const selQnum = sel.select_qnum || qnum;
+
         try {
-            // 엑셀을 바로 파싱해서 그리드에 넣기
-            const rows = await parseExcelFileToRows(file);
-            //console.log(rows);
+            const rows = await parseExcelFileToRows_firstSheetOnly(file, selProject, selQnum);
             setRightRows(rows);
             setRightSort([]);
             setRightFilter(null);
-
-            // 안내(선택)
-            modal.showAlert("알림", `엑셀 파일을 불러와 미리보기로 표시했습니다.\n필요 시 '보기등록'을 눌러 저장하세요.`);
+            modal.showAlert("알림", "엑셀을 불러왔습니다. (프로젝트/문번호 검증 완료)");
         } catch (err) {
             console.error(err);
-            modal.showErrorAlert("에러", "엑셀 파일을 읽는 중 오류가 발생했습니다.");
+            modal.showErrorAlert("에러", String(err.message || err));
         }
-    }, [setRightRows, setRightSort, setRightFilter, modal]);
+    }, [projectnum, qnum, modal]);
+
 
     // 샘플 다운로드 (Blob만 처리, 파일명 고정)
     const handleSampleClick = useCallback(
@@ -334,7 +324,7 @@ const OptionSettingExload = () => {
                     return;
                 }
 
-                saveBlobWithName(blob, `보기엑셀_샘플`+ moment().format("YYYYMMDDHHmmss")+`.xlsx`);
+                saveBlobWithName(blob, `보기엑셀_샘플_` + moment().format("YYYYMMDDHHmmss") + `.xlsx`);
             } catch (err) {
                 console.error(err);
                 modal.showErrorAlert("에러", "샘플 다운로드 중 오류가 발생했습니다.");
@@ -342,42 +332,40 @@ const OptionSettingExload = () => {
         }, [sampleDownloadData, auth?.user?.userId, projectnum, selectedProject, qnum]);
 
     // 보기 등록
-    const handleRegisterClick = useCallback(
-        async () => {
-            const sel = getSel();
-            if (!sel.select_projectnum || !sel.select_qnum) {
-                modal.showErrorAlert("알림", "좌측에서 프로젝트/문항을 먼저 선택하세요.");
-                return;
+    const handleRegisterClick = useCallback(async () => {
+        const sel = getSel();
+        if (!sel.select_projectnum || !sel.select_qnum) {
+            modal.showErrorAlert("알림", "좌측에서 프로젝트/문항을 먼저 선택하세요.");
+            return;
+        }
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum: sel.projectnum,
+                gb: "enter_ex",
+                select_projectnum: sel.select_projectnum,
+                select_qnum: sel.select_qnum,
+                qid: sel.qid,
+                rows: rightRows, // ← lv1code/lv2code 포함된 데이터 통째로 전달
+            };
+            const res = await excelListData.mutateAsync(payload);
+            console.log(res);
+            const data = res?.data ?? res;
+            const code = String(data?.success ?? "");
+
+            if (code === "777") {
+                modal.showAlert("알림", "보기등록이 완료되었습니다.");
+            } else if (code === "762") {
+                modal.showErrorAlert("알림", "중복 코드가 있습니다. 그리드에서 확인하세요.");
+                setRightRows(mapToRightRow(data?.jsondata || data?.resultjson || []));
+            } else {
+                modal.showErrorAlert("에러", data?.error || "보기등록 중 오류가 발생했습니다.");
             }
-
-            try {
-                const payload = {
-                    user: auth?.user?.userId || "",
-                    projectnum: sel.projectnum,
-                    gb: "enter_ex",
-                    select_projectnum: sel.select_projectnum,
-                    select_qnum: sel.select_qnum,
-                    qid: sel.qid,
-                };
-
-                const res = await excelListData.mutateAsync(payload);
-                console.log(res);
-                const data = res?.data ?? res;
-                const code = String(data?.success ?? "");
-
-                if (code === "777") {
-                    modal.showAlert("알림", "보기등록이 완료되었습니다.");
-                } else if (code === "762") {
-                    modal.showErrorAlert("알림", "중복 코드가 있습니다. 그리드에서 확인하세요.");
-                    setRightRows(mapToRightRow(data?.jsondata || data?.resultjson || []));
-                } else {
-                    modal.showErrorAlert("에러", data?.error || "보기등록 중 오류가 발생했습니다.");
-                }
-            } catch (err) {
-                console.error(err);
-                modal.showErrorAlert("에러", "보기등록 중 오류가 발생했습니다.");
-            }
-        }, [excelListData, auth?.user?.userId, projectnum, selectedProject, rightRows]);
+        } catch (err) {
+            console.error(err);
+            modal.showErrorAlert("에러", "보기등록 중 오류가 발생했습니다.");
+        }
+    }, [rightRows]);
 
     // 좌측 그리드
     const LeftGrid = useCallback(
