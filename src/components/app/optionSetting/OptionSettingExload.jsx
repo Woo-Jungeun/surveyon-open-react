@@ -422,7 +422,6 @@ const OptionSettingExload = () => {
             );
         }, [leftFilter, leftColumns, onLeftRowClick, selectedProject, leftSort]
     );
-
     // 우측 그리드
     const RightGrid = useMemo(() => {
         return (
@@ -430,9 +429,10 @@ const OptionSettingExload = () => {
                 <article className="subTitWrap">
                     <div className="subTit subTit--with-actions">
                         <div className="kvline">
-                            <span className="kv"><b>보기정보</b></span>
+                            <span className="kv"><b>보기정보 </b></span>
+                            <span className="kv" style={{ display: "block", fontSize:"13px"}}>{questionText}</span>
                         </div>
-
+                    
                         <div>
                             <div className="actions">
                                 <Button type="button" className="btnTxt" onClick={handleUploadClick}>보기엑셀업로드</Button>
