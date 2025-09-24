@@ -11,6 +11,7 @@ import "@/components/app/optionSetting/OptionSetting.css";
 import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal";
 import * as XLSX from "xlsx";
+import moment from "moment";
 
 /**
  * 보기불러오기 (새창)
@@ -333,7 +334,7 @@ const OptionSettingExload = () => {
                     return;
                 }
 
-                saveBlobWithName(blob, `보기엑셀_샘플.xlsx`);
+                saveBlobWithName(blob, `보기엑셀_샘플`+ moment().format("YYYYMMDDHHmmss")+`.xlsx`);
             } catch (err) {
                 console.error(err);
                 modal.showErrorAlert("에러", "샘플 다운로드 중 오류가 발생했습니다.");
