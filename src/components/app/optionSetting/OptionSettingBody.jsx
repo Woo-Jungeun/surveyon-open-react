@@ -125,7 +125,12 @@ const OptionSettingBody = () => {
     if (next === tabDivision) return;
 
     const cur = tabDivision;
-    if (unsaved[cur]) {
+    const curDirty =
+      cur === "2"
+        ? (unsaved["2"] || (lvCodeDraft?.value !== lvCodeCommitted?.value))
+        : unsaved[cur];
+
+    if (curDirty) {
       const action = await confirmNavigate(
         "저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?",
         /* canSave */(cur === "1" || cur === "2")
@@ -161,14 +166,15 @@ const OptionSettingBody = () => {
   // 새로고침/창닫기 가드 (브라우저 네이티브)
   useEffect(() => {
     const handler = (e) => {
-      const anyDirty = Object.values(unsaved).some(Boolean);
+      const stageDirty = tabDivision === "2" && (lvCodeDraft?.value !== lvCodeCommitted?.value);
+      const anyDirty = Object.values(unsaved).some(Boolean) || stageDirty;
       if (!anyDirty) return;
       e.preventDefault();
       e.returnValue = ""; // 크롬/사파리 경고 표시 트리거
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [unsaved]);
+  }, [unsaved, tabDivision, lvCodeDraft, lvCodeCommitted]);
 
   // 정렬, 필터, 컬럼 숨기기 상태 유지
   const [gridPrefs, setGridPrefs] = useState({
