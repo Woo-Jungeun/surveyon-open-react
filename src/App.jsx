@@ -10,6 +10,7 @@ import OptionSettingExloadWrapperView from "@/views/optionSetting/OptionSettingE
 import MainListWrapperView from "@/views/mainList/MainListWrapperView.jsx";
 import PopupWrapperView from "@/views/PopupWrapperView.jsx";
 import ProListWrapperView from "@/views/proList/ProListWrapperView.jsx";
+import ProEnterWrapperView from "@/views/proEnter/ProEnterWrapperView.jsx";
 import busGif from "@/assets/images/bus_loading.gif";
 
 function App() {
@@ -36,10 +37,9 @@ function App() {
             <Route index element={<MainListWrapperView />} />
             <Route path="pro_list/*" element={<ProListWrapperView />} />
             <Route path="open_setting/*" element={<OptionSettingWrapperView />} />
-            {/* <Route path="viewer/*" element={<OptionSettingExloadWrapperView />} />          */}
             <Route path="login/*" element={<Navigate to="/" replace />} />
+            <Route path="pro_enter/*" element={<ProEnterWrapperView />} />
             <Route path="*" element={<PageNotFound />} />
-            {/* <Route path="*" element={<Navigate to="/" replace />} /> */}
           </Route>
           
           {/*헤더 없는 페이지*/}

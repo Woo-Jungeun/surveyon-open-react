@@ -147,13 +147,11 @@ const MenuBar = () => {
                   className="dd-item"
                   onClick={() => {
                     setAppsOpen(false);
-                    // TODO: 실제 경로/팝업으로 교체
-                    // navigate('/project/new');
-                    modal.showAlert("알림", "프로젝트등록 준비 중");
+                    navigate('/pro_enter');
                   }}
                 >
                   <span className="dd-icon">＋</span>
-                  <span>프로젝트등록</span>
+                  <span>프로젝트 등록</span>
                 </button>
 
                 <button
