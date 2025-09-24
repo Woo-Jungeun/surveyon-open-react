@@ -4,6 +4,7 @@ import { Input } from "@progress/kendo-react-inputs";
 import { useSelector } from "react-redux";
 import { ProEnterApi } from "@/components/app/proEnter/ProEnterApi";
 import { modalContext } from "@/components/common/Modal.jsx";
+import { useNavigate } from "react-router-dom";
 
 /**
  * 프로젝트 등록 > 신규등록
@@ -11,9 +12,11 @@ import { modalContext } from "@/components/common/Modal.jsx";
  * @author jewoo
  * @since 2025-09-24<br />
  */
-const ProEnterTab3 = (props) => {
+const ProEnterTab3 = () => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
+    const navigate = useNavigate();
+
     const { proEnterSaveData } = ProEnterApi();
 
     const [pof, setPof] = useState("");
@@ -48,20 +51,15 @@ const ProEnterTab3 = (props) => {
             };
 
             const res = await proEnterSaveData.mutateAsync(payload);
-
             if (res?.success === "777") {
                 modal.showAlert("알림", "프로젝트가 등록되었습니다.");
-                onRegistered?.(res);
-                navigate("/");
-                setPof("");
-                setProjectname("");
+                navigate("/"); //프로젝트 목록 페이지로 이동
             } else if (res?.success === "765") {
                 // 중복
                 modal.showErrorAlert("알림", "이미 등록된 프로젝트 입니다.");
             } else {
                 modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
             }
-
         } catch (err) {
             modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
         } finally {

@@ -85,7 +85,6 @@ const ProEnterTab1 = (props) => {
                 };
 
                 const res = await proEnterSaveData.mutateAsync(payload);
-                console.log(res?.success);
                 if (res?.success === "766") {
                     modal.showErrorAlert("알림", "등록된 프로젝트가 없습니다.");
                     return;
@@ -95,11 +94,8 @@ const ProEnterTab1 = (props) => {
                     return;
                 }
                 if (res?.success === "777") {
-                    console.log("!!!!들어옴");
                     modal.showAlert("알림", "등록이 완료되었습니다.");
-                    // handleSearch();    //재조회
                     navigate("/"); //프로젝트 목록 페이지로 이동
-
                 } else {
                     modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다."); //오류 팝업 표출
                 }
