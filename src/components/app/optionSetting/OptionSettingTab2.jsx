@@ -8,6 +8,8 @@ import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
+import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
+
 /**
  * 분석 > 그리드 영역 > 보기 데이터
  *
@@ -178,8 +180,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch,
             hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature,
         } = props;
-        // 키값
-        const COMPOSITE_KEY_FIELD = "__rowKey";
+        
+        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
+            orderByWithProxy(dataState?.data || [], sort, {
+                // 숫자 인식 자연 정렬이 필요한 필드만 명시
+                lv1code: 'nat',
+                lv2code: 'nat',
+                lv123code: 'nat',
+            })
+        ), [dataState?.data, sort]);
+
+        const COMPOSITE_KEY_FIELD = "__rowKey";  // 키값
         const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row), []);
         const qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
@@ -985,7 +996,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
-                            data: dataState?.data,
+                            data: dataForGridSorted,
                             dataItemKey: "__rowKey",
                             idGetter: (r) => r.__rowKey,
                             editField,
@@ -998,13 +1009,30 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             useClientProcessing: true,                         // 클라 처리
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            initialSort: sort,
+                            initialSort: mappedSort,
                             initialFilter: filter,
-                            sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
+                            sortChange: ({ sort: next }) => {
+                                const nextRaw = unmapSortFields(next, proxyField);
+                                setSort(nextRaw ?? []);
+                                onPrefsChange?.({ sort: nextRaw ?? [] });
+                            },
                             filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
+                            if (c.field === 'lv1code' || c.field === 'lv2code' || c.field === 'lv123code') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={proxyField[c.field] ?? `__sort__${c.field}`}
+                                        title={c.title}
+                                        width={c.width}
+                                        sortable
+                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })} // 셀에는 원본 값 그대로 보여주기
+                                        cell={(p) => <td title={p.dataItem[c.field]}>{p.dataItem[c.field]}</td>}
+                                    />
+                                );
+                            }
                             if (c.field === 'delete') {
                                 return (
                                     <Column

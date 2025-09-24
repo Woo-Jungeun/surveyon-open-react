@@ -10,6 +10,8 @@ import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/components/app/proList/ProListPopup";    // 필터문항설정 팝업
 import "@/components/app/proList/ProList.css";
 import { modalContext } from "@/components/common/Modal.jsx";
+import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
+
 /**
  * 문항 목록
  *
@@ -79,7 +81,7 @@ const ProList = () => {
     //컬럼 표출 권한 체크
     const [userPerm, setUserPerm] = useState(PERM.READ);
     useEffect(() => {
-        const ug = proListData?.data?.usergroup;  
+        const ug = proListData?.data?.usergroup;
         if (ug) setUserPerm(roleToPerm(ug));
     }, [proListData?.data?.usergroup]);
 
@@ -126,6 +128,15 @@ const ProList = () => {
         [navigate]
     );
 
+    // 권한 반영 컬럼 배열
+    const columnsForPerm = useMemo(() => {
+        return columns.map((c) => {
+            const need = (FIELD_MIN_PERM[c.field] ?? GROUP_MIN_PERM[c.group || "VIEW"] ?? PERM.READ);
+            const canSee = hasPerm(userPerm, need);
+            return { ...c, show: (c.show !== false) && canSee };
+        });
+    }, [columns, userPerm]);
+
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
@@ -157,6 +168,15 @@ const ProList = () => {
         const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
 
         const pendingFlushRef = useRef(false); // 저장 후 1회 입력 캐시 초기화 플래그
+        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
+            orderByWithProxy(dataState?.data || [], sort, {
+                // 숫자 인식 자연 정렬이 필요한 필드만 명시
+                status_cnt: 'nat',
+                status_cnt_duplicated: 'nat',
+                status_cnt_fin: 'nat',
+                tokens_text: 'nat',
+            })
+        ), [dataState?.data, sort]);
 
         // 저장 여부 확인 
         const blockWhenDirty = useCallback(() => {
@@ -724,28 +744,6 @@ const ProList = () => {
                     />
                 );
             }
-            if (c.field === 'status_cnt_duplicated') {
-                return (
-                    <Column
-                        key={c.field}
-                        field={c.field}
-                        title={c.title}
-                        columnMenu={columnMenu}
-                        cell={BlankWhenMergeCell('status_cnt_duplicated')}
-                    />
-                );
-            }
-            if (c.field === 'status_cnt_fin') {
-                return (
-                    <Column
-                        key={c.field}
-                        field={c.field}
-                        title={c.title}
-                        columnMenu={columnMenu}
-                        cell={BlankWhenMergeCell('status_cnt_fin')}
-                    />
-                );
-            }
             if (c.field === 'status_text') {
                 return (
                     <Column
@@ -757,14 +755,36 @@ const ProList = () => {
                     />
                 );
             }
-            if (c.field === 'tokens_text') {
+            if (
+                c.field === 'status_cnt_duplicated' || c.field === 'status_cnt_fin' || c.field === 'tokens_text') {
                 return (
                     <Column
                         key={c.field}
-                        field={c.field}
+                        // 정렬은 프록시 필드 사용
+                        field={proxyField?.[c.field] ?? `__sort__${c.field}`}
                         title={c.title}
-                        columnMenu={columnMenu}
-                        cell={BlankWhenMergeCell('tokens_text')}
+                        width={c.width}
+                        sortable
+                        // 메뉴/필터는 원본 필드 기준으로 동작하도록 교정
+                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
+                        // 셀 표시는 기존처럼: 머지 행이면 빈칸
+                        cell={BlankWhenMergeCell(c.field)}
+                    />
+                );
+            }
+            if (c.field === 'status_cnt') {
+                return (
+                    <Column
+                        key={c.field}
+                        // 정렬은 프록시 필드 사용
+                        field={proxyField?.[c.field] ?? `__sort__${c.field}`}
+                        title={c.title}
+                        width={c.width}
+                        sortable
+                        // 메뉴/필터는 원본 필드 기준으로 동작하게 교정
+                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
+                        // 셀은 원본 값 그대로 표시
+                        cell={(p) => <td title={p.dataItem?.[c.field]}>{p.dataItem?.[c.field]}</td>}
                     />
                 );
             }
@@ -846,17 +866,6 @@ const ProList = () => {
             );
         };
 
-        // 권한 반영 컬럼 배열
-        const columnsForPerm = useMemo(() => {
-            return columns.map((c) => {
-                const need = (FIELD_MIN_PERM[c.field] ?? GROUP_MIN_PERM[c.group || "VIEW"] ?? PERM.READ);
-                const canSee = hasPerm(userPerm, need);
-                return { ...c, show: (c.show !== false) && canSee };
-            });
-        }, [columns, userPerm]);
-
-
-
         const visible = columnsForPerm.filter(c => c.show !== false);
 
         // 상위로 묶지 않는 단일 컬럼
@@ -892,7 +901,7 @@ const ProList = () => {
                                     key={gridKey}
                                     parentProps={{
                                         height: "750px",
-                                        data: dataState?.data,       // props에서 직접 전달
+                                        data: dataForGridSorted,       // props에서 직접 전달
                                         dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                                         selectedState,
                                         setSelectedState,
@@ -900,9 +909,12 @@ const ProList = () => {
                                         idGetter,                     // GridData가 만든 getter 그대로
                                         sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
                                         filterable: true,              // 필터 허용
-                                        sortChange: ({ sort }) => setSort(sort ?? []),
+                                        sortChange: ({ sort: next }) => {
+                                            const nextRaw = unmapSortFields(next, proxyField);
+                                            setSort(nextRaw ?? []);
+                                        },
                                         filterChange: ({ filter }) => setFilter(filter ?? undefined),
-                                        initialSort: sort,
+                                        initialSort: mappedSort,
                                         initialFilter: filter,
                                         // onRowClick,
                                         columnVirtualization: false,    // 멀티 헤더에서 가상화는 끄는 걸 권장

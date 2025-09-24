@@ -11,6 +11,8 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
+import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
+
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -229,6 +231,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
         const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
         const [gridEpoch, setGridEpoch] = useState(0);
+        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
+            orderByWithProxy(dataState?.data || [], sort, {
+                // 숫자 인식 자연 정렬이 필요한 필드만 명시
+                lv1code: 'nat',
+                lv2code: 'nat',
+                lv123code: 'nat',
+            })
+        ), [dataState?.data, sort]);
+
         useEffect(() => {
             const rowsNow = dataState?.data || [];
             if (!rowsNow.length || !hasAllRowKeys) return;
@@ -964,15 +975,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             });
         }, [selectedRowKey, lv3SelKeys, getKey, onRowMouseDown, onRowMouseEnter]);
 
-        // // 클릭 하이라이트(색상) 제거: 선택된 행 key/편집상태 모두 해제
-        // const clearRowHighlight = useCallback(() => {
-        //     setSelectedRowKey(null);
-        //     setDataState(prev => ({
-        //         ...prev,
-        //         data: prev.data.map(r => (r.inEdit ? { ...r, inEdit: false } : r))
-        //     }));
-        // }, [setDataState]);
-
         // 같은 행에서 여는 경우(특히 추가행) 즉시 하이라이트 해제하지 않음 → 닫힐 때 정리
         useEffect(() => {
             if (lv3EditorKey == null) return;
@@ -986,9 +988,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         const buildSavePayload = (rows, opts, { getKey, selectedState = {} }) => {
             const {
-                user = "",               
-                projectnum = "",         
-                qnum = "",            
+                user = "",
+                projectnum = "",
+                qnum = "",
                 gb = "in",               // 호출 구분자
             } = opts || {};
 
@@ -1248,7 +1250,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     <KendoGrid
                         key={`lv-${lvCode}-${gridEpoch}`}
                         parentProps={{
-                            data: dataState?.data,
+                            data: dataForGridSorted,
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
                             editField,
                             onItemChange,
@@ -1265,9 +1267,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             useClientProcessing: true,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            initialSort: sort,
+                            initialSort: mappedSort,
                             initialFilter: filter,
-                            sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
+                            sortChange: ({ sort: next }) => {
+                                const nextRaw = unmapSortFields(next, proxyField);
+                                setSort(nextRaw ?? []);
+                                onPrefsChange?.({ sort: nextRaw ?? [] });
+                            },
                             filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                             cellRender: (td, cellProps) => {
                                 if (!React.isValidElement(td)) return td;
@@ -1400,6 +1406,19 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 </td>
                                             );
                                         }}
+                                    />
+                                );
+                            }
+                            if (c.field === 'lv1code' || c.field === 'lv2code' || c.field === 'lv123code') {
+                                return (
+                                    <Column
+                                        key={c.field} 
+                                        field={proxyField[c.field] ?? `__sort__${c.field}`}
+                                        title={c.title}
+                                        width={c.width}
+                                        sortable 
+                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })} // 셀에는 원본 값 그대로 보여주기
+                                        cell={(p) => <td title={p.dataItem[c.field]}>{p.dataItem[c.field]}</td>} 
                                     />
                                 );
                             }
@@ -1556,12 +1575,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                     setLv3EditorKey(null);
                                     setLv3AnchorRect(null);
                                 }}
-                            // onClose={() => {
-                            //     clearLv3Selection();        // 셀 강조 제거
-                            //     clearRowHighlight();           // 수정 완료 시 하이라이트 해제
-                            //     setLv3EditorKey(null);
-                            //     setLv3AnchorRect(null);
-                            // }}
                             />
                         </div>
                     )}
