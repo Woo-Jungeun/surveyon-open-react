@@ -46,7 +46,7 @@ const OptionSettingExload = () => {
     const noopSelect = useCallback(() => { }, []);
     const rightIdGetter = useCallback(item => item?.no, []);
 
-    const { projectListData, excelListData, sampleDownloadData, uploadData } = OptionSettingApi();
+    const { projectListData, excelListData, sampleDownloadData } = OptionSettingApi();
 
     // 좌측에서 선택된 행 정보 (헤더 표기용)
     const [selectedProject, setSelectedProject] = useState(null); // { selprojectnum, project_qnum, pofname, ... }

@@ -106,18 +106,6 @@ export function OptionSettingApi() {
         }
     );
 
-    // 업로드 api 
-    const uploadData = useMutation(
-        async (data) => await api.form(data, "/pro_exload_api.aspx"),
-        {
-            onMutate: (vars) => {
-                //loadingSpinner.show(); 
-            },
-            onSettled: () => {
-                //loadingSpinner.hide(); 
-            }
-        }
-    );
 
     return {
         optionEditData,
@@ -128,7 +116,6 @@ export function OptionSettingApi() {
         optionStatus,
         projectListData,
         excelListData,
-        sampleDownloadData,
-        uploadData
+        sampleDownloadData
     };
 }
