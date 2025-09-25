@@ -207,20 +207,20 @@ function ModalProvider(props) {
      *  @author jewoo
      *   @since 2024-05-04<br />
      **/
-    const showConfirm = (title, content, btnOptions = {}) => {
+    const showConfirm = (title, content, options = {}, btnOptions = {}) => {
         setModal(prevState => ({
             ...prevState,
             type: "confirm",
             title: title,
             content: content,
-            btnList: btnOptions && btnOptions.btns ? btnOptions.btns : null,
+            btnList: btnOptions.btns ?? options.btns ?? null,
             show: true,
-            isBtnHide: btnOptions && btnOptions.isBtnHide ? btnOptions.isBtnHide : false,
+            isBtnHide: btnOptions.isBtnHide ?? options.isBtnHide ?? false,
             confirmCallback: null,
             width: 400,
-            visibleOn: btnOptions.visibleOn ?? null,
-            autoCloseOnRouteChange: btnOptions.autoCloseOnRouteChange ?? true,
-            zIndex: btnOptions.zIndex ?? undefined
+            visibleOn: options.visibleOn ?? btnOptions.visibleOn ?? null,
+            autoCloseOnRouteChange: options.autoCloseOnRouteChange ?? btnOptions.autoCloseOnRouteChange ?? true,
+            zIndex: options.zIndex ?? btnOptions.zIndex ?? undefined
         }));
     }
 
@@ -410,7 +410,7 @@ function Modal(props) {
                             doubleClickStageChange={false}
                             onClose={props.onClose}
                             style={props.zIndex != null ? { zIndex: props.zIndex } : undefined}
-                            >
+                        >
                             {
                                 props.content
                             }

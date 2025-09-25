@@ -109,7 +109,30 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (hasError) {
             modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.", MODAL_SCOPE);
         } else {
-            modal.showAlert("알림", "분석이 완료되었습니다.", MODAL_SCOPE);
+            modal.showConfirm("알림", "분석이 완료되었습니다.", MODAL_SCOPE, {
+                btns: [
+                    {
+                        title: "확인",
+                        click: async () => {
+                            try {
+                                //상태 확인 했다는 API 태움 
+                                const res = await optionEditData.mutateAsync({
+                                    params: {
+                                        user: auth?.user?.userId || "",
+                                        projectnum, qnum,
+                                        gb: "popupcheck", qid: data?.qid,
+                                        checkyn: 1
+                                    },
+                                });
+                                if(res.success==="777"){
+                                    console.log("정상 동작")
+                                }
+                            } catch {
+                            }
+                        },
+                    },
+                ],
+            });
         }
 
         setTimeout(goNextTab, 0);
@@ -258,10 +281,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (!projectnum || !qid) return;     // 준비 안 됐으면 대기
 
         if (initStatusCheckedRef.current) return;
-        //   if (projectnum && data?.qid) {   //todo 나중에 주석 풀기
-        initStatusCheckedRef.current = true;
-     //todo 임시주석   checkInitialStatus();
-        //   }
+      //  if (projectnum && data?.qid) {
+            initStatusCheckedRef.current = true;
+          //  checkInitialStatus();
+      //  }
     }, [projectnum, data?.qid]);
 
     // 배열 -> 옵션으로 변환
