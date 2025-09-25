@@ -321,43 +321,38 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [dataState?.data, hasAllRowKeys, hist, makeTab1Signature, onUnsavedChange]);
 
-        // 수정로그 commit 
-        const commitSmart = useCallback((updatedRows) => {
-            const newSig = makeTab1Signature(updatedRows);
+        // 수정 로그 commit (delta 기반)
+        const commitSmart = useCallback((updatedRows, changedKeys = null) => {
+            // delta 적용 시에는 굳이 전체 rows 시그니처를 다시 안 만들어도 됨
+            const newSig = changedKeys ? null : makeTab1Signature(updatedRows);
+
             const stack = sigStackRef.current;
             const top = stack[stack.length - 1] ?? null;
             const prev = stack[stack.length - 2] ?? baselineSigRef.current;
 
-            // 1) 동일 스냅샷이면 무시
-            if (newSig === top) {
-                onUnsavedChange?.(hist.hasChanges);
-                onHasEditLogChange?.(hist.hasChanges);
-                return;
-            }
-
-            // 2) 베이스라인으로 완전 복귀한 경우: 히스토리를 0으로 초기화
-            if (newSig === baselineSigRef.current) {
-                hist.reset(updatedRows);          // 내부 스택을 비우고 현재를 베이스라인으로
-                stack.length = 0;                 // 우리 서명 스택도 비우기
-                onUnsavedChange?.(false);         // 미저장 플래그 해제
+            if (newSig && newSig === top) return;
+            if (newSig && newSig === baselineSigRef.current) {
+                hist.reset(updatedRows);
+                stack.length = 0;
+                onUnsavedChange?.(false);
                 onHasEditLogChange?.(false);
                 return;
             }
-
-            // 3) 직전 단계로의 되돌림이면 undo로 처리(길이 -1처럼 보이게)
-            if (newSig === prev) {
-                hist.undo();      // 커서만 되돌리는 히스토리 구현이어도 OK
-                stack.pop();      // 우리는 실제로 스택에서 하나 제거
+            if (newSig && newSig === prev) {
+                hist.undo();
+                stack.pop();
                 onUnsavedChange?.(hist.hasChanges);
                 onHasEditLogChange?.(hist.hasChanges);
                 return;
             }
 
-            hist.commit(updatedRows);
-            stack.push(newSig);
+            hist.commit(updatedRows, { changedKeys }); // delta commit
+            if (newSig) stack.push(newSig);
+
             onUnsavedChange?.(true);
             onHasEditLogChange?.(true);
         }, [hist, makeTab1Signature, onUnsavedChange]);
+
 
         //ctrl+z, ctrl+y
         useEffect(() => {
@@ -499,73 +494,41 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data]);
 
         const setSelectedStateGuarded = useCallback((next) => {
-            // (A) 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
-            const expandWithBatchIfNeeded = (prevMap, nextMap) => {
-                try {
-                    const prevKeys = new Set(Object.keys(prevMap || {}));
-                    const nextKeys = new Set(Object.keys(nextMap || {}));
-                    const all = new Set([...prevKeys, ...nextKeys]);
-                    const changed = [];
-                    for (const k of all) {
-                        if (!!prevMap?.[k] !== !!nextMap?.[k]) changed.push(k);
-                    }
-                    // 체크박스 하나만 바뀌었고, 그 키가 현재 선택집합 안에 있으면 → 선택집합 전체에 동일값 적용
-                    if (changed.length === 1 && lv3SelKeys.size > 0) {
-                        const toggledKey = changed[0];
-                        const toggledVal = !!nextMap[toggledKey];
-                        if (lv3SelKeys.has(toggledKey)) {
-                            const expanded = { ...(prevMap || {}) };
-                            lv3SelKeys.forEach((k) => { expanded[k] = toggledVal; });
-                            return expanded;
-                        }
-                    }
-                } catch { }
-                return nextMap;
-            };
-
-            setSelectedState((prev) => {
+            setSelectedState(prev => {
                 const computed = (typeof next === "function" ? next(prev) : (next || {}));
-                const maybeBatched = expandWithBatchIfNeeded(prev, computed);
-
-                // 자동 동기화 중에는 데이터/히스토리 건드리지 않고 선택맵만 바꾼다
-                if (suppressUnsavedSelectionRef.current) {
-                    return maybeBatched;
-                }
-
-                // 변경된 키만 계산 (prev ↔ next 대칭차집합)
                 const toggled = [];
-                const allKeys = new Set([...Object.keys(prev || {}), ...Object.keys(maybeBatched || {})]);
+                const allKeys = new Set([...Object.keys(prev || {}), ...Object.keys(computed || {})]);
+        
                 for (const k of allKeys) {
-                    if (!!prev?.[k] !== !!maybeBatched?.[k]) toggled.push(k);
+                    if (!!prev?.[k] !== !!computed?.[k]) toggled.push(k);
                 }
-
+        
                 if (toggled.length) {
                     setDataState(prevDS => {
-                        const base = prevDS?.data || [];
-                        const nextRows = base.slice();                 // 얕은 복사(배열만)
+                        const nextRows = prevDS.data.slice();
                         let touched = false;
+        
                         for (const k of toggled) {
                             const idx = rowIndexByKey.get(k);
                             if (idx == null) continue;
+        
                             const r = nextRows[idx];
-                            const checked = !!maybeBatched[k];
+                            const checked = !!computed[k];
                             const nextRe = checked ? 'y' : '';
-                            if ((r.recheckyn ?? '') === nextRe && (r.selected ?? false) === checked) continue;
-                            nextRows[idx] = { ...r, recheckyn: nextRe, selected: checked }; // 해당 행만 교체
+                            if ((r.recheckyn ?? '') === nextRe) continue;
+        
+                            nextRows[idx] = { ...r, recheckyn: nextRe, selected: checked };
                             touched = true;
                         }
-                        if (touched) {
-                            commitSmart(nextRows);                       // 히스토리 유지 (Undo/Redo 동작)
-                            return { ...prevDS, data: nextRows };
-                        }
-                        return prevDS;
+        
+                        if (touched) commitSmart(nextRows, toggled);
+                        return { ...prevDS, data: nextRows };
                     });
                 }
-
-                return maybeBatched;
+                return computed;
             });
-    }, [setSelectedState, setDataState, lv3SelKeys, commitSmart, rowIndexByKey]);
-
+        }, [setSelectedState, setDataState, rowIndexByKey, commitSmart]);
+    
         useLayoutEffect(() => {
             if (!rows.length) return;
             if (!shouldAutoApplySelectionRef.current) return; // 1회만 동작
@@ -837,30 +800,33 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const applyLv3To = useCallback((targetKeys, opt) => {
             const isPh = opt && (opt.__placeholder || String(opt.codeId).startsWith('__ph__'));
             onUnsavedChange?.(true);
+        
             setDataState(prev => {
-                // 선택된 키들에 값 반영
-                const updated = prev.data.map(r =>
-                    targetKeys.has(getKey(r))
-                        ? {
-                            ...r,
-                            lv3: isPh ? (opt?.codeName ?? "") : (opt?.codeId ?? ""),
-                            lv1: opt?.lv1 ?? "",
-                            lv2: opt?.lv2 ?? "",
-                            lv1code: r?.lv1code ?? "",
-                            lv2code: r?.lv2code ?? "",
-                            lv123code: opt?.lv123code ?? "",
-                        }
-                        : r
-                );
-
-                // 필수값(오류) 마크를 먼저 적용한 스냅샷을 만든다
-                const marked = applyRequiredMarksLv3(updated);
-                // 되돌림 시 +1/-1 맞추기 위해 push 대신 commit 사용
-                commitSmart(marked);
-                // 상태 적용
+                const nextRows = prev.data.slice();
+                const changed = [];
+        
+                targetKeys.forEach(k => {
+                    const idx = rowIndexByKey.get(k);
+                    if (idx == null) return;
+        
+                    const r = nextRows[idx];
+                    nextRows[idx] = {
+                        ...r,
+                        lv3: isPh ? (opt?.codeName ?? "") : (opt?.codeId ?? ""),
+                        lv1: opt?.lv1 ?? "",
+                        lv2: opt?.lv2 ?? "",
+                        lv123code: opt?.lv123code ?? "",
+                    };
+                    changed.push(k);
+                });
+        
+                const marked = applyRequiredMarksLv3(nextRows);
+                commitSmart(marked, changed);
                 return { ...prev, data: marked };
             });
-        }, [setDataState, getKey, applyRequiredMarksLv3, hist, onUnsavedChange]);
+        }, [rowIndexByKey, applyRequiredMarksLv3, commitSmart]);
+        
+
         /*----------소분류 드래그-------*/
 
         // 행 클릭 이벤트 → 해당 행만 inEdit=true
@@ -882,30 +848,35 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             onUnsavedChange?.(true);
             const { dataItem, field, value } = e;
             const targetKey = getKey(dataItem);
-
-            setDataState(prev => ({
-                ...prev,
-                data: (() => {
-                    const nextRows = prev.data.map(row => getKey(row) === targetKey ? { ...row, [field]: value } : row);
-                    commitSmart(nextRows);
-                    return nextRows;
-                })()
-            }));
-        }, [getKey, setDataState]);
+        
+            setDataState(prev => {
+                const idx = rowIndexByKey.get(targetKey);
+                if (idx == null) return prev;
+        
+                const nextRows = prev.data.slice();
+                nextRows[idx] = { ...nextRows[idx], [field]: value };
+        
+                commitSmart(nextRows, [targetKey]); // delta 기반
+                return { ...prev, data: nextRows };
+            });
+        }, [getKey, rowIndexByKey, commitSmart]);
 
         // 드롭다운 변경 핸들러 (선택 행만 갱신) 
         const onDropDownItemChange = useCallback((row, field, value) => {
             onUnsavedChange?.(true);
             const key = getKey(row);
-            setDataState(prev => ({
-                ...prev,
-                data: (() => {
-                    const nextRows = prev.data.map(r => (getKey(r) === key ? { ...r, [field]: value } : r));
-                    commitSmart(nextRows);
-                    return nextRows;
-                })(),
-            }));
-        }, [getKey, setDataState]);
+        
+            setDataState(prev => {
+                const idx = rowIndexByKey.get(key);
+                if (idx == null) return prev;
+        
+                const nextRows = prev.data.slice();
+                nextRows[idx] = { ...nextRows[idx], [field]: value };
+        
+                commitSmart(nextRows, [key]); // delta 기반
+                return { ...prev, data: nextRows };
+            });
+        }, [getKey, rowIndexByKey, commitSmart]);
 
         const recomputeCidForGroup = useCallback((fk, data) => {
             // 1) 보류삭제 아닌 행만 모아서 정렬
@@ -1273,37 +1244,25 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             onUnsavedChange?.(true);
             const row = cellProps.dataItem;
             const key = getKey(row);
-            const fk = row?.fixed_key;
-
-            // 새 행은 즉시 제거
-            if (row.__isNew) {
-                setDataState(prev => {
-                    const kept = (prev.data || []).filter(r => getKey(r) !== key);
-                    // 제거 후 cid 재배열(보류삭제 제외)
-                    const recomputed = recomputeCidForGroup(fk, kept);
-                    // 필수값 마킹을 적용한 최종 스냅샷
-                    const marked = applyRequiredMarksLv3(recomputed);
-                    // 되돌리기 카운트가 정확히 맞도록 최종 스냅샷을 커밋
-                    commitSmart(marked);
-                    return { ...prev, data: marked };
-                });
-                return;
-            }
-
-            // 기존 행은 보류삭제 토글
+        
             setDataState(prev => {
-                const toggled = (prev.data || []).map(r =>
-                    getKey(r) === key
-                        ? { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false }
-                        : r
-                );
-
-                // 히스토리에는 항상 최종 스냅샷을 커밋
-                const marked = applyRequiredMarksLv3(toggled);
-                commitSmart(marked);
+                const nextRows = prev.data.slice();
+                const idx = rowIndexByKey.get(key);
+                if (idx == null) return prev;
+        
+                if (row.__isNew) {
+                    nextRows.splice(idx, 1);
+                } else {
+                    const r = nextRows[idx];
+                    nextRows[idx] = { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false };
+                }
+        
+                const marked = applyRequiredMarksLv3(nextRows);
+                commitSmart(marked, [key]);
                 return { ...prev, data: marked };
             });
-        }, [getKey, setDataState, onUnsavedChange, recomputeCidForGroup, applyRequiredMarksLv3, hist]);
+        }, [getKey, rowIndexByKey, applyRequiredMarksLv3, commitSmart]);
+        
         // "min-gap" (비어있는 가장 작은 수) or "max+1"
         const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
 
@@ -1604,26 +1563,37 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                 return (
                                     <Column
                                         key={c.field}
-                                        field={proxyField[c.field] ?? `__sort__${c.field}`}
+                                        field={proxyField[c.field] ?? `__sort__${c.field}`}   // 정렬 기준은 proxyField
                                         title={c.title}
                                         width={c.width}
                                         sortable
                                         columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
                                         cell={(p) => {
+                                            const rawValue = p.dataItem[c.field];  // 원래 값
+                                            const displayValue = rawValue ?? "";
+                            
                                             if (c.field !== 'lv123code') {
-                                                return <td title={p.dataItem[c.field]}>{p.dataItem[c.field]}</td>;
+                                                return <td title={displayValue}>{displayValue}</td>;
                                             }
+                            
+                                            // lv123code 전용 처리
                                             const r = p.dataItem;
                                             const codeEmpty = !String(r?.lv123code ?? "").trim();
-                                            const missingInDDL = !!r?.lv3 && !optByCodeId.has(r.lv3); // codeId 없는 상태(placeholder)
+                                            const missingInDDL = !!r?.lv3 && !optByCodeId.has(r.lv3);
                                             const showAdd = codeEmpty && missingInDDL;
-
+                            
                                             return (
                                                 <td style={{ textAlign: "center" }}>
                                                     {showAdd ? (
-                                                        <Button className={"btnM"} themeColor={"primary"} onClick={() => handleAddMissingCode(r)}>추가</Button>
+                                                        <Button
+                                                            className="btnM"
+                                                            themeColor="primary"
+                                                            onClick={() => handleAddMissingCode(r)}
+                                                        >
+                                                            추가
+                                                        </Button>
                                                     ) : (
-                                                        <span title={r?.lv123code}>{r?.lv123code}</span>
+                                                        <span title={displayValue}>{displayValue}</span>
                                                     )}
                                                 </td>
                                             );
