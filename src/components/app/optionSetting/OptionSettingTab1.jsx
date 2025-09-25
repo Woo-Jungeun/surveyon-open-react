@@ -60,7 +60,7 @@ function useDebouncedValue(value, delay = 120) {
     }, [value, delay]);
     return v;
 }
-
+const lv3Cache = new WeakMap();
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -863,55 +863,84 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 셀 값 변경 → 해당 행의 해당 필드만 업데이트
         const onItemChange = useCallback((e) => {
             onUnsavedChange?.(true);
-            const { dataItem, field, value } = e;
-            const targetKey = getKey(dataItem);
 
-            setDataState(prev => ({
-                ...prev,
-                data: (() => {
-                    const nextRows = prev.data.map(row => getKey(row) === targetKey ? { ...row, [field]: value } : row);
-                    commitSmart(nextRows);
-                    return nextRows;
-                })()
-            }));
-        }, [getKey, setDataState]);
+            setDataState((prev) => {
+                const prevData = prev?.data ?? [];
+                const idx = prevData.findIndex(r => getKey(r) === getKey(e.dataItem));
+                if (idx === -1) return prev;
+
+                const updatedRow = {
+                    ...prevData[idx],
+                    [e.field]: e.value,
+                    inEdit: true,
+                };
+
+                const nextData = [...prevData];
+                nextData[idx] = updatedRow;
+
+                const marked = applyRequiredMarksLv3(nextData);
+
+                // ✅ 변경된 행만 커밋
+                commitSmart([updatedRow]);
+
+                return { ...prev, data: marked };
+            });
+        }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
 
         // 드롭다운 변경 핸들러 (선택 행만 갱신) 
-        const onDropDownItemChange = useCallback((row, field, value) => {
+        const onDropDownItemChange = useCallback((e) => {
             onUnsavedChange?.(true);
-            const key = getKey(row);
-            setDataState(prev => ({
-                ...prev,
-                data: (() => {
-                    const nextRows = prev.data.map(r => (getKey(r) === key ? { ...r, [field]: value } : r));
-                    commitSmart(nextRows);
-                    return nextRows;
-                })(),
-            }));
-        }, [getKey, setDataState]);
 
-        const recomputeCidForGroup = useCallback((fk, data) => {
-            // 1) 보류삭제 아닌 행만 모아서 정렬
-            const alive = (data || [])
-                .filter(r => r.fixed_key === fk && r.__pendingDelete !== true)
-                .sort((a, b) => Number(a.cid) - Number(b.cid));
+            setDataState((prev) => {
+                const prevData = prev?.data ?? [];
+                const idx = prevData.findIndex(r => getKey(r) === getKey(e.dataItem));
+                if (idx === -1) return prev;
 
-            // 2) 새 cid 매핑 (보류삭제 행은 기존 cid 유지)
-            const newCidByRowKey = new Map();
-            let i = 1;
-            for (const r of alive) newCidByRowKey.set(getKey(r), String(i++));
+                const updatedRow = {
+                    ...prevData[idx],
+                    [e.field]: e.value,
+                    inEdit: true,
+                };
 
-            // 3) data에 반영
-            return (data || []).map(r =>
-                r.fixed_key === fk && newCidByRowKey.has(getKey(r))
-                    ? { ...r, cid: newCidByRowKey.get(getKey(r)) }
-                    : r
-            );
-        }, [getKey]);
+                const nextData = [...prevData];
+                nextData[idx] = updatedRow;
 
+                const marked = applyRequiredMarksLv3(nextData);
+
+                // 변경된 행만 커밋
+                commitSmart([updatedRow]);
+
+                return { ...prev, data: marked };
+            });
+        }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
+
+        // "min-gap" (비어있는 가장 작은 수) or "max+1"
+        const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
+
+        const getNextCid = useCallback((fk, data, mode = NEXT_CID_MODE) => {
+            const nums = (data || [])
+                .filter(r => r.fixed_key === fk && r.__pendingDelete !== true) // 보류 삭제 제외
+                .map(r => Number(r.cid))
+                .filter(n => Number.isFinite(n))
+                .sort((a, b) => a - b);
+
+            if (mode === "min-gap") {
+                let expect = 1;
+                for (const n of nums) {
+                    if (n === expect) expect++;
+                    else if (n > expect) break;   // 구멍 발견
+                }
+                return String(expect); // 1,2,3,.. 가운데 비어있는 가장 작은 값
+            }
+            // default: max+1
+            const max = nums.length ? nums[nums.length - 1] : 0;
+            return String(max + 1);
+        }, []);
+        
         // 추가 버튼 이벤트
         const handleAddButton = useCallback((cellProps) => {
             onUnsavedChange?.(true);
+
             const clicked = cellProps.dataItem;
             const clickedKey = getKey(clicked);
             setSelectedRowKey(clickedKey);
@@ -919,12 +948,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setDataState((prev) => {
                 const prevData = prev?.data ?? [];
                 const idx = prevData.findIndex(r => getKey(r) === clickedKey);
-                if (idx === -1) return prev; // 대상 행 못찾으면 원본 유지
-                // 같은 fixed_key 그룹 내에서 "현재 prev.data" 기준으로 max cid 계산
+                if (idx === -1) return prev;
+
                 const fk = clicked?.fixed_key;
                 const nextCid = getNextCid(fk, prevData);
 
-                // 새 행 기본값
                 const newRow = {
                     fixed_key: fk,
                     cid: nextCid,
@@ -938,17 +966,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     ip: "",
                     inEdit: true,
                     __isNew: true,
-                    __rowKey: `${String(fk)}::${nextCid}::${Date.now()}::${Math.random()}`, // ← 고유키
+                    __rowKey: `${String(fk)}::${nextCid}::${Date.now()}::${Math.random()}`,
                 };
 
-                // 클릭한 행 아래에 삽입
                 const nextData = [...prevData];
                 nextData.splice(idx + 1, 0, newRow);
+
                 const marked = applyRequiredMarksLv3(nextData);
-                commitSmart(marked);
+
+                // ✅ 새로 추가된 행만 커밋
+                commitSmart([newRow]);
+
                 return { ...prev, data: marked };
             });
-        }, [getKey, onUnsavedChange, setDataState, setSelectedRowKey, recomputeCidForGroup, applyRequiredMarksLv3, hist]);
+        }, [getKey, onUnsavedChange, setSelectedRowKey, getNextCid, applyRequiredMarksLv3, commitSmart]);
+
 
         // 클릭 행 
         const rowRender = useCallback((trEl, rowProps) => {
@@ -1195,7 +1227,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // util
         const tl = (v) => String(v ?? "").trim().toLowerCase();
-        const phId = (name) => `__ph__${tl(name)}`;
 
         // 옵션 증강: rows에만 있는 값은 placeholder(고유 codeId)로 추가
         const augmentedLv3Options = useMemo(() => {
@@ -1203,24 +1234,30 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const byName = new Map(base.map(o => [tl(o.codeName), o]));
             const out = [...base];
 
-            (rows || []).forEach(r => {
+            for (const r of rows || []) {
                 const name = r?.lv3;
                 const key = tl(name);
-                if (!key) return;
+                if (!key) continue;
+
                 if (!byName.has(key)) {
-                    const ph = {
-                        codeId: phId(name),           // ★ 고유 ID
-                        codeName: name ?? "",
-                        lv1: r?.lv1 ?? "",
-                        lv2: r?.lv2 ?? "",
-                        lv123code: r?.lv123code ?? "",
-                        __placeholder: true,
-                    };
+                    let ph = lv3Cache.get(r);   // 이 row에 이미 캐시 있으면 재사용
+                    if (!ph) {
+                        ph = {
+                            codeId: `__ph__${key}`,
+                            codeName: name ?? "",
+                            lv1: r?.lv1 ?? "",
+                            lv2: r?.lv2 ?? "",
+                            lv123code: r?.lv123code ?? "",
+                            __placeholder: true,
+                        };
+                        lv3Cache.set(r, ph); // 캐시에 저장
+                    }
                     byName.set(key, ph);
                     out.push(ph);
                 }
-            });
-            return out.map(o => Object.freeze(o));
+            }
+
+            return out;
         }, [lv3Options, rows]);
 
         // 빠른 조회용 맵
@@ -1254,61 +1291,24 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
             onUnsavedChange?.(true);
-            const row = cellProps.dataItem;
-            const key = getKey(row);
-            const fk = row?.fixed_key;
 
-            // 새 행은 즉시 제거
-            if (row.__isNew) {
-                setDataState(prev => {
-                    const kept = (prev.data || []).filter(r => getKey(r) !== key);
-                    // 제거 후 cid 재배열(보류삭제 제외)
-                    const recomputed = recomputeCidForGroup(fk, kept);
-                    // 필수값 마킹을 적용한 최종 스냅샷
-                    const marked = applyRequiredMarksLv3(recomputed);
-                    // 되돌리기 카운트가 정확히 맞도록 최종 스냅샷을 커밋
-                    commitSmart(marked);
-                    return { ...prev, data: marked };
-                });
-                return;
-            }
+            const deletedRow = cellProps.dataItem;
+            const deletedKey = getKey(deletedRow);
 
-            // 기존 행은 보류삭제 토글
-            setDataState(prev => {
-                const toggled = (prev.data || []).map(r =>
-                    getKey(r) === key
-                        ? { ...r, __pendingDelete: !r.__pendingDelete, inEdit: false }
-                        : r
-                );
+            setDataState((prev) => {
+                const prevData = prev?.data ?? [];
+                const nextData = prevData.filter(r => getKey(r) !== deletedKey);
 
-                // 히스토리에는 항상 최종 스냅샷을 커밋
-                const marked = applyRequiredMarksLv3(toggled);
-                commitSmart(marked);
+                const marked = applyRequiredMarksLv3(nextData);
+
+                // ✅ 삭제된 행만 커밋
+                commitSmart([deletedRow]);
+
                 return { ...prev, data: marked };
             });
-        }, [getKey, setDataState, onUnsavedChange, recomputeCidForGroup, applyRequiredMarksLv3, hist]);
-        // "min-gap" (비어있는 가장 작은 수) or "max+1"
-        const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
+        }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
 
-        const getNextCid = useCallback((fk, data, mode = NEXT_CID_MODE) => {
-            const nums = (data || [])
-                .filter(r => r.fixed_key === fk && r.__pendingDelete !== true) // 보류 삭제 제외
-                .map(r => Number(r.cid))
-                .filter(n => Number.isFinite(n))
-                .sort((a, b) => a - b);
 
-            if (mode === "min-gap") {
-                let expect = 1;
-                for (const n of nums) {
-                    if (n === expect) expect++;
-                    else if (n > expect) break;   // 구멍 발견
-                }
-                return String(expect); // 1,2,3,.. 가운데 비어있는 가장 작은 값
-            }
-            // default: max+1
-            const max = nums.length ? nums[nums.length - 1] : 0;
-            return String(max + 1);
-        }, []);
 
         // 추가 버튼은 “보류삭제 아닌 마지막 cid”에서만
         const lastVisibleCidByFixedKey = useMemo(() => {
@@ -1424,6 +1424,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 </div>
                 <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""} ${isDragging ? "is-dragging" : ""}`}>
                     <KendoGrid
+                        scrollable="virtual"
+                        rowHeight={38}
                         key={`lv-${lvCode}-${gridEpoch}`}
                         parentProps={{
                             data: dataForGridSorted,
