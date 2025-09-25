@@ -87,6 +87,7 @@ const MainList = () => {
                             <div id="grid_01" className="cmn_grid">
                                 <KendoGrid
                                     parentProps={{
+                                        height: "750px",
                                         data: dataState?.data,       // props에서 직접 전달
                                         dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                                         selectedState,
