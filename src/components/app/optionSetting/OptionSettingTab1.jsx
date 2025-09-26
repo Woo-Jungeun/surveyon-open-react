@@ -1493,6 +1493,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 >
                                                     <div
                                                         className="lv3-opener"
+                                                        style={{ cursor: "pointer" }}   
                                                         onMouseDown={(e) => e.stopPropagation()} // td 핸들러 막음
                                                         onClick={(e) => {
                                                             e.stopPropagation();
