@@ -13,32 +13,6 @@ import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
 import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
 
-/** 셀 표시용: 원래 Kendo DDL 모양 유지 + 열리지 않음 + 가벼움(현재값 1개만) */
-const ReadonlyDDL = React.memo(function ReadonlyDDL({
-    option,                      // { codeId, codeName } 또는 null
-    placeholder = "소분류 선택",
-}) {
-    const data = option ? [option] : [];
-    return (
-        <DropDownList
-            data={data}
-            dataItemKey="codeId"
-            textField="codeName"
-            value={option || null}
-            placeholder={placeholder}
-            opened={false}
-            onOpen={(e) => e.preventDefault()}
-            clearButton={false}
-            tabIndex={-1}
-            className="readonly-ddl"
-            style={{ pointerEvents: "none", width: "100%" }}
-        />
-    );
-}, (prev, next) => {
-    const p = prev.option, n = next.option;
-    // 값/플레이스홀더 모두 동일하면 스킵
-    return (p?.codeId === n?.codeId) && (prev.placeholder === next.placeholder);
-});
 // 드래그 제외 셀렉터: 바깥에 선언해 매 렌더마다 재생성 방지
 const ROW_EXCLUSION_SELECTOR = [
     '.lv3-popup', '.lv3-editor', '.lv3-opener', '.k-animation-container',
@@ -112,18 +86,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
             // { field: "fixed_key", title: "키", show: false, editable: false },
-            { field: "answer_origin", title: "원본 응답", show: true, editable: false, allowHide: false },
+            { field: "answer_origin", title: "원본 응답", show: true, editable: false, width: "230px", allowHide: false },
             { field: "cid", title: "멀티", show: true, editable: false, width: "100px", allowHide: false },
-            { field: "answer", title: "클리닝 응답", show: true, editable: false, allowHide: false },
-            { field: "lv1code", title: "대분류 코드", show: true, editable: false },
-            { field: "lv1", title: "대분류", show: true, editable: false },
-            { field: "lv2code", title: "중분류 코드", show: true, editable: false },
-            { field: "lv2", title: "중분류", show: true, editable: false },
-            { field: "lv123code", title: "소분류 코드", show: true, editable: false, allowHide: false },
+            { field: "answer", title: "클리닝 응답", show: true, editable: false, width: "230px", allowHide: false },
+            { field: "lv1code", title: "대분류 코드", show: true, editable: false, width: "150px" },
+            { field: "lv1", title: "대분류", show: true, editable: false, width: "200px" },
+            { field: "lv2code", title: "중분류 코드", show: true, editable: false, width: "150px" },
+            { field: "lv2", title: "중분류", show: true, editable: false, width: "200px" },
+            { field: "lv123code", title: "소분류 코드", show: true, editable: false, width: "150px", allowHide: false },
             { field: "lv3", title: "소분류", show: true, editable: true, width: "200px", allowHide: false },
-            { field: "sentiment", title: "sentiment", show: true, editable: false },
-            { field: "add", title: "추가", show: true, editable: true, allowHide: false },
-            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
+            { field: "sentiment", title: "sentiment", show: true, editable: false, width: "150px" },
+            { field: "add", title: "추가", show: true, editable: true, width: "100px", allowHide: false },
+            { field: "delete", title: "삭제", show: true, editable: true, width: "100px", allowHide: false }
         ]);
 
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
@@ -179,12 +153,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     ), [columns, forcedHidden, stageFields, filter, onPrefsChange]);
 
     // 검증 드롭다운 데이터
-    const sentimentOptions = useMemo(
-        () => [
-            { codeId: "neutral", codeName: "neutral" },
-            { codeId: "positive", codeName: "positive" },
-            { codeId: "negative", codeName: "negative" }
-        ], []);
+    // const sentimentOptions = useMemo(
+    //     () => [
+    //         { codeId: "neutral", codeName: "neutral" },
+    //         { codeId: "positive", codeName: "positive" },
+    //         { codeId: "negative", codeName: "negative" }
+    //     ], []);
 
     // 소분류 드롭다운 데이터 + 메타 기능
     const [lv3Options, setLv3Options] = useState([]);
@@ -880,7 +854,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                 const marked = applyRequiredMarksLv3(nextData);
 
-                // ✅ 변경된 행만 커밋
+                // 변경된 행만 커밋
                 commitSmart([updatedRow]);
 
                 return { ...prev, data: marked };
@@ -936,7 +910,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const max = nums.length ? nums[nums.length - 1] : 0;
             return String(max + 1);
         }, []);
-        
+
         // 추가 버튼 이벤트
         const handleAddButton = useCallback((cellProps) => {
             onUnsavedChange?.(true);
@@ -974,7 +948,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                 const marked = applyRequiredMarksLv3(nextData);
 
-                // ✅ 새로 추가된 행만 커밋
+                // 새로 추가된 행만 커밋
                 commitSmart([newRow]);
 
                 return { ...prev, data: marked };
@@ -1024,8 +998,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return React.cloneElement(trEl, {
                 ...trEl.props,
                 className: cls,
-                // onMouseDown: (e) => { onRowMouseDown(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseDown?.(e); },
-                // onMouseEnter: (e) => { onRowMouseEnter(rowProps, e); if (!e.defaultPrevented) trEl.props.onMouseEnter?.(e); },
                 onPointerDown: (e) => { onRowMouseDown(rowProps, e); trEl.props.onPointerDown?.(e); },
                 onPointerEnter: (e) => { onRowMouseEnter(rowProps, e); trEl.props.onPointerEnter?.(e); },
                 onDragStart: (e) => e.preventDefault(), // 네이티브 드래그로 텍스트 선택되는 것 방지
@@ -1256,7 +1228,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     out.push(ph);
                 }
             }
-
             return out;
         }, [lv3Options, rows]);
 
@@ -1281,7 +1252,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             augmentedLv3Options.forEach(o => m.set(tl(o.codeName), o));
             return m;
         }, [augmentedLv3Options]);
-        // console.log("augmentedLv3Options", augmentedLv3Options);
+
         // 검증 체크박스 위치 고정시키기 위함 (임시)
         const anchorField = useMemo(() => {
             const vis = effectiveColumns.filter(c => c.show !== false);
@@ -1301,14 +1272,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                 const marked = applyRequiredMarksLv3(nextData);
 
-                // ✅ 삭제된 행만 커밋
+                // 삭제된 행만 커밋
                 commitSmart([deletedRow]);
 
                 return { ...prev, data: marked };
             });
         }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
-
-
 
         // 추가 버튼은 “보류삭제 아닌 마지막 cid”에서만
         const lastVisibleCidByFixedKey = useMemo(() => {
@@ -1481,11 +1450,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                             const isSelectedCell = lv3SelKeys.has(rowKey);
                                             const isActiveCell = lv3EditorKey === rowKey;
                                             const currentValue = cellProps.dataItem.lv3 ?? "";
-                                            const selectedOption =
-                                                optByCodeId.get(currentValue) ||                            // 정상 코드
-                                                optByLv123.get(tl(cellProps.dataItem.lv123code)) ||         // 코드로 매칭
-                                                optByName.get(tl(currentValue)) ||                          // placeholder(이름) 매칭
-                                                null;
                                             const hasReqError = cellProps.dataItem?.__errors?.has?.('lv3');
                                             const labelKind = cellProps.dataItem?.__errorKinds?.lv3; // 'required' 예상
                                             const labelText = labelKind === 'required' ? '빈값' : '오류';
@@ -1560,19 +1524,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                             });
                                                         }}
                                                     >
-                                                        {/* 모양만 보여주는 DropDownList */}
-                                                        {/* <DropDownList
-                                                            id={`lv3_display__${rowKey}`}
-                                                            name="lv3_display"
-                                                            data={augmentedLv3Options}
-                                                            dataItemKey="codeId"
-                                                            textField="codeName"
-                                                            value={selectedOption}
-                                                            placeholder="소분류 선택"
-                                                            tabIndex={-1}
-                                                            style={{ pointerEvents: "none", width: "100%" }}
-                                                        /> */}
-                                                        <ReadonlyDDL option={selectedOption} />
+                                                        <span className="lv3-display">{currentValue || "소분류 선택"}</span>
                                                     </div>
                                                     {/* 필수값 오류 배지 */}
                                                     {hasReqError && <span className="cell-error-badge">{labelText}</span>}
