@@ -281,6 +281,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (!projectnum || !qid) return;     // 준비 안 됐으면 대기
 
         if (initStatusCheckedRef.current) return;
+        //todo 임시 주석 
       //  if (projectnum && data?.qid) {
             initStatusCheckedRef.current = true;
           //  checkInitialStatus();
