@@ -121,7 +121,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             { field: "lv2", title: "중분류", show: true, editable: false },
             { field: "lv123code", title: "소분류 코드", show: true, editable: false, allowHide: false },
             { field: "lv3", title: "소분류", show: true, editable: true, width: "200px", allowHide: false },
-            { field: "sentiment", title: "sentiment", show: true, editable: true },
+            { field: "sentiment", title: "sentiment", show: true, editable: false },
             { field: "add", title: "추가", show: true, editable: true, allowHide: false },
             { field: "delete", title: "삭제", show: true, editable: true, allowHide: false }
         ]);
@@ -1613,37 +1613,37 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                     />
                                 );
                             }
-                            if (c.field === 'sentiment') {
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field="sentiment"
-                                        title={c.title}
-                                        width={c.width}
-                                        columnMenu={columnMenu}
-                                        cell={(cellProps) => {
-                                            const selectedOption =
-                                                sentimentOptions.find(o => o.codeId === (cellProps.dataItem.sentiment ?? "")) ?? null;
-                                            return (
-                                                <td>
-                                                    <CustomDropDownList
-                                                        id={`sentiment__${getKey(cellProps.dataItem)}`}
-                                                        name="sentiment"
-                                                        data={sentimentOptions}
-                                                        dataItemKey={"codeId"}
-                                                        textField={"codeName"}
-                                                        value={selectedOption}
-                                                        onChange={(e) => {
-                                                            const chosen = e?.value ?? null;
-                                                            onDropDownItemChange(cellProps.dataItem, "sentiment", chosen?.codeId ?? "");
-                                                        }}
-                                                    />
-                                                </td>
-                                            )
-                                        }}
-                                    />
-                                );
-                            }
+                            // if (c.field === 'sentiment') {
+                            //     return (
+                            //         <Column
+                            //             key={c.field}
+                            //             field="sentiment"
+                            //             title={c.title}
+                            //             width={c.width}
+                            //             columnMenu={columnMenu}
+                            //             cell={(cellProps) => {
+                            //                 const selectedOption =
+                            //                     sentimentOptions.find(o => o.codeId === (cellProps.dataItem.sentiment ?? "")) ?? null;
+                            //                 return (
+                            //                     <td>
+                            //                         <CustomDropDownList
+                            //                             id={`sentiment__${getKey(cellProps.dataItem)}`}
+                            //                             name="sentiment"
+                            //                             data={sentimentOptions}
+                            //                             dataItemKey={"codeId"}
+                            //                             textField={"codeName"}
+                            //                             value={selectedOption}
+                            //                             onChange={(e) => {
+                            //                                 const chosen = e?.value ?? null;
+                            //                                 onDropDownItemChange(cellProps.dataItem, "sentiment", chosen?.codeId ?? "");
+                            //                             }}
+                            //                         />
+                            //                     </td>
+                            //                 )
+                            //             }}
+                            //         />
+                            //     );
+                            // }
                             if (c.field === 'add') {
                                 return (
                                     <Column
