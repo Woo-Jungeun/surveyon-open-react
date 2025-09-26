@@ -21,7 +21,7 @@ const ProListPopup = (parentProps) => {
         </div>
 
         <div className="popCont" style={{ maxHeight: 600, overflowY: "auto" }}>
-      
+          추후 개발 진행 예정입니다.
         </div>
       </div>
     </article>
