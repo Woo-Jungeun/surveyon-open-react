@@ -679,24 +679,24 @@ const ProList = () => {
                             const { dataItem } = cellProps;
                             const locked = isLocked(dataItem);
                             const excluded = isExcluded(dataItem);
-                            const disabled = excluded; // 제외면 비활성
+            
+                            // 제외 상태면 버튼 자체를 안보이게
+                            if (excluded) {
+                                return <td style={{ textAlign: 'center' }}></td>;
+                            }
+            
                             return (
-                                <td
-                                    style={{ textAlign: 'center' }}
+                                <td style={{ textAlign: 'center' }}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <Button
-                                        className={`btnS k-icon-button${disabled ? ' btnS--disabled' : ''}`}
-                                        disabled={disabled}
-                                        onClick={() => { if (!disabled) toggleRowLock(dataItem); }}
-                                        title={
-                                            disabled ? '제외 상태' : (locked ? '잠금 해제' : '잠금')
-                                        }
+                                        className={`btnS k-icon-button${locked ? '' : ''}`}
+                                        onClick={() => toggleRowLock(dataItem)}
+                                        title={locked ? '잠금 해제' : '잠금'}
                                     >
-                                        <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden="true">{locked ? '🔒' : '🔓'}</span>
-                                        <span style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0 0 0 0)' }}>
-                                            {locked ? '잠금' : '해제'}
+                                        <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden="true">
+                                            {locked ? '🔒' : '🔓'}
                                         </span>
                                     </Button>
                                 </td>
@@ -714,15 +714,25 @@ const ProList = () => {
                         title={c.title}
                         sortable={false}
                         columnMenu={undefined}
-                        cell={(cellProps) => (
-                            <td style={{ textAlign: "center" }}>
-                                <Button className="btnM" themeColor="primary"
-                                    onClick={(e) => { e.stopPropagation(); setPopupShow(true); }}
-                                    onMouseDown={(e) => e.stopPropagation()} >
-                                    설정
-                                </Button>
-                            </td>
-                        )}
+                        cell={(cellProps) => {
+                            const row = cellProps.dataItem;
+                            const excluded = isExcluded(row);
+            
+                            // 제외 상태면 버튼 숨김
+                            if (excluded) {
+                                return <td style={{ textAlign: 'center' }}></td>;
+                            }
+            
+                            return (
+                                <td style={{ textAlign: "center" }}>
+                                    <Button className="btnM" themeColor="primary"
+                                        onClick={(e) => { e.stopPropagation(); setPopupShow(true); }}
+                                        onMouseDown={(e) => e.stopPropagation()} >
+                                        설정
+                                    </Button>
+                                </td>
+                            );
+                        }}
                     />
                 );
             }
