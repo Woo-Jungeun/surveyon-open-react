@@ -35,6 +35,21 @@ function useDebouncedValue(value, delay = 120) {
     return v;
 }
 const lv3Cache = new WeakMap();
+const getKey = (row) => row?.__rowKey ?? null; // 키 가져오기 헬퍼 
+const tl = (v) => String(v ?? "").trim().toLowerCase();
+
+// 클라이언트 전용 표시/편집 플래그 제거
+const stripLocalFlags = (rows = []) =>
+    (rows || []).map(r => {
+        const { __pendingDelete, __errors, __errorKinds, inEdit, selected, __isNew, ...rest } = r;
+        return rest;
+    });
+// YYYY-MM-DD HH:mm:ss
+const formatNow = (d = new Date()) => {
+    const p = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+};
+
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -57,21 +72,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
     const latestCtxRef = useRef(null);
-    // 클라이언트 전용 표시/편집 플래그 제거
-    const stripLocalFlags = (rows = []) =>
-        (rows || []).map(r => {
-            const { __pendingDelete, __errors, __errorKinds, inEdit, selected, __isNew, ...rest } = r;
-            return rest;
-        });
-    /**
-     * rows: 그리드 행 배열(dataState.data)
-     * opts: { key, user, projectnum, qnum, gb }  // API
-     */
-    // YYYY-MM-DD HH:mm:ss
-    const formatNow = (d = new Date()) => {
-        const p = (n) => String(n).padStart(2, "0");
-        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
-    };
 
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
@@ -384,9 +384,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 reportedInitialAnalysisRef.current = true;
             }
         }, [rows, onInitialAnalysisCount]);
-
-        // 키 가져오기 헬퍼 
-        const getKey = useCallback((row) => row?.__rowKey, []);
 
         // lv3 필수값 마크를 행들의 __errors(Set)로 갱신
         const applyRequiredMarksLv3 = useCallback((rows = []) => {
@@ -1197,9 +1194,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             };
         }, [lv3EditorKey]);
 
-        // util
-        const tl = (v) => String(v ?? "").trim().toLowerCase();
-
         // 옵션 증강: rows에만 있는 값은 placeholder(고유 codeId)로 추가
         const augmentedLv3Options = useMemo(() => {
             const base = lv3Options || [];
@@ -1607,10 +1601,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         cell={(props) => {
                                             const row = props.dataItem;
                                             const fk = row?.fixed_key;
-                                            const isLastVisible = row.__pendingDelete !== true
-                                                && Number(row?.cid) === (lastVisibleCidByFixedKey.get(fk) ?? -1);
-
-
+                                            const isLastVisible = row.__pendingDelete !== true && Number(row?.cid) === (lastVisibleCidByFixedKey.get(fk) ?? -1);
                                             return (
                                                 <td style={{ textAlign: "center" }}>
                                                     {isLastVisible && (
