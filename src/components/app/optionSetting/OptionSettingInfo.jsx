@@ -109,30 +109,32 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (hasError) {
             modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.", MODAL_SCOPE);
         } else {
-            modal.showConfirm("알림", "분석이 완료되었습니다.", MODAL_SCOPE, {
-                btns: [
-                    {
-                        title: "확인",
-                        click: async () => {
-                            try {
-                                //상태 확인 했다는 API 태움 
-                                const res = await optionEditData.mutateAsync({
-                                    params: {
-                                        user: auth?.user?.userId || "",
-                                        projectnum, qnum,
-                                        gb: "popupcheck", qid: data?.qid,
-                                        checkyn: 1
-                                    },
-                                });
-                                if(res.success==="777"){
-                                    console.log("정상 동작")
+            if (String(data?.popupcheck) === "1") {
+                modal.showConfirm("알림", "분석이 완료되었습니다.", MODAL_SCOPE, {
+                    btns: [
+                        {
+                            title: "확인",
+                            click: async () => {
+                                try {
+                                    //상태 확인 했다는 API 태움 
+                                    const res = await optionEditData.mutateAsync({
+                                        params: {
+                                            user: auth?.user?.userId || "",
+                                            projectnum, qnum,
+                                            gb: "popupcheck", qid: data?.qid,
+                                            checkyn: 1
+                                        },
+                                    });
+                                    if (res.success === "777") {
+                                        console.log("정상 동작")
+                                    }
+                                } catch {
                                 }
-                            } catch {
-                            }
+                            },
                         },
-                    },
-                ],
-            });
+                    ],
+                });
+            }
         }
 
         setTimeout(goNextTab, 0);
@@ -261,7 +263,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             } else if (isDone) {
                 setAnalyzing(false);              // 로딩바 off
                 put("분석이 완료되었습니다.");
-                modal.showAlert("알림", "분석이 완료되었습니다.", MODAL_SCOPE);
+                finalizeCompletion(false);
             }
 
         } catch {
@@ -281,11 +283,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (!projectnum || !qid) return;     // 준비 안 됐으면 대기
 
         if (initStatusCheckedRef.current) return;
-        //todo 임시 주석 
-      //  if (projectnum && data?.qid) {
+        if (projectnum && data?.qid) {
             initStatusCheckedRef.current = true;
-          //  checkInitialStatus();
-      //  }
+            checkInitialStatus();
+        }
     }, [projectnum, data?.qid]);
 
     // 배열 -> 옵션으로 변환
@@ -363,6 +364,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             open_item_lv1: orIfEmpty(d?.open_item_lv1, "0~50"),
             open_item_lv2: orIfEmpty(d?.open_item_lv2, "0"),
             open_item_lv3: orIfEmpty(d?.open_item_lv3, "0"),
+            popupcheck: d?.popupcheck ?? "",
         }));
 
         setPreviousPromptExValue(d?.prompt_string_ex_backup || "");
