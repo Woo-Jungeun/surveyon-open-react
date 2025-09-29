@@ -285,6 +285,7 @@ const OptionSettingBody = () => {
                 trySwitchTab(nextTab);
               }
             }}
+            userPerm={state?.userPerm}  // 권한 체크 
           />
         </div>
 

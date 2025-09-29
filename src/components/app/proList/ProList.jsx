@@ -31,6 +31,8 @@ function roleToPerm(usergroup) {
         case "연구원(읽기,쓰기)":
             return PERM.WRITE;
         case "일반(읽기)":
+        case "고객(읽기)":
+            return PERM.READ;
         default:
             return PERM.READ;
     }
@@ -122,11 +124,10 @@ const ProList = () => {
         { field: "project_lock", title: "수정", group: "EDIT", show: true, order: 2 },
     ]);
 
-
-    // 행 클릭 → /open_setting 로 이동
+    // 행 클릭 → /option_setting 로 이동
     const goOpenSetting = useCallback(
-        (merge_qnum) => navigate('/open_setting', { state: { projectnum, qnum: merge_qnum } }),
-        [navigate]
+        (merge_qnum) => navigate('/option_setting', { state: { projectnum, qnum: merge_qnum, userPerm: userPerm } }),
+        [navigate, userPerm]
     );
 
     // 권한 반영 컬럼 배열

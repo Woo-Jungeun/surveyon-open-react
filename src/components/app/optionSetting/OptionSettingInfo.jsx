@@ -26,7 +26,7 @@ const ACTION_LABEL = {
     recallResponse: "응답자 빈셀&기타",
 };
 const MODAL_SCOPE = {
-    visibleOn: "/open_setting",
+    visibleOn: "/option_setting",
     autoCloseOnRouteChange: true,
     // zIndex: 2000, // 필요하면 추가
 };
@@ -66,7 +66,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loading = useContext(loadingSpinnerContext);
@@ -130,7 +130,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     },
                 ],
             });
-                }
+        }
 
         setTimeout(goNextTab, 0);
 
@@ -200,7 +200,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
     // SignalR 훅
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
-        hubUrl: HUB_URL,      // ✅ 운영: https://son.hrc.kr/o/signalr / dev: /o/signalr
+        hubUrl: HUB_URL,      // 운영: https://son.hrc.kr/o/signalr / dev: /o/signalr
         hubName: HUB_NAME,    // 서버 허브 이름
         onCompleted: ({ hasError, jobKey }) => {
             if (completedOnceRef.current) return;
@@ -230,7 +230,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
             const payload = { user: auth?.user?.userId || "", projectnum, qid };
             const r = await optionStatus.mutateAsync(payload);
-            console.log("r", r)
             // 팝업 오픈 필요할 경우만 
             if (String(r?.popupcheck) === "1") {
                 // 상태 텍스트 파싱
@@ -630,7 +629,40 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         // 로그가 추가될 때마다 항상 맨 아래로
         el.scrollTop = el.scrollHeight;
     }, [logText]);
+    
+    // 문항 삭제 버튼 이벤트  
+    const deleteQnum = async () => {
+        modal.showConfirm("알림", "삭제하시면 데이터를 복구할 수 없습니다.\n해당 문항을 삭제하시겠습니까?", MODAL_SCOPE, {
+            btns: [
+                { title: "취소", background: "#75849a" },
+                {
+                    title: "확인",
+                    click: async () => {
+                        try {
+                            const payload = {
+                                gb: "del_qnum",
+                                projectnum, qnum,
+                                user: auth?.user?.userId || "",
+                            };
+                            console.log("payload", payload)
+                            const res = await optionEditData.mutateAsync(payload);
+                            if (res?.success === "777") {
+                                modal.showAlert("알림", "문항이 삭제되었습니다.");
+                                navigate("/pro_list"); // 문항 목록 페이지로 이동
+                            } else {
+                                modal.showErrorAlert("에러", "문항이 삭제 중 오류가 발생했습니다.");
+                            }
+                        } catch (err) {
+                            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
+                        } finally {
 
+                        }
+                    },
+                },
+            ],
+        });
+    };
+    console.log(userPerm)
     return (
         <Fragment>
             <div className="collapseBar">
@@ -808,7 +840,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                             {logText}
                         </div>
                         <div className="flexE mgT10">
-                            <Button className="btnTxt type02">문항삭제</Button>
+                            {userPerm===2 && <Button className="btnTxt type02" onClick={deleteQnum}>문항 삭제</Button>}
                             <Button className="btnTxt type02" onClick={clearLog}>로그 지우기</Button>
                         </div>
                     </div>

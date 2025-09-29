@@ -38,7 +38,7 @@ function App() {
           <Route element={<MainWrapperView />}>
             <Route index element={<MainListWrapperView />} />
             <Route path="pro_list/*" element={<ProListWrapperView />} />
-            <Route path="open_setting/*" element={<OptionSettingWrapperView />} />
+            <Route path="option_setting/*" element={<OptionSettingWrapperView />} />
             <Route path="login/*" element={<Navigate to="/" replace />} />
             <Route path="pro_enter/*" element={<ProEnterWrapperView />} />
             <Route path="pro_register/*" element={<ProRegisterWrapperView />} />
