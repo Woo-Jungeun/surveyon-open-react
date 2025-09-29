@@ -44,8 +44,9 @@ const MainList = () => {
     // 행 클릭 → /pro_list 로 이동
     const onRowClick = useCallback((e) => {
         const projectnum = e?.dataItem?.projectnum;
-        if (!projectnum) return;
-        navigate('/pro_list', { state: { projectnum } });
+        const projectname = e?.dataItem?.projectname;
+        if (!projectnum || !projectname) return;
+        navigate('/pro_list', { state: { projectnum, projectname } });
     }, [navigate]);
 
     // ...
