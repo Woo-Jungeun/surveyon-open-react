@@ -862,10 +862,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 클릭 하이라이트(색상) 제거: 선택된 행 key/편집상태 모두 해제
         const clearRowHighlight = useCallback(() => {
             setSelectedRowKey(null);
-            setDataState(prev => ({
-                ...prev,
-                data: prev.data.map(r => (r.inEdit ? { ...r, inEdit: false } : r))
-            }));
+            setDataState(prev => {
+                let changed = false;
+                const next = prev.data.map(r => {
+                    if (r.inEdit) {
+                        changed = true;
+                        return { ...r, inEdit: false };
+                    }
+                    return r;
+                });
+                return changed ? { ...prev, data: next } : prev;  // 변경 없으면 그대로 반환
+            });
         }, [setDataState]);
 
         useEffect(() => {
