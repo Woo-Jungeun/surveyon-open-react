@@ -662,7 +662,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             ],
         });
     };
-    console.log(userPerm)
     return (
         <Fragment>
             <div className="collapseBar">
