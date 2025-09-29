@@ -63,7 +63,7 @@ const Lv3Cell = memo(function Lv3Cell({
     lastIndexRef,
     lastCellRectRef,
     lv3AnchorElRef,
-    setLv3AnchorRect,   
+    setLv3AnchorRect,
 }) {
     const rowKey = cellProps.dataItem.__rowKey;
     const isSelectedCell = lv3SelKeys.has(rowKey);
@@ -1694,6 +1694,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 </td>
                                             );
                                         }}
+                                    />
+                                );
+                            }
+                            if (c.field === "cid") {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={c.field}
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        sortable={false}   // 정렬 끔
                                     />
                                 );
                             }
