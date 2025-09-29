@@ -109,33 +109,31 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (hasError) {
             modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.", MODAL_SCOPE);
         } else {
-            if (String(data?.popupcheck) === "1") {
-                modal.showConfirm("알림", "분석이 완료되었습니다.", MODAL_SCOPE, {
-                    btns: [
-                        {
-                            title: "확인",
-                            click: async () => {
-                                try {
-                                    //상태 확인 했다는 API 태움 
-                                    const res = await optionEditData.mutateAsync({
-                                        params: {
-                                            user: auth?.user?.userId || "",
-                                            projectnum, qnum,
-                                            gb: "popupcheck", qid: data?.qid,
-                                            checkyn: 1
-                                        },
-                                    });
-                                    if (res.success === "777") {
-                                        console.log("정상 동작")
-                                    }
-                                } catch {
+            modal.showConfirm("알림", "분석이 완료되었습니다.", MODAL_SCOPE, {
+                btns: [
+                    {
+                        title: "확인",
+                        click: async () => {
+                            try {
+                                //상태 확인 했다는 API 태움 
+                                const res = await optionEditData.mutateAsync({
+                                    params: {
+                                        user: auth?.user?.userId || "",
+                                        projectnum, qnum,
+                                        gb: "popupcheck", qid: data?.qid,
+                                        checkyn: 1
+                                    },
+                                });
+                                if (res.success === "777") {
+                                    console.log("정상 동작")
                                 }
-                            },
+                            } catch {
+                            }
                         },
-                    ],
-                });
-            }
-        }
+                    },
+                ],
+            });
+                }
 
         setTimeout(goNextTab, 0);
 
@@ -235,37 +233,39 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
             const payload = { user: auth?.user?.userId || "", projectnum, qid };
             const r = await optionStatus.mutateAsync(payload);
+            console.log("r", r)
+            // 팝업 오픈 필요할 경우만 
+            if (String(r?.popupcheck) === "1") {
+                // 상태 텍스트 파싱
+                const raw = String(r?.output ?? "").trim();
+                const norm = raw.replace(/\s+/g, "");      // 공백 제거
+                const isRunning = /분석중/.test(norm);
+                const isDone = /분석완료/.test(norm);
 
-            // 상태 텍스트 파싱
-            const raw = String(r?.output ?? "").trim();
-            const norm = raw.replace(/\s+/g, "");      // 공백 제거
-            const isRunning = /분석중/.test(norm);
-            const isDone = /분석완료/.test(norm);
+                // 진행 중 job 키(있으면 실시간 조인)
+                const job =
+                    r?.job ??
+                    r?.contents?.job ??
+                    r?.data?.job ??
+                    r?.currentJob ??
+                    null;
 
-            // 진행 중 job 키(있으면 실시간 조인)
-            const job =
-                r?.job ??
-                r?.contents?.job ??
-                r?.data?.job ??
-                r?.currentJob ??
-                null;
-
-            // 출력 헬퍼
-            const put = (s) => appendLog(s.endsWith("\n") ? s : s + "\n");
-            // 분석 결과창에 출력
-            if (isRunning) {
-                put("분석중입니다...");
-                setAnalyzing(true);              // 로딩바 on
-                if (job) {
-                    const ok = await joinJob(job);
-                    put(ok ? "== 실시간 로그 연결됨 ==\n" : "[WARN] 실시간 로그 연결 실패(상태 조회)\n");
+                // 출력 헬퍼
+                const put = (s) => appendLog(s.endsWith("\n") ? s : s + "\n");
+                // 분석 결과창에 출력
+                if (isRunning) {
+                    put("분석중입니다...");
+                    setAnalyzing(true);              // 로딩바 on
+                    if (job) {
+                        const ok = await joinJob(job);
+                        put(ok ? "== 실시간 로그 연결됨 ==\n" : "[WARN] 실시간 로그 연결 실패(상태 조회)\n");
+                    }
+                } else if (isDone) {
+                    setAnalyzing(false);              // 로딩바 off
+                    put("분석이 완료되었습니다.");
+                    finalizeCompletion(false);
                 }
-            } else if (isDone) {
-                setAnalyzing(false);              // 로딩바 off
-                put("분석이 완료되었습니다.");
-                finalizeCompletion(false);
             }
-
         } catch {
             appendLog("[ERR] 상태 조회 실패\n");
         }
