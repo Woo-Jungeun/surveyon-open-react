@@ -160,7 +160,7 @@ const OptionSettingExload = () => {
     });
 
     const mapToRightRow = (list = []) =>
-        list.map((it, idx) => ({
+        list?.map((it, idx) => ({
             no: idx + 1,
             qnum: it?.qnum ?? "",
             lv1: it?.lv1 ?? "",
@@ -338,6 +338,7 @@ const OptionSettingExload = () => {
             modal.showErrorAlert("알림", "좌측에서 프로젝트/문항을 먼저 선택하세요.");
             return;
         }
+        //console.log("rightRows", rightRows)
         try {
             const payload = {
                 user: auth?.user?.userId || "",
@@ -345,24 +346,22 @@ const OptionSettingExload = () => {
                 gb: "enter_ex",
                 select_projectnum: sel.select_projectnum,
                 select_qnum: sel.select_qnum,
-                qid: sel.qid,
-                rows: rightRows, // ← lv1code/lv2code 포함된 데이터 통째로 전달
+                data: rightRows, // ← lv1code/lv2code 포함된 데이터 통째로 전달
             };
+            //console.log("payload", payload)
             const res = await excelListData.mutateAsync(payload);
-            console.log(res);
-            const data = res?.data ?? res;
-            const code = String(data?.success ?? "");
+            //console.log("res", res);
 
-            if (code === "777") {
+            if (res?.success === "777") {
                 modal.showAlert("알림", "보기등록이 완료되었습니다.");
-            } else if (code === "762") {
+            } else if (res?.success === "768") {
                 modal.showErrorAlert("알림", "중복 코드가 있습니다. 그리드에서 확인하세요.");
-                setRightRows(mapToRightRow(data?.jsondata || data?.resultjson || []));
+               // setRightRows(mapToRightRow( res?.resultjson || []));
             } else {
-                modal.showErrorAlert("에러", data?.error || "보기등록 중 오류가 발생했습니다.");
+                modal.showErrorAlert("에러", "보기등록 중 오류가 발생했습니다.");
             }
         } catch (err) {
-            console.error(err);
+            console.error("err", err);
             modal.showErrorAlert("에러", "보기등록 중 오류가 발생했습니다.");
         }
     }, [rightRows]);
@@ -481,7 +480,7 @@ const OptionSettingExload = () => {
                 </div>
             </div>
         );
-    }, [rightRows, rightColumns, rightSort, rightFilter, handleUploadClick, handleFileChange, handleSampleClick, handleRegisterClick]);
+    }, [rightRows, rightColumns, rightSort, rightFilter, handleUploadClick, handleFileChange, handleSampleClick]);
 
     return (
         <Fragment>
