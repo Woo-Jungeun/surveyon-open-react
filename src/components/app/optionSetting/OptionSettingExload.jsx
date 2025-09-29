@@ -342,10 +342,11 @@ const OptionSettingExload = () => {
         try {
             const payload = {
                 user: auth?.user?.userId || "",
-                projectnum: sel.projectnum,
+                projectnum: projectnum,
                 gb: "enter_ex",
-                select_projectnum: sel.select_projectnum,
-                select_qnum: sel.select_qnum,
+                qnum: qnum,
+                // select_projectnum: sel.select_projectnum,
+                // select_qnum: sel.select_qnum,
                 data: rightRows, // ← lv1code/lv2code 포함된 데이터 통째로 전달
             };
             //console.log("payload", payload)

@@ -40,6 +40,9 @@ const MenuBar = () => {
   const key = normalize(location.pathname);
   const tabs = trailFor(key);
 
+  const projectnum = sessionStorage.getItem("projectnum");
+  const projectname = sessionStorage.getItem("projectname");
+
   // 드롭다운 상태
   const [appsOpen, setAppsOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -112,7 +115,7 @@ const MenuBar = () => {
               <li key={path}>
                 <NavLink
                   to={path}
-                  end={path === "/"}                  
+                  end={path === "/"}
                   className={({ isActive }) => (isActive ? "on" : undefined)}
                 >
                   {ROUTE_LABEL[path] ?? path}
@@ -123,7 +126,7 @@ const MenuBar = () => {
         </div>
 
         <div className="userWrap" style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {/* 점 아홉개 - 앱 메뉴 */}
+          {/* 앱 메뉴 */}
           <div ref={appsRef} className="menu-dd">
             <button
               type="button"
@@ -135,7 +138,7 @@ const MenuBar = () => {
                 setAppsOpen((v) => !v);
                 setUserOpen(false);
               }}
-              // title="앱 메뉴"
+            // title="앱 메뉴"
             >
               <AppsIcon />
             </button>
@@ -153,19 +156,46 @@ const MenuBar = () => {
                   <span className="dd-icon">＋</span>
                   <span>프로젝트 등록</span>
                 </button>
-
-                <button
+                {(projectnum !== "" && projectname !=="") &&
+                  <>
+                    <button
+                      type="button"
+                      className="dd-item"
+                      onClick={() => {
+                        setAppsOpen(false);
+                        navigate('/pro_register');
+                      }}
+                    >
+                      <span className="dd-icon">＋</span>
+                      <span>문항 등록</span>
+                    </button>
+                    <button
                   type="button"
                   className="dd-item"
                   onClick={() => {
                     setAppsOpen(false);
-                    // navigate('/api-setting');
-                    modal.showAlert("알림", "API설정 준비 중");
+                    // navigate('/pro_permission');
+                    modal.showAlert("알림", "사용자설정 준비 중");
                   }}
                 >
-                  <span className="dd-icon">🔑</span>
-                  <span>API설정</span>
+                  <span className="dd-icon">＋</span>
+                  <span>사용자 설정</span>
                 </button>
+                  </>
+                }
+                <button
+                      type="button"
+                      className="dd-item"
+                      onClick={() => {
+                        setAppsOpen(false);
+                        // navigate('/pro_key');
+                        modal.showAlert("알림", "API설정 준비 중");
+                      }}
+                    >
+                      <span className="dd-icon">🔑</span>
+                      <span>API 설정</span>
+                    </button>
+
               </div>
             )}
           </div>
@@ -182,7 +212,7 @@ const MenuBar = () => {
                 setUserOpen((v) => !v);
                 setAppsOpen(false);
               }}
-              // title="사용자 메뉴"
+            // title="사용자 메뉴"
             >
               <UserIcon />
               <span style={{ marginLeft: 6 }}>{auth?.user?.userNm || ""}님</span>
