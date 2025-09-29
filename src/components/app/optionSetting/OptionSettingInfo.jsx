@@ -120,13 +120,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                     params: {
                                         user: auth?.user?.userId || "",
                                         projectnum, qnum,
-                                        gb: "popupcheck", qid: data?.qid,
+                                        gb: "popupcheck",
                                         checkyn: 1
                                     },
                                 });
-                                if (res.success === "777") {
-                                    console.log("정상 동작")
-                                }
                             } catch {
                             }
                         },
