@@ -242,3 +242,101 @@
   gap:8px;
 }
 
+.option-setting-layout {
+  display: flex;
+  align-items: flex-start;   /* 위쪽 정렬 */
+}
+
+.grid-area {
+  flex: 1;                  /* 그리드가 가로 공간 대부분 차지 */
+  min-width: 0;             /* flex 아이템 넘침 방지 */
+}
+
+
+.lv3-panel-header {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  gap: 8px;
+}
+
+.lv3-search {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.lv3-panel-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.lv3-panel-item {
+  padding: 6px 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+}
+
+.lv3-panel-item:hover {
+  background: #f5f5f5;
+}
+
+.lv3-panel-item .code {
+  color: #888;
+  font-size: 12px;
+}
+/* .subCont.subContR {
+  display: block;     
+  overflow: visible;    
+} */
+
+.gridWithPanel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* 전체 레이아웃에서 스크롤 방지 */
+}
+
+.gridWithPanel .grid-area {
+  flex: 1;
+  overflow: auto; /* 스크롤은 여기서만 허용 */
+  min-width: 0;   /* flex 안에서 overflow 잘 동작하도록 */
+}
+.lv3-panel-wrap {
+  position: relative;
+}
+
+.lv3-side-panel {
+  position: fixed;         /* 화면 오른쪽 고정 */
+  top: 100px;              /* 원하는 시작 위치 (헤더 안 가리도록 조절) */
+  right: 0;
+  height: calc(100% - 100px); /* 헤더 높이 제외한 영역 */
+  width: 0;
+  background: #fff;
+  overflow: hidden;
+  transition: width 0.25s ease;
+  z-index: 100;
+}
+
+.lv3-side-panel.open {
+  width: 280px;
+  border-left: 1px solid #ddd;
+}
+
+.lv3-panel-toggle {
+  position: fixed;        /* 패널과 함께 오른쪽 고정 */
+  top: 110px;             /* 패널보다 조금 아래로 */
+  width: 24px;
+  height: 40px;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  transition: right 0.25s ease;
+}

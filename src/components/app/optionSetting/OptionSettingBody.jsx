@@ -8,7 +8,7 @@ import OptionSettingTab3 from "@/components/app/optionSetting/OptionSettingTab3"
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { modalContext } from "@/components/common/Modal.jsx";
-
+import OptionSettingLv3Panel from "@/components/app/optionSetting/OptionSettingLv3Panel.jsx";
 
 /**
  * 분석 > Body
@@ -51,6 +51,18 @@ const OptionSettingBody = () => {
   const [canSave, setCanSave] = useState({ "1": false, "2": false }); // 히스토리 변화가 있을 때만 true
   const tab1Ref = useRef(null);
   const tab2Ref = useRef(null);
+
+  // 오른쪽 패널 관련 state
+  const [isLv3PanelOpen, setIsLv3PanelOpen] = useState(false);
+  const [lv3Options, setLv3Options] = useState([]);  // 패널에 줄 옵션 데이터
+  const [lv3Targets, setLv3Targets] = useState(new Set());
+
+  // Tab1 → 패널 열기 요청
+  const handleOpenLv3Panel = useCallback((targetRows, codeIds) => {
+    setLv3Targets(new Set(targetRows.map(r => r.__rowKey)));  // 선택된 행들 key 저장
+    setCurrentCodeIds(codeIds);                               // 패널 초기 선택용
+    setIsLv3PanelOpen(true);
+  }, []);
 
   /*버튼 이벤트 핸들러*/
   const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();
@@ -243,6 +255,9 @@ const OptionSettingBody = () => {
     openCenteredPopup(url);
   }, [projectnum, qnum, lvCodeDraft]);
 
+  // Tab1 → Body로 패널 열기 요청
+  const [currentCodeIds, setCurrentCodeIds] = useState([]);
+
   return (
     <Fragment>
       <article className="subTitWrap">
@@ -326,50 +341,69 @@ const OptionSettingBody = () => {
               }}
             />
           </div>
-
-          {tabDivision === "1" ? (
-            <OptionSettingTab1
-              ref={tab1Ref}
+          <div className="gridWithPanel">
+            <div className="grid-area">
+              {tabDivision === "1" ? (
+                <OptionSettingTab1
+                  ref={tab1Ref}
+                  projectnum={projectnum}
+                  qnum={qnum}
+                  lvCode={lvCodeDraft.value}
+                  onInitLvCode={handleInitLvCode}
+                  onSaved={() => {
+                    // 저장 성공 → 더티 해제
+                    markUnsaved("1", false);
+                  }}
+                  onInitialAnalysisCount={(n) => setAnalysisCount(n)} //최초 분석값 존재 여부 확인
+                  onUnsavedChange={defer((v) => markUnsaved("1", v))}
+                  onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "1": !!v })))}
+                  persistedPrefs={gridPrefs["1"]}
+                  onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
+                  onOpenLv3Panel={(...args) => {
+                    handleOpenLv3Panel(...args);
+                  }}
+                />
+              ) : tabDivision === "2" ? (
+                <OptionSettingTab2
+                  ref={tab2Ref}
+                  projectnum={projectnum}
+                  qnum={qnum}
+                  lvCode={lvCodeDraft.value}
+                  onSaved={() => {
+                    // 저장 성공 → 더티 해제 + 단계 커밋
+                    markUnsaved("2", false);
+                    setLvCodeCommitted(lvCodeDraft);
+                    // 저장된 값을 기준으로 히스토리 재설정
+                    stageHistRef.current = { back: [lvCodeDraft], fwd: [] };
+                  }}
+                  onUnsavedChange={defer((v) => markUnsaved("2", v))}
+                  onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "2": !!v })))}
+                  persistedPrefs={gridPrefs["2"]}
+                  onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
+                />
+              ) : <OptionSettingTab3
+                lvCode={lvCodeDraft.value}
+                projectnum={projectnum}
+                qnum={qnum}
+                persistedPrefs={gridPrefs["3"]}
+                onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
+              />
+              }
+            </div>
+            <OptionSettingLv3Panel
+              open={isLv3PanelOpen}
+              onClose={(next) => setIsLv3PanelOpen(next)}  
               projectnum={projectnum}
               qnum={qnum}
-              lvCode={lvCodeDraft.value}
-              onInitLvCode={handleInitLvCode}
-              onSaved={() => {
-                // 저장 성공 → 더티 해제
-                markUnsaved("1", false);
+              targets={lv3Targets}
+              currentCodeIds={currentCodeIds}
+              onApply={(opt, targets) => {
+                // 순서 바꿔서 전달
+                tab1Ref.current?.applyLv3To?.(targets, opt);
+                setIsLv3PanelOpen(false);
               }}
-              onInitialAnalysisCount={(n) => setAnalysisCount(n)} //최초 분석값 존재 여부 확인
-              onUnsavedChange={defer((v) => markUnsaved("1", v))}
-              onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "1": !!v })))}
-              persistedPrefs={gridPrefs["1"]}
-              onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
             />
-          ) : tabDivision === "2" ? (
-            <OptionSettingTab2
-              ref={tab2Ref}
-              projectnum={projectnum}
-              qnum={qnum}
-              lvCode={lvCodeDraft.value}
-              onSaved={() => {
-                // 저장 성공 → 더티 해제 + 단계 커밋
-                markUnsaved("2", false);
-                setLvCodeCommitted(lvCodeDraft);
-                // 저장된 값을 기준으로 히스토리 재설정
-                stageHistRef.current = { back: [lvCodeDraft], fwd: [] };
-              }}
-              onUnsavedChange={defer((v) => markUnsaved("2", v))}
-              onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "2": !!v })))}
-              persistedPrefs={gridPrefs["2"]}
-              onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
-            />
-          ) : <OptionSettingTab3
-            lvCode={lvCodeDraft.value}
-            projectnum={projectnum}
-            qnum={qnum}
-            persistedPrefs={gridPrefs["3"]}
-            onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
-          />
-          }
+          </div>
         </div>
       </article>
     </Fragment>
