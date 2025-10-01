@@ -681,12 +681,10 @@ const ProList = () => {
                             const { dataItem } = cellProps;
                             const locked = isLocked(dataItem);
                             const excluded = isExcluded(dataItem);
-            
                             // 제외 상태면 버튼 자체를 안보이게
                             if (excluded) {
                                 return <td style={{ textAlign: 'center' }}></td>;
                             }
-            
                             return (
                                 <td style={{ textAlign: 'center' }}
                                     onMouseDown={(e) => e.stopPropagation()}
@@ -719,12 +717,10 @@ const ProList = () => {
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
                             const excluded = isExcluded(row);
-            
                             // 제외 상태면 버튼 숨김
                             if (excluded) {
                                 return <td style={{ textAlign: 'center' }}></td>;
                             }
-            
                             return (
                                 <td style={{ textAlign: "center" }}>
                                     <Button className="btnM" themeColor="primary"
@@ -901,7 +897,9 @@ const ProList = () => {
             <Fragment>
                 <article className="subTitWrap">
                     <div className="subTit">
-                        <h2 className="titTxt">문항 목록</h2>
+                        <h2 className="titTxt">문항 목록
+                            {state?.projectname && (<span className="projectName"> {state.projectname}</span>)}
+                        </h2>
                     </div>
                 </article>
 
