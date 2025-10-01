@@ -179,7 +179,11 @@ const OptionSettingExload = () => {
     }, []);
 
     // 공통: 트림/노멀라이즈
-    const norm = (v) => (typeof v === "string" ? v.trim() : (v ?? ""));
+    const norm = (v) => {
+        if (typeof v !== "string") return v ?? "";
+        // 일반 trim + 모든 유니코드 공백 제거
+        return v.replace(/\s+/g, "").trim();
+    };
 
     // 첫 시트에서 A1/B1(혹은 A1 단일 문자열) → {xlsProject, xlsQnum} 얻기
     function readHeaderIds(ws) {
@@ -340,21 +344,29 @@ const OptionSettingExload = () => {
         }
         //console.log("rightRows", rightRows)
         try {
+            const filteredRows = rightRows.map(({ no, ...rest }) => rest); //순번 컬럼 제거 후 등록 
             const payload = {
                 user: auth?.user?.userId || "",
                 projectnum: projectnum,
                 gb: "enter_ex",
                 qnum: qnum,
-                // select_projectnum: sel.select_projectnum,
-                // select_qnum: sel.select_qnum,
-                data: rightRows, // ← lv1code/lv2code 포함된 데이터 통째로 전달
+                data: filteredRows, // 그리드 데이터
             };
-            //console.log("payload", payload)
+            console.log("payload", payload)
             const res = await excelListData.mutateAsync(payload);
             //console.log("res", res);
 
             if (res?.success === "777") {
-                modal.showAlert("알림", "보기등록이 완료되었습니다.");
+                modal.showConfirm("알림", "보기등록이 완료되었습니다.", {
+                    btns: [
+                        {
+                            title: "확인",
+                            click: () => {
+                                window.close();
+                            },
+                        },
+                    ],
+                });
             } else if (res?.success === "768") {
                 modal.showErrorAlert("알림", "중복 코드가 있습니다. 그리드에서 확인하세요.");
                // setRightRows(mapToRightRow( res?.resultjson || []));
@@ -430,9 +442,9 @@ const OptionSettingExload = () => {
                     <div className="subTit subTit--with-actions">
                         <div className="kvline">
                             <span className="kv"><b>보기정보 </b></span>
-                            <span className="kv" style={{ display: "block", fontSize:"13px"}}>{questionText}</span>
+                            <span className="kv" style={{ display: "block", fontSize: "13px" }}>{questionText}</span>
                         </div>
-                    
+
                         <div>
                             <div className="actions">
                                 <Button type="button" className="btnTxt" onClick={handleUploadClick}>보기엑셀업로드</Button>
