@@ -1372,29 +1372,29 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 sortable
                                                 columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
                                                 cell={(p) => {
-                                                    if (c.field !== 'lv123code') {
-                                                        return <td title={p.dataItem[c.field]}>{p.dataItem[c.field]}</td>;
-                                                    }
                                                     const r = p.dataItem;
-                                                    const codeEmpty = !String(r?.lv123code ?? "").trim();
-                                                    const showAdd = codeEmpty; // 단순히 값이 비었으면 "추가" 버튼 노출
+                                                    const codeId = String(r?.lv123code ?? "").trim();
+                                                    const codeName = String(r?.lv3 ?? "").trim();
+                                            
                                                     return (
-                                                        <td style={{ textAlign: "center" }}>
-                                                            {showAdd ? (
-                                                                <Button
-                                                                    className="btnM"
-                                                                    themeColor="primary"
-                                                                    onClick={() => {
-                                                                        // "추가"는 패널을 열도록 연결
-                                                                        openLv3EditorAtKey(getKey(r));
-                                                                    }}
-                                                                >
-                                                                    추가
-                                                                </Button>
-                                                            ) : (
-                                                                <span title={r?.lv123code}>{r?.lv123code}</span>
-                                                            )}
-                                                        </td>
+                                                      <td style={{ textAlign: "center" }}>
+                                                        {/* codeId 없고, codeName은 있을 때 → 코드 등록 버튼 */}
+                                                        {!codeId && codeName ? (
+                                                          <Button
+                                                            className="btnM"
+                                                            themeColor="primary"
+                                                            onClick={() => openLv3EditorAtKey(getKey(r))}
+                                                          >
+                                                            코드 등록
+                                                          </Button>
+                                                        ) : codeId ? (
+                                                          // codeId 있으면 코드값 출력
+                                                          <span title={codeId}>{codeId}</span>
+                                                        ) : (
+                                                          // codeName도, codeId도 없으면 빈칸
+                                                          null
+                                                        )}
+                                                      </td>
                                                     );
                                                 }}
                                             />
