@@ -550,21 +550,26 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
     // 공통 버튼 실행
     const runInfoSave = async (type) => {
-        // 새 작업 시작 시 초기화
-        completedOnceRef.current = false;
-        lastStableRef.current = 0;
-        lineCountRef.current = getLogMetrics(logTextRef.current).lines;
         /*유효성 체크 */
         if (saving) return false;
-        completedOnceRef.current = false;  // 새 작업 시작 시 리셋
         if (!data?.qid || !projectnum) {
-            modal.showAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.", MODAL_SCOPE);
+            modal.showErrorAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.", MODAL_SCOPE);
             return false;
         }
         if (!String(data?.open_item_lv1 ?? "").trim()) {
-            modal.showErrorAlert("에러", "소분류 개수를 입력하세요.", MODAL_SCOPE);
+            modal.showErrorAlert("알림", "소분류 개수를 입력하세요.", MODAL_SCOPE);
             return false;
         }
+        if (!apiKeyOptions?.length || !apiKeyOptions[0]?.keyselected) {
+            modal.showErrorAlert("알림", "apikey가 설정되지 않았습니다.\n설정 후 분석해주세요.", MODAL_SCOPE);
+            return false;
+        }
+
+        // 새 작업 시작 시 초기화 (검증 다 통과한 후)
+        completedOnceRef.current = false;
+        lastStableRef.current = 0;
+        lineCountRef.current = getLogMetrics(logTextRef.current).lines;
+
         setSaving(true);
         try {
             // 1) 옵션 정보 저장
@@ -657,13 +662,13 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 modal.showErrorAlert("에러", "문항이 삭제 중 오류가 발생했습니다.");
                             }
                         } catch (err) {
-                        } 
+                        }
                     },
                 },
             ],
         });
     };
-    
+
     return (
         <Fragment>
             <div className="collapseBar">
