@@ -357,6 +357,12 @@ const OptionSettingExload = () => {
             //console.log("res", res);
 
             if (res?.success === "777") {
+
+                // 부모창에 등록 성공 신호 보내기
+                if (window.opener) {
+                    window.opener.postMessage({ type: "EXLOAD_REGISTER_SUCCESS" }, window.location.origin);
+                }
+
                 modal.showConfirm("알림", "보기등록이 완료되었습니다.", {
                     btns: [
                         {
@@ -368,8 +374,19 @@ const OptionSettingExload = () => {
                     ],
                 });
             } else if (res?.success === "768") {
-                modal.showErrorAlert("알림", "중복 코드가 있습니다. 그리드에서 확인하세요.");
-               // setRightRows(mapToRightRow( res?.resultjson || []));
+                let dupList = [];
+                try {
+                    dupList = typeof res?.resultjson === "string"
+                        ? JSON.parse(res.resultjson)
+                        : (res?.resultjson || []);
+                } catch (e) {
+                    console.error("dup parse error", e);
+                }
+            
+                // 줄바꿈 형식으로 보기 구성
+                const dupText = dupList.map(it => `${it.lv3 || ""}(${it.lv123code || ""})`).join("\n");
+            
+                modal.showErrorAlert("알림", "이미 등록된 보기가 있습니다.\n\n" + dupText);
             } else {
                 modal.showErrorAlert("에러", "보기등록 중 오류가 발생했습니다.");
             }

@@ -258,6 +258,23 @@ const OptionSettingBody = () => {
   // Tab1 → Body로 패널 열기 요청
   const [currentCodeIds, setCurrentCodeIds] = useState([]);
 
+  // 보기불러오기 등록 완료 -> 창 닫힌 후 보기데이터 탭 이동, 재조회  
+  useEffect(() => {
+    const handleMessage = (e) => {
+      // 동일 출처만 허용
+      if (e.origin !== window.location.origin) return;
+      if (e.data?.type === "EXLOAD_REGISTER_SUCCESS") {
+        // 탭2로 이동
+        setTabDivision("2");
+        // 탭2 데이터 재조회
+        tab2Ref.current?.reload?.();
+      }
+    };
+  
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
   return (
     <Fragment>
       <article className="subTitWrap">
@@ -315,8 +332,18 @@ const OptionSettingBody = () => {
             <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("3")}>
               rawdata
             </Button>
-            <Button className="btnTab" onClick={openExloadWindow}>
-              보기불러오기
+            <Button
+              style={{
+                border: "1px solid #afb6b2",
+                borderRadius: "8px",
+                color: "#69706d",
+                fontSize: "15px",
+                fontWeight: 500,
+                background: "#fff",
+                height: "36px",
+              }}
+              onClick={openExloadWindow}>
+              보기 불러오기
             </Button>
             <DropDownList
               style={{ width: 140 }}
@@ -392,7 +419,7 @@ const OptionSettingBody = () => {
             </div>
             <OptionSettingLv3Panel
               open={isLv3PanelOpen}
-              onClose={(next) => setIsLv3PanelOpen(next)}  
+              onClose={(next) => setIsLv3PanelOpen(next)}
               projectnum={projectnum}
               qnum={qnum}
               targets={lv3Targets}
