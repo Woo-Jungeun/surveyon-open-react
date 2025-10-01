@@ -1,4 +1,5 @@
 import React, { Fragment, useState, useEffect, useContext, useRef, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
@@ -70,6 +71,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loading = useContext(loadingSpinnerContext);
+    const navigate = useNavigate();
     const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
     const logTextRef = useRef("");   // 최신 로그 문자열 저장용
     // 로그 안정성 체크용 ref
@@ -629,7 +631,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         // 로그가 추가될 때마다 항상 맨 아래로
         el.scrollTop = el.scrollHeight;
     }, [logText]);
-    
+
     // 문항 삭제 버튼 이벤트  
     const deleteQnum = async () => {
         modal.showConfirm("알림", "삭제하시면 데이터를 복구할 수 없습니다.\n해당 문항을 삭제하시겠습니까?", MODAL_SCOPE, {
@@ -640,28 +642,28 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     click: async () => {
                         try {
                             const payload = {
-                                gb: "del_qnum",
-                                projectnum, qnum,
-                                user: auth?.user?.userId || "",
+                                params: {
+                                    gb: "del_qnum",
+                                    projectnum, qnum,
+                                    user: auth?.user?.userId || "",
+                                }
                             };
-                            console.log("payload", payload)
                             const res = await optionEditData.mutateAsync(payload);
-                            if (res?.success === "777") {
+
+                            if (res.success === "777") {
                                 modal.showAlert("알림", "문항이 삭제되었습니다.");
                                 navigate("/pro_list"); // 문항 목록 페이지로 이동
                             } else {
                                 modal.showErrorAlert("에러", "문항이 삭제 중 오류가 발생했습니다.");
                             }
                         } catch (err) {
-                            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
-                        } finally {
-
-                        }
+                        } 
                     },
                 },
             ],
         });
     };
+    
     return (
         <Fragment>
             <div className="collapseBar">
@@ -839,7 +841,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                             {logText}
                         </div>
                         <div className="flexE mgT10">
-                            {userPerm===2 && <Button className="btnTxt type02" onClick={deleteQnum}>문항 삭제</Button>}
+                            {userPerm === 2 && <Button className="btnTxt type02" onClick={deleteQnum}>문항 삭제</Button>}
                             <Button className="btnTxt type02" onClick={clearLog}>로그 지우기</Button>
                         </div>
                     </div>
