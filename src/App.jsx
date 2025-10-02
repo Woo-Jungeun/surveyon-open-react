@@ -13,6 +13,7 @@ import ProListWrapperView from "@/views/proList/ProListWrapperView.jsx";
 import ProEnterWrapperView from "@/views/proEnter/ProEnterWrapperView.jsx";
 import ProRegisterWrapperView from "@/views/proRegister/ProRegisterWrapperView.jsx";
 import ProPermissionWrapperView from "@/views/proPermission/ProPermissionWrapperView.jsx";
+import ProKeyWrapperView from "@/views/proKey/ProKeyWrapperView.jsx";
 import busGif from "@/assets/images/bus_loading.gif";
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
             <Route path="pro_enter/*" element={<ProEnterWrapperView />} />
             <Route path="pro_register/*" element={<ProRegisterWrapperView />} />
             <Route path="pro_permission/*" element={<ProPermissionWrapperView />} />
+            <Route path="pro_key/*" element={<ProKeyWrapperView />} />
             <Route path="*" element={<PageNotFound />} />
           </Route>
           

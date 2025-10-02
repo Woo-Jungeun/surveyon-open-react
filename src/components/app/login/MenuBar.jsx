@@ -178,7 +178,7 @@ const MenuBar = () => {
                     modal.showAlert("알림", "사용자설정 준비 중");
                   }}
                 >
-                  <span className="dd-icon">＋</span>
+                  <span className="dd-icon">👤</span>
                   <span>사용자 설정</span>
                 </button>
                   </>
@@ -188,8 +188,7 @@ const MenuBar = () => {
                       className="dd-item"
                       onClick={() => {
                         setAppsOpen(false);
-                        // navigate('/pro_key');
-                        modal.showAlert("알림", "API설정 준비 중");
+                        navigate('/pro_key');
                       }}
                     >
                       <span className="dd-icon">🔑</span>
