@@ -163,7 +163,8 @@ const MenuBar = () => {
                       className="dd-item"
                       onClick={() => {
                         setAppsOpen(false);
-                        navigate('/pro_register');
+                       // navigate('/pro_register');
+                        modal.showAlert("알림", "준비 중...");
                       }}
                     >
                       <span className="dd-icon">＋</span>
@@ -174,7 +175,8 @@ const MenuBar = () => {
                   className="dd-item"
                   onClick={() => {
                     setAppsOpen(false);
-                    navigate('/pro_permission');
+                   // navigate('/pro_permission');
+                   modal.showAlert("알림", "준비 중...");
                   }}
                 >
                   <span className="dd-icon">👤</span>
@@ -187,7 +189,8 @@ const MenuBar = () => {
                       className="dd-item"
                       onClick={() => {
                         setAppsOpen(false);
-                        navigate('/pro_key');
+                        // navigate('/pro_key');
+                        modal.showAlert("알림", "준비 중...");
                       }}
                     >
                       <span className="dd-icon">🔑</span>
