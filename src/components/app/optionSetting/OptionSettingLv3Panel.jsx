@@ -12,12 +12,14 @@ const OptionSettingLv3Panel = ({
   onApply
 }) => {
   const { optionEditData } = OptionSettingApi();
-  const [options, setOptions] = useState([]);
   const auth = useSelector((store) => store.auth);
-  
+
+  const [options, setOptions] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // 검색어 상태
+
   useEffect(() => {
     if (!open && options.length > 0) return; // 이미 불러온 값 있으면 skip
-  
+
     async function fetchOptions() {
       try {
         const res = await optionEditData.mutateAsync({
@@ -31,10 +33,11 @@ const OptionSettingLv3Panel = ({
         const seen = new Set();
         const list = (res?.resultjson ?? []).reduce((acc, r) => {
           const lv3 = (r?.lv3 ?? "").trim();
+          const lv123code  = (r?.lv123code  ?? "").trim();
           if (!lv3 || seen.has(lv3)) return acc;
           seen.add(lv3);
           acc.push({
-            codeId: lv3,
+            codeId: lv123code,
             codeName: lv3,
             lv1: r?.lv1 ?? "",
             lv2: r?.lv2 ?? "",
@@ -50,10 +53,14 @@ const OptionSettingLv3Panel = ({
         console.error("lv3 fetch error", err);
       }
     }
-  
+
     fetchOptions();
   }, [open, projectnum, qnum, currentCodeIds]);
-  
+
+  // 검색 필터링
+  const filteredOptions = options.filter(opt =>
+    opt.codeName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="lv3-panel-wrap">
@@ -61,21 +68,26 @@ const OptionSettingLv3Panel = ({
       <aside className={`lv3-side-panel ${open ? "open" : ""}`}>
         <div className="lv3-panel-header">
           <h3>소분류 선택</h3>
+          <input
+            type="text"
+            placeholder="소분류 검색..."
+            className="lv3-search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
         </div>
         <div className="lv3-panel-body">
-          {options.map(opt => (
-            <div key={opt.lv123code} className="lv3-option">
-              <button
-                onClick={() => {
-                  console.log("👉 Panel onApply 실행", { targets, opt });
-                  onApply(targets, opt); // 이미 Set이니까 그대로 넘기기
-                }}
-              >
-                {opt.codeName}
-              </button>
+          {filteredOptions.map(opt => (
+            <div
+              key={opt.lv123code}
+              className="lv3-panel-item"
+              onClick={() => onApply(targets, opt)}
+            >
+              <span>{opt.codeName}</span>
+              <span className="code">{opt.codeId}</span>
             </div>
           ))}
-          {options.length === 0 && <p>소분류가 없습니다.</p>}
+          {filteredOptions.length === 0 && <p className="lv3-empty">검색 결과가 없습니다.</p>}
         </div>
       </aside>
 
@@ -88,7 +100,6 @@ const OptionSettingLv3Panel = ({
         {open ? ">>" : "<<"}
       </div>
     </div>
-
   );
 };
 
