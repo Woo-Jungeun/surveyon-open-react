@@ -77,7 +77,7 @@ const ProList = () => {
 
     const { proListData, editMutation } = ProListApi();
 
-    //재조회 후 그리드 업데이트트 플래그
+    //재조회 후 그리드 업데이트 플래그
     const [gridDataKey, setGridDataKey] = useState(0);
     const [timeStamp, setTimeStamp] = useState(0); // cache buster
 
