@@ -270,7 +270,7 @@ const OptionSettingBody = () => {
         tab2Ref.current?.reload?.();
       }
     };
-  
+
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, []);
@@ -386,6 +386,7 @@ const OptionSettingBody = () => {
                   onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "1": !!v })))}
                   persistedPrefs={gridPrefs["1"]}
                   onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
+                  lv3Options={lv3Options}    // 패널에서 가져온 리스트 내려줌
                   onOpenLv3Panel={(...args) => {
                     handleOpenLv3Panel(...args);
                   }}
@@ -417,19 +418,21 @@ const OptionSettingBody = () => {
               />
               }
             </div>
-            <OptionSettingLv3Panel
-              open={isLv3PanelOpen}
-              onClose={(next) => setIsLv3PanelOpen(next)}
-              projectnum={projectnum}
-              qnum={qnum}
-              targets={lv3Targets}
-              currentCodeIds={currentCodeIds}
-              onApply={(opt, targets) => {
-                // 순서 바꿔서 전달
-                tab1Ref.current?.applyLv3To?.(targets, opt);
-                setIsLv3PanelOpen(false);
-              }}
-            />
+            {tabDivision === "1" &&
+              <OptionSettingLv3Panel
+                open={isLv3PanelOpen}
+                onClose={(next) => setIsLv3PanelOpen(next)}
+                projectnum={projectnum}
+                qnum={qnum}
+                targets={lv3Targets}
+                currentCodeIds={currentCodeIds}
+                onOptionsLoaded={(list) => setLv3Options(list)}
+                onApply={(targets, opt) => {
+                  tab1Ref.current?.applyLv3To?.(targets, opt);
+                  setIsLv3PanelOpen(false);
+                }}
+              />
+            }
           </div>
         </div>
       </article>

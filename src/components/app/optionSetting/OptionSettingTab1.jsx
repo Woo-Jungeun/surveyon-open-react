@@ -1,14 +1,9 @@
-import React, {
-    Fragment, useEffect, useState, useRef, useCallback, memo, useMemo,
-    useContext, forwardRef, useImperativeHandle, useLayoutEffect, cloneElement, isValidElement
-} from "react";
+import React, { Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
-import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { Button } from "@progress/kendo-react-buttons";
-import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
 import "@/components/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -26,18 +21,6 @@ const ROW_EXCLUSION_SELECTOR = [
     'input[type="checkbox"]', '[role="checkbox"]'
 ].join(',');
 
-// 가벼운 디바운스 훅
-function useDebouncedValue(value, delay = 120) {
-    const [v, setV] = useState(value);
-    const tRef = useRef();
-    useEffect(() => {
-        clearTimeout(tRef.current);
-        tRef.current = setTimeout(() => setV(value), delay);
-        return () => clearTimeout(tRef.current);
-    }, [value, delay]);
-    return v;
-}
-
 const lv3Cache = new WeakMap();
 const getKey = (row) => row?.__rowKey ?? null; // 키 가져오기 헬퍼 
 const tl = (v) => String(v ?? "").trim().toLowerCase();
@@ -54,108 +37,6 @@ const formatNow = (d = new Date()) => {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
 
-// Lv3 전용 셀 컴포넌트
-const Lv3Cell = memo(function Lv3Cell({
-    cellProps,
-    lv3SelKeys,
-    lv3EditorKey,
-    openLv3EditorAtKey,
-    lastFocusedKeyRef,
-    anchorIndexRef,
-    lastIndexRef,
-    lastCellRectRef,
-    lv3AnchorElRef,
-    setLv3AnchorRect,
-}) {
-    const rowKey = cellProps.dataItem.__rowKey;
-    const isSelectedCell = lv3SelKeys.has(rowKey);
-    const isActiveCell = lv3EditorKey === rowKey;
-    const currentValue = cellProps.dataItem.lv3 ?? "";
-    const hasReqError = cellProps.dataItem?.__errors?.has?.("lv3");
-    const labelKind = cellProps.dataItem?.__errorKinds?.lv3;
-    const labelText = labelKind === "required" ? "빈값" : "오류";
-
-    const tdClasses = [
-        isSelectedCell && "lv3-selected",
-        isActiveCell && "lv3-active",
-        hasReqError && "lv3-error cell-error",
-    ]
-        .filter(Boolean)
-        .join(" ");
-
-    const handleKeyDown = useCallback(
-        (e) => {
-            if (e.key !== "Enter") return;
-            e.preventDefault();
-            e.stopPropagation();
-
-            let targetKey = null;
-            if (lv3SelKeys.size > 0) {
-                targetKey = Array.from(lv3SelKeys).pop();
-            } else {
-                targetKey = lastFocusedKeyRef.current;
-            }
-            if (!targetKey) return;
-
-            // 앵커 엘리먼트 확보
-            if (!lv3AnchorElRef.current || !lv3AnchorElRef.current.isConnected) {
-                const el = document.querySelector(`[data-lv3-key="${String(targetKey)}"]`);
-                if (el) {
-                    lv3AnchorElRef.current = el;
-                    const r = el.getBoundingClientRect();
-                    lastCellRectRef.current = r;
-                }
-            }
-
-            // 위치 보정
-            const rect = lastCellRectRef.current;
-            if (rect && setLv3AnchorRect) {
-                setLv3AnchorRect({
-                    top: rect.top,
-                    left: rect.left,
-                    width: rect.width,
-                    height: rect.height,
-                });
-            }
-
-            openLv3EditorAtKey(targetKey);
-        },
-        [lv3SelKeys, openLv3EditorAtKey, setLv3AnchorRect]
-    );
-
-    return (
-        <td
-            data-lv3-key={rowKey}
-            className={tdClasses}
-            tabIndex={0}
-            onKeyDown={handleKeyDown}
-            title={currentValue}
-        >
-            <div
-                className="lv3-opener"
-                style={{ cursor: "pointer" }}
-                onMouseDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                    e.stopPropagation();
-                    const td = e.currentTarget.closest("td");
-                    if (!td) return;
-                    lastFocusedKeyRef.current = rowKey;
-                    anchorIndexRef.current = cellProps.dataIndex;
-                    lastIndexRef.current = cellProps.dataIndex;
-                    lastCellRectRef.current = td.getBoundingClientRect();
-                    lv3AnchorElRef.current = td;
-
-                    requestAnimationFrame(() => openLv3EditorAtKey(rowKey));
-                }}
-            >
-                <span className="lv3-display">{currentValue || "소분류 선택"}</span>
-            </div>
-            {hasReqError && <span className="cell-error-badge">{labelText}</span>}
-        </td>
-    );
-});
-
-
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -165,7 +46,8 @@ const Lv3Cell = memo(function Lv3Cell({
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel } = props;
+    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
+        , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
@@ -177,6 +59,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
     const latestCtxRef = useRef(null);
+    const gridRef = useRef(null);
+
+    // 부모(OptionSettingBody.jsx) 에게 노출
+    useImperativeHandle(ref, () => ({
+        saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
+        reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
+        applyLv3To: (targets, opt) => {
+            console.log("👉 Tab1 applyLv3To 호출됨", { targets, opt });
+            gridRef.current?.applyLv3To?.(targets, opt);
+        }
+    }));
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -277,7 +170,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     /*-----수정 로그 관련-----*/
 
     //grid rendering 
-    const GridRenderer = (props) => {
+    const GridRenderer = forwardRef((props, ref) => {
         const { dataState, setDataState, selectedState, setSelectedState,
             idGetter, dataItemKey, handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature,
@@ -286,7 +179,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [lv3AnchorRect, setLv3AnchorRect] = useState(null); // {top,left,width,height}
-        const isDraggingRef = useRef(false);
+        const [isDragging, setIsDragging] = useState(false);
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
         const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
         const [lv3EditorKey, setLv3EditorKey] = useState(null);  // 드롭다운 보여줄 "대표" 셀의 키
@@ -623,9 +516,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const onRowMouseDown = useCallback((rowProps, e) => {
             if (e.target.closest(ROW_EXCLUSION_SELECTOR)) return; // 인터랙션 요소는 패스
 
-            draggingRef.current = true;
-            isDraggingRef.current = true;
-
             const idx = rowProps.dataIndex;
             const row = rowProps.dataItem;
             const key = getKey(row);
@@ -657,36 +547,26 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             if (e.ctrlKey || e.metaKey) {
                 selectionModeRef.current = 'toggle';
+                /* CTRL 토글 시에도 마지막 인덱스/앵커 최신화 (Enter 직후 사용됨) */
                 anchorIndexRef.current = idx;
                 lastIndexRef.current = idx;
 
                 setLv3SelKeys(prev => {
                     const next = new Set(prev);
-                    const toggledOn = !prev.has(key);
-
-                    if (toggledOn) next.add(key);
-                    else next.delete(key);
-
-                    // selectedState도 같이 맞춰서 Kendo 기본 선택 리셋 방지
-                    setSelectedStateGuarded(prevMap => {
-                        const updated = { ...prevMap };
-                        if (toggledOn) updated[key] = true;
-                        else delete updated[key];
-                        return updated;
-                    });
-
+                    next.has(key) ? next.delete(key) : next.add(key);
                     return next;
                 });
-
+                // Kendo의 단일선택/리셋 기본 동작 차단 (행 클릭 시 선택 유지)
                 e.preventDefault();
                 e.stopPropagation();
-                suppressNextClickRef.current = true;
+                suppressNextClickRef.current = true; //Ctrl 토글 후 Kendo 기본 click 한 번 차단
                 return;
             }
 
             // 기본: 드래그 시작
             selectionModeRef.current = 'drag';
             draggingRef.current = true;
+            setIsDragging(true);
             anchorIndexRef.current = idx;
             lastIndexRef.current = idx;
             setLv3SelKeys(new Set([key]));
@@ -706,33 +586,32 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (td) lastCellRectRef.current = td.getBoundingClientRect();
         }, [rangeToKeys, getKey]);
 
-        // openLv3EditorAtKey 안에서 패널 열리도록 수정
+        // 열기 가드
         const openLv3EditorAtKey = useCallback((targetKey) => {
             if (!targetKey) return;
+            if (Date.now() - justClosedAtRef.current < 80) return;
+            if (lv3EditorKey === targetKey) return;
 
-            // 선택된 행 전체 가져오기
-            let targetRows = (dataState?.data || []).filter(r => lv3SelKeys.has(getKey(r)));
-
-            // 선택이 없으면 단일 행
-            if (targetRows.length === 0) {
-                const single = (dataState?.data || []).find(r => getKey(r) === targetKey);
-                if (single) targetRows = [single];
+            // 항상 DOM에서 대상 셀을 찾아 anchor & rect 먼저 세팅
+            const sel = `[data-lv3-key="${String(targetKey)}"]`;
+            const el = document.querySelector(sel);
+            if (el) {
+                lv3AnchorElRef.current = el;
+                const r = el.getBoundingClientRect();
+                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
             }
-
-            const codeIds = targetRows.map(r => r.lv123code).filter(Boolean);
-
-            // 부모 콜백 호출 (Body → Lv3Panel 열기)
-            onOpenLv3Panel(targetRows, codeIds);
-        }, [dataState?.data, lv3SelKeys, onOpenLv3Panel]);
+            justOpenedAtRef.current = Date.now(); // 오픈 직후 닫힘 가드 시작
+            setLv3EditorKey(targetKey); // 에디터 키 세팅
+        }, [lv3EditorKey]);
 
         // mouseup(드래그 종료): 자동으로 에디터 열지 않음 (중복 오픈 방지)
         useEffect(() => {
             const end = () => {
                 if (!draggingRef.current) return;
                 draggingRef.current = false;
-                isDraggingRef.current = false;
                 // 드래그/범위 선택 상태만 종료. 자동 오픈은 하지 않음
                 selectionModeRef.current = null;
+                setIsDragging(false);
             };
             window.addEventListener('mouseup', end);
             return () => window.removeEventListener('mouseup', end);
@@ -759,41 +638,32 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 전역 Enter 리스너: 마운트 시 1회 등록 (최신 값은 keyHandlerStateRef로 접근)
         useEffect(() => {
             const onKey = (e) => {
-                if (e.key !== "Enter") return;
-
-                // 입력창/셀 편집 중일 때는 무시
+                if (e.key !== 'Enter') return;
                 const tag = document.activeElement?.tagName?.toLowerCase();
-                if (["input", "select", "textarea"].includes(tag)) return;
+                if (['input', 'select', 'textarea'].includes(tag)) return;
 
                 const s = keyHandlerStateRef.current;
                 if (!s || s.lv3EditorKey != null) return;
 
-                // === Ctrl+Enter: 선택된 모든 행에 대해 패널 열기 ===
-                if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    if (s.lv3SelKeys && s.lv3SelKeys.size > 0) {
-                        const arr = Array.from(s.lv3SelKeys);
-                        const targetKey = arr[arr.length - 1]; // 마지막 선택한 키 기준
-                        requestAnimationFrame(() => s.openLv3EditorAtKey(targetKey));
-                    }
-                    return;
-                }
-
-                // === 그냥 Enter: 마지막 포커스/선택 기준으로 패널 열기 ===
-                let targetKey = null;
+                // 타겟 키 결정: 선택영역 마지막 인덱스 우선, 없으면 마지막 포커스
+                //1) lastIndex/anchorIndex 우선
+                //2) 없으면 마지막 포커스
+                //3) 그래도 없으면 선택집합(lv3SelKeys)의 마지막 요소 사용 */
                 const i = s.lastIndex ?? s.anchorIndex;
+                let targetKey = null;
                 if (i != null && s.data?.[i]) {
                     targetKey = s.getKey(s.data[i]);
                 } else if (s.lastFocusedKey) {
                     targetKey = s.lastFocusedKey;
                 } else if (s.lv3SelKeys && s.lv3SelKeys.size > 0) {
+                    // Set → 배열 변환 뒤 마지막 요소 사용
                     const arr = Array.from(s.lv3SelKeys);
                     targetKey = arr[arr.length - 1];
                 }
 
                 if (!targetKey) return;
 
-                // 마지막 셀 위치를 rect로 보정
+                // 앵커 엘리먼트/좌표 보정
                 let el = s.lastCellEl;
                 if (!el || !document.body.contains(el)) {
                     el = document.querySelector(`[data-lv3-key="${String(targetKey)}"]`);
@@ -809,11 +679,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     });
                 }
 
+                // 다음 프레임에 오픈
                 requestAnimationFrame(() => s.openLv3EditorAtKey(targetKey));
             };
-
-            window.addEventListener("keydown", onKey, true);
-            return () => window.removeEventListener("keydown", onKey, true);
+            window.addEventListener('keydown', onKey, true);
+            return () => window.removeEventListener('keydown', onKey, true);
         }, []);
 
         // 소분류 선택 해제
@@ -860,7 +730,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 justClosedAtRef.current = Date.now();
                 setLv3EditorKey(null);
                 setLv3AnchorRect(null);
-                // clearLv3Selection();
+                clearLv3Selection();
                 clearRowHighlight();
             };
             document.addEventListener('click', onDocClick); // 버블 단계
@@ -869,35 +739,31 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 일괄 적용 (선택된 키들에 옵션 메타까지 모두 반영)
         const applyLv3To = useCallback((targetKeys, opt) => {
+            const keySet = targetKeys instanceof Set ? targetKeys : new Set([].concat(targetKeys));
+            const isPh = opt && (opt.__placeholder || String(opt.codeId).startsWith('__ph__'));
             onUnsavedChange?.(true);
-
             setDataState(prev => {
                 const updated = prev.data.map(r =>
-                    targetKeys.has(getKey(r))
+                    keySet.has(getKey(r))
                         ? {
                             ...r,
-                            lv3: opt?.codeName ?? "",
+                            lv3: isPh ? (opt?.codeName ?? "") : (opt?.codeId ?? ""),
                             lv1: opt?.lv1 ?? "",
                             lv2: opt?.lv2 ?? "",
-                            lv1code: opt?.lv1code ?? "",
-                            lv2code: opt?.lv2code ?? "",
+                            lv1code: r?.lv1code ?? "",
+                            lv2code: r?.lv2code ?? "",
                             lv123code: opt?.lv123code ?? "",
                         }
                         : r
                 );
-
                 const marked = applyRequiredMarksLv3(updated);
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
-            setLv3SelKeys(new Set());
         }, [setDataState, getKey, applyRequiredMarksLv3, commitSmart, onUnsavedChange]);
 
-        // 부모(OptionSettingBody.jsx) 에게 노출
         useImperativeHandle(ref, () => ({
-            applyLv3To,
-            saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
-            reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
+            applyLv3To
         }));
         /*----------소분류 드래그-------*/
 
@@ -906,16 +772,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const clickedKey = getKey(e.dataItem);
             setSelectedRowKey(clickedKey);
 
-            setDataState(prev => {
-                return {
-                    ...prev,
-                    data: prev.data.map(r =>
-                        getKey(r) === clickedKey
-                            ? { ...r, inEdit: true }
-                            : r
-                    ),
-                };
-            });
+            setDataState(prev => ({
+                ...prev,
+                data: prev.data.map(r => ({
+                    ...r,
+                    inEdit: getKey(r) === clickedKey
+                }))
+            }));
         }, [getKey, setDataState]);
 
         // 셀 값 변경 → 해당 행의 해당 필드만 업데이트
@@ -939,35 +802,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const marked = applyRequiredMarksLv3(nextData);
 
                 // 변경된 행만 커밋
-                commitSmart([updatedRow]);
-
-                return { ...prev, data: marked };
-            });
-        }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
-
-        // 드롭다운 변경 핸들러 (선택 행만 갱신) 
-        const onDropDownItemChange = useCallback((e) => {
-            onUnsavedChange?.(true);
-
-            setDataState((prev) => {
-                const prevData = prev?.data ?? [];
-                const idx = prevData.findIndex(r => getKey(r) === getKey(e.dataItem));
-                if (idx === -1) return prev;
-
-                const updatedRow = {
-                    ...prevData[idx],
-                    [e.field]: e.value,
-                    inEdit: true,
-                };
-
-                const nextData = [...prevData];
-                nextData[idx] = updatedRow;
-
-                const marked = applyRequiredMarksLv3(nextData);
-
-                // 변경된 행만 커밋
-                commitSmart([updatedRow]);
-
+                // commitSmart([updatedRow]);
+                commitSmart(marked);
                 return { ...prev, data: marked };
             });
         }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
@@ -1033,8 +869,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const marked = applyRequiredMarksLv3(nextData);
 
                 // 새로 추가된 행만 커밋
-                commitSmart([newRow]);
-
+                // commitSmart([newRow]);
+                commitSmart(marked);
                 return { ...prev, data: marked };
             });
         }, [getKey, onUnsavedChange, setSelectedRowKey, getNextCid, applyRequiredMarksLv3, commitSmart]);
@@ -1079,7 +915,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 openLv3EditorAtKey(k);
             };
 
-            return cloneElement(trEl, {
+            return React.cloneElement(trEl, {
                 ...trEl.props,
                 className: cls,
                 onPointerDown: (e) => { onRowMouseDown(rowProps, e); trEl.props.onPointerDown?.(e); },
@@ -1213,7 +1049,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 부모에서 호출할 수 있도록 ref에 연결
         saveChangesRef.current = saveChanges;
-        // const openedLv3DDLRef = useRef(null);
+        const openedLv3DDLRef = useRef(null);
         // 드롭다운이 열리면(= lv3EditorKey가 생기면) DDL에 포커스
         useEffect(() => {
             if (lv3EditorKey != null) {
@@ -1230,6 +1066,110 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
 
+        // 화면에 보이는 첫 번째 에러(lv3) 셀로 포커스(중앙 스크롤) → 필요 시 DDL 자동 오픈
+        const focusFirstLv3ErrorCell = useCallback(() => {
+            // setState 직후 렌더 보장용 두 번의 rAF
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                const root = gridRootRef.current || document;
+                const td = root.querySelector('td.lv3-error'); // DOM 상 가장 위(첫번째)
+                if (!td) return;
+                td.focus({ preventScroll: false });
+                td.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+                const key = td.getAttribute('data-lv3-key');
+                if (key) openLv3EditorAtKey(key); // 원하면 주석 처리해도 됨(포커스만 이동)
+            }));
+        }, [openLv3EditorAtKey]);
+
+        useEffect(() => {
+            if (lv3EditorKey == null) return;
+
+            const ensureAnchor = () => {
+                // 1) 기존 ref가 아직 DOM에 연결되어 있으면 그걸 사용
+                let el = lv3AnchorElRef.current;
+                if (el && el.isConnected) return el;
+
+                // 2) 리렌더 등으로 ref가 끊겼다면, data-attr로 현재 셀을 다시 찾기
+                const sel = `[data-lv3-key="${String(lv3EditorKey)}"]`;
+                el = document.querySelector(sel);
+                if (el) {
+                    lv3AnchorElRef.current = el;
+                    return el;
+                }
+                return null; // 못 찾았지만, 여기서 "닫지"는 않음
+            };
+
+            const updatePos = () => {
+                const el = ensureAnchor();
+                if (!el) return; // 앵커를 잠깐 못 찾는 상황(리렌더 중 등)에서는 그냥 위치 갱신 스킵
+                const r = el.getBoundingClientRect();
+                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+            };
+
+            // 처음 한 번 보정
+            updatePos();
+
+            // 스크롤/리사이즈 시 위치만 갱신 (닫지 않음)
+            window.addEventListener('scroll', updatePos, true);
+            window.addEventListener('resize', updatePos, true);
+            return () => {
+                window.removeEventListener('scroll', updatePos, true);
+                window.removeEventListener('resize', updatePos, true);
+            };
+        }, [lv3EditorKey]);
+
+        // 옵션 증강: rows에만 있는 값은 placeholder(고유 codeId)로 추가
+        const augmentedLv3Options = useMemo(() => {
+            const base = lv3Options || [];
+            const byName = new Map(base.map(o => [tl(o.codeName), o]));
+            const out = [...base];
+
+            for (const r of rows || []) {
+                const name = r?.lv3;
+                const key = tl(name);
+                if (!key) continue;
+
+                if (!byName.has(key)) {
+                    let ph = lv3Cache.get(r);   // 이 row에 이미 캐시 있으면 재사용
+                    if (!ph) {
+                        ph = {
+                            codeId: `__ph__${key}`,
+                            codeName: name ?? "",
+                            lv1: r?.lv1 ?? "",
+                            lv2: r?.lv2 ?? "",
+                            lv123code: r?.lv123code ?? "",
+                            __placeholder: true,
+                        };
+                        lv3Cache.set(r, ph); // 캐시에 저장
+                    }
+                    byName.set(key, ph);
+                    out.push(ph);
+                }
+            }
+            return out;
+        }, [lv3Options, rows]);
+
+        // 빠른 조회용 맵
+        const optByCodeId = useMemo(() => {
+            const m = new Map();
+            augmentedLv3Options.forEach(o => m.set(o.codeId, o));
+            return m;
+        }, [augmentedLv3Options]);
+
+        const optByLv123 = useMemo(() => {
+            const m = new Map();
+            augmentedLv3Options.forEach(o => {
+                const k = tl(o.lv123code);
+                if (k) m.set(k, o);
+            });
+            return m;
+        }, [augmentedLv3Options]);
+
+        const optByName = useMemo(() => {
+            const m = new Map();
+            augmentedLv3Options.forEach(o => m.set(tl(o.codeName), o));
+            return m;
+        }, [augmentedLv3Options]);
+
         // 검증 체크박스 위치 고정시키기 위함 (임시)
         const anchorField = useMemo(() => {
             const vis = effectiveColumns.filter(c => c.show !== false);
@@ -1239,30 +1179,19 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
             onUnsavedChange?.(true);
+
             const deletedRow = cellProps.dataItem;
             const deletedKey = getKey(deletedRow);
 
             setDataState((prev) => {
                 const prevData = prev?.data ?? [];
-
-                let nextData;
-                if (deletedRow.__isNew) {
-                    // 저장 안 된 추가행 → 바로 제거
-                    nextData = prevData.filter(r => getKey(r) !== deletedKey);
-                } else {
-                    // 기존 저장된 행 → 보류 삭제 토글
-                    nextData = prevData.map(r =>
-                        getKey(r) === deletedKey
-                            ? { ...r, __pendingDelete: !r.__pendingDelete }
-                            : r
-                    );
-                }
+                const nextData = prevData.filter(r => getKey(r) !== deletedKey);
 
                 const marked = applyRequiredMarksLv3(nextData);
 
-                // 변경된 전체 rows를 커밋해야 Undo/Redo가 정상 동작
+                // 삭제된 행만 커밋
+                // commitSmart([deletedRow]);
                 commitSmart(marked);
-
                 return { ...prev, data: marked };
             });
         }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
@@ -1288,211 +1217,277 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b>
                     </div>
                 </div>
-                <div className="option-setting-layout">
-                    {/* 왼쪽 그리드 */}
-                    <div className="grid-area">
-                        <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""} ${isDraggingRef.current ? "is-dragging" : ""}`}>
-                            <KendoGrid
-                                scrollable="virtual"
-                                rowHeight={38}
-                                key={`lv-${lvCode}-${gridEpoch}`}
-                                parentProps={{
-                                    data: dataForGridSorted,
-                                    dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
-                                    editField,
-                                    onItemChange,
-                                    onRowClick,
-                                    selectedField: SELECTED_FIELD, // 체크박스 필드 지정 
-                                    selectedState,
-                                    setSelectedState: setSelectedStateGuarded,
-                                    idGetter: (r) => r.__rowKey,
-                                    multiSelect: true,
-                                    selectionColumnAfterField: anchorField, // 체크박스 선택 컬럼을 원하는 위치에 삽입 
-                                    linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
-                                    selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
-                                    rowRender,
-                                    useClientProcessing: true,
-                                    sortable: { mode: "multiple", allowUnsort: true },
-                                    filterable: true,
-                                    initialSort: mappedSort,
-                                    initialFilter: filter,
-                                    sortChange: ({ sort: next }) => {
-                                        const nextRaw = unmapSortFields(next, proxyField);
-                                        setSort(nextRaw ?? []);
-                                        onPrefsChange?.({ sort: nextRaw ?? [] });
-                                    },
-                                    filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
-                                    cellRender: (td, cellProps) => {
-                                        if (!isValidElement(td)) return td;
-                                        const f = cellProps?.field;
-                                        if (!f) return td;
-                                        const k = cellProps?.dataItem?.__rowKey;
-                                        return cloneElement(td, {
-                                            ...td.props,
-                                            'data-field': f,
-                                            'data-rowkey': k,
-                                        });
-                                    },
-                                }}
-                            >
-                                {effectiveColumns.filter(c => c.show !== false).map((c) => {
-                                    if (c.field === 'lv3') {
-                                        return (
-                                            <Column
-                                                key={c.field}
-                                                field="lv3"
-                                                title={c.title}
-                                                width={c.width}
-                                                columnMenu={columnMenu}
-                                                sortable
-                                                cell={(cellProps) => (
-                                                    <Lv3Cell
-                                                        cellProps={cellProps}
-                                                        lv3SelKeys={lv3SelKeys}                 // 현재 선택된 lv3 셀들의 키 집합
-                                                        lv3EditorKey={lv3EditorKey}             // 현재 드롭다운(오버레이)이 열려 있는 "대표" 셀의 키
-                                                        openLv3EditorAtKey={openLv3EditorAtKey} // 특정 셀(rowKey)에서 드롭다운을 열어주는 함수
-                                                        lastFocusedKeyRef={lastFocusedKeyRef}   // 마지막으로 포커스가 있었던 셀의 키를 기억하는 ref
-                                                        anchorIndexRef={anchorIndexRef}         // 선택 시작점(Anchor)의 행 인덱스 dataIndex
-                                                        lastIndexRef={lastIndexRef}             // 마지막으로 선택된 행 인덱스
-                                                        lastCellRectRef={lastCellRectRef}       // 마지막으로 클릭/포커스된 셀의 DOM 위치(rect) 기억
-                                                        lv3AnchorElRef={lv3AnchorElRef}         // 현재 드롭다운이 붙어야 할 실제 DOM 요소(td)
-                                                        setLv3AnchorRect={setLv3AnchorRect}     // 오버레이 위치 상태 세터 (useState)
-                                                    />
+                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${lv3EditorKey ? "lv3-dd-open" : ""} ${isDragging ? "is-dragging" : ""}`}>
+                    <KendoGrid
+                        scrollable="virtual"
+                        rowHeight={38}
+                        key={`lv-${lvCode}-${gridEpoch}`}
+                        parentProps={{
+                            data: dataForGridSorted,
+                            dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
+                            editField,
+                            onItemChange,
+                            onRowClick,
+                            selectedField: SELECTED_FIELD, // 체크박스 필드 지정 
+                            selectedState,
+                            setSelectedState: setSelectedStateGuarded,
+                            idGetter: (r) => r.__rowKey,
+                            multiSelect: true,
+                            selectionColumnAfterField: anchorField, // 체크박스 선택 컬럼을 원하는 위치에 삽입 
+                            linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
+                            selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
+                            rowRender,
+                            useClientProcessing: true,
+                            sortable: { mode: "multiple", allowUnsort: true },
+                            filterable: true,
+                            initialSort: mappedSort,
+                            initialFilter: filter,
+                            sortChange: ({ sort: next }) => {
+                                const nextRaw = unmapSortFields(next, proxyField);
+                                setSort(nextRaw ?? []);
+                                onPrefsChange?.({ sort: nextRaw ?? [] });
+                            },
+                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
+                            cellRender: (td, cellProps) => {
+                                if (!React.isValidElement(td)) return td;
+                                const f = cellProps?.field;
+                                if (!f) return td;
+                                const k = cellProps?.dataItem?.__rowKey;
+                                return React.cloneElement(td, {
+                                    ...td.props,
+                                    'data-field': f,
+                                    'data-rowkey': k,
+                                });
+                            },
+                        }}
+                    >
+                        {effectiveColumns.filter(c => c.show !== false).map((c) => {
+                            if (c.field === 'lv3') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field="lv3"
+                                        title={c.title}
+                                        width={c.width}
+                                        columnMenu={columnMenu}
+                                        sortable
+                                        cell={(cellProps) => {
+                                            const rowKey = getKey(cellProps.dataItem);
+                                            const currentValue = cellProps.dataItem.lv3 ?? "";
+                                            const hasReqError = cellProps.dataItem?.__errors?.has?.('lv3');
+                                            const labelKind = cellProps.dataItem?.__errorKinds?.lv3; // 'required' 예상
+                                            const labelText = labelKind === 'required' ? '빈값' : '오류';
+                                            const tdClasses = `${hasReqError ? "lv3-error cell-error" : ""}`.trim();
+                                            // Enter 키 핸들러
+                                            const handleKeyDown = (e) => {
+                                                if (e.key === "Enter") {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+
+                                                    let targetKey = null;
+                                                    if (lv3SelKeys.size > 0) {
+                                                        targetKey = Array.from(lv3SelKeys).pop(); // 여러개면 마지막 선택
+                                                    } else {
+                                                        targetKey = lastFocusedKeyRef.current;   // 아니면 마지막 포커스
+                                                    }
+                                                    if (!targetKey) return;
+                                                    // 마지막 셀 위치로 앵커 세팅
+                                                    if (!lv3AnchorElRef.current || !lv3AnchorElRef.current.isConnected) {
+                                                        const el = document.querySelector(`[data-lv3-key="${String(targetKey)}"]`);
+                                                        if (el) {
+                                                            lv3AnchorElRef.current = el;
+                                                            const r = el.getBoundingClientRect();
+                                                            setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+                                                        }
+                                                    } else {
+                                                        // 기존 rect fallback
+                                                        const rect = lastCellRectRef.current;
+                                                        if (rect) {
+                                                            setLv3AnchorRect({ top: rect.top, left: rect.left, width: rect.width, height: rect.height });
+                                                        }
+                                                    }
+                                                    // 열기
+                                                    openLv3EditorAtKey(targetKey);
+                                                }
+                                            };
+
+                                            return (
+                                                <td
+                                                    data-lv3-key={rowKey}
+                                                    className={tdClasses}
+                                                    tabIndex={0}
+                                                    onKeyDown={handleKeyDown}
+                                                    title={currentValue}
+                                                >
+                                                    <div
+                                                        className="lv3-opener"
+                                                        style={{ cursor: "pointer" }}
+                                                        onMouseDown={(e) => e.stopPropagation()} // td 핸들러 막음
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+
+                                                            const td = e.currentTarget.closest('td');
+                                                            const rect = td?.getBoundingClientRect?.();
+                                                            if (rect) lastCellRectRef.current = rect;
+
+                                                            // 포커스/인덱스 최신화(엔터로 열기 등)
+                                                            lastFocusedKeyRef.current = rowKey;
+                                                            anchorIndexRef.current = cellProps.dataIndex;
+                                                            lastIndexRef.current = cellProps.dataIndex;
+
+                                                            if (td) {
+                                                                lastCellElRef.current = td;
+                                                                lv3AnchorElRef.current = td;
+                                                                const r = td.getBoundingClientRect();
+                                                                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+                                                            }
+                                                            // Body 쪽 패널 열기 요청 추가
+                                                            const selectedRows = (dataState?.data || []).filter(r => lv3SelKeys.has(getKey(r)));
+                                                            onOpenLv3Panel?.(selectedRows, selectedRows.map(r => r.lv123code));
+                                                        }}
+                                                    >
+                                                        <span className="lv3-display">{currentValue || "소분류 선택"}</span>
+                                                    </div>
+                                                    {/* 필수값 오류 배지 */}
+                                                    {hasReqError && <span className="cell-error-badge">{labelText}</span>}
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
+                            if (c.field === 'lv1code' || c.field === 'lv2code' || c.field === 'lv123code') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={proxyField[c.field] ?? `__sort__${c.field}`}
+                                        title={c.title}
+                                        width={c.width}
+                                        sortable
+                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
+                                        cell={(p) => {
+                                            const r = p.dataItem;
+                                            const codeId = String(r?.lv123code ?? "").trim();
+                                            const codeName = String(r?.lv3 ?? "").trim();
+                                    
+                                            // 패널에서 받아온 옵션 확인
+                                            const matchedOpt = (lv3Options || []).find(o => String(o.codeName ?? "").trim() === codeName);
+                                    
+                                            return (
+                                              <td style={{ textAlign: "center" }}>
+                                                {/* case 3: 옵션 자체가 없음 → 코드 등록 버튼 */}
+                                                {!matchedOpt && codeName ? (
+                                                  <Button
+                                                    className="btnM"
+                                                    themeColor="primary"
+                                                    onClick={() => openLv3EditorAtKey(getKey(r))}
+                                                  >
+                                                    코드 등록
+                                                  </Button>
+                                                ) : matchedOpt && codeId ? (
+                                                  // case 1: 옵션 있고 codeId도 있으면 codeId 출력
+                                                  <span title={codeId}>{codeId}</span>
+                                                ) : (
+                                                  // case 2: 옵션은 있는데 codeId는 없음 → 빈칸
+                                                  null
                                                 )}
-                                            />
-                                        );
-                                    }
-                                    if (c.field === 'lv1code' || c.field === 'lv2code' || c.field === 'lv123code') {
-                                        return (
-                                            <Column
-                                                key={c.field}
-                                                field={proxyField[c.field] ?? `__sort__${c.field}`}
-                                                title={c.title}
-                                                width={c.width}
-                                                sortable
-                                                columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
-                                                cell={(p) => {
-                                                    const r = p.dataItem;
-                                                    const codeId = String(r?.lv123code ?? "").trim();
-                                                    const codeName = String(r?.lv3 ?? "").trim();
-                                            
-                                                    return (
-                                                      <td style={{ textAlign: "center" }}>
-                                                        {/* codeId 없고, codeName은 있을 때 → 코드 등록 버튼 */}
-                                                        {!codeId && codeName ? (
-                                                          <Button
-                                                            className="btnM"
-                                                            themeColor="primary"
-                                                            onClick={() => openLv3EditorAtKey(getKey(r))}
-                                                          >
-                                                            코드 등록
-                                                          </Button>
-                                                        ) : codeId ? (
-                                                          // codeId 있으면 코드값 출력
-                                                          <span title={codeId}>{codeId}</span>
-                                                        ) : (
-                                                          // codeName도, codeId도 없으면 빈칸
-                                                          null
-                                                        )}
-                                                      </td>
-                                                    );
-                                                }}
-                                            />
-                                        );
-                                    }
-                                    if (c.field === 'add') {
-                                        return (
-                                            <Column
-                                                key={c.field}
-                                                field="add"
-                                                title={c.title}
-                                                sortable={false}
-                                                columnMenu={undefined}
-                                                cell={(props) => {
-                                                    const row = props.dataItem;
-                                                    const fk = row?.fixed_key;
-                                                    const isLastVisible = row.__pendingDelete !== true && Number(row?.cid) === (lastVisibleCidByFixedKey.get(fk) ?? -1);
-                                                    return (
-                                                        <td style={{ textAlign: "center" }}>
-                                                            {isLastVisible && (
-                                                                <Button
-                                                                    className={"btnM"}
-                                                                    themeColor={"primary"}
-                                                                    onClick={() => handleAddButton(props)}
-                                                                >
-                                                                    추가
-                                                                </Button>
-                                                            )}
-                                                        </td>
-                                                    );
-                                                }}
-                                            />
-                                        );
-                                    }
-                                    if (c.field === 'delete') {
-                                        return (
-                                            <Column
-                                                key={c.field}
-                                                field="delete"
-                                                title={c.title}
-                                                sortable={false}
-                                                columnMenu={undefined}
-                                                cell={(props) => {
-                                                    const row = props.dataItem;
-                                                    const pending = row.__pendingDelete === true;
+                                              </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
+                            if (c.field === 'add') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field="add"
+                                        title={c.title}
+                                        sortable={false}
+                                        columnMenu={undefined}
+                                        cell={(props) => {
+                                            const row = props.dataItem;
+                                            const fk = row?.fixed_key;
+                                            const isLastVisible = row.__pendingDelete !== true && Number(row?.cid) === (lastVisibleCidByFixedKey.get(fk) ?? -1);
+                                            return (
+                                                <td style={{ textAlign: "center" }}>
+                                                    {isLastVisible && (
+                                                        <Button
+                                                            className={"btnM"}
+                                                            themeColor={"primary"}
+                                                            onClick={() => handleAddButton(props)}
+                                                        >
+                                                            추가
+                                                        </Button>
+                                                    )}
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
+                            if (c.field === 'delete') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field="delete"
+                                        title={c.title}
+                                        sortable={false}
+                                        columnMenu={undefined}
+                                        cell={(props) => {
+                                            const row = props.dataItem;
+                                            const pending = row.__pendingDelete === true;
 
-                                                    // 멀티값이 1이면 항상 숨김 
-                                                    const isMultiOne = Number(row?.cid) === 1;
-                                                    if (isMultiOne) return <td />;
+                                            // 멀티값이 1이면 항상 숨김 
+                                            const isMultiOne = Number(row?.cid) === 1;
+                                            if (isMultiOne) return <td />;
 
-                                                    return (
-                                                        <td style={{ textAlign: "center" }}
-                                                            onMouseDown={(e) => e.stopPropagation()}
-                                                            onClick={(e) => e.stopPropagation()}>
-                                                            <Button
-                                                                className="btnM"
-                                                                themeColor={pending ? "secondary" : "primary"}
-                                                                onClick={() => onClickDeleteCell(props)}
-                                                            >
-                                                                {pending ? "취소" : "삭제"}
-                                                            </Button>
-                                                        </td>
-                                                    );
-                                                }}
-                                            />
-                                        );
-                                    }
-                                    if (c.field === "cid") {
-                                        return (
-                                            <Column
-                                                key={c.field}
-                                                field={c.field}
-                                                title={c.title}
-                                                width={c.width}
-                                                editable={c.editable}
-                                                sortable={false}   // 정렬 끔
-                                            />
-                                        );
-                                    }
-                                    // 일반 텍스트 컬럼
-                                    return (
-                                        <Column
-                                            key={c.field}
-                                            field={c.field}
-                                            title={c.title}
-                                            width={c.width}
-                                            editable={c.editable}
-                                            columnMenu={columnMenu}
-                                        />
-                                    );
-                                })}
-                            </KendoGrid>
-                        </div>
-                    </div>
+                                            return (
+                                                <td style={{ textAlign: "center" }}
+                                                    onMouseDown={(e) => e.stopPropagation()}
+                                                    onClick={(e) => e.stopPropagation()}>
+                                                    <Button
+                                                        className="btnM"
+                                                        themeColor={pending ? "secondary" : "primary"}
+                                                        onClick={() => onClickDeleteCell(props)}
+                                                    >
+                                                        {pending ? "취소" : "삭제"}
+                                                    </Button>
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
+                            if (c.field === "cid") {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={c.field}
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        sortable={false}   // 정렬 끔
+                                    />
+                                );
+                            }
+                            // 일반 텍스트 컬럼
+                            return (
+                                <Column
+                                    key={c.field}
+                                    field={c.field}
+                                    title={c.title}
+                                    width={c.width}
+                                    editable={c.editable}
+                                    columnMenu={columnMenu}
+                                />
+                            );
+                        })}
+                    </KendoGrid>
                 </div>
             </Fragment>
         );
-    }
+    });
 
     return (
         <GridData
@@ -1517,6 +1512,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     baselineSigRef={baselineSigRef}
                     sigStackRef={sigStackRef}
                     makeTab1Signature={makeTab1Signature}
+                    ref={gridRef}
                 />}
 
         />
