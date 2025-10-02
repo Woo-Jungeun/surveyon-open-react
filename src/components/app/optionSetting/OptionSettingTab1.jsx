@@ -21,9 +21,7 @@ const ROW_EXCLUSION_SELECTOR = [
     'input[type="checkbox"]', '[role="checkbox"]'
 ].join(',');
 
-// const lv3Cache = new WeakMap();
 const getKey = (row) => row?.__rowKey ?? null; // 키 가져오기 헬퍼 
-const tl = (v) => String(v ?? "").trim().toLowerCase();
 
 // 클라이언트 전용 표시/편집 플래그 제거
 const stripLocalFlags = (rows = []) =>
@@ -632,54 +630,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 lastCellRect: lastCellRectRef.current,
             };
         }, [lv3SelKeys, lv3EditorKey, dataState?.data, getKey, openLv3EditorAtKey, setLv3AnchorRect]);
-
-        // 전역 Enter 리스너: 마운트 시 1회 등록 (최신 값은 keyHandlerStateRef로 접근)
-        useEffect(() => {
-            const onKey = (e) => {
-                if (e.key !== 'Enter') return;
-                const tag = document.activeElement?.tagName?.toLowerCase();
-                if (['input', 'select', 'textarea'].includes(tag)) return;
-
-                const s = keyHandlerStateRef.current;
-                if (!s || s.lv3EditorKey != null) return;
-
-                // 그래도 없으면 선택집합(lv3SelKeys)의 마지막 요소 사용 */
-                const i = s.lastIndex ?? s.anchorIndex;
-                let targetKey = null;
-                if (i != null && s.data?.[i]) {
-                    targetKey = s.getKey(s.data[i]);
-                } else if (s.lastFocusedKey) {
-                    targetKey = s.lastFocusedKey;
-                } else if (s.lv3SelKeys && s.lv3SelKeys.size > 0) {
-                    // Set → 배열 변환 뒤 마지막 요소 사용
-                    const arr = Array.from(s.lv3SelKeys);
-                    targetKey = arr[arr.length - 1];
-                }
-
-                if (!targetKey) return;
-
-                // 앵커 엘리먼트/좌표 보정
-                let el = s.lastCellEl;
-                if (!el || !document.body.contains(el)) {
-                    el = document.querySelector(`[data-lv3-key="${String(targetKey)}"]`);
-                }
-                let rect = s.lastCellRect;
-                if (el) rect = el.getBoundingClientRect();
-                if (rect) {
-                    s.setLv3AnchorRect({
-                        top: rect.top,
-                        left: rect.left,
-                        width: rect.width,
-                        height: rect.height,
-                    });
-                }
-
-                // 다음 프레임에 오픈
-                requestAnimationFrame(() => s.openLv3EditorAtKey(targetKey));
-            };
-            window.addEventListener('keydown', onKey, true);
-            return () => window.removeEventListener('keydown', onKey, true);
-        }, []);
 
         // 소분류 선택 해제
         const clearLv3Selection = useCallback(() => {
