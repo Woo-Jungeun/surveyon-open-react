@@ -1,7 +1,8 @@
 import { Route, Routes } from "react-router-dom";
 import { useSelector } from "react-redux";
-import ProEnterBody from "@/components/app/proEnter/ProEnterBody.jsx";
 import PageNotFound from "@/components/app/pageNotFound/PageNotFound";
+import ProPermission from "@/components/app/proPermission/ProPermission";
+
 const ProPermissionWrapperView = () => {
     const auth = useSelector((store) => store.auth);
 
@@ -10,7 +11,7 @@ const ProPermissionWrapperView = () => {
      */
     return (
         <Routes>
-            <Route index element={<ProEnterBody />} />
+            <Route index element={<ProPermission />} />
             <Route path="*" element={<PageNotFound />} />
         </Routes>
     );

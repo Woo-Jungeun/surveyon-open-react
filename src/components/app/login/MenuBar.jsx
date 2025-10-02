@@ -174,8 +174,7 @@ const MenuBar = () => {
                   className="dd-item"
                   onClick={() => {
                     setAppsOpen(false);
-                    // navigate('/pro_permission');
-                    modal.showAlert("알림", "사용자설정 준비 중");
+                    navigate('/pro_permission');
                   }}
                 >
                   <span className="dd-icon">👤</span>
