@@ -21,7 +21,7 @@ const ROW_EXCLUSION_SELECTOR = [
     'input[type="checkbox"]', '[role="checkbox"]'
 ].join(',');
 
-const lv3Cache = new WeakMap();
+// const lv3Cache = new WeakMap();
 const getKey = (row) => row?.__rowKey ?? null; // 키 가져오기 헬퍼 
 const tl = (v) => String(v ?? "").trim().toLowerCase();
 
@@ -66,7 +66,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
         reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
         applyLv3To: (targets, opt) => {
-            console.log("👉 Tab1 applyLv3To 호출됨", { targets, opt });
             gridRef.current?.applyLv3To?.(targets, opt);
         }
     }));
@@ -644,11 +643,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                 const s = keyHandlerStateRef.current;
                 if (!s || s.lv3EditorKey != null) return;
-
-                // 타겟 키 결정: 선택영역 마지막 인덱스 우선, 없으면 마지막 포커스
-                //1) lastIndex/anchorIndex 우선
-                //2) 없으면 마지막 포커스
-                //3) 그래도 없으면 선택집합(lv3SelKeys)의 마지막 요소 사용 */
+                
+                // 그래도 없으면 선택집합(lv3SelKeys)의 마지막 요소 사용 */
                 const i = s.lastIndex ?? s.anchorIndex;
                 let targetKey = null;
                 if (i != null && s.data?.[i]) {
@@ -740,14 +736,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 일괄 적용 (선택된 키들에 옵션 메타까지 모두 반영)
         const applyLv3To = useCallback((targetKeys, opt) => {
             const keySet = targetKeys instanceof Set ? targetKeys : new Set([].concat(targetKeys));
-            const isPh = opt && (opt.__placeholder || String(opt.codeId).startsWith('__ph__'));
             onUnsavedChange?.(true);
             setDataState(prev => {
                 const updated = prev.data.map(r =>
                     keySet.has(getKey(r))
                         ? {
                             ...r,
-                            lv3: isPh ? (opt?.codeName ?? "") : (opt?.codeId ?? ""),
+                            lv3: opt?.codeName ?? "",
                             lv1: opt?.lv1 ?? "",
                             lv2: opt?.lv2 ?? "",
                             lv1code: r?.lv1code ?? "",
@@ -802,7 +797,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const marked = applyRequiredMarksLv3(nextData);
 
                 // 변경된 행만 커밋
-                // commitSmart([updatedRow]);
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
@@ -826,7 +820,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 }
                 return String(expect); // 1,2,3,.. 가운데 비어있는 가장 작은 값
             }
-            // default: max+1
+         
             const max = nums.length ? nums[nums.length - 1] : 0;
             return String(max + 1);
         }, []);
@@ -869,7 +863,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const marked = applyRequiredMarksLv3(nextData);
 
                 // 새로 추가된 행만 커밋
-                // commitSmart([newRow]);
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
@@ -1049,126 +1042,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 부모에서 호출할 수 있도록 ref에 연결
         saveChangesRef.current = saveChanges;
-        const openedLv3DDLRef = useRef(null);
-        // 드롭다운이 열리면(= lv3EditorKey가 생기면) DDL에 포커스
-        useEffect(() => {
-            if (lv3EditorKey != null) {
-                // 다음 프레임에 포커스 (렌더 완료 보장)
-                requestAnimationFrame(() => {
-                    openedLv3DDLRef.current?.focus?.();
-                    // 혹시 포커스가 안 잡히는 테마/버전이면 input으로 직접:
-                    openedLv3DDLRef.current?.element
-                        ?.querySelector?.('input')
-                        ?.focus?.();
-                });
-            }
-        }, [lv3EditorKey]);
-
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
 
-        // 화면에 보이는 첫 번째 에러(lv3) 셀로 포커스(중앙 스크롤) → 필요 시 DDL 자동 오픈
-        const focusFirstLv3ErrorCell = useCallback(() => {
-            // setState 직후 렌더 보장용 두 번의 rAF
-            requestAnimationFrame(() => requestAnimationFrame(() => {
-                const root = gridRootRef.current || document;
-                const td = root.querySelector('td.lv3-error'); // DOM 상 가장 위(첫번째)
-                if (!td) return;
-                td.focus({ preventScroll: false });
-                td.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
-                const key = td.getAttribute('data-lv3-key');
-                if (key) openLv3EditorAtKey(key); // 원하면 주석 처리해도 됨(포커스만 이동)
-            }));
-        }, [openLv3EditorAtKey]);
-
-        useEffect(() => {
-            if (lv3EditorKey == null) return;
-
-            const ensureAnchor = () => {
-                // 1) 기존 ref가 아직 DOM에 연결되어 있으면 그걸 사용
-                let el = lv3AnchorElRef.current;
-                if (el && el.isConnected) return el;
-
-                // 2) 리렌더 등으로 ref가 끊겼다면, data-attr로 현재 셀을 다시 찾기
-                const sel = `[data-lv3-key="${String(lv3EditorKey)}"]`;
-                el = document.querySelector(sel);
-                if (el) {
-                    lv3AnchorElRef.current = el;
-                    return el;
-                }
-                return null; // 못 찾았지만, 여기서 "닫지"는 않음
-            };
-
-            const updatePos = () => {
-                const el = ensureAnchor();
-                if (!el) return; // 앵커를 잠깐 못 찾는 상황(리렌더 중 등)에서는 그냥 위치 갱신 스킵
-                const r = el.getBoundingClientRect();
-                setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-            };
-
-            // 처음 한 번 보정
-            updatePos();
-
-            // 스크롤/리사이즈 시 위치만 갱신 (닫지 않음)
-            window.addEventListener('scroll', updatePos, true);
-            window.addEventListener('resize', updatePos, true);
-            return () => {
-                window.removeEventListener('scroll', updatePos, true);
-                window.removeEventListener('resize', updatePos, true);
-            };
-        }, [lv3EditorKey]);
-
-        // 옵션 증강: rows에만 있는 값은 placeholder(고유 codeId)로 추가
-        const augmentedLv3Options = useMemo(() => {
-            const base = lv3Options || [];
-            const byName = new Map(base.map(o => [tl(o.codeName), o]));
-            const out = [...base];
-
-            for (const r of rows || []) {
-                const name = r?.lv3;
-                const key = tl(name);
-                if (!key) continue;
-
-                if (!byName.has(key)) {
-                    let ph = lv3Cache.get(r);   // 이 row에 이미 캐시 있으면 재사용
-                    if (!ph) {
-                        ph = {
-                            codeId: `__ph__${key}`,
-                            codeName: name ?? "",
-                            lv1: r?.lv1 ?? "",
-                            lv2: r?.lv2 ?? "",
-                            lv123code: r?.lv123code ?? "",
-                            __placeholder: true,
-                        };
-                        lv3Cache.set(r, ph); // 캐시에 저장
-                    }
-                    byName.set(key, ph);
-                    out.push(ph);
-                }
-            }
-            return out;
-        }, [lv3Options, rows]);
-
-        // 빠른 조회용 맵
-        const optByCodeId = useMemo(() => {
-            const m = new Map();
-            augmentedLv3Options.forEach(o => m.set(o.codeId, o));
-            return m;
-        }, [augmentedLv3Options]);
-
-        const optByLv123 = useMemo(() => {
-            const m = new Map();
-            augmentedLv3Options.forEach(o => {
-                const k = tl(o.lv123code);
-                if (k) m.set(k, o);
-            });
-            return m;
-        }, [augmentedLv3Options]);
-
-        const optByName = useMemo(() => {
-            const m = new Map();
-            augmentedLv3Options.forEach(o => m.set(tl(o.codeName), o));
-            return m;
-        }, [augmentedLv3Options]);
 
         // 검증 체크박스 위치 고정시키기 위함 (임시)
         const anchorField = useMemo(() => {
@@ -1190,7 +1065,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const marked = applyRequiredMarksLv3(nextData);
 
                 // 삭제된 행만 커밋
-                // commitSmart([deletedRow]);
+
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
