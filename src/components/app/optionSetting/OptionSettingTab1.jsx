@@ -65,9 +65,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
         reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
-        applyLv3To: (targets, opt) => {
-            gridRef.current?.applyLv3To?.(targets, opt);
-        }
+        applyLv3To: (targets, opt) => gridRef.current?.applyLv3To?.(targets, opt),
+        
     }));
 
     /**
@@ -643,7 +642,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                 const s = keyHandlerStateRef.current;
                 if (!s || s.lv3EditorKey != null) return;
-                
+
                 // 그래도 없으면 선택집합(lv3SelKeys)의 마지막 요소 사용 */
                 const i = s.lastIndex ?? s.anchorIndex;
                 let targetKey = null;
@@ -745,8 +744,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             lv3: opt?.codeName ?? "",
                             lv1: opt?.lv1 ?? "",
                             lv2: opt?.lv2 ?? "",
-                            lv1code: r?.lv1code ?? "",
-                            lv2code: r?.lv2code ?? "",
+                            lv1code: opt?.lv1code ?? "",
+                            lv2code: opt?.lv2code ?? "",
                             lv123code: opt?.lv123code ?? "",
                         }
                         : r
@@ -820,7 +819,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 }
                 return String(expect); // 1,2,3,.. 가운데 비어있는 가장 작은 값
             }
-         
+
             const max = nums.length ? nums[nums.length - 1] : 0;
             return String(max + 1);
         }, []);
@@ -1060,12 +1059,22 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             setDataState((prev) => {
                 const prevData = prev?.data ?? [];
-                const nextData = prevData.filter(r => getKey(r) !== deletedKey);
+                let nextData;
 
+                if (deletedRow.__isNew) {
+                    // 신규 추가행은 즉시 제거
+                    nextData = prevData.filter(r => getKey(r) !== deletedKey);
+                } else {
+                    // 기존 행은 __pendingDelete 토글
+                    nextData = prevData.map(r =>
+                        getKey(r) === deletedKey
+                            ? { ...r, __pendingDelete: !r.__pendingDelete }
+                            : r
+                    );
+                }
+        
                 const marked = applyRequiredMarksLv3(nextData);
-
                 // 삭제된 행만 커밋
-
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
@@ -1216,9 +1225,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                                 const r = td.getBoundingClientRect();
                                                                 setLv3AnchorRect({ top: r.top, left: r.left, width: r.width, height: r.height });
                                                             }
-                                                            // Body 쪽 패널 열기 요청 추가
+                                                            // 현재 선택된 행들
                                                             const selectedRows = (dataState?.data || []).filter(r => lv3SelKeys.has(getKey(r)));
-                                                            onOpenLv3Panel?.(selectedRows, selectedRows.map(r => r.lv123code));
+
+                                                            // 선택이 없으면 현재 행이라도 추가
+                                                            const targetRows = selectedRows.length > 0 ? selectedRows : [cellProps.dataItem];
+                                                            const targetCodes = targetRows.map(r => r.lv123code);
+
+                                                            onOpenLv3Panel?.(targetRows, targetCodes);
                                                         }}
                                                     >
                                                         <span className="lv3-display">{currentValue || "소분류 선택"}</span>
@@ -1244,29 +1258,29 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                             const r = p.dataItem;
                                             const codeId = String(r?.lv123code ?? "").trim();
                                             const codeName = String(r?.lv3 ?? "").trim();
-                                    
+
                                             // 패널에서 받아온 옵션 확인
                                             const matchedOpt = (lv3Options || []).find(o => String(o.codeName ?? "").trim() === codeName);
-                                    
+
                                             return (
-                                              <td style={{ textAlign: "center" }}>
-                                                {/* case 3: 옵션 자체가 없음 → 코드 등록 버튼 */}
-                                                {!matchedOpt && codeName ? (
-                                                  <Button
-                                                    className="btnM"
-                                                    themeColor="primary"
-                                                    onClick={() => openLv3EditorAtKey(getKey(r))}
-                                                  >
-                                                    코드 등록
-                                                  </Button>
-                                                ) : matchedOpt && codeId ? (
-                                                  // case 1: 옵션 있고 codeId도 있으면 codeId 출력
-                                                  <span title={codeId}>{codeId}</span>
-                                                ) : (
-                                                  // case 2: 옵션은 있는데 codeId는 없음 → 빈칸
-                                                  null
-                                                )}
-                                              </td>
+                                                <td style={{ textAlign: "center" }}>
+                                                    {/* case 3: 옵션 자체가 없음 → 코드 등록 버튼 */}
+                                                    {!matchedOpt && codeName ? (
+                                                        <Button
+                                                            className="btnM"
+                                                            themeColor="primary"
+                                                            onClick={() => openLv3EditorAtKey(getKey(r))}
+                                                        >
+                                                            코드 등록
+                                                        </Button>
+                                                    ) : matchedOpt && codeId ? (
+                                                        // case 1: 옵션 있고 codeId도 있으면 codeId 출력
+                                                        <span title={codeId}>{codeId}</span>
+                                                    ) : (
+                                                        // case 2: 옵션은 있는데 codeId는 없음 → 빈칸
+                                                        null
+                                                    )}
+                                                </td>
                                             );
                                         }}
                                     />
