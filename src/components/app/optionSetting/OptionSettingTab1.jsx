@@ -64,7 +64,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
         reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
         applyLv3To: (targets, opt) => gridRef.current?.applyLv3To?.(targets, opt),
-        
+
     }));
 
     /**
@@ -934,7 +934,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             : r
                     );
                 }
-        
+
                 const marked = applyRequiredMarksLv3(nextData);
                 // 삭제된 행만 커밋
                 commitSmart(marked);
@@ -954,6 +954,30 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
             return m;
         }, [dataState?.data]);
+
+        // 소분류코드 생성 요청 클릭 핸들러
+        const handleAddMissingCode = useCallback(async (row) => {
+            try {
+                const payload = {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    qnum,
+                    gb: "register_excode",      
+                    lv3: row?.lv3
+                };
+                const res = await optionSaveData.mutateAsync(payload);
+                if (res?.success === "777") {
+                    handleSearch();
+                    modal.showAlert("알림", "소분류 코드를 추가했습니다.");
+                    return;
+                } else {
+                    modal.showErrorAlert("에러", "코드 추가에 실패했습니다.");
+                }
+            } catch (e) {
+                console.error(e);
+                modal.showErrorAlert("에러", "코드 추가 중 오류가 발생했습니다.");
+            }
+        }, [optionSaveData, auth?.user?.userId, projectnum, qnum, handleSearch, commitSmart, modal, setDataState]);
 
         return (
             <Fragment>
@@ -1119,6 +1143,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         <Button
                                                             className="btnM"
                                                             themeColor="primary"
+                                                            onClick={() => handleAddMissingCode(r)}
                                                         >
                                                             코드 등록
                                                         </Button>
