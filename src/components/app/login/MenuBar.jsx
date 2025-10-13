@@ -99,7 +99,7 @@ const MenuBar = () => {
       <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V21h18v-1.5C21 16.5 17 14 12 14Z" />
     </svg>
   );
-  
+
   return (
     <Fragment>
       <header>
@@ -169,14 +169,14 @@ const MenuBar = () => {
                   <span className="dd-icon">＋</span>
                   <span>프로젝트 등록</span>
                 </button>
-                {(projectnum !== "" && projectname !=="") &&
+                {(projectnum !== "" && projectname !== "") &&
                   <>
                     <button
                       type="button"
                       className="dd-item"
                       onClick={() => {
                         setAppsOpen(false);
-                       navigate('/pro_register');
+                        navigate('/pro_register');
                         //modal.showAlert("알림", "준비 중...");
                       }}
                     >
@@ -184,31 +184,31 @@ const MenuBar = () => {
                       <span>문항 등록</span>
                     </button>
                     <button
-                  type="button"
-                  className="dd-item"
-                  onClick={() => {
-                    setAppsOpen(false);
-                   navigate('/pro_permission');
-                   //modal.showAlert("알림", "준비 중...");
-                  }}
-                >
-                  <span className="dd-icon">👤</span>
-                  <span>사용자 설정</span>
-                </button>
-                  </>
-                }
-                <button
                       type="button"
                       className="dd-item"
                       onClick={() => {
                         setAppsOpen(false);
-                        navigate('/pro_key');
+                        navigate('/pro_permission');
                         //modal.showAlert("알림", "준비 중...");
                       }}
                     >
-                      <span className="dd-icon">🔑</span>
-                      <span>API 설정</span>
+                      <span className="dd-icon">👤</span>
+                      <span>사용자 설정</span>
                     </button>
+                  </>
+                }
+                <button
+                  type="button"
+                  className="dd-item"
+                  onClick={() => {
+                    setAppsOpen(false);
+                    navigate('/pro_key');
+                    //modal.showAlert("알림", "준비 중...");
+                  }}
+                >
+                  <span className="dd-icon">🔑</span>
+                  <span>API 설정</span>
+                </button>
 
               </div>
             )}
