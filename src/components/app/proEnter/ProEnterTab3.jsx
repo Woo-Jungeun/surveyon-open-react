@@ -53,6 +53,8 @@ const ProEnterTab3 = () => {
             const res = await proEnterSaveData.mutateAsync(payload);
             if (res?.success === "777") {
                 modal.showAlert("알림", "프로젝트가 등록되었습니다.");
+                sessionStorage.setItem("projectnum", "");
+                sessionStorage.setItem("projectname", "");
                 navigate("/"); //프로젝트 목록 페이지로 이동
             } else if (res?.success === "765") {
                 // 중복

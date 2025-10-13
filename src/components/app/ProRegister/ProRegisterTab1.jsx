@@ -51,6 +51,8 @@ const ProRegisterTab1 = (props) => {
             //    if (res?.success === "777") {
             //        modal.showAlert("알림", "프로젝트가 등록되었습니다.");
             //        navigate("/"); //프로젝트 목록 페이지로 이동
+            //        sessionStorage.setItem("projectnum", "");
+            //        sessionStorage.setItem("projectname", "");
             //    } else if (res?.success === "765") {
             //        // 중복
             //        modal.showErrorAlert("알림", "이미 등록된 프로젝트 입니다.");

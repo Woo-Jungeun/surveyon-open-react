@@ -72,6 +72,8 @@ const MenuBar = () => {
             try {
               await persistor.purge();
               removeCookie("TOKEN", { path: "/" });
+              sessionStorage.setItem("projectnum", "");
+              sessionStorage.setItem("projectname", "");
               navigate("/"); // 로그아웃 시 홈으로
             } catch {
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
@@ -97,14 +99,18 @@ const MenuBar = () => {
       <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V21h18v-1.5C21 16.5 17 14 12 14Z" />
     </svg>
   );
-
+  console.log(projectnum, projectname)
   return (
     <Fragment>
       <header>
         <h1
           className="logo"
           style={{ cursor: "pointer" }}
-          onClick={() => navigate("/")}
+          onClick={() => {
+            sessionStorage.setItem("projectnum", "");
+            sessionStorage.setItem("projectname", "");
+            navigate("/");
+          }}
         >
           설문온 <span className="fcG">OPEN</span>
         </h1>
@@ -117,6 +123,13 @@ const MenuBar = () => {
                   to={path}
                   end={path === "/"}
                   className={({ isActive }) => (isActive ? "on" : undefined)}
+                  onClick={() => {
+                    // 프로젝트 목록 클릭 시 세션 초기화
+                    if (path === "/") {
+                      sessionStorage.setItem("projectnum", "");
+                      sessionStorage.setItem("projectname", "");
+                    }
+                  }}
                 >
                   {ROUTE_LABEL[path] ?? path}
                 </NavLink>
@@ -163,8 +176,8 @@ const MenuBar = () => {
                       className="dd-item"
                       onClick={() => {
                         setAppsOpen(false);
-                       // navigate('/pro_register');
-                        modal.showAlert("알림", "준비 중...");
+                       navigate('/pro_register');
+                        //modal.showAlert("알림", "준비 중...");
                       }}
                     >
                       <span className="dd-icon">＋</span>
@@ -175,8 +188,8 @@ const MenuBar = () => {
                   className="dd-item"
                   onClick={() => {
                     setAppsOpen(false);
-                   // navigate('/pro_permission');
-                   modal.showAlert("알림", "준비 중...");
+                   navigate('/pro_permission');
+                   //modal.showAlert("알림", "준비 중...");
                   }}
                 >
                   <span className="dd-icon">👤</span>
@@ -189,8 +202,8 @@ const MenuBar = () => {
                       className="dd-item"
                       onClick={() => {
                         setAppsOpen(false);
-                        // navigate('/pro_key');
-                        modal.showAlert("알림", "준비 중...");
+                        navigate('/pro_key');
+                        //modal.showAlert("알림", "준비 중...");
                       }}
                     >
                       <span className="dd-icon">🔑</span>
