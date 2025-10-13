@@ -1,5 +1,6 @@
 import React, { Fragment, useRef, useState, useCallback, useContext, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
+import { useSelector } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import OptionSettingInfo from "@/components/app/optionSetting/OptionSettingInfo";
 import OptionSettingTab1 from "@/components/app/optionSetting/OptionSettingTab1";
@@ -9,6 +10,7 @@ import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { modalContext } from "@/components/common/Modal.jsx";
 import OptionSettingLv3Panel from "@/components/app/optionSetting/OptionSettingLv3Panel.jsx";
+import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 
 /**
  * 분석 > Body
@@ -33,6 +35,7 @@ function openCenteredPopup(url, title = "viewer", w = 2000, h = 800) {
 
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
+  const auth = useSelector((store) => store.auth);
   const { state } = useLocation();
   const projectnumFromState = state?.projectnum ?? sessionStorage.getItem("projectnum") ?? "";
   const qnum = state?.qnum;
@@ -275,6 +278,47 @@ const OptionSettingBody = () => {
     return () => window.removeEventListener("message", handleMessage);
   }, []);
 
+  //-----------------소분류 코드 중앙 관리-----------------
+  const { optionEditData } = OptionSettingApi();
+  const fetchLv3Options = useCallback(async () => {
+    try {
+      const res = await optionEditData.mutateAsync({
+        params: {
+          user: auth?.user?.userId || "",
+          projectnum,
+          qnum,
+          gb: "lb",
+        },
+      });
+
+      const seen = new Set();
+      const list = (res?.resultjson ?? []).reduce((acc, r) => {
+        const lv3 = (r?.lv3 ?? "").trim();
+        const lv123code = (r?.lv123code ?? "").trim();
+        if (!lv3 || seen.has(lv3)) return acc;
+        seen.add(lv3);
+        acc.push({
+          codeId: lv123code,
+          codeName: lv3,
+          lv1: r?.lv1 ?? "",
+          lv2: r?.lv2 ?? "",
+          lv1code: r?.lv1code ?? "",
+          lv2code: r?.lv2code ?? "",
+          lv123code: r?.lv123code ?? "",
+        });
+        return acc;
+      }, []);
+      setLv3Options(list);
+    } catch (err) {
+      console.error("lv3 fetch error", err);
+    }
+  }, [optionEditData, projectnum, qnum]);
+
+  useEffect(() => {
+    // 최초 1회 호출 
+    fetchLv3Options();
+  }, []);
+  //-----------------소분류 코드 중앙 관리-----------------
   return (
     <Fragment>
       <article className="subTitWrap">
@@ -387,7 +431,7 @@ const OptionSettingBody = () => {
                   persistedPrefs={gridPrefs["1"]}
                   onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
                   lv3Options={lv3Options}    // 패널에서 가져온 리스트 내려줌
-                  onLv3OptionsUpdate={setLv3Options} 
+                  onRequestLv3Refresh={fetchLv3Options}
                   onOpenLv3Panel={(...args) => {
                     handleOpenLv3Panel(...args);
                   }}
@@ -432,6 +476,8 @@ const OptionSettingBody = () => {
                   tab1Ref.current?.applyLv3To?.(targets, opt);
                   setIsLv3PanelOpen(false);
                 }}
+                options={lv3Options}                      // 소분류 코드 
+                onRequestLv3Refresh={fetchLv3Options}
               />
             }
           </div>
