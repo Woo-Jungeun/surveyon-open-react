@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
-import { Fragment, useContext, useEffect, useRef, useState } from "react";
+import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -37,8 +37,8 @@ const MenuBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const key = normalize(location.pathname);
-  const tabs = trailFor(key);
+  const activePath = useMemo(() => normalize(location.pathname), [location.pathname]);
+  const tabs = useMemo(() => trailFor(activePath), [activePath]);
 
   const projectnum = sessionStorage.getItem("projectnum");
   const projectname = sessionStorage.getItem("projectname");
@@ -99,10 +99,10 @@ const MenuBar = () => {
       <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V21h18v-1.5C21 16.5 17 14 12 14Z" />
     </svg>
   );
-
+  
   return (
     <Fragment>
-      <header>
+      <header key={location.pathname}> 
         <h1
           className="logo"
           style={{ cursor: "pointer" }}
@@ -121,8 +121,7 @@ const MenuBar = () => {
               <li key={path}>
                 <NavLink
                   to={path}
-                  end={path === "/"}
-                  className={({ isActive }) => (isActive ? "on" : undefined)}
+                  className={activePath === path ? "on" : undefined}
                   onClick={() => {
                     // 프로젝트 목록 클릭 시 세션 초기화
                     if (path === "/") {
