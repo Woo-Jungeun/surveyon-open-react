@@ -387,6 +387,7 @@ const OptionSettingBody = () => {
                   persistedPrefs={gridPrefs["1"]}
                   onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
                   lv3Options={lv3Options}    // 패널에서 가져온 리스트 내려줌
+                  onLv3OptionsUpdate={setLv3Options} 
                   onOpenLv3Panel={(...args) => {
                     handleOpenLv3Panel(...args);
                   }}

@@ -45,7 +45,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
-        , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options } = props;
+        , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options, onLv3OptionsUpdate } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
@@ -962,14 +962,53 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     user: auth?.user?.userId || "",
                     projectnum,
                     qnum,
-                    gb: "register_excode",      
+                    gb: "register_excode",
                     lv3: row?.lv3
                 };
                 const res = await optionSaveData.mutateAsync(payload);
                 if (res?.success === "777") {
-                    handleSearch();
-                    modal.showAlert("알림", "소분류 코드를 추가했습니다.");
+                    // 코드 등록 성공 후 최신 lv3Options 불러오기
+                    const optRes =  await optionEditData.mutateAsync({
+                        params: {
+                          user: auth?.user?.userId || "",
+                          projectnum,
+                          qnum,
+                          gb: "lb",
+                        }
+                      });
+                    const seen = new Set();
+                    const list = (optRes?.resultjson ?? []).reduce((acc, r) => {
+                        const lv3 = (r?.lv3 ?? "").trim();
+                        const lv123code = (r?.lv123code ?? "").trim();
+                        if (!lv3 || seen.has(lv3)) return acc;
+                        seen.add(lv3);
+                        acc.push({
+                            codeId: lv123code,
+                            codeName: lv3,
+                            lv1: r?.lv1 ?? "",
+                            lv2: r?.lv2 ?? "",
+                            lv1code: r?.lv1code ?? "",
+                            lv2code: r?.lv2code ?? "",
+                            lv123code: r?.lv123code ?? "",
+                        });
+                        return acc;
+                    }, []);
+
+                    // 부모에 최신 목록 전달 (OptionSettingBody → setLv3Options)
+                    onLv3OptionsUpdate?.(list);
+                    modal.showConfirm("알림", "소분류 코드를 추가했습니다.", {
+                        btns: [
+                            {
+                                title: "확인",
+                                click: () => {
+                                    handleSearch();
+                                },
+                            },
+                        ],
+                    });
                     return;
+                } else if (res?.success === "768") {
+                    modal.showErrorAlert("에러", res?.message);
                 } else {
                     modal.showErrorAlert("에러", "코드 추가에 실패했습니다.");
                 }
