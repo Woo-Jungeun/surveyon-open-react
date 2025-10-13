@@ -99,7 +99,7 @@ const MenuBar = () => {
       <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V21h18v-1.5C21 16.5 17 14 12 14Z" />
     </svg>
   );
-  console.log(projectnum, projectname)
+  
   return (
     <Fragment>
       <header>
