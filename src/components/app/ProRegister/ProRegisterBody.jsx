@@ -13,8 +13,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
  */
 const ProRegisterBody = () => {
   const servername = sessionStorage.getItem("servername");
-  
-  //servername이 NEW가 아닐 경우만 DB탭 표출 
+
+  // servername이 NEW가 아닐 경우만 DB탭 표출 
   const [tabDivision, setTabDivision] = useState(() => {
     return servername !== "NEW" ? "1" : "2";
   });

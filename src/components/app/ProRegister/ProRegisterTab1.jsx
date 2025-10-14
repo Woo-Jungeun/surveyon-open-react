@@ -71,7 +71,7 @@ const ProRegisterTab1 = (props) => {
             <div className="popCont">
                 <div className="popTbl">
                     <div className="cmn_pop_ipt">
-                        <span style={{ width: "200px" }}>웹프로젝트 명</span>
+                        <span style={{ width: "200px" }}>웹프로젝트명</span>
                         <Input
                             className="k-input k-input-solid"
                             value={projectnum || ""}
@@ -80,7 +80,7 @@ const ProRegisterTab1 = (props) => {
                     </div>
 
                     <div className="cmn_pop_ipt">
-                        <span style={{ width: "200px" }}>조사 명</span>
+                        <span style={{ width: "200px" }}>조사명</span>
                         <Input
                             className="k-input k-input-solid"
                             value={projectname || ""}
