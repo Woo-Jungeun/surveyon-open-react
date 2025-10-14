@@ -81,18 +81,21 @@ const OptionSettingExload = () => {
         { field: "ex_gubun", title: "ex_gubun", show: false },
     ]);
 
-    // 좌측 컬럼 메뉴
+    // 좌측 컬럼 메뉴 정렬/필터
     const leftColumnMenu = (menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
             columns={leftColumns}
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map((c) => [c.field, c]));
-                const next = leftColumns.map((c) => (map.has(c.field) ? { ...c, ...map.get(c.field) } : c));
+                const next = leftColumns.map(c => {
+                    const u = map.get(c.field);
+                    return u ? { ...c, ...u } : c
+                });
                 setLeftColumns(next);
             }}
             filter={leftFilter}
-            onFilterChange={({ filter }) => setLeftFilter(filter ?? undefined)}
+            onFilterChange={(e) => setLeftFilter(e)}
         />
     );
 
@@ -136,7 +139,6 @@ const OptionSettingExload = () => {
             setRightSort([]);       // 옵션: 우측 정렬 초기화
             setRightFilter(null);   // 옵션: 우측 필터 초기화
         }, [excelListData, auth?.user?.userId, projectnum, qnum]);
-
 
     //--------------------------file--------------------------
     // 파일 저장 
@@ -415,8 +417,8 @@ const OptionSettingExload = () => {
                                     filterable: true,
                                     sortChange: ({ sort }) => setLeftSort(sort ?? []),
                                     filterChange: ({ filter }) => setLeftFilter(filter ?? undefined),
-                                    sort: leftSort,
-                                    filter: leftFilter,
+                                    initialSort: leftSort,
+                                    initialFilter: leftFilter,
                                     onRowClick: onLeftRowClick,
                                     pageable: false, // 페이징 제거
                                     toolbar: null,   // 툴바 제거
