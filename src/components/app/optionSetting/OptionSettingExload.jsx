@@ -59,11 +59,11 @@ const OptionSettingExload = () => {
     // 좌측 컬럼 (요청 매핑 반영)
     const [leftColumns, setLeftColumns] = useState(() => [
         { field: "no", title: "순번", show: true, width: "90px", allowHide: false },
-        { field: "pof", title: "프로젝트", show: true, width: "120px", allowHide: false },
+        { field: "pof", title: "프로젝트", show: true, width: "150px", allowHide: false },
         { field: "selprojectnum", title: "웹프로젝트", show: true, width: "140px", allowHide: false },
-        { field: "pofname", title: "프로젝트명", show: true, width: "200px", allowHide: false },
-        { field: "servername", title: "오픈서버정보", show: true, width: "145px", allowHide: false },
-        { field: "project_qnum", title: "문항정보", show: true, width: "120px", allowHide: false },
+        { field: "pofname", title: "프로젝트명", show: true, width: "240px", allowHide: false },
+        { field: "servername", title: "오픈서버정보", show: true, width: "150px", allowHide: false },
+        { field: "project_qnum", title: "문항정보", show: true, width: "150px", allowHide: false },
         { field: "id", title: "id", show: false, allowHide: false },
 
     ]);
@@ -158,18 +158,6 @@ const OptionSettingExload = () => {
         select_qnum: selectedProject?.project_qnum || qnum || "",
         qid: selectedProject?.id || ""
     });
-
-    const mapToRightRow = (list = []) =>
-        list?.map((it, idx) => ({
-            no: idx + 1,
-            qnum: it?.qnum ?? "",
-            lv1: it?.lv1 ?? "",
-            lv2: it?.lv2 ?? "",
-            lv3: it?.lv3 ?? "",
-            lv123code: it?.lv123code ?? "",
-            lv1code: it?.lv1code ?? "",
-            lv2code: it?.lv2code ?? "",
-        }));
 
     // 파일 업로드 input 제어
     const fileInputRef = useRef(null);
@@ -449,7 +437,7 @@ const OptionSettingExload = () => {
                     </div>
                 </div>
             );
-        }, [leftFilter, leftColumns, onLeftRowClick, selectedProject, leftSort]
+        }, [leftFilter, leftColumns, leftSort]
     );
     // 우측 그리드
     const RightGrid = useMemo(() => {
