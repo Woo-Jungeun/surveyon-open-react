@@ -67,6 +67,7 @@ const ProList = () => {
             setProjectnum(projectnumFromState);
             sessionStorage.setItem("projectnum", projectnumFromState);
             sessionStorage.setItem("projectname", state?.projectname);
+            sessionStorage.setItem("servername", state?.servername);
         }
     }, [projectnumFromState]);
 

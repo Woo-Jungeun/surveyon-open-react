@@ -74,6 +74,7 @@ const MenuBar = () => {
               removeCookie("TOKEN", { path: "/" });
               sessionStorage.setItem("projectnum", "");
               sessionStorage.setItem("projectname", "");
+              sessionStorage.setItem("servername", "");
               navigate("/"); // 로그아웃 시 홈으로
             } catch {
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
@@ -109,6 +110,7 @@ const MenuBar = () => {
           onClick={() => {
             sessionStorage.setItem("projectnum", "");
             sessionStorage.setItem("projectname", "");
+            sessionStorage.setItem("servername", "");
             navigate("/");
           }}
         >
@@ -127,6 +129,7 @@ const MenuBar = () => {
                     if (path === "/") {
                       sessionStorage.setItem("projectnum", "");
                       sessionStorage.setItem("projectname", "");
+                      sessionStorage.setItem("servername", "");
                     }
                   }}
                 >

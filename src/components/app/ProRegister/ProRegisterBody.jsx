@@ -7,14 +7,17 @@ import { modalContext } from "@/components/common/Modal.jsx";
 
 /**
  * 문항 등록 > Body
- *
+ * 
  * @author jewoo
  * @since 2025-09-29<br />
  */
 const ProRegisterBody = () => {
-  const modal = useContext(modalContext);
-  const [tabDivision, setTabDivision] = useState("1");
-
+  const servername = sessionStorage.getItem("servername");
+  
+  //servername이 NEW가 아닐 경우만 DB탭 표출 
+  const [tabDivision, setTabDivision] = useState(() => {
+    return servername !== "NEW" ? "1" : "2";
+  });
 
   return (
     <Fragment>
@@ -27,9 +30,11 @@ const ProRegisterBody = () => {
       <article className={`subContWrap`}>
         <div className="subCont">
           <div className="btnBox tabMenu  ">
-            <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("1")}>
-              DB
-            </Button>
+            {servername !== "NEW" &&
+              <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("1")}>
+                DB
+              </Button>
+            }
             <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("2")}>
               Excel
             </Button>

@@ -55,6 +55,7 @@ const ProEnterTab3 = () => {
                 modal.showAlert("알림", "프로젝트가 등록되었습니다.");
                 sessionStorage.setItem("projectnum", "");
                 sessionStorage.setItem("projectname", "");
+                sessionStorage.setItem("servername", "");
                 navigate("/"); //프로젝트 목록 페이지로 이동
             } else if (res?.success === "765") {
                 // 중복

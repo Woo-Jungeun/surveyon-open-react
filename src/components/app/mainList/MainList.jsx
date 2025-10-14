@@ -45,8 +45,9 @@ const MainList = () => {
     const onRowClick = useCallback((e) => {
         const projectnum = e?.dataItem?.projectnum;
         const projectname = e?.dataItem?.projectname;
+        const servername = e?.dataItem?.servername;
         if (!projectnum || !projectname) return;
-        navigate('/pro_list', { state: { projectnum, projectname } });
+        navigate('/pro_list', { state: { projectnum, projectname, servername } });
     }, [navigate]);
 
     // ...
