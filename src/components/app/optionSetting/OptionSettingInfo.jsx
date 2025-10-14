@@ -695,7 +695,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                             </span>
                             <Input
                                 className="k-input k-input-solid"
-                                value={data?.keyword_string || ""}
+                                value={
+                                    data?.keyword_string && data.keyword_string.trim() !== ""
+                                      ? data.keyword_string
+                                      : data?.question_fin || ""
+                                  }
                                 onChange={(e) => onChangeInputEvent(e, "keyword_string")}
                             />
                         </div>
