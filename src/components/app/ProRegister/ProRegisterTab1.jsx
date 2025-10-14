@@ -71,7 +71,7 @@ const ProRegisterTab1 = (props) => {
             <div className="popCont">
                 <div className="popTbl">
                     <div className="cmn_pop_ipt">
-                        <span style={{ width: "200px" }}>웹프로젝트 번호</span>
+                        <span style={{ width: "200px" }}>웹프로젝트 명</span>
                         <Input
                             className="k-input k-input-solid"
                             value={projectnum || ""}
@@ -80,17 +80,13 @@ const ProRegisterTab1 = (props) => {
                     </div>
 
                     <div className="cmn_pop_ipt">
-                        <span style={{ width: "200px" }}>프로젝트 명</span>
+                        <span style={{ width: "200px" }}>조사 명</span>
                         <Input
                             className="k-input k-input-solid"
                             value={projectname || ""}
                             disabled
                         />
                     </div>
-                    <div className="cmn_pop_ipt">
-                        조사 테이블에서 자동으로 문항이 추가됩니다. 아래의 등록버튼을 눌러주세요.
-                    </div>
-
                 </div>
             </div>
 
@@ -105,6 +101,9 @@ const ProRegisterTab1 = (props) => {
                         등록
                     </Button>
                 </div>
+            </div>
+            <div>
+                문항추가, 응답자 데이터 추가를 자동으로 등록합니다.
             </div>
         </form>
     );
