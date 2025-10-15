@@ -194,7 +194,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 lv2code: 'nat',
                 lv123code: 'nat',
             })
-        ), [dataState?.data, sort]);
+        ), [sort]);
 
         useEffect(() => {
             const rowsNow = dataState?.data || [];
@@ -227,7 +227,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 // 이제 자동복원 끝났으므로 행 동기화 다시 허용
                 suppressUnsavedSelectionRef.current = false;
             }
-        }, [dataState?.data, hasAllRowKeys, hist, makeTab1Signature, onUnsavedChange]);
+        }, [dataState?.data, hasAllRowKeys]);
 
         // 수정로그 commit 
         const commitSmart = useCallback((updatedRows) => {
@@ -302,12 +302,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             window.addEventListener("keydown", onKey, true);
             return () => window.removeEventListener("keydown", onKey, true);
-        }, [hist, setDataState, onUnsavedChange]);
+        }, [hist]);
 
         // 부모가 reload()를 부르면 GridData의 handleSearch를 실행할 수 있도록 ref에 최신 핸들러 보관
         useEffect(() => {
             latestCtxRef.current = { handleSearch };
-        }, [handleSearch]);
+        }, []);
 
         // 최초 로드 시 분석값 있는지 체크 
         useEffect(() => {
@@ -317,7 +317,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 onInitialAnalysisCount?.(analyzed);
                 reportedInitialAnalysisRef.current = true;
             }
-        }, [rows, onInitialAnalysisCount]);
+        }, [rows]);
 
         // lv3 필수값 마크를 행들의 __errors(Set)로 갱신
         const applyRequiredMarksLv3 = useCallback((rows = []) => {
@@ -395,7 +395,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     ),
                 }));
             }
-        }, [dataState?.data, setDataState]);
+        }, [dataState?.data]);
 
         const setSelectedStateGuarded = useCallback((next) => {
             // (A) 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
@@ -487,7 +487,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             // 초기에 한 번만 돌고 종료 (비어있어도 끈다)
             shouldAutoApplySelectionRef.current = false;
-        }, [rows, getKey, setSelectedState]);
+        }, [rows]);
 
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
@@ -602,7 +602,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 lastCellEl: lastCellElRef.current,
                 lastCellRect: lastCellRectRef.current,
             };
-        }, [lv3SelKeys, dataState?.data, getKey]);
+        }, [lv3SelKeys]);
 
         // 소분류 선택 해제
         const clearLv3Selection = useCallback(() => {
@@ -630,6 +630,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             });
         }, [setDataState]);
 
+        // commitSmart를 ref로 보관 (의존성 제거를 위해)
+        const commitSmartRef = useRef(commitSmart);
+        useEffect(() => {
+            commitSmartRef.current = commitSmart;
+        }, [commitSmart]);
+
         // 일괄 적용 (선택된 키들에 옵션 메타까지 모두 반영)
         const applyLv3To = useCallback((targetKeys, opt) => {
             const keySet = targetKeys instanceof Set ? targetKeys : new Set([].concat(targetKeys));
@@ -649,10 +655,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         : r
                 );
                 const marked = applyRequiredMarksLv3(updated);
-                commitSmart(marked);
+                commitSmartRef.current?.(marked);
+
                 return { ...prev, data: marked };
             });
-        }, [setDataState, getKey, applyRequiredMarksLv3, commitSmart, onUnsavedChange]);
+        }, []);
 
         useImperativeHandle(ref, () => ({
             applyLv3To
@@ -671,7 +678,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     inEdit: getKey(r) === clickedKey
                 }))
             }));
-        }, [getKey, setDataState]);
+        }, []);
 
         // 셀 값 변경 → 해당 행의 해당 필드만 업데이트
         const onItemChange = useCallback((e) => {
@@ -697,7 +704,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
-        }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
+        }, []);
 
         // "min-gap" (비어있는 가장 작은 수) or "max+1"
         const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
@@ -758,16 +765,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 nextData.splice(idx + 1, 0, newRow);
 
                 const marked = applyRequiredMarksLv3(nextData);
+                commitSmartRef.current?.(marked);
 
-                // 새로 추가된 행만 커밋
-                commitSmart(marked);
                 return { ...prev, data: marked };
             });
-        }, [getKey, onUnsavedChange, setSelectedRowKey, getNextCid, applyRequiredMarksLv3, commitSmart]);
+        }, []);
 
 
         // 클릭 행 
-        const rowRender = useCallback((trEl, rowProps) => {
+        const rowRender = (trEl, rowProps) => {
             const key = getKey(rowProps?.dataItem);
             const clicked = key === selectedRowKey;
             const selectedByBatch = lv3SelKeys.has(key);   // 행이 일괄 선택 대상이면
@@ -796,7 +802,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     if (!e.defaultPrevented) trEl.props.onClick?.(e);
                 },
             });
-        }, [selectedRowKey, lv3SelKeys, getKey, onRowMouseDown, onRowMouseEnter]);
+        };
 
         // 선택된 lv3 셀 존재 여부
         const hasLv3CellSelection = lv3SelKeys.size > 0;
@@ -835,6 +841,33 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 data,
             };
         };
+
+        // 소분류(lv3) 오류 있는 첫 번째 행으로 스크롤 이동
+        const focusFirstLv3ErrorCell = useCallback(() => {
+            try {
+                const targetRow = (dataState?.data || []).find(
+                    (r) => r.__errors instanceof Set && r.__errors.has("lv3")
+                );
+                if (!targetRow) return;
+
+                const key = getKey(targetRow);
+                if (!key) return;
+
+                const td = document.querySelector(`[data-lv3-key="${String(key)}"]`);
+                if (td) {
+                    // 해당 셀이 화면 중앙 근처로 오게 스크롤
+                    td.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+            } catch (err) {
+                console.error("focusFirstLv3ErrorCell error:", err);
+            }
+        }, []);
+
+        // saveChanges 의존성 제거를 위한 ref 처리 
+        const selectedStateRef = useRef(selectedState);
+        useEffect(() => { selectedStateRef.current = selectedState; }, [selectedState]);
+        const onSavedRef = useRef(onSaved);
+        useEffect(() => { onSavedRef.current = onSaved; }, [onSaved]);
 
         /* 저장: API 호출 */
         const saveChanges = useCallback(async () => {
@@ -885,7 +918,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     });
 
                     // Kendo 그리드 강제 리마운트(가상화/재사용 캐시 끊기)
-                    setGridEpoch(e => e + 1);
+                    //setGridEpoch(e => e + 1);
 
                     handleSearch();                              // 재조회
                     return true;
@@ -898,12 +931,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                 return false; // 실패 시 그리드 상태 변경 안 함
             }
-        }, [dataState?.data, selectedState, getKey, setSelectedStateGuarded, onSaved]);
+        }, [getKey, setSelectedStateGuarded]);
 
         // 부모에서 호출할 수 있도록 ref에 연결
-        saveChangesRef.current = saveChanges;
+        useEffect(() => {
+            saveChangesRef.current = saveChanges;
+        }, [saveChanges]);
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
-
 
         // 검증 체크박스 위치 고정시키기 위함 (임시)
         const anchorField = useMemo(() => {
@@ -911,13 +945,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return vis.length >= 3 ? vis[vis.length - 3].field : undefined; // 항상 추가 왼쪽에
         }, [effectiveColumns]);
 
+        // onClickDeleteCell 의존성 제거를 위한 ref 처리 
+        const onUnsavedChangeRef = useRef(onUnsavedChange);
+        useEffect(() => { onUnsavedChangeRef.current = onUnsavedChange; }, [onUnsavedChange]);
+
         // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
             onUnsavedChange?.(true);
-
             const deletedRow = cellProps.dataItem;
             const deletedKey = getKey(deletedRow);
-
             setDataState((prev) => {
                 const prevData = prev?.data ?? [];
                 let nextData;
@@ -933,13 +969,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             : r
                     );
                 }
-
                 const marked = applyRequiredMarksLv3(nextData);
                 // 삭제된 행만 커밋
                 commitSmart(marked);
                 return { ...prev, data: marked };
             });
-        }, [getKey, onUnsavedChange, applyRequiredMarksLv3, commitSmart]);
+        }, []);
 
         // 추가 버튼은 “보류삭제 아닌 마지막 cid”에서만
         const lastVisibleCidByFixedKey = useMemo(() => {
@@ -980,7 +1015,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 console.error(e);
                 modal.showErrorAlert("에러", "코드 추가 중 오류가 발생했습니다.");
             }
-        }, [optionSaveData, auth?.user?.userId, projectnum, qnum, handleSearch, commitSmart, modal, setDataState]);
+        }, []);
 
         return (
             <Fragment>
@@ -994,7 +1029,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     <KendoGrid
                         scrollable="virtual"
                         rowHeight={38}
-                        key={`lv-${lvCode}-${gridEpoch}`}
+                        // key={`lv-${lvCode}-${gridEpoch}`}
+                        key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataForGridSorted,
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
