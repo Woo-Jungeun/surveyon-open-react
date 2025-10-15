@@ -194,7 +194,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 lv2code: 'nat',
                 lv123code: 'nat',
             })
-        ), [sort]);
+        ), [dataState?.data, sort]);
 
         useEffect(() => {
             const rowsNow = dataState?.data || [];

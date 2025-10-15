@@ -105,9 +105,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
     const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
 
-
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
-    const columnMenu = (menuProps) => (
+    const columnMenu = useCallback((menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
             columns={columns
@@ -132,7 +131,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 onPrefsChange?.({ filter: e });
             }}
         />
-    );
+    ), [columns, forcedHidden, stageFields, onPrefsChange, filter]);
 
     const { optionEditData, optionSaveData } = OptionSettingApi();
     const [editField] = useState("inEdit");
@@ -222,7 +221,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 onUnsavedChange?.(false);
                 onHasEditLogChange?.(false);
             }
-        }, [dataState?.data, hist, makeTab2Signature, onUnsavedChange, onHasEditLogChange]);
+        }, [dataState?.data, hist, makeTab2Signature]);
 
         // 수정로그 commit 
         const commitSmart = useCallback((updatedRows) => {
@@ -258,7 +257,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             stack.push(newSig);
             onUnsavedChange?.(true);
             onHasEditLogChange?.(true);
-        }, [hist, makeTab2Signature, onUnsavedChange, onHasEditLogChange]);
+        }, [hist, makeTab2Signature]);
 
         //ctrl+z, ctrl+y
         useEffect(() => {
@@ -480,7 +479,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             commitSmart(withDup);
             // 더 이상 대기중인 타이핑 없음 표시
             pendingTypingRef.current = false;
-        }, [applyLiveDupMarks, commitSmart]);
+        }, [applyLiveDupMarks]);
 
         // flushTyping을 일정 시간(200ms) 지연 실행하기 위한 스케줄 함수
         // 사용자가 연속으로 입력할 때 불필요하게 매번 커밋되는 걸 방지 (디바운스)
@@ -654,7 +653,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 commitSmart(withDup);
                 return { ...prev, data: withDup };
             });
-        }, [keyOf, setDataState, modal, findLv123Duplicates, applyLiveDupMarks, commitSmart]);
+        }, [keyOf, findLv123Duplicates, applyLiveDupMarks]);
 
         // 추가버튼 클릭 이벤트
         const addButtonClick = useCallback(() => {
@@ -688,7 +687,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const withDup = applyLiveDupMarks(data);
             commitSmart(withDup);
             setDataState((prev) => ({ ...prev, data: withDup }));
-        }, [dataState?.data, setDataState, applyLiveDupMarks, commitSmart]);
+        }, [applyLiveDupMarks]);
 
         // 행 클릭 시 편집기능 open
         const onRowClick = useCallback((e) => {
@@ -706,7 +705,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     inEdit: getKey(r) === clickedKey
                 }))
             }));
-        }, [setDataState, getKey]);
+        }, []);
 
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
@@ -781,7 +780,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 return false;   // 실패 시 그리드 상태 변경 안 함
             }
 
-        }, [setDataState, setSelectedState]);
+        }, []);
 
         // 부모에서 호출할 수 있도록 ref에 연결
         saveChangesRef.current = saveChanges;
@@ -994,7 +993,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 )}
                 <div id="grid_01" className="cmn_grid" ref={gridRootRef}>
                     <KendoGrid
-                        key={`lv-${lvCode}`}
+                        // key={`lv-${lvCode}`}
+                        key="tab2-grid"
                         parentProps={{
                             data: dataForGridSorted,
                             dataItemKey: "__rowKey",
