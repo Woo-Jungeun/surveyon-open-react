@@ -65,7 +65,7 @@ const ProRegisterTab2 = () => {
     <Fragment>
       <form onSubmit={handleSubmit}>
         <div className="popCont">
-          <table className="popTbl" style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="popTbl">
             <tbody>
               {/* 웹프로젝트명 */}
               <tr>
