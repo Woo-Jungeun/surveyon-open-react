@@ -50,7 +50,6 @@ const MainList = () => {
         navigate('/pro_list', { state: { projectnum, projectname, servername } });
     }, [navigate]);
 
-    // ...
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (
         <ExcelColumnMenu
