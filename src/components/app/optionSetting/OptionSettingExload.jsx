@@ -323,7 +323,7 @@ const OptionSettingExload = () => {
                 console.error(err);
                 modal.showErrorAlert("에러", "샘플 다운로드 중 오류가 발생했습니다.");
             }
-        }, [sampleDownloadData, auth?.user?.userId, projectnum, selectedProject, qnum]);
+        }, []);
 
     // 보기 등록
     const handleRegisterClick = useCallback(async () => {
