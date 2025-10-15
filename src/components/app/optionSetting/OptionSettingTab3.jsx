@@ -1,10 +1,12 @@
-import React, { Fragment, useState, useEffect, useRef, useMemo } from "react";
+import React, { Fragment, useState, useMemo, useCallback } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { useSelector } from "react-redux";
+import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
+
 /**
  * 분석 > 그리드 영역 > rawdata
  *
@@ -50,7 +52,7 @@ const OptionSettingTab3 = (props) => {
                 ? { ...c, show: false, allowHide: false }
                 : c
         );
-    }, [columns, forcedHidden, stageFields]);
+    }, [columns, forcedHidden]);
 
 
     // 정렬/필터를 controlled로
@@ -58,7 +60,7 @@ const OptionSettingTab3 = (props) => {
     const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
-    const columnMenu = (menuProps) => (
+    const columnMenu = useCallback((menuProps) => (
         <ExcelColumnMenu
             {...menuProps}
             columns={columns
@@ -82,15 +84,21 @@ const OptionSettingTab3 = (props) => {
                 setFilter(e);
                 onPrefsChange?.({ filter: e });
             }}
-
         />
-    );
+    ), [columns, forcedHidden, stageFields, onPrefsChange, filter])
 
     const { optionEditData } = OptionSettingApi();
 
     //grid rendering 
     const GridRenderer = (props) => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
+        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
+            orderByWithProxy(dataState?.data || [], sort, {
+                // 숫자 인식 자연 정렬이 필요한 필드만 명시
+                pid: 'nat',
+                cid: 'nat',
+            })
+        ), [dataState?.data, sort]);
 
         return (
             <Fragment>
@@ -98,7 +106,7 @@ const OptionSettingTab3 = (props) => {
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
-                            data: dataState?.data,       // props에서 직접 전달
+                            data: dataForGridSorted,       // props에서 직접 전달
                             dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                             selectedState,
                             setSelectedState,
@@ -107,22 +115,28 @@ const OptionSettingTab3 = (props) => {
                             useClientProcessing: true,                         // 클라 처리
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            initialSort: sort,                               // 1회 초기값
+                            initialSort: mappedSort,                               // 1회 초기값
                             initialFilter: filter,
-                            sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
+                            sortChange: ({ sort: next }) => {
+                                const nextRaw = unmapSortFields(next, proxyField);
+                                setSort(nextRaw ?? []);
+                                onPrefsChange?.({ sort: nextRaw ?? [] });
+                            },
                             filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
-                            // 일반 텍스트 컬럼
+                            const isNatField = ["pid", "cid"].includes(c.field);
                             return (
                                 <Column
                                     key={c.field}
-                                    field={c.field}
+                                    // proxyField 기반 정렬 필드 전달
+                                    field={isNatField ? proxyField[c.field] ?? `__sort__${c.field}` : c.field}
                                     title={c.title}
                                     width={c.width}
                                     editable={c.editable}
                                     columnMenu={columnMenu}
+                                    cell={(p) => <td title={p.dataItem[c.field]}>{p.dataItem[c.field]}</td>}
                                 />
                             );
                         })}
