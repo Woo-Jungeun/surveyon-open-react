@@ -85,7 +85,6 @@ const ProRegisterTab2 = () => {
 
         setPopupData(mappedData); // popupData 구성
       } catch (err) {
-        console.error(err);
         modal.showErrorAlert("에러", "엑셀을 읽는 중 오류가 발생했습니다.");
       }
     };
@@ -130,7 +129,6 @@ const ProRegisterTab2 = () => {
 
         saveBlobWithName(blob, `문항 등록 엑셀_샘플_` + moment().format("YYYYMMDDHHmmss") + `.xlsx`);
       } catch (err) {
-        console.error(err);
         modal.showErrorAlert("에러", "샘플 다운로드 중 오류가 발생했습니다.");
       }
     }, []);
@@ -140,10 +138,9 @@ const ProRegisterTab2 = () => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // 2차원 배열
-
     const headers = json[1]; // 두 번째 행이 컬럼명 (예: id, q10, q20, ...)
     const rows = json.slice(2); // 세 번째 행부터 실제 데이터
-    const idIndex = headers.indexOf("id");
+    const idIndex = headers.indexOf(idColumn);
 
     const result = [];
 
@@ -154,11 +151,9 @@ const ProRegisterTab2 = () => {
       const colIndex = headers.indexOf(qnum);
 
       if (colIndex === -1) return; // 엑셀에 해당 컬럼이 없으면 skip
-
       rows.forEach((row) => {
         const pid = row[idIndex];
         let answer = row[colIndex];
-
         // 공백, 빈값 구분 로직 
         if (answer === undefined || answer === null) {
           return;
@@ -209,7 +204,6 @@ const ProRegisterTab2 = () => {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: "array" });
         const jsonData = buildJsonData(workbook, selectData);
-
         // todo '(예정)' 제거 처리
         const cleanModel = analysisModel.replace(/\(.*\)/g, "").trim();
 
@@ -222,9 +216,7 @@ const ProRegisterTab2 = () => {
             model: cleanModel
           },
         };
-        console.log("payload", payload);
         const res = await proRegisterMutation.mutateAsync(payload);
-        console.log("res", res)
         if (res?.success === "777") {
           modal.showConfirm("알림", "문항이 등록되었습니다.", {
             btns: [{ title: "확인", click: () => navigate("/pro_list") }],   // 문항 목록 페이지로 이동
