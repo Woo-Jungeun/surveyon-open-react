@@ -91,6 +91,11 @@ const KendoGrid = ({ parentProps, children, processData }) => {
 
     // 헤더 체크박스 클릭 시 핸들러 
     const onHeaderSelectionChange = useCallback((event) => {
+        // 부모에서 직접 처리하도록 허용
+        if (typeof parentProps?.onHeaderSelectionChange === "function") {
+            parentProps.onHeaderSelectionChange(event);
+            return;
+        }
         const checked = event.syntheticEvent.target.checked;
         const newSelectedState = {};
         const items = Array.isArray(event.dataItems)
@@ -123,6 +128,10 @@ const KendoGrid = ({ parentProps, children, processData }) => {
 
     //헤더 인디터미넌트 계산(일부만 체크)
     const headerSomeSelected = (viewItems.some((item) => selectedState[idGetter(item)]) && !headerSelectionValue);
+    // 헤더 체크박스 상태 계산 (중복 제외 기준)
+    const validItems = viewItems.filter((item) => !item.isDuplicate);
+    const allChecked = validItems.length > 0 && validItems.every((item) => selectedState[idGetter(item)]);
+    const someChecked = validItems.some((item) => selectedState[idGetter(item)]) && !allChecked;
 
     // 트리를 보존하면서 재귀적으로 key만 부여
     const addKeysRecursively = (nodes) =>
@@ -143,23 +152,45 @@ const KendoGrid = ({ parentProps, children, processData }) => {
         const SelectionHeaderCell = () => {
             const ref = useRef(null);
             useEffect(() => {
-                if (ref.current) ref.current.indeterminate = headerSomeSelected;
-            }, [headerSomeSelected]);
+                if (ref.current) ref.current.indeterminate = someChecked;
+            }, [someChecked]);
             const stop = (e) => e.stopPropagation();
+
             return (
-                <div onClick={stop} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, width: '100%' }}>
+                <div
+                    onClick={stop}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                        width: '100%',
+                    }}
+                >
                     <span>{selectionHeaderTitle}</span>
                     <div className="k-checkbox-wrap">
                         <input
                             ref={ref}
                             type="checkbox"
                             className="k-checkbox"
-                            checked={!!headerSelectionValue}
+                            checked={allChecked}
                             onChange={(e) => {
-                                onHeaderSelectionChange({
-                                    syntheticEvent: { target: { checked: e.target.checked } },
-                                    dataItems: viewItems,
+                                const checked = e.target.checked;
+                                if (typeof parentProps?.onHeaderSelectionChange === "function") {
+                                    parentProps.onHeaderSelectionChange({
+                                        syntheticEvent: { target: { checked } },
+                                        dataItems: validItems,
+                                    });
+                                    return;
+                                }
+                                const next = {};
+                                viewItems.forEach((item) => {
+                                    const key = idGetter(item);
+                                    if (!key) return;
+                                    if (item.isDuplicate) next[key] = false;
+                                    else next[key] = checked;
                                 });
+                                setSelectedState(next);
                             }}
                             aria-label="Select all rows"
                         />

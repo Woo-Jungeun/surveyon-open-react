@@ -34,7 +34,22 @@ export function ProRegisterApi() {
         }
     );
 
+    // 샘플 다운로드 
+    const sampleDownloadData = useMutation(
+        async (data) => await api.file(data, "/pro_register_api.aspx"),
+        {
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
+        }
+    );
+
+
     return {
-        proRegisterMutation
+        proRegisterMutation,
+        sampleDownloadData
     };
 }
