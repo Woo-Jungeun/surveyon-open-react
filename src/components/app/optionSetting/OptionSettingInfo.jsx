@@ -267,7 +267,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         } catch {
             appendLog("[ERR] 상태 조회 실패\n");
         }
-    }, [projectnum, data?.qid, optionStatus, appendLog, clearLog, joinJob]);
+    }, [projectnum, data?.qid, optionStatus, appendLog, joinJob]);
 
     useEffect(() => {
         return () => {
