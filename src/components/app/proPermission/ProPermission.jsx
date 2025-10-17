@@ -1,30 +1,32 @@
-import React, { Fragment, useRef, useState, useCallback, useContext, useEffect } from "react";
+import React, { Fragment, useState, useContext, useEffect, useCallback } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { Input } from "@progress/kendo-react-inputs";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useSelector } from "react-redux";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import ProPermissionGrid from "@/components/app/proPermission/ProPermissionGrid.jsx";
+import { ProPermissionApi } from "@/components/app/proPermission/ProPermissionApi";
 
 /**
  * 사용자 설정
  *
  * @author jewoo
- * @since 2025-10-02<br />
+ * @since 2025-10-17<br />
  */
 const ProPermission = () => {
   const modal = useContext(modalContext);
   const auth = useSelector((store) => store.auth);
   const [loading, setLoading] = useState(false);
-
+  const { proPermissionData } = ProPermissionApi();
+  
   const projectnum = sessionStorage.getItem("projectnum");
   const projectname = sessionStorage.getItem("projectname");
 
-  // formData 객체로 모든 값 관리
+  /** formData (기본값: 개인키) */
   const [formData, setFormData] = useState({
-    analysisModel: "", // API KEY 유형
-    projectName: "",   // API 이름
-    apiKey: "",        // API KEY 값
+    api_gubun: "1", // 기본값 개인키
+    api_name: "",
+    api_key: "",
   });
 
   // 공통 업데이트 핸들러
@@ -37,15 +39,42 @@ const ProPermission = () => {
 
   const [gridData, setGridData] = useState([]);
 
-  // 등록 버튼 이벤트
+  // 그리드 데이터 조회
+  const fetchData = async () => {
+    try {
+      const payload = {
+        params: {
+          gb: "api_select",
+          user: auth?.user?.userId || "",
+        }
+      };
+      const res = await proPermissionData.mutateAsync(payload);
+      if (res?.success === "777") {
+        setGridData(res?.resultjson || []);
+      } else {
+        modal.showErrorAlert("에러", "사용자 설정 목록을 불러오지 못했습니다.");
+      }
+
+    } catch (err) {
+      modal.showErrorAlert("에러", "사용자 설정 조회 중 오류가 발생했습니다.");
+    }
+  };
+
+  /** 최초 진입 시 목록 조회 */
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // 등록 버튼 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (loading) return;
 
+    // 필수값 체크
     const errs = [];
-    if (!formData.analysisModel) errs.push("권한을 선택해 주세요.");
-    if (!formData.projectName.trim()) errs.push("POF를 입력해 주세요.");
-    if (!formData.apiKey.trim()) errs.push("작업자를 입력해 주세요.");
+    if (!formData.api_gubun) errs.push("API KEY 유형을 선택해 주세요.");
+    if (!formData.api_name.trim()) errs.push("API 이름을 입력해 주세요.");
+    if (!formData.api_key.trim()) errs.push("API KEY를 입력해 주세요.");
 
     if (errs.length) {
       modal.showErrorAlert("알림", errs.join("\n"));
@@ -56,24 +85,28 @@ const ProPermission = () => {
       setLoading(true);
 
       const payload = {
-        gb: "NewProject",
-        ...formData,
-        user: auth?.user?.userId || "",
+        params: {
+          gb: "api_enter",
+          ...formData,
+          user: auth?.user?.userId || "",
+        }
       };
-      console.log("👉 전송 payload", payload);
-
-      // 실제 저장 API 연동 후 성공 시 목록 갱신
-      setGridData((prev) => [
-        ...prev,
-        {
-          no: prev.length + 1,
-          apiType: formData.analysisModel,
-          apiName: formData.projectName,
-          apiKey: formData.apiKey,
-          regDate: new Date().toISOString().slice(0, 19).replace("T", " "),
-          defaultUse: false,
-        },
-      ]);
+      const res = await proKeyData.mutateAsync(payload);
+      if (res?.success === "777") {
+        modal.showConfirm("알림", "API KEY가 등록되었습니다.", {
+          btns: [{
+            title: "확인",
+            click: async () => {
+              await fetchData(); // 재조회
+            },
+          }],
+        });
+      } else if (res?.success === "770") {
+        // 이미 등록된 api key입니다..
+        modal.showErrorAlert("에러", res?.message);
+      } else {
+        modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
+      }
     } catch (err) {
       modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
     } finally {
@@ -98,7 +131,7 @@ const ProPermission = () => {
         setLoading(false);
       }
     });
-  }, [modal, projectnum]);
+  }, []);
 
   return (
     <Fragment>
@@ -109,11 +142,11 @@ const ProPermission = () => {
         </p>
 
         <div className="subTit">
-          <h2 className="titTxt"> 프로젝트 권한 등록</h2>
+          <h2 className="titTxt">프로젝트 권한 등록</h2>
         </div>
       </article>
 
-      <article className={`subContWrap`}>
+      <article className="subContWrap">
         <div className="subCont">
           <form onSubmit={handleSubmit}>
             <div className="popCont">
@@ -134,30 +167,34 @@ const ProPermission = () => {
                     disabled
                   />
                 </div>
+
+                {/* API 이름 */}
                 <div className="cmn_pop_ipt">
-                  <span style={{ width: "200px" }}>POF</span>
+                  <span style={{ width: "200px" }}>* POF</span>
                   <Input
                     className="k-input k-input-solid"
-                    value={formData.projectName}
-                    onChange={(e) => handleChange("projectName", e.value)}
+                    value={formData.api_name}
+                    onChange={(e) => handleChange("api_name", e.value)}
                     disabled={loading}
                   />
                 </div>
-                <div className="cmn_pop_ipt">
-                  <span style={{ width: "200px" }}>작업자</span>
-                  <Input
-                    className="k-input k-input-solid"
-                    value={formData.apiKey}
-                    onChange={(e) => handleChange("apiKey", e.value)}
-                    disabled={loading}
-                  />
-                </div>
+                {/* 권한 */}
                 <div className="cmn_pop_ipt">
                   <span style={{ width: "190px" }}>권한</span>
                   <DropDownList
                     data={["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)", "고객(읽기)", "일반(읽기)"]}
                     value={formData.analysisModel}
                     onChange={(e) => handleChange("analysisModel", e.value)}
+                    disabled={loading}
+                  />
+                </div>
+                {/* 작업자 */}
+                <div className="cmn_pop_ipt">
+                  <span style={{ width: "200px" }}>* 작업자</span>
+                  <Input
+                    className="k-input k-input-solid"
+                    value={formData.api_key}
+                    onChange={(e) => handleChange("api_key", e.value)}
                     disabled={loading}
                   />
                 </div>
@@ -189,7 +226,9 @@ const ProPermission = () => {
               </div>
             </div>
           </form>
-          <ProPermissionGrid data={gridData} setData={setGridData} />
+
+          {/* 사용자 설정 목록 */}
+          <ProPermissionGrid data={gridData} setData={setGridData} fetchData={fetchData} />
         </div>
       </article>
     </Fragment>
