@@ -18,15 +18,18 @@ const ProPermission = () => {
   const auth = useSelector((store) => store.auth);
   const [loading, setLoading] = useState(false);
   const { proPermissionData } = ProPermissionApi();
-  
+
   const projectnum = sessionStorage.getItem("projectnum");
   const projectname = sessionStorage.getItem("projectname");
 
   /** formData (기본값: 개인키) */
   const [formData, setFormData] = useState({
-    api_gubun: "1", // 기본값 개인키
-    api_name: "",
-    api_key: "",
+    pof: "",
+    permission_gubun: "",
+    worker_name: "",
+    worker_id: "",
+    worker_password: "",
+    worker_position: "",
   });
 
   // 공통 업데이트 핸들러
@@ -70,11 +73,16 @@ const ProPermission = () => {
     e.preventDefault();
     if (loading) return;
 
-    // 필수값 체크
     const errs = [];
-    if (!formData.api_gubun) errs.push("API KEY 유형을 선택해 주세요.");
-    if (!formData.api_name.trim()) errs.push("API 이름을 입력해 주세요.");
-    if (!formData.api_key.trim()) errs.push("API KEY를 입력해 주세요.");
+    if (!formData.pof.trim()) errs.push("POF를 입력해 주세요.");
+    if (!formData.permission_gubun) errs.push("작업권한을 선택해 주세요.");
+
+    if (["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun)) {
+      if (!formData.worker_id.trim()) errs.push("고객 이메일을 입력해 주세요.");
+      if (!formData.worker_password.trim()) errs.push("고객 비밀번호를 입력해 주세요.");
+    } else {
+      if (!formData.worker_name.trim()) errs.push("작업자 이름을 입력해 주세요.");
+    }
 
     if (errs.length) {
       modal.showErrorAlert("알림", errs.join("\n"));
@@ -83,29 +91,40 @@ const ProPermission = () => {
 
     try {
       setLoading(true);
+      console.log("formData", formData)
+      // 고객 / 일반 구분하여 worker_position 설정
+      let worker_position = "";
+      if (formData.permission_gubun === "고객(읽기)") worker_position = "고객";
+      else if (formData.permission_gubun === "일반(읽기)") worker_position = "일반";
 
       const payload = {
         params: {
-          gb: "api_enter",
+          gb: "worker_enter",
+          projectname,
+          projectnum,
           ...formData,
+          worker_position, // 추가됨
           user: auth?.user?.userId || "",
-        }
+        },
       };
-      const res = await proKeyData.mutateAsync(payload);
+      console.log("payload", payload)
+      const res = await proPermissionData.mutateAsync(payload);
       if (res?.success === "777") {
-        modal.showConfirm("알림", "API KEY가 등록되었습니다.", {
-          btns: [{
-            title: "확인",
-            click: async () => {
-              await fetchData(); // 재조회
+        modal.showConfirm("알림", "프로젝트 권한이 등록되었습니다.", {
+          btns: [
+            {
+              title: "확인",
+              click: async () => {
+                await fetchData();
+              },
             },
-          }],
+          ],
         });
-      } else if (res?.success === "770") {
-        // 이미 등록된 api key입니다..
+      } else if (res?.success === "773") {
+        // 773	이미 등록된 담당자입니다.
         modal.showErrorAlert("에러", res?.message);
       } else {
-        modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
+        modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.");
       }
     } catch (err) {
       modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
@@ -168,36 +187,70 @@ const ProPermission = () => {
                   />
                 </div>
 
-                {/* API 이름 */}
+                {/* POF */}
                 <div className="cmn_pop_ipt">
                   <span style={{ width: "200px" }}>* POF</span>
                   <Input
                     className="k-input k-input-solid"
-                    value={formData.api_name}
-                    onChange={(e) => handleChange("api_name", e.value)}
+                    value={formData.pof}
+                    onChange={(e) => handleChange("pof", e.value)}
                     disabled={loading}
                   />
                 </div>
-                {/* 권한 */}
+
+                {/* 작업권한 */}
                 <div className="cmn_pop_ipt">
-                  <span style={{ width: "190px" }}>권한</span>
+                  <span style={{ width: "190px" }}>* 권한</span>
                   <DropDownList
-                    data={["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)", "고객(읽기)", "일반(읽기)"]}
-                    value={formData.analysisModel}
-                    onChange={(e) => handleChange("analysisModel", e.value)}
+                    data={[
+                      "오픈팀(관리,읽기,쓰기)",
+                      "제작자(관리,읽기,쓰기)",
+                      "연구원(읽기,쓰기)",
+                      "고객(읽기)",
+                      "일반(읽기)",
+                    ]}
+                    value={formData.permission_gubun}
+                    onChange={(e) => handleChange("permission_gubun", e.value)}
                     disabled={loading}
                   />
                 </div>
-                {/* 작업자 */}
-                <div className="cmn_pop_ipt">
-                  <span style={{ width: "200px" }}>* 작업자</span>
-                  <Input
-                    className="k-input k-input-solid"
-                    value={formData.api_key}
-                    onChange={(e) => handleChange("api_key", e.value)}
-                    disabled={loading}
-                  />
-                </div>
+
+                {/* 고객 or 일반일 경우 → 고객 이메일 / 고객비번 */}
+                {["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun) ? (
+                  <>
+                    <div className="cmn_pop_ipt">
+                      <span style={{ width: "200px" }}>* 고객 이메일</span>
+                      <Input
+                        className="k-input k-input-solid"
+                        value={formData.worker_id || ""}
+                        onChange={(e) => handleChange("worker_id", e.value)}
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="cmn_pop_ipt">
+                      <span style={{ width: "200px" }}>* 고객 비밀번호</span>
+                      <Input
+                        type="password"
+                        className="k-input k-input-solid"
+                        value={formData.worker_password || ""}
+                        onChange={(e) => handleChange("worker_password", e.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  /* 고객/일반 외 → 작업자 이름 */
+                  <div className="cmn_pop_ipt">
+                    <span style={{ width: "200px" }}>* 작업자</span>
+                    <Input
+                      className="k-input k-input-solid"
+                      value={formData.worker_name}
+                      onChange={(e) => handleChange("worker_name", e.value)}
+                      disabled={loading}
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

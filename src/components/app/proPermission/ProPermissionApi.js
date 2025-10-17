@@ -17,18 +17,10 @@ export function ProPermissionApi() {
          async (data) => await api.post(data?.params, "/pro_permission_api.aspx"),
          {
              onMutate: (vars) => {
-               // gb 값이 api_useyn_update일 경우 로딩바 표시하지 않음
-               const gbValue = vars?.params?.gb;
-               if (gbValue !== "api_useyn_update") {
                  loadingSpinner.show();
-               }
              },
              onSettled: (data, error, vars) => {
-               // gb값이 api_useyn_update가 아닐 때만 닫기
-               const gbValue = vars?.params?.gb;
-               if (gbValue !== "api_useyn_update") {
                  loadingSpinner.hide();
-               }
              },
            }
          );
