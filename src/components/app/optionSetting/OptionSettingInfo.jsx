@@ -103,11 +103,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         setAnalyzing(false);
         activeJobRef.current = null;
 
-        const goNextTab = () => {
-            if (nextTabRef.current) onNavigateTab?.(nextTabRef.current);
-            nextTabRef.current = null;
-        };
-
         if (hasError) {
             modal.showErrorAlert("에러", "분석 중 오류가 발생했습니다.", MODAL_SCOPE);
         } else {
@@ -118,7 +113,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         click: async () => {
                             try {
                                 //상태 확인 했다는 API 태움 
-                                const res = await optionEditData.mutateAsync({
+                                await optionEditData.mutateAsync({
                                     params: {
                                         user: auth?.user?.userId || "",
                                         projectnum, qnum,
@@ -128,14 +123,16 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 });
                             } catch {
                             }
+                            // 팝업 닫힌 후 탭 이동
+                            if (nextTabRef.current) {
+                                onNavigateTab?.(nextTabRef.current);
+                                nextTabRef.current = null;
+                            }
                         },
                     },
                 ],
             });
         }
-
-        setTimeout(goNextTab, 0);
-
     }, [modal, onNavigateTab, setAnalyzing]);
 
 
@@ -157,45 +154,38 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
     // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
     const confirmEndByStatusAndSnapshot = useCallback(
-        async ({ maxTries = 4, interval = 350, hasError = false }) => {
+        async ({ maxTries = 8, interval = 500, hasError = false }) => {
             lastStableRef.current = 0;
-            // 변경: logText -> logTextRef.current
-            lineCountRef.current = getLogMetrics(logTextRef.current).lines;
 
             for (let i = 0; i < maxTries; i++) {
                 try {
-                    const payload = buildStatusPayload(activeJobRef.current);
-                    if (!payload) {
-                        // 아직 job/qid가 안 들어온 타이밍 → 잠깐 대기 후 다시 확인
-                        await sleep(interval);
-                        continue;
-                    }
-                    const r = await optionAnalysisStatus.mutateAsync(payload);
-                    const raw = String(r?.output ?? "").replace(/\s+/g, "");
-                    const stateDone =
-                        /분석완료/.test(raw) || /completed/i.test(raw) || r?.state === "completed";
+                    // 현재 로그 문자열 통합 + 공백 제거
+                    const currentLog = (logTextRef.current || "")
+                        .replace(/\r?\n/g, "")
+                        .replace(/\s+/g, "") // ← 이거 추가!
+                        .trim();
 
-                    // 변경: logText -> logTextRef.current
-                    const { lines } = getLogMetrics(logTextRef.current);
-                    const stableNow = lines === lineCountRef.current;
-                    lineCountRef.current = lines;
-
-                    if (stateDone && stableNow) {
-                        lastStableRef.current += 1;
-                    } else {
-                        lastStableRef.current = 0;
-                    }
-
-                    if (lastStableRef.current >= 2) {
+                    // 확정 종료 문구 감지 (공백/개행/대소문자 무시)
+                    if (/모든\s*응답\s*분류\s*완료\s*<eof>(?==|=|$)/i.test(currentLog)) {
+                        // console.log("모든 응답분류 완료 감지됨");
                         finalizeCompletion(hasError);
                         return;
                     }
-                } catch {
-                    // 무시하고 다음 루프
+
+                    // 상태 API 호출 (보조 확인)
+                    const payload = buildStatusPayload(activeJobRef.current);
+                    if (!payload) {
+                        await sleep(interval);
+                        continue;
+                    }
+
+                    await optionAnalysisStatus.mutateAsync(payload);
+                } catch (err) {
+                    console.warn("status check err", err);
                 }
+
                 await sleep(interval);
             }
-            finalizeCompletion(hasError);
         },
         [optionAnalysisStatus, buildStatusPayload, finalizeCompletion]
     );
@@ -607,7 +597,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                 const joined = await joinJob(job);
                 if (!joined) appendLog("[WARN] 실시간 로그 연결 실패(작업은 진행 중)\n");
 
-                // (선택) 누락 로그 보정: status 호출
+                // 누락 로그 보정: status 호출
                 try {
                     const r = await optionAnalysisStatus.mutateAsync(buildStatusPayload(job));
                     if (r?.output) appendLog(String(r.output));
@@ -697,9 +687,9 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 className="k-input k-input-solid"
                                 value={
                                     data?.keyword_string && data.keyword_string.trim() !== ""
-                                      ? data.keyword_string
-                                      : data?.question_fin || ""
-                                  }
+                                        ? data.keyword_string
+                                        : data?.question_fin || ""
+                                }
                                 onChange={(e) => onChangeInputEvent(e, "keyword_string")}
                             />
                         </div>
