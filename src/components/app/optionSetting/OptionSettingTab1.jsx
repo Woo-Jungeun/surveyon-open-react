@@ -44,7 +44,7 @@ const formatNow = (d = new Date()) => {
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
+    const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
         , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options, onRequestLv3Refresh } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
@@ -58,6 +58,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
     const latestCtxRef = useRef(null);
     const gridRef = useRef(null);
+    const reportedLvcodeRef = useRef(false);    //Body 초기 lvcode 전달
+
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
@@ -1016,6 +1018,20 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 modal.showErrorAlert("에러", "코드 추가 중 오류가 발생했습니다.");
             }
         }, []);
+
+        // Body 초기 lvcode 전달
+        useEffect(() => {
+            if (reportedLvcodeRef.current) return;
+            if (!optionEditData?.data) return;
+            if (!onInitLvCode) return;
+
+            const res = optionEditData.data;
+            const fetchedLv = String(res?.lvcode ?? res?.resultjson?.[0]?.lvcode ?? "").trim();
+            if (["1", "2", "3"].includes(fetchedLv)) {
+                onInitLvCode(fetchedLv);
+                reportedLvcodeRef.current = true;
+            }
+        }, [optionEditData?.data, onInitLvCode]);
 
         return (
             <Fragment>
