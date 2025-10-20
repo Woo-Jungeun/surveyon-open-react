@@ -1,4 +1,6 @@
 import React, { Fragment, useState, useCallback, useEffect, useContext, useRef, useMemo } from "react";
+import { useDispatch } from "react-redux";
+import { login } from "@/common/redux/action/AuthAction";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -52,6 +54,7 @@ const FIELD_MIN_PERM = {
 
 const ProList = () => {
     const auth = useSelector((store) => store.auth);
+    const dispatch = useDispatch();
     const modal = useContext(modalContext);
     const navigate = useNavigate();
     const DATA_ITEM_KEY = "no";
@@ -86,7 +89,17 @@ const ProList = () => {
     const [userPerm, setUserPerm] = useState(PERM.READ);
     useEffect(() => {
         const ug = proListData?.data?.usergroup;
-        if (ug) setUserPerm(roleToPerm(ug));
+        if (ug) {
+            setUserPerm(roleToPerm(ug));
+            
+            // Redux에 usergroup 값 반영
+            dispatch(
+                login({
+                    ...auth?.user,
+                    userAuth: ug,
+                })
+            );
+        }
     }, [proListData?.data?.usergroup]);
 
     // 서브그룹으로 묶으면서 리프 헤더를 숨기는 헬퍼

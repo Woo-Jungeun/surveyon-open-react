@@ -33,6 +33,8 @@ const trailFor = (key) => {
 const MenuBar = () => {
   const [, , removeCookie] = useCookies();
   const auth = useSelector((store) => store.auth);
+  const userAuth = auth?.user?.userAuth || "";
+  const canManage = userAuth.includes("관리자") || userAuth.includes("오픈팀") || userAuth.includes("제작자");
   const modal = useContext(modalContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -100,10 +102,10 @@ const MenuBar = () => {
       <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V21h18v-1.5C21 16.5 17 14 12 14Z" />
     </svg>
   );
-  
+
   return (
     <Fragment>
-      <header key={location.pathname}> 
+      <header key={location.pathname}>
         <h1
           className="logo"
           style={{ cursor: "pointer" }}
@@ -179,39 +181,42 @@ const MenuBar = () => {
                       onClick={() => {
                         setAppsOpen(false);
                         navigate('/pro_register');
-                        //modal.showAlert("알림", "준비 중...");
                       }}
                     >
                       <span className="dd-icon">＋</span>
                       <span>문항 등록</span>
                     </button>
-                    <button
-                      type="button"
-                      className="dd-item"
-                      onClick={() => {
-                        setAppsOpen(false);
-                        navigate('/pro_permission');
-                        //modal.showAlert("알림", "준비 중...");
-                      }}
-                    >
-                      <span className="dd-icon">👤</span>
-                      <span>사용자 설정</span>
-                    </button>
+
+                    {/* 사용자 설정: 관리자/오픈팀/제작자만 보이게 */}
+                    {canManage && (
+                      <button
+                        type="button"
+                        className="dd-item"
+                        onClick={() => {
+                          setAppsOpen(false);
+                          navigate('/pro_permission');
+                        }}
+                      >
+                        <span className="dd-icon">👤</span>
+                        <span>사용자 설정</span>
+                      </button>
+                    )}
                   </>
                 }
-                <button
-                  type="button"
-                  className="dd-item"
-                  onClick={() => {
-                    setAppsOpen(false);
-                    navigate('/pro_key');
-                    //modal.showAlert("알림", "준비 중...");
-                  }}
-                >
-                  <span className="dd-icon">🔑</span>
-                  <span>API 설정</span>
-                </button>
-
+                {/* API 설정: 관리자/오픈팀/제작자만 보이게 */}
+                {canManage && (
+                  <button
+                    type="button"
+                    className="dd-item"
+                    onClick={() => {
+                      setAppsOpen(false);
+                      navigate('/pro_key');
+                    }}
+                  >
+                    <span className="dd-icon">🔑</span>
+                    <span>API 설정</span>
+                  </button>
+                )}
               </div>
             )}
           </div>
