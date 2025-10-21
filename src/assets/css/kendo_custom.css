@@ -59,7 +59,7 @@ textarea.k-textarea[disabled] {border:1px solid #a5e2c5; background:#edefec; opa
 
 .btnS {height: 24px; padding:0 12px; border-radius: 4px !important; font-size:12px;}
 .btnM {padding:0 12px; height: 32px; font-size:14px;}
-.btnL {padding:0 20px; height: 48px; font-size:16px;}
+.btnL {padding:0 20px; height: 48px; font-size:14px;}
 
 .btnType01 {background:#ff4646; color:#fff; border:none;}
 .btnType01:hover {background:#e23a3a; color:#fff; border:none;}
@@ -118,7 +118,7 @@ textarea.k-textarea[disabled] {border:1px solid #a5e2c5; background:#edefec; opa
 
 .k-grid-header th.k-header,
 .k-grid th,
-.k-grid td {font-size:16px; padding:0 20px;}
+.k-grid td {font-size: 14px; padding:0 20px;}
 .k-grid-header th.k-header,
 .k-grid th {font-weight: 500; padding:0 20px;height: 48px; vertical-align: middle;}
 .k-grid td {font-weight: normal; height: 52px; border-bottom:1px solid #dedfee;}
@@ -184,7 +184,7 @@ div.k-grid-norecords {width: 100% !important;}
 /* grid - paging - react*/
 .k-pager {display:flex; justify-content: center; background:none; margin-top:28px; border:none;}
 .k-pager .k-button::before,.k-pager .k-button::after{display:none !important;}
-.k-pager-numbers .k-button {color:#343b37; font-size:16px; font-weight: normal; border-radius: 4px; width: 40px;}
+.k-pager-numbers .k-button {color:#343b37; font-size:14px; font-weight: normal; border-radius: 4px; width: 40px;}
 .k-pager .k-button:hover{background:#eafae5 !important; }
 .k-pager .k-button:focus{box-shadow: none; background:#bff7c1 !important;}
 .k-pager-numbers .k-button.k-selected{background:none !important; color:#00b272; font-weight: 500;}
@@ -202,7 +202,7 @@ div.k-grid-norecords {width: 100% !important;}
 
 /* grid - paging */
 .k-pager-wrap {background:none; margin-top:28px; border:none;}
-.k-pager-numbers .k-link {color:#343b37; font-size:16px; font-weight: normal; border-radius: 0;}
+.k-pager-numbers .k-link {color:#343b37; font-size: 14px; font-weight: normal; border-radius: 0;}
 .k-pager-wrap .k-link,
 .k-pager-wrap .k-link.k-state-disabled {border:none;}
 .k-pager-wrap .k-link.k-state-selected {background:none; color:#00b272; font-weight: 500;}
@@ -264,7 +264,7 @@ div.k-grid-norecords {width: 100% !important;}
 .k-combobox{height:32px; border-radius:8px; border:1px solid #a5e2c5; background:#fff; padding:0;}
 .k-combobox:hover{background:none; border:1px solid #054a31; background:#fff;}
 .k-combobox > .k-input-inner{padding:0 0 0 12px; }
-.k-combobox > .k-input-inner > .k-input-value-text{font-size:16px;}
+.k-combobox > .k-input-inner > .k-input-value-text{font-size:14px;}
 .k-combobox > button{width:32px; height:100%; background:url("../images/icon_dropdown.png")center center no-repeat; background-size:24px; border:0;}
 .k-combobox > button:hover{background-color:inherit;}
 .k-combobox > button svg{display:none;}
@@ -326,7 +326,7 @@ div.k-grid-norecords {width: 100% !important;}
 .k-treelist-toggle.k-svg-icon {width: 24px; height: 24px; padding:0; background:none;}
 .k-treelist-toggle.k-svg-icon path {fill:#00b272;}
 .k-grid td,
-.k-grid .k-table-td {border-bottom:1px solid #dedfee; border-right: none; border-left:none; font-size:16px; font-weight: normal;}
+.k-grid .k-table-td {border-bottom:1px solid #dedfee; border-right: none; border-left:none; font-size: 14px; font-weight: normal;}
 .k-treelist-scrollable > .k-table {overflow:hidden;}
 
 /* timepicker */
@@ -440,7 +440,7 @@ div.k-grid-norecords {width: 100% !important;}
 .cmn_grid:not(.multihead) .k-grid-header th.k-header,
 .cmn_grid:not(.multihead) .k-grid th,
 .cmn_grid:not(.multihead) .k-grid .k-grid-container .k-grid-content td {
-  font-size: 16px;
+  font-size: 14px;
   padding: 0 20px;    /* ← 원래값으로 복원 */
 }
 
@@ -451,7 +451,7 @@ div.k-grid-norecords {width: 100% !important;}
 }
 
 .cmn_grid:not(.multihead) .k-grid .k-grid-container .k-grid-content td {
-  font-size: 16px;
+  font-size: 14px;
   height: 52px;
 }
 

@@ -730,7 +730,7 @@ footer {
 /*.popBtnS {height: 80px;}*/
 .popBtnS .btnWrap.type04>button {
     height: 44px;
-    font-size: 16px;
+    font-size: 14px;
     padding: 0 20px;
 }
 
@@ -864,7 +864,7 @@ footer {
 
 .iptDeco {
     color: #69706d;
-    font-size: 16px;
+    font-size: 14px;
     margin: 0 3px;
 }
 
@@ -1091,7 +1091,7 @@ footer {
 }
 
 .tblTopTxt {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     color: #343b37;
 }
@@ -1252,7 +1252,7 @@ footer {
 .popTbl .contTop .contTit .titTxt,
 .gridItem .contTop .contTit .titTxt {
     font-weight: normal;
-    font-size: 16px;
+    font-size: 14px;
     margin-left: 8px;
 }
 
@@ -1343,7 +1343,7 @@ footer {
 
 .mainTotal {
     color: #69706d;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: normal;
     line-height: 1;
     text-align: center;
@@ -1392,7 +1392,7 @@ footer {
 
 .totalLine .totalNum {
     color: #69706d;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: normal;
 }
 
@@ -1563,7 +1563,7 @@ footer {
 
 .itemSW>p {
     color: #012011;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
 }
 
@@ -1765,7 +1765,7 @@ footer {
 
 .listTxt li .txt {
     color: #343b37;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     margin-right: 44px;
 }
@@ -1846,7 +1846,7 @@ footer {
 }
 
 .cardCont td {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
 }
 
@@ -2032,7 +2032,7 @@ footer {
 
 .gridTopTxt {
     color: #343b37;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     margin-bottom: 10px;
 }
@@ -2303,7 +2303,7 @@ footer {
 }
 
 .infoBox .txtTit {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     color: #343b37;
     margin-bottom: 12px;
@@ -2424,7 +2424,7 @@ footer {
     align-items: center;
     justify-content: space-between;
     color: #010220;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: bold;
     border-top: 1px solid #d3d4d7;
     border-bottom: 1px solid #d3d4d7;
@@ -2492,7 +2492,7 @@ footer {
 
 .cmn_textbox .textboxTit {
     color: #343b37;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     margin-bottom: 12px;
 }
@@ -2555,7 +2555,7 @@ footer {
 
 .iptBox .iptTit {
     color: #343b37;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     margin-bottom: 4px;
 }
@@ -2813,7 +2813,7 @@ footer {
     height: 40px;
     padding: 0 12px;
     color: #012011;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 500;
     display: flex;
     align-items: center;
@@ -2952,7 +2952,7 @@ footer {
 
 /*loading*/
 .loading {
-    font-size: 16px;
+    font-size: 14px;
     color: #fff;
     font-weight: 500;
     position: absolute;
@@ -3041,7 +3041,7 @@ footer {
 
 .errTxtS {
     color: #696a70;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: normal;
     line-height: 1;
 }
@@ -3790,7 +3790,7 @@ footer {
     height: 40px;
     text-align: center;
     color: #010220;
-    font-size: 16px;
+    font-size: 14px;
     border-bottom: 1px solid #dedfee;
     vertical-align: middle;
 }
