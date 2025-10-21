@@ -68,6 +68,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
     try {
       modal.showConfirm("알림", "선택한 사용자를 삭제하시겠습니까?", {
         btns: [
+          { title: "취소" },
           {
             title: "삭제",
             click: async () => {
@@ -94,7 +95,6 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
               }
             },
           },
-          { title: "취소" },
         ],
       });
     } catch (err) {

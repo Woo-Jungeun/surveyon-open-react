@@ -189,6 +189,7 @@ const ProPermission = () => {
       // 삭제 확인 모달
       modal.showConfirm("알림", "프로젝트를 삭제하시겠습니까?", {
         btns: [
+          { title: "취소" },
           {
             title: "삭제",
             click: async () => {
@@ -224,7 +225,6 @@ const ProPermission = () => {
               }
             },
           },
-          { title: "취소" },
         ],
       });
     } catch (err) {
