@@ -34,7 +34,10 @@ const MenuBar = () => {
   const [, , removeCookie] = useCookies();
   const auth = useSelector((store) => store.auth);
   const userAuth = auth?.user?.userAuth || "";
-  const canManage = userAuth.includes("관리자") || userAuth.includes("오픈팀") || userAuth.includes("제작자");
+  const userGroup = auth?.user?.userGroup || "";
+  const roleSource = userAuth || userGroup; //권한 없으면 그룹으로 체크 
+  const manage = ["고객", "일반"].some(role =>roleSource.includes(role));
+
   const modal = useContext(modalContext);
   const navigate = useNavigate();
   const location = useLocation();
@@ -147,7 +150,7 @@ const MenuBar = () => {
 
         <div className="userWrap" style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {/* 고객/일반 권한은 앱 메뉴 숨김 */}
-          {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+          {(!roleSource.includes("고객") && !roleSource.includes("일반")) && (
             <div ref={appsRef} className="menu-dd">
               <button
                 type="button"
@@ -167,8 +170,8 @@ const MenuBar = () => {
                 <div className="dropdown-card apps-card">
                   {(projectnum && projectname) && (
                     <>
-                      {/* 사용자 설정: 관리자/오픈팀/제작자만 보이게 */}
-                      {canManage && (
+                      {/* 사용자 설정: 일반, 고객만 안보이게 */}
+                      {!manage && (
                         <button
                           type="button"
                           className="dd-item"
@@ -184,8 +187,8 @@ const MenuBar = () => {
                     </>
                   )}
 
-                  {/* API 설정: 관리자/오픈팀/제작자만 보이게 */}
-                  {canManage && (
+                  {/* API 설정:  일반, 고객만 안보이게 */}
+                  {!manage && (
                     <button
                       type="button"
                       className="dd-item"

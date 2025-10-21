@@ -4,7 +4,7 @@ import ProEnterTab1 from "@/components/app/proEnter/ProEnterTab1";
 import ProEnterTab2 from "@/components/app/proEnter/ProEnterTab2";
 import ProEnterTab3 from "@/components/app/proEnter/ProEnterTab3";
 import { modalContext } from "@/components/common/Modal.jsx";
-
+import { useSelector } from "react-redux";
 
 /**
  * 프로젝트 등록 > Body
@@ -14,7 +14,14 @@ import { modalContext } from "@/components/common/Modal.jsx";
  */
 const ProEnterBody = () => {
   const modal = useContext(modalContext);
-  const [tabDivision, setTabDivision] = useState("1");
+  const auth = useSelector((store) => store.auth);
+  const userGroup = auth?.user?.userGroup || "";
+  // "솔루션" 또는 "조사지원팀"만 Qmaster 탭 허용
+  const canViewQmaster = ["솔루션", "조시지원팀"].some(keyword =>
+    userGroup.includes(keyword)
+  );
+  // 초기 탭: Qmaster 가능 → "1", 아니면 "3"
+  const [tabDivision, setTabDivision] = useState(canViewQmaster ? "1" : "3");
 
   // 부모로 올리는 콜백을 “렌더 뒤”로 미루기 (defer)
   const useDeferred = () => {
@@ -47,10 +54,12 @@ const ProEnterBody = () => {
 
       <article className={`subContWrap`}>
         <div className="subCont">
-          <div className="btnBox tabMenu  ">
-            <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("1")}>
-              조사 (Qmaster)
-            </Button>
+          <div className="btnBox tabMenu">
+            {canViewQmaster && (
+              <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("1")}>
+                조사 (Qmaster)
+              </Button>
+            )}
             {/* todo 임시주석 */}
             {/* <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("2")}>
               조사 (Perl)
@@ -71,8 +80,8 @@ const ProEnterBody = () => {
               onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
             />
           ) : <ProEnterTab3
-            // persistedPrefs={gridPrefs["3"]}
-            // onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
+          // persistedPrefs={gridPrefs["3"]}
+          // onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
           />
           }
         </div>

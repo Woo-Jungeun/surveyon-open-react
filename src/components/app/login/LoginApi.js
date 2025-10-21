@@ -46,7 +46,7 @@ export function LoginApi() {
                         login({
                             userId: v?.user ?? "",       // mutate 시 넘긴 값
                             userNm: username,
-                            userAuth: groupposition,
+                            userGroup: groupposition,
                         })
                     );
                     // 2) 쿠키 저장 (로그인키)
