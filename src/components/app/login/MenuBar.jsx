@@ -78,7 +78,7 @@ const MenuBar = () => {
               sessionStorage.setItem("projectname", "");
               sessionStorage.setItem("servername", "");
               sessionStorage.setItem("projectpof", "");
-              navigate("/"); // 로그아웃 시 홈으로
+              navigate("/login"); // 로그아웃 시 홈으로
             } catch {
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
             }
