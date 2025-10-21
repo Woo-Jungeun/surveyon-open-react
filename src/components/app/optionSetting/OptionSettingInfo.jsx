@@ -78,6 +78,12 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     const lineCountRef = useRef(0);   // 마지막 라인 수
     const lastStableRef = useRef(0);  // 연속 안정 횟수
     const [data, setData] = useState({}); //데이터 
+    const [qid, setQid] = useState(""); //qid 
+    // qid를 ref로도 저장하여 재렌더/언마운트 시에도 유지
+    const qidRef = useRef("");
+    useEffect(() => {
+        qidRef.current = qid;
+    }, [qid]);
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
     const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
     const nextTabRef = useRef(null);    //탭 이동
@@ -138,13 +144,14 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
     // status 호출용
     const buildStatusPayload = (job) => {
-        const qid = String(data?.qid || "");
+        const qidValue = qidRef.current || qid;
         // 필수값/잡키 없으면 status 치지 않음
-        if (!projectnum || !qid || !job) return null;
+        if (!projectnum || !qidValue || !job) return null;
+
         return {
             user: auth?.user?.userId || "",
             projectnum,
-            qid,
+            qid: qidValue,
             action: "status",
             job: String(job),
         };
@@ -154,32 +161,26 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
     // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
     const confirmEndByStatusAndSnapshot = useCallback(
-        async ({ maxTries = 8, interval = 500, hasError = false }) => {
+        async ({ maxTries = 8, interval = 500, hasError = false, job }) => {
             lastStableRef.current = 0;
 
             for (let i = 0; i < maxTries; i++) {
                 try {
-                    // 현재 로그 문자열 통합 + 공백 제거
-                    const currentLog = (logTextRef.current || "")
-                        .replace(/\r?\n/g, "")
-                        .replace(/\s+/g, "") // ← 이거 추가!
-                        .trim();
+                    const payload = buildStatusPayload(job || activeJobRef.current);
 
-                    // 확정 종료 문구 감지 (공백/개행/대소문자 무시)
-                    if (/모든\s*응답\s*분류\s*완료\s*<eof>(?==|=|$)/i.test(currentLog)) {
-                        // console.log("모든 응답분류 완료 감지됨");
-                        finalizeCompletion(hasError);
-                        return;
-                    }
-
-                    // 상태 API 호출 (보조 확인)
-                    const payload = buildStatusPayload(activeJobRef.current);
                     if (!payload) {
                         await sleep(interval);
                         continue;
                     }
 
-                    await optionAnalysisStatus.mutateAsync(payload);
+                    const statusRes = await optionAnalysisStatus.mutateAsync(payload);
+
+                    if (statusRes?.IsCompleted === true) {
+                        console.log("IsCompleted 감지 → 완료처리");
+                        finalizeCompletion(statusRes?.HasError === true);
+                        return;
+                    }
+
                 } catch (err) {
                     console.warn("status check err", err);
                 }
@@ -189,7 +190,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         },
         [optionAnalysisStatus, buildStatusPayload, finalizeCompletion]
     );
-
     // SignalR 훅
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
         hubUrl: HUB_URL,      // 운영: https://son.hrc.kr/o/signalr / dev: /o/signalr
@@ -197,12 +197,12 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         onCompleted: ({ hasError, jobKey }) => {
             if (completedOnceRef.current) return;
             // status 호출에 job 누락되지 않도록 보강
-            if (!activeJobRef.current && jobKey) {
-                activeJobRef.current = String(jobKey);
-            }
-            if (!activeJobRef.current || activeJobRef.current === jobKey) {
-                // 여기서 바로 팝업 X → 확정 체크 함수 호출
-                confirmEndByStatusAndSnapshot({ hasError });
+            const currentJob = jobKey || activeJobRef.current;
+            if (currentJob) {
+                activeJobRef.current = currentJob;
+                confirmEndByStatusAndSnapshot({ hasError, job: currentJob });
+            } else {
+                console.warn("jobKey 없음 - 상태 확인 스킵");
             }
         },
     });
@@ -215,7 +215,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
     // 최초 진입 시 현재 분석 상태 조회
     const checkInitialStatus = useCallback(async () => {
-        const qid = String(data?.qid || "");
         if (!projectnum || !qid) return; // 데이터 준비 전이면 스킵
 
         try {
@@ -257,7 +256,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         } catch {
             appendLog("[ERR] 상태 조회 실패\n");
         }
-    }, [projectnum, data?.qid, optionStatus, appendLog, joinJob]);
+    }, [projectnum, qid, optionStatus, appendLog, joinJob]);
 
     useEffect(() => {
         return () => {
@@ -267,15 +266,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
     // 최초 진입 시 현재 분석 상태 조회
     useEffect(() => {
-        const qid = data?.qid;
-        if (!projectnum || !qid) return;     // 준비 안 됐으면 대기
-
+        if (!projectnum || !qid) return;
         if (initStatusCheckedRef.current) return;
-        if (projectnum && data?.qid) {
-            initStatusCheckedRef.current = true;
-            checkInitialStatus();
-        }
-    }, [projectnum, data?.qid]);
+        initStatusCheckedRef.current = true;
+        checkInitialStatus();
+    }, [projectnum, qid]);
 
     // 배열 -> 옵션으로 변환
     const toOptions = (arr) =>
@@ -393,6 +388,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         });
 
         const d = res?.resultjson?.[0] || {};
+        setQid(prev => {
+            const next = String(d?.qid || "").trim();
+            return next ? next : prev;
+        });
         applySearchResult(d);
         return d;
     }, [optionEditData, projectnum, qnum]);
@@ -516,7 +515,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             token: "",
             user: auth?.user?.userId || "",
             projectnum,
-            qid: data?.qid,
+            qid,
             action: "start",
         };
 
@@ -542,7 +541,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     const runInfoSave = async (type) => {
         /*유효성 체크 */
         if (saving) return false;
-        if (!data?.qid || !projectnum) {
+        if (!qid || !projectnum) {
             modal.showErrorAlert("알림", "문항/프로젝트 정보를 먼저 불러온 뒤 실행해 주세요.", MODAL_SCOPE);
             return false;
         }
