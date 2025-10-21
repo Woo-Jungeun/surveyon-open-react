@@ -71,6 +71,7 @@ const ProList = () => {
             sessionStorage.setItem("projectnum", projectnumFromState);
             sessionStorage.setItem("projectname", state?.projectname);
             sessionStorage.setItem("servername", state?.servername);
+            sessionStorage.setItem("projectpof", state?.projectpof);
         }
     }, [projectnumFromState]);
 
@@ -91,7 +92,7 @@ const ProList = () => {
         const ug = proListData?.data?.usergroup;
         if (ug) {
             setUserPerm(roleToPerm(ug));
-            
+
             // Redux에 usergroup 값 반영
             dispatch(
                 login({

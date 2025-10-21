@@ -98,6 +98,7 @@ const ProEnterTab1 = (props) => {
                     sessionStorage.setItem("projectnum", "");
                     sessionStorage.setItem("projectname", "");
                     sessionStorage.setItem("servername", "");
+                    sessionStorage.setItem("projectpof", "");
                     navigate("/"); //프로젝트 목록 페이지로 이동
                 } else {
                     modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다."); //오류 팝업 표출

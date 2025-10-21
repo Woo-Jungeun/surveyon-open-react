@@ -58,6 +58,7 @@ const ProEnterTab3 = () => {
                             sessionStorage.setItem("projectnum", "");
                             sessionStorage.setItem("projectname", "");
                             sessionStorage.setItem("servername", "");
+                            sessionStorage.setItem("projectpof", "");
                             navigate("/"); //프로젝트 목록 페이지로 이동
                         }
                     }],   ////문항 목록 페이지로 이동

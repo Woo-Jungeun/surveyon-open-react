@@ -46,8 +46,9 @@ const MainList = () => {
         const projectnum = e?.dataItem?.projectnum;
         const projectname = e?.dataItem?.projectname;
         const servername = e?.dataItem?.servername;
+        const projectpof = e?.dataItem?.projectpof;
         if (!projectnum || !projectname) return;
-        navigate('/pro_list', { state: { projectnum, projectname, servername } });
+        navigate('/pro_list', { state: { projectnum, projectname, servername, projectpof } });
     }, [navigate]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달

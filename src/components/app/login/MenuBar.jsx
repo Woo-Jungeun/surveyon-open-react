@@ -77,6 +77,7 @@ const MenuBar = () => {
               sessionStorage.setItem("projectnum", "");
               sessionStorage.setItem("projectname", "");
               sessionStorage.setItem("servername", "");
+              sessionStorage.setItem("projectpof", "");
               navigate("/"); // 로그아웃 시 홈으로
             } catch {
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
@@ -113,6 +114,7 @@ const MenuBar = () => {
             sessionStorage.setItem("projectnum", "");
             sessionStorage.setItem("projectname", "");
             sessionStorage.setItem("servername", "");
+            sessionStorage.setItem("projectpof", "");
             navigate("/");
           }}
         >
@@ -132,6 +134,7 @@ const MenuBar = () => {
                       sessionStorage.setItem("projectnum", "");
                       sessionStorage.setItem("projectname", "");
                       sessionStorage.setItem("servername", "");
+                      sessionStorage.setItem("projectpof", "");
                     }
                   }}
                 >
