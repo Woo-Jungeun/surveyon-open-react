@@ -28,10 +28,10 @@ const MainList = () => {
 
     const [columns, setColumns] = useState(() =>
         [
-            { field: "no", title: "no", show: true, editable: false, width: "100px", allowHide: false },
+            { field: "no", title: "no", show: true, editable: false, width: "90px", allowHide: false },
             { field: "projectpof", title: "프로젝트 번호", show: true, editable: false, allowHide: false },
-            { field: "projectnum", title: "웹프로젝트 번호", show: true, editable: false, allowHide: false },
-            { field: "projectname", title: "프로젝트명", show: true, editable: false, width: "300px", allowHide: false },
+            { field: "projectnum", title: "웹프로젝트 번호", show: true, editable: false, width: "200px", allowHide: false },
+            { field: "projectname", title: "프로젝트명", show: true, editable: false, width: "350px", allowHide: false },
             { field: "register_userid", title: "등록자명", show: true, editable: false, allowHide: false },
             { field: "register_date", title: "등록일", show: true, editable: false, allowHide: false },
             { field: "servername", title: "오픈서버정보", show: true, editable: false, allowHide: false },
