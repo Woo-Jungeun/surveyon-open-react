@@ -165,32 +165,8 @@ const MenuBar = () => {
 
               {appsOpen && (
                 <div className="dropdown-card apps-card">
-                  <button
-                    type="button"
-                    className="dd-item"
-                    onClick={() => {
-                      setAppsOpen(false);
-                      navigate('/pro_enter');
-                    }}
-                  >
-                    <span className="dd-icon">＋</span>
-                    <span>프로젝트 등록</span>
-                  </button>
-
                   {(projectnum && projectname) && (
                     <>
-                      <button
-                        type="button"
-                        className="dd-item"
-                        onClick={() => {
-                          setAppsOpen(false);
-                          navigate('/pro_register');
-                        }}
-                      >
-                        <span className="dd-icon">＋</span>
-                        <span>문항 등록</span>
-                      </button>
-
                       {/* 사용자 설정: 관리자/오픈팀/제작자만 보이게 */}
                       {canManage && (
                         <button

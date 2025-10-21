@@ -2,6 +2,7 @@ import React, { Fragment, useState, useCallback, useEffect, useContext, useRef, 
 import { useDispatch } from "react-redux";
 import { login } from "@/common/redux/action/AuthAction";
 import { useNavigate, useLocation } from "react-router-dom";
+import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -54,6 +55,7 @@ const FIELD_MIN_PERM = {
 
 const ProList = () => {
     const auth = useSelector((store) => store.auth);
+    const userAuth = auth?.user?.userAuth || "";
     const dispatch = useDispatch();
     const modal = useContext(modalContext);
     const navigate = useNavigate();
@@ -915,6 +917,11 @@ const ProList = () => {
                         <h2 className="titTxt">문항 목록
                             {state?.projectname && (<span className="projectName"> {state.projectname}</span>)}
                         </h2>
+                        {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+                            <div className="btnWrap">
+                                <GridHeaderBtnPrimary onClick={() => navigate('/pro_register')}>문항 등록</GridHeaderBtnPrimary>
+                            </div>
+                        )}
                     </div>
                 </article>
 

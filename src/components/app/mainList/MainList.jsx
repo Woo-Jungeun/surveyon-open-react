@@ -1,5 +1,6 @@
 import React, { Fragment, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -15,6 +16,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
  */
 const MainList = () => {
     const auth = useSelector((store) => store.auth);
+    const userAuth = auth?.user?.userAuth || "";
     const navigate = useNavigate();
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
@@ -66,7 +68,7 @@ const MainList = () => {
             }}
             filter={filter}
             onFilterChange={(e) => {
-                setFilter(e);    
+                setFilter(e);
             }}
 
         />
@@ -80,6 +82,11 @@ const MainList = () => {
                 <article className="subTitWrap">
                     <div className="subTit">
                         <h2 className="titTxt">프로젝트 목록</h2>
+                        {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+                            <div className="btnWrap">
+                                <GridHeaderBtnPrimary onClick={() => navigate("/pro_enter")}>프로젝트 등록</GridHeaderBtnPrimary>
+                            </div>
+                        )}
                     </div>
                 </article>
 
