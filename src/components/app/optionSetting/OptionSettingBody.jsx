@@ -54,6 +54,7 @@ const OptionSettingBody = () => {
   const [canSave, setCanSave] = useState({ "1": false, "2": false }); // 히스토리 변화가 있을 때만 true
   const tab1Ref = useRef(null);
   const tab2Ref = useRef(null);
+  const [responseCount, setResponseCount] = useState(0);  // 탭1 데이터 갯수
 
   // 오른쪽 패널 관련 state
   const [isLv3PanelOpen, setIsLv3PanelOpen] = useState(false);
@@ -374,6 +375,7 @@ const OptionSettingBody = () => {
             }}
             userPerm={state?.userPerm}  // 권한 체크 
             lv3Options={lv3Options}
+            responseCount={responseCount}
           />
         </div>
 
@@ -447,6 +449,7 @@ const OptionSettingBody = () => {
                   onOpenLv3Panel={(...args) => {
                     handleOpenLv3Panel(...args);
                   }}
+                  onResponseCountChange={setResponseCount} 
                 />
               ) : tabDivision === "2" ? (
                 <OptionSettingTab2

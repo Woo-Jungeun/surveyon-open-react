@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loading = useContext(loadingSpinnerContext);
@@ -847,7 +847,27 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         </Button>
 
                         <Button themeColor="primary" disabled={saving}
-                            onClick={() => runInfoSave("response")}>
+                            onClick={() => {
+                                try {
+                                    if (responseCount < 0) {
+                                        modal.showConfirm(
+                                            "알림",
+                                            "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
+                                            {
+                                                btns: [
+                                                    { title: "취소" },
+                                                    { title: "확인", click: () => runInfoSave("response") },
+                                                ],
+                                            }
+                                        );
+                                    } else {
+                                        runInfoSave("response");
+                                    }
+                                } catch (err) {
+                                    console.error("응답자분석 전 확인 오류", err);
+                                    modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
+                                }
+                            }}>
                             응답자분석(NEW)
                         </Button>
 

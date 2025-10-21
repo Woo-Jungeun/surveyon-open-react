@@ -45,7 +45,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
-        , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options, onRequestLv3Refresh } = props;
+        , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options, onRequestLv3Refresh, onResponseCountChange } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const MENU_TITLE = "응답 데이터";
@@ -367,6 +367,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const total = rows.length;  //총 갯수
         const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석값
         const updatedAt = rows[0]?.update_date ?? '-';  //업데이트 날짜
+        useEffect(() => {
+            onResponseCountChange?.(total ?? 0);  // 응답데이터 개수 부모로 전달
+        }, [total]);
         const verified = useMemo(() => {//검증값
             const keysOnPage = new Set(rows.map(getKey));
             let count = 0;
