@@ -284,7 +284,14 @@ const KendoGrid = ({ parentProps, children, processData }) => {
                 />
             ) : null} */}
             <GridNoRecords>
-                조회된 데이터가 없습니다.
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                    조회된 데이터가 없습니다.
+                    {parentProps?.noRecordsExtra && (
+                        <div style={{ marginTop: "10px" }}>
+                            {parentProps.noRecordsExtra}
+                        </div>
+                    )}
+                </div>
             </GridNoRecords>
             {childColsTree}
         </Grid>

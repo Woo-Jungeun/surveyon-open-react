@@ -1017,6 +1017,16 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                 onPrefsChange?.({ sort: nextRaw ?? [] });
                             },
                             filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
+                            noRecordsExtra: (
+                                // 데이터가 하나도 없을 때 “추가” 버튼 표출 
+                                <Button
+                                  themeColor="primary"
+                                  className="btnM"
+                                  onClick={addButtonClick}
+                                >
+                                  + 보기 데이터 추가
+                                </Button>
+                              ),
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
