@@ -337,6 +337,7 @@ const ProPermission = () => {
                       min={new Date()} // 오늘 이후만 선택 가능
                       required={false}
                       disabled={loading}
+                      editable={false}
                       onChange={(e) => handleChange("worker_expired", e.value)}
                     />
                   </div>
