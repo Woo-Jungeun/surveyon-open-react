@@ -146,83 +146,86 @@ const MenuBar = () => {
         </div>
 
         <div className="userWrap" style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          {/* 앱 메뉴 */}
-          <div ref={appsRef} className="menu-dd">
-            <button
-              type="button"
-              className="iconBtn"
-              aria-haspopup="true"
-              aria-expanded={appsOpen}
-              onClick={(e) => {
-                e.stopPropagation();
-                setAppsOpen((v) => !v);
-                setUserOpen(false);
-              }}
-            // title="앱 메뉴"
-            >
-              <AppsIcon />
-            </button>
+          {/* 고객/일반 권한은 앱 메뉴 숨김 */}
+          {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+            <div ref={appsRef} className="menu-dd">
+              <button
+                type="button"
+                className="iconBtn"
+                aria-haspopup="true"
+                aria-expanded={appsOpen}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAppsOpen((v) => !v);
+                  setUserOpen(false);
+                }}
+              >
+                <AppsIcon />
+              </button>
 
-            {appsOpen && (
-              <div className="dropdown-card apps-card">
-                <button
-                  type="button"
-                  className="dd-item"
-                  onClick={() => {
-                    setAppsOpen(false);
-                    navigate('/pro_enter');
-                  }}
-                >
-                  <span className="dd-icon">＋</span>
-                  <span>프로젝트 등록</span>
-                </button>
-                {(projectnum !== "" && projectname !== "") &&
-                  <>
-                    <button
-                      type="button"
-                      className="dd-item"
-                      onClick={() => {
-                        setAppsOpen(false);
-                        navigate('/pro_register');
-                      }}
-                    >
-                      <span className="dd-icon">＋</span>
-                      <span>문항 등록</span>
-                    </button>
-
-                    {/* 사용자 설정: 관리자/오픈팀/제작자만 보이게 */}
-                    {canManage && (
-                      <button
-                        type="button"
-                        className="dd-item"
-                        onClick={() => {
-                          setAppsOpen(false);
-                          navigate('/pro_permission');
-                        }}
-                      >
-                        <span className="dd-icon">👤</span>
-                        <span>사용자 설정</span>
-                      </button>
-                    )}
-                  </>
-                }
-                {/* API 설정: 관리자/오픈팀/제작자만 보이게 */}
-                {canManage && (
+              {appsOpen && (
+                <div className="dropdown-card apps-card">
                   <button
                     type="button"
                     className="dd-item"
                     onClick={() => {
                       setAppsOpen(false);
-                      navigate('/pro_key');
+                      navigate('/pro_enter');
                     }}
                   >
-                    <span className="dd-icon">🔑</span>
-                    <span>API 설정</span>
+                    <span className="dd-icon">＋</span>
+                    <span>프로젝트 등록</span>
                   </button>
-                )}
-              </div>
-            )}
-          </div>
+
+                  {(projectnum && projectname) && (
+                    <>
+                      <button
+                        type="button"
+                        className="dd-item"
+                        onClick={() => {
+                          setAppsOpen(false);
+                          navigate('/pro_register');
+                        }}
+                      >
+                        <span className="dd-icon">＋</span>
+                        <span>문항 등록</span>
+                      </button>
+
+                      {/* 사용자 설정: 관리자/오픈팀/제작자만 보이게 */}
+                      {canManage && (
+                        <button
+                          type="button"
+                          className="dd-item"
+                          onClick={() => {
+                            setAppsOpen(false);
+                            navigate('/pro_permission');
+                          }}
+                        >
+                          <span className="dd-icon">👤</span>
+                          <span>사용자 설정</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+
+                  {/* API 설정: 관리자/오픈팀/제작자만 보이게 */}
+                  {canManage && (
+                    <button
+                      type="button"
+                      className="dd-item"
+                      onClick={() => {
+                        setAppsOpen(false);
+                        navigate('/pro_key');
+                      }}
+                    >
+                      <span className="dd-icon">🔑</span>
+                      <span>API 설정</span>
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 사용자 이름 - 로그아웃 메뉴 */}
           <div ref={userRef} className="menu-dd">
@@ -236,7 +239,6 @@ const MenuBar = () => {
                 setUserOpen((v) => !v);
                 setAppsOpen(false);
               }}
-            // title="사용자 메뉴"
             >
               <UserIcon />
               <span style={{ marginLeft: 6 }}>{auth?.user?.userNm || ""}님</span>
@@ -253,7 +255,7 @@ const MenuBar = () => {
           </div>
         </div>
       </header>
-    </Fragment>
+    </Fragment >
   );
 };
 

@@ -42,7 +42,7 @@ const Login = ({
             //코드가져오기
            // await loadCode();
         }else{
-            modal.showErrorAlert(result?.success, result?.message); //오류 팝업 표출
+            modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
         }
     };
 
