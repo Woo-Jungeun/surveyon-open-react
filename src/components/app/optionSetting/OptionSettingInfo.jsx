@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loading = useContext(loadingSpinnerContext);
@@ -818,7 +818,31 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         </Button>
 
                         <Button themeColor="primary" disabled={saving}
-                            onClick={() => runInfoSave("classified")}>
+                            onClick={async () => {
+                                try {
+                                    const hasAnalysis = (lv3Options ?? []).some(
+                                        (r) => r.ex_gubun?.trim?.() === "analysis"
+                                    );
+                                    if (hasAnalysis) {
+                                        modal.showConfirm(
+                                            "알림",
+                                            "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
+                                            {
+                                                btns: [
+                                                    { title: "취소" },
+                                                    { title: "확인", click: () => runInfoSave("classified") },
+                                                ],
+                                            }
+                                        );
+                                    } else {
+                                        runInfoSave("classified");
+                                    }
+                                } catch (err) {
+                                    console.error("분석 전 확인 오류", err);
+                                    modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
+                                }
+                            }}
+                        >
                             보기분석
                         </Button>
 

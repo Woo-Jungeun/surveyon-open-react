@@ -69,7 +69,13 @@ const OptionSettingBody = () => {
 
   /*버튼 이벤트 핸들러*/
   const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();
-  const onTab2SaveClick = () => tab2Ref.current?.saveChanges?.();
+  const onTab2SaveClick = async () => {
+    const ok = await tab2Ref.current?.saveChanges?.();
+    if (ok) {
+      // 저장 성공 → Lv3 코드 재조회
+      await fetchLv3Options();
+    }
+  };
 
   const LVCODE_OPTION = [
     { text: "1단계", value: "1" },
@@ -271,6 +277,8 @@ const OptionSettingBody = () => {
         setTabDivision("2");
         // 탭2 데이터 재조회
         tab2Ref.current?.reload?.();
+        // 보기불러오기 성공 후 Lv3 코드 다시 조회
+        fetchLv3Options();
       }
     };
 
@@ -305,12 +313,15 @@ const OptionSettingBody = () => {
           lv1code: r?.lv1code ?? "",
           lv2code: r?.lv2code ?? "",
           lv123code: r?.lv123code ?? "",
+          ex_gubun: r?.ex_gubun ?? "",    // Info 쪽에서 필요
         });
         return acc;
       }, []);
       setLv3Options(list);
+      return { resultjson: list };
     } catch (err) {
       console.error("lv3 fetch error", err);
+      throw err;
     }
   }, [optionEditData, projectnum, qnum]);
 
@@ -362,6 +373,7 @@ const OptionSettingBody = () => {
               }
             }}
             userPerm={state?.userPerm}  // 권한 체크 
+            lv3Options={lv3Options}
           />
         </div>
 
@@ -472,9 +484,10 @@ const OptionSettingBody = () => {
                 targets={lv3Targets}
                 currentCodeIds={currentCodeIds}
                 onOptionsLoaded={(list) => setLv3Options(list)}
-                onApply={(targets, opt) => {
+                onApply={async (targets, opt) => {
                   tab1Ref.current?.applyLv3To?.(targets, opt);
                   setIsLv3PanelOpen(false);
+                  await fetchLv3Options();
                 }}
                 options={lv3Options}                      // 소분류 코드 
                 onRequestLv3Refresh={fetchLv3Options}
