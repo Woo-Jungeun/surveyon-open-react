@@ -81,6 +81,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
     // linkRowClickToSelection=false면 체크박스 클릭에만 반응
     const onSelectionChange = (event) => {
         if (!linkRowClickToSelection && !isFromCheckbox(event)) return;
+        if (typeof setSelectedState !== "function") return; // 내부에서 setSelectedState가 없으면 호출하지 않게 막기
         const newSelectedState = getSelectedState({
             event,
             selectedState,
