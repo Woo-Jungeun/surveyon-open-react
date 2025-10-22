@@ -908,6 +908,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         name={field}               // name 부여 (폼 전송/자동완성에 도움)
                         value={value}
                         onChange={handleChange}
+                        onBlur={flushNow}
                         autoComplete="on"          // 필요 시 구체 값으로 변경 가능 (e.g., "organization-title")
                         className="k-input k-input-solid"
                         style={{ width: "100%" }}
