@@ -161,35 +161,57 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
     // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
     const confirmEndByStatusAndSnapshot = useCallback(
-        async ({ maxTries = 8, interval = 500, hasError = false, job }) => {
-            lastStableRef.current = 0;
+        async ({ interval = 1000, hasError = false, job }) => {
+            const startTime = Date.now();
+            const TIMEOUT_MS = 15 * 60 * 1000; // 최대 15분 기다림
+            const CHECK_INTERVAL = interval;  // 1초 단위로 polling
 
-            for (let i = 0; i < maxTries; i++) {
+            console.log("[StatusCheck] 무한 polling 시작");
+
+            while (true) {
+                // 타임아웃 보호
+                if (Date.now() - startTime > TIMEOUT_MS) {
+                    console.warn("[StatusCheck] 15분 경과 → 강제 중단");
+                    finalizeCompletion(false);
+                    break;
+                }
+
                 try {
                     const payload = buildStatusPayload(job || activeJobRef.current);
-
                     if (!payload) {
-                        await sleep(interval);
+                        await sleep(CHECK_INTERVAL);
                         continue;
                     }
 
                     const statusRes = await optionAnalysisStatus.mutateAsync(payload);
+                    const out = String(statusRes?.output || "");
 
+                    // 완료 조건 1: 서버 플래그
                     if (statusRes?.IsCompleted === true) {
-                        console.log("IsCompleted 감지 → 완료처리");
-                        finalizeCompletion(statusRes?.HasError === true);
-                        return;
+                        console.log("[StatusCheck] IsCompleted = true → 완료");
+                        // finalizeCompletion(statusRes?.HasError === true); todo 추후 다시 확인인
+                        finalizeCompletion(false);
+                        break;
                     }
 
-                } catch (err) {
-                    console.warn("status check err", err);
-                }
+                    // 완료 조건 2: 로그에 <eof> 포함
+                    //   if (out.includes("<eof>")) {
+                    //     console.log("[StatusCheck] output에 <eof> 포함 → 완료");
+                    //     finalizeCompletion(false);
+                    //     break;
+                    //   }
 
-                await sleep(interval);
+                    // 아직 미완료 → 대기 후 반복
+                    await sleep(CHECK_INTERVAL);
+                } catch (err) {
+                    console.warn("[StatusCheck] polling error", err);
+                    await sleep(CHECK_INTERVAL);
+                }
             }
         },
         [optionAnalysisStatus, buildStatusPayload, finalizeCompletion]
     );
+
     // SignalR 훅
     const { logText, appendLog, clearLog, joinJob } = useWorkerLogSignalR({
         hubUrl: HUB_URL,      // 운영: https://son.hrc.kr/o/signalr / dev: /o/signalr
