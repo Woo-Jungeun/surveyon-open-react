@@ -166,8 +166,6 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             const TIMEOUT_MS = 15 * 60 * 1000; // 최대 15분 기다림
             const CHECK_INTERVAL = interval;  // 1초 단위로 polling
 
-            console.log("[StatusCheck] 무한 polling 시작");
-
             while (true) {
                 // 타임아웃 보호
                 if (Date.now() - startTime > TIMEOUT_MS) {
@@ -188,7 +186,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
                     // 완료 조건 1: 서버 플래그
                     if (statusRes?.IsCompleted === true) {
-                        console.log("[StatusCheck] IsCompleted = true → 완료");
+                     //   console.log("[StatusCheck] IsCompleted = true → 완료");
                         // finalizeCompletion(statusRes?.HasError === true); todo 추후 다시 확인인
                         finalizeCompletion(false);
                         break;
