@@ -9,6 +9,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
 import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
+import { TextArea } from "@progress/kendo-react-inputs";
 
 /**
  * 분석 > 그리드 영역 > 보기 데이터
@@ -34,10 +35,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             { field: "qnum", title: "문번호", show: true, editable: false },
             { field: "lv1code", title: "대분류 코드", show: true },
             { field: "lv1", title: "대분류", show: true },
-            { field: "lv2code", title: "중분류 코드", show: true },
-            { field: "lv2", title: "중분류", show: true },
-            { field: "lv123code", title: "소분류 코드", show: true, allowHide: false },
-            { field: "lv3", title: "소분류", show: true, allowHide: false },
+            { field: "lv2code", title: "중분류 코드", show: true, width: "140px" },
+            { field: "lv2", title: "중분류", show: true, width: "210px" },
+            { field: "lv123code", title: "소분류 코드", show: true, allowHide: false, width: "140px" },
+            { field: "lv3", title: "소분류", show: true, allowHide: false, width: "210px" },
             { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false },
             { field: "ex_gubun", title: "보기유형", show: true, editable: false, allowHide: false },
             { field: "delete", title: "삭제", show: true, editable: true, allowHide: false },
@@ -434,14 +435,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);  // 새 타이머 설정 → 1000ms 후 flushTyping 실행
             debounceTimerRef.current = setTimeout(flushTyping, 1000);
         }, [flushTyping]);
-        
+
         const flushNow = useCallback(() => {
             if (debounceTimerRef.current) {
-              clearTimeout(debounceTimerRef.current);
-              debounceTimerRef.current = null;
+                clearTimeout(debounceTimerRef.current);
+                debounceTimerRef.current = null;
             }
             flushTyping(); // -> commitSmart 호출됨
-          }, [flushTyping]);
+        }, [flushTyping]);
 
         //ctrl+z, ctrl+y
         useEffect(() => {
@@ -451,13 +452,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
                 const t = e.target;
                 const isEditable =
-                  t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+                    t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
                 if (isEditable) return;
 
                 // Ctrl/Cmd + Z (Undo)
                 if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
                     e.preventDefault();
-                    flushNow();    
+                    flushNow();
 
                     const snap = hist.undo();
                     if (Array.isArray(snap)) {
@@ -476,7 +477,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 // Ctrl/Cmd + Y  또는 Shift + Ctrl/Cmd + Z (Redo)
                 if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
                     e.preventDefault();
-                    flushNow();      
+                    flushNow();
 
                     const snap = hist.redo?.();
                     if (Array.isArray(snap)) {
@@ -877,6 +878,25 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             "lv3", "lv123code",
         ]);
 
+        // textarea로 쓸 '이름' 필드
+        const TEXTAREA_FIELDS = new Set(["lv1", "lv2", "lv3"]);
+        // 그리드 밖 클릭 시 무조건 닫기
+        useEffect(() => {
+            const closeAllEditors = (evt) => {
+                const root = gridRootRef.current;
+                // 그리드 영역 밖을 클릭한 경우만 닫기
+                if (root && !root.contains(evt.target)) {
+                    setDataState((prev) => ({
+                        ...prev,
+                        data: (prev.data || []).map((r) => (r.inEdit ? { ...r, inEdit: false } : r)),
+                    }));
+                }
+            };
+            // capture 단계에서 잡아주면 Kendo 내부 핸들러보다 먼저 닫힘
+            document.addEventListener("pointerdown", closeAllEditors, true);
+            return () => document.removeEventListener("pointerdown", closeAllEditors, true);
+        }, []);
+
         /** inEdit일 때 id/name 달아서 렌더하는 텍스트 에디터 셀 */
         const NamedTextCell = useCallback((cellProps) => {
             const { dataItem, field } = cellProps;
@@ -898,24 +918,63 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     value: e.target.value,
                 });
             };
+            // textarea 자동 높이
+            const autoGrow = (el) => {
+                if (!el) return;
+                el.style.height = "auto";
+                el.style.height = `${el.scrollHeight}px`;
+            };
 
+            // 포커스 빠질 때(blur) → 커밋 + 편집 닫기
+            const handleBlurClose = (e) => {
+                // 변경분 즉시 커밋/검증
+                flushNow();
+                // 해당 행 편집 닫기
+                setDataState((prev) => ({
+                    ...prev,
+                    data: (prev.data || []).map((r) =>
+                        r.__rowKey === dataItem.__rowKey ? { ...r, inEdit: false } : r
+                    ),
+                }));
+            };
             return (
                 <td onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                     {/* label은 시각적으로 숨김(접근성+Issues 해결) */}
                     <label htmlFor={inputId} className="hidden">{field}</label>
-                    <input
-                        id={inputId}
-                        name={field}               // name 부여 (폼 전송/자동완성에 도움)
-                        value={value}
-                        onChange={handleChange}
-                        onBlur={flushNow}
-                        autoComplete="on"          // 필요 시 구체 값으로 변경 가능 (e.g., "organization-title")
-                        className="k-input k-input-solid"
-                        style={{ width: "100%" }}
-                    />
+                    {TEXTAREA_FIELDS.has(field) ? (
+                        <TextArea
+                            id={inputId}
+                            name={field}
+                            value={value}
+                            onChange={(e) => { handleChange(e); autoGrow(e.target); }}
+                            onInput={(e) => autoGrow(e.target)}
+                            onFocus={(e) => autoGrow(e.target)}
+                            onBlur={handleBlurClose}
+                            rows={1}                       // 처음엔 1줄
+                            style={{
+                                width: "100%",
+                                minHeight: 34,
+                                lineHeight: 1.4,
+                                overflow: "hidden",          // 처음엔 스크롤 안 보이게
+                                resize: "vertical",          // 원하면 "none"으로
+                            }}
+                            className="k-textarea k-input-solid"
+                        />
+                    ) : (
+                        <input
+                            id={inputId}
+                            name={field}
+                            value={value}
+                            onChange={handleChange}
+                            onBlur={handleBlurClose}
+                            autoComplete="on"
+                            className="k-input k-input-solid"
+                            style={{ width: "100%" }}
+                        />
+                    )}
                 </td>
             );
-        }, [keyOf]);
+        }, [keyOf, flushNow, setDataState]);
 
         // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
         const buildSavePayload = (rows, qnum) => {
