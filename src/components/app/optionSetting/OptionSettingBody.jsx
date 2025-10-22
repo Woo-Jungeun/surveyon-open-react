@@ -365,14 +365,17 @@ const OptionSettingBody = () => {
             qnum={qnum}
             onToggle={() => setIsLeftOpen(v => !v)}
             showEmptyEtcBtn={analysisCount !== 0}
-            onNavigateTab={(nextTab) => {                        // 좌측 패널에서 탭 이동 요청 처리 같은 탭이면 reload
-              if (tabDivision === nextTab) {
-                if (nextTab === "1") tab1Ref.current?.reload?.();
-                else if (nextTab === "2") tab2Ref.current?.reload?.();
-              } else {
-                trySwitchTab(nextTab);
-              }
-            }}
+            onNavigateTab={useCallback((nextTab) => {
+              // 항상 최신 상태로 비교되도록 콜백화
+              setTabDivision((prev) => {
+                if (prev === nextTab) {
+                  if (nextTab === "1") tab1Ref.current?.reload?.();
+                  else if (nextTab === "2") tab2Ref.current?.reload?.();
+                  return prev; // 유지
+                }
+                return nextTab;
+              });
+            }, [])}
             userPerm={state?.userPerm}  // 권한 체크 
             lv3Options={lv3Options}
             responseCount={responseCount}
