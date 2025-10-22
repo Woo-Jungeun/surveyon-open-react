@@ -179,7 +179,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch,
             hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature,
         } = props;
-        
+
         const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
             orderByWithProxy(dataState?.data || [], sort, {
                 // 숫자 인식 자연 정렬이 필요한 필드만 명시
@@ -381,7 +381,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         const keyOf = useCallback((row) => row?.__rowKey || makeRowKey(row), []);
 
         /**
-         * 검증 오류가 있는 셀에 빨간 테두리(className)와 배지(중복/빈값)를 붙임임
+         * 검증 오류가 있는 셀에 빨간 테두리(className)와 배지(중복/빈값)를 붙임
          * - 셀의 원래 컨텐츠(td.props.children)는 그대로 유지
          */
         const cellRender = useCallback((td, cellProps) => {
@@ -481,12 +481,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             pendingTypingRef.current = false;
         }, [applyLiveDupMarks]);
 
-        // flushTyping을 일정 시간(200ms) 지연 실행하기 위한 스케줄 함수
+        // flushTyping을 일정 시간(1000ms) 지연 실행하기 위한 스케줄 함수
         // 사용자가 연속으로 입력할 때 불필요하게 매번 커밋되는 걸 방지 (디바운스)
         const scheduleFlush = useCallback(() => {
             pendingTypingRef.current = true;     // 기존 타이머 있으면 취소
-            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);  // 새 타이머 설정 → 200ms 후 flushTyping 실행
-            debounceTimerRef.current = setTimeout(flushTyping, 200);
+            if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);  // 새 타이머 설정 → 1000ms 후 flushTyping 실행
+            debounceTimerRef.current = setTimeout(flushTyping, 1000);
         }, [flushTyping]);
 
         /**
@@ -1020,13 +1020,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             noRecordsExtra: (
                                 // 데이터가 하나도 없을 때 “추가” 버튼 표출 
                                 <Button
-                                  themeColor="primary"
-                                  className="btnM"
-                                  onClick={addButtonClick}
+                                    themeColor="primary"
+                                    className="btnM"
+                                    onClick={addButtonClick}
                                 >
-                                  + 보기 데이터 추가
+                                    + 보기 데이터 추가
                                 </Button>
-                              ),
+                            ),
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
