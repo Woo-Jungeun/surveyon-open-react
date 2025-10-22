@@ -407,6 +407,7 @@ const OptionSettingBody = () => {
               보기 불러오기
             </Button>
             <DropDownList
+              key={`lvcode-${tabDivision}`}
               style={{ width: 140 }}
               data={LVCODE_OPTION}
               dataItemKey="value"
