@@ -259,60 +259,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             onHasEditLogChange?.(true);
         }, [hist, makeTab2Signature]);
 
-        //ctrl+z, ctrl+y
-        useEffect(() => {
-            const onKey = (e) => {
-                const key = e.key?.toLowerCase?.();
-                if (!key) return;
-
-                const cancelPendingTyping = () => {
-                    if (debounceTimerRef.current) {
-                        clearTimeout(debounceTimerRef.current);
-                        debounceTimerRef.current = null;
-                    }
-                    pendingTypingRef.current = false;
-                };
-
-                // Ctrl/Cmd + Z (Undo)
-                if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
-                    e.preventDefault();
-                    cancelPendingTyping();
-
-                    const snap = hist.undo();
-                    if (Array.isArray(snap)) {
-                        const curLen = latestCtxRef.current?.dataState?.data?.length ?? 0;
-                        // 안전장치: 현재 데이터가 있는데 빈 스냅샷으로 되돌리려 하면 무시
-                        if (snap.length === 0 && curLen > 0) return;
-
-                        setDataState((prev) => ({ ...prev, data: snap }));
-                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                        onUnsavedChange?.(dirty);
-                        onHasEditLogChange?.(dirty);
-                    }
-                    return;
-                }
-
-                // Ctrl/Cmd + Y  또는 Shift + Ctrl/Cmd + Z (Redo)
-                if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
-                    e.preventDefault();
-                    cancelPendingTyping();
-
-                    const snap = hist.redo?.();
-                    if (Array.isArray(snap)) {
-                        setDataState((prev) => ({ ...prev, data: snap }));
-                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
-                        onUnsavedChange?.(dirty);
-                        onHasEditLogChange?.(dirty);
-                    }
-                    return;
-                }
-            };
-
-            window.addEventListener("keydown", onKey, true);
-            return () => window.removeEventListener("keydown", onKey, true);
-        }, [hist, setDataState, onUnsavedChange, makeTab2Signature, onHasEditLogChange]);
-
-
         // 대분류/중분류 코드값 텍스트 매핑
         const buildMaps = (rows, codeField, textField) => {
             const codeToText = new Map(); // code -> text
@@ -488,6 +434,64 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);  // 새 타이머 설정 → 1000ms 후 flushTyping 실행
             debounceTimerRef.current = setTimeout(flushTyping, 1000);
         }, [flushTyping]);
+        
+        const flushNow = useCallback(() => {
+            if (debounceTimerRef.current) {
+              clearTimeout(debounceTimerRef.current);
+              debounceTimerRef.current = null;
+            }
+            flushTyping(); // -> commitSmart 호출됨
+          }, [flushTyping]);
+
+        //ctrl+z, ctrl+y
+        useEffect(() => {
+            const onKey = (e) => {
+                const key = e.key?.toLowerCase?.();
+                if (!key) return;
+
+                const t = e.target;
+                const isEditable =
+                  t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable);
+                if (isEditable) return;
+
+                // Ctrl/Cmd + Z (Undo)
+                if ((e.ctrlKey || e.metaKey) && key === "z" && !e.shiftKey) {
+                    e.preventDefault();
+                    flushNow();    
+
+                    const snap = hist.undo();
+                    if (Array.isArray(snap)) {
+                        const curLen = latestCtxRef.current?.dataState?.data?.length ?? 0;
+                        // 안전장치: 현재 데이터가 있는데 빈 스냅샷으로 되돌리려 하면 무시
+                        if (snap.length === 0 && curLen > 0) return;
+
+                        setDataState((prev) => ({ ...prev, data: snap }));
+                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                        onUnsavedChange?.(dirty);
+                        onHasEditLogChange?.(dirty);
+                    }
+                    return;
+                }
+
+                // Ctrl/Cmd + Y  또는 Shift + Ctrl/Cmd + Z (Redo)
+                if ((e.ctrlKey || e.metaKey) && (key === "y" || (key === "z" && e.shiftKey))) {
+                    e.preventDefault();
+                    flushNow();      
+
+                    const snap = hist.redo?.();
+                    if (Array.isArray(snap)) {
+                        setDataState((prev) => ({ ...prev, data: snap }));
+                        const dirty = makeTab2Signature(snap) !== baselineSigRef.current;
+                        onUnsavedChange?.(dirty);
+                        onHasEditLogChange?.(dirty);
+                    }
+                    return;
+                }
+            };
+
+            window.addEventListener("keydown", onKey, true);
+            return () => window.removeEventListener("keydown", onKey, true);
+        }, [hist, setDataState, onUnsavedChange, makeTab2Signature, onHasEditLogChange]);
 
         /**
         * 코드/텍스트 동기화 공통 처리:
