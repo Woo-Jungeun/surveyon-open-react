@@ -31,7 +31,7 @@ const OptionSettingLv3Panel = ({
         <div className="lv3-panel-body">
           {filteredOptions.map(opt => (
             <div
-              key={opt.lv123code}
+              key={opt.lv123code+"_"+opt.codeName}
               className="lv3-panel-item"
               onClick={() => onApply(targets, opt)}
             >

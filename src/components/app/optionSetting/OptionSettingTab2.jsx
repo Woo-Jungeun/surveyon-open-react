@@ -21,7 +21,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum } = props;
     const modal = useContext(modalContext);
-    const DATA_ITEM_KEY = ["lv123code", "no"];
+    const DATA_ITEM_KEY = ["lv123code", "lv3"];
     const MENU_TITLE = "보기 데이터";
 
     /**
@@ -371,9 +371,9 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             }));
         }, []);
 
-        // ["lv123code","no"] 기준
+        // ["lv123code","lv3"] 기준
         const makeRowKey = (row) =>
-            [row?.lv123code ?? "", row?.no ?? ""]
+            [row?.lv123code ?? "", row?.lv3 ?? ""]
                 .map(v => encodeURIComponent(String(v)))
                 .join("__");
 
