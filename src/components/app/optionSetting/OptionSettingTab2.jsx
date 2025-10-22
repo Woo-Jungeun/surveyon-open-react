@@ -9,7 +9,6 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
 import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
-import { TextArea } from "@progress/kendo-react-inputs";
 
 /**
  * 분석 > 그리드 영역 > 보기 데이터
@@ -918,12 +917,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     value: e.target.value,
                 });
             };
-            // textarea 자동 높이
-            const autoGrow = (el) => {
-                if (!el) return;
-                el.style.height = "auto";
-                el.style.height = `${el.scrollHeight}px`;
-            };
 
             // 포커스 빠질 때(blur) → 커밋 + 편집 닫기
             const handleBlurClose = (e) => {
@@ -942,20 +935,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     {/* label은 시각적으로 숨김(접근성+Issues 해결) */}
                     <label htmlFor={inputId} className="hidden">{field}</label>
                     {TEXTAREA_FIELDS.has(field) ? (
-                        <TextArea
+                        <textarea
                             id={inputId}
                             name={field}
                             value={value}
-                            onChange={(e) => { handleChange(e); autoGrow(e.target); }}
-                            onInput={(e) => autoGrow(e.target)}
-                            onFocus={(e) => autoGrow(e.target)}
+                            onChange={(e) => cellProps.onChange?.({ dataItem, field, value: e.target.value })}
                             onBlur={handleBlurClose}
                             rows={1}                       // 처음엔 1줄
                             style={{
                                 width: "100%",
                                 minHeight: 34,
                                 lineHeight: 1.4,
-                                overflow: "hidden",          // 처음엔 스크롤 안 보이게
                                 resize: "vertical",          // 원하면 "none"으로
                             }}
                             className="k-textarea k-input-solid"
