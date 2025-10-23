@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loading = useContext(loadingSpinnerContext);
@@ -129,7 +129,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 });
                             } catch {
                             }
-                            // 팝업 닫힌 후 탭 이동
+
+                            // 소분류 리스트 재조회 추가
+                            try {
+                                await fetchLv3Options?.();
+                            } catch (err) {
+                                console.warn("lb 재조회 실패", err);
+                            }
+
+                            // 탭 이동
                             if (nextTabRef.current) {
                                 onNavigateTab?.(nextTabRef.current);
                                 nextTabRef.current = null;
@@ -186,7 +194,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
                     // 완료 조건 1: 서버 플래그
                     if (statusRes?.IsCompleted === true) {
-                     //   console.log("[StatusCheck] IsCompleted = true → 완료");
+                        // console.log("[StatusCheck] IsCompleted = true → 완료");
                         // finalizeCompletion(statusRes?.HasError === true); todo 추후 다시 확인인
                         finalizeCompletion(false);
                         break;

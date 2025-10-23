@@ -379,6 +379,7 @@ const OptionSettingBody = () => {
             userPerm={state?.userPerm}  // 권한 체크 
             lv3Options={lv3Options}
             responseCount={responseCount}
+            fetchLv3Options={fetchLv3Options}
           />
         </div>
 
