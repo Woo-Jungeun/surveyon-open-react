@@ -11,6 +11,7 @@ import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { modalContext } from "@/components/common/Modal.jsx";
 import OptionSettingLv3Panel from "@/components/app/optionSetting/OptionSettingLv3Panel.jsx";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
+import moment from "moment";
 
 /**
  * 분석 > Body
@@ -36,9 +37,13 @@ function openCenteredPopup(url, title = "viewer", w = 2000, h = 800) {
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
   const auth = useSelector((store) => store.auth);
+
+  const { optionEditData, excelDownloadData } = OptionSettingApi();
+
   const { state } = useLocation();
   const projectnumFromState = state?.projectnum ?? sessionStorage.getItem("projectnum") ?? "";
   const qnum = state?.qnum;
+  const projectname = sessionStorage.getItem("projectname");
   const projectnum = projectnumFromState;
 
   useEffect(() => {
@@ -288,7 +293,6 @@ const OptionSettingBody = () => {
   }, []);
 
   //-----------------소분류 코드 중앙 관리-----------------
-  const { optionEditData } = OptionSettingApi();
   const fetchLv3Options = useCallback(async () => {
     try {
       const res = await optionEditData.mutateAsync({
@@ -331,6 +335,57 @@ const OptionSettingBody = () => {
     fetchLv3Options();
   }, []);
   //-----------------소분류 코드 중앙 관리-----------------
+  const saveBlobWithName = (blob, filename = "download.xlsx") => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename; // 고정 파일명
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  // 엑셀 다운로드 이벤트
+  const onClickExcelDownload = async () => {
+    const res = await excelDownloadData.mutateAsync({
+      user: auth?.user?.userId || "",
+      projectnum,
+      qnum,
+      gb: "export_excel",
+    });
+    console.log("res", res)
+    const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
+
+    if (!blob) {
+      modal.showErrorAlert("에러", "샘플 파일을 받지 못했습니다.");
+      return;
+    }
+
+    // 서버가 에러를 JSON(Blob)으로 줄 수도 있어서 가드
+    if (blob.type?.includes("application/json")) {
+      const txt = await blob.text();
+      console.log("server error json/text:", txt);
+      modal.showErrorAlert("에러", "엑셀 다운로드 요청이 거부되었습니다.");
+      return;
+    }
+
+    saveBlobWithName(blob, `hrcopen_`+ projectname+ `_` + projectnum + `_` + qnum + `_` + moment().format("YYYYMMDDHHmmss") + `.xlsx`);
+  };
+
+  // 엑셀 업로드 이벤트
+  const onClickExcelUpload = async () => {
+    const res = await optionEditData.mutateAsync({
+      params: {
+        user: auth?.user?.userId || "",
+        projectnum,
+        qnum,
+        gb: "inport_excel",
+      },
+    });
+
+  };
+
   return (
     <Fragment>
       <article className="subTitWrap">
@@ -404,9 +459,36 @@ const OptionSettingBody = () => {
                 background: "#fff",
                 height: "36px",
               }}
+              onClick={onClickExcelDownload}>
+              엑셀 다운로드
+            </Button>
+            <Button
+              style={{
+                border: "1px solid #afb6b2",
+                borderRadius: "8px",
+                color: "#69706d",
+                fontSize: "15px",
+                fontWeight: 500,
+                background: "#fff",
+                height: "36px",
+              }}
+              onClick={onClickExcelUpload}>
+              엑셀 업로드
+            </Button>
+            <Button
+              style={{
+                border: "1px solid #afb6b2",
+                borderRadius: "8px",
+                color: "#69706d",
+                fontSize: "15px",
+                fontWeight: 500,
+                background: "#fff",
+                height: "36px",
+              }}
               onClick={openExloadWindow}>
               보기 불러오기
             </Button>
+
             <DropDownList
               key={`lvcode-${tabDivision}`}
               style={{ width: 140 }}
@@ -454,7 +536,7 @@ const OptionSettingBody = () => {
                   onOpenLv3Panel={(...args) => {
                     handleOpenLv3Panel(...args);
                   }}
-                  onResponseCountChange={setResponseCount} 
+                  onResponseCountChange={setResponseCount}
                 />
               ) : tabDivision === "2" ? (
                 <OptionSettingTab2

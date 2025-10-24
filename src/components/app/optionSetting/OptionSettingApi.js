@@ -106,6 +106,18 @@ export function OptionSettingApi() {
         }
     );
 
+    const excelDownloadData = useMutation(
+        async (data) => await api.file(data, "/option_edit_api.aspx"),
+        {
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
+        }
+    );
+
 
     return {
         optionEditData,
@@ -116,6 +128,7 @@ export function OptionSettingApi() {
         optionStatus,
         projectListData,
         excelListData,
-        sampleDownloadData
+        sampleDownloadData,
+        excelDownloadData
     };
 }
