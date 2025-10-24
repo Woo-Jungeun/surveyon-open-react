@@ -910,7 +910,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         <div ref={logRef} className="resultBox" aria-label="분석결과창">
                             {logText}
                         </div>
-                        <div className="flexE mgT10">
+                        <div className="mgT10" style={{ display: "flex", justifyContent: "space-between" }}>
                             {userPerm === 2 && <Button className="btnTxt type02" onClick={deleteQnum}>문항 삭제</Button>}
                             <Button className="btnTxt type02" onClick={clearLog}>로그 지우기</Button>
                         </div>
