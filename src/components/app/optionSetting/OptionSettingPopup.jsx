@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
  * @author jewoo
  * @since 2025-08-19<br />
  */
-const PreviousPromptPopup = (parentProps) => {
+const OptionSettingPopup = (parentProps) => {
   const { popupShow, previousPromptResValue, previousPromptExValue, onSelectPrompt } = parentProps;
   const modalOnOff = popupShow ? "on" : "off";
 
@@ -136,4 +136,4 @@ const PreviousPromptPopup = (parentProps) => {
   );
 };
 
-export default PreviousPromptPopup;
+export default OptionSettingPopup;

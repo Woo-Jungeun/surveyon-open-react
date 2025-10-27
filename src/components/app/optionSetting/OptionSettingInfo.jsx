@@ -2,7 +2,7 @@ import React, { Fragment, useState, useEffect, useContext, useRef, useCallback }
 import { useNavigate } from "react-router-dom";
 import { Button } from "@progress/kendo-react-buttons";
 import CustomDropDownList from "@/components/kendo/CustomDropDownList.jsx";
-import PreviousPromptPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
+import OptionSettingPopup from "@/components/app/optionSetting/OptionSettingPopup";    // 기존 프롬프트 내용 팝업
 import { Input } from "@progress/kendo-react-inputs";
 import { TextArea, Slider } from "@progress/kendo-react-inputs";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
@@ -919,7 +919,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             )}
             {/* 기존 프롬프트 내용 팝업 */}
             {previousPromptShow &&
-                <PreviousPromptPopup
+                <OptionSettingPopup
                     popupShow={previousPromptShow}
                     setPopupShow={setPreviousPromptShow}
                     previousPromptExValue={previousPromptExValue}           //보기 프롬프트 로그
