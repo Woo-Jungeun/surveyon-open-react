@@ -221,21 +221,32 @@ const ProRegisterTab2 = () => {
           modal.showConfirm("알림", "문항이 등록되었습니다.", {
             btns: [{ title: "확인", click: () => navigate("/pro_list") }],   // 문항 목록 페이지로 이동
           });
-        } else if (res?.success === "768") {
-          const dupJson = res?.resultjson || {};
-          const dupList = Object.entries(dupJson).map(([k, v]) => `${k}: ${v}`).join("\n");
+        } else if (res?.success === "768" || res?.success === "769") {
+          let dupJson = res?.resultjson || {};
+
+          try {
+            if (typeof dupJson === "string") {
+              dupJson = JSON.parse(dupJson); // 문자열이면 JSON 파싱
+            }
+          } catch (err) {
+            console.error("dupJson parse error:", err);
+            dupJson = {};
+          }
+
+          const isIdDup = res?.success === "769";
+          const dupList = Object.entries(dupJson || {})
+            .map(([k, v]) => {
+              if (Array.isArray(v)) return `${k}: ${v.join(", ")}`; // 배열일 때
+              return `${k}: ${v}`; // 문자열일 때
+            })
+            .join("\n");
+
           modal.showErrorAlert(
             "에러",
-            `중복된 문항이 발견되었습니다.\n\n${dupList || "(중복 항목 없음)"}`
+            `${isIdDup ? "중복된 아이디가 발견되었습니다." : "중복된 문항이 발견되었습니다."}\n\n${dupList || "(중복 항목 없음)"}`
           );
-        } else if (res?.success === "769") {
-          const dupJson = res?.resultjson || {};
-          const dupList = Object.entries(dupJson).map(([k, v]) => `${k}: ${v.join(", ")}`).join("\n");
-          modal.showErrorAlert(
-            "에러",
-            `중복된 아이디가 발견되었습니다.\n\n${dupList || "(중복 항목 없음)"}`
-          );
-        } else {
+        }
+        else {
           modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
         }
       }
