@@ -325,43 +325,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         // 각 행의 고유키를 계산(서버키 없을 때 __rowKey → 없으면 makeRowKey로 대체)
         const keyOf = useCallback((row) => row?.__rowKey || makeRowKey(row), []);
-
-        /**
-         * 검증 오류가 있는 셀에 빨간 테두리(className)와 배지(중복/빈값)를 붙임
-         * - 셀의 원래 컨텐츠(td.props.children)는 그대로 유지
-         */
-        const cellRender = useCallback((td, cellProps) => {
-            if (!React.isValidElement(td)) return td;
-
-            const field = cellProps?.field;
-            if (!field) return td;
-
-            const item = cellProps?.dataItem;
-            const key = keyOf(item);
-
-            const hasError =
-                errorMarks.get(key)?.has(field) || item?.__errors?.has?.(field);
-            if (!hasError) return td;  // 오류가 없으면 원본 td 그대로 반환
-
-            const kind = item?.__errorKinds?.[field] ?? (field === 'lv123code' ? 'dup' : 'required');
-            const label = kind === 'dup' ? '중복' : '빈값';
-
-            return React.cloneElement(
-                td,
-                {
-                    ...td.props,
-                    className: `${td.props.className || ''} cell-error`,
-                    tabIndex: 0,
-                    'data-err-field': field,
-                    'data-err-key': key
-                },
-                <>
-                    {td.props.children}
-                    <span className="cell-error-badge">{label}</span>   {/* 오류 배지 */}
-                </>
-            );
-        }, [errorMarks, keyOf]);
-
+    
         // 현재 rows 기준으로 lv123code 중복 셀만 __errors에 반영
         const applyLiveDupMarks = useCallback((rows = []) => {
             // 대상 키 집합 계산
@@ -723,24 +687,21 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 1) 유효성 검사
             const { ok, errors, rowMarks, rowKinds } = validateRows(prev);
             if (!ok) {
-                setErrorMarks(new Map());
                 // 행 객체 기준으로 바로 __errors 세팅
                 setDataState(prevState => {
                     const nextRows = (prevState?.data || []).map(r => {
                         const set = rowMarks.get(r);
                         const kinds = rowKinds.get(r);
                         if (!set) {
-                            // if (r.__errors) {
                             const { __errors, ...rest } = r;
                             return rest;              // 이전 에러 제거
-                            // }
-                            // return r;
                         }
-                        return { ...r, __errors: new Set(set), __errorKinds: kinds }; // 표시 대상
+                        return { ...r, __errors: new Set(set), __errorKinds: kinds };
                     });
+                    requestAnimationFrame(() => focusFirstErrorCell());
                     return { ...prevState, data: nextRows };
                 });
-                focusFirstErrorCell();
+                setTimeout(() => setErrorMarks(new Map()), 150);
                 modal.showErrorAlert("알림", errors.join("\n"));
                 return false; // 저장 중단
             }
@@ -796,7 +757,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
         }, []);
 
-        // 유효성 체크
+        // 유효성 체크 (모든 행의 중복 / 빈값 검사 수행)
         const validateRows = (allRows) => {
             // 1) 저장 대상만 추리기: 삭제 예정/설문(survey) 행 제외
             const rows = (allRows || []).filter(
@@ -804,8 +765,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             );
 
             const errors = [];
-            const rowMarks = new WeakMap(); // WeakMap<object, Set<string>>
-            const rowKinds = new WeakMap(); // row -> { [field]: 'required'|'dup' };
+            const rowMarks = new Map(); // WeakMap<object, Set<string>>
+            const rowKinds = new Map(); // row -> { [field]: 'required'|'dup' };
             const mark = (row, field, message, kind) => {
                 const set = rowMarks.get(row) ?? new Set();
                 set.add(field);
@@ -896,15 +857,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return () => document.removeEventListener("pointerdown", closeAllEditors, true);
         }, []);
 
-        /** inEdit일 때 id/name 달아서 렌더하는 텍스트 에디터 셀 */
+        /** inEdit일 때 id/name 달아서 렌더하는 텍스트 에디터 셀
+         * 검증 오류가 있는 셀에 빨간 테두리(className)와 배지(중복/빈값)를 붙임 => dataItem.__errors 만 보고 스타일 표시시
+         */
         const NamedTextCell = useCallback((cellProps) => {
             const { dataItem, field } = cellProps;
             const editable = dataItem?.inEdit && NAMED_FIELDS.has(field);
 
-            // 편집 아님 → 기본 셀
-            if (!editable) {
-                return <td>{dataItem?.[field]}</td>;
-            }
+            // 에러 감지
+            const hasError = dataItem?.__errors?.has?.(field);
+            const errorKind = dataItem?.__errorKinds?.[field];
+            const errorLabel = errorKind === "dup" ? "중복" : "빈값";
 
             const rowKey = keyOf(dataItem);
             const inputId = `${field}-${rowKey}`;   // 고유 id
@@ -930,8 +893,20 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     ),
                 }));
             };
+
+            // 일반 셀 (편집 아닐 때)
+            if (!editable) {
+                return (
+                    <td className={`k-table-td ${hasError ? "cell-error" : ""}`}>
+                        {dataItem?.[field] ?? ""}
+                        {hasError && <span className="cell-error-badge">{errorLabel}</span>}
+                    </td>
+                );
+            }
+
             return (
-                <td onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+                <td className={`k-table-td ${hasError ? "cell-error" : ""}`}
+                    onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
                     {/* label은 시각적으로 숨김(접근성+Issues 해결) */}
                     <label htmlFor={inputId} className="hidden">{field}</label>
                     {TEXTAREA_FIELDS.has(field) ? (
@@ -962,6 +937,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             style={{ width: "100%" }}
                         />
                     )}
+                    {hasError && <span className="cell-error-badge">{errorLabel}</span>}
                 </td>
             );
         }, [keyOf, flushNow, setDataState]);
@@ -1058,9 +1034,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             selectedState,
                             setSelectedState,
                             rowRender,
-                            cellRender,
                             onRowClick,
-                            useClientProcessing: true,                         // 클라 처리
+                            useClientProcessing: true,                      
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
                             initialSort: mappedSort,
