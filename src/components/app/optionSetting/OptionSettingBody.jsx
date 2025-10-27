@@ -35,6 +35,47 @@ function openCenteredPopup(url, title = "viewer", w = 2000, h = 800) {
   try { win?.focus?.(); } catch { }
   return win;
 }
+// 액샐 다운로드, 업로드, 보기불러오기 버튼 공통 형식식
+const CommonActionButton = ({ label, onClick }) => {
+  const baseStyle = {
+    border: "1px solid #afb6b2",
+    borderRadius: "8px",
+    color: "#69706d",
+    fontSize: "15px",
+    fontWeight: 500,
+    background: "#fff",
+    height: "36px",
+    transition: "all 0.15s ease",
+    cursor: "pointer",
+  };
+
+  // 공통 hover / click 이벤트
+  const handleMouseEnter = (e) => {
+    e.currentTarget.style.background = "#eafae5";
+  };
+  const handleMouseLeave = (e) => {
+    e.currentTarget.style.background = "#fff";
+  };
+  const handleMouseDown = (e) => {
+    e.currentTarget.style.background = "#d7f5cf";
+  };
+  const handleMouseUp = (e) => {
+    e.currentTarget.style.background = "#eafae5";
+  };
+
+  return (
+    <Button
+      style={baseStyle}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+      onClick={onClick}
+    >
+      {label}
+    </Button>
+  );
+};
 
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
@@ -446,10 +487,9 @@ const OptionSettingBody = () => {
               if (!file) return;
 
               try {
-              //  modal.showAlert("알림", "엑셀 업로드를 시작합니다.");
+                //  modal.showAlert("알림", "엑셀 업로드를 시작합니다.");
 
                 const { responseJson, viewJson } = await parseExcelToJson(file);
-                console.log(responseJson)
                 // 모든 종류의 공백 문자 제거 (NBSP, NARROW NBSP 등 포함)
                 const normalize = (s = "") =>
                   s.replace(/[\s\u00A0\u202F]+/g, "").toLowerCase().trim();
@@ -460,7 +500,7 @@ const OptionSettingBody = () => {
                   }, {});
                   // "key" 포함된 컬럼 자동 탐색 (대소문자/공백/괄호 무시)
                   const keyCol = Object.keys(normalized).find(k => k.includes("key"));
-            
+
                   return {
                     key: String(normalized[keyCol] ?? "").trim(),
                     cid: String(normalized["복수"] ?? "").trim(),
@@ -490,8 +530,6 @@ const OptionSettingBody = () => {
                     ex_gubun: String(normalized["보기유형"] ?? "").trim(),
                   };
                 });
-                console.log("✅ data_in", data_in);
-                console.log("✅ data_lb", data_lb);
 
                 const res = await optionEditData.mutateAsync({
                   params: {
@@ -504,7 +542,6 @@ const OptionSettingBody = () => {
                   },
                 });
 
-                console.log("엑셀 업로드 결과:", res);
                 if (res?.success === "777") {
                   modal.showAlert("알림", "엑셀 업로드가 완료되었습니다.");
                   // todo 추후 확인
@@ -518,13 +555,11 @@ const OptionSettingBody = () => {
                 } else {
                   modal.showErrorAlert("에러", "업로드 중 문제가 발생했습니다.");
                 }
-
               } catch (err) {
                 console.error("excel upload error", err);
                 modal.showErrorAlert("에러", "엑셀 업로드 요청 실패");
               }
             };
-
             input.click();
           },
         },
@@ -596,46 +631,9 @@ const OptionSettingBody = () => {
             <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("3")}>
               rawdata
             </Button>
-            <Button
-              style={{
-                border: "1px solid #afb6b2",
-                borderRadius: "8px",
-                color: "#69706d",
-                fontSize: "15px",
-                fontWeight: 500,
-                background: "#fff",
-                height: "36px",
-              }}
-              onClick={onClickExcelDownload}>
-              엑셀 다운로드
-            </Button>
-            <Button
-              style={{
-                border: "1px solid #afb6b2",
-                borderRadius: "8px",
-                color: "#69706d",
-                fontSize: "15px",
-                fontWeight: 500,
-                background: "#fff",
-                height: "36px",
-              }}
-              onClick={onClickExcelUpload}>
-              엑셀 업로드
-            </Button>
-            <Button
-              style={{
-                border: "1px solid #afb6b2",
-                borderRadius: "8px",
-                color: "#69706d",
-                fontSize: "15px",
-                fontWeight: 500,
-                background: "#fff",
-                height: "36px",
-              }}
-              onClick={openExloadWindow}>
-              보기 불러오기
-            </Button>
-
+            <CommonActionButton label="엑셀 다운로드" onClick={onClickExcelDownload} />
+            <CommonActionButton label="엑셀 업로드" onClick={onClickExcelUpload} />
+            <CommonActionButton label="보기 불러오기" onClick={openExloadWindow} />
             <DropDownList
               key={`lvcode-${tabDivision}`}
               style={{ width: 140 }}
