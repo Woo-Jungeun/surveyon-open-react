@@ -12,6 +12,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import OptionSettingLv3Panel from "@/components/app/optionSetting/OptionSettingLv3Panel.jsx";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import moment from "moment";
+import OptionSettingExcelUploadErrorPopup from "@/components/app/optionSetting/OptionSettingExcelUploadErrorPopup.jsx";
+import * as XLSX from "xlsx";
 
 /**
  * 분석 > Body
@@ -370,18 +372,163 @@ const OptionSettingBody = () => {
       return;
     }
 
-    saveBlobWithName(blob, `hrcopen_`+ projectname+ `_` + projectnum + `_` + qnum + `_` + moment().format("YYYYMMDDHHmmss") + `.xlsx`);
+    saveBlobWithName(blob, `hrcopen_` + projectname + `_` + projectnum + `_` + qnum + `_` + moment().format("YYYYMMDDHHmmss") + `.xlsx`);
   };
 
   // 엑셀 업로드 이벤트
+
+  const [errorPopupShow, setErrorPopupShow] = useState(false);
+  const [errorList, setErrorList] = useState([]);
+
+  const parseExcelToJson = async (file, projectnum) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: "array" });
+
+        // ✅ 시트명 동적 할당 (projectnum 시트가 응답자 시트)
+        const sheetNames = workbook.SheetNames;
+        const responseSheet =
+          workbook.Sheets[projectnum] || workbook.Sheets[sheetNames[0]]; // 예: "n11-5"
+        const viewSheet =
+          workbook.Sheets["보기항목"] || workbook.Sheets[sheetNames[1]];
+
+        if (!responseSheet || !viewSheet) {
+          reject(new Error("시트를 찾을 수 없습니다."));
+          return;
+        }
+
+        // ✅ 응답자 시트는 4행부터 실제 header 시작
+        const responseJson = XLSX.utils.sheet_to_json(responseSheet, {
+          defval: "",
+          range: 3, // (0-based) 실제 컬럼명이 4행에 있음
+          raw: true,
+        });
+        const test = XLSX.utils.sheet_to_json(responseSheet, { defval: "", range: 3 });
+        console.log(test.map(r => r["검증"]));
+        // ✅ 보기 시트는 1행부터 header
+        const viewJson = XLSX.utils.sheet_to_json(viewSheet, {
+          defval: "",
+        });
+
+        console.log("응답시트 헤더:", Object.keys(responseJson[0] || {}));
+        console.log("응답시트 행 수:", responseJson.length);
+        console.log("보기시트 행 수:", viewJson.length);
+
+        resolve({ responseJson, viewJson });
+      };
+
+      reader.onerror = (err) => reject(err);
+      reader.readAsArrayBuffer(file);
+    });
+  };
+
   const onClickExcelUpload = async () => {
-    const res = await optionEditData.mutateAsync({
-      params: {
-        user: auth?.user?.userId || "",
-        projectnum,
-        qnum,
-        gb: "inport_excel",
-      },
+    modal.showConfirm("알림", "엑셀 업로드 데이터를 대체 하시겠습니까? ", {
+      btns: [
+        { title: "취소", background: "#75849a" },
+        {
+          title: "확인",
+          click: async () => {
+            const input = document.createElement("input");
+            input.type = "file";
+            input.accept = ".xls,.xlsx";
+            input.style.display = "none";
+            document.body.appendChild(input);
+
+            input.onchange = async (e) => {
+              const file = e.target.files?.[0];
+
+              // 파일 선택창 닫히는 즉시 input 제거 (취소 시에도 클린업)
+              document.body.removeChild(input);
+              if (!file) return;
+
+              try {
+              //  modal.showAlert("알림", "엑셀 업로드를 시작합니다.");
+
+                const { responseJson, viewJson } = await parseExcelToJson(file);
+                console.log(responseJson)
+                // 모든 종류의 공백 문자 제거 (NBSP, NARROW NBSP 등 포함)
+                const normalize = (s = "") =>
+                  s.replace(/[\s\u00A0\u202F]+/g, "").toLowerCase().trim();
+                const data_in = responseJson.map(row => {
+                  const normalized = Object.keys(row).reduce((acc, k) => {
+                    acc[normalize(k)] = row[k];
+                    return acc;
+                  }, {});
+                  // "key" 포함된 컬럼 자동 탐색 (대소문자/공백/괄호 무시)
+                  const keyCol = Object.keys(normalized).find(k => k.includes("key"));
+            
+                  return {
+                    key: String(normalized[keyCol] ?? "").trim(),
+                    cid: String(normalized["복수"] ?? "").trim(),
+                    answer_origin: String(normalized["원본내용"] ?? "").trim(),
+                    answer_fin: String(normalized["클리닝내용(번역)"] ?? "").trim(),
+                    lv3: String(normalized["소분류"] ?? "").trim(),
+                    lv123code: String(normalized["lv3"] ?? "").trim(),
+                    sentiment: String(normalized["sentiment"] ?? "").trim(),
+                    recheckyn: String(normalized["검증"] ?? "").trim(),
+                  };
+                });
+
+                const data_lb = viewJson.map(row => {
+                  const normalized = Object.keys(row).reduce((acc, k) => {
+                    acc[normalize(k)] = row[k];
+                    return acc;
+                  }, {});
+
+                  return {
+                    lv1: String(normalized["대분류"] ?? "").trim(),
+                    lv2: String(normalized["중분류"] ?? "").trim(),
+                    lv3: String(normalized["소분류"] ?? "").trim(),
+                    qnum: String(normalized["문번호"] ?? "").trim(),
+                    lv1code: String(normalized["lv1"] ?? "").trim(),
+                    lv2code: String(normalized["lv2"] ?? "").trim(),
+                    lv123code: String(normalized["lv3"] ?? "").trim(),
+                    ex_gubun: String(normalized["보기유형"] ?? "").trim(),
+                  };
+                });
+                console.log("✅ data_in", data_in);
+                console.log("✅ data_lb", data_lb);
+
+                const res = await optionEditData.mutateAsync({
+                  params: {
+                    user: auth?.user?.userId || "",
+                    projectnum,
+                    qnum,
+                    gb: "import_excel",
+                    data_in,
+                    data_lb,
+                  },
+                });
+
+                console.log("엑셀 업로드 결과:", res);
+                if (res?.success === "777") {
+                  modal.showAlert("알림", "엑셀 업로드가 완료되었습니다.");
+                  // todo 추후 확인
+                  // tab2Ref.current?.reload?.();
+                  // await fetchLv3Options();
+                } else if (res?.success === "761") {
+                  // 실행 오류 (761)
+                  setErrorList(res.resultjson);
+                  setErrorPopupShow(true);
+                  return;
+                } else {
+                  modal.showErrorAlert("에러", "업로드 중 문제가 발생했습니다.");
+                }
+
+              } catch (err) {
+                console.error("excel upload error", err);
+                modal.showErrorAlert("에러", "엑셀 업로드 요청 실패");
+              }
+            };
+
+            input.click();
+          },
+        },
+      ],
     });
 
   };
@@ -586,6 +733,16 @@ const OptionSettingBody = () => {
           </div>
         </div>
       </article>
+      {errorPopupShow && (
+        <OptionSettingExcelUploadErrorPopup
+          popupShow={errorPopupShow}
+          onClose={() => {
+            setErrorPopupShow(false);
+            setErrorList([]);
+          }}
+          errorList={errorList}
+        />
+      )}
     </Fragment>
   );
 };
