@@ -500,7 +500,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const max = Math.max(a, b);
             const s = new Set();
             for (let i = min; i <= max; i++) {
-                const row = dataState?.data?.[i];
+                const row = dataForGridSorted?.[i]; 
                 if (row) s.add(getKey(row));
             }
             setLv3SelKeys(s);
