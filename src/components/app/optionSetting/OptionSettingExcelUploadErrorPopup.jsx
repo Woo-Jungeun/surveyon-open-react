@@ -22,25 +22,19 @@ const OptionSettingExcelUploadErrorPopup = ({ popupShow, onClose, errorList = []
   }, [errorList]);
 
   /** 공통 테이블 렌더러 */
-  const ErrorTable = ({ rows, type }) => {
+  const ErrorTable = ({ rows }) => {
     if (!rows?.length)
       return <p style={{ padding: 12, color: "#888" }}>표시할 오류 데이터가 없습니다.</p>;
 
     return (
-      <div
-        style={{
-          overflowY: "auto",     // ✅ 세로 스크롤 활성화
-          maxHeight: "230px",    // ✅ 고정 높이 (원하는 값으로 조정 가능)
-          borderRadius: 6,
-        }}
-      >
+      <div style={{ overflowY: "auto", maxHeight: "230px", borderRadius: 6}}>
         <table
           className="k-grid k-table"
           style={{
             width: "100%",
             borderCollapse: "collapse",
             borderSpacing: 0,
-            tableLayout: "fixed",          // 헤더/바디 폭 고정
+            tableLayout: "fixed",       
             border: "1px solid #d3d7d5",
             boxSizing: "border-box",
           }}
@@ -136,7 +130,7 @@ const OptionSettingExcelUploadErrorPopup = ({ popupShow, onClose, errorList = []
           {viewErrors.length > 0 && (
             <>
               <SectionTitle label="보기 오류 목록" count={viewErrors.length} />
-              <ErrorTable rows={viewErrors} type="view" />
+              <ErrorTable rows={viewErrors} />
             </>
           )}
 
@@ -144,10 +138,9 @@ const OptionSettingExcelUploadErrorPopup = ({ popupShow, onClose, errorList = []
           {answerErrors.length > 0 && (
             <>
               <SectionTitle label="응답자 오류 목록" count={answerErrors.length} />
-              <ErrorTable rows={answerErrors} type="answer" />
+              <ErrorTable rows={answerErrors} />
             </>
           )}
-
           {/* 데이터 없음 */}
           {viewErrors.length === 0 && answerErrors.length === 0 && (
             <p style={{ padding: 20, color: "#69706d", textAlign: "center" }}>

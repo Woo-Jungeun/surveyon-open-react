@@ -22,6 +22,7 @@ import * as XLSX from "xlsx";
  * @since 2025-08-14<br />
  */
 
+// 보기불러오기 새창 형식
 function openCenteredPopup(url, title = "viewer", w = 2000, h = 800) {
   const dualLeft = window.screenLeft ?? window.screenX ?? 0;
   const dualTop = window.screenTop ?? window.screenY ?? 0;
@@ -35,7 +36,8 @@ function openCenteredPopup(url, title = "viewer", w = 2000, h = 800) {
   try { win?.focus?.(); } catch { }
   return win;
 }
-// 액샐 다운로드, 업로드, 보기불러오기 버튼 공통 형식식
+
+// 액샐 다운로드, 업로드, 보기불러오기 버튼 공통 형식
 const CommonActionButton = ({ label, onClick }) => {
   const baseStyle = {
     border: "1px solid #afb6b2",
@@ -417,7 +419,6 @@ const OptionSettingBody = () => {
   };
 
   // 엑셀 업로드 이벤트
-
   const [errorPopupShow, setErrorPopupShow] = useState(false);
   const [errorList, setErrorList] = useState([]);
 
@@ -429,7 +430,7 @@ const OptionSettingBody = () => {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: "array" });
 
-        // ✅ 시트명 동적 할당 (projectnum 시트가 응답자 시트)
+        // 시트명 동적 할당 (projectnum 시트가 응답자 시트)
         const sheetNames = workbook.SheetNames;
         const responseSheet =
           workbook.Sheets[projectnum] || workbook.Sheets[sheetNames[0]]; // 예: "n11-5"
@@ -441,7 +442,7 @@ const OptionSettingBody = () => {
           return;
         }
 
-        // ✅ 응답자 시트는 4행부터 실제 header 시작
+        // 응답자 시트는 4행부터 실제 header 시작
         const responseJson = XLSX.utils.sheet_to_json(responseSheet, {
           defval: "",
           range: 3, // (0-based) 실제 컬럼명이 4행에 있음
@@ -449,14 +450,14 @@ const OptionSettingBody = () => {
         });
         const test = XLSX.utils.sheet_to_json(responseSheet, { defval: "", range: 3 });
         console.log(test.map(r => r["검증"]));
-        // ✅ 보기 시트는 1행부터 header
+        // 보기 시트는 1행부터 header
         const viewJson = XLSX.utils.sheet_to_json(viewSheet, {
           defval: "",
         });
 
-        console.log("응답시트 헤더:", Object.keys(responseJson[0] || {}));
-        console.log("응답시트 행 수:", responseJson.length);
-        console.log("보기시트 행 수:", viewJson.length);
+        // console.log("응답시트 헤더:", Object.keys(responseJson[0] || {}));
+        // console.log("응답시트 행 수:", responseJson.length);
+        // console.log("보기시트 행 수:", viewJson.length);
 
         resolve({ responseJson, viewJson });
       };
