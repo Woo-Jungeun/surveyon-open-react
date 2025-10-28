@@ -399,7 +399,6 @@ const OptionSettingBody = () => {
       qnum,
       gb: "export_excel",
     });
-    console.log("res", res)
     const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
 
     if (!blob) {
