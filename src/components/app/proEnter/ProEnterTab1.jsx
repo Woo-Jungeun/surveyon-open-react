@@ -19,7 +19,6 @@ const ProEnterTab1 = (props) => {
     const modal = useContext(modalContext);
     const navigate = useNavigate();
     const { persistedPrefs, onPrefsChange } = props;
-    const MENU_TITLE = "조사 (Qmaster)";
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
 
@@ -154,7 +153,6 @@ const ProEnterTab1 = (props) => {
             rowNumberOrder="asc"
             selectedField={SELECTED_FIELD}
             searchMutation={proEnterData}
-            menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 gb: "qmlist",

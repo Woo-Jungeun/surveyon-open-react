@@ -18,7 +18,6 @@ const OptionSettingTab3 = (props) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { persistedPrefs, onPrefsChange, projectnum, qnum } = props;
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
-    const MENU_TITLE = "rawdata";
 
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
@@ -151,7 +150,6 @@ const OptionSettingTab3 = (props) => {
         <GridData
             dataItemKey={DATA_ITEM_KEY}
             searchMutation={optionEditData}
-            menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 projectnum: projectnum,

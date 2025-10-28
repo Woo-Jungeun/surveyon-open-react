@@ -62,7 +62,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
-    const MENU_TITLE = "응답 데이터";
     const SELECTED_FIELD = "selected";
     const { optionEditData, optionSaveData } = OptionSettingApi();
     const [editField] = useState("inEdit");
@@ -1769,7 +1768,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             selectedField={SELECTED_FIELD}
             multiSelect={true}
             editField={editField}
-            menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 projectnum: projectnum,

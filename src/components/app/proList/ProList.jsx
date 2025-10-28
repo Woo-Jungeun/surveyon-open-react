@@ -61,7 +61,6 @@ const ProList = () => {
     const navigate = useNavigate();
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
-    const MENU_TITLE = "문항 목록";
     const { state } = useLocation();
     const projectnumFromState = state?.projectnum;
     const [projectnum, setProjectnum] = useState(() =>
@@ -1048,7 +1047,6 @@ const ProList = () => {
             rowNumber={"no"}
             rowNumberOrder="desc"
             selectedField={SELECTED_FIELD}
-            menuTitle={MENU_TITLE}
             searchMutation={proListData}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",

@@ -1,5 +1,4 @@
 import React, { Fragment, useState, useCallback, useMemo, useRef, useContext } from "react";
-import { useNavigate } from "react-router-dom";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -23,15 +22,12 @@ const OptionSettingExload = () => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
 
-    const navigate = useNavigate();
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
-    const MENU_TITLE = "보기불러오기";
 
     const [searchParams] = useSearchParams();
     const projectnum = (searchParams.get("projectnum") || "").trim(); // 예: n221115
     const qnum = (searchParams.get("qnum") || "").trim();       // 예: 문1
-    //console.log(projectnum, qnum);
 
     // 좌측 전용 정렬/필터
     const [leftSort, setLeftSort] = useState([]);
@@ -510,7 +506,6 @@ const OptionSettingExload = () => {
                     dataItemKey={DATA_ITEM_KEY}
                     rowNumber={"no"}
                     selectedField={SELECTED_FIELD}
-                    menuTitle={MENU_TITLE}
                     searchMutation={projectListData}
                     initialParams={{
                         user: auth?.user?.userId || "",

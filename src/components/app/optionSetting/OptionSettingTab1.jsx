@@ -48,7 +48,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options, onRequestLv3Refresh, onResponseCountChange } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
-    const MENU_TITLE = "응답 데이터";
     const SELECTED_FIELD = "selected";
     const { optionEditData, optionSaveData } = OptionSettingApi();
     const [editField] = useState("inEdit");
@@ -170,7 +169,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     //grid rendering 
     const GridRenderer = forwardRef((props, ref) => {
         const { dataState, setDataState, selectedState, setSelectedState,
-            idGetter, dataItemKey, handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
+            handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature,
         } = props;
 
@@ -1318,7 +1317,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             selectedField={SELECTED_FIELD}
             multiSelect={true}
             editField={editField}
-            menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 projectnum: projectnum,

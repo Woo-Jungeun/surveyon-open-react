@@ -15,7 +15,6 @@ const ProEnterTab2 = (props) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { persistedPrefs, onPrefsChange } = props;
-    const MENU_TITLE = "조사 (Perl)";
     const DATA_ITEM_KEY =  "no";
     const SELECTED_FIELD = "selected"; 
 
@@ -108,7 +107,6 @@ const ProEnterTab2 = (props) => {
             rowNumberOrder="asc"
             selectedField={SELECTED_FIELD}
             searchMutation={proEnterData}
-            menuTitle={MENU_TITLE}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 gb: "qmlist",

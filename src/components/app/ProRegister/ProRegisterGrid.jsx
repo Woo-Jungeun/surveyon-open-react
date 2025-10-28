@@ -17,7 +17,6 @@ const ProRegisterGrid = ({ onDataLength }) => {
   const auth = useSelector((store) => store.auth);
   const DATA_ITEM_KEY = "no";
   const SELECTED_FIELD = "selected";
-  const MENU_TITLE = "맵 목록";
   const { proRegisterMutation } = ProRegisterApi();
   const projectnum = sessionStorage.getItem("projectnum");
   const projectname = sessionStorage.getItem("projectname");
@@ -106,7 +105,6 @@ const ProRegisterGrid = ({ onDataLength }) => {
       rowNumber={"no"}
       rowNumberOrder="asc"
       selectedField={SELECTED_FIELD}
-      menuTitle={MENU_TITLE}
       searchMutation={proRegisterMutation}
       initialParams={{ /*초기파라미터 설정*/
         gb: "db_select",

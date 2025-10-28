@@ -20,7 +20,6 @@ const MainList = () => {
     const navigate = useNavigate();
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
-    const MENU_TITLE = "프로젝트 목록";
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState([]);
@@ -138,7 +137,6 @@ const MainList = () => {
             rowNumber={"no"}
             rowNumberOrder="desc"
             selectedField={SELECTED_FIELD}
-            menuTitle={MENU_TITLE}
             searchMutation={mainListData}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",

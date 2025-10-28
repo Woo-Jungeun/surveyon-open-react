@@ -18,7 +18,6 @@ const ProRegisterPopup = (parentProps) => {
 
   // selection 필드명
   const SELECTED_FIELD = "selected";
-  const MENU_TITLE = "문항 목록";
   const modal = useContext(modalContext);
 
   // 정렬/필터(Controlled)
@@ -379,7 +378,6 @@ const ProRegisterPopup = (parentProps) => {
           // GridData 쪽 키도 __rowKey로 통일 (스크롤/선택 상태 보존에 유리)
           dataItemKey="__rowKey"
           selectedField={SELECTED_FIELD}
-          menuTitle={MENU_TITLE}
           renderItem={(props) => <GridRenderer {...props} />}
         />
       </div>

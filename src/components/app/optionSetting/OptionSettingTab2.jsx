@@ -22,7 +22,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "lv3"];
-    const MENU_TITLE = "보기 데이터";
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -725,7 +724,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             try {
                 const payload = buildSavePayload(normalized, qnum);
                 const res = await optionSaveData.mutateAsync(payload);
-
                 if (res?.success == "777") {
                     setErrorMarks(new Map());   //에러 초기화
                     // modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
@@ -1159,7 +1157,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             dataItemKey={DATA_ITEM_KEY}
             rowNumber={"no"}
             searchMutation={optionEditData}
-            menuTitle={MENU_TITLE}
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
