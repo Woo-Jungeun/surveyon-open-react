@@ -61,7 +61,8 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
         setColumns(columns.map((c) => map.get(c.field) || c));
       }}
       filter={filter}
-      onFilterChange={(e) => setFilter(e)}
+      onFilterChange={(e) => setFilter(e ?? null)}
+      onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
     />
   );
   const handleDelete = async (id) => {

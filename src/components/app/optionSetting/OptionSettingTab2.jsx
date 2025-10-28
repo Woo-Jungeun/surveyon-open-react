@@ -127,9 +127,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             }}
             filter={filter}
             onFilterChange={(e) => {
-                setFilter(e);
-                onPrefsChange?.({ filter: e });
+                setFilter(e?? null);
+                onPrefsChange?.({ filter: e }); // 상단에 저장 
             }}
+            onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
+
         />
     ), [columns, forcedHidden, stageFields, onPrefsChange, filter]);
 

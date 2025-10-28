@@ -67,10 +67,8 @@ const MainList = () => {
                 setColumns(next);
             }}
             filter={filter}
-            onFilterChange={(e) => {
-                setFilter(e);
-            }}
-
+            onFilterChange={(e) => setFilter(e ?? null)}
+            onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
         />
     );
 

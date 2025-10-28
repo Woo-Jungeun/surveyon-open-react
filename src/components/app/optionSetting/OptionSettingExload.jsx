@@ -95,7 +95,8 @@ const OptionSettingExload = () => {
                 setLeftColumns(next);
             }}
             filter={leftFilter}
-            onFilterChange={(e) => setLeftFilter(e)}
+            onFilterChange={(e) => setLeftFilter(e ?? null)}
+            onSortChange={(e) => setLeftSort(e ?? [])} // sortArr는 배열 형태
         />
     );
 

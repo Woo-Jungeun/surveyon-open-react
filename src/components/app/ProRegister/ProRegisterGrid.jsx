@@ -13,7 +13,7 @@ import { ProRegisterApi } from "@/components/app/proRegister/ProRegisterApi.js";
  * @author jewoo
  * @since 2025-10-15<br />
  */
-const ProRegisterGrid = ({onDataLength}) => {
+const ProRegisterGrid = ({ onDataLength }) => {
   const auth = useSelector((store) => store.auth);
   const DATA_ITEM_KEY = "no";
   const SELECTED_FIELD = "selected";
@@ -46,10 +46,8 @@ const ProRegisterGrid = ({onDataLength}) => {
         setColumns(next);
       }}
       filter={filter}
-      onFilterChange={(e) => {
-        setFilter(e);
-      }}
-
+      onFilterChange={(e) => setFilter(e ?? null)}
+      onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
     />
   );
 
