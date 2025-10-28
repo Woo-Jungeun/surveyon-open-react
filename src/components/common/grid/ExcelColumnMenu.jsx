@@ -28,7 +28,7 @@ const mergeFilter = (prevFilter, nextForField, field) => {
 };
 
 export default function ExcelColumnMenu(props) {
-  const { columns = [], onColumnsChange, column, onFilterChange, filter } = props;
+  const { columns = [], onColumnsChange, column, onFilterChange, filter, onSortChange } = props;
 
   // --------- 간단 필터(텍스트 1개 + 적용/지우기) ---------
   // 컬럼 타입(숫자면 number, 그 외 텍스트)
@@ -87,8 +87,7 @@ export default function ExcelColumnMenu(props) {
     <div style={styles.wrap}>
       {/* Sort */}
       <div style={styles.section}>
-        <GridColumnMenuSort {...props} />
-      </div>
+        <GridColumnMenuSort {...props} onSortChange={(sort) => onSortChange?.(sort)}/></div>
 
       {/* 간단 필터: 텍스트 + 적용/지우기만 표시 */}
       <div style={styles.section}>

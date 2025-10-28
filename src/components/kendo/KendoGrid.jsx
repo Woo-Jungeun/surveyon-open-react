@@ -1,29 +1,25 @@
-import { getSelectedState, Grid, GridColumn as Column, GridNoRecords, GridColumnMenuFilter } from "@progress/kendo-react-grid";
-import { useCallback, useMemo, Children, useRef, useEffect, cloneElement, useState } from "react";
+import { getSelectedState, Grid, GridColumn as Column, GridNoRecords } from "@progress/kendo-react-grid";
+import { useCallback, useMemo, Children, useRef, useEffect, cloneElement } from "react";
 import PropTypes from "prop-types";
-import { Checkbox } from "@progress/kendo-react-inputs";
 import { process } from "@progress/kendo-data-query";
+
 /**
- * GridData와 함께 사용하는 KendoGrid 묶음.
+ * GridData와 함께 사용하는 KendoGrid (정렬/필터는 ExcelColumnMenu로 관리)
  *
- *
- * @author jisu
- * @since 2024.04.30
- * -----------custom props-----------
- * @param parentProps 상위(gridData)에서 넘겨준 데이터를 props로 넘겨주어야 한다.
- * @param processData grid data의 포맷등을 변경할 때 쓸 수 있는 callback
- * ----------------------------------
- * @param children
- * @param props
- * @returns {JSX.Element}
- * @constructor
+ * @author jewoo
+ * @since 2025-10
  */
-const KendoGrid = ({ parentProps, children, processData }) => {
-    const parentData = parentProps?.data || { data: [], totalSize: 0 };
+const KendoGrid = ({ parentProps, children }) => {
+    const parentData = Array.isArray(parentProps?.data)
+        ? { data: parentProps.data, totalSize: parentProps?.data?.length ?? 0 }
+        : (parentProps?.data || { data: [], totalSize: 0 });
+
+    // sort/filter는 상위(MainList)에서 관리 (ExcelColumnMenu)
     const sortChange = parentProps?.sortChange;
     const filterChange = parentProps?.filterChange;
-    const initialSort = parentProps?.initialSort;
-    const initialFilter = parentProps?.initialFilter;
+    const sort = parentProps?.initialSort ?? [];
+    const filter = parentProps?.initialFilter ?? undefined;
+
     const page = parentProps?.page;
     const pageChange = parentProps?.pageChange;
     const selectedState = parentProps?.selectedState || {};
@@ -33,48 +29,37 @@ const KendoGrid = ({ parentProps, children, processData }) => {
     const parentIdGetter = parentProps?.idGetter;
     const selectMode = parentProps?.multiSelect ? "multiple" : "single";
     const isPage = parentProps?.isPage;
+
     const editField = parentProps?.editField;
     const onItemChange = parentProps?.onItemChange;
     const onCellClose = parentProps?.onCellClose;
     const editCell = parentProps?.editCell;
     const height = parentProps?.height;
-    //const processedData = parentProps?.data ?? [];
     const columnVirtualization = parentProps?.columnVirtualization ?? false;
     const cellRender = parentProps?.cellRender;
-    // 원본 배열
-    const rawData = Array.isArray(parentProps?.data) ? parentProps.data : [];
-
-    // 클라이언트 처리(로컬 정렬/필터/페이징) 여부: 서버 정렬/필터 쓰면 false로 넘겨주세요.
-    const useClientProcessing =
-        parentProps?.useClientProcessing ??
-        (parentProps?.filterable ?? parentProps?.sortable ?? true);
-
-    // Grid 상태 (정렬/필터/페이징)
-    const [gridState, setGridState] = useState({
-        sort: initialSort ?? [],
-        filter: initialFilter ?? undefined,
-        skip: 0,
-        take: rawData.length, // 페이징 미사용시 전체
-    });
-
-    // 데이터 길이 변하면 take 동기화
-    useEffect(() => {
-        setGridState(s => ({ ...s, take: rawData.length }));
-    }, [rawData.length]);
-
-    // 화면에 뿌릴 데이터 (클라처리면 process, 아니면 그대로)
-    const processedData = useMemo(
-        () => (useClientProcessing ? process(rawData, gridState) : rawData),
-        [rawData, gridState, useClientProcessing]
-    );
     const rowRender = parentProps?.rowRender;
-    const linkRowClickToSelection =
-        parentProps?.linkRowClickToSelection ?? true; // 기본값: true (행 클릭 시 체크박스도 선택/해제됨)
+    const linkRowClickToSelection = parentProps?.linkRowClickToSelection ?? true; // 기본값: true (행 클릭 시 체크박스도 선택/해제됨)
     const selectionHeaderTitle = parentProps?.selectionHeaderTitle ?? "";   //체크박스 헤더 라벨 
+
+    // 클라이언트 정렬/필터 적용 (API 호출 없이)
+    const processedData = useMemo(() => {
+        if (!Array.isArray(parentData.data)) return { data: [], total: 0 };
+        try {
+            return process(parentData.data, { sort, filter });
+        } catch (err) {
+            console.warn("process error", err);
+            return { data: parentData.data, total: parentData.data.length };
+        }
+    }, [parentData.data, sort, filter]);
+
     const idGetter = useCallback(
-        (item) => (typeof parentIdGetter === "function" ? parentIdGetter(item) : item?.[dataItemKey]),
+        (item) =>
+            typeof parentIdGetter === "function"
+                ? parentIdGetter(item)
+                : item?.[dataItemKey],
         [parentIdGetter, dataItemKey]
     );
+
     // 체크박스에서 발생한 이벤트인지 판별
     const isFromCheckbox = (evt) => !!evt?.syntheticEvent?.target?.closest?.('input[type="checkbox"]');
 
@@ -101,7 +86,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
         const newSelectedState = {};
         const items = Array.isArray(event.dataItems)
             ? event.dataItems
-            : (event.dataItems?.data ?? []);        // ← 안전 정규화
+            : (event.dataItems?.data ?? []);
         items.forEach((item) => {
             const key = idGetter(item);
             if (key !== undefined) newSelectedState[key] = checked;
@@ -114,27 +99,18 @@ const KendoGrid = ({ parentProps, children, processData }) => {
         if (isFromCheckbox(event)) return;
         parentProps?.onRowClick?.(event);
     };
-    // 👉 Grid에 넘긴 processedData가 배열/혹은 DataResult일 수 있으므로 항상 배열로 정규화
-    const viewItems = useMemo(
-        () => (Array.isArray(processedData) ? processedData : (processedData?.data ?? [])),
-        [processedData]
-    );
-    // 헤더 체크박스 클릭 여부 
-    const headerSelectionValue = useMemo(() => {
-        return (
-            viewItems.length > 0 &&
-            viewItems.every((item) => selectedState[idGetter(item)])
-        );
-    }, [processedData, selectedState, idGetter]);
 
-    //헤더 인디터미넌트 계산(일부만 체크)
-    const headerSomeSelected = (viewItems.some((item) => selectedState[idGetter(item)]) && !headerSelectionValue);
-    // 헤더 체크박스 상태 계산 (중복 제외 기준)
-    const validItems = viewItems.filter((item) => !item.isDuplicate);
-    const allChecked = validItems.length > 0 && validItems.every((item) => selectedState[idGetter(item)]);
-    const someChecked = validItems.some((item) => selectedState[idGetter(item)]) && !allChecked;
+    // 헤더 체크박스 계산
+    const validItems = useMemo(() => {
+        return (processedData.data ?? []).filter((item) => !item.isDuplicate);
+    }, [processedData.data]);
+    const allChecked =
+        validItems.length > 0 &&
+        validItems.every((item) => selectedState[idGetter(item)]);
+    const someChecked =
+        validItems.some((item) => selectedState[idGetter(item)]) && !allChecked;
 
-    // 트리를 보존하면서 재귀적으로 key만 부여
+    // 컬럼 key 안정화 로직 유지
     const addKeysRecursively = (nodes) =>
         Children.map(nodes, (node, idx) => {
             if (!node || typeof node !== 'object') return node;
@@ -146,9 +122,9 @@ const KendoGrid = ({ parentProps, children, processData }) => {
                 node.props?.children ? addKeysRecursively(node.props.children) : undefined
             );
         });
-
     let childColsTree = addKeysRecursively(children);
-    // 멀티선택이면: 헤더셀 정의 -> selectionCol 생성 -> 루트 레벨에 삽입
+
+    // 멀티 선택 헤더
     if (parentProps?.multiSelect) {
         const SelectionHeaderCell = () => {
             const ref = useRef(null);
@@ -185,7 +161,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
                                     return;
                                 }
                                 const next = {};
-                                viewItems.forEach((item) => {
+                                processedData.data.forEach((item) => {
                                     const key = idGetter(item);
                                     if (!key) return;
                                     if (item.isDuplicate) next[key] = false;
@@ -224,7 +200,6 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             const i = roots.findIndex((c) => c?.props?.field === afterField);
             insertAt = i >= 0 ? i + 1 : 0;
         }
-
         roots.splice(insertAt, 0, selectionCol);
         childColsTree = roots;
     }
@@ -233,19 +208,21 @@ const KendoGrid = ({ parentProps, children, processData }) => {
         <Grid
             scrollable="scrollable"
             style={{ height: height || "625px" }}
-            data={processedData}
-            // 클라이언트 처리 모드일 때만 내부 gridState 바인딩
-            {...(useClientProcessing ? gridState : {})}
-            onDataStateChange={useClientProcessing ? (e) => {
-                setGridState(e.dataState);
-
-                // 부모에도 반영 (persistedPrefs 갱신용)
-                sortChange?.({ sort: e.dataState.sort ?? [] });
-                filterChange?.({ filter: e.dataState.filter ?? undefined });
-            } : undefined}
+            data={processedData.data}
 
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}
+            sort={sort}
+            filter={filter}
+            onSortChange={sortChange}          // setSort와 연결됨
+            onFilterChange={filterChange}      // setFilter와 연결됨
+
+            pageable={isPage ? { info: false } : false}
+            skip={page?.skip}
+            take={page?.take}
+            total={processedData.total}
+            onPageChange={pageChange}
+
             rowRender={rowRender}
             dataItemKey={dataItemKey}
             selectedField={selectedField}
@@ -259,30 +236,7 @@ const KendoGrid = ({ parentProps, children, processData }) => {
             editCell={editCell}
             columnVirtualization={columnVirtualization}
             cellRender={cellRender}
-            // 서버/외부 제어 모드일 때만 다시 붙여주기
-            {
-            ...(!useClientProcessing ? {
-                sort,
-                filter,
-                pageable: isPage ? { info: false } : false,
-                onSortChange: sortChange,
-                skip: page?.skip,
-                take: page?.take,
-                total: parentData?.totalSize,
-                onPageChange: pageChange,
-            } : {})
-            }
-        // {...props}
         >
-            {/* {parentProps.multiSelect ? (
-                <Column
-                    field={selectedField}
-                    width={"40px"}
-                    headerSelectionValue={headerSelectionValue}
-                    onHeaderSelectionChange={onHeaderSelectionChange}
-                    sortable={false}
-                />
-            ) : null} */}
             <GridNoRecords>
                 <div style={{ textAlign: "center", padding: "20px 0" }}>
                     조회된 데이터가 없습니다.
