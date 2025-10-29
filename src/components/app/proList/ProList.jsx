@@ -1,5 +1,5 @@
-import React, { Fragment, useState, useCallback, useEffect, useContext, useRef, useMemo } from "react";
-import { useDispatch } from "react-redux";
+import React, { useState, useCallback, useEffect, useContext, useRef, useMemo } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/common/redux/action/AuthAction";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
@@ -7,7 +7,6 @@ import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { ProListApi } from "@/components/app/proList/ProListApi.js";
-import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/components/app/proList/ProListPopup";    // 필터문항설정 팝업
@@ -83,24 +82,24 @@ const ProList = () => {
 
     const { proListData, editMutation } = ProListApi();
 
+    // 스크롤 위치 저장용 ref
+    const scrollTopRef = useRef(0);
+
     //재조회 후 그리드 업데이트 플래그
     const [gridDataKey, setGridDataKey] = useState(0);
     const [timeStamp, setTimeStamp] = useState(0); // cache buster
 
     //컬럼 표출 권한 체크
     const [userPerm, setUserPerm] = useState(PERM.READ);
+
     useEffect(() => {
         const ug = proListData?.data?.usergroup;
-        if (ug) {
-            setUserPerm(roleToPerm(ug));
+        if (!ug) return;
+        setUserPerm(roleToPerm(ug));
 
-            // Redux에 usergroup 값 반영
-            dispatch(
-                login({
-                    ...auth?.user,
-                    userAuth: ug,
-                })
-            );
+        // userAuth가 이미 동일하면 dispatch 생략
+        if (auth?.user?.userAuth !== ug) {
+            dispatch(login({ ...auth?.user, userAuth: ug }));
         }
     }, [proListData?.data?.usergroup]);
 
@@ -141,10 +140,7 @@ const ProList = () => {
     ]);
 
     // 행 클릭 → /option_setting 로 이동
-    const goOpenSetting = useCallback(
-        (merge_qnum) => navigate('/option_setting', { state: { projectnum, qnum: merge_qnum, userPerm: userPerm } }),
-        [navigate, userPerm]
-    );
+    const goOpenSetting = ((merge_qnum) => navigate('/option_setting', { state: { projectnum, qnum: merge_qnum, userPerm: userPerm } }));
 
     // 권한 반영 컬럼 배열
     const columnsForPerm = useMemo(() => {
@@ -156,27 +152,29 @@ const ProList = () => {
     }, [columns, userPerm]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
-    const columnMenu = (menuProps) => (
-        <ExcelColumnMenu
-            {...menuProps}
-            columns={columnsForPerm}
-            onColumnsChange={(updated) => {
-                const map = new Map(updated.map(c => [c.field, c]));
-                const next = columns.map(c => {
-                    const u = map.get(c.field);
-                    return u ? { ...c, ...u } : c
-                });
-                setColumns(next);
-            }}
-            filter={filter}
-            onFilterChange={(e) => setFilter(e ?? null)}
-            onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
-        />
-    );
+    const columnMenu = useMemo(() => {
+        const handleColumnsChange = (updated) => {
+            const map = new Map(updated.map(c => [c.field, c]));
+            setColumns(prev => prev.map(c => map.get(c.field) ? { ...c, ...map.get(c.field) } : c));
+        };
+        return (menuProps) => (
+            <ExcelColumnMenu
+                {...menuProps}
+                columns={columnsForPerm}
+                onColumnsChange={handleColumnsChange}
+                filter={filter}
+                onFilterChange={(e) => setFilter(e ?? null)}
+                onSortChange={(e) => setSort(e ?? [])}
+            />
+        );
+    }, [columnsForPerm, filter]);
 
     //grid rendering 
     const GridRenderer = (props) => {
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch } = props;
+        const renderCount = useRef(0);
+        renderCount.current += 1;
+        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch, scrollTopRef } = props;
+
         const groupOrder = ["VIEW", "ADMIN", "EDIT"]; // 상단 그룹 순서
 
         const [locksById, setLocksById] = useState(new Map());          // 행 잠금상태
@@ -221,6 +219,7 @@ const ProList = () => {
         // 재조회 시: 저장 직후 1회만 서버값으로 완전 초기화, 그 외에는 증분 유지
         useEffect(() => {
             const rows = dataState?.data ?? [];
+
             setMergeEditsById(prev => {
                 if (pendingFlushRef.current) {
                     pendingFlushRef.current = false;
@@ -269,9 +268,10 @@ const ProList = () => {
 
         // 표출 머지 여부는 "현재 입력" 기준으로 계산
         const isMergeRow = (row) => dupGroups.restOfGroup.has(row?.id);
-
         // 문항통합저장: "수정한 행" ∪ "그로 인해 실제 상태가 바뀐 행"만 호출
         const sendMergeAll = async () => {
+            const beforeEdits = new Map(mergeEditsById);
+            rememberScroll(); // 스크롤 위치 저장
             const rows = dataState?.data ?? [];
             const changesObj = getMergeChanges();                 // { id: "텍스트" }
             const changedIds = new Set(Object.keys(changesObj).map(n => Number(n))); // [추가]
@@ -287,6 +287,7 @@ const ProList = () => {
             if (blankIds.length > 0) {
                 const blankNos = blankIds.map((qid) => idToNo.get(String(qid))).filter(Boolean);
                 modal.showErrorAlert("알림", `[행: ${blankNos.join(", ")}] 분석을 위해 '문항통합'란을 입력해 주세요.`);
+                setMergeEditsById(beforeEdits);
                 return;
             }
 
@@ -365,8 +366,6 @@ const ProList = () => {
                 }
 
                 // 5) 다음 재조회에서 1회 입력 캐시 초기화 + 재조회
-                // pendingFlushRef.current = true;
-                // handleSearch?.();
                 pendingFlushRef.current = true;
                 setTimeStamp(Date.now());     // 캐시 무력화 파라미터 갱신
                 setGridDataKey((k) => k + 1);   // GridData 재마운트 유도
@@ -409,6 +408,7 @@ const ProList = () => {
                 val: excluded ? "제외" : "분석",
                 ...(scope === "row" ? { qid: id } : {}),
             };
+            rememberScroll(); // 스크롤 위치 저장 
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
                 if (refresh) {
@@ -484,6 +484,31 @@ const ProList = () => {
                 return next;
             });
 
+        // 재조회 전 스크롤 저장
+        const rememberScroll = () => {
+            const grid = document.querySelector("#grid_01 .k-grid-content");
+            if (grid) {
+                scrollTopRef.current = grid.scrollTop;
+            } else {
+                console.warn("[rememberScroll] grid 요소를 찾지 못함");
+            }
+        };
+
+        // 재조회 후 스크롤 복원 (렌더 완료 후)
+        useEffect(() => {
+            if (!dataState?.data?.length) return;
+            const saved = scrollTopRef.current;
+            const timer = setTimeout(() => {
+                const grid = document.querySelector("#grid_01 .k-grid-content");
+                if (grid) {
+                    grid.scrollTop = saved;
+                } else {
+                    console.warn("[restoreScroll] grid 요소를 찾지 못함");
+                }
+            }, 30);
+            return () => clearTimeout(timer);
+        }, [dataState?.data]);
+
         // 수정 잠금 api 연결     
         const sendLock = async (gbVal, lockVal, id) => {
             const payload = {
@@ -494,6 +519,7 @@ const ProList = () => {
                 val: lockVal,
                 ...(gbVal === "rowEdit" ? { qid: id } : {}),
             };
+            rememberScroll(); // 스크롤 위치 저장 
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
                 handleSearch?.();   // 재조회
@@ -531,6 +557,7 @@ const ProList = () => {
             const ids = (dataState?.data ?? []).map((r) => r.id);
             const prev = new Map(locksById);
             setLocksById(new Map(ids.map((id) => [id, locked])));
+            rememberScroll(); // 스크롤 위치 저장 
             try {
                 await (locked ? lockApi.lockAll() : lockApi.unlockAll());
             } catch (e) {
@@ -902,13 +929,8 @@ const ProList = () => {
             })
             .filter(g => g.inGroup.length > 0);
 
-        const gridKey = useMemo(() => {
-            const rowsSig = (dataState?.data ?? []).map(r => `${r.id}:${r.useYN ?? ''}:${r.merge_qnum ?? ''}`).join('|');
-            const colsSig = visible.map(c => `${c.group}|${c.subgroup ?? ''}|${c.field}`).join(',');
-            return `${rowsSig}::${userPerm}::${colsSig}`;   // 권한/컬럼 시그니처 포함
-        }, [dataState?.data, visible, userPerm]);
         return (
-            <Fragment>
+            <>
                 <article className="subTitWrap">
                     <div className="subTit">
                         <h2 className="titTxt">문항 목록
@@ -927,7 +949,7 @@ const ProList = () => {
                         <div className="cmn_gird_wrap">
                             <div id="grid_01" className="cmn_grid multihead">
                                 <KendoGrid
-                                    key={gridKey}
+                                    // key={gridKey}
                                     parentProps={{
                                         height: "750px",
                                         data: dataForGridSorted,       // props에서 직접 전달
@@ -1036,7 +1058,7 @@ const ProList = () => {
                         setPopupShow={setPopupShow}
                     />
                 }
-            </Fragment>
+            </>
         );
     }
 
@@ -1054,7 +1076,7 @@ const ProList = () => {
                 gb: "select",
                 _ts: timeStamp, // 캐시 버스터
             }}
-            renderItem={(props) => <GridRenderer {...props} />}
+            renderItem={(props) => <GridRenderer {...props} scrollTopRef={scrollTopRef} />}
         />
     );
 };
