@@ -102,6 +102,13 @@ const ProKey = () => {
             title: "확인",
             click: async () => {
               await fetchData(); // 재조회
+
+              // 폼 초기화 
+              setFormData({
+                api_gubun: "1", // 기본값: 개인키
+                api_name: "",
+                api_key: "",
+              });
             },
           }],
         });

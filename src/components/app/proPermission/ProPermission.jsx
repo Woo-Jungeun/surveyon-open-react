@@ -124,7 +124,7 @@ const ProPermission = () => {
     if (!formData.permission_gubun) errs.push("작업권한을 선택해 주세요.");
 
     if (["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun)) {
-      if (!formData.worker_name.trim()) errs.push("고객객 이름을 입력해 주세요.");
+      if (!formData.worker_name.trim()) errs.push("고객 이름을 입력해 주세요.");
       if (!formData.worker_id.trim()) errs.push("고객 이메일을 입력해 주세요.");
       if (!formData.worker_password.trim()) errs.push("고객 비밀번호를 입력해 주세요.");
       if (!formData.worker_expired) errs.push("만료일자를 선택해 주세요.");
@@ -150,7 +150,7 @@ const ProPermission = () => {
           projectname,
           projectnum,
           ...formData,
-          worker_position: formData.worker_position || worker_position || "", 
+          worker_position: formData.worker_position || worker_position || "",
           worker_expired: formData.worker_expired
             ? moment(formData.worker_expired).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
             : "",
@@ -166,6 +166,17 @@ const ProPermission = () => {
               title: "확인",
               click: async () => {
                 await fetchData();
+
+                // 폼 초기화
+                setFormData({
+                  pof: projectpof || "",
+                  permission_gubun: "",
+                  worker_name: "",
+                  worker_id: "",
+                  worker_password: "",
+                  worker_position: "",
+                  worker_expired: "",
+                });
               },
             },
           ],
@@ -299,7 +310,7 @@ const ProPermission = () => {
                 {/* 고객 or 일반일 경우 → 고객 이메일 / 고객비번 */}
                 {["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun) ? (
                   <>
-                     <div className="cmn_pop_ipt">
+                    <div className="cmn_pop_ipt">
                       <span style={{ width: "200px" }}>* 고객명</span>
                       <Input
                         className="k-input k-input-solid"
@@ -330,19 +341,19 @@ const ProPermission = () => {
                       />
                     </div>
                     <div className="cmn_pop_ipt" style={{ marginTop: "8px" }}>
-                  <span style={{ width: "180px" }}>* 만료일자</span>
-                  <div style={{ width: "200px" }}>
-                    <DatePicker
-                      value={formData.worker_expired ? new Date(formData.worker_expired) : null}
-                      format={"yyyy-MM-dd"}
-                      min={new Date()} // 오늘 이후만 선택 가능
-                      required={false}
-                      disabled={loading}
-                      editable={false}
-                      onChange={(e) => handleChange("worker_expired", e.value)}
-                    />
-                  </div>
-                </div>
+                      <span style={{ width: "180px" }}>* 만료일자</span>
+                      <div style={{ width: "200px" }}>
+                        <DatePicker
+                          value={formData.worker_expired ? new Date(formData.worker_expired) : null}
+                          format={"yyyy-MM-dd"}
+                          min={new Date()} // 오늘 이후만 선택 가능
+                          required={false}
+                          disabled={loading}
+                          editable={false}
+                          onChange={(e) => handleChange("worker_expired", e.value)}
+                        />
+                      </div>
+                    </div>
                   </>
                 ) : (
                   /* 고객/일반 외 → 작업자 이름 */
