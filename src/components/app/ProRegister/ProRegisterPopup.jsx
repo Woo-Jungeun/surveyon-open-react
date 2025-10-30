@@ -27,6 +27,37 @@ const ProRegisterPopup = (parentProps) => {
   // 현재 편집 중인 행만 별도 상태로 추적 (데이터 안에 inEdit를 심지 않음)
   const [editingKey, setEditingKey] = useState(null);
 
+  // 스크롤 위치 저장용 ref
+  const scrollTopRef = useRef(0);
+  const rememberScroll = useCallback(() => {
+    const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+    if (grid) {
+      scrollTopRef.current = grid.scrollTop;
+    };
+  }, []);
+
+  const restoreScroll = useCallback(() => {
+    const saved = scrollTopRef.current;
+    const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+    if (grid) {
+      grid.scrollTop = saved;
+    }
+  }, []);
+
+  // 최초 렌더 시 1회 스크롤 위치 강제 초기화
+  useEffect(() => {
+    if (!popupShow) return;
+    const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+    if (grid) {
+      const timer = setTimeout(() => {
+        if (scrollTopRef.current === 0) {
+          scrollTopRef.current = grid.scrollTop;
+        }
+      }, 120); // DOM 안정화 후 안전하게 저장
+      return () => clearTimeout(timer);
+    }
+  }, [popupShow]);
+
   // 고유 키 생성 함수 (복합키)
   const makeRowKey = useCallback(
     (r) => [r?.question ?? "", r?.column ?? ""].map((v) => encodeURIComponent(String(v))).join("__"),
@@ -126,24 +157,22 @@ const ProRegisterPopup = (parentProps) => {
     });
     initSelectionRef.current = true;
     // 의도적으로 popupData 미포함: 타이핑으로 데이터가 바뀌어도 선택 초기화하지 않음
-  }, [popupShow, selectData, makeRowKey]); 
+  }, [popupShow, selectData, makeRowKey]);
 
   // 입력 변경 (데이터만 수정, 편집 상태는 editingKey로만 제어)
-  const handleItemChange = useCallback(
-    (e) => {
-      const { field, value, dataItem } = e;
-      setPopupData((prev) => {
-        const idx = prev.findIndex((i) => i.__rowKey === dataItem.__rowKey);
-        if (idx === -1) return prev;
-        const current = prev[idx];
-        if (current[field] === value) return prev; // 동일 값이면 skip
-        const next = [...prev];
-        next[idx] = { ...current, [field]: value };
-        return next;
-      });
-    },
-    [setPopupData]
-  );
+  const handleItemChange = useCallback((e) => {
+    rememberScroll(); // 스크롤 저장
+    const { field, value, dataItem } = e;
+    setPopupData((prev) => {
+      const idx = prev.findIndex((i) => i.__rowKey === dataItem.__rowKey);
+      if (idx === -1) return prev;
+      const current = prev[idx];
+      if (current[field] === value) return prev; // 동일 값이면 skip
+      const next = [...prev];
+      next[idx] = { ...current, [field]: value };
+      return next;
+    });
+  }, [setPopupData]);
 
   useEffect(() => {
     if (!popupShow) { initSelectionRef.current = false; return; }
@@ -260,6 +289,13 @@ const ProRegisterPopup = (parentProps) => {
       });
     }, [popupData, selectedState]);
 
+    const didInitRef = useRef(false);
+    useEffect(() => {
+      if (!popupShow || didInitRef.current) return;
+      didInitRef.current = true;
+      restoreScroll();
+    }, [popupShow]);
+
     return (
       <Fragment>
         <div id="grid_01">
@@ -302,6 +338,7 @@ const ProRegisterPopup = (parentProps) => {
 
               // 헤더 전체 선택: 중복행은 제외
               onHeaderSelectionChange: (e) => {
+                rememberScroll(); // 스크롤 저장
                 const checked = e?.syntheticEvent?.target?.checked;
                 setSelectedState((prev) => {
                   const next = { ...prev };
@@ -318,6 +355,7 @@ const ProRegisterPopup = (parentProps) => {
                 e.preventDefault?.();
                 e.syntheticEvent?.stopPropagation?.();
                 const { dataItem } = e;
+                rememberScroll();
                 setEditingKey(dataItem.__rowKey);
               },
 
