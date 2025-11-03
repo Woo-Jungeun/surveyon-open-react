@@ -722,7 +722,7 @@ const OptionSettingBody = () => {
                 onApply={async (targets, opt) => {
                   tab1Ref.current?.applyLv3To?.(targets, opt);
                   setIsLv3PanelOpen(false);
-                  await fetchLv3Options();
+                  // await fetchLv3Options();
                 }}
                 options={lv3Options}                      // 소분류 코드 
                 onRequestLv3Refresh={fetchLv3Options}
