@@ -1035,7 +1035,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             setSelectedState,
                             rowRender,
                             onRowClick,
-                            useClientProcessing: true,                      
+                            // useClientProcessing: true,                      
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
                             initialSort: mappedSort,

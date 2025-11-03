@@ -112,7 +112,7 @@ const OptionSettingTab3 = (props) => {
                             setSelectedState,
                             selectedField,               //  선택 필드 전달
                             idGetter,                     // GridData가 만든 getter 그대로
-                            useClientProcessing: true,                         // 클라 처리
+                            // useClientProcessing: true,                         // 클라 처리
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
                             initialSort: mappedSort,                               // 1회 초기값

@@ -1065,7 +1065,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
                             selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
                             rowRender,
-                            useClientProcessing: true,
+                            //useClientProcessing: true,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
                             initialSort: mappedSort,

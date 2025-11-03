@@ -118,7 +118,7 @@ const ProEnterTab1 = (props) => {
                             selectedField,               //  선택 필드 전달
                             onRowClick,
                             idGetter,                     // GridData가 만든 getter 그대로
-                            useClientProcessing: true,                         // 클라 처리
+                            // useClientProcessing: true,                         // 클라 처리
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
                             initialSort: sort,                               // 1회 초기값
