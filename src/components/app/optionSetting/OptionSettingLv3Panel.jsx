@@ -22,7 +22,7 @@ const OptionSettingLv3Panel = ({
           <h3>소분류 선택</h3>
           <input
             type="text"
-            placeholder="소분류 검색..."
+            placeholder="소분류를 검색하세요."
             className="lv3-search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
