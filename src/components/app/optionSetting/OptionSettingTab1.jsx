@@ -9,7 +9,6 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
-import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
 
 // 드래그 제외 셀렉터: 바깥에 선언해 매 렌더마다 재생성 방지
 const ROW_EXCLUSION_SELECTOR = [
@@ -134,7 +133,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }}
             filter={filter}
             onFilterChange={(e) => {
-                setFilter(e?? null);
+                setFilter(e ?? null);
                 onPrefsChange?.({ filter: e }); // 상단에 저장 
             }}
             onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
@@ -164,7 +163,33 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const baselineAfterReloadRef = useRef(false);   // 저장 후 재조회 베이스라인 리셋 필요
     const baselineSigRef = useRef('');   // 현재 베이스라인의 시그니처
     const sigStackRef = useRef([]);      // 베이스라인 이후 커밋들의 시그니처 스택
+
     /*-----수정 로그 관련-----*/
+
+    // 정렬 
+    const natKey = (v) => {
+        if (v == null) return Number.NEGATIVE_INFINITY;
+        const s = String(v).trim();
+        return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
+    };
+
+    // 정렬용 프록시를 붙일 대상 필드
+    const NAT_FIELDS = ["lv1code", "lv2code", "lv123code"]; // 필요 시 추가
+
+    // rows에 __sort__* 필드를 덧붙이고, 원필드→프록시 맵을 리턴
+    const addSortProxies = (rows = []) => {
+        const proxyField = {};
+        const dataWithProxies = rows.map((r) => {
+            const o = { ...r };
+            for (const f of NAT_FIELDS) {
+                const pf = `__sort__${f}`;
+                o[pf] = natKey(r?.[f]);
+                proxyField[f] = pf;
+            }
+            return o;
+        });
+        return { dataWithProxies, proxyField };
+    };
 
     //grid rendering 
     const GridRenderer = forwardRef((props, ref) => {
@@ -188,16 +213,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
         const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
-        const [gridEpoch, setGridEpoch] = useState(0);
-        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
-            orderByWithProxy(dataState?.data || [], sort, {
-                // 숫자 인식 자연 정렬이 필요한 필드만 명시
-                lv1code: 'nat',
-                lv2code: 'nat',
-                lv123code: 'nat',
-            })
-        ), [dataState?.data, sort]);
-
+        const [processedMirror, setProcessedMirror] = useState([]);
+        const { dataWithProxies, proxyField } = useMemo(
+            () => addSortProxies(dataState?.data || []),
+            [dataState?.data]
+        );
+        const mappedSort = useMemo(
+            () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
+            [sort, proxyField]
+        );
         useEffect(() => {
             const rowsNow = dataState?.data || [];
             if (!rowsNow.length || !hasAllRowKeys) return;
@@ -500,11 +524,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const max = Math.max(a, b);
             const s = new Set();
             for (let i = min; i <= max; i++) {
-                const row = dataForGridSorted?.[i]; 
+                const row = processedMirror?.[i];
                 if (row) s.add(getKey(row));
             }
             setLv3SelKeys(s);
-        }, [dataState?.data, getKey])
+        }, [processedMirror, getKey]);
 
         const lastCellRectRef = useRef(null); //마지막 셀의 DOM 좌표 기억용 ref 추가
 
@@ -1051,7 +1075,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         // key={`lv-${lvCode}-${gridEpoch}`}
                         key={`lv-${lvCode}`}
                         parentProps={{
-                            data: dataForGridSorted,
+                            data: dataWithProxies,
+                            onProcessedDataUpdate: (arr) => setProcessedMirror(arr),
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
                             editField,
                             onItemChange,
@@ -1071,7 +1096,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             initialSort: mappedSort,
                             initialFilter: filter,
                             sortChange: ({ sort: next }) => {
-                                const nextRaw = unmapSortFields(next, proxyField);
+                                const nextRaw = (next || []).map(d => {
+                                    const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);
+                                    return { ...d, field: orig || d.field };
+                                });
                                 setSort(nextRaw ?? []);
                                 onPrefsChange?.({ sort: nextRaw ?? [] });
                             },

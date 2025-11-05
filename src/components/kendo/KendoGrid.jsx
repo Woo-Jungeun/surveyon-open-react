@@ -52,6 +52,11 @@ const KendoGrid = ({ parentProps, children }) => {
         }
     }, [parentData.data, sort, filter]);
 
+    // 화면에 실제로 표시되는 가공 데이터(정렬/필터 적용 결과)를 부모에 알림
+    useEffect(() => {
+        parentProps?.onProcessedDataUpdate?.(processedData.data);
+    }, [processedData.data]);
+
     const idGetter = useCallback(
         (item) =>
             typeof parentIdGetter === "function"
