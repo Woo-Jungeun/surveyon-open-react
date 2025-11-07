@@ -9,7 +9,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
 import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
-
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 /**
  * 분석 > 그리드 영역 > 보기 데이터
  *
@@ -18,6 +18,7 @@ import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers"
  */
 const OptionSettingTab2 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
+    const loadingSpinner = useContext(loadingSpinnerContext);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum } = props;
     const modal = useContext(modalContext);
@@ -1029,6 +1030,13 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             data: dataForGridSorted,
                             dataItemKey: "__rowKey",
                             idGetter: (r) => r.__rowKey,
+                            onProcessedDataUpdate: (arr) => {
+                                console.log("arr", arr)
+                                if (arr && arr.length > 0) {
+                                    // ✅ Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
+                                    loadingSpinner.hide();
+                                }
+                            },
                             editField,
                             onItemChange,
                             selectedState,

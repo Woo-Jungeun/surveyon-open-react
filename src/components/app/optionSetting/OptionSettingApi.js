@@ -21,7 +21,7 @@ export function OptionSettingApi() {
                 loadingSpinner.show(); 
             },
             onSettled: () => {
-                loadingSpinner.hide(); 
+               // loadingSpinner.hide(); 
             }
         }
     );

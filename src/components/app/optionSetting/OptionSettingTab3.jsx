@@ -1,4 +1,4 @@
-import React, { Fragment, useState, useMemo, useCallback } from "react";
+import React, { Fragment, useState, useMemo, useCallback, useContext } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -6,7 +6,7 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { useSelector } from "react-redux";
 import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
-
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 /**
  * 분석 > 그리드 영역 > rawdata
  *
@@ -15,6 +15,7 @@ import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers"
  */
 const OptionSettingTab3 = (props) => {
     const auth = useSelector((store) => store.auth);
+    const loadingSpinner = useContext(loadingSpinnerContext);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { persistedPrefs, onPrefsChange, projectnum, qnum } = props;
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
@@ -112,6 +113,12 @@ const OptionSettingTab3 = (props) => {
                             setSelectedState,
                             selectedField,               //  선택 필드 전달
                             idGetter,                     // GridData가 만든 getter 그대로
+                            onProcessedDataUpdate: (arr) => {
+                                if (arr && arr.length > 0) {
+                                    // ✅ Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
+                                    loadingSpinner.hide();
+                                }
+                            },
                             // useClientProcessing: true,                         // 클라 처리
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,

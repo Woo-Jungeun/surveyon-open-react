@@ -9,6 +9,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 // 드래그 제외 셀렉터: 바깥에 선언해 매 렌더마다 재생성 방지
 const ROW_EXCLUSION_SELECTOR = [
@@ -42,6 +43,7 @@ const formatNow = (d = new Date()) => {
  */
 const OptionSettingTab1 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
+    const loadingSpinner = useContext(loadingSpinnerContext);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
         , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options, onRequestLv3Refresh, onResponseCountChange } = props;
@@ -1076,7 +1078,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         key={`lv-${lvCode}`}
                         parentProps={{
                             data: dataWithProxies,
-                            onProcessedDataUpdate: (arr) => setProcessedMirror(arr),
+                            onProcessedDataUpdate: (arr) => {
+                                setProcessedMirror(arr);
+                                console.log("arr", arr)
+                                if (arr && arr.length > 0) {
+                                    // ✅ Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
+                                    loadingSpinner.hide();
+                                }
+                            },
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
                             editField,
                             onItemChange,
