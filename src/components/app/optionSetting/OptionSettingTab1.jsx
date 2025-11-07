@@ -1080,9 +1080,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             data: dataWithProxies,
                             onProcessedDataUpdate: (arr) => {
                                 setProcessedMirror(arr);
-                                console.log("arr", arr)
                                 if (arr && arr.length > 0) {
-                                    // ✅ Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
+                                    // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
                                     loadingSpinner.hide();
                                 }
                             },

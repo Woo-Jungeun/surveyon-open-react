@@ -115,7 +115,7 @@ const OptionSettingTab3 = (props) => {
                             idGetter,                     // GridData가 만든 getter 그대로
                             onProcessedDataUpdate: (arr) => {
                                 if (arr && arr.length > 0) {
-                                    // ✅ Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
+                                    // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
                                     loadingSpinner.hide();
                                 }
                             },

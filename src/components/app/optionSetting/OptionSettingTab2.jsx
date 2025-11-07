@@ -1031,9 +1031,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             dataItemKey: "__rowKey",
                             idGetter: (r) => r.__rowKey,
                             onProcessedDataUpdate: (arr) => {
-                                console.log("arr", arr)
                                 if (arr && arr.length > 0) {
-                                    // ✅ Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
+                                    // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
                                     loadingSpinner.hide();
                                 }
                             },
