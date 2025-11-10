@@ -78,10 +78,22 @@ const MainList = () => {
             <Fragment>
                 <article className="subTitWrap">
                     <div className="subTit">
-                        <h2 className="titTxt">프로젝트 목록</h2>
+                        <h2 className="titTxt">
+                            프로젝트 목록
+                            <span
+                                className="info-icon"
+                                data-tooltip={`프로젝트 목록|현 사용자가 등록한 프로젝트, 다른 사용자가 권한을 부여한 프로젝트가 제시됩니다.`}
+                             ></span>
+                        </h2>
                         {(!userGroup.includes("고객") && !userGroup.includes("일반")) && (
                             <div className="btnWrap">
-                                <GridHeaderBtnPrimary onClick={() => navigate("/pro_enter")}>프로젝트 등록</GridHeaderBtnPrimary>
+                                <GridHeaderBtnPrimary onClick={() => navigate("/pro_enter")}>
+                                    프로젝트 등록
+                                    <span
+                                        className="info-icon"
+                                        data-tooltip={`프로젝트 등록|조사(큐마): 연동된 프로젝트 등록\n신규등록: 새로운 프로젝트를 직접 등록`}
+                                    ></span>
+                                </GridHeaderBtnPrimary>
                             </div>
                         )}
                     </div>

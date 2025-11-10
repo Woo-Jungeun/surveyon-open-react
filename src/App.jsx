@@ -15,6 +15,7 @@ import ProRegisterWrapperView from "@/views/proRegister/ProRegisterWrapperView.j
 import ProPermissionWrapperView from "@/views/proPermission/ProPermissionWrapperView.jsx";
 import ProKeyWrapperView from "@/views/proKey/ProKeyWrapperView.jsx";
 import busGif from "@/assets/images/bus_loading.gif";
+import "@/common/utils/tooltip.js";
 
 function App() {
   const [cookies] = useCookies();

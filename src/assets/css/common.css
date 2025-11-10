@@ -4429,25 +4429,151 @@ footer {
     display: inline-block !important;
     visibility: visible !important;
     overflow: visible !important;
-    border: 2px solid #ccc !important;/* 연한 회색 테두리 */
+    border: 2px solid #ccc !important;
+    /* 연한 회색 테두리 */
     border-radius: 50%;
     background: #fff;
     position: relative;
     cursor: pointer;
 }
 
-/* ✅ 체크된 상태에서 내부만 초록색으로 채움 */
+/* 체크된 상태에서 내부만 초록색으로 채움 */
 .k-grid input[type="radio"]:checked {
-    border-color: #a5e2c5 !important; /* 테두리도 약간 초록빛 */
-    background-color: #00b272 !important; /* 내부 채움 */
-    box-shadow: inset 0 0 0 4px #fff; /* 가운데 하얀 원 유지 */
+    border-color: #a5e2c5 !important;
+    /* 테두리도 약간 초록빛 */
+    background-color: #00b272 !important;
+    /* 내부 채움 */
+    box-shadow: inset 0 0 0 4px #fff;
+    /* 가운데 하얀 원 유지 */
 }
 
-/* ✅ Kendo 팝업 메뉴가 모달보다 위에 표시되도록 (정렬/필터 포함) */
+/* Kendo 팝업 메뉴가 모달보다 위에 표시되도록 (정렬/필터 포함) */
 .k-animation-container,
 .k-popup,
 .k-grid-columnmenu-popup,
 .k-columnmenu-popup,
 .k-filter-menu {
     z-index: 10050 !important;
+}
+
+/* 설명 툴팁 관련 CSS */
+/* info 아이콘 (밝은 회색) */
+.info-icon {
+    display: inline-block;
+    margin-left: 6px;
+    width: 16px;
+    height: 16px;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='%23cccccc' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' opacity='0.15'/><path fill='%23cccccc' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm.88 15h-1.75v-6h1.75v6zm0-8h-1.75V7h1.75v2z'/></svg>") no-repeat center;
+    background-size: contain;
+    cursor: pointer;
+    vertical-align: middle;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+
+.info-icon:hover {
+    transform: scale(1.15);
+    filter: brightness(0.8);
+}
+
+/* floating tooltip 기본 스타일 */
+.floating-tooltip {
+    position: absolute;
+    background: #ffffff;
+    color: #333;
+    font-size: 13px;
+    line-height: 1.4;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 6px 16px rgba(26, 127, 86, 0.15);
+    /* 록톤 그림자 */
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 999999;
+    animation: tooltipFade 0.2s ease forwards;
+
+    /* 폭 자동 조정 */
+    display: inline-block;
+    width: auto;
+    /* 내용에 따라 자동 조정 */
+    min-width: 250px;
+    /* 최소 크기 */
+    max-width: 500px;
+    /* 너무 길면 제한 */
+    white-space: normal;
+    /* 자동 줄바꿈 허용 */
+    word-break: keep-all;
+    /* 단어 단위로 줄바꿈 (가독성 좋음) */
+}
+
+/* 제목 영역 */
+.tooltip-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #1a7f56;
+    /* 초록 포인트 */
+    margin-bottom: 0;
+    /* 기본 여백 제거 */
+}
+
+/* 원 안의 i 아이콘 */
+.tooltip-title::before {
+    content: "";
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='%231a7f56' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231a7f56' opacity='0.12'/><path fill='%231a7f56' d='M12 7a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7zm.75 4v6h-1.5v-6h1.5z'/></svg>") no-repeat center;
+    background-size: contain;
+    vertical-align: middle;
+    flex-shrink: 0;
+    margin-top: 1px;
+    /* 정렬 보정 */
+}
+
+
+/* 본문 (2줄까지만 표시) */
+.tooltip-body {
+    margin-top: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    /* 최대 2줄까지만 표시 */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: keep-all;
+    line-height: 1.5;
+}
+
+/* 위쪽으로 뜰 때 */
+@keyframes tooltipFade {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -2px);
+    }
+}
+
+/* 아래쪽으로 뜰 때 */
+.tooltip-bottom {
+    animation: tooltipFadeUp 0.25s ease forwards;
+}
+
+@keyframes tooltipFadeUp {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 2px);
+    }
 }
