@@ -73,6 +73,10 @@ const ProEnterBody = () => {
             </Button> */}
             <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("3")}>
               신규 등록
+              <span
+                  className="info-icon"
+                  data-tooltip={`신규 등록|조사(Qmaster)에 없는 프로젝트를 새롭게 등록`}
+                ></span>
             </Button>
           </div>
 

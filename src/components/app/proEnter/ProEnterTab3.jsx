@@ -91,13 +91,26 @@ const ProEnterTab3 = () => {
 
                     <div className="cmn_pop_ipt">
                         <span className="iptTit">POF</span>
-                        <Input
-                            className="k-input k-input-solid"
-                            value={pof}
-                            onChange={(e) => setPof(e.target.value)}
-                            disabled={loading}
-                            placeholder="프로젝트 번호 입력"
-                        />
+                        <div style={{ width: "100%" }}>
+                            <Input
+                                className="k-input k-input-solid"
+                                value={pof}
+                                onChange={(e) => setPof(e.target.value)}
+                                disabled={loading}
+                                placeholder="프로젝트 번호 입력"
+                                style={{ width: "100%" }}
+                            />
+                            <div
+                                style={{
+                                    fontSize: "12.5px",
+                                    color: "#777",
+                                    marginTop: "5px",
+                                    lineHeight: "1.4",
+                                }}
+                            >
+                                ※ POF가 없을 경우 2025-00-0000 포맷에 맞춰 부서 공용 POF를 입력
+                            </div>
+                        </div>
                     </div>
 
                     <div className="cmn_pop_ipt">
