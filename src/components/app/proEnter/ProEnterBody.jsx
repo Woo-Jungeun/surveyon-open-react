@@ -56,8 +56,15 @@ const ProEnterBody = () => {
         <div className="subCont">
           <div className="btnBox tabMenu">
             {canViewQmaster && (
-              <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("1")}>
+              <Button
+                className={tabDivision === "1" ? "btnTab on" : "btnTab"}
+                onClick={() => setTabDivision("1")}
+              >
                 조사 (Qmaster)
+                <span
+                  className="info-icon"
+                  data-tooltip={`조사(Qmaster)|조사에 연동된 프로젝트 등록\n(원하는 프로젝트가 없을 경우 웹제작담당자에게 문의)\n설문온 등록 여부에 따라 등록 가능 여부 확인`}
+                ></span>
               </Button>
             )}
             {/* todo 임시주석 */}

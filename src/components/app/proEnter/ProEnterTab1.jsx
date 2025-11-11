@@ -128,6 +128,36 @@ const ProEnterTab1 = (props) => {
                         }}
                     >
                         {columns.filter(c => c.show !== false).map((c) => {
+                            if (c.field === "gubunYN") {
+                                // 설문온등록여부 컬럼에만 스타일 적용
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={c.field}
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        columnMenu={columnMenu}
+                                        cell={(props) => {
+                                            const value = props.dataItem[c.field];
+                                            const isNotRegistered = value !== "등록"; // 등록이 아닐 때만 강조
+                                            const cellStyle = isNotRegistered
+                                                ? {
+                                                    border: "2px solid #d9534f", // 빨간 테두리
+                                                    padding: "2px 6px",
+                                                    textAlign: "center",
+                                                }
+                                                : { textAlign: "center" };
+
+                                            return (
+                                                <td style={cellStyle}>
+                                                    {value || ""}
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
                             // 일반 텍스트 컬럼
                             return (
                                 <Column
