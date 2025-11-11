@@ -407,7 +407,12 @@ const ProRegisterPopup = (parentProps) => {
     <article className={`modal ${modalOnOff}`}>
       <div className="cmn_popup">
         <div className="popTit">
-          <h3>문항 선택 팝업</h3>
+          <h3>문항 선택 팝업
+            <span
+              className="info-icon"
+              data-tooltip={`문항 선택|추가하고자 하는 문항을 선택해주세요.`}
+            ></span>
+          </h3>
           <a className="btnClose" onClick={handleCancelButton}>
             <span className="hidden">close</span>
           </a>
