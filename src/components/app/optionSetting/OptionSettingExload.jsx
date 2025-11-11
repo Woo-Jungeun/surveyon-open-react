@@ -369,10 +369,10 @@ const OptionSettingExload = () => {
                 } catch (e) {
                     console.error("dup parse error", e);
                 }
-            
+
                 // 줄바꿈 형식으로 보기 구성
                 const dupText = dupList.map(it => `${it.lv3 || ""}(${it.lv123code || ""})`).join("\n");
-            
+
                 modal.showErrorAlert("알림", "이미 등록된 보기가 있습니다.\n\n" + dupText);
             } else {
                 modal.showErrorAlert("에러", "보기등록 중 오류가 발생했습니다.");
@@ -451,7 +451,12 @@ const OptionSettingExload = () => {
 
                         <div>
                             <div className="actions">
-                                <Button type="button" className="btnTxt" onClick={handleUploadClick}>보기엑셀업로드</Button>
+                                <Button type="button" className="btnTxt" onClick={handleUploadClick}>보기엑셀업로드
+                                    <span
+                                        className="info-icon"
+                                        data-tooltip={`보기엑셀업로드|보기엑셀샘플 지침에 따라 보기를 수동으로 업로드하여 "보기등록" 할 수 있다.`}
+                                    ></span>
+                                </Button>
                                 <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: "none" }} onChange={handleFileChange} />
                                 <Button type="button" className="btnTxt" onClick={handleSampleClick}>보기엑셀샘플</Button>
                             </div>

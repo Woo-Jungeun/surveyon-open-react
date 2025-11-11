@@ -43,7 +43,7 @@ const ProRegisterBody = () => {
               Excel
               <span
                   className="info-icon"
-                  data-tooltip={`Excel|“엑셀 샘플” 규칙에 따라 문항등록 가능`}
+                  data-tooltip={`Excel|"엑셀 샘플" 규칙에 따라 문항등록 가능`}
                 ></span>
             </Button>
           </div>

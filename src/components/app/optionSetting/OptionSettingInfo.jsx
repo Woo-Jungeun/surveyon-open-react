@@ -804,7 +804,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         title={
                             <>
                                 분류 개수 설정
-                                <span className="titNote">(대/중분류를 “0” 설정시 분석안함)</span>
+                                <span className="titNote">(대/중분류를 "0" 설정시 분석안함)</span>
                             </>
                         }
                         open={openCounts}
