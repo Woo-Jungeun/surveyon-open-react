@@ -129,7 +129,12 @@ const ProKey = () => {
     <Fragment>
       <article className="subTitWrap">
         <div className="subTit">
-          <h2 className="titTxt">API KEY 등록</h2>
+          <h2 className="titTxt">API KEY 등록
+            <span
+              className="info-icon"
+              data-tooltip={`API KEY 등록|사용자 계정 전체 프로젝트 기준으로 OPENAI API KEY를 등록해야\n 자동 "보기분석", "응답자분석", "번역" 실행이 가능합니다.`}
+            ></span>
+          </h2>
         </div>
       </article>
 
@@ -150,7 +155,12 @@ const ProKey = () => {
 
                 {/* API KEY 유형 */}
                 <div className="cmn_pop_ipt">
-                  <span style={{ width: "190px" }}>* API KEY 유형선택</span>
+                  <span style={{ width: "190px" }}>* API KEY 유형선택
+                    <span
+                      className="info-icon"
+                      data-tooltip={`API KEY 유형선택|부서나 개인이 등록한 APIKEY가 없을 경우 "회사공용"을 등록하여 사용하기`}
+                    ></span>
+                  </span>
                   <DropDownList
                     data={apiTypeList}
                     textField="label"

@@ -454,7 +454,7 @@ const OptionSettingExload = () => {
                                 <Button type="button" className="btnTxt" onClick={handleUploadClick}>보기엑셀업로드
                                     <span
                                         className="info-icon"
-                                        data-tooltip={`보기엑셀업로드|보기엑셀샘플 지침에 따라 보기를 수동으로 업로드하여 "보기등록" 할 수 있다.`}
+                                        data-tooltip={`보기엑셀업로드|보기엑셀샘플 지침에 따라 보기를 수동으로 업로드하여 "보기등록" 할 수 있습니다.`}
                                     ></span>
                                 </Button>
                                 <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: "none" }} onChange={handleFileChange} />

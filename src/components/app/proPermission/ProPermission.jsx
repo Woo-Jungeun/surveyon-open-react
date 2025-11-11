@@ -248,7 +248,12 @@ const ProPermission = () => {
       <article className="subTitWrap">
         <p className="subStep">
           <span>사용자 설정</span>
-          <span> 프로젝트 권한 등록</span>
+          <span> 프로젝트 권한 등록
+            <span
+              className="info-icon"
+              data-tooltip={`프로젝트 권한 등록|등록된 프로젝트를 기준으로 다른 작업자에게 읽기, 쓰기, 권한을 부여합니다.`}
+            ></span>
+          </span>
         </p>
 
         <div className="subTit">
@@ -405,6 +410,10 @@ const ProPermission = () => {
 
                 >
                   프로젝트 삭제
+                  <span
+                    className="info-icon"
+                    data-tooltip={`프로젝트 삭제|프로젝트 삭제 시 모든 문항이 함께 삭제되므로 신중히 진행하세요.`}
+                  ></span>
                 </Button>
                 <Button
                   type="submit"
