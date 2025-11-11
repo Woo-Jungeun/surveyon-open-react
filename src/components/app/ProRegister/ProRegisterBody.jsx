@@ -33,10 +33,18 @@ const ProRegisterBody = () => {
             {servername !== "NEW" &&
               <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("1")}>
                 DB
+                <span
+                  className="info-icon"
+                  data-tooltip={`DB|조사(Qmaster) DB에 추가문항 또는 추가 응답자 등록 가능`}
+                ></span>
               </Button>
             }
             <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("2")}>
               Excel
+              <span
+                  className="info-icon"
+                  data-tooltip={`Excel|“엑셀 샘플” 규칙에 따라 문항등록 가능`}
+                ></span>
             </Button>
           </div>
 

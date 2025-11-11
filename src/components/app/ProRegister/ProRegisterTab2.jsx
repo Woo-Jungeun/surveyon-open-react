@@ -380,6 +380,184 @@ const ProRegisterTab2 = () => {
             등록
           </Button>
         </div>
+        {/* 엑셀 샘플 규칙 안내 */}
+        <div
+          style={{
+            marginTop: "40px",
+            border: "1px solid #8ab6db",
+            borderRadius: "4px",
+            overflow: "hidden",
+            width: "fit-content",
+            marginLeft: "auto",
+            marginRight: "auto",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+          }}
+        >
+          <table
+            style={{
+              borderCollapse: "collapse",
+              fontSize: "13px",
+              fontFamily: "Malgun Gothic, sans-serif",
+            }}
+          >
+            <thead>
+              <tr>
+                {/* 1열 */}
+                <th
+                  style={{
+                    background: "#0f5f82",
+                    color: "#fff",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    border: "1px solid #0f5f82",
+                    minWidth: "120px",
+                  }}
+                >
+                  응답자id
+                  <div style={{ fontSize: "11px", color: "#ffeb9c" }}>
+                    (중복불가-id 중복시 새로운 id로 추가해야함)
+                  </div>
+                </th>
+                {/* 2열 */}
+                <th
+                  style={{
+                    background: "#0f5f82",
+                    color: "#fff",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    border: "1px solid #0f5f82",
+                    minWidth: "90px",
+                  }}
+                >
+                  문1. 지역
+                </th>
+                {/* 3열 */}
+                <th
+                  style={{
+                    background: "#0f5f82",
+                    color: "#fff",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    border: "1px solid #0f5f82",
+                    minWidth: "110px",
+                  }}
+                >
+                  문2. 이유
+                </th>
+                {/* 4열 */}
+                <th
+                  style={{
+                    background: "#0f5f82",
+                    color: "#fff",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    border: "1px solid #0f5f82",
+                    minWidth: "120px",
+                  }}
+                >
+                  문4. 문제점
+                </th>
+                {/* 5열 - 여기! */}
+                <th
+                  style={{
+                    background: "#0f5f82",
+                    color: "#fff",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    border: "1px solid #0f5f82",
+                    minWidth: "150px",
+                  }}
+                >
+                  ←문항정의(질문)
+                </th>
+                {/* 6열 가이드 */}
+                <th
+                  style={{
+                    background: "#d1e6f7",
+                    color: "#000",
+                    padding: "6px 10px",
+                    textAlign: "left",
+                    border: "1px solid #bcd7f0",
+                    minWidth: "360px",
+                  }}
+                >
+                  가이드
+                </th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {/* 2번째 줄 */}
+              <tr>
+                <td style={{ border: "1px solid #d0d0d0", padding: "6px 10px", background: "#e6f0fa" }}>
+                  id
+                </td>
+                <td style={{ border: "1px solid #d0d0d0", padding: "6px 10px", background: "#e6f0fa" }}>
+                  q10
+                </td>
+                <td style={{ border: "1px solid #d0d0d0", padding: "6px 10px", background: "#e6f0fa" }}>
+                  q20_op1
+                </td>
+                <td style={{ border: "1px solid #d0d0d0", padding: "6px 10px", background: "#e6f0fa" }}>
+                  문4
+                </td>
+                {/* 여기에도 화살표 */}
+                <td style={{ border: "1px solid #d0d0d0", padding: "6px 10px", background: "#e6f0fa" }}>
+                  ←컬럼명정의(공백,중복불가)
+                </td>
+                <td
+                  rowSpan={8}
+                  style={{
+                    border: "1px solid #bcd7f0",
+                    background: "#e1f0ff",
+                    verticalAlign: "top",
+                    padding: "8px 10px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  코드, 오픈 모두 있는 데이터 가능, 단 아래의 지침사항을 잘 숙지해주세요.
+                  <br />
+                  <br />
+                  <b>1행 :</b> 컬럼의 정보=문항을 정의한다
+                  <br />
+                  <b>1행 :</b> 응답자 id가 중복시 새로운 열을 추가하여{" "}
+                  <span style={{ color: "#b30000", fontWeight: "bold" }}>중복없는 ID를 생성</span>해야한다.
+                  <br />
+                  <b>2행 :</b> 컬럼변수명 정의(공백없음) q10, q10_op1, q_op_10_1, 문1, 선문1-1...
+                </td>
+              </tr>
+
+              {[
+                ["1112", "1", "이유내용1", "문제점서술1"],
+                ["1113", "2", "이유내용2", "문제점서술2"],
+                ["1114", "1", "이유내용3", "문제점서술3"],
+                ["1115", "2", "이유내용4", "문제점서술4"],
+                ["1116", "2", "이유내용5", "문제점서술5"],
+                ["1117", "1", "이유내용6", "문제점서술6"],
+                ["1118", "2", "이유내용7", "문제점서술7"]
+              ].map((row, idx) => (
+                <tr key={row[0]}>
+                  <td style={{ border: "1px solid #d0d0d0", padding: "5px 10px", background: "#f3f6fb" }}>
+                    {row[0]}
+                  </td>
+                  <td style={{ border: "1px solid #d0d0d0", padding: "5px 10px", background: "#f3f6fb" }}>
+                    {row[1]}
+                  </td>
+                  <td style={{ border: "1px solid #d0d0d0", padding: "5px 10px", background: "#f3f6fb" }}>
+                    {row[2]}
+                  </td>
+                  <td style={{ border: "1px solid #d0d0d0", padding: "5px 10px", background: "#f3f6fb" }}>
+                    {row[3]}
+                  </td>
+                  {/* 5번째 컬럼은 실제 데이터 없으니까 빈칸 */}
+                  <td style={{ border: "1px solid #d0d0d0", background: "#f3f6fb" }} />
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+
       </form>
       {/* 필터문항설정 팝업 */}
       {popupShow &&
