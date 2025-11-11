@@ -935,10 +935,20 @@ const ProList = () => {
                     <div className="subTit">
                         <h2 className="titTxt">문항 목록
                             {state?.projectname && (<span className="projectName"> {state.projectname}</span>)}
+                            <span
+                                className="info-icon"
+                                data-tooltip={`문항 목록|조사(Qmaster): 등록 시 오픈응답문항 중 텍스트로 입력된 데이터 자동 등록\n신규(수동): "문항등록"을 통해 엑셀로 문항을 선택하여 등록`}
+                            ></span>
                         </h2>
+
                         {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
                             <div className="btnWrap">
-                                <GridHeaderBtnPrimary onClick={() => navigate('/pro_register')}>문항 등록</GridHeaderBtnPrimary>
+                                <GridHeaderBtnPrimary onClick={() => navigate('/pro_register')}>문항 등록
+                                    <span
+                                        className="info-icon"
+                                        data-tooltip={`문항 등록|엑셀로 새로운 문항 추가`}
+                                    ></span>
+                                </GridHeaderBtnPrimary>
                             </div>
                         )}
                     </div>
@@ -1010,9 +1020,27 @@ const ProList = () => {
 
                                         // order → 원래 인덱스 순으로 안정 정렬
                                         items.sort((a, b) => (a.order - b.order) || (a._idx - b._idx));
-
                                         return (
-                                            <Column key={`grp:${g.name}`} title={g.name}>
+                                            <Column
+                                                key={`grp:${g.name}`}
+                                                title={
+                                                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                                                        {g.name}
+                                                        {g.name === "ADMIN" && (
+                                                            <span
+                                                                className="info-icon"
+                                                                data-tooltip={`ADMIN|• ✓분석: 분석 할 문항만 체크\n• ✓제외: 분석 안 할 문항 체크\n• 분석 버튼: 각 문항별 카테고리 자동분류 페이지로 이동`}
+                                                            ></span>
+                                                        )}
+                                                        {g.name === "EDIT" && (
+                                                            <span
+                                                                className="info-icon"
+                                                                data-tooltip={`EDIT|• 문항통합저장 버튼: 여러 문항을 하나로 통합해 분석\n• 🔓 수정 가능: 분석 전 수정 가능\n• 🔒 수정 불가: 분석 완료 후 수정 불가`}
+                                                            ></span>
+                                                        )}
+                                                    </div>
+                                                }
+                                            >
                                                 {items.map(it =>
                                                     it.type === "col"
                                                         ? renderLeafColumn(it.col)
