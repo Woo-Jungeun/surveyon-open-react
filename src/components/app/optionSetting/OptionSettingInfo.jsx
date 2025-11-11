@@ -724,7 +724,19 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     {/* 프롬프트 지침 (기존 버튼 포함) */}
                     <Section
                         id="sec-prompt"
-                        title="프롬프트 지침"
+                        title={
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                프롬프트 지침
+                                <span
+                                    className="info-icon"
+                                    data-tooltip={`프롬프트 지침|보기분석시 추가 지침 정의
+                                        \n예1. 소분류 카테고리 분류시 문구의 어조는 "~있었음", "~했음"으로 구체적인 어조로 분류해줘.
+                                        예2."정책"의 단어는 제외하고 분류되게 해줘
+                                        예3. 소분류 카테고리 분류시 추출된 항목문구가 더 설명이 들어간 문구로 구성해줘
+                                        예4. 소분류 카테고리 분류시 추출된 항목문구가 더 설명이 들어간 문구로 구성해줘`}
+                                ></span>
+                            </span>
+                        }
                         first
                         open={openPrompt}
                         onToggle={() => setOpenPrompt(v => !v)}
@@ -744,7 +756,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     {/* 옵션 */}
                     <Section
                         id="sec-option"
-                        title="옵션"
+                        title={
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                                옵션
+                                <span
+                                    className="info-icon"
+                                    data-tooltip={`옵션|결과언어 : 보기분석 후 결과 언어, 번역 시 결과 언어\n창의성 조절 : 1에 가까울수록 새로운 보기 분석을 시도한다.`}
+                                ></span>
+                            </span>
+                        }
                         open={openOption}
                         onToggle={() => setOpenOption(v => !v)}
                     >

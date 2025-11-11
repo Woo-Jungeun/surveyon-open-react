@@ -4535,12 +4535,11 @@ footer {
 }
 
 
-/* 본문 (5줄까지만 표시) */
+/* 본문 (15줄까지만 표시) */
 .tooltip-body {
     margin-top: 8px;
     display: -webkit-box;
-    -webkit-line-clamp: 5;
-    /* 최대 2줄까지만 표시 */
+    -webkit-line-clamp: 15;
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
