@@ -339,7 +339,6 @@ const OptionSettingExload = () => {
                 qnum: qnum,
                 data: filteredRows, // 그리드 데이터
             };
-            console.log("payload", payload)
             const res = await excelListData.mutateAsync(payload);
             //console.log("res", res);
 

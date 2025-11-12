@@ -413,7 +413,6 @@ const OptionSettingBody = () => {
     // 서버가 에러를 JSON(Blob)으로 줄 수도 있어서 가드
     if (blob.type?.includes("application/json")) {
       const txt = await blob.text();
-      console.log("server error json/text:", txt);
       modal.showErrorAlert("에러", "엑셀 다운로드 요청이 거부되었습니다.");
       return;
     }
@@ -452,7 +451,6 @@ const OptionSettingBody = () => {
           raw: true,
         });
         const test = XLSX.utils.sheet_to_json(responseSheet, { defval: "", range: 3 });
-        console.log(test.map(r => r["검증"]));
         // 보기 시트는 1행부터 header
         const viewJson = XLSX.utils.sheet_to_json(viewSheet, {
           defval: "",
