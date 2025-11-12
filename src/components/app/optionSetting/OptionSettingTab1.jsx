@@ -1307,6 +1307,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         className="btnM"
                                                         themeColor={pending ? "secondary" : "primary"}
                                                         onClick={() => onClickDeleteCell(props)}
+                                                        style={{ borderRadius: "8px" }}
                                                     >
                                                         {pending ? "취소" : "삭제"}
                                                     </Button>
