@@ -81,7 +81,7 @@ const OptionSettingTab3 = (props) => {
             }}
             filter={filter}
             onFilterChange={(e) => {
-                setFilter(e?? null);
+                setFilter(e ?? null);
                 onPrefsChange?.({ filter: e });  // 상단에 저장 
             }}
             onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
@@ -156,7 +156,19 @@ const OptionSettingTab3 = (props) => {
     return (
         <GridData
             dataItemKey={DATA_ITEM_KEY}
-            searchMutation={optionEditData}
+            searchMutation={{
+                ...optionEditData,
+                mutateAsync: async (params) => {
+                    const res = await optionEditData.mutateAsync(params);
+
+                    // resultjson이 빈 배열일 경우 로딩바 닫기
+                    if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
+                        loadingSpinner.hide();
+                    }
+
+                    return res;
+                },
+            }}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
                 projectnum: projectnum,

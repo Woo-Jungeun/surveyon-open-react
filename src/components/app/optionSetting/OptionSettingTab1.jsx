@@ -1349,7 +1349,19 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     return (
         <GridData
             dataItemKey={DATA_ITEM_KEY}
-            searchMutation={optionEditData}
+            searchMutation={{
+                ...optionEditData,
+                mutateAsync: async (params) => {
+                    const res = await optionEditData.mutateAsync(params);
+
+                    // resultjson이 빈 배열일 경우 로딩바 닫기
+                    if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
+                        loadingSpinner.hide();
+                    }
+
+                    return res;
+                },
+            }}
             selectedField={SELECTED_FIELD}
             multiSelect={true}
             editField={editField}

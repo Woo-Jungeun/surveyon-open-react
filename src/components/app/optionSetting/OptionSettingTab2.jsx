@@ -127,7 +127,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             }}
             filter={filter}
             onFilterChange={(e) => {
-                setFilter(e?? null);
+                setFilter(e ?? null);
                 onPrefsChange?.({ filter: e }); // 상단에 저장 
             }}
             onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
@@ -327,7 +327,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         // 각 행의 고유키를 계산(서버키 없을 때 __rowKey → 없으면 makeRowKey로 대체)
         const keyOf = useCallback((row) => row?.__rowKey || makeRowKey(row), []);
-    
+
         // 현재 rows 기준으로 lv123code 중복 셀만 __errors에 반영
         const applyLiveDupMarks = useCallback((rows = []) => {
             // 대상 키 집합 계산
@@ -1163,7 +1163,19 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         <GridData
             dataItemKey={DATA_ITEM_KEY}
             rowNumber={"no"}
-            searchMutation={optionEditData}
+            searchMutation={{
+                ...optionEditData,
+                mutateAsync: async (params) => {
+                    const res = await optionEditData.mutateAsync(params);
+
+                    // resultjson이 빈 배열일 경우 로딩바 닫기
+                    if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
+                        loadingSpinner.hide();
+                    }
+
+                    return res;
+                },
+            }}
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
