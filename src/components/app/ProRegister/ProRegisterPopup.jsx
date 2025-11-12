@@ -189,28 +189,25 @@ const ProRegisterPopup = (parentProps) => {
     initSelectionRef.current = true;
   }, [popupShow, selectData, makeRowKey]);
 
-  // 질문 셀 전용 컴포넌트 (IME 안전)
+  // 질문 셀 전용 컴포넌트
   const QuestionCell = memo((props) => {
     const { dataItem, field } = props;
     const inEdit = field === "question" && dataItem.__rowKey === editingKey;
     const inputRef = useRef(null);
-    const composingRef = useRef(false);
     const [local, setLocal] = useState(dataItem[field] ?? "");
-
+  
     // 편집행 바뀌거나 원본 값이 바뀌면 로컬 초기화
     useEffect(() => {
       if (inEdit) setLocal(dataItem[field] ?? "");
     }, [inEdit, dataItem, field]);
-
+  
+    // 편집 시작 시 자동 포커스
     useEffect(() => {
-      if (inEdit) {
-        inputRef.current?.focus({ preventScroll: true });
-      }
+      if (inEdit) inputRef.current?.focus({ preventScroll: true });
     }, [inEdit]);
-
+  
     const commit = useCallback(
       (next) => {
-        if (composingRef.current) return; // 조합중 커밋 금지
         handleItemChange({
           ...props,
           field,
@@ -220,34 +217,25 @@ const ProRegisterPopup = (parentProps) => {
       },
       [props, field, dataItem]
     );
-
+  
+    // 일반 상태는 텍스트로 표시
     if (!inEdit) return <td>{dataItem[field]}</td>;
+  
+    // 편집 모드 input
     return (
       <td onMouseDown={(e) => e.stopPropagation()}>
         <input
           ref={inputRef}
           className="k-input k-input-solid"
           value={local}
-          onCompositionStart={() => { composingRef.current = true; }}
-          onCompositionEnd={(e) => {
-            composingRef.current = false;
-            const next = e.currentTarget.value;
-            setLocal(next);
-            commit(next);
-          }}
-          onChange={(e) => {
-            const next = e.target.value ?? "";
-            setLocal(next);
-            if (!composingRef.current) {
-              commit(next); // 영문 등 일반 입력은 즉시 커밋
-            }
-          }}
+          onChange={(e) => setLocal(e.target.value)}
           onBlur={(e) => {
-            commit(e.currentTarget.value ?? ""); // 포커스 아웃 시 커밋
+            commit(e.target.value ?? "");
+            setEditingKey(null);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              commit(e.currentTarget.value ?? "");
+              commit(e.target.value ?? "");
               setEditingKey(null);
             }
             if (e.key === "Escape") {
@@ -258,7 +246,6 @@ const ProRegisterPopup = (parentProps) => {
       </td>
     );
   });
-
   // 컬럼 셀: '중복' 배지
   const ColumnCell = memo((props) => {
     const { dataItem, field } = props;
