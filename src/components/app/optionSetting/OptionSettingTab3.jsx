@@ -107,6 +107,7 @@ const OptionSettingTab3 = (props) => {
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
+                            height: "680px",
                             data: dataForGridSorted,       // props에서 직접 전달
                             dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                             selectedState,
