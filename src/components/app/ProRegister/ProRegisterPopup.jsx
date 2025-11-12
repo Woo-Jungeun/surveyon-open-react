@@ -13,7 +13,7 @@ import { modalContext } from "@/components/common/Modal";
  * @since 2025-10-14<br />
  */
 const ProRegisterPopup = (parentProps) => {
-  const { popupShow, setPopupShow, popupData, setPopupData, selectData, setSelectData } = parentProps;
+  const { popupShow, setPopupShow, popupData, setPopupData, selectData, setSelectData, idColumn } = parentProps;
   const modalOnOff = popupShow ? "on" : "off";
 
   // selection 필드명
@@ -278,16 +278,17 @@ const ProRegisterPopup = (parentProps) => {
 
     // 중복 표시 + 선택 상태 주입
     const popupGridData = useMemo(() => {
-      const colCounts = (popupData || []).reduce((acc, cur) => {
+      const filtered = (popupData || []).filter((r) => r.question !== idColumn); // 선택한 아이디 컬럼 제외
+      const colCounts = filtered.reduce((acc, cur) => {
         acc[cur.column] = (acc[cur.column] || 0) + 1;
         return acc;
       }, {});
-      return (popupData || []).map((row) => {
+      return filtered.map((row) => {
         const selected = !!selectedState[row.__rowKey];
         const isDuplicate = colCounts[row.column] > 1;
         return { ...row, [SELECTED_FIELD]: selected, isDuplicate };
       });
-    }, [popupData, selectedState]);
+    }, [popupData, selectedState, idColumn]);
 
     const didInitRef = useRef(false);
     useEffect(() => {

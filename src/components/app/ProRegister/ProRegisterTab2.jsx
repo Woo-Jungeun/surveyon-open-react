@@ -568,6 +568,7 @@ const ProRegisterTab2 = () => {
           setPopupData={setPopupData}
           selectData={selectData}   // 선택 데이터
           setSelectData={setSelectData}
+          idColumn={idColumn} 
         />
       }
     </Fragment>
