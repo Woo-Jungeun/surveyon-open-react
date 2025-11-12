@@ -23,6 +23,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "lv3"];
+    // 스크롤 위치 저장용 ref
+    const scrollTopRef = useRef(0);
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -179,8 +181,23 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const GridRenderer = (props) => {
         const {
             dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch,
-            hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature,
+            hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature, scrollTopRef
         } = props;
+
+        const rememberScroll = useCallback(() => {
+            const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+            if (grid) {
+                scrollTopRef.current = grid.scrollTop;
+            }
+        }, []);
+
+        useLayoutEffect(() => {
+            const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+            if (!grid) return;
+            if (scrollTopRef.current > 0) {
+                grid.scrollTop = scrollTopRef.current;
+            }
+        }, [dataState?.data]);
 
         const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
             orderByWithProxy(dataState?.data || [], sort, {
@@ -569,8 +586,10 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             lv1CodeToText, lv1ToTextToCode,
             lv2CodeToText, lv2TextToCode, scheduleFlush
         ]);
+
         // 삭제 로직: 새 행은 즉시 제거, 기존 행은 토글 (단, 해제 시 중복이면 토글 차단)
         const onClickDeleteCell = useCallback((cellProps) => {
+            rememberScroll(); // 스크롤 저장
             const row = cellProps.dataItem;
             const key = keyOf(row);
             // 새 행은 제거
@@ -627,6 +646,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         // 추가버튼 클릭 이벤트
         const addButtonClick = useCallback(() => {
+            rememberScroll(); // 스크롤 저장
             const data = Array.isArray(dataState?.data) ? [...dataState.data] : [];
             const insertIndex = data.length;
             const maxLv123 = Math.max(
@@ -657,10 +677,23 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const withDup = applyLiveDupMarks(data);
             commitSmart(withDup);
             setDataState((prev) => ({ ...prev, data: withDup }));
+
+            // 새 행 추가 후 스크롤 맨 아래로 이동
+            requestAnimationFrame(() => {
+                const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+                if (grid) {
+                    grid.scrollTo({
+                        top: grid.scrollHeight,
+                        behavior: "smooth", // 부드럽게 이동 (깜빡임 방지)
+                    });
+                    scrollTopRef.current = grid.scrollHeight; // 다음 복원 루프용
+                }
+            });
         }, [applyLiveDupMarks]);
 
         // 행 클릭 시 편집기능 open
         const onRowClick = useCallback((e) => {
+            rememberScroll();
             const clicked = e.dataItem;
 
             // 보기유형이 survey면 편집 진입 막기 
@@ -1103,6 +1136,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                                         className="btnM"
                                                         themeColor={pending ? "secondary" : "primary"}
                                                         onClick={() => onClickDeleteCell(props)}
+                                                        style={{ borderRadius: "8px" }}
                                                     >
                                                         {pending ? "취소" : "삭제"}
                                                     </Button>
@@ -1192,6 +1226,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     baselineSigRef={baselineSigRef}
                     sigStackRef={sigStackRef}
                     makeTab2Signature={makeTab2Signature}
+                    scrollTopRef={scrollTopRef}
                 />
             )}
         />
