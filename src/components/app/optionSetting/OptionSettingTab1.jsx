@@ -60,6 +60,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const gridRef = useRef(null);
     const reportedLvcodeRef = useRef(false);    //Body 초기 lvcode 전달
 
+    // 스크롤 위치 저장용 ref
+    const scrollTopRef = useRef(0);
+
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
@@ -197,7 +200,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const GridRenderer = forwardRef((props, ref) => {
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
-            sigStackRef, makeTab1Signature,
+            sigStackRef, makeTab1Signature, scrollTopRef
         } = props;
 
         const rows = dataState?.data ?? [];
@@ -224,6 +227,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
             [sort, proxyField]
         );
+        const rememberScroll = useCallback(() => {
+            const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+            if (grid) {
+                scrollTopRef.current = grid.scrollTop;
+            }
+        }, []);
+
+        useLayoutEffect(() => {
+            const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+            if (!grid) return;
+            if (scrollTopRef.current > 0) {
+                grid.scrollTop = scrollTopRef.current;
+            }
+        }, [dataState?.data]);
+
         useEffect(() => {
             const rowsNow = dataState?.data || [];
             if (!rowsNow.length || !hasAllRowKeys) return;
@@ -429,6 +447,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data]);
 
         const setSelectedStateGuarded = useCallback((next) => {
+            rememberScroll(); // 스크롤 저장
             // (A) 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
             const expandWithBatchIfNeeded = (prevMap, nextMap) => {
                 try {
@@ -509,9 +528,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 for (const k of aKeys) if (!!a[k] !== !!b[k]) return false;
                 return true;
             })();
-            if (isSame) return; // [추가] 플래그 유지 → 이후 실제 데이터 들어오면 다시 시도
+            if (isSame) return; // 플래그 유지 → 이후 실제 데이터 들어오면 다시 시도
 
-            /* 즉시 적용(첫 페인트 전) */
             suppressUnsavedSelectionRef.current = true;   // 미저장 X
             setSelectedState(nextSelected);
             suppressUnsavedSelectionRef.current = false;
@@ -762,6 +780,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 추가 버튼 이벤트
         const handleAddButton = useCallback((cellProps) => {
+            rememberScroll(); // 스크롤 저장
             onUnsavedChange?.(true);
 
             const clicked = cellProps.dataItem;
@@ -982,6 +1001,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
+            rememberScroll(); // 스크롤 저장
             onUnsavedChange?.(true);
             const deletedRow = cellProps.dataItem;
             const deletedKey = getKey(deletedRow);
@@ -1022,6 +1042,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 소분류코드 생성 요청 클릭 핸들러
         const handleAddMissingCode = useCallback(async (row) => {
+            rememberScroll(); // 스크롤 저장
             try {
                 const payload = {
                     user: auth?.user?.userId || "",
@@ -1382,6 +1403,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     sigStackRef={sigStackRef}
                     makeTab1Signature={makeTab1Signature}
                     ref={gridRef}
+                    scrollTopRef={scrollTopRef}
                 />}
 
         />
