@@ -330,23 +330,26 @@
   top: 100px;
   right: 0;
   height: calc(100% - 100px);
-  width: 0;
+  width: 280px; /* 고정폭으로 잡고 */
   background: #fff;
   border-left: 1px solid #ddd;
   box-shadow: -2px 0 8px rgba(0,0,0,0.08);
   overflow: hidden;
-  transition: width 0.25s ease;
   z-index: 100;
-  border-radius: 8px 0 0 8px; /* 모서리 둥글게 */
+  border-radius: 8px 0 0 8px;
+  transform: translateX(100%); /* 기본: 화면 밖으로 */
+  transition: transform 0.25s ease-out; /* GPU 전용 transition */
+  will-change: transform; /* 브라우저에 미리 힌트 주기 */
 }
 
 .lv3-side-panel.open {
-  width: 280px;
+  transform: translateX(0); /* 열릴 때 오른쪽에서 슬라이드 인 */
 }
 
+/* 토글 버튼도 패널에 맞춰 살짝 이동 */
 .lv3-panel-toggle {
-  position: fixed;        /* 패널과 함께 오른쪽 고정 */
-  top: 110px;             /* 패널보다 조금 아래로 */
+  position: fixed;
+  top: 110px;
   width: 24px;
   height: 40px;
   background: #eee;
@@ -357,7 +360,13 @@
   align-items: center;
   justify-content: center;
   z-index: 200;
-  transition: right 0.25s ease;
+  right: 0;
+  transition: transform 0.25s ease-out;
+  will-change: transform;
+}
+
+.lv3-side-panel.open + .lv3-panel-toggle {
+  transform: translateX(-280px); /* 패널 폭만큼 이동 */
 }
 
 /* 드래그 중 실시간 하이라이트 */

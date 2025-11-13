@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-const OptionSettingLv3Panel = ({
+import React, { useState, memo } from "react";
+const OptionSettingLv3Panel = memo(({
   open,
   onClose,
   targets,
@@ -47,12 +47,11 @@ const OptionSettingLv3Panel = ({
       <div
         className="lv3-panel-toggle"
         onClick={() => onClose(!open)}
-        style={{ right: open ? "280px" : "0" }}
       >
         {open ? ">>" : "<<"}
       </div>
     </div>
   );
-};
+});
 
 export default OptionSettingLv3Panel;
