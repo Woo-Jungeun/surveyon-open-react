@@ -730,30 +730,30 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, []);
 
         // 셀 값 변경 → 해당 행의 해당 필드만 업데이트
-        const onItemChange = useCallback((e) => {
-            onUnsavedChange?.(true);
+        // const onItemChange = useCallback((e) => {
+        //     onUnsavedChange?.(true);
 
-            setDataState((prev) => {
-                const prevData = prev?.data ?? [];
-                const idx = prevData.findIndex(r => getKey(r) === getKey(e.dataItem));
-                if (idx === -1) return prev;
+        //     setDataState((prev) => {
+        //         const prevData = prev?.data ?? [];
+        //         const idx = prevData.findIndex(r => getKey(r) === getKey(e.dataItem));
+        //         if (idx === -1) return prev;
 
-                const updatedRow = {
-                    ...prevData[idx],
-                    [e.field]: e.value,
-                    inEdit: true,
-                };
+        //         const updatedRow = {
+        //             ...prevData[idx],
+        //             [e.field]: e.value,
+        //             inEdit: true,
+        //         };
 
-                const nextData = [...prevData];
-                nextData[idx] = updatedRow;
+        //         const nextData = [...prevData];
+        //         nextData[idx] = updatedRow;
 
-                const marked = applyRequiredMarksLv3(nextData);
+        //         const marked = applyRequiredMarksLv3(nextData);
 
-                // 변경된 행만 커밋
-                commitSmart(marked);
-                return { ...prev, data: marked };
-            });
-        }, []);
+        //         // 변경된 행만 커밋
+        //         commitSmart(marked);
+        //         return { ...prev, data: marked };
+        //     });
+        // }, []);
 
         // "min-gap" (비어있는 가장 작은 수) or "max+1"
         const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
@@ -1108,7 +1108,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             },
                             dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
                             editField,
-                            onItemChange,
+                            //onItemChange, ->sentiment같은 행 수정할때 사용 
                             onRowClick,
                             selectedField: SELECTED_FIELD, // 체크박스 필드 지정 
                             selectedState,
