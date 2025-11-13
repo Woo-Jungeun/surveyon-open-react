@@ -1023,7 +1023,8 @@ const ProList = () => {
                                         return (
                                             <Column
                                                 key={`grp:${g.name}`}
-                                                title={
+                                                title={g.name}
+                                                headerCell={() => (
                                                     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
                                                         {g.name}
                                                         {g.name === "ADMIN" && (
@@ -1039,7 +1040,7 @@ const ProList = () => {
                                                             ></span>
                                                         )}
                                                     </div>
-                                                }
+                                             )}
                                             >
                                                 {items.map(it =>
                                                     it.type === "col"
