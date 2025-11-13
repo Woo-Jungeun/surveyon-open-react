@@ -1,7 +1,7 @@
 import React, { Fragment, useRef, useState, useCallback, useContext, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { useSelector } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import OptionSettingInfo from "@/components/app/optionSetting/OptionSettingInfo";
 import OptionSettingTab1 from "@/components/app/optionSetting/OptionSettingTab1";
 import OptionSettingTab2 from "@/components/app/optionSetting/OptionSettingTab2";
@@ -450,7 +450,6 @@ const OptionSettingBody = () => {
           range: 3, // (0-based) 실제 컬럼명이 4행에 있음
           raw: true,
         });
-        const test = XLSX.utils.sheet_to_json(responseSheet, { defval: "", range: 3 });
         // 보기 시트는 1행부터 header
         const viewJson = XLSX.utils.sheet_to_json(viewSheet, {
           defval: "",
