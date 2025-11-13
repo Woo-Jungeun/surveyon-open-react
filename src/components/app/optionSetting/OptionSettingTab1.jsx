@@ -202,12 +202,16 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
         } = props;
+        // useEffect(() => {
+        //     console.log("%c🔄 GridRenderer 렌더됨", "color: #0af");
+        // });
 
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [isDragging, setIsDragging] = useState(false);
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
-        const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 선택된 행키 집합(소분류 전용)
+        const lv3SelKeysRef = useRef(new Set());
+        const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 화면 표시용 (mouseup 때만 변경)
         const draggingRef = useRef(false);
         const anchorIndexRef = useRef(null);
         const lastIndexRef = useRef(null);
@@ -547,96 +551,114 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const row = processedMirror?.[i];
                 if (row) s.add(getKey(row));
             }
-            setLv3SelKeys(s);
+            lv3SelKeysRef.current = s; // ref에만 저장 (렌더 유발 X)
         }, [processedMirror, getKey]);
-
         const lastCellRectRef = useRef(null); //마지막 셀의 DOM 좌표 기억용 ref 추가
 
-        // 행에서 드래그/범위/토글 선택 시작
+        // 행에서 드래그/범위/토글 선택 시작점
         const onRowMouseDown = useCallback((rowProps, e) => {
-            if (e.target.closest(ROW_EXCLUSION_SELECTOR)) return; // 인터랙션 요소는 패스
-
+            if (e.target.closest(ROW_EXCLUSION_SELECTOR)) return;
+          
             const idx = rowProps.dataIndex;
             const row = rowProps.dataItem;
             const key = getKey(row);
-
+          
             lastFocusedKeyRef.current = key;
-
-            // 이 행의 lv3 셀(td) 위치를 찾아 앵커로 기억(드롭다운 위치 계산용)
-            const td = document.querySelector(`[data-lv3-key="${String(key)}"]`);
-            if (td) {
-                lastCellElRef.current = td;
-                lastCellRectRef.current = td.getBoundingClientRect();
-            }
-
-            //  Ctrl/Shift 없이 "이미 선택된 행"을 클릭하면 선택 유지(리셋 금지)
+          
+            // Ctrl/Shift 클릭 로직은 그대로 유지
             if (!e.shiftKey && !e.ctrlKey && !e.metaKey && lv3SelKeys.size > 0 && lv3SelKeys.has(key)) {
-                anchorIndexRef.current = idx;
-                lastIndexRef.current = idx;
-                // 드래그 시작/리셋 안 함
-                return;
+              anchorIndexRef.current = idx;
+              lastIndexRef.current = idx;
+              return;
             }
-
             if (e.shiftKey && anchorIndexRef.current != null) {
-                selectionModeRef.current = 'range';
-                rangeToKeys(anchorIndexRef.current, idx);
-                lastIndexRef.current = idx;
-                return;
+              selectionModeRef.current = 'range';
+              rangeToKeys(anchorIndexRef.current, idx);
+              lastIndexRef.current = idx;
+              return;
             }
-
             if (e.ctrlKey || e.metaKey) {
-                selectionModeRef.current = 'toggle';
-                /* CTRL 토글 시에도 마지막 인덱스/앵커 최신화 (Enter 직후 사용됨) */
-                anchorIndexRef.current = idx;
-                lastIndexRef.current = idx;
-
-                setLv3SelKeys(prev => {
-                    const next = new Set(prev);
-                    next.has(key) ? next.delete(key) : next.add(key);
-                    return next;
-                });
-                // Kendo의 단일선택/리셋 기본 동작 차단 (행 클릭 시 선택 유지)
-                e.preventDefault();
-                e.stopPropagation();
-                suppressNextClickRef.current = true; //Ctrl 토글 후 Kendo 기본 click 한 번 차단
-                return;
+              selectionModeRef.current = 'toggle';
+              anchorIndexRef.current = idx;
+              lastIndexRef.current = idx;
+          
+              setLv3SelKeys(prev => {
+                const next = new Set(prev);
+                next.has(key) ? next.delete(key) : next.add(key);
+                return next;
+              });
+              e.preventDefault();
+              e.stopPropagation();
+              suppressNextClickRef.current = true;
+              return;
             }
-
-            // 기본: 드래그 시작
+          
+            // 드래그 시작 (상태 변경 없음)
             selectionModeRef.current = 'drag';
             draggingRef.current = true;
             setIsDragging(true);
             anchorIndexRef.current = idx;
             lastIndexRef.current = idx;
-            setLv3SelKeys(new Set([key]));
-        }, [getKey, rangeToKeys]);
+          
+            // dataset 초기화 (시각 표시용)
+            const grid = gridRootRef.current;
+            if (grid) {
+              grid.dataset.dragStart = idx;
+              grid.dataset.dragEnd = idx;
+            }
+          }, [getKey, rangeToKeys]);
 
-        // 드래그 중 행 위로 진입할 때 범위 갱신
-        const onRowMouseEnter = useCallback((rowProps, e) => {
+        // 드래그 중 범위 갱신신
+        const onRowMouseEnter = useCallback((rowProps) => {
             if (!draggingRef.current || anchorIndexRef.current == null) return;
-
             const idx = rowProps.dataIndex;
             lastIndexRef.current = idx;
             rangeToKeys(anchorIndexRef.current, idx);
-
-            // 지나간 행의 lv3 셀 위치를 계속 최신화(나중에 드롭다운 열 위치 정확도 ↑)
-            const key = getKey(rowProps.dataItem);
-            const td = document.querySelector(`[data-lv3-key="${String(key)}"]`);
-            if (td) lastCellRectRef.current = td.getBoundingClientRect();
-        }, [rangeToKeys, getKey]);
+          
+            // 실시간 하이라이트 표시
+            const grid = gridRootRef.current;
+            if (grid) {
+              const trs = grid.querySelectorAll(".k-grid-table tr[data-index]");
+              const start = Math.min(anchorIndexRef.current, idx);
+              const end = Math.max(anchorIndexRef.current, idx);
+              trs.forEach(tr => {
+                const i = Number(tr.dataset.index);
+                tr.classList.toggle("drag-highlight", i >= start && i <= end);
+              });
+            }
+          }, [rangeToKeys]);
 
         // mouseup(드래그 종료): 자동으로 에디터 열지 않음 (중복 오픈 방지)
         useEffect(() => {
             const end = () => {
-                if (!draggingRef.current) return;
-                draggingRef.current = false;
-                // 드래그/범위 선택 상태만 종료. 자동 오픈은 하지 않음
-                selectionModeRef.current = null;
-                setIsDragging(false);
+              if (!draggingRef.current) return;
+          
+              draggingRef.current = false;
+              setIsDragging(false);
+              selectionModeRef.current = null;
+          
+              // 최종 선택 확정: 여기서 한 번만 렌더 발생
+              const finalSet = new Set(lv3SelKeysRef.current);
+              setLv3SelKeys(finalSet);
+          
+              // 드래그 하이라이트 제거
+              const grid = gridRootRef.current;
+              if (grid) {
+                delete grid.dataset.dragStart;
+                delete grid.dataset.dragEnd;
+                grid.querySelectorAll(".drag-highlight").forEach(tr => tr.classList.remove("drag-highlight"));
+              }
+          
+              // 필요 시 GridRenderer에게 콜백 전달 (선택 완료 시점)
+              if (typeof props?.onDragSelectionEnd === "function") {
+                props.onDragSelectionEnd(finalSet);
+              }
             };
-            window.addEventListener('mouseup', end);
-            return () => window.removeEventListener('mouseup', end);
-        }, []);
+          
+            window.addEventListener("mouseup", end);
+            return () => window.removeEventListener("mouseup", end);
+          }, []);
+          
 
         // 최신 값들을 ref에 동기화 (렌더마다 가벼운 할당만)
         useEffect(() => {
@@ -838,6 +860,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             return React.cloneElement(trEl, {
                 ...trEl.props,
+                'data-index': rowProps.dataIndex, 
                 className: cls,
                 onPointerDown: (e) => { onRowMouseDown(rowProps, e); trEl.props.onPointerDown?.(e); },
                 onPointerEnter: (e) => { onRowMouseEnter(rowProps, e); trEl.props.onPointerEnter?.(e); },
@@ -1200,7 +1223,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         onMouseDown={(e) => e.stopPropagation()} // td 핸들러 막음
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-
+                                                            rememberScroll(); // 스크롤 저장
                                                             const td = e.currentTarget.closest('td');
                                                             const rect = td?.getBoundingClientRect?.();
                                                             if (rect) lastCellRectRef.current = rect;

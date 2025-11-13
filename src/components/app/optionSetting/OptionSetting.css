@@ -359,3 +359,14 @@
   z-index: 200;
   transition: right 0.25s ease;
 }
+
+/* 드래그 중 실시간 하이라이트 */
+#grid_01.is-dragging .k-grid-table tr.drag-highlight {
+  background-color: #eafae5;
+}
+
+/* 드래그 중 선택 방지 */
+#grid_01.is-dragging {
+  user-select: none;
+  cursor: ns-resize;
+}
