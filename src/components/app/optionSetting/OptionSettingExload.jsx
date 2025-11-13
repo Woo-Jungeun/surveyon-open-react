@@ -310,7 +310,6 @@ const OptionSettingExload = () => {
                 // 서버가 에러를 JSON(Blob)으로 줄 수도 있어서 가드
                 if (blob.type?.includes("application/json")) {
                     const txt = await blob.text();
-                    console.log("server error json/text:", txt);
                     modal.showErrorAlert("에러", "샘플 다운로드 요청이 거부되었습니다.");
                     return;
                 }
