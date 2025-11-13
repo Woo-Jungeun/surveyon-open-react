@@ -1413,6 +1413,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         baselineSigRef,
         sigStackRef,
         makeTab1Signature,
+        sort, filter
     ]);
 
     return (
