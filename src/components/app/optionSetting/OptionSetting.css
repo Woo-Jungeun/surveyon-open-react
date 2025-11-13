@@ -264,7 +264,7 @@
 .lv3-panel-body {
   padding: 6px;
   overflow-y: auto;
-  max-height: calc(100% - 60px); /* 검색창 영역 제외 */
+  max-height: calc(100% - 80px); /* 검색창 영역 제외 */
 }
 
 .lv3-search {
