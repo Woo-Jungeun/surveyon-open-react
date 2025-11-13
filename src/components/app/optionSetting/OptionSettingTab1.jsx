@@ -1077,9 +1077,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 };
                 const res = await optionSaveData.mutateAsync(payload);
                 if (res?.success === "777") {
-                    await onRequestLv3Refresh?.(); // 부모에게 소분류 코드 재조회 요청 보냄 
                     modal.showConfirm("알림", "소분류 코드를 추가했습니다.", {
-                        btns: [{ title: "확인", click: () => handleSearch() }],
+                        btns: [{
+                            title: "확인", click: async () => {
+                                handleSearch();
+                                await onRequestLv3Refresh?.(); // 부모에게 소분류 코드 재조회 요청 보냄 
+                            }
+                        }],
                     });
                     return;
                 } else if (res?.success === "768") {
@@ -1277,22 +1281,20 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                                             return (
                                                 <td style={{ textAlign: "center" }}>
-                                                    {/* case 3: 옵션 자체가 없음 → 코드 등록 버튼 */}
-                                                    {!matchedOpt && codeName ? (
-                                                        <Button
-                                                            className="btnM"
-                                                            themeColor="primary"
-                                                            onClick={() => handleAddMissingCode(r)}
-                                                        >
-                                                            코드 등록
-                                                        </Button>
-                                                    ) : matchedOpt && codeId ? (
-                                                        // case 1: 옵션 있고 codeId도 있으면 codeId 출력
+                                                    {/* 코드가 있으면 무조건 코드 출력 */}
+                                                    {!!codeId ? (
                                                         <span title={codeId}>{codeId}</span>
-                                                    ) : (
-                                                        // case 2: 옵션은 있는데 codeId는 없음 → 빈칸
-                                                        null
-                                                    )}
+                                                    ) :
+                                                        /* 코드 없지만 이름은 있고, lv3Options에도 없으면 등록 버튼 */
+                                                        (!!codeName && !matchedOpt) ? (
+                                                            <Button
+                                                                className="btnM"
+                                                                themeColor="primary"
+                                                                onClick={() => handleAddMissingCode(r)}
+                                                            >
+                                                                코드 등록
+                                                            </Button>
+                                                        ) : null}
                                                 </td>
                                             );
                                         }}
