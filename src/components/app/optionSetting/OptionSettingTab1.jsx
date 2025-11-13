@@ -739,6 +739,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 행 클릭 이벤트 → 해당 행만 inEdit=true
         const onRowClick = useCallback((e) => {
+            rememberScroll(); // 스크롤 저장
             const clickedKey = getKey(e.dataItem);
             setSelectedRowKey(clickedKey);
 
