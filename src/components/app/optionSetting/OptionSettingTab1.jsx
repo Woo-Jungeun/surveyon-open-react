@@ -558,55 +558,55 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 행에서 드래그/범위/토글 선택 시작점
         const onRowMouseDown = useCallback((rowProps, e) => {
             if (e.target.closest(ROW_EXCLUSION_SELECTOR)) return;
-          
+
             const idx = rowProps.dataIndex;
             const row = rowProps.dataItem;
             const key = getKey(row);
-          
+
             lastFocusedKeyRef.current = key;
-          
+
             // Ctrl/Shift 클릭 로직은 그대로 유지
             if (!e.shiftKey && !e.ctrlKey && !e.metaKey && lv3SelKeys.size > 0 && lv3SelKeys.has(key)) {
-              anchorIndexRef.current = idx;
-              lastIndexRef.current = idx;
-              return;
+                anchorIndexRef.current = idx;
+                lastIndexRef.current = idx;
+                return;
             }
             if (e.shiftKey && anchorIndexRef.current != null) {
-              selectionModeRef.current = 'range';
-              rangeToKeys(anchorIndexRef.current, idx);
-              lastIndexRef.current = idx;
-              return;
+                selectionModeRef.current = 'range';
+                rangeToKeys(anchorIndexRef.current, idx);
+                lastIndexRef.current = idx;
+                return;
             }
             if (e.ctrlKey || e.metaKey) {
-              selectionModeRef.current = 'toggle';
-              anchorIndexRef.current = idx;
-              lastIndexRef.current = idx;
-          
-              setLv3SelKeys(prev => {
-                const next = new Set(prev);
-                next.has(key) ? next.delete(key) : next.add(key);
-                return next;
-              });
-              e.preventDefault();
-              e.stopPropagation();
-              suppressNextClickRef.current = true;
-              return;
+                selectionModeRef.current = 'toggle';
+                anchorIndexRef.current = idx;
+                lastIndexRef.current = idx;
+
+                setLv3SelKeys(prev => {
+                    const next = new Set(prev);
+                    next.has(key) ? next.delete(key) : next.add(key);
+                    return next;
+                });
+                e.preventDefault();
+                e.stopPropagation();
+                suppressNextClickRef.current = true;
+                return;
             }
-          
+
             // 드래그 시작 (상태 변경 없음)
             selectionModeRef.current = 'drag';
             draggingRef.current = true;
             setIsDragging(true);
             anchorIndexRef.current = idx;
             lastIndexRef.current = idx;
-          
+
             // dataset 초기화 (시각 표시용)
             const grid = gridRootRef.current;
             if (grid) {
-              grid.dataset.dragStart = idx;
-              grid.dataset.dragEnd = idx;
+                grid.dataset.dragStart = idx;
+                grid.dataset.dragEnd = idx;
             }
-          }, [getKey, rangeToKeys]);
+        }, [getKey, rangeToKeys]);
 
         // 드래그 중 범위 갱신신
         const onRowMouseEnter = useCallback((rowProps) => {
@@ -614,51 +614,51 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const idx = rowProps.dataIndex;
             lastIndexRef.current = idx;
             rangeToKeys(anchorIndexRef.current, idx);
-          
+
             // 실시간 하이라이트 표시
             const grid = gridRootRef.current;
             if (grid) {
-              const trs = grid.querySelectorAll(".k-grid-table tr[data-index]");
-              const start = Math.min(anchorIndexRef.current, idx);
-              const end = Math.max(anchorIndexRef.current, idx);
-              trs.forEach(tr => {
-                const i = Number(tr.dataset.index);
-                tr.classList.toggle("drag-highlight", i >= start && i <= end);
-              });
+                const trs = grid.querySelectorAll(".k-grid-table tr[data-index]");
+                const start = Math.min(anchorIndexRef.current, idx);
+                const end = Math.max(anchorIndexRef.current, idx);
+                trs.forEach(tr => {
+                    const i = Number(tr.dataset.index);
+                    tr.classList.toggle("drag-highlight", i >= start && i <= end);
+                });
             }
-          }, [rangeToKeys]);
+        }, [rangeToKeys]);
 
         // mouseup(드래그 종료): 자동으로 에디터 열지 않음 (중복 오픈 방지)
         useEffect(() => {
             const end = () => {
-              if (!draggingRef.current) return;
-          
-              draggingRef.current = false;
-              setIsDragging(false);
-              selectionModeRef.current = null;
-          
-              // 최종 선택 확정: 여기서 한 번만 렌더 발생
-              const finalSet = new Set(lv3SelKeysRef.current);
-              setLv3SelKeys(finalSet);
-          
-              // 드래그 하이라이트 제거
-              const grid = gridRootRef.current;
-              if (grid) {
-                delete grid.dataset.dragStart;
-                delete grid.dataset.dragEnd;
-                grid.querySelectorAll(".drag-highlight").forEach(tr => tr.classList.remove("drag-highlight"));
-              }
-          
-              // 필요 시 GridRenderer에게 콜백 전달 (선택 완료 시점)
-              if (typeof props?.onDragSelectionEnd === "function") {
-                props.onDragSelectionEnd(finalSet);
-              }
+                if (!draggingRef.current) return;
+
+                draggingRef.current = false;
+                setIsDragging(false);
+                selectionModeRef.current = null;
+
+                // 최종 선택 확정: 여기서 한 번만 렌더 발생
+                const finalSet = new Set(lv3SelKeysRef.current);
+                setLv3SelKeys(finalSet);
+
+                // 드래그 하이라이트 제거
+                const grid = gridRootRef.current;
+                if (grid) {
+                    delete grid.dataset.dragStart;
+                    delete grid.dataset.dragEnd;
+                    grid.querySelectorAll(".drag-highlight").forEach(tr => tr.classList.remove("drag-highlight"));
+                }
+
+                // 필요 시 GridRenderer에게 콜백 전달 (선택 완료 시점)
+                if (typeof props?.onDragSelectionEnd === "function") {
+                    props.onDragSelectionEnd(finalSet);
+                }
             };
-          
+
             window.addEventListener("mouseup", end);
             return () => window.removeEventListener("mouseup", end);
-          }, []);
-          
+        }, []);
+
 
         // 최신 값들을 ref에 동기화 (렌더마다 가벼운 할당만)
         useEffect(() => {
@@ -861,7 +861,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             return React.cloneElement(trEl, {
                 ...trEl.props,
-                'data-index': rowProps.dataIndex, 
+                'data-index': rowProps.dataIndex,
                 className: cls,
                 onPointerDown: (e) => { onRowMouseDown(rowProps, e); trEl.props.onPointerDown?.(e); },
                 onPointerEnter: (e) => { onRowMouseEnter(rowProps, e); trEl.props.onPointerEnter?.(e); },
@@ -1392,6 +1392,27 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         );
     });
 
+    const renderGridItem = useCallback((props) => (
+        <GridRenderer
+            {...props}
+            hist={hist}
+            baselineDidRef={baselineDidRef}
+            baselineAfterReloadRef={baselineAfterReloadRef}
+            baselineSigRef={baselineSigRef}
+            sigStackRef={sigStackRef}
+            makeTab1Signature={makeTab1Signature}
+            ref={gridRef}
+            scrollTopRef={scrollTopRef}
+        />
+    ), [
+        hist,
+        baselineDidRef,
+        baselineAfterReloadRef,
+        baselineSigRef,
+        sigStackRef,
+        makeTab1Signature,
+    ]);
+
     return (
         <GridData
             dataItemKey={DATA_ITEM_KEY}
@@ -1417,18 +1438,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 qnum: qnum,
                 gb: "in",
             }}
-            renderItem={(props) =>
-                <GridRenderer
-                    {...props}
-                    hist={hist}
-                    baselineDidRef={baselineDidRef}
-                    baselineAfterReloadRef={baselineAfterReloadRef}
-                    baselineSigRef={baselineSigRef}
-                    sigStackRef={sigStackRef}
-                    makeTab1Signature={makeTab1Signature}
-                    ref={gridRef}
-                    scrollTopRef={scrollTopRef}
-                />}
+            renderItem={renderGridItem}   // useCallback 적용
 
         />
     );
