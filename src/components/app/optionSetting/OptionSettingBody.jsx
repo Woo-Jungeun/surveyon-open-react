@@ -14,6 +14,7 @@ import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingAp
 import moment from "moment";
 import OptionSettingExcelUploadErrorPopup from "@/components/app/optionSetting/OptionSettingExcelUploadErrorPopup.jsx";
 import * as XLSX from "xlsx";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 /**
  * 분석 > Body
@@ -86,6 +87,7 @@ const CommonActionButton = ({ label, onClick, tooltipText }) => {
 const OptionSettingBody = () => {
   const modal = useContext(modalContext);
   const auth = useSelector((store) => store.auth);
+  const loadingSpinner = useContext(loadingSpinnerContext);
 
   const { optionEditData, excelDownloadData } = OptionSettingApi();
 
@@ -352,6 +354,10 @@ const OptionSettingBody = () => {
           gb: "lb",
         },
       });
+      
+      if (res.success === "777") {
+        loadingSpinner.hide();  // 로딩바 닫기 
+      }
 
       const seen = new Set();
       const list = (res?.resultjson ?? []).reduce((acc, r) => {
