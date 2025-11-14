@@ -283,42 +283,46 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data, hasAllRowKeys]);
 
         // 수정로그 commit 
+        const onUnsavedChangeRef = useRef(onUnsavedChange);
+        const onHasEditLogChangeRef = useRef(onHasEditLogChange);
+
+        useEffect(() => {
+            onUnsavedChangeRef.current = onUnsavedChange;
+            onHasEditLogChangeRef.current = onHasEditLogChange;
+        }, [onUnsavedChange, onHasEditLogChange]);
+
+
         const commitSmart = useCallback((updatedRows) => {
             const newSig = makeTab1Signature(updatedRows);
             const stack = sigStackRef.current;
             const top = stack[stack.length - 1] ?? null;
             const prev = stack[stack.length - 2] ?? baselineSigRef.current;
 
-            // 1) 동일 스냅샷이면 무시
-            if (newSig === top) {
-                onUnsavedChange?.(hist.hasChanges);
-                onHasEditLogChange?.(hist.hasChanges);
-                return;
-            }
+            // 동일 상태면 무시
+            if (newSig === top) return;
 
-            // 2) 베이스라인으로 완전 복귀한 경우: 히스토리를 0으로 초기화
+            // 완전 복귀 시 초기화
             if (newSig === baselineSigRef.current) {
-                hist.reset(updatedRows);          // 내부 스택을 비우고 현재를 베이스라인으로
-                stack.length = 0;                 // 우리 서명 스택도 비우기
-                onUnsavedChange?.(false);         // 미저장 플래그 해제
-                onHasEditLogChange?.(false);
+                hist.reset(updatedRows);
+                stack.length = 0;
+                onUnsavedChangeRef.current?.(false);
+                onHasEditLogChangeRef.current?.(false);
                 return;
             }
-
-            // 3) 직전 단계로의 되돌림이면 undo로 처리(길이 -1처럼 보이게)
+            // 직전으로 되돌림
             if (newSig === prev) {
-                hist.undo();      // 커서만 되돌리는 히스토리 구현이어도 OK
-                stack.pop();      // 우리는 실제로 스택에서 하나 제거
-                onUnsavedChange?.(hist.hasChanges);
-                onHasEditLogChange?.(hist.hasChanges);
+                hist.undo();
+                stack.pop();
+                onUnsavedChangeRef.current?.(hist.hasChanges);
+                onHasEditLogChangeRef.current?.(hist.hasChanges);
                 return;
             }
 
             hist.commit(updatedRows);
             stack.push(newSig);
-            onUnsavedChange?.(true);
-            onHasEditLogChange?.(true);
-        }, [hist, makeTab1Signature, onUnsavedChange]);
+            onUnsavedChangeRef.current?.(true);
+            onHasEditLogChangeRef.current?.(true);
+        }, [hist, makeTab1Signature]);
 
         //ctrl+z, ctrl+y
         useEffect(() => {
@@ -482,7 +486,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setSelectedState((prev) => {
                 const computed = (typeof next === "function" ? next(prev) : (next || {}));
                 const maybeBatched = expandWithBatchIfNeeded(prev, computed);
-                
+
                 // 자동 동기화 중에는 데이터/히스토리 건드리지 않고 선택맵만 바꾼다
                 if (suppressUnsavedSelectionRef.current) {
                     return maybeBatched;
@@ -502,12 +506,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         return { ...r, recheckyn: nextRe, selected: nextSel };
                     });
                     if (!changed) return prevDS;   // 변경 없으면 리렌더 스킵
-                    commitSmart(updated);
+                    commitSmartRef.current?.(updated);
                     return { ...prevDS, data: updated };
                 });
                 return maybeBatched;
             });
-        }, [setSelectedState, setDataState, lv3SelKeys, getKey, commitSmart]);
+        }, [setSelectedState, setDataState, lv3SelKeys, getKey]);
 
         useLayoutEffect(() => {
             if (!rows.length) return;
@@ -703,10 +707,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [setDataState]);
 
         // commitSmart를 ref로 보관 (의존성 제거를 위해)
-        const commitSmartRef = useRef(commitSmart);
+        const commitSmartRef = useRef(null);
         useEffect(() => {
             commitSmartRef.current = commitSmart;
-        }, [commitSmart]);
+        }, []);
 
         // 일괄 적용 (선택된 키들에 옵션 메타까지 모두 반영)
         const applyLv3To = useCallback((targetKeys, opt) => {
@@ -1018,9 +1022,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             return vis.length >= 3 ? vis[vis.length - 3].field : undefined; // 항상 추가 왼쪽에
         }, [effectiveColumns]);
 
-        // onClickDeleteCell 의존성 제거를 위한 ref 처리 
-        const onUnsavedChangeRef = useRef(onUnsavedChange);
-        useEffect(() => { onUnsavedChangeRef.current = onUnsavedChange; }, [onUnsavedChange]);
 
         // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
@@ -1045,7 +1046,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 }
                 const marked = applyRequiredMarksLv3(nextData);
                 // 삭제된 행만 커밋
-                commitSmart(marked);
+                commitSmartRef.current?.(marked);
                 return { ...prev, data: marked };
             });
         }, []);
