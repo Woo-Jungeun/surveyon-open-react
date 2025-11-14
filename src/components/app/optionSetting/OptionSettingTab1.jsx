@@ -482,7 +482,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setSelectedState((prev) => {
                 const computed = (typeof next === "function" ? next(prev) : (next || {}));
                 const maybeBatched = expandWithBatchIfNeeded(prev, computed);
-
+                
                 // 자동 동기화 중에는 데이터/히스토리 건드리지 않고 선택맵만 바꾼다
                 if (suppressUnsavedSelectionRef.current) {
                     return maybeBatched;
@@ -741,6 +741,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 행 클릭 이벤트 → 해당 행만 inEdit=true
         const onRowClick = useCallback((e) => {
             rememberScroll(); // 스크롤 저장
+            clearLv3Selection(); //선택 행 초기화 
+
             const clickedKey = getKey(e.dataItem);
             setSelectedRowKey(clickedKey);
 
