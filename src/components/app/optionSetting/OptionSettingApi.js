@@ -17,8 +17,8 @@ export function OptionSettingApi() {
     const optionEditData = useMutation(
         async (data) => await api.post(data.params, "/option_edit_api.aspx"),
         {
-            onMutate: (vars) => {
-                loadingSpinner.show(); 
+            onMutate: (variables) => {
+                if (variables?.params?.gb !== "info") loadingSpinner.show();
             },
             onSettled: () => {
                // loadingSpinner.hide(); 
