@@ -1,4 +1,4 @@
-import React, { Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
+import React, { memo, Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -195,17 +195,20 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         });
         return { dataWithProxies, proxyField };
     };
-
+    // useEffect(() => {
+    //     console.log("%c🟣 OptionSettingTab1 렌더됨", "color:magenta;");
+    // });
     //grid rendering 
-    const GridRenderer = forwardRef((props, ref) => {
+    const GridRenderer = memo(forwardRef((props, ref) => {
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
         } = props;
+        // const renderCount = useRef(0);
         // useEffect(() => {
-        //     console.log("%c🔄 GridRenderer 렌더됨", "color: #0af");
+        //     renderCount.current += 1;
+        //     console.log(`🔄 GridRenderer 렌더 #${renderCount.current}`);
         // });
-
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [isDragging, setIsDragging] = useState(false);
@@ -452,7 +455,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         const setSelectedStateGuarded = useCallback((next) => {
             rememberScroll(); // 스크롤 저장
-            // (A) 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
+            // 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
             const expandWithBatchIfNeeded = (prevMap, nextMap) => {
                 try {
                     const prevKeys = new Set(Object.keys(prevMap || {}));
@@ -498,11 +501,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         changed = true;
                         return { ...r, recheckyn: nextRe, selected: nextSel };
                     });
-                    if (changed) {
-                        commitSmart(updated);
-                        return { ...prevDS, data: updated };
-                    }
-                    return prevDS;
+                    if (!changed) return prevDS;   // 변경 없으면 리렌더 스킵
+                    commitSmart(updated);
+                    return { ...prevDS, data: updated };
                 });
                 return maybeBatched;
             });
@@ -518,7 +519,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             for (const r of rows) {
                 const yn = String(r?.recheckyn ?? "").trim().toLowerCase();
                 if (yn === "y") {
-                    const k = getKey(r);         // 반드시 idGetter(row)와 동일한 키
+                    const k = getKey(r);         // idGetter(row)와 동일한 키
                     if (k != null) nextSelected[k] = true;
                 }
             }
@@ -534,7 +535,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             })();
             if (isSame) return; // 플래그 유지 → 이후 실제 데이터 들어오면 다시 시도
 
-            suppressUnsavedSelectionRef.current = true;   // 미저장 X
+            suppressUnsavedSelectionRef.current = true;
             setSelectedState(nextSelected);
             suppressUnsavedSelectionRef.current = false;
 
@@ -608,7 +609,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [getKey, rangeToKeys]);
 
-        // 드래그 중 범위 갱신신
+        // 드래그 중 범위 갱신
         const onRowMouseEnter = useCallback((rowProps) => {
             if (!draggingRef.current || anchorIndexRef.current == null) return;
             const idx = rowProps.dataIndex;
@@ -844,7 +845,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             });
         }, []);
 
-
         // 클릭 행 
         const rowRender = (trEl, rowProps) => {
             const key = getKey(rowProps?.dataItem);
@@ -990,9 +990,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         const cleaned = stripLocalFlags(kept);
                         return { ...prev, data: cleaned };
                     });
-
-                    // Kendo 그리드 강제 리마운트(가상화/재사용 캐시 끊기)
-                    //setGridEpoch(e => e + 1);
 
                     handleSearch();                              // 재조회
                     return true;
@@ -1147,7 +1144,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
                             selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
                             rowRender,
-                            //useClientProcessing: true,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
                             initialSort: mappedSort,
@@ -1392,7 +1388,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 </div>
             </Fragment>
         );
-    });
+    }));
 
     const renderGridItem = useCallback((props) => (
         <GridRenderer
@@ -1406,15 +1402,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             ref={gridRef}
             scrollTopRef={scrollTopRef}
         />
-    ), [
-        hist,
-        baselineDidRef,
-        baselineAfterReloadRef,
-        baselineSigRef,
-        sigStackRef,
-        makeTab1Signature,
-        sort, filter
-    ]);
+    ), [hist, makeTab1Signature, sort, filter]);
 
     return (
         <GridData
@@ -1423,12 +1411,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 ...optionEditData,
                 mutateAsync: async (params) => {
                     const res = await optionEditData.mutateAsync(params);
-
                     // resultjson이 빈 배열일 경우 로딩바 닫기
                     if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
                         loadingSpinner.hide();
                     }
-
                     return res;
                 },
             }}
@@ -1442,9 +1428,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 gb: "in",
             }}
             renderItem={renderGridItem}   // useCallback 적용
-
         />
     );
 });
 
-export default OptionSettingTab1;
+export default memo(OptionSettingTab1);
