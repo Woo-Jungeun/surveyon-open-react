@@ -18,10 +18,10 @@ export function OptionSettingApi() {
         async (data) => await api.post(data.params, "/option_edit_api.aspx"),
         {
             onMutate: (variables) => {
-                if (variables?.params?.gb !== "info") loadingSpinner.show();
+                if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum") loadingSpinner.show();
             },
             onSettled: () => {
-               // loadingSpinner.hide(); 
+                // loadingSpinner.hide(); 
             }
         }
     );

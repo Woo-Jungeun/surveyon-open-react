@@ -70,7 +70,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
 const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
-    const loading = useContext(loadingSpinnerContext);
+    const loadingSpinner = useContext(loadingSpinnerContext);
     const navigate = useNavigate();
     const completedOnceRef = useRef(false); // 분석 결과 끝난 ref
     const logTextRef = useRef("");   // 최신 로그 문자열 저장용
@@ -97,9 +97,9 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     });
 
     const setAnalyzing = useCallback((on) => {
-        if (!loading) return;
-        on ? loading.show() : loading.hide();
-    }, [loading]);
+        if (!loadingSpinner) return;
+        on ? loadingSpinner.show() : loadingSpinner.hide();
+    }, [loadingSpinner]);
 
     // 최종 완료 처리 (팝업, 로딩 off, 탭 이동)
     const finalizeCompletion = useCallback((hasError) => {
