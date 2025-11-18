@@ -550,6 +550,7 @@ const OptionSettingBody = () => {
                 });
 
                 if (res?.success === "777") {
+                  loadingSpinner.hide(); // 로딩바 닫기
                   modal.showAlert("알림", "엑셀 업로드가 완료되었습니다.");
                   // todo 추후 확인
                   // tab2Ref.current?.reload?.();
