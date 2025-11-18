@@ -733,7 +733,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         }
                         return { ...r, __errors: new Set(set), __errorKinds: kinds };
                     });
-                    requestAnimationFrame(() => focusFirstErrorCell());
+                    //requestAnimationFrame(() => focusFirstErrorCell()); // 포커스 이동  
                     return { ...prevState, data: nextRows };
                 });
                 setTimeout(() => setErrorMarks(new Map()), 150);
@@ -793,11 +793,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         // 유효성 체크 (모든 행의 중복 / 빈값 검사 수행)
         const validateRows = (allRows) => {
-            // 1) 저장 대상만 추리기: 삭제 예정/설문(survey) 행 제외
-            const rows = (allRows || []).filter(
-                (r) => r?.__pendingDelete !== true && r?.ex_gubun !== "survey"
-            );
-
+            // 1) 저장 대상만 추리기: 삭제 예정 행 제외
+            const rows = (allRows || []).filter((r) => r?.__pendingDelete !== true);
             const errors = [];
             const rowMarks = new Map(); // WeakMap<object, Set<string>>
             const rowKinds = new Map(); // row -> { [field]: 'required'|'dup' };
@@ -858,7 +855,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 if (arr.length > 1) {
                     const nos = arr.map(r => r?.no ?? "?").join(", ");
                     // 해당 코드가 있는 모든 행의 'lv123code' 셀에 마크
-                    arr.forEach(r => mark(r, "lv123code"));
+                    arr.forEach(r => mark(r, "lv123code", null, "dup"));
                     errors.push(`소분류코드 '${code}'가 중복입니다. (행 번호: ${nos})`);
                 }
             });
@@ -1099,19 +1096,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
-                            if (c.field === 'lv1code' || c.field === 'lv2code' || c.field === 'lv123code') {
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field={proxyField[c.field] ?? `__sort__${c.field}`}
-                                        title={c.title}
-                                        width={c.width}
-                                        sortable
-                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })} // 셀에는 원본 값 그대로 보여주기
-                                        cell={(p) => <td title={p.dataItem[c.field]}>{p.dataItem[c.field]}</td>}
-                                    />
-                                );
-                            }
                             if (c.field === 'delete') {
                                 return (
                                     <Column
