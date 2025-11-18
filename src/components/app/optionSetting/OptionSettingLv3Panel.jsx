@@ -7,13 +7,13 @@ const OptionSettingLv3Panel = memo(({
   onApply
 }) => {
 
-  // -----검색 필터링-----//
+  // -----검색 필터링+정렬-----//
   const [searchTerm, setSearchTerm] = useState(""); // 검색어 상태
-  const filteredOptions = (options || []).filter(opt =>
-    opt.codeName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  // -----검색 필터링-----//
-  
+  const filteredOptions = (options || [])
+    .filter(opt =>opt.codeName.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => Number(a.codeId) - Number(b.codeId));   // 숫자 오름차순 정렬
+  // -----검색 필터링+정렬-----//
+
   return (
     <div className="lv3-panel-wrap">
       {/* 패널 */}
@@ -31,7 +31,7 @@ const OptionSettingLv3Panel = memo(({
         <div className="lv3-panel-body">
           {filteredOptions.map(opt => (
             <div
-              key={opt.lv123code+"_"+opt.codeName}
+              key={opt.lv123code + "_" + opt.codeName}
               className="lv3-panel-item"
               onClick={() => onApply(targets, opt)}
             >
