@@ -26,7 +26,7 @@ const getKey = (row) => row?.__rowKey ?? null; // 키 가져오기 헬퍼
 // 클라이언트 전용 표시/편집 플래그 제거
 const stripLocalFlags = (rows = []) =>
     (rows || []).map(r => {
-        const { __pendingDelete, __errors, __errorKinds, inEdit, selected, __isNew, ...rest } = r;
+        const { __pendingDelete, inEdit, __isNew, ...rest } = r;
         return rest;
     });
 // YYYY-MM-DD HH:mm:ss
@@ -256,9 +256,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (!baselineDidRef.current || baselineAfterReloadRef.current) {
                 // 새로 들어온 데이터에 남아있는 로컬 플래그를 제거
                 const needClean = rowsNow.some(r =>
-                    r?.__pendingDelete === true || r?.inEdit || r?.selected ||
-                    r?.__errors || r?.__errorKinds || r?.__isNew
-                );
+                    r?.__pendingDelete === true || r?.inEdit === true || r?.__isNew === true);
                 const base = needClean ? stripLocalFlags(rowsNow) : rowsNow;
                 if (needClean) {
                     // 자동 동기화 중에는 더티/히스토리 흔들림 방지
@@ -375,32 +373,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 reportedInitialAnalysisRef.current = true;
             }
         }, [rows]);
-
-        // lv3 필수값 마크를 행들의 __errors(Set)로 갱신
-        const applyRequiredMarksLv3 = useCallback((rows = []) => {
-            return (rows || []).map(r => {
-                const need = r.__pendingDelete !== true && String(r?.lv3 ?? '').trim() === '';
-
-                // __errors 갱신
-                const nextErrs = new Set(r.__errors ?? []);
-                if (need) nextErrs.add('lv3'); else nextErrs.delete('lv3');
-
-                // __errorKinds 갱신 (배지 라벨 표시용)
-                const nextKinds = { ...(r.__errorKinds ?? {}) };
-                if (need) nextKinds.lv3 = 'required'; else delete nextKinds.lv3;
-
-                const base = nextErrs.size ? { ...r, __errors: nextErrs } : (() => {
-                    if (!r.__errors) return r;
-                    const { __errors, ...rest } = r;
-                    return rest;
-                })();
-
-                return Object.keys(nextKinds).length ? { ...base, __errorKinds: nextKinds } : (() => {
-                    const { __errorKinds, ...rest } = base;
-                    return rest;
-                })();
-            });
-        }, []);
 
         const buildSelectedMapFromRows = useCallback((rows = []) => {
             const next = {};
@@ -730,10 +702,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         }
                         : r
                 );
-                const marked = applyRequiredMarksLv3(updated);
-                commitSmartRef.current?.(marked);
-
-                return { ...prev, data: marked };
+                commitSmartRef.current?.(updated);
+                return { ...prev, data: updated };
             });
         }, []);
 
@@ -758,32 +728,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 }))
             }));
         }, []);
-
-        // 셀 값 변경 → 해당 행의 해당 필드만 업데이트
-        // const onItemChange = useCallback((e) => {
-        //     onUnsavedChange?.(true);
-
-        //     setDataState((prev) => {
-        //         const prevData = prev?.data ?? [];
-        //         const idx = prevData.findIndex(r => getKey(r) === getKey(e.dataItem));
-        //         if (idx === -1) return prev;
-
-        //         const updatedRow = {
-        //             ...prevData[idx],
-        //             [e.field]: e.value,
-        //             inEdit: true,
-        //         };
-
-        //         const nextData = [...prevData];
-        //         nextData[idx] = updatedRow;
-
-        //         const marked = applyRequiredMarksLv3(nextData);
-
-        //         // 변경된 행만 커밋
-        //         commitSmart(marked);
-        //         return { ...prev, data: marked };
-        //     });
-        // }, []);
 
         // "min-gap" (비어있는 가장 작은 수) or "max+1"
         const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
@@ -844,10 +788,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const nextData = [...prevData];
                 nextData.splice(idx + 1, 0, newRow);
 
-                const marked = applyRequiredMarksLv3(nextData);
-                commitSmartRef.current?.(marked);
-
-                return { ...prev, data: marked };
+                commitSmartRef.current?.(nextData);
+                return { ...prev, data: nextData };
             });
         }, []);
 
@@ -922,27 +864,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             };
         };
 
-        // 소분류(lv3) 오류 있는 첫 번째 행으로 스크롤 이동
-        const focusFirstLv3ErrorCell = useCallback(() => {
-            try {
-                const targetRow = (dataState?.data || []).find(
-                    (r) => r.__errors instanceof Set && r.__errors.has("lv3")
-                );
-                if (!targetRow) return;
-
-                const key = getKey(targetRow);
-                if (!key) return;
-
-                const td = document.querySelector(`[data-lv3-key="${String(key)}"]`);
-                if (td) {
-                    // 해당 셀이 화면 중앙 근처로 오게 스크롤
-                    td.scrollIntoView({ behavior: "smooth", block: "center" });
-                }
-            } catch (err) {
-                console.error("focusFirstLv3ErrorCell error:", err);
-            }
-        }, []);
-
         // saveChanges 의존성 제거를 위한 ref 처리 
         const selectedStateRef = useRef(selectedState);
         useEffect(() => { selectedStateRef.current = selectedState; }, [selectedState]);
@@ -951,18 +872,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         /* 저장: API 호출 */
         const saveChanges = useCallback(async () => {
-            // 저장 전에 유효성 검사 (소분류 필수)
-            const hasEmptyLv3 = rows
-                .filter(r => r.__pendingDelete !== true)          // 보류 삭제 제외
-                .some(r => String(r.lv3 || "").trim() === "");
-
-            if (hasEmptyLv3) {
-                setDataState(prev => ({ ...prev, data: applyRequiredMarksLv3(prev.data) }));
-                focusFirstLv3ErrorCell();   // 에러 중 첫번째 셀로 포커스 이동
-                modal.showErrorAlert("알림", "소분류 값은 필수입니다.");
-                return false; // 저장 중단
-            }
-
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
                 user: auth?.user?.userId || "",
@@ -987,16 +896,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     shouldAutoApplySelectionRef.current = true;   // 재조회 후 recheckyn 1회 자동복원
                     suppressUnsavedSelectionRef.current = true;   // 새 데이터 자리잡을 때까지 행 수정 금지
                     setSelectedStateGuarded({});                  // 선택맵 초기화
-
                     baselineAfterReloadRef.current = true;       // 다음 로드에서 베이스라인 리셋
 
-                    // 화면에서 바로 없애기(낙관적): 보류삭제 행 제거 + 로컬플래그 제거
+                    // 화면에서 바로 없애기: 보류삭제 행 제거 + 로컬플래그 제거
                     setDataState(prev => {
                         const kept = (prev.data || []).filter(r => r.__pendingDelete !== true);
-                        const cleaned = stripLocalFlags(kept);
-                        return { ...prev, data: cleaned };
+                        return { ...prev, data: kept };
                     });
-
                     handleSearch();                              // 재조회
                     return true;
                 } else {
@@ -1008,7 +914,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                 return false; // 실패 시 그리드 상태 변경 안 함
             }
-        }, [getKey, setSelectedStateGuarded]);
+        }, [rows, getKey, setSelectedStateGuarded]);
 
         // 부모에서 호출할 수 있도록 ref에 연결
         useEffect(() => {
@@ -1044,10 +950,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             : r
                     );
                 }
-                const marked = applyRequiredMarksLv3(nextData);
                 // 삭제된 행만 커밋
-                commitSmartRef.current?.(marked);
-                return { ...prev, data: marked };
+                commitSmartRef.current?.(nextData);
+                return { ...prev, data: nextData };
             });
         }, []);
 
@@ -1186,53 +1091,28 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         cell={(cellProps) => {
                                             const rowKey = getKey(cellProps.dataItem);
                                             const currentValue = cellProps.dataItem.lv3 ?? "";
-                                            const hasReqError = cellProps.dataItem?.__errors?.has?.('lv3');
-                                            const labelKind = cellProps.dataItem?.__errorKinds?.lv3; // 'required' 예상
-                                            const labelText = labelKind === 'required' ? '빈값' : '오류';
-                                            const tdClasses = `${hasReqError ? "lv3-error cell-error" : ""}`.trim();
-                                            // Enter 키 핸들러
-                                            const handleKeyDown = (e) => {
-                                                if (e.key === "Enter") {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
 
-                                                    let targetKey = null;
-                                                    if (lv3SelKeys.size > 0) {
-                                                        targetKey = Array.from(lv3SelKeys).pop(); // 여러개면 마지막 선택
-                                                    } else {
-                                                        targetKey = lastFocusedKeyRef.current;   // 아니면 마지막 포커스
-                                                    }
-                                                    if (!targetKey) return;
-                                                    // 마지막 셀 위치로 앵커 세팅
-                                                    if (!lv3AnchorElRef.current || !lv3AnchorElRef.current.isConnected) {
-                                                        const el = document.querySelector(`[data-lv3-key="${String(targetKey)}"]`);
-                                                        if (el) {
-                                                            lv3AnchorElRef.current = el;
-                                                        }
-                                                    }
-                                                }
-                                            };
+                                            // 값이 없으면 빨간 테두리
+                                            const hasReqError = String(currentValue).trim() === "";
 
                                             return (
                                                 <td
                                                     data-lv3-key={rowKey}
-                                                    className={tdClasses}
+                                                    className={hasReqError ? "lv3-error cell-error" : ""}
                                                     tabIndex={0}
-                                                    onKeyDown={handleKeyDown}
                                                     title={currentValue}
                                                 >
                                                     <div
                                                         className="lv3-opener"
                                                         style={{ cursor: "pointer" }}
-                                                        onMouseDown={(e) => e.stopPropagation()} // td 핸들러 막음
+                                                        onMouseDown={(e) => e.stopPropagation()}
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            rememberScroll(); // 스크롤 저장
+                                                            rememberScroll();  // 스크롤 저장
+
                                                             const td = e.currentTarget.closest('td');
                                                             const rect = td?.getBoundingClientRect?.();
                                                             if (rect) lastCellRectRef.current = rect;
-
-                                                            // 포커스/인덱스 최신화(엔터로 열기 등)
                                                             lastFocusedKeyRef.current = rowKey;
                                                             anchorIndexRef.current = cellProps.dataIndex;
                                                             lastIndexRef.current = cellProps.dataIndex;
@@ -1241,10 +1121,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                                 lastCellElRef.current = td;
                                                                 lv3AnchorElRef.current = td;
                                                             }
-                                                            // 현재 선택된 행들
-                                                            const selectedRows = (dataState?.data || []).filter(r => lv3SelKeys.has(getKey(r)));
 
-                                                            // 선택이 없으면 현재 행이라도 추가
+                                                            const selectedRows = (dataState?.data || []).filter(r => lv3SelKeys.has(getKey(r)));
                                                             const targetRows = selectedRows.length > 0 ? selectedRows : [cellProps.dataItem];
                                                             const targetCodes = targetRows.map(r => r.lv123code);
 
@@ -1253,8 +1131,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                     >
                                                         <span className="lv3-display">{currentValue || "소분류 선택"}</span>
                                                     </div>
-                                                    {/* 필수값 오류 배지 */}
-                                                    {hasReqError && <span className="cell-error-badge">{labelText}</span>}
+
+                                                    {hasReqError && (
+                                                        <span className="cell-error-badge">빈값</span>
+                                                    )}
                                                 </td>
                                             );
                                         }}
