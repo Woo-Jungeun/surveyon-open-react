@@ -487,35 +487,23 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         useLayoutEffect(() => {
             if (!rows.length) return;
-            if (!shouldAutoApplySelectionRef.current) return; // 1회만 동작
-            if (rows.some(r => !r?.__rowKey)) return;
-
-            // recheckyn 정규화 + 키 일치
+            if (!shouldAutoApplySelectionRef.current) return;
+        
             const nextSelected = {};
             for (const r of rows) {
                 const yn = String(r?.recheckyn ?? "").trim().toLowerCase();
                 if (yn === "y") {
-                    const k = getKey(r);         // idGetter(row)와 동일한 키
+                    const k = getKey(r);
                     if (k != null) nextSelected[k] = true;
                 }
             }
-            // 검증 체크 박스 느림 이슈로 인한 수정사항 
-            const isSame = (() => {
-                const a = selectedState || {};
-                const b = nextSelected || {};
-                const aKeys = Object.keys(a);
-                const bKeys = Object.keys(b);
-                if (aKeys.length !== bKeys.length) return false;
-                for (const k of aKeys) if (!!a[k] !== !!b[k]) return false;
-                return true;
-            })();
-            if (isSame) return; // 플래그 유지 → 이후 실제 데이터 들어오면 다시 시도
-
+        
+            // restore 동안 Dirty 감지 차단
             suppressUnsavedSelectionRef.current = true;
             setSelectedState(nextSelected);
             suppressUnsavedSelectionRef.current = false;
-
-            // 초기에 한 번만 돌고 종료 (비어있어도 끈다)
+        
+            // 한 번만 동작
             shouldAutoApplySelectionRef.current = false;
         }, [rows]);
 
