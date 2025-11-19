@@ -102,7 +102,7 @@ const MainList = () => {
                 <article className="subContWrap">
                     <div className="subCont">
                         <div className="cmn_gird_wrap">
-                            <div id="grid_01" className="cmn_grid">
+                            <div id="grid_01" className="cmn_grid" style={{ cursor: "pointer" }} >
                                 <KendoGrid
                                     parentProps={{
                                         height: "750px",

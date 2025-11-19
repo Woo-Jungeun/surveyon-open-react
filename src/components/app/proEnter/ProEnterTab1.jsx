@@ -125,6 +125,16 @@ const ProEnterTab1 = (props) => {
                             initialFilter: filter,
                             sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
                             filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
+                            rowRender: (tr, rowProps) => {
+                                // 설문온등록여부가 등록이 아닐 경우 커서 포인터 
+                                return React.cloneElement(tr, {
+                                    ...tr.props,
+                                    style: {
+                                        ...(tr.props.style || {}),
+                                        cursor: rowProps.dataItem?.gubunYN !== "등록" ? "pointer" : "default"
+                                    }
+                                });
+                            }
                         }}
                     >
                         {columns.filter(c => c.show !== false).map((c) => {
