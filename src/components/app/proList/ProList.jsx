@@ -90,6 +90,15 @@ const ProList = () => {
     const [timeStamp, setTimeStamp] = useState(0); // cache buster
     const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
     const [mergeSavedBaseline, setMergeSavedBaseline] = useState(new Map());
+    
+    // mergeSavedBaseline, mergeEditsById 초기화 
+    useEffect(() => {
+        const rows = proListData?.data?.resultjson ?? [];
+        if (!rows.length) return;
+    
+        setMergeSavedBaseline(new Map(rows.map(r => [r.id, r.merge_qnum || ""])));
+        setMergeEditsById(new Map(rows.map(r => [r.id, r.merge_qnum || ""])));
+    }, [proListData?.data?.resultjson]);
 
     //컬럼 표출 권한 체크
     const [userPerm, setUserPerm] = useState(PERM.READ);
@@ -202,7 +211,9 @@ const ProList = () => {
             // 블러 전 변경: 셀에 붙여둔 .cell-merge-diff 존재 여부
             const gridEl = document.getElementById('grid_01');
             const hasDirtyCell = !!(gridEl && gridEl.querySelector('.cell-merge-diff'));
-
+            console.log("changed", changed);
+            console.log("hasChanged", hasChanged);
+            console.log("hasDirtyCell", hasDirtyCell);
             if (hasChanged || hasDirtyCell) {
                 modal.showErrorAlert("알림", "문항통합 입력에 저장되지 않은 내용이 있습니다.\n[문항통합저장]을 먼저 눌러 저장해 주세요.");
                 return true; // block
@@ -344,7 +355,9 @@ const ProList = () => {
                 setMergeSavedBaseline(new Map(
                     rows.map(r => [r.id, getMergeVal(r)])
                 ));
-                
+                setMergeEditsById(new Map(
+                    rows.map(r => [r.id, getMergeVal(r)])
+                ));
                 // DOM 노란색 제거 (렌더 직후)
                 requestAnimationFrame(() => {
                     const grid = document.getElementById("grid_01");
