@@ -88,6 +88,8 @@ const ProList = () => {
     //재조회 후 그리드 업데이트 플래그
     const [gridDataKey, setGridDataKey] = useState(0);
     const [timeStamp, setTimeStamp] = useState(0); // cache buster
+    const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
+    const [mergeSavedBaseline, setMergeSavedBaseline] = useState(new Map());
 
     //컬럼 표출 권한 체크
     const [userPerm, setUserPerm] = useState(PERM.READ);
@@ -173,13 +175,12 @@ const ProList = () => {
     const GridRenderer = (props) => {
         const renderCount = useRef(0);
         renderCount.current += 1;
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch, scrollTopRef } = props;
+        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch, scrollTopRef,mergeSavedBaseline, setMergeSavedBaseline } = props;
 
         const groupOrder = ["VIEW", "ADMIN", "EDIT"]; // 상단 그룹 순서
 
         const [locksById, setLocksById] = useState(new Map());          // 행 잠금상태
         const [excludedById, setExcludedById] = useState(new Map());    // 분석/제외 토글 상태
-        const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
 
         const pendingFlushRef = useRef(false); // 저장 후 1회 입력 캐시 초기화 플래그
         const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
@@ -216,30 +217,13 @@ const ProList = () => {
         const setMergeVal = (row, v) =>
             setMergeEditsById(m => { const n = new Map(m); n.set(row?.id, v); return n; });
 
-        // 재조회 시: 저장 직후 1회만 서버값으로 완전 초기화, 그 외에는 증분 유지
-        useEffect(() => {
-            const rows = dataState?.data ?? [];
-
-            setMergeEditsById(prev => {
-                if (pendingFlushRef.current) {
-                    pendingFlushRef.current = false;
-                    return new Map(rows.map(r => [r.id, r?.merge_qnum ?? ""]));
-                }
-                const next = new Map(prev);
-                rows.forEach(r => { if (!next.has(r.id)) next.set(r.id, r?.merge_qnum ?? ""); });
-                const live = new Set(rows.map(r => r.id));
-                for (const id of next.keys()) if (!live.has(id)) next.delete(id);
-                return next;
-            });
-        }, [dataState?.data]);
-
         // 변경 검출 기준 = 서버값 merge_qnum
         const getMergeChanges = () => {
             const rows = dataState?.data ?? [];
             const changed = {};
             rows.forEach(r => {
                 if (isLocked(r)) return;
-                const base = norm(r?.merge_qnum ?? "");
+                const base = norm(mergeSavedBaseline.get(r.id) ?? "");
                 const cur = norm(getMergeVal(r));
                 if (cur !== base) changed[r.id] = cur;
             });
@@ -356,7 +340,20 @@ const ProList = () => {
                 };
                 const res = await editMutation.mutateAsync(payload);
                 if (res?.success !== "777") throw new Error("merge 저장 실패");
-
+                pendingFlushRef.current = true; // 0) 저장 직후 dirty-block 무시 모드 ON  ← 핵심
+                setMergeSavedBaseline(new Map(
+                    rows.map(r => [r.id, getMergeVal(r)])
+                ));
+                
+                // DOM 노란색 제거 (렌더 직후)
+                requestAnimationFrame(() => {
+                    const grid = document.getElementById("grid_01");
+                    if (grid) {
+                        grid.querySelectorAll(".cell-merge-diff").forEach(el => {
+                            el.classList.remove("cell-merge-diff");
+                        });
+                    }
+                });
                 // 4) 선택된 행들만 useYN 동기화
                 for (const r of rows) {
                     if (!affectedIds.has(Number(r.id))) continue;
@@ -365,10 +362,9 @@ const ProList = () => {
                     await sendAnalysis({ scope: "row", id: r.id, excluded: false, refresh: false });
                 }
 
-                // 5) 다음 재조회에서 1회 입력 캐시 초기화 + 재조회
+                // 다음 재조회에서 1회 입력 캐시 초기화 + 재조회
                 pendingFlushRef.current = true;
-                setTimeStamp(Date.now());     // 캐시 무력화 파라미터 갱신
-                setGridDataKey((k) => k + 1);   // GridData 재마운트 유도
+                setTimeStamp(Date.now());
             } catch (e) {
                 console.error(e);
                 modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
@@ -870,11 +866,12 @@ const ProList = () => {
                             const locked = isLocked(row); // "수정불가"면 true
                             const excluded = isExcluded(row);
                             const disabled = locked || excluded;
+                            const baseline = mergeSavedBaseline.get(row.id) ?? original;
 
                             return (
                                 <td
                                     ref={tdRef}
-                                    className={!disabled && norm(cur) !== original ? 'cell-merge-diff' : ''}
+                                    className={!disabled && norm(cur) !== baseline ? 'cell-merge-diff' : ''}
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
                                 >
@@ -890,7 +887,7 @@ const ProList = () => {
                                             const now = norm(e.currentTarget.value);
                                             if (!tdRef.current) return;
                                             if (disabled) return;
-                                            if (now !== original) tdRef.current.classList.add('cell-merge-diff');
+                                            if (now !== baseline) tdRef.current.classList.add('cell-merge-diff');
                                             else tdRef.current.classList.remove('cell-merge-diff');
                                         }}
                                         onBlur={(e) => setMergeVal(row, e.currentTarget.value)} // 포커스 빠질 때만 저장
@@ -1040,7 +1037,7 @@ const ProList = () => {
                                                             ></span>
                                                         )}
                                                     </div>
-                                             )}
+                                                )}
                                             >
                                                 {items.map(it =>
                                                     it.type === "col"
@@ -1105,7 +1102,14 @@ const ProList = () => {
                 gb: "select",
                 _ts: timeStamp, // 캐시 버스터
             }}
-            renderItem={(props) => <GridRenderer {...props} scrollTopRef={scrollTopRef} />}
+            renderItem={(props) =>
+                <GridRenderer {...props}
+                    scrollTopRef={scrollTopRef}
+                    mergeEditsById={mergeEditsById}
+                    setMergeEditsById={setMergeEditsById}
+                    mergeSavedBaseline={mergeSavedBaseline}
+                    setMergeSavedBaseline={setMergeSavedBaseline}
+                />}
         />
     );
 };
