@@ -4,7 +4,6 @@ import {Form, Formik} from "formik";
 import {LoginApi} from "@/components/app/login/LoginApi.js";
 import {Input} from "@progress/kendo-react-inputs";
 import {Button} from "@progress/kendo-react-buttons";
-import { loadCode } from "@/common/utils/CodeUtil.jsx";
 import {modalContext} from "@/components/common/Modal.jsx";
 
 const Login = ({
