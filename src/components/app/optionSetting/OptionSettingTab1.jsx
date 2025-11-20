@@ -46,7 +46,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
-        , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel, lv3Options, onRequestLv3Refresh, onResponseCountChange } = props;
+        , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel
+        , lv3Options, onRequestLv3Refresh, onResponseCountChange } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const SELECTED_FIELD = "selected";
@@ -59,7 +60,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const latestCtxRef = useRef(null);
     const gridRef = useRef(null);
     const reportedLvcodeRef = useRef(false);    //Body 초기 lvcode 전달
-
     // 스크롤 위치 저장용 ref
     const scrollTopRef = useRef(0);
 
@@ -195,20 +195,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         });
         return { dataWithProxies, proxyField };
     };
-    // useEffect(() => {
-    //     console.log("%c🟣 OptionSettingTab1 렌더됨", "color:magenta;");
-    // });
+
     //grid rendering 
     const GridRenderer = memo(forwardRef((props, ref) => {
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
         } = props;
-        // const renderCount = useRef(0);
-        // useEffect(() => {
-        //     renderCount.current += 1;
-        //     console.log(`🔄 GridRenderer 렌더 #${renderCount.current}`);
-        // });
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [isDragging, setIsDragging] = useState(false);
@@ -222,7 +215,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const selectionModeRef = useRef(null);// 선택 동작 모드: 'drag' | 'range' | 'toggle'
         const shouldAutoApplySelectionRef = useRef(true);
         const keyHandlerStateRef = useRef({}); // keydown 핸들러가 참조할 최신 상태 보관용 ref
-        const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그 (setSelectedStateGuarded에서만 더티 관리)
+        const suppressUnsavedSelectionRef = useRef(false); // 선택 변경 감지 억제 플래그
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
         const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
         const [processedMirror, setProcessedMirror] = useState([]);
@@ -488,7 +481,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         useLayoutEffect(() => {
             if (!rows.length) return;
             if (!shouldAutoApplySelectionRef.current) return;
-        
+
             const nextSelected = {};
             for (const r of rows) {
                 const yn = String(r?.recheckyn ?? "").trim().toLowerCase();
@@ -497,12 +490,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     if (k != null) nextSelected[k] = true;
                 }
             }
-        
+
             // restore 동안 Dirty 감지 차단
             suppressUnsavedSelectionRef.current = true;
             setSelectedState(nextSelected);
             suppressUnsavedSelectionRef.current = false;
-        
+
             // 한 번만 동작
             shouldAutoApplySelectionRef.current = false;
         }, [rows]);
@@ -717,7 +710,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }));
         }, []);
 
-        // "min-gap" (비어있는 가장 작은 수) or "max+1"
+        // 비어있는 가장 작은 수 or "max+1"
         const NEXT_CID_MODE = persistedPrefs?.nextCidMode ?? "min-gap";
 
         const getNextCid = useCallback((fk, data, mode = NEXT_CID_MODE) => {
@@ -866,9 +859,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 projectnum: projectnum,
                 qnum: qnum,
                 gb: "in",
-            },
-                { getKey, selectedState }
-            );
+            }, { getKey, selectedState });
 
             // 저장 API 호출
             try {
@@ -899,8 +890,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 }
             } catch (err) {
                 console.error(err);
-                modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
-                return false; // 실패 시 그리드 상태 변경 안 함
+                modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
+                return false;
             }
         }, [rows, getKey, setSelectedStateGuarded]);
 
@@ -915,7 +906,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             const vis = effectiveColumns.filter(c => c.show !== false);
             return vis.length >= 3 ? vis[vis.length - 3].field : undefined; // 항상 추가 왼쪽에
         }, [effectiveColumns]);
-
 
         // 삭제/취소 버튼 클릭
         const onClickDeleteCell = useCallback((cellProps) => {
@@ -1027,9 +1017,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                     loadingSpinner.hide();
                                 }
                             },
-                            dataItemKey: DATA_ITEM_KEY,      // "__rowKey"
+                            dataItemKey: DATA_ITEM_KEY,
                             editField,
-                            //onItemChange, ->sentiment같은 행 수정할때 사용 
                             onRowClick,
                             selectedField: SELECTED_FIELD, // 체크박스 필드 지정 
                             selectedState,
@@ -1079,10 +1068,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         cell={(cellProps) => {
                                             const rowKey = getKey(cellProps.dataItem);
                                             const currentValue = cellProps.dataItem.lv3 ?? "";
-
-                                            // 값이 없으면 빨간 테두리
-                                            const hasReqError = String(currentValue).trim() === "";
-
+                                            const hasReqError = String(currentValue).trim() === ""; // 값이 없으면 빨간 테두리
                                             return (
                                                 <td
                                                     data-lv3-key={rowKey}
