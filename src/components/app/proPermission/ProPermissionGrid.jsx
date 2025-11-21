@@ -117,8 +117,8 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
               filterable: true,
               sortChange: ({ sort }) => setSort(sort ?? []),
               filterChange: ({ filter }) => setFilter(filter ?? undefined),
-              initialSort: sort,
-              initialFilter: filter,
+              sort,
+              filter,
             }}
           >
             {columns.filter((c) => c.show !== false).map((c) => {

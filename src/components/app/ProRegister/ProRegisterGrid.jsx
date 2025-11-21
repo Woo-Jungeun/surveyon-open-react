@@ -19,7 +19,6 @@ const ProRegisterGrid = ({ onDataLength }) => {
   const SELECTED_FIELD = "selected";
   const { proRegisterMutation } = ProRegisterApi();
   const projectnum = sessionStorage.getItem("projectnum");
-  const projectname = sessionStorage.getItem("projectname");
 
   // 정렬/필터를 controlled로
   const [sort, setSort] = useState([]);
@@ -76,8 +75,8 @@ const ProRegisterGrid = ({ onDataLength }) => {
                 filterable: true,
                 sortChange: ({ sort }) => setSort(sort ?? []),
                 filterChange: ({ filter }) => setFilter(filter ?? undefined),
-                initialSort: sort,
-                initialFilter: filter,
+                sort,
+                filter,
               }}
             >
               {columns.filter((c) => c.show !== false).map((c) => {

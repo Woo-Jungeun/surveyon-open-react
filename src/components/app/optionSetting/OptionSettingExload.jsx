@@ -412,8 +412,8 @@ const OptionSettingExload = () => {
                                     filterable: true,
                                     sortChange: ({ sort }) => setLeftSort(sort ?? []),
                                     filterChange: ({ filter }) => setLeftFilter(filter ?? undefined),
-                                    initialSort: leftSort,
-                                    initialFilter: leftFilter,
+                                    sort: leftSort,
+                                    filter: leftFilter,
                                     onRowClick: onLeftRowClick,
                                     pageable: false, // 페이징 제거
                                     toolbar: null,   // 툴바 제거

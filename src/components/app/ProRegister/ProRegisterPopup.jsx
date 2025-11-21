@@ -195,17 +195,17 @@ const ProRegisterPopup = (parentProps) => {
     const inEdit = field === "question" && dataItem.__rowKey === editingKey;
     const inputRef = useRef(null);
     const [local, setLocal] = useState(dataItem[field] ?? "");
-  
+
     // 편집행 바뀌거나 원본 값이 바뀌면 로컬 초기화
     useEffect(() => {
       if (inEdit) setLocal(dataItem[field] ?? "");
     }, [inEdit, dataItem, field]);
-  
+
     // 편집 시작 시 자동 포커스
     useEffect(() => {
       if (inEdit) inputRef.current?.focus({ preventScroll: true });
     }, [inEdit]);
-  
+
     const commit = useCallback(
       (next) => {
         handleItemChange({
@@ -217,10 +217,10 @@ const ProRegisterPopup = (parentProps) => {
       },
       [props, field, dataItem]
     );
-  
+
     // 일반 상태는 텍스트로 표시
     if (!inEdit) return <td>{dataItem[field]}</td>;
-  
+
     // 편집 모드 input
     return (
       <td onMouseDown={(e) => e.stopPropagation()}>
@@ -300,8 +300,8 @@ const ProRegisterPopup = (parentProps) => {
               filterable: true,
               sortChange: ({ sort }) => setSort(sort ?? []),
               filterChange: ({ filter }) => setFilter(filter ?? undefined),
-              initialSort: sort,
-              initialFilter: filter,
+              sort,
+              filter,
               multiSelect: true,
               linkRowClickToSelection: false,
               editable: "incell",

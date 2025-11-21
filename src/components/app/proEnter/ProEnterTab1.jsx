@@ -121,8 +121,8 @@ const ProEnterTab1 = (props) => {
                             // useClientProcessing: true,                         // 클라 처리
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            initialSort: sort,                               // 1회 초기값
-                            initialFilter: filter,
+                            sort,
+                            filter,
                             sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
                             filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                             rowRender: (tr, rowProps) => {

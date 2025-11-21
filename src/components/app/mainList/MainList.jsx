@@ -116,8 +116,8 @@ const MainList = () => {
                                         filterable: true,              // 필터 허용
                                         sortChange: ({ sort }) => setSort(sort ?? []),
                                         filterChange: ({ filter }) => setFilter(filter ?? undefined),
-                                        initialSort: sort,
-                                        initialFilter: filter,
+                                        sort,
+                                        filter,
                                         onRowClick,
                                     }}
                                 >
