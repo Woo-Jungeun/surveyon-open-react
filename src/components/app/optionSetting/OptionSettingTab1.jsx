@@ -35,6 +35,41 @@ const formatNow = (d = new Date()) => {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 };
 
+// 정렬 
+const natKey = (v) => {
+    if (v == null) return Number.NEGATIVE_INFINITY;
+    const s = String(v).trim();
+    return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
+};
+
+// 정렬용 프록시를 붙일 대상 필드
+const NAT_FIELDS = ["lv1code", "lv2code", "lv123code"]; // 필요 시 추가
+
+// rows에 __sort__* 필드를 덧붙이고, 원필드→프록시 맵을 리턴
+const addSortProxies = (rows = []) => {
+    const proxyField = {};
+    const dataWithProxies = rows.map((r) => {
+        const o = { ...r };
+        for (const f of NAT_FIELDS) {
+            const pf = `__sort__${f}`;
+            o[pf] = natKey(r?.[f]);
+            proxyField[f] = pf;
+        }
+        return o;
+    });
+    return { dataWithProxies, proxyField };
+};
+
+const buildSelectedMapFromRows = (rows = []) => {
+    const next = {};
+    for (const r of rows) {
+        const k = getKey(r);
+        if (!k) continue;
+        if (String(r?.recheckyn ?? '').toLowerCase() === 'y') next[k] = true;
+    }
+    return next;
+};
+
 /**
  * 분석 > 그리드 영역 > 응답 데이터
  *
@@ -171,33 +206,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     /*-----수정 로그 관련-----*/
 
-    // 정렬 
-    const natKey = (v) => {
-        if (v == null) return Number.NEGATIVE_INFINITY;
-        const s = String(v).trim();
-        return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
-    };
-
-    // 정렬용 프록시를 붙일 대상 필드
-    const NAT_FIELDS = ["lv1code", "lv2code", "lv123code"]; // 필요 시 추가
-
-    // rows에 __sort__* 필드를 덧붙이고, 원필드→프록시 맵을 리턴
-    const addSortProxies = (rows = []) => {
-        const proxyField = {};
-        const dataWithProxies = rows.map((r) => {
-            const o = { ...r };
-            for (const f of NAT_FIELDS) {
-                const pf = `__sort__${f}`;
-                o[pf] = natKey(r?.[f]);
-                proxyField[f] = pf;
-            }
-            return o;
-        });
-        return { dataWithProxies, proxyField };
-    };
 
     //grid rendering 
     const GridRenderer = memo(forwardRef((props, ref) => {
+        console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
@@ -367,16 +379,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [rows]);
 
-        const buildSelectedMapFromRows = useCallback((rows = []) => {
-            const next = {};
-            for (const r of rows) {
-                const k = getKey(r);
-                if (!k) continue;
-                if (String(r?.recheckyn ?? '').toLowerCase() === 'y') next[k] = true;
-            }
-            return next;
-        }, [getKey]);
-
         // 자동 동기화 시에는 미저장 플래그/히스토리 커밋 안 나가게 가드
         const applySelectedFromRows = useCallback((rows = []) => {
             suppressUnsavedSelectionRef.current = true;
@@ -423,6 +425,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data]);
 
         const setSelectedStateGuarded = useCallback((next) => {
+            console.log(
+                "%c[SELECTION MAP UPDATE]",
+                "color:#FF8C00;font-weight:bold",
+                next
+            );
             rememberScroll(); // 스크롤 저장
             // 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
             const expandWithBatchIfNeeded = (prevMap, nextMap) => {
@@ -776,6 +783,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 클릭 행 
         const rowRender = (trEl, rowProps) => {
+            console.log(
+                "%c[ROW RENDER]",
+                "color:#32CD32;font-weight:bold",
+                rowProps?.dataItem?.__rowKey,
+                "selected=", rowProps?.dataItem?.selected
+            );
             const key = getKey(rowProps?.dataItem);
             const clicked = key === selectedRowKey;
             const selectedByBatch = lv3SelKeys.has(key);   // 행이 일괄 선택 대상이면
