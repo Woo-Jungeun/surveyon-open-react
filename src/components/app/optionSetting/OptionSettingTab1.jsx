@@ -209,7 +209,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     //grid rendering 
     const GridRenderer = memo(forwardRef((props, ref) => {
-        // console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
+        console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
@@ -789,6 +789,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             //     rowProps?.dataItem?.__rowKey,
             //     "selected=", rowProps?.dataItem?.selected
             // );
+            // 헤더/푸터/그룹 헤더는 Kendo 기본 이벤트 유지해야 정렬/필터 정상 작동
+            if (!rowProps.dataItem) {
+                return trEl;   // 절대 커스텀 이벤트 넣지 말기
+            }
+
             const key = getKey(rowProps?.dataItem);
             if (key === undefined) return;
 
@@ -1019,7 +1024,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 </div>
                 <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`}>
                     <KendoGrid
-                        scrollable="virtual"
                         rowHeight={38}
                         // key={`lv-${lvCode}-${gridEpoch}`}
                         key={`lv-${lvCode}`}
@@ -1046,8 +1050,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             rowRender,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            initialSort: mappedSort,
-                            initialFilter: filter,
+                            sort: mappedSort,
+                            filter: filter,
                             sortChange: ({ sort: next }) => {
                                 const nextRaw = (next || []).map(d => {
                                     const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);

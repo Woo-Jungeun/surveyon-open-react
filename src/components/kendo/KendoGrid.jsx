@@ -1,5 +1,5 @@
 import { getSelectedState, Grid, GridColumn as Column, GridNoRecords } from "@progress/kendo-react-grid";
-import { useCallback, useMemo, Children, useRef, useEffect, cloneElement } from "react";
+import { useCallback, useMemo, Children, useRef, useEffect, cloneElement, useState } from "react";
 import PropTypes from "prop-types";
 import { process } from "@progress/kendo-data-query";
 
@@ -10,15 +10,19 @@ import { process } from "@progress/kendo-data-query";
  * @since 2025-10
  */
 const KendoGrid = ({ parentProps, children }) => {
+    // console.log("[KendoGrid]")
     const parentData = Array.isArray(parentProps?.data)
         ? { data: parentProps.data, totalSize: parentProps?.data?.length ?? 0 }
         : (parentProps?.data || { data: [], totalSize: 0 });
 
+    const rawData = parentData.data || [];
+    const initialTotal = parentData.totalSize ?? rawData.length;
+
     // sort/filter는 상위(MainList)에서 관리 (ExcelColumnMenu)
     const sortChange = parentProps?.sortChange;
     const filterChange = parentProps?.filterChange;
-    const sort = parentProps?.initialSort ?? [];
-    const filter = parentProps?.initialFilter ?? undefined;
+    const sort = parentProps?.sort ?? parentProps?.initialSort ?? [];
+    const filter = parentProps?.filter ?? parentProps?.initialFilter ?? undefined;
 
     const page = parentProps?.page;
     const pageChange = parentProps?.pageChange;
@@ -40,23 +44,9 @@ const KendoGrid = ({ parentProps, children }) => {
     const rowRender = parentProps?.rowRender;
     const linkRowClickToSelection = parentProps?.linkRowClickToSelection ?? true; // 기본값: true (행 클릭 시 체크박스도 선택/해제됨)
     const selectionHeaderTitle = parentProps?.selectionHeaderTitle ?? "";   //체크박스 헤더 라벨 
+    const onProcessedDataUpdate = parentProps?.onProcessedDataUpdate;
 
-    // 클라이언트 정렬/필터 적용 (API 호출 없이)
-    const processedData = useMemo(() => {
-        if (!Array.isArray(parentData.data)) return { data: [], total: 0 };
-        try {
-            return process(parentData.data, { sort, filter });
-        } catch (err) {
-            console.warn("process error", err);
-            return { data: parentData.data, total: parentData.data.length };
-        }
-    }, [parentData.data, sort, filter]);
-
-    // 화면에 실제로 표시되는 가공 데이터(정렬/필터 적용 결과)를 부모에 알림
-    useEffect(() => {
-        parentProps?.onProcessedDataUpdate?.(processedData.data);
-    }, [processedData.data]);
-
+    /** ---------- key resolver ---------- */
     const idGetter = useCallback(
         (item) =>
             typeof parentIdGetter === "function"
@@ -65,6 +55,165 @@ const KendoGrid = ({ parentProps, children }) => {
         [parentIdGetter, dataItemKey]
     );
 
+    /** ---------- 화면에 실제로 표시할 데이터 ---------- */
+    const [viewData, setViewData] = useState(rawData);
+    const [viewTotal, setViewTotal] = useState(initialTotal);
+
+    // 마지막으로 정렬/필터 적용한 상태 기억
+    const sortKeyRef = useRef(JSON.stringify(sort || []));
+    const filterKeyRef = useRef(JSON.stringify(filter ?? null));
+
+    // 현재 화면 순서 (key 배열)
+    const orderRef = useRef([]);
+    const initializedRef = useRef(false);
+
+    // 함수 의존성 때문에 루프 안 돌게 ref로 래핑
+    const idGetterRef = useRef(idGetter);
+    useEffect(() => {
+        idGetterRef.current = idGetter;
+    }, [idGetter]);
+
+    const onProcessedDataUpdateRef = useRef(onProcessedDataUpdate);
+    useEffect(() => {
+        onProcessedDataUpdateRef.current = onProcessedDataUpdate;
+    }, [onProcessedDataUpdate]);
+
+    useEffect(() => {
+        const data = rawData;
+
+        // sort/filter 내용 기준으로 변경 여부 판단
+        const nextSortKey = JSON.stringify(sort || []);
+        const nextFilterKey = JSON.stringify(filter ?? null);
+        const sortChanged = sortKeyRef.current !== nextSortKey;
+        const filterChanged = filterKeyRef.current !== nextFilterKey;
+
+        // console.log("[KendoGrid effect]", { sortChanged, filterChanged, sort, filter });
+
+        // 공통 헬퍼: 정렬된 전체 목록(sortedAll)에 필터만 적용
+        const applyFilterOnly = (sortedAll) => {
+            if (!filter) {
+                return {
+                    data: sortedAll,
+                    total: sortedAll.length,
+                };
+            }
+            try {
+                const filtered = process(sortedAll, { filter });
+                const filteredData = filtered.data || [];
+                return {
+                    data: filteredData,
+                    total: filtered.total ?? filteredData.length,
+                };
+            } catch (err) {
+                console.warn("process filter error", err);
+                return {
+                    data: sortedAll,
+                    total: sortedAll.length,
+                };
+            }
+        };
+
+        // 처음 로드이거나, 정렬/필터가 내용상 바뀐 경우
+        if (!initializedRef.current || sortChanged || filterChanged) {
+            initializedRef.current = true;
+            sortKeyRef.current = nextSortKey;
+            filterKeyRef.current = nextFilterKey;
+
+            let sortedAll = [];
+            if (Array.isArray(data)) {
+                if (sort && sort.length) {
+                    // 정렬만 수행
+                    try {
+                        const sorted = process(data, { sort });
+                        sortedAll = sorted.data || [];
+                    } catch (err) {
+                        console.warn("process sort error", err);
+                        sortedAll = data.slice();
+                    }
+                } else {
+                    sortedAll = data.slice();
+                }
+            }
+
+            // 전체 정렬된 순서를 기억 (필터 적용 전 순서)
+            orderRef.current = sortedAll.map((item) => idGetterRef.current(item));
+
+            // 필터 적용
+            const { data: finalData, total } = applyFilterOnly(sortedAll);
+
+            setViewData(finalData);
+            setViewTotal(total);
+            onProcessedDataUpdateRef.current?.(finalData);
+            return;
+        }
+
+        // 정렬/필터는 그대로인데 "데이터만" 바뀐 경우
+        //    → 기존 정렬 순서(orderRef)를 유지한 채 값만 새 데이터로 교체,
+        //       그 다음에 필터만 다시 적용
+        const prevKeySet = new Set(orderRef.current || []);
+
+        const keyToRow = new Map();   // 이전에도 있던 행들
+        const afterMap = new Map();   // 기존행 key -> [그 뒤에 붙일 신규 행들...]
+        const orphans = [];           // 기준 없이 떠 있는 신규행 (나중에 맨 뒤)
+    
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const k = idGetterRef.current(row);
+            if (k == null) continue;
+    
+            if (prevKeySet.has(k)) {
+                keyToRow.set(k, row);
+            } else {
+                const prevRow = i > 0 ? data[i - 1] : null;
+                const prevKey = prevRow ? idGetterRef.current(prevRow) : null;
+    
+                if (prevKey && prevKeySet.has(prevKey)) {
+                    if (!afterMap.has(prevKey)) afterMap.set(prevKey, []);
+                    afterMap.get(prevKey).push(row);
+                } else {
+                    orphans.push(row);
+                }
+            }
+        }
+    
+        const sortedAll = [];
+    
+        // 기존 순서를 따라가면서, 각 행 뒤에 붙기로 한 신규행도 같이 밀어 넣기
+        for (const baseKey of orderRef.current || []) {
+            const baseRow = keyToRow.get(baseKey);
+            if (!baseRow) continue;
+    
+            sortedAll.push(baseRow);
+            keyToRow.delete(baseKey);
+    
+            const attached = afterMap.get(baseKey);
+            if (attached) {
+                for (const r of attached) {
+                    sortedAll.push(r);
+                }
+            }
+        }
+    
+        // 혹시 orderRef에 없던 기존 행이 남아 있으면 그냥 뒤에
+        for (const row of keyToRow.values()) {
+            sortedAll.push(row);
+        }
+        // 기준 없던 신규행도 맨 뒤
+        for (const row of orphans) {
+            sortedAll.push(row);
+        }
+    
+        // 새 순서를 기준으로 다시 저장 (다음 변경 때 기준)
+        orderRef.current = sortedAll.map(item => idGetterRef.current(item));
+    
+        const { data: finalData, total } = applyFilterOnly(sortedAll);
+    
+        setViewData(finalData);
+        setViewTotal(total);
+        onProcessedDataUpdateRef.current?.(finalData);
+    }, [rawData, sort, filter]);
+
+    /** ---------- 선택(행/체크박스) 처리 ---------- */
     // 체크박스에서 발생한 이벤트인지 판별
     const isFromCheckbox = (evt) => !!evt?.syntheticEvent?.target?.closest?.('input[type="checkbox"]');
 
@@ -80,11 +229,13 @@ const KendoGrid = ({ parentProps, children }) => {
         setSelectedState(newSelectedState);
     };
 
-    // 헤더 체크박스 클릭 시 핸들러 
+    // 헤더 체크박스 클릭 시 핸들러
+    const parentHeaderSelectionChange = parentProps?.onHeaderSelectionChange;
+    
     const onHeaderSelectionChange = useCallback((event) => {
         // 부모에서 직접 처리하도록 허용
-        if (typeof parentProps?.onHeaderSelectionChange === "function") {
-            parentProps.onHeaderSelectionChange(event);
+        if (typeof parentHeaderSelectionChange === "function") {
+            parentHeaderSelectionChange(event);
             return;
         }
         const checked = event.syntheticEvent.target.checked;
@@ -97,7 +248,7 @@ const KendoGrid = ({ parentProps, children }) => {
             if (key !== undefined) newSelectedState[key] = checked;
         });
         setSelectedState(newSelectedState);
-    }, [setSelectedState, idGetter]);
+    }, [setSelectedState, idGetter, parentHeaderSelectionChange]);
 
     // 체크박스 클릭이면 onRowClick은 항상 무시 (편집/활성 충돌 방지)
     const onRowClickWrapper = (event) => {
@@ -106,9 +257,10 @@ const KendoGrid = ({ parentProps, children }) => {
     };
 
     // 헤더 체크박스 계산
-    const validItems = useMemo(() => {
-        return (processedData.data ?? []).filter((item) => !item.isDuplicate);
-    }, [processedData.data]);
+    const validItems = useMemo(
+        () => (viewData ?? []).filter((item) => !item.isDuplicate),
+        [viewData]
+    );
     const allChecked =
         validItems.length > 0 &&
         validItems.every((item) => selectedState[idGetter(item)]);
@@ -127,8 +279,8 @@ const KendoGrid = ({ parentProps, children }) => {
                 node.props?.children ? addKeysRecursively(node.props.children) : undefined
             );
         });
-    let childColsTree = addKeysRecursively(children);
 
+    let childColsTree = addKeysRecursively(children);
     // 멀티 선택 헤더
     if (parentProps?.multiSelect) {
         const SelectionHeaderCell = () => {
@@ -166,7 +318,7 @@ const KendoGrid = ({ parentProps, children }) => {
                                     return;
                                 }
                                 const next = {};
-                                processedData.data.forEach((item) => {
+                                (viewData || []).forEach((item) => {
                                     const key = idGetter(item);
                                     if (!key) return;
                                     if (item.isDuplicate) next[key] = false;
@@ -213,7 +365,7 @@ const KendoGrid = ({ parentProps, children }) => {
         <Grid
             scrollable="scrollable"
             style={{ height: height || "625px" }}
-            data={processedData.data}
+            data={viewData}
 
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}
@@ -225,7 +377,7 @@ const KendoGrid = ({ parentProps, children }) => {
             pageable={isPage ? { info: false } : false}
             skip={page?.skip}
             take={page?.take}
-            total={processedData.total}
+            total={viewTotal}
             onPageChange={pageChange}
 
             rowRender={rowRender}
