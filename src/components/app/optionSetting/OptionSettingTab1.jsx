@@ -790,6 +790,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 "selected=", rowProps?.dataItem?.selected
             );
             const key = getKey(rowProps?.dataItem);
+            if (key === undefined) return;
+
             const clicked = key === selectedRowKey;
             const selectedByBatch = lv3SelKeys.has(key);   // 행이 일괄 선택 대상이면
             const pending = rowProps?.dataItem?.__pendingDelete === true;
