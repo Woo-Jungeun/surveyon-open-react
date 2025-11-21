@@ -241,14 +241,14 @@ const OptionSettingExload = () => {
         const rows = rawRows
             .map((r, i) => ({
                 no: i + 1,
-                qnum: qScreen,                             // 현재 문번호 고정
-                lv1: norm(r.lv1),
-                lv1code: norm(r.lv1code),
-                lv2: norm(r.lv2),
-                lv2code: norm(r.lv2code),
-                lv3: norm(r.lv3),
-                lv123code: String(norm(r.lv123code)),
-                ex_gubun: norm(r.ex_gubun),
+                qnum: qScreen,        // 현재 문번호 고정
+                lv1: r.lv1 ?? "",
+                lv1code: r.lv1code ?? "",
+                lv2: r.lv2 ?? "",
+                lv2code: r.lv2code ?? "",
+                lv3: r.lv3 ?? "",
+                lv123code: r.lv123code != null ? String(r.lv123code) : "",
+                ex_gubun: r.ex_gubun ?? "",
             }))
             // 완전 공백 행 제거
             .filter(x => x.lv1 || x.lv2 || x.lv3 || x.lv123code);
