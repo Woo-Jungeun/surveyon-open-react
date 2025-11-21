@@ -786,6 +786,9 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         // 보류 행 회색 처리
         const rowRender = useCallback((trEl, rowProps) => {
+            if (!rowProps.dataItem) {
+                return trEl;   // 절대 커스텀 이벤트 넣지 말기
+            }
             const pending = rowProps?.dataItem?.__pendingDelete === true;
             const cls = `${trEl.props.className || ''} ${pending ? 'row-pending-delete' : ''}`;
             return React.cloneElement(trEl, { ...trEl.props, className: cls });
@@ -1075,14 +1078,18 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             // useClientProcessing: true,                      
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            initialSort: mappedSort,
-                            initialFilter: filter,
+                            sort: mappedSort,
+                            filter: filter,
                             sortChange: ({ sort: next }) => {
                                 const nextRaw = unmapSortFields(next, proxyField);
                                 setSort(nextRaw ?? []);
                                 onPrefsChange?.({ sort: nextRaw ?? [] });
                             },
-                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
+                            filterChange: ({ filter }) => {
+                                console.log("ExcelColumnMenu filterChange", filter);
+                                setFilter(filter ?? null);
+                                onPrefsChange?.({ filter: filter ?? null });
+                            },
                             noRecordsExtra: (
                                 // 데이터가 하나도 없을 때 “추가” 버튼 표출 
                                 <Button
