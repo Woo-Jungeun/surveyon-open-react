@@ -209,7 +209,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     //grid rendering 
     const GridRenderer = memo(forwardRef((props, ref) => {
-        console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
+        // console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
