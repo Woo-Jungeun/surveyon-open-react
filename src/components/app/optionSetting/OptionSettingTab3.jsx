@@ -5,8 +5,33 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { OptionSettingApi } from "@/components/app/optionSetting/OptionSettingApi.js";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { useSelector } from "react-redux";
-import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+
+// 정렬 
+const natKey = (v) => {
+    if (v == null) return Number.NEGATIVE_INFINITY;
+    const s = String(v).trim();
+    return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
+};
+
+// 정렬용 프록시를 붙일 대상 필드
+const NAT_FIELDS = ["pid", "cid"];
+
+// rows에 __sort__* 필드를 덧붙이고, 원필드→프록시 맵을 리턴
+const addSortProxies = (rows = []) => {
+    const proxyField = {};
+    const dataWithProxies = (rows || []).map((r) => {
+        const o = { ...r };
+        for (const f of NAT_FIELDS) {
+            const pf = `__sort__${f}`;
+            o[pf] = natKey(r?.[f]);
+            proxyField[f] = pf;
+        }
+        return o;
+    });
+    return { dataWithProxies, proxyField };
+};
+
 /**
  * 분석 > 그리드 영역 > rawdata
  *
@@ -54,7 +79,6 @@ const OptionSettingTab3 = (props) => {
         );
     }, [columns, forcedHidden]);
 
-
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
     const [filter, setFilter] = useState(persistedPrefs?.filter ?? null);
@@ -93,13 +117,14 @@ const OptionSettingTab3 = (props) => {
     //grid rendering 
     const GridRenderer = (props) => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
-        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
-            orderByWithProxy(dataState?.data || [], sort, {
-                // 숫자 인식 자연 정렬이 필요한 필드만 명시
-                pid: 'nat',
-                cid: 'nat',
-            })
-        ), [dataState?.data, sort]);
+        const { dataWithProxies, proxyField } = useMemo(
+            () => addSortProxies(dataState?.data || []),
+            [dataState?.data]
+        );
+        const mappedSort = useMemo(
+            () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
+            [sort, proxyField]
+        );
 
         return (
             <Fragment>
@@ -108,7 +133,7 @@ const OptionSettingTab3 = (props) => {
                         key={`lv-${lvCode}`}
                         parentProps={{
                             height: "680px",
-                            data: dataForGridSorted,       // props에서 직접 전달
+                            data: dataWithProxies,       // props에서 직접 전달
                             dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                             selectedState,
                             setSelectedState,
@@ -119,14 +144,16 @@ const OptionSettingTab3 = (props) => {
                                     // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
                                     loadingSpinner.hide();
                                 }
-                            },
-                            // useClientProcessing: true,                         // 클라 처리
+                            },                        // 클라 처리
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            initialSort: mappedSort,                               // 1회 초기값
-                            initialFilter: filter,
+                            sort: mappedSort,
+                            filter: filter,
                             sortChange: ({ sort: next }) => {
-                                const nextRaw = unmapSortFields(next, proxyField);
+                                const nextRaw = (next || []).map(d => {
+                                    const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);
+                                    return { ...d, field: orig || d.field };
+                                });
                                 setSort(nextRaw ?? []);
                                 onPrefsChange?.({ sort: nextRaw ?? [] });
                             },
@@ -134,17 +161,40 @@ const OptionSettingTab3 = (props) => {
                         }}
                     >
                         {effectiveColumns.filter(c => c.show !== false).map((c) => {
-                            const isNatField = ["pid", "cid"].includes(c.field);
+                            if (["pid", "cid"].includes(c.field)) {
+                                const proxy = proxyField[c.field] ?? `__sort__${c.field}`;
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={proxy}  // 정렬용은 proxy
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        // 메뉴에는 원래 field를 넘겨 줌
+                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
+                                        cell={(p) => (
+                                            <td title={p.dataItem[c.field]}>
+                                                {p.dataItem[c.field]}
+                                            </td>
+                                        )}
+                                    />
+                                );
+                            }
+
+                            // 나머지 컬럼은 그대로
                             return (
                                 <Column
                                     key={c.field}
-                                    // proxyField 기반 정렬 필드 전달
-                                    field={isNatField ? proxyField[c.field] ?? `__sort__${c.field}` : c.field}
+                                    field={c.field}
                                     title={c.title}
                                     width={c.width}
                                     editable={c.editable}
                                     columnMenu={columnMenu}
-                                    cell={(p) => <td title={p.dataItem[c.field]}>{p.dataItem[c.field]}</td>}
+                                    cell={(p) => (
+                                        <td title={p.dataItem[c.field]}>
+                                            {p.dataItem[c.field]}
+                                        </td>
+                                    )}
                                 />
                             );
                         })}

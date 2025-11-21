@@ -12,7 +12,6 @@ import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/components/app/proList/ProListPopup";    // 필터문항설정 팝업
 import "@/components/app/proList/ProList.css";
 import { modalContext } from "@/components/common/Modal.jsx";
-import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
 
 /**
  * 문항 목록
@@ -50,6 +49,31 @@ const FIELD_MIN_PERM = {
     tokens_text: PERM.READ,
     filterSetting: PERM.WRITE,
     project_lock: PERM.MANAGE,
+};
+
+// 정렬 
+const natKey = (v) => {
+    if (v == null) return Number.NEGATIVE_INFINITY;
+    const s = String(v).trim();
+    return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
+};
+
+// 정렬용 프록시를 붙일 대상 필드
+const NAT_FIELDS = ["status_cnt", "status_cnt_duplicated", "status_cnt_fin", "tokens_text"]; // 필요 시 추가
+
+// rows에 __sort__* 필드를 덧붙이고, 원필드→프록시 맵을 리턴
+const addSortProxies = (rows = []) => {
+    const proxyField = {};
+    const dataWithProxies = rows.map((r) => {
+        const o = { ...r };
+        for (const f of NAT_FIELDS) {
+            const pf = `__sort__${f}`;
+            o[pf] = natKey(r?.[f]);
+            proxyField[f] = pf;
+        }
+        return o;
+    });
+    return { dataWithProxies, proxyField };
 };
 
 const ProList = () => {
@@ -90,12 +114,12 @@ const ProList = () => {
     const [timeStamp, setTimeStamp] = useState(0); // cache buster
     const [mergeEditsById, setMergeEditsById] = useState(new Map()); // 행별 머지 텍스트 편집값
     const [mergeSavedBaseline, setMergeSavedBaseline] = useState(new Map());
-    
+
     // mergeSavedBaseline, mergeEditsById 초기화 
     useEffect(() => {
         const rows = proListData?.data?.resultjson ?? [];
         if (!rows.length) return;
-    
+
         setMergeSavedBaseline(new Map(rows.map(r => [r.id, r.merge_qnum || ""])));
         setMergeEditsById(new Map(rows.map(r => [r.id, r.merge_qnum || ""])));
     }, [proListData?.data?.resultjson]);
@@ -184,7 +208,7 @@ const ProList = () => {
     const GridRenderer = (props) => {
         const renderCount = useRef(0);
         renderCount.current += 1;
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch, scrollTopRef,mergeSavedBaseline, setMergeSavedBaseline } = props;
+        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch, scrollTopRef, mergeSavedBaseline, setMergeSavedBaseline } = props;
 
         const groupOrder = ["VIEW", "ADMIN", "EDIT"]; // 상단 그룹 순서
 
@@ -192,16 +216,14 @@ const ProList = () => {
         const [excludedById, setExcludedById] = useState(new Map());    // 분석/제외 토글 상태
 
         const pendingFlushRef = useRef(false); // 저장 후 1회 입력 캐시 초기화 플래그
-        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
-            orderByWithProxy(dataState?.data || [], sort, {
-                // 숫자 인식 자연 정렬이 필요한 필드만 명시
-                status_cnt: 'nat',
-                status_cnt_duplicated: 'nat',
-                status_cnt_fin: 'nat',
-                tokens_text: 'nat',
-            })
-        ), [dataState?.data, sort]);
-
+        const { dataWithProxies, proxyField } = useMemo(
+            () => addSortProxies(dataState?.data || []),
+            [dataState?.data]
+        );
+        const mappedSort = useMemo(
+            () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
+            [sort, proxyField]
+        );
         // 저장 여부 확인 
         const blockWhenDirty = useCallback(() => {
             // 블러된 변경: 상태 기반
@@ -969,7 +991,7 @@ const ProList = () => {
                                     // key={gridKey}
                                     parentProps={{
                                         height: "750px",
-                                        data: dataForGridSorted,       // props에서 직접 전달
+                                        data: dataWithProxies,
                                         dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                                         selectedState,
                                         setSelectedState,
@@ -978,12 +1000,15 @@ const ProList = () => {
                                         sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
                                         filterable: true,              // 필터 허용
                                         sortChange: ({ sort: next }) => {
-                                            const nextRaw = unmapSortFields(next, proxyField);
+                                            const nextRaw = (next || []).map(d => {
+                                                const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);
+                                                return { ...d, field: orig || d.field };
+                                            });
                                             setSort(nextRaw ?? []);
                                         },
-                                        filterChange: ({ filter }) => setFilter(filter ?? undefined),
-                                        initialSort: mappedSort,
-                                        initialFilter: filter,
+                                        filterChange: ({ filter }) => { setFilter(filter ?? null); },
+                                        sort: mappedSort,
+                                        filter: filter,
                                         // onRowClick,
                                         columnVirtualization: false,    // 멀티 헤더에서 가상화는 끄는 걸 권장
                                     }}
