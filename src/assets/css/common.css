@@ -753,7 +753,7 @@ footer {
 
 .cmn_gird_wrap .cmn_grid {
     width: 100%;
-    overflow-y: scroll;
+    /* overflow-y: scroll; */
     background: none;
 }
 
