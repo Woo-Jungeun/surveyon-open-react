@@ -8,8 +8,31 @@ import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
-import { orderByWithProxy, unmapSortFields } from "@/common/utils/SortComparers";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+
+const natKey = (v) => {
+    if (v == null) return Number.NEGATIVE_INFINITY;
+    const s = String(v).trim();
+    return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
+};
+
+// 숫자처럼 정렬하고 싶은 필드
+const NAT_FIELDS = ["lv1code", "lv2code", "lv123code"];
+
+// rows에 __sort__* 필드를 붙이고, 원필드 → 프록시필드 맵을 리턴
+const addSortProxies = (rows = []) => {
+    const proxyField = {};
+    const dataWithProxies = (rows || []).map((r) => {
+        const o = { ...r };
+        for (const f of NAT_FIELDS) {
+            const pf = `__sort__${f}`;
+            o[pf] = natKey(r?.[f]);
+            proxyField[f] = pf;
+        }
+        return o;
+    });
+    return { dataWithProxies, proxyField };
+};
 /**
  * 분석 > 그리드 영역 > 보기 데이터
  *
@@ -184,6 +207,15 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature, scrollTopRef
         } = props;
 
+        const { dataWithProxies, proxyField } = useMemo(
+            () => addSortProxies(dataState?.data || []),
+            [dataState?.data]
+        );
+
+        const mappedSort = useMemo(
+            () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
+            [sort, proxyField]
+        );
         const rememberScroll = useCallback(() => {
             const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
             if (grid) {
@@ -198,15 +230,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 grid.scrollTop = scrollTopRef.current;
             }
         }, [dataState?.data]);
-
-        const { data: dataForGridSorted, mappedSort, proxyField } = useMemo(() => (
-            orderByWithProxy(dataState?.data || [], sort, {
-                // 숫자 인식 자연 정렬이 필요한 필드만 명시
-                lv1code: 'nat',
-                lv2code: 'nat',
-                lv123code: 'nat',
-            })
-        ), [dataState?.data, sort]);
 
         const COMPOSITE_KEY_FIELD = "__rowKey";  // 키값
         const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row), []);
@@ -1060,7 +1083,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         // key={`lv-${lvCode}`}
                         key="tab2-grid"
                         parentProps={{
-                            data: dataForGridSorted,
+                            data: dataWithProxies,
                             dataItemKey: "__rowKey",
                             idGetter: (r) => r.__rowKey,
                             onProcessedDataUpdate: (arr) => {
@@ -1081,15 +1104,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             sort: mappedSort,
                             filter: filter,
                             sortChange: ({ sort: next }) => {
-                                const nextRaw = unmapSortFields(next, proxyField);
+                                const nextRaw = (next || []).map(d => {
+                                    const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);
+                                    return { ...d, field: orig || d.field };
+                                });
                                 setSort(nextRaw ?? []);
                                 onPrefsChange?.({ sort: nextRaw ?? [] });
                             },
-                            filterChange: ({ filter }) => {
-                                console.log("ExcelColumnMenu filterChange", filter);
-                                setFilter(filter ?? null);
-                                onPrefsChange?.({ filter: filter ?? null });
-                            },
+                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
                             noRecordsExtra: (
                                 // 데이터가 하나도 없을 때 “추가” 버튼 표출 
                                 <Button
@@ -1166,6 +1188,30 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                 );
                             }
                             const useNamed = ["lv1", "lv1code", "lv2", "lv2code", "lv3", "lv123code"].includes(c.field);
+
+                            // 코드 컬럼이면 proxy 필드로 정렬
+                            if (["lv1code", "lv2code", "lv123code"].includes(c.field)) {
+                                const proxy = proxyField[c.field] ?? `__sort__${c.field}`;
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={proxy}                    // 정렬용 필드는 proxy
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        // 메뉴는 원래 필드 기준으로
+                                        columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
+                                        {...(useNamed ? {
+                                            // 셀은 원래 필드 이름으로 넘겨서 NamedTextCell이 lv1code 를 수정하게
+                                            cell: (cellProps) => (
+                                                <NamedTextCell {...cellProps} field={c.field} />
+                                            )
+                                        } : {})}
+                                    />
+                                );
+                            }
+
+                            // 나머지 컬럼
                             return (
                                 <Column
                                     key={c.field}
