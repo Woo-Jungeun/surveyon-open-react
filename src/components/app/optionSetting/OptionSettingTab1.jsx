@@ -209,7 +209,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     //grid rendering 
     const GridRenderer = memo(forwardRef((props, ref) => {
-        console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
+        // console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
@@ -425,11 +425,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data]);
 
         const setSelectedStateGuarded = useCallback((next) => {
-            console.log(
-                "%c[SELECTION MAP UPDATE]",
-                "color:#FF8C00;font-weight:bold",
-                next
-            );
+            // console.log(
+            //     "%c[SELECTION MAP UPDATE]",
+            //     "color:#FF8C00;font-weight:bold",
+            //     next
+            // );
             rememberScroll(); // 스크롤 저장
             // 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
             const expandWithBatchIfNeeded = (prevMap, nextMap) => {
@@ -783,12 +783,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 클릭 행 
         const rowRender = (trEl, rowProps) => {
-            console.log(
-                "%c[ROW RENDER]",
-                "color:#32CD32;font-weight:bold",
-                rowProps?.dataItem?.__rowKey,
-                "selected=", rowProps?.dataItem?.selected
-            );
+            // console.log(
+            //     "%c[ROW RENDER]",
+            //     "color:#32CD32;font-weight:bold",
+            //     rowProps?.dataItem?.__rowKey,
+            //     "selected=", rowProps?.dataItem?.selected
+            // );
             const key = getKey(rowProps?.dataItem);
             if (key === undefined) return;
 
