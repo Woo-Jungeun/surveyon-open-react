@@ -185,15 +185,16 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
                   <Column
                     key={c.field}
                     field="useyn_id"
-                    title={
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                        기본 사용설정
-                        <span
-                          className="info-icon"
-                          data-tooltip={` 기본 사용설정|API KEY 여러 개 등록 및 관리가 가능하며,\n"기본 사용설정"된 KEY 기준으로 분석·비용이 청구됩니다.`}
-                        ></span>
-                      </span>
-                    }
+                    title={c.title}
+                    headerCell={() => (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          기본 사용설정
+                          <span
+                            className="info-icon"
+                            data-tooltip={` 기본 사용설정|API KEY 여러 개 등록 및 관리가 가능하며,\n"기본 사용설정"된 KEY 기준으로 분석·비용이 청구됩니다.`}
+                          ></span>
+                        </span>
+                    )}
                     width={c.width}
                     columnMenu={undefined}
                     cell={(props) => {
