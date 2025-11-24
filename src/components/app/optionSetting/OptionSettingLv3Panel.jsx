@@ -50,29 +50,40 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
     };
   }, [open, onClose]);
 
-  // 필터링 및 정렬 로직 최적화 (useMemo)
-  const filteredOptions = useMemo(() => {
-    // 데이터 방어 코드
+  // codeId 자연스러운 정렬용 키
+  const natKey = (v) => {
+    if (v == null || v === "") return Number.POSITIVE_INFINITY;
+    const s = String(v).trim();
+    // 전부 숫자면 숫자로, 아니면 소문자 문자열로 비교
+    return /^\d+$/.test(s) ? Number(s) : s.toLowerCase();
+  };
+  // options가 바뀔 때만 한 번 정렬
+  const sortedOptions = useMemo(() => {
     if (!options) return [];
-    let result = options;
-    // 검색 필터링
-    if (deferredSearchTerm) {
-      const lowerTerm = deferredSearchTerm.toLowerCase();
-      result = result.filter(opt =>
-        opt.codeName && opt.codeName.toLowerCase().includes(lowerTerm)
-      );
-    }
+    const arr = [...options];
+    arr.sort((a, b) => {
+      const ka = natKey(a.codeId);
+      const kb = natKey(b.codeId);
+      if (ka < kb) return -1;
+      if (ka > kb) return 1;
+      return 0;
+    });
+    return arr;
+  }, [options]);
 
-    // 정렬 로직 (숫자형 오름차순 정렬)
-    const sortedResult = [...result].sort((a, b) => Number(a.codeId) - Number(b.codeId));
-    // 정렬 로직 (문자형 오름차순 정렬)
-    // const sortedResult = [...result].sort((a, b) => {
-    //   const idA = String(a.codeId || ""); // 문자열로 변환
-    //   const idB = String(b.codeId || "");
-    //   return idA.localeCompare(idB);
-    // });
-    return sortedResult;
-  }, [options, deferredSearchTerm]); // options나 검색어가 변할 때만 재계산
+  // 필터링만 담당 (정렬은 sortedOptions에서 이미 한 번 수행)
+  const filteredOptions = useMemo(() => {
+    // 정렬된 옵션 기준
+    if (!sortedOptions) return [];
+
+    // 검색어 없으면 전체 반환
+    if (!deferredSearchTerm) return sortedOptions;
+
+    const lowerTerm = deferredSearchTerm.toLowerCase();
+    return sortedOptions.filter(opt =>
+      opt.codeName && opt.codeName.toLowerCase().includes(lowerTerm)
+    );
+  }, [sortedOptions, deferredSearchTerm]);
 
   return (
     <div className="lv3-panel-wrap">
