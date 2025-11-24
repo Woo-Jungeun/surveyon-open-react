@@ -494,7 +494,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         useLayoutEffect(() => {
             if (!rows.length) return;
             if (!shouldAutoApplySelectionRef.current) return;
-        
+
             const nextSelected = {};
             for (const r of rows) {
                 const yn = String(r?.recheckyn ?? "").trim().toLowerCase();
@@ -706,14 +706,27 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }));
         /*----------소분류 드래그-------*/
 
-        // 행 클릭 이벤트 → 해당 행만 inEdit=true
+        // 행 클릭 시: 스크롤 유지 + 단일 행 선택 + 편집 포커스 이동
         const onRowClick = useCallback((e) => {
             rememberScroll(); // 스크롤 저장
-            clearLv3Selection(); //선택 행 초기화 
 
+            // 클릭한 행의 고유 key 계산 후 "현재 선택 행"으로 저장
             const clickedKey = getKey(e.dataItem);
             setSelectedRowKey(clickedKey);
 
+            // 드래그/다중선택이 있어도 행 클릭하면 "그 행만" 연두색으로 남기기
+            const nextSel = new Set();
+            if (clickedKey != null) nextSel.add(clickedKey);
+            setLv3SelKeys(nextSel);
+            lv3SelKeysRef.current = nextSel;
+
+            // Shift+클릭 / 드래그 선택을 위해 기준 인덱스(anchor / last)를 클릭한 행으로 리셋
+            const rowIndex = rows.findIndex(r => getKey(r) === clickedKey);
+            if (rowIndex >= 0) {
+                anchorIndexRef.current = rowIndex;
+                lastIndexRef.current = rowIndex;
+            }
+            // inEdit 플래그: 클릭한 행만 true, 나머지는 false
             setDataState(prev => ({
                 ...prev,
                 data: prev.data.map(r => ({
