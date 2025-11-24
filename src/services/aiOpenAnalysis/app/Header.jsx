@@ -1,0 +1,1 @@
+export { default } from "@/services/aiOpenAnalysis/app/MenuBar.jsx";

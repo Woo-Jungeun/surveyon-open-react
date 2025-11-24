@@ -1,22 +1,14 @@
 import { useSelector } from "react-redux";
-import Login from "@/components/app/login/Login.jsx";
+import Login from "@/services/login/Login.jsx";
+import HomePage from "@/services/homePage/HomePage.jsx";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { Fragment, useEffect } from "react";
-import MainWrapperView from "@/views/MainWrapperView";
 import { useCookies } from "react-cookie";
-import PageNotFound from "@/components/app/pageNotFound/PageNotFound";
-import OptionSettingWrapperView from "@/views/optionSetting/OptionSettingWrapperView.jsx";
-import OptionSettingExloadWrapperView from "@/views/optionSetting/OptionSettingExloadWrapperView.jsx";
-import MainListWrapperView from "@/views/mainList/MainListWrapperView.jsx";
-import PopupWrapperView from "@/views/PopupWrapperView.jsx";
-import ProListWrapperView from "@/views/proList/ProListWrapperView.jsx";
-import ProEnterWrapperView from "@/views/proEnter/ProEnterWrapperView.jsx";
-import ProRegisterWrapperView from "@/views/proRegister/ProRegisterWrapperView.jsx";
-import ProPermissionWrapperView from "@/views/proPermission/ProPermissionWrapperView.jsx";
-import ProKeyWrapperView from "@/views/proKey/ProKeyWrapperView.jsx";
+import PageNotFound from "@/services/aiOpenAnalysis/app/pageNotFound/PageNotFound";
 import busGif from "@/assets/images/bus_loading.gif";
 import "@/common/utils/tooltip.js";
 
+import AiOpenAnalysisRoutes from "@/services/aiOpenAnalysis";
 function App() {
   const [cookies] = useCookies();
   const auth = useSelector((store) => store.auth);
@@ -32,39 +24,32 @@ function App() {
     };
   }, []);
 
+  const isLoggedIn = auth?.isLogin && cookies?.TOKEN;
+
   return (
     <Fragment>
-      {(auth?.isLogin && cookies?.TOKEN)
-        ?
-        <Routes>
-          <Route element={<MainWrapperView />}>
-            <Route index element={<MainListWrapperView />} />
-            <Route path="pro_list/*" element={<ProListWrapperView />} />
-            <Route path="option_setting/*" element={<OptionSettingWrapperView />} />
-            <Route path="login/*" element={<Navigate to="/" replace />} />
-            <Route path="pro_enter/*" element={<ProEnterWrapperView />} />
-            <Route path="pro_register/*" element={<ProRegisterWrapperView />} />
-            <Route path="pro_permission/*" element={<ProPermissionWrapperView />} />
-            <Route path="pro_key/*" element={<ProKeyWrapperView />} />
-            <Route path="*" element={<PageNotFound />} />
-          </Route>
-          
-          {/*헤더 없는 페이지*/}
-          <Route element={<PopupWrapperView />}>
-            <Route path="viewer/*" element={<OptionSettingExloadWrapperView />} />
-          </Route>
+      <Routes>
+        {/* ---------------------------
+            1. 로그인 여부와 무관한 공개 페이지
+        ---------------------------- */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<Login />} />
 
-          {/* / 외 경로로 오면 /로 돌려 */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-        : (
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            {/* 그 외 모든 경로는 /login으로 보냄 (404 없음) */}
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        )
-      }
+        {/* -----------------------------------
+            2. 로그인된 경우만 접근 가능한 내부 페이지
+        ------------------------------------ */}
+        {isLoggedIn ? (
+          <>
+            <Route path="/ai_open_analysis/*" element={<AiOpenAnalysisRoutes />} />
+          </>
+        ) : (
+          // 로그인 안 되어 있는데 내부 메뉴 접근 시 → /login 으로 이동
+          <Route path="/*" element={<Navigate to="/login" replace />} />
+        )}
+
+        {/* 404 처리 */}
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
     </Fragment>
   );
 }
