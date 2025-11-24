@@ -914,35 +914,31 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             return () => document.removeEventListener("pointerdown", closeAllEditors, true);
         }, []);
 
-        /** inEdit일 때 id/name 달아서 렌더하는 텍스트 에디터 셀
-         * 검증 오류가 있는 셀에 빨간 테두리(className)와 배지(중복/빈값)를 붙임 => dataItem.__errors 만 보고 스타일 표시시
-         */
         const NamedTextCell = useCallback((cellProps) => {
             const { dataItem, field } = cellProps;
             const editable = dataItem?.inEdit && NAMED_FIELDS.has(field);
-
+        
             // 에러 감지
             const hasError = dataItem?.__errors?.has?.(field);
             const errorKind = dataItem?.__errorKinds?.[field];
             const errorLabel = errorKind === "dup" ? "중복" : "빈값";
-
+        
             const rowKey = keyOf(dataItem);
             const inputId = `${field}-${rowKey}`;   // 고유 id
-            const value = dataItem?.[field] ?? "";
-
-            const handleChange = (e) => {
+            const initialValue = dataItem?.[field] ?? "";
+        
+            // blur 시점에만 상위(onItemChange)로 최종 값 전달
+            const handleBlurClose = (e) => {
+                const finalValue = e.target.value;
+        
+                // 1) GridData(onItemChange)로 최종 값 전달
                 cellProps.onChange?.({
                     dataItem,
                     field,
-                    value: e.target.value,
+                    value: finalValue,
                 });
-            };
-
-            // 포커스 빠질 때(blur) → 커밋 + 편집 닫기
-            const handleBlurClose = (e) => {
-                // 변경분 즉시 커밋/검증
-                flushNow();
-                // 해당 행 편집 닫기
+        
+                // 2) 편집 모드 해제
                 setDataState((prev) => ({
                     ...prev,
                     data: (prev.data || []).map((r) =>
@@ -950,7 +946,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     ),
                 }));
             };
-
+        
             // 일반 셀 (편집 아닐 때)
             if (!editable) {
                 return (
@@ -960,25 +956,30 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     </td>
                 );
             }
-
+        
             return (
-                <td className={`k-table-td ${hasError ? "cell-error" : ""}`}
-                    onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                    {/* label은 시각적으로 숨김(접근성+Issues 해결) */}
-                    <label htmlFor={inputId} className="hidden">{field}</label>
+                <td
+                    className={`k-table-td ${hasError ? "cell-error" : ""}`}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    <label htmlFor={inputId} className="hidden">
+                        {field}
+                    </label>
+        
                     {TEXTAREA_FIELDS.has(field) ? (
                         <textarea
                             id={inputId}
                             name={field}
-                            value={value}
-                            onChange={(e) => cellProps.onChange?.({ dataItem, field, value: e.target.value })}
+                            // IME 보호: controlled → uncontrolled 로 변경
+                            defaultValue={initialValue}
                             onBlur={handleBlurClose}
-                            rows={1}                       // 처음엔 1줄
+                            rows={1}
                             style={{
                                 width: "100%",
                                 minHeight: 34,
                                 lineHeight: 1.4,
-                                resize: "vertical",          // 원하면 "none"으로
+                                resize: "vertical",
                             }}
                             className="k-textarea k-input-solid"
                         />
@@ -986,8 +987,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         <input
                             id={inputId}
                             name={field}
-                            value={value}
-                            onChange={handleChange}
+                            // value → defaultValue
+                            defaultValue={initialValue}
                             onBlur={handleBlurClose}
                             autoComplete="on"
                             className="k-input k-input-solid"
@@ -997,8 +998,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     {hasError && <span className="cell-error-badge">{errorLabel}</span>}
                 </td>
             );
-        }, [keyOf, flushNow, setDataState]);
-
+        }, [keyOf, setDataState]);
+        
         // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
         const buildSavePayload = (rows, qnum) => {
             // __pendingDelete 행은 제외(=실제 삭제 반영), __isNew 플래그/로컬키는 서버로 안보냄
