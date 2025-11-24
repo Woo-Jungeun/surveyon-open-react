@@ -28,7 +28,7 @@ const mergeFilter = (prevFilter, nextForField, field) => {
 };
 
 export default function ExcelColumnMenu(props) {
-  const { columns = [], onColumnsChange, column, onFilterChange, filter, onSortChange } = props;
+  const { columns = [], onColumnsChange, column, onFilterChange, filter, onSortChange, onCloseMenu } = props;
 
   // --------- 간단 필터(텍스트 1개 + 적용/지우기) ---------
   // 컬럼 타입(숫자면 number, 그 외 텍스트)
@@ -55,11 +55,13 @@ export default function ExcelColumnMenu(props) {
       : { field: column.field, operator: 'contains', value: value };
 
     onFilterChange?.(mergeFilter(filter, next, column.field));
+    onCloseMenu?.();
   };
 
   const clearSimpleFilter = () => {
     setValue('');
     onFilterChange?.(mergeFilter(filter, null, column.field));
+    onCloseMenu?.();
   };
 
   // --------- Columns Chooser 관련 ---------
