@@ -21,7 +21,20 @@ const ROW_EXCLUSION_SELECTOR = [
     'input[type="checkbox"]', '[role="checkbox"]'
 ].join(',');
 
-const getKey = (row) => row?.__rowKey ?? null; // 키 가져오기 헬퍼 
+const getKey = (row) => {
+    if (!row) return null;
+
+    // 이미 __rowKey가 있으면 사용
+    if (row.__rowKey) return row.__rowKey;
+
+    // 아직 __rowKey가 없어도 fixed_key + cid로 동일한 키 조합
+    if (row.fixed_key != null && row.cid != null) {
+        return `${String(row.fixed_key)}::${String(row.cid)}`;
+    }
+
+    // 그래도 없으면 null
+    return null;
+};
 
 // 클라이언트 전용 표시/편집 플래그 제거
 const stripLocalFlags = (rows = []) =>
@@ -209,7 +222,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     //grid rendering 
     const GridRenderer = memo(forwardRef((props, ref) => {
-        // console.log("%c[RENDER] GridRenderer rendered", "color:#00BFFF;font-weight:bold");
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef
@@ -384,7 +396,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             suppressUnsavedSelectionRef.current = true;
             setSelectedState(buildSelectedMapFromRows(rows));
             suppressUnsavedSelectionRef.current = false;
-        }, [setSelectedState, buildSelectedMapFromRows]);
+        }, [setSelectedState]);
 
         const total = rows.length;  //총 갯수
         const analyzed = rows.filter(r => (r.lv3 ?? '').trim() !== '').length;  //분석값
@@ -415,9 +427,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             : {
                                 ...r,
                                 __rowKey:
-                                    (r.fixed_key != null && r.cid != null)
-                                        ? `${String(r.fixed_key)}::${String(r.cid)}`
-                                        : `__tmp__${Date.now()}__${i}__${Math.random()}`
+                                    getKey(r) ??
+                                    `__tmp__${Date.now()}__${i}__${Math.random()}`
                             }
                     ),
                 }));
@@ -425,11 +436,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [dataState?.data]);
 
         const setSelectedStateGuarded = useCallback((next) => {
-            // console.log(
-            //     "%c[SELECTION MAP UPDATE]",
-            //     "color:#FF8C00;font-weight:bold",
-            //     next
-            // );
             rememberScroll(); // 스크롤 저장
             // 단일 토글이면 "현재 lv3 셀 선택집합" 전체로 확장
             const expandWithBatchIfNeeded = (prevMap, nextMap) => {
@@ -488,7 +494,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         useLayoutEffect(() => {
             if (!rows.length) return;
             if (!shouldAutoApplySelectionRef.current) return;
-
+        
             const nextSelected = {};
             for (const r of rows) {
                 const yn = String(r?.recheckyn ?? "").trim().toLowerCase();

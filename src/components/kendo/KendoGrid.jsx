@@ -10,7 +10,6 @@ import { process } from "@progress/kendo-data-query";
  * @since 2025-10
  */
 const KendoGrid = ({ parentProps, children }) => {
-    // console.log("[KendoGrid]")
     const parentData = Array.isArray(parentProps?.data)
         ? { data: parentProps.data, totalSize: parentProps?.data?.length ?? 0 }
         : (parentProps?.data || { data: [], totalSize: 0 });
@@ -58,6 +57,34 @@ const KendoGrid = ({ parentProps, children }) => {
     /** ---------- 화면에 실제로 표시할 데이터 ---------- */
     const [viewData, setViewData] = useState(rawData);
     const [viewTotal, setViewTotal] = useState(initialTotal);
+
+    // selectedState(map)를 실제 row 객체의 selectedField에 주입
+    const dataWithSelection = useMemo(() => {
+        if (!selectedField || !dataItemKey) return viewData;
+        if (!selectedState) return viewData;
+    
+        const keys = Object.keys(selectedState);
+        // 선택된 key가 하나도 없고, viewData에도 selected true인 애가 없다면 그대로 반환
+        if (keys.length === 0) {
+            const hasSelectedRow = (viewData || []).some(
+                (item) => item && item[selectedField]
+            );
+            if (!hasSelectedRow) return viewData;
+        }
+    
+        const next = (viewData || []).map((item) => {
+            const key = idGetter(item);
+            const isSelected = !!selectedState[key];
+    
+            if (item[selectedField] === isSelected) return item;
+            return {
+                ...item,
+                [selectedField]: isSelected,
+            };
+        });
+    
+        return next;
+    }, [viewData, selectedState, selectedField, idGetter, dataItemKey]);    
 
     // 마지막으로 정렬/필터 적용한 상태 기억
     const sortKeyRef = useRef(JSON.stringify(sort || []));
@@ -155,18 +182,18 @@ const KendoGrid = ({ parentProps, children }) => {
         const keyToRow = new Map();   // 이전에도 있던 행들
         const afterMap = new Map();   // 기존행 key -> [그 뒤에 붙일 신규 행들...]
         const orphans = [];           // 기준 없이 떠 있는 신규행 (나중에 맨 뒤)
-    
+
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             const k = idGetterRef.current(row);
             if (k == null) continue;
-    
+
             if (prevKeySet.has(k)) {
                 keyToRow.set(k, row);
             } else {
                 const prevRow = i > 0 ? data[i - 1] : null;
                 const prevKey = prevRow ? idGetterRef.current(prevRow) : null;
-    
+
                 if (prevKey && prevKeySet.has(prevKey)) {
                     if (!afterMap.has(prevKey)) afterMap.set(prevKey, []);
                     afterMap.get(prevKey).push(row);
@@ -175,17 +202,17 @@ const KendoGrid = ({ parentProps, children }) => {
                 }
             }
         }
-    
+
         const sortedAll = [];
-    
+
         // 기존 순서를 따라가면서, 각 행 뒤에 붙기로 한 신규행도 같이 밀어 넣기
         for (const baseKey of orderRef.current || []) {
             const baseRow = keyToRow.get(baseKey);
             if (!baseRow) continue;
-    
+
             sortedAll.push(baseRow);
             keyToRow.delete(baseKey);
-    
+
             const attached = afterMap.get(baseKey);
             if (attached) {
                 for (const r of attached) {
@@ -193,7 +220,7 @@ const KendoGrid = ({ parentProps, children }) => {
                 }
             }
         }
-    
+
         // 혹시 orderRef에 없던 기존 행이 남아 있으면 그냥 뒤에
         for (const row of keyToRow.values()) {
             sortedAll.push(row);
@@ -202,12 +229,12 @@ const KendoGrid = ({ parentProps, children }) => {
         for (const row of orphans) {
             sortedAll.push(row);
         }
-    
+
         // 새 순서를 기준으로 다시 저장 (다음 변경 때 기준)
         orderRef.current = sortedAll.map(item => idGetterRef.current(item));
-    
+
         const { data: finalData, total } = applyFilterOnly(sortedAll);
-    
+
         setViewData(finalData);
         setViewTotal(total);
         onProcessedDataUpdateRef.current?.(finalData);
@@ -231,7 +258,7 @@ const KendoGrid = ({ parentProps, children }) => {
 
     // 헤더 체크박스 클릭 시 핸들러
     const parentHeaderSelectionChange = parentProps?.onHeaderSelectionChange;
-    
+
     const onHeaderSelectionChange = useCallback((event) => {
         // 부모에서 직접 처리하도록 허용
         if (typeof parentHeaderSelectionChange === "function") {
@@ -365,8 +392,7 @@ const KendoGrid = ({ parentProps, children }) => {
         <Grid
             scrollable="scrollable"
             style={{ height: height || "625px" }}
-            data={viewData}
-
+            data={dataWithSelection}
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}
             sort={sort}
