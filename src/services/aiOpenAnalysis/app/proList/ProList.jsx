@@ -239,7 +239,7 @@ const ProList = () => {
                 return;
             }
 
-            saveBlobWithName(blob, `보기 추출 (개발자용)_${projectnum}_${moment().format("YYYYMMDDHHmmss")}.xlsx`);
+            saveBlobWithName(blob, `open.xlsx`);
 
         } catch (err) {
             console.error(err);
