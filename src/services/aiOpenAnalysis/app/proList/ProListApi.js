@@ -17,29 +17,42 @@ export function ProListApi() {
     const proListData = useMutation(
         async (data) => await api.post(data.params, "/pro_list_api.aspx"),
         {
-         onMutate: (vars) => { 
-        //    loadingSpinner.show(); 
-        },
-         onSettled: () => {  
-        //    loadingSpinner.hide(); 
-        }
+            onMutate: (vars) => {
+                //    loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //    loadingSpinner.hide(); 
+            }
         }
     );
     // 수정/수정불가, 분석/제외, 문항통합저장버튼
     const editMutation = useMutation(
         async (data) => await api.post(data, "/pro_list_api.aspx"),
         {
-         onMutate: (vars) => { 
-            //loadingSpinner.show(); 
-        },
-         onSettled: () => {  
-            //loadingSpinner.hide(); 
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
         }
+    );
+    // 보기추출 파일 다운로드
+    const excelDownloadMutation = useMutation(
+        async (data) => await api.file(data, "/pro_list_api.aspx"),
+        {
+            onMutate: (vars) => {
+                //loadingSpinner.show(); 
+            },
+            onSettled: () => {
+                //loadingSpinner.hide(); 
+            }
         }
     );
 
     return {
         proListData,
-        editMutation
+        editMutation,
+        excelDownloadMutation
     };
 }

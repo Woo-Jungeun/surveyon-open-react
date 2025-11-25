@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/common/redux/action/AuthAction";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
+import GridHeaderBtnTxt from "@/components/style/button/GridHeaderBtnTxt.jsx";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -12,6 +13,7 @@ import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";    // 필터문항설정 팝업
 import "@/services/aiOpenAnalysis/app/proList/ProList.css";
 import { modalContext } from "@/components/common/Modal.jsx";
+import moment from "moment";
 
 /**
  * 문항 목록
@@ -104,7 +106,7 @@ const ProList = () => {
     const [filter, setFilter] = useState(null);
     const [popupShow, setPopupShow] = useState(false);        // 필터문항설정 팝업 popupShow
 
-    const { proListData, editMutation } = ProListApi();
+    const { proListData, editMutation, excelDownloadMutation } = ProListApi();
 
     // 스크롤 위치 저장용 ref
     const scrollTopRef = useRef(0);
@@ -203,6 +205,47 @@ const ProList = () => {
             />
         );
     }, [columnsForPerm, filter]);
+
+    const saveBlobWithName = (blob, filename = "download.xlsx") => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename; // 고정 파일명
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    };
+
+    // 보기추출 엑셀 다운로드  이벤트
+    const handleExportExcel = async () => {
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: "export_lb_excel"
+            };
+            const res = await excelDownloadMutation.mutateAsync(payload);
+
+            const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
+
+            if (!blob) {
+                modal.showErrorAlert("에러", "보기추출 파일을 받지 못했습니다.");
+                return;
+            }
+
+            if (blob.type?.includes("application/json")) {
+                modal.showErrorAlert("에러", "보기 추출 요청이 거부되었습니다.");
+                return;
+            }
+
+            saveBlobWithName(blob, `보기 추출 (개발자용)_${projectnum}_${moment().format("YYYYMMDDHHmmss")}.xlsx`);
+
+        } catch (err) {
+            console.error(err);
+            modal.showErrorAlert("오류", "보기 추출 중 오류가 발생했습니다.");
+        }
+    };
 
     //grid rendering 
     const GridRenderer = (props) => {
@@ -970,16 +1013,21 @@ const ProList = () => {
                             ></span>
                         </h2>
 
-                        {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
-                            <div className="btnWrap">
-                                <GridHeaderBtnPrimary onClick={() => navigate('/ai_open_analysis/pro_register')}>문항 등록
+                        <div className="btnWrap">
+                            {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
+                                <GridHeaderBtnTxt onClick={handleExportExcel}>보기 추출 (개발자용)
+                                </GridHeaderBtnTxt>
+                            )}
+
+                            {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+                                <GridHeaderBtnPrimary onClick={() => navigate('/pro_register')}>문항 등록
                                     <span
                                         className="info-icon"
                                         data-tooltip={`문항 등록|엑셀로 새로운 문항 추가`}
                                     ></span>
                                 </GridHeaderBtnPrimary>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 </article>
 

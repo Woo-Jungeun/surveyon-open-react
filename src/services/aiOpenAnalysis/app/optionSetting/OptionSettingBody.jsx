@@ -418,7 +418,6 @@ const OptionSettingBody = () => {
 
     // 서버가 에러를 JSON(Blob)으로 줄 수도 있어서 가드
     if (blob.type?.includes("application/json")) {
-      const txt = await blob.text();
       modal.showErrorAlert("에러", "엑셀 다운로드 요청이 거부되었습니다.");
       return;
     }
