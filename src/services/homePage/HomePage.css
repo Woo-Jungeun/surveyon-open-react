@@ -452,7 +452,7 @@
   opacity: 0.85;
 }
 /* ============================
-   Floating Background Circles
+   infoSection Floating Background Circles
 ============================ */
 @keyframes floatSoft {
   0%   { transform: translateY(0) scale(1); opacity: 0.35; }
@@ -468,4 +468,179 @@
   -webkit-backdrop-filter: blur(4px);
   animation: floatSoft 12s ease-in-out infinite;
   z-index: 1;
+}
+/* ================================
+   Menu Section
+================================ */
+/* ================================
+   Menu Section - Modern Upgraded
+================================ */
+.hp-menu-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 90px 20px 120px;
+}
+
+.hp-menu-title-wrap {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.hp-menu-title {
+  font-size: 30px;
+  font-weight: 800;
+  color: #222;
+}
+
+.hp-menu-desc {
+  font-size: 16px;
+  color: #777;
+  margin-top: 10px;
+}
+
+/* Grid Layout */
+.hp-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+/* CARD */
+.hp-menu-card {
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.06);
+  padding: 26px;
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.04),
+    0 12px 38px rgba(0,0,0,0.06);
+  position: relative;
+  overflow: hidden;
+  transition: 0.3s ease;
+}
+
+/* Hover 시 부드러운 색상 강조 */
+.hp-menu-card:hover {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--menu-color) 16%, white 84%),
+    color-mix(in srgb, var(--menu-color) 8%, white 92%)
+  );
+
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,0.06),
+    0 20px 45px rgba(0,0,0,0.08);
+}
+/* Status badge */
+.hp-menu-status {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+
+  color: #fff;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 40px;
+
+  font-weight: 400;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  transition: 0.25s ease;
+  opacity: 0.95;
+}
+
+/* ICON Area */
+.hp-menu-icon-wrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+
+  /* Glass-like */
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(8px);
+}
+
+.hp-menu-icon {
+  width: 30px;
+  height: 30px;
+}
+
+/* Title */
+.hp-menu-card-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #222;
+}
+
+/* Description */
+.hp-menu-card-desc {
+  font-size: 15px;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 32px;
+  min-height: 52px;
+}
+
+/* Modern Button */
+.hp-menu-card-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 20px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+
+  transition: 0.25s ease;
+  transform: translateY(0);
+}
+
+.hp-menu-card-btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+/* ================================
+   Fixed Footer 
+================================ */
+.hp-footer {
+  width: 100%;
+  height: 60px;
+  position: relative;
+  background: #ffffff;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.hp-footer-inner {
+  max-width: 1280px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #777;
+}
+
+.hp-footer-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.hp-status-dot {
+  width: 9px;
+  height: 9px;
+  background: #d9534f;
+  border-radius: 50%;
 }
