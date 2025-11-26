@@ -30,7 +30,7 @@ function App() {
     <Fragment>
       <Routes>
         {/* ---------------------------
-            1. 로그인 여부와 무관한 공개 페이지
+            1. 로그인 여부와 무관한 공개 페이지 (메인, 로그인)
         ---------------------------- */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />

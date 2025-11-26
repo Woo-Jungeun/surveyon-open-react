@@ -1,0 +1,471 @@
+/* ========================================
+   SCOPE: .homepage-container
+======================================== */
+.homepage-container {
+  --font-size: 16px;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+
+  --background: #ffffff;
+  --foreground: oklch(0.145 0 0);
+
+  --card: #ffffff;
+  --card-foreground: oklch(0.145 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  --primary: #030213;
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #030213;
+
+  --muted: #ececf0;
+  --muted-foreground: #717182;
+
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
+
+  --destructive: #d4183d;
+  --destructive-foreground: #ffffff;
+
+  --border: rgba(0, 0, 0, 0.1);
+  --input: transparent;
+  --input-background: #f3f3f5;
+  --switch-background: #cbced4;
+  --ring: oklch(0.708 0 0);
+
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+
+  --radius: 0.625rem;
+  --radius-sm: calc(0.625rem - 4px);
+  --radius-md: calc(0.625rem - 2px);
+  --radius-lg: 0.625rem;
+  --radius-xl: calc(0.625rem + 4px);
+
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+}
+
+/* Dark mode (남겨두기만 하고 현재 사용 안 함) */
+.homepage-container .dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+}
+
+/* ========================================
+   Global Reset (Scoped)
+======================================== */
+.homepage-container * {
+  box-sizing: border-box;
+  border-color: var(--border);
+  outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
+}
+
+.homepage-container h1,
+.homepage-container h2,
+.homepage-container h3,
+.homepage-container h4,
+.homepage-container p,
+.homepage-container button,
+.homepage-container input,
+.homepage-container label {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Utilities */
+.homepage-container .flex { display: flex; }
+.homepage-container .relative { position: relative; }
+.homepage-container .absolute { position: absolute; }
+.homepage-container .grid { display: grid; }
+.homepage-container .hidden { display: none; }
+
+/* Dot pattern 사용되는 부분만 유지 */
+.homepage-container .dot-pattern {
+  background-image: radial-gradient(circle at 2px 2px, white 1px, transparent 0);
+  background-size: 40px 40px;
+}
+
+/* ========================================
+   InfoSection (Hero Re-Design)
+======================================== */
+.homepage-container .hp-hero {
+  height: 650px;
+  position: relative;
+  padding: 20px 0;
+  background: linear-gradient(
+    145deg,
+    #5A4BFF 0%,
+    #6847F7 40%,
+    #7D3BEF 70%,
+    #9B2FD1 100%
+  );
+  overflow: hidden;
+  color: white;
+}
+
+/* 배경 패턴 */
+.homepage-container .hp-hero-bg-pattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.homepage-container .hp-hero-bg-pattern .dot-pattern {
+  width: 100%;
+  height: 100%;
+}
+
+/* 네비 */
+.homepage-container .hp-hero-nav {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 30px 40px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 20;
+}
+
+.homepage-container .hp-nav-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.homepage-container .hp-logo-img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.homepage-container .hp-logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: white;
+}
+
+/* 로그인 버튼 */
+.homepage-container .hp-login-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 28px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: 0.25s;
+}
+
+.homepage-container .hp-login-btn:hover {
+  background: rgba(255,255,255,0.25);
+}
+
+/* Hero Inner */
+.homepage-container .hp-hero-inner {
+  width: 1280px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  z-index: 5;
+}
+
+/* Left 텍스트 */
+.homepage-container .hp-hero-text {
+  max-width: 540px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.homepage-container .hp-chip {
+  display: inline-flex;
+  align-items: center;
+  width: 200px;
+  gap: 6px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  backdrop-filter: blur(8px);
+}
+
+.homepage-container .hp-title {
+  font-size: 5rem;
+  font-weight: 900;
+}
+
+.homepage-container .hp-subtext {
+  font-size: 1.2rem;
+  opacity: 0.92;
+}
+
+/* =========================================
+   기능 박스 4개 (중앙 배치)
+========================================= */
+.homepage-container .hp-feature-list {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(2, 280px);
+  gap: 14px 18px;
+}
+
+.homepage-container .hp-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  color: white;
+  font-size: 1rem;
+}
+
+.homepage-container .hp-feature-icon {
+  width: 20px;
+  height: 20px;
+  color: #dbeafe;
+}
+
+/* 버튼 */
+.homepage-container .hp-hero-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.homepage-container .hp-btn-primary {
+  padding: 14px 24px;
+  background: white;
+  color: #4f46e5;
+  border-radius: 10px;
+  font-weight: 600;
+  border: none;
+  transition: 0.25s;
+  cursor: pointer;
+}
+
+.homepage-container .hp-btn-outline {
+  padding: 14px 24px;
+  border-radius: 10px;
+  background: transparent;
+  border: 2px solid rgba(255,255,255,0.4);
+  color: white;
+  cursor: pointer;
+  transition: 0.25s;
+}
+/* ============================
+   오른쪽 카드 전체 영역
+============================ */
+.homepage-container .hp-visual-area {
+  position: absolute;
+  top: 65%;
+  right: -2%;
+  transform: translate(0, -50%);
+  width: 700px;
+  height: 620px;
+  pointer-events: none;
+  perspective: 1600px;
+}
+
+/* ============================
+   카드 공통 스타일 (업그레이드 버전)
+============================ */
+.homepage-container .hp-card {
+  position: absolute;
+  width: 270px;
+  padding: 22px 26px;
+  background: linear-gradient(
+    135deg,
+    rgba(52, 76, 175, 0.85),   /* 밝은 네이비 (#344CAF) */
+    rgba(94, 78, 199, 0.90)    /* 퍼플/블루(#5E4EC7) */
+  );
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(16px);
+  box-shadow:
+    0 12px 28px rgba(0, 0, 60, 0.32),
+    0 0 25px rgba(140, 150, 255, 0.35);
+  color: white;
+  transform-style: preserve-3d;
+}
+
+/* 아이콘 */
+.homepage-container .hp-card-icon {
+  /* width: 28px;
+  height: 28px; */
+  color: rgba(235, 240, 255, 0.95);
+}
+
+/* 숫자 */
+.homepage-container .hp-card-number {
+  margin-top: 8px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.homepage-container .hp-card-label {
+  margin-top: 6px;
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.homepage-container .hp-card-sub {
+  margin-top: 6px;
+  font-size: 0.75rem; 
+  opacity: 0.75;
+}
+
+/* ============================
+   카드 개별 위치 & 3D 깊이
+============================ */
+/* 텍스트 작은 라벨 */
+.hp-card-sub {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  opacity: 0.8;
+}
+/* AI 텍스트 분석 — 좌측 상단 */
+.homepage-container .hp-card-text {
+  top: 60px;
+  left: 30px;
+  transform: translateZ(140px) rotateY(-4deg);
+  z-index: 8;
+}
+
+/* AI 정확도 — 우측 상단 */
+.homepage-container .hp-card-accuracy {
+  top: 10px;
+  right: 20px;
+  transform: translateZ(180px) rotateY(10deg);
+  z-index: 11;
+}
+
+/* 감정 분석 — 가장 앞 (중앙 메인 카드) */
+.homepage-container .hp-card-sentiment {
+  top: 150px;
+  right: 180px;
+  transform: translateZ(240px);
+  z-index: 20;
+}
+
+/* AI 키워드 추출 — 좌측 아래 */
+.homepage-container .hp-card-keyword {
+  top: 280px;
+  left: 40px;
+  transform: translateZ(150px) rotateY(5deg);
+  z-index: 10;
+}
+
+/* AI 응답 요약 — 우측 아래 */
+.homepage-container .hp-card-summary {
+  top: 310px;
+  right: 0px;
+  transform: translateZ(140px) rotateY(-5deg);
+  z-index: 9;
+}
+
+/* 키워드 태그 */
+.homepage-container .hp-chip-row {
+  margin-top: 16px;
+  display: flex;
+  gap: 8px;
+}
+
+.homepage-container .hp-chip-tag {
+  padding: 6px 13px;
+  background: rgba(255,255,255,0.22);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+/* 정확도 막대 */
+.homepage-container .hp-accuracy-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-top: 14px;
+  height: 26px; /* 전체 높이 */
+}
+
+/* 막대 그래프 형태 */
+.homepage-container .hp-accuracy-unit {
+  width: 10px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.45);
+  transition: height 0.3s ease;
+}
+
+/* 개별 막대 높이 (점점 증가) */
+.homepage-container .hp-accuracy-unit:nth-child(1) { height: 20%; }
+.homepage-container .hp-accuracy-unit:nth-child(2) { height: 30%; }
+.homepage-container .hp-accuracy-unit:nth-child(3) { height: 40%; }
+.homepage-container .hp-accuracy-unit:nth-child(4) { height: 50%; }
+.homepage-container .hp-accuracy-unit:nth-child(5) { height: 60%; }
+.homepage-container .hp-accuracy-unit:nth-child(6) { height: 70%; }
+.homepage-container .hp-accuracy-unit:nth-child(7) { height: 80%; }
+.homepage-container .hp-accuracy-unit:nth-child(8) { height: 90%; }
+.homepage-container .hp-accuracy-unit:nth-child(9) { height: 100%; }
+.homepage-container .hp-accuracy-unit:nth-child(10) { height: 100%; }
+.homepage-container .hp-accuracy-unit:nth-child(11) { height: 100%; }
+.homepage-container .hp-accuracy-unit:nth-child(12) { height: 100%; }
+
+/* 감정 분석 바 */
+.homepage-container .hp-progress {
+  width: 100%;
+  height: 8px;
+  margin-top: 12px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.homepage-container .hp-progress-fill {
+  width: 75%;
+  height: 100%;
+  background: #9bd0ff;
+}
+
+.homepage-container .hp-progress-value {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  text-align: right;
+  opacity: 0.85;
+}
+/* ============================
+   Floating Background Circles
+============================ */
+@keyframes floatSoft {
+  0%   { transform: translateY(0) scale(1); opacity: 0.35; }
+  50%  { transform: translateY(-25px) scale(1.05); opacity: 0.55; }
+  100% { transform: translateY(0) scale(1); opacity: 0.35; }
+}
+
+.hp-shape {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.13);
+  border-radius: 9999px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: floatSoft 12s ease-in-out infinite;
+  z-index: 1;
+}
