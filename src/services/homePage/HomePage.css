@@ -602,6 +602,13 @@
   transform: translateY(0);
 }
 
+.hp-menu-card-btn.disabled {
+  background: #cccccc !important;
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .hp-menu-card-btn:hover {
   transform: translateY(-2px);
   opacity: 0.9;
@@ -643,4 +650,82 @@
   height: 9px;
   background: #d9534f;
   border-radius: 50%;
+}
+/* ===============================
+   🔹 User Button (로그인 상태)
+=============================== */
+.hp-user-wrap {
+  position: relative;
+}
+
+.hp-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: white;
+
+  backdrop-filter: blur(14px);
+  padding: 8px 16px;
+  border-radius: 12px;
+
+  font-size: 15px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.hp-user-btn:hover {
+  background: rgba(255,255,255,0.38);
+}
+
+.hp-user-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ===============================
+   🔹 User Dropdown
+=============================== */
+.hp-user-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+
+  background: white;
+  border-radius: 14px;
+  min-width: 150px;
+
+  padding: 12px 0;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+
+  animation: fadeDown 0.18s ease-out;
+  z-index: 50;
+}
+
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hp-dd-item {
+  width: 100%;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  font-size: 15px;
+  color: #333;
+  background: none;
+  border: none;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.hp-dd-item:hover {
+  background: #f5f5ff;
+  color: #4338CA;
 }

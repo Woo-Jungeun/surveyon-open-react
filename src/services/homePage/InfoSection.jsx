@@ -1,17 +1,64 @@
-import React from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  Sparkles,
-  LogIn,
-  BrainCircuit,
-  Zap,
-  BarChart3
-} from "lucide-react";
+import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3 } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { useCookies } from "react-cookie";
+import { modalContext } from "@/components/common/Modal.jsx";
 import logoImg from "@/assets/images/hrc_logo.png";
+import { motion } from "framer-motion";
+import { logout } from "@/common/redux/action/AuthAction";
 
 const InfoSection = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const modal = useContext(modalContext);
+
+  const auth = useSelector((store) => store.auth);
+  const [cookies, , removeCookie] = useCookies(["TOKEN"]);
+
+  const isLoggedIn = auth?.isLogin && cookies?.TOKEN;
+  const userName = auth?.user?.userNm || "";
+
+  const [open, setOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  /** 로그아웃 처리 */
+  const doLogout = async () => {
+    modal.showConfirm("알림", "로그아웃하시겠습니까?", {
+      btns: [
+        { title: "취소", background: "#75849a" },
+        {
+          title: "로그아웃",
+          click: async () => {
+            try {
+              dispatch(logout()); 
+              await persistor.purge();
+              removeCookie("TOKEN", { path: "/" });
+              sessionStorage.setItem("projectnum", "");
+              sessionStorage.setItem("projectname", "");
+              sessionStorage.setItem("servername", "");
+              sessionStorage.setItem("projectpof", "");
+              navigate("/");
+       
+            } catch {
+              modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  /** 외부 클릭 시 드롭다운 닫기 */
+  useEffect(() => {
+    const handleClose = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("click", handleClose);
+    return () => document.removeEventListener("click", handleClose);
+  }, []);
 
   return (
     <section className="hp-hero">
@@ -23,10 +70,36 @@ const InfoSection = () => {
           <span className="hp-logo-text">설문온</span>
         </div>
 
-        <button className="hp-login-btn" onClick={() => navigate("/login")}>
-          <LogIn className="hp-login-icon" />
-          로그인
-        </button>
+     
+        {/* ▣ 로그인 여부에 따른 분기 */}
+        {!isLoggedIn ? (
+          <button className="hp-login-btn" onClick={() => navigate("/login")}>
+            <LogIn className="hp-login-icon" />
+            로그인
+          </button>
+        ) : (
+          <div className="hp-user-wrap" ref={dropdownRef}>
+            {/* 사용자 버튼 */}
+            <button
+              type="button"
+              className="hp-user-btn"
+              onClick={() => setOpen((v) => !v)}
+            >
+              <User className="hp-user-icon" />
+              <span>{userName}님</span>
+            </button>
+
+            {/* 드롭다운 */}
+            {open && (
+              <div className="hp-user-dropdown">
+                <button className="hp-dd-item" onClick={doLogout}>
+                  <LogOut size={18} />
+                  <span>로그아웃</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 배경 패턴 */}

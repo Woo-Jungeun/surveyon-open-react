@@ -38,7 +38,7 @@ export function LoginApi() {
                     return out;
                 };
                 if (res?.success === "777") {
-                    navigate("/ai_open_analysis/");
+                    navigate("/"); // 홈으로 이동
                     // 성공 처리: 스토어/쿠키/세션 동기화
                     const out = parseOutput(res?.output);
                     const info = Array.isArray(out) ? out[0] : out || {};

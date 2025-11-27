@@ -1,6 +1,9 @@
 import React from "react";
 import { FileText, BarChart3, Database, BrainCircuit, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useCookies } from "react-cookie";
+
 const menuItems = [
   {
     id: "survey-creation",
@@ -66,6 +69,9 @@ const menuItems = [
 
 const MenuSection = () => {
   const navigate = useNavigate();
+  const auth = useSelector((store) => store.auth);
+  const [cookies] = useCookies(["TOKEN"]);
+  const isLoggedIn = auth?.isLogin && cookies?.TOKEN;
 
   return (
     <section className="hp-menu-section">
@@ -107,17 +113,17 @@ const MenuSection = () => {
               <p className="hp-menu-card-desc">{item.description}</p>
 
               <button
-                className="hp-menu-card-btn"
+                className={`hp-menu-card-btn ${!isLoggedIn ? "disabled" : ""}`}
                 style={{ backgroundColor: item.color }}
-                onClick={() => navigate(item.path)}
-              >
-                시작하기 →
+                disabled={!isLoggedIn}
+                onClick={() => isLoggedIn && navigate(item.path)}   // 로그인 시에만 이동
+              > 시작하기 →
               </button>
             </div>
           </div>
         ))}
       </div>
-    </section>
+    </section >
   );
 };
 
