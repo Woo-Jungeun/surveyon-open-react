@@ -1020,7 +1020,7 @@ const ProList = () => {
                             )}
 
                             {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
-                                <GridHeaderBtnPrimary onClick={() => navigate('/pro_register')}>문항 등록
+                                <GridHeaderBtnPrimary onClick={() => navigate('/ai_open_analysis/pro_register')}>문항 등록
                                     <span
                                         className="info-icon"
                                         data-tooltip={`문항 등록|엑셀로 새로운 문항 추가`}

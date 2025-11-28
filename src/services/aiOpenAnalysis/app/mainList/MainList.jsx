@@ -83,11 +83,11 @@ const MainList = () => {
                             <span
                                 className="info-icon"
                                 data-tooltip={`프로젝트 목록|현 사용자가 등록한 프로젝트, 다른 사용자가 권한을 부여한 프로젝트가 제시됩니다.`}
-                             ></span>
+                            ></span>
                         </h2>
                         {(!userGroup.includes("고객") && !userGroup.includes("일반")) && (
                             <div className="btnWrap">
-                                <GridHeaderBtnPrimary onClick={() => navigate("/pro_enter")}>
+                                <GridHeaderBtnPrimary onClick={() => navigate("/ai_open_analysis/pro_enter")}>
                                     프로젝트 등록
                                     <span
                                         className="info-icon"
