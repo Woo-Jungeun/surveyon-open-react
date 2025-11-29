@@ -1,5 +1,5 @@
 import { createContext, Fragment, useState, useEffect } from "react";
-import busGif from "@/assets/images/bus_loading.gif";
+import "@/assets/css/loading-spinner.css";
 
 // 분석 전용 로딩바 
 // context를 생성해야지만 전역으로 사용할 수 있음
@@ -23,17 +23,7 @@ function LoadingProvider(props) {
         target: null,
     });
 
-    // GIF 사전 로드 상태
-    const [gifReady, setGifReady] = useState(false);
-    useEffect(() => {
-        let alive = true;
-        const img = new Image();
-        img.src = busGif;
-        // decode()가 있으면 페인트 전에 디코딩 완료까지 기다림
-        const done = img.decode ? img.decode() : Promise.resolve();
-        done.catch(() => { }).finally(() => { if (alive) setGifReady(true); });
-        return () => { alive = false; };
-    }, []);
+
 
     /**
      * @funcName : show
@@ -101,7 +91,6 @@ function LoadingProvider(props) {
                 loading={spinner.loading}
                 content={spinner.content}
                 target={spinner.target}
-                gifReady={gifReady}
             />
         </loadingSpinnerContext.Provider>
     )
@@ -117,7 +106,7 @@ function LoadingProvider(props) {
  * @history :
 **/
 function LoadingSpinner(props) {
-    const { loading, content, target, gifReady } = props;
+    const { loading, content, target } = props;
 
     let maskStyle;
 
@@ -137,9 +126,10 @@ function LoadingSpinner(props) {
                 loading
                     ? <article className={"modal on no-dim"} style={maskStyle}>
                         <div className="loading">
-                            {gifReady && (
-                                <img src={busGif} alt="" width={140} height={140} style={{ display: "block", margin: "0 auto" }}/>
-                            )}
+                            <div className="survey-loading-spinner">
+                                <div className="checkmark checkmark-1"></div>
+                                <div className="checkmark checkmark-2"></div>
+                            </div>
                             <p>분석중입니다...</p>
                         </div>
                     </article>
