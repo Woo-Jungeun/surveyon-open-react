@@ -174,13 +174,9 @@ video {
 html,
 body {
 	-webkit-text-size-adjust: none;
-	/* ?щ＼, ?ы뙆由? ?ㅽ럹???좊쾭??*/
 	-ms-text-size-adjust: none;
-	/* IE */
 	-moz-text-size-adjust: none;
-	/* ?뚯씠?댄룺??*/
 	-o-text-size-adjust: none;
-	/* ?ㅽ럹??援щ쾭??*/
 }
 
 body {

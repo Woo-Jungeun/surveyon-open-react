@@ -5,8 +5,6 @@
     --left-panel-width: 500px;
 }
 
-/* ?쇱そ ?⑤꼸 ?볦씠 議곗젅 */
-
 /* common style */
 .hidden {
     border: 0 !important;
@@ -1577,7 +1575,6 @@ footer {
     overflow-y: scroll;
 }
 
-/* 踰붾??꾩씠肄?異붽? */
 .labelIcon {
     display: inline-flex;
     align-items: center;
@@ -2975,7 +2972,6 @@ footer {
     display: none !important;
 }
 
-/* 湲곕낯(dim) ?ㅻ쾭?덉씠 = ?덉쟾 ?ㅽ???*/
 .modal.on {
     position: fixed;
     inset: 0;
@@ -2984,27 +2980,22 @@ footer {
     align-items: center;
     justify-content: center;
     background: rgba(15, 23, 42, 0.55);
-    /* ?대몢??諛섑닾紐?*/
     pointer-events: all;
 }
 
-/* ?щ챸 ?ㅻ쾭?덉씠 移대뱶 */
 .modal.on.no-dim {
     background: transparent;
-    /* dim ?쒓굅 */
 }
 
 .modal.on.no-dim .loading {
     background: rgba(255, 255, 255, 0.92);
     color: #111;
-    /* 湲??寃??*/
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
     backdrop-filter: blur(8px);
 }
 
 .modal.on.no-dim .loading p {
     color: #111;
-    /* 媛?낆꽦 蹂댁옣 */
 }
 
 /* error page */
@@ -3113,7 +3104,7 @@ footer {
     background: #f44e4e;
 }
 
-/* bus line / ?몄꽑?????*/
+/* bus line */
 .busLineWrap {
     display: grid;
     position: relative;
@@ -3539,7 +3530,7 @@ footer {
     font-weight: normal;
 }
 
-/* marker img 諛⑺뼢 / 踰붾? ?꾩씠肄??숈씪 class ?ъ슜媛??*/
+/* marker img */
 .map_marker_up {
     transform: rotate(180deg);
 }
@@ -3552,7 +3543,6 @@ footer {
     transform: rotate(180deg);
 }
 
-/* 240715 : 寃쎌쁺 諛??쒕퉬???됯? 異붽? */
 .tbl .cmn_pop_ipt .iptCol2 {
     display: flex;
     align-items: center;
@@ -3734,9 +3724,6 @@ footer {
     line-height: 1.67;
 }
 
-
-
-/* ?몄꽑 二쇱슂寃쎈줈 ?쒓컙???앹뾽 */
 .modalTime {
     width: 100%;
     height: 100%;
@@ -3827,7 +3814,6 @@ footer {
     color: #012011;
 }
 
-/* 241002 ?섏씠吏 異붽? */
 .popCont.type02 {
     padding: 0;
     max-height: none;
@@ -4031,7 +4017,6 @@ footer {
     max-height: calc(100vh - 525px);
 }
 
-/* ?쇱そ ?⑤꼸 ?묓옒 ?곹깭 */
 .subContWrap.left-closed .subContL {
     width: 44px;
     padding: 20px 8px;
@@ -4043,10 +4028,8 @@ footer {
 
 .subContWrap.left-closed .subContL .left-body {
     display: none;
-    /* ?댁슜 ?④?, 踰꾪듉留??④? */
 }
 
-/* 遺꾩꽍寃곌낵 寃? 諛뺤뒪 (?ㅽ겕由곗꺑 ?ㅽ??? */
 .resultBox {
     height: 215px;
     border: 1px solid #111;
@@ -4054,7 +4037,6 @@ footer {
     color: #0f0;
 }
 
-/* ?뱀뀡 ?좉? show/hide (?대? ?덈떎硫?以묐났 異붽? X) */
 .leftInfo .infoList {
     display: none;
 }
@@ -4063,7 +4045,6 @@ footer {
     display: block;
 }
 
-/* ?뱀뀡 ?쒕ぉ ???묒? ?덈궡 臾멸뎄 */
 .infoTit .titNote {
     margin-left: 6px;
     font-size: 12px;
@@ -4072,12 +4053,10 @@ footer {
     letter-spacing: -0.2px;
 }
 
-/* ?쇱そ ?⑤꼸 ?곷떒 ?묒? ?묎린 踰꾪듉 */
 .collapseBar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 湲곗〈 flex-end ??space-between */
     gap: 8px;
     margin-bottom: 8px;
 }
@@ -4103,7 +4082,6 @@ footer {
     background: var(--primary-bg-hover);
 }
 
-/* ?쇱そ 踰꾪듉 以꾨컮轅??먮룞??*/
 .subContL .btnWrap.type01.btnRowFit {
     justify-content: space-between;
     flex-wrap: wrap;
@@ -4113,10 +4091,8 @@ footer {
 .subContL .btnWrap.type01.btnRowFit .k-button {
     flex: 1 1 auto;
     min-width: 110px;
-    /* ?덈Т ?묒븘吏??寃?諛⑹? */
 }
 
-/* ?꾨＼?꾪듃 吏移??띿뒪?몃컯??媛꾧꺽 */
 .leftInfo .promptArea {
     margin: 6px 0 12px;
 }
@@ -4128,8 +4104,6 @@ footer {
     box-sizing: border-box;
 }
 
-
-/* ?뱀뀡 ?ㅻ뜑: ?쒕ぉ 踰꾪듉 + ?곗륫 ?≪뀡(?섍린議닳? */
 .infoTitRow {
     display: flex;
     align-items: center;
@@ -4146,7 +4120,6 @@ footer {
     border-top: none;
 }
 
-/* ???덉쓽 ?쒕ぉ 踰꾪듉? 蹂대뜑/?⑤뵫/耳???쒓굅 (?됱씠 ???대떦) */
 .infoTitRow .infoTit {
     flex: 1;
     border: 0 !important;
@@ -4162,16 +4135,11 @@ footer {
     content: none !important;
 }
 
-/* 耳???쒓굅 */
-/* .infoTit { justify-content:flex-start; } */
-
-/* ?붿궡???쇱そ??遺숇뒗 ?묒? ?곸뿭(?섍린議닳?踰꾪듉 ?대뒗 ?먮━) */
 .infoTitAddon {
     display: flex;
     align-items: center;
 }
 
-/* ?ㅻ뜑??誘몃땲 踰꾪듉 */
 .btnMini {
     height: 28px;
     padding: 0 10px;
@@ -4179,12 +4147,10 @@ footer {
     border-radius: 6px;
 }
 
-/* ?쒕ぉ 踰꾪듉??湲곕낯 ???붿궡???쒓굅(蹂꾨룄 caret ??嫄곕씪) */
 .infoTit.no-caret::after {
     content: none;
 }
 
-/* ?붿궡???꾩슜 踰꾪듉 */
 .infoCaret {
     width: 24px;
     height: 24px;
@@ -4206,7 +4172,7 @@ footer {
 }
 
 
-/* ?쒖떆??Kendo TextArea */
+/* Kendo TextArea */
 .k-textarea.ta-display,
 .k-textarea.ta-display:hover {
     background: transparent !important;
@@ -4222,13 +4188,10 @@ footer {
     resize: none;
     height: auto;
     min-height: 110px;
-    /* ?꾩슂 ?놁쑝硫??쒓굅 媛??*/
     white-space: pre-wrap;
     caret-color: transparent;
-    /* 罹먮읉 ?④? */
 }
 
-/*湲곗〈 ?꾨＼?꾪듃 ?앹뾽 css*/
 .secTitle {
     display: flex;
     align-items: center;
@@ -4257,13 +4220,11 @@ footer {
     font-weight: 500;
 }
 
-/* 湲곗〈 ?꾨＼?꾪듃 ?앹뾽: ?댁슜(?ㅻⅨ履?移?留?蹂쇰뱶 ?댁젣 */
 .modal .prompt-text,
 .modal .prompt-text * {
     font-weight: 400 !important;
 }
 
-/* ?쒕쾭?먯꽌 <b>/<strong>/<h*>濡??대젮?ㅻ㈃ 洹멸쾬???됰Ц?쇰줈 */
 .modal .prompt-text b,
 .modal .prompt-text strong,
 .modal .prompt-text h1,
@@ -4275,7 +4236,6 @@ footer {
     font-weight: 400 !important;
 }
 
-/* --- ?꾨＼?꾪듃 ?? ??以?誘몃━蹂닿린/?좉? --- */
 .modal .prompt-text.clamp-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -4286,7 +4246,6 @@ footer {
 
 .modal .prompt-text.expanded {
     display: block;
-    /* ?꾩껜 ?쒖떆 */
 }
 
 .modal .prompt-text,
@@ -4294,7 +4253,6 @@ footer {
     white-space: pre-wrap;
 }
 
-/* ???곗륫 ?≪뀡 ?곸뿭 */
 .modal .rowActions {
     display: flex;
     align-items: center;
@@ -4302,7 +4260,6 @@ footer {
     justify-content: flex-end;
 }
 
-/* ?좉? ?꾩씠肄?湲곗〈 ?쒕∼?ㅼ슫 ?꾩씠肄??ъ궗?? */
 .modal .toggleBtn {
     width: 28px;
     height: 28px;
@@ -4324,7 +4281,6 @@ footer {
     transform: rotate(180deg);
 }
 
-/* ?좏깮 踰꾪듉? 議댁옱?섎뒗 .btnMini ?ъ슜(?대?吏??留욎떠 媛?낆꽦 ?쎄컙 蹂닿컯) */
 .modal .btnMini {
     height: 28px;
     padding: 0 10px;
@@ -4334,11 +4290,8 @@ footer {
 
 .prompt-text {
     white-space: pre-wrap;
-    /* 以꾨컮轅덇낵 怨듬갚 ?좎? */
     word-break: break-word;
-    /* 湲??⑥뼱 以꾨컮轅?*/
     line-height: 1.5;
-    /* 蹂닿린 醫뗪쾶 以?媛꾧꺽 */
 }
 
 .meta2 {
@@ -4355,9 +4308,6 @@ footer {
     font-weight: 700
 }
 
-
-/* ---硫붾돱諛?-- */
-/* 怨듯넻 ?꾩씠肄?踰꾪듉 */
 .iconBtn,
 .userBtn {
     display: inline-flex;
@@ -4375,12 +4325,10 @@ footer {
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* ?쒕∼?ㅼ슫 而⑦뀒?대꼫 */
 .menu-dd {
     position: relative;
 }
 
-/* 移대뱶 ?쒕∼?ㅼ슫 */
 .dropdown-card {
     position: absolute;
     right: 0;
@@ -4393,7 +4341,6 @@ footer {
     z-index: 1000;
 }
 
-/* ??ぉ */
 .dd-item {
     width: 100%;
     display: flex;
@@ -4416,7 +4363,6 @@ footer {
     justify-content: flex-start;
 }
 
-/* ?꾩씠肄??먮━ */
 .dd-icon {
     width: 22px;
     display: inline-flex;
@@ -4429,7 +4375,6 @@ footer {
     height: 100%;
 }
 
-/* Kendo Grid ???쇰뵒??踰꾪듉 媛뺤젣 ?쒖떆 */
 .k-grid input[type="radio"] {
     appearance: none !important;
     -webkit-appearance: none !important;
@@ -4440,24 +4385,18 @@ footer {
     visibility: visible !important;
     overflow: visible !important;
     border: 2px solid #ccc !important;
-    /* ?고븳 ?뚯깋 ?뚮몢由?*/
     border-radius: 50%;
     background: #fff;
     position: relative;
     cursor: pointer;
 }
 
-/* 泥댄겕???곹깭?먯꽌 ?대?留?珥덈줉?됱쑝濡?梨꾩? */
 .k-grid input[type="radio"]:checked {
     border-color: var(--primary-border) !important;
-    /* ?뚮몢由щ룄 ?쎄컙 珥덈줉鍮?*/
     background-color: var(--primary-color) !important;
-    /* ?대? 梨꾩? */
     box-shadow: inset 0 0 0 4px #fff;
-    /* 媛?대뜲 ?섏? ???좎? */
 }
 
-/* Kendo ?앹뾽 硫붾돱媛 紐⑤떖蹂대떎 ?꾩뿉 ?쒖떆?섎룄濡?(?뺣젹/?꾪꽣 ?ы븿) */
 .k-animation-container,
 .k-popup,
 .k-grid-columnmenu-popup,
@@ -4466,8 +4405,6 @@ footer {
     z-index: 10050 !important;
 }
 
-/* ?ㅻ챸 ?댄똻 愿??CSS */
-/* info ?꾩씠肄?(諛앹? ?뚯깋) */
 .info-icon {
     display: inline-block;
     margin-left: 6px;
@@ -4486,7 +4423,7 @@ footer {
     filter: brightness(0.8);
 }
 
-/* floating tooltip 湲곕낯 ?ㅽ???*/
+/* floating tooltip */
 .floating-tooltip {
     position: absolute;
     background: #ffffff;
@@ -4497,27 +4434,19 @@ footer {
     border-radius: 10px;
     border: 1px solid #e0e0e0;
     box-shadow: 0 6px 16px rgba(26, 127, 86, 0.15);
-    /* 濡앺넠 洹몃┝??*/
     transform: translateX(-50%);
     pointer-events: none;
     z-index: 999999;
     animation: tooltipFade 0.2s ease forwards;
 
-    /* ???먮룞 議곗젙 */
     display: inline-block;
     width: auto;
-    /* ?댁슜???곕씪 ?먮룞 議곗젙 */
     min-width: 250px;
-    /* 理쒖냼 ?ш린 */
     max-width: 500px;
-    /* ?덈Т 湲몃㈃ ?쒗븳 */
     white-space: normal;
-    /* ?먮룞 以꾨컮轅??덉슜 */
     word-break: keep-all;
-    /* ?⑥뼱 ?⑥쐞濡?以꾨컮轅?(媛?낆꽦 醫뗭쓬) */
 }
 
-/* ?쒕ぉ ?곸뿭 */
 .tooltip-title {
     display: flex;
     align-items: center;
@@ -4542,8 +4471,6 @@ footer {
     color: var(--primary-color);
 }
 
-
-/* 蹂몃Ц (15以꾧퉴吏留??쒖떆) */
 .tooltip-body {
     margin-top: 8px;
     display: -webkit-box;
@@ -4555,7 +4482,6 @@ footer {
     line-height: 1.5;
 }
 
-/* ?꾩そ?쇰줈 ????*/
 @keyframes tooltipFade {
     from {
         opacity: 0;
@@ -4568,7 +4494,6 @@ footer {
     }
 }
 
-/* ?꾨옒履쎌쑝濡?????*/
 .tooltip-bottom {
     animation: tooltipFadeUp 0.25s ease forwards;
 }

@@ -1,4 +1,4 @@
-/* common */
+﻿/* common */
 input.k-input,
 textarea.k-textarea {
   padding-inline-start: 12px;
@@ -1397,7 +1397,6 @@ input[type='checkbox']+label {
   transition: none;
 }
 
-/* 241002 ?섏씠吏 異붽? */
 .btnType05 {
   background: #edefec;
   color: #69706d;
@@ -1470,13 +1469,11 @@ input[type='checkbox']+label {
   padding: 0;
 }
 
-/* === 湲곕낯(硫???ㅻ뜑 ?꾨떂) ???먮옒 ?ъ쑀 ?⑤뵫/?믪씠 蹂듭썝 === */
 .cmn_grid:not(.multihead) .k-grid-header th.k-header,
 .cmn_grid:not(.multihead) .k-grid th,
 .cmn_grid:not(.multihead) .k-grid .k-grid-container .k-grid-content td {
   font-size: 14px;
   padding: 0 20px;
-  /* ???먮옒媛믪쑝濡?蹂듭썝 */
 }
 
 .cmn_grid:not(.multihead) .k-grid-header th.k-header {
@@ -1490,23 +1487,19 @@ input[type='checkbox']+label {
   height: 52px;
 }
 
-/* === 硫???ㅻ뜑 ?꾩슜(而댄뙥???⑤뵫/蹂대뜑 蹂댁젙) === */
 .cmn_grid.multihead .k-grid-header th.k-header,
 .cmn_grid.multihead .k-grid th,
 .cmn_grid.multihead .k-grid .k-grid-container .k-grid-content td {
   font-size: 15px;
   padding: 0 5px;
-  /* ??而댄뙥???⑤뵫? 硫???꾩슜 */
 }
 
 .cmn_grid.multihead .k-grid-header th.k-header {
   font-weight: 500;
   height: auto;
-  /* 硫?곗뿉???믪씠 ?먮룞 */
   vertical-align: middle;
 }
 
-/* 硫???ㅻ뜑 以??믪씠/?쇱씤 ?뺤긽??硫?곗뿉留?) */
 .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead tr {
   height: auto;
 }
@@ -1520,17 +1513,14 @@ input[type='checkbox']+label {
   border-bottom: 1px solid #012011;
 }
 
-/* 遺紐??쒕툕洹몃９) ?꾨옒以??쒓굅 ????移몄쿂??蹂댁씠寃?(臾명빆理쒖쥌 ?? */
 .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead th.sub-no-bottom-border {
   border-bottom: 0 !important;
 }
 
-/* 臾명빆理쒖쥌: ?먯떇(leaf) ?ㅻ뜑? ?먯껜 ?쒓굅 ??3踰덉㎏ 以꾩씠 ?앹꽦?섏? ?딆쓬 */
 .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead th.no-leaf-header {
   display: none !important;
 }
 
-/* ADMIN/EDIT: 2踰덉㎏ 以??쒕툕洹몃９ ?쒕ぉ) ?먯껜瑜??묒뼱 ?щ┝ */
 .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead th.collapse-subgroup-title {
   padding: 0 !important;
   height: 0 !important;
@@ -1539,19 +1529,16 @@ input[type='checkbox']+label {
   overflow: hidden !important;
 }
 
-/* (寃쎄퀎?좎씠 ?⑤뒗 釉뚮씪?곗? ?鍮? 2???꾩튂??蹂대뜑???쒕쾲 ???쒓굅 */
 .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead tr:nth-child(2)>th.collapse-subgroup-title {
   border-bottom: 0 !important;
 }
 
-/* (?듭뀡) 1??洹몃９ ??댄? 以묒븰 ?뺣젹 */
 .cmn_grid.multihead .k-grid .k-grid-header .k-table-thead tr:first-child th.k-header .k-cell-inner {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-/* 硫?고뿤???뚯씠釉?怨좎젙???덉씠?꾩썐 + 留먯쨪??*/
 .cmn_grid.multihead .k-grid-header table,
 .cmn_grid.multihead .k-grid-content table {
   table-layout: fixed;
@@ -1565,22 +1552,18 @@ input[type='checkbox']+label {
   text-overflow: ellipsis;
 }
 
-/* ?ㅻ뜑 踰꾪듉????쓣 諛吏 ?딅룄濡?*/
 .cmn_grid.multihead .k-grid .k-grid-header th.k-header .k-button.btnS {
   max-width: 100%;
   padding: 0 8px;
 }
 
-/* 臾명빆理쒖쥌(硫?곕씪?? ?留?以꾨컮轅??먮룞?믪씠濡?*/
 .cmn_grid.multihead .k-grid .cell-wrap {
   white-space: pre-wrap !important;
-  /* 媛쒗뻾 蹂댁〈 + 以꾨컮轅?*/
   word-break: break-word;
   overflow: visible !important;
   text-overflow: clip !important;
   height: auto !important;
   line-height: 1.4;
   padding-top: 8px;
-  /* 蹂닿린 醫뗪쾶 ?쎄컙???곹븯 ?⑤뵫 */
   padding-bottom: 8px;
 }
