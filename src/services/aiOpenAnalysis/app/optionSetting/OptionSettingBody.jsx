@@ -54,16 +54,16 @@ const CommonActionButton = ({ label, onClick, tooltipText }) => {
 
   // 공통 hover / click 이벤트
   const handleMouseEnter = (e) => {
-    e.currentTarget.style.background = "#eafae5";
+    e.currentTarget.style.background = "var(--primary-bg-selected)";
   };
   const handleMouseLeave = (e) => {
     e.currentTarget.style.background = "#fff";
   };
   const handleMouseDown = (e) => {
-    e.currentTarget.style.background = "#d7f5cf";
+    e.currentTarget.style.background = "var(--primary-bg-hover)";
   };
   const handleMouseUp = (e) => {
-    e.currentTarget.style.background = "#eafae5";
+    e.currentTarget.style.background = "var(--primary-bg-selected)";
   };
 
   return (

@@ -4524,24 +4524,22 @@ footer {
     gap: 6px;
     font-weight: 700;
     font-size: 14px;
-    color: #1a7f56;
-    /* 珥덈줉 ?ъ씤??*/
+    color: var(--primary-color);
     margin-bottom: 0;
-    /* 湲곕낯 ?щ갚 ?쒓굅 */
 }
 
-/* ???덉쓽 i ?꾩씠肄?*/
+/* 제목의 i 아이콘 */
 .tooltip-title::before {
     content: "";
     display: inline-block;
     width: 16px;
     height: 16px;
-    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='%231a7f56' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231a7f56' opacity='0.12'/><path fill='%231a7f56' d='M12 7a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7zm.75 4v6h-1.5v-6h1.5z'/></svg>") no-repeat center;
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='currentColor' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='currentColor' opacity='0.12'/><path fill='currentColor' d='M12 7a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7zm.75 4v6h-1.5v-6h1.5z'/></svg>") no-repeat center;
     background-size: contain;
     vertical-align: middle;
     flex-shrink: 0;
     margin-top: 1px;
-    /* ?뺣젹 蹂댁젙 */
+    color: var(--primary-color);
 }
 
 
