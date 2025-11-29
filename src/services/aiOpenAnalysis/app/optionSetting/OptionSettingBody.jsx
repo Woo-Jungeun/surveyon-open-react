@@ -317,7 +317,7 @@ const OptionSettingBody = () => {
       qnum: (qnum ?? "") + "",
       lv: lvCodeDraft?.value ?? "1",
     });
-    const url = `${window.location.origin}/viewer?${params.toString()}`;
+    const url = `${window.location.origin}/ai_open_analysis/viewer?${params.toString()}`;
     openCenteredPopup(url);
   }, [projectnum, qnum, lvCodeDraft]);
 
@@ -354,7 +354,7 @@ const OptionSettingBody = () => {
           gb: "lb",
         },
       });
-      
+
       if (res.success === "777") {
         loadingSpinner.hide();  // 로딩바 닫기 
       }
