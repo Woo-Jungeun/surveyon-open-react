@@ -4,6 +4,7 @@ import App from "@/App.jsx";
 import { BrowserRouter } from "react-router-dom";
 
 import '@progress/kendo-theme-default/dist/all.css'
+import "@/assets/css/theme.css";
 import "@/assets/css/common.css";
 import "@/assets/css/kendo_custom.css";
 
@@ -11,6 +12,7 @@ import "@/assets/css/kendo_custom.css";
 import ModalProvider from "@/components/common/Modal";
 import LoadingProvider from "@/components/common/LoadingSpinner";
 import WindowPopupProvider from "@/components/common/WindowPopup";
+import ThemeProvider from "@/contexts/ThemeProvider";
 
 /* redux */
 import { Provider } from "react-redux";
@@ -48,11 +50,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
                         <LoadingProvider>
                             <QueryClientProvider client={queryClient}>
                                 <BrowserRouter>
-                                    <ModalProvider>
-                                        <WindowPopupProvider>
-                                            <App />
-                                        </WindowPopupProvider>
-                                    </ModalProvider>
+                                    <ThemeProvider>
+                                        <ModalProvider>
+                                            <WindowPopupProvider>
+                                                <App />
+                                            </WindowPopupProvider>
+                                        </ModalProvider>
+                                    </ThemeProvider>
                                 </BrowserRouter>
                             </QueryClientProvider>
                         </LoadingProvider>

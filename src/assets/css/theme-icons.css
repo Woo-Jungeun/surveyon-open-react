@@ -1,0 +1,106 @@
+/* Theme-Specific Icon Images Structure */
+
+/* 
+  이미지 파일 구조:
+  /src/assets/images/
+    - checkbox_on_orange.png
+    - checkbox_on_violet.png
+    - checkbox_on_blue.png
+    - checkbox_on_emerald.png
+    - checkbox_on_indigo.png
+    - icon_dropdown_orange.png
+    - icon_dropdown_violet.png
+    - icon_dropdown_blue.png
+    - icon_dropdown_emerald.png
+    - icon_dropdown_indigo.png
+    - icon_notice_orange.png
+    - icon_notice_violet.png
+    - icon_notice_blue.png
+    - icon_notice_emerald.png
+    - icon_notice_indigo.png
+*/
+
+/* Default (Orange) - AI오픈분석 */
+:root input[type='checkbox']:checked+label::before,
+[data-theme="ai-open-analysis"] input[type='checkbox']:checked+label::before {
+    background: url('../images/checkbox_on_orange.png') no-repeat center #fff;
+    background-size: 12px 10px;
+}
+
+/* Purple - 설문제작 */
+[data-theme="survey-creation"] input[type='checkbox']:checked+label::before {
+    background: url('../images/checkbox_on_violet.png') no-repeat center #fff;
+    background-size: 12px 10px;
+}
+
+/* Blue - 데이터현황 */
+[data-theme="data-dashboard"] input[type='checkbox']:checked+label::before {
+    background: url('../images/checkbox_on_blue.png') no-repeat center #fff;
+    background-size: 12px 10px;
+}
+
+/* Emerald - 데이터관리 */
+[data-theme="data-management"] input[type='checkbox']:checked+label::before {
+    background: url('../images/checkbox_on_emerald.png') no-repeat center #fff;
+    background-size: 12px 10px;
+}
+
+/* Indigo - 응답자관리 */
+[data-theme="respondent-management"] input[type='checkbox']:checked+label::before {
+    background: url('../images/checkbox_on_indigo.png') no-repeat center #fff;
+    background-size: 12px 10px;
+}
+
+/* Dropdown Icons */
+:root .iptBtn::after,
+[data-theme="ai-open-analysis"] .iptBtn::after {
+    background: url('../images/icon_dropdown_orange.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="survey-creation"] .iptBtn::after {
+    background: url('../images/icon_dropdown_violet.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="data-dashboard"] .iptBtn::after {
+    background: url('../images/icon_dropdown_blue.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="data-management"] .iptBtn::after {
+    background: url('../images/icon_dropdown_emerald.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="respondent-management"] .iptBtn::after {
+    background: url('../images/icon_dropdown_indigo.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+/* Notice Icons */
+:root .iconNoti::before,
+[data-theme="ai-open-analysis"] .iconNoti::before {
+    background: url('../images/icon_notice_orange.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="survey-creation"] .iconNoti::before {
+    background: url('../images/icon_notice_violet.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="data-dashboard"] .iconNoti::before {
+    background: url('../images/icon_notice_blue.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="data-management"] .iconNoti::before {
+    background: url('../images/icon_notice_emerald.png') no-repeat center;
+    background-size: 24px 24px;
+}
+
+[data-theme="respondent-management"] .iconNoti::before {
+    background: url('../images/icon_notice_indigo.png') no-repeat center;
+    background-size: 24px 24px;
+}

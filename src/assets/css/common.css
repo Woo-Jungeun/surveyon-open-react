@@ -1,11 +1,11 @@
-@charset "utf-8";
+﻿@charset "utf-8";
 @import "reset.css";
 
 :root {
     --left-panel-width: 500px;
 }
 
-/* 왼쪽 패널 넓이 조절 */
+/* ?쇱そ ?⑤꼸 ?볦씠 議곗젅 */
 
 /* common style */
 .hidden {
@@ -153,7 +153,7 @@ section {
 /* font */
 .fcGreen,
 .fcG {
-    color: #00b272 !important;
+    color: var(--primary-color) !important;
 }
 
 .fcRed {
@@ -200,8 +200,8 @@ section {
 }
 
 .bgGreen {
-    background: #bff7c1 !important;
-    border: 1px solid #00b272 !important;
+    background: var(--primary-bg-selected) !important;
+    border: 1px solid var(--primary-color) !important;
 }
 
 .bgRed {
@@ -382,7 +382,7 @@ section {
 /* header */
 header {
     padding: 0 25px 0 20px;
-    background-image: linear-gradient(to right, #d8f9d3, #e9f5cf 26%, #d3eee5 52%, #d5eaff 75%, #ccdaff);
+    background: var(--header-bg-gradient);
     width: 100%;
     display: flex;
     justify-content: space-between;
@@ -400,7 +400,7 @@ header .logo>span {
 }
 
 header .logo .fcG {
-    color: #007d4f !important;
+    color: var(--primary-hover) !important;
 }
 
 .navWrap .nav.depth01 {
@@ -425,11 +425,11 @@ header .logo .fcG {
 
 .navWrap .nav.depth01>li.on>a,
 .navWrap .nav.depth01>li>a.on {
-    color: #00b272;
+    color: var(--primary-color);
 }
 
 .navWrap .nav.depth01>li:hover>a {
-    color: #00b272;
+    color: var(--primary-color);
 }
 
 .navWrap .nav.depth01>li ul {
@@ -440,7 +440,7 @@ header .logo .fcG {
     position: absolute;
     background: #fff;
     padding: 8px;
-    border: solid 1px #00b272;
+    border: solid 1px var(--primary-color);
     box-shadow: 0 6px 12px 0 rgba(0, 0, 0, 0.1);
     border-radius: 12px;
     width: max-content;
@@ -450,7 +450,7 @@ header .logo .fcG {
     position: absolute;
     background: #fff;
     padding: 8px;
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
     box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.25);
     border-radius: 12px;
     width: max-content;
@@ -499,13 +499,13 @@ header .logo .fcG {
 .navWrap .nav.depth01>li .depth02>li>a:hover,
 .navWrap .nav.depth01>li .depth02>li>a:focus,
 .navWrap .nav.depth01>li .depth02>li.hover>a {
-    background: #eafae5;
+    background: var(--primary-bg-hover);
     border-radius: 8px;
 }
 
 .navWrap .nav.depth01>li .depth02>li>.depth03>li>a:hover,
 .navWrap .nav.depth01>li .depth02>li>.depth03>li>a:focus {
-    background: #eafae5;
+    background: var(--primary-bg-hover);
     border-radius: 8px;
     color: #012011;
 }
@@ -925,7 +925,7 @@ footer {
 }
 
 .totalTxtPop>i {
-    color: #00b272;
+    color: var(--primary-color);
     margin-left: 4px;
 }
 
@@ -1435,7 +1435,7 @@ footer {
 }
 
 .label02::before {
-    background: #00b272;
+    background: var(--primary-color);
 }
 
 .label03::before {
@@ -1466,7 +1466,7 @@ footer {
 .label03.labelG>span,
 .label03.labelG>span::after,
 .label03.labelG>span::before {
-    background: #00b272;
+    background: var(--primary-color);
 }
 
 .label03.labelY>span,
@@ -1492,7 +1492,7 @@ footer {
 
 .labelTxtC.label04::before,
 .checkList input[type='checkbox']+label.labelTxtC.label04>span::before {
-    background: #00b272;
+    background: var(--primary-color);
 }
 
 .labelTxtC.label05::before,
@@ -1577,7 +1577,7 @@ footer {
     overflow-y: scroll;
 }
 
-/* 범례아이콘 추가 */
+/* 踰붾??꾩씠肄?異붽? */
 .labelIcon {
     display: inline-flex;
     align-items: center;
@@ -1792,7 +1792,7 @@ footer {
 .cardList {
     border: 1px solid #b1d0c5;
     border-radius: 12px;
-    background: #e7f7e3;
+    background: var(--primary-bg);
     padding: 20px;
     display: flex;
     justify-content: space-between;
@@ -1922,7 +1922,7 @@ footer {
 }
 
 .cardPlus {
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
     background: url("../images/icon_card_plus.png") no-repeat center #fff;
     background-size: 16px 16px;
 }
@@ -1970,7 +1970,7 @@ footer {
 }
 
 .listItem {
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
     border-radius: 4px;
     height: 34px;
     color: #012011;
@@ -2127,7 +2127,7 @@ footer {
 }
 
 .txtWrap .txtL .txtNum>i {
-    color: #00b272;
+    color: var(--primary-color);
     font-size: 40px;
     font-weight: bold;
     margin-right: 4px;
@@ -2216,7 +2216,7 @@ footer {
 .infoBoxWrap {
     box-shadow: 0 6px 12px 0 rgba(0, 0, 0, 0.1);
     border-radius: 12px;
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
     background: #fff;
 }
 
@@ -2236,7 +2236,7 @@ footer {
 .iptBtn:hover,
 .iptBtn:focus,
 .iptBtn.on {
-    border: 1px solid #007d4f;
+    border: 1px solid var(--primary-hover);
 }
 
 .iptBtnM {
@@ -2250,7 +2250,9 @@ footer {
     content: "";
     width: 24px;
     height: 24px;
-    background: url('../images/icon_dropdown.png') no-repeat center;
+    background-color: var(--primary-color);
+    -webkit-mask: url('../images/icon_dropdown.png') no-repeat center;
+    mask: url('../images/icon_dropdown.png') no-repeat center;
     background-size: 24px 24px;
 }
 
@@ -2391,13 +2393,13 @@ footer {
 }
 
 .route {
-    color: #054a31;
+    color: var(--primary-focus);
     font-size: 12px;
     letter-spacing: -0.48px;
     font-weight: 500;
     background: #fff;
     border-radius: 4px;
-    border: 2px solid #00b272;
+    border: 2px solid var(--primary-color);
     padding: 6px;
     line-height: 1;
     display: inline-block;
@@ -2441,7 +2443,9 @@ footer {
     display: inline-block;
     width: 24px;
     height: 24px;
-    background: url('../images/icon_dropdown.png') no-repeat center;
+    background-color: var(--primary-color);
+    -webkit-mask: url('../images/icon_dropdown.png') no-repeat center;
+    mask: url('../images/icon_dropdown.png') no-repeat center;
     background-size: 24px 24px;
 }
 
@@ -2630,7 +2634,7 @@ footer {
 
 .icon.iconExpend:hover,
 .icon.iconExpend:focus {
-    background: url('../images/icon_expand.png') no-repeat center #eafae5;
+    background: url('../images/icon_expand.png') no-repeat center var(--primary-bg-hover);
     background-size: 24px 24px;
 }
 
@@ -2655,15 +2659,15 @@ footer {
 }
 
 .icon.iconArr:hover {
-    background: url('../images/icon_arr.png') no-repeat center 4px #eafae5;
+    background: url('../images/icon_arr.png') no-repeat center 4px var(--primary-bg-hover);
     background-size: 17px 16px;
 }
 
 .icon.iconArr:focus,
 .icon.iconArr.on {
-    background: url('../images/icon_arr.png') no-repeat center 4px #bff7c1;
+    background: url('../images/icon_arr.png') no-repeat center 4px var(--primary-bg-selected);
     background-size: 17px 16px;
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
 }
 
 .icon.iconPlus {
@@ -2675,7 +2679,7 @@ footer {
 
 .icon.iconPlus:hover,
 .icon.iconPlus:focus {
-    background: url('../images/icon_plus.png') no-repeat center #eafae5;
+    background: url('../images/icon_plus.png') no-repeat center var(--primary-bg-hover);
     background-size: 24px 24px;
 }
 
@@ -2688,7 +2692,7 @@ footer {
 
 .icon.iconMinus:hover,
 .icon.iconMinus:focus {
-    background: url('../images/icon_minus.png') no-repeat center #eafae5;
+    background: url('../images/icon_minus.png') no-repeat center var(--primary-bg-hover);
     background-size: 24px 24px;
 }
 
@@ -2725,7 +2729,7 @@ footer {
 
 .icon.iconCam:hover,
 .icon.iconCam:focus {
-    background: url('../images/icon_camera.png') no-repeat center #eafae5;
+    background: url('../images/icon_camera.png') no-repeat center var(--primary-bg-hover);
     background-size: 24px 24px;
 }
 
@@ -2770,20 +2774,22 @@ footer {
 }
 
 .iconNoti::before {
-    background: url('../images/icon_notice.png') no-repeat center;
+    background-color: var(--primary-color);
+    -webkit-mask: url('../images/icon_notice.png') no-repeat center;
+    mask: url('../images/icon_notice.png') no-repeat center;
     background-size: 24px 24px;
     margin-right: 8px;
 }
 
 /* text-type */
 .txtLink {
-    color: #00b272;
+    color: var(--primary-color);
     text-decoration: underline;
 }
 
 .txtLink:hover,
 .txtLink:focus {
-    color: #007d4f;
+    color: var(--primary-hover);
 }
 
 .txtBoxS {
@@ -2808,7 +2814,7 @@ footer {
 }
 
 .txtBg {
-    background: #eafae5;
+    background: var(--primary-bg-hover);
     border-radius: 8px;
     height: 40px;
     padding: 0 12px;
@@ -2830,9 +2836,9 @@ footer {
 
 /* btn */
 .k-button-solid-primary.btnIcon {
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
     background: #fff;
-    color: #00b272;
+    color: var(--primary-color);
     border-radius: 8px;
     padding: 0 16px;
     font-size: 15px;
@@ -2841,15 +2847,15 @@ footer {
 }
 
 .k-button-solid-primary.btnIcon:hover {
-    border: 1px solid #007d4f;
+    border: 1px solid var(--primary-hover);
     background: #fff;
-    color: #007d4f;
+    color: var(--primary-hover);
 }
 
 .k-button-solid-primary.btnIcon:focus {
-    border: 1px solid #054a31;
+    border: 1px solid var(--primary-focus);
     background: #fff;
-    color: #054a31;
+    color: var(--primary-focus);
 }
 
 .k-button-solid-primary.btnIcon .k-button-text {
@@ -2939,15 +2945,15 @@ footer {
 
 .tabMenu .btnTab:hover {
     border: 1px solid #afb6b2;
-    background: #eafae5;
+    background: var(--primary-bg-hover);
     color: #69706d;
 }
 
 .tabMenu .btnTab:focus,
 .tabMenu .btnTab.on {
-    border: 1px solid #00b272;
-    background: #bff7c1;
-    color: #054a31;
+    border: 1px solid var(--primary-color);
+    background: var(--primary-bg-selected);
+    color: var(--primary-focus);
 }
 
 /*loading*/
@@ -2969,7 +2975,7 @@ footer {
     display: none !important;
 }
 
-/* 기본(dim) 오버레이 = 예전 스타일 */
+/* 湲곕낯(dim) ?ㅻ쾭?덉씠 = ?덉쟾 ?ㅽ???*/
 .modal.on {
     position: fixed;
     inset: 0;
@@ -2978,27 +2984,27 @@ footer {
     align-items: center;
     justify-content: center;
     background: rgba(15, 23, 42, 0.55);
-    /* 어두운 반투명 */
+    /* ?대몢??諛섑닾紐?*/
     pointer-events: all;
 }
 
-/* 투명 오버레이 카드 */
+/* ?щ챸 ?ㅻ쾭?덉씠 移대뱶 */
 .modal.on.no-dim {
     background: transparent;
-    /* dim 제거 */
+    /* dim ?쒓굅 */
 }
 
 .modal.on.no-dim .loading {
     background: rgba(255, 255, 255, 0.92);
     color: #111;
-    /* 글씨 검정 */
+    /* 湲??寃??*/
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
     backdrop-filter: blur(8px);
 }
 
 .modal.on.no-dim .loading p {
     color: #111;
-    /* 가독성 보장 */
+    /* 媛?낆꽦 蹂댁옣 */
 }
 
 /* error page */
@@ -3107,7 +3113,7 @@ footer {
     background: #f44e4e;
 }
 
-/* bus line / 노선도 타입 */
+/* bus line / ?몄꽑?????*/
 .busLineWrap {
     display: grid;
     position: relative;
@@ -3533,7 +3539,7 @@ footer {
     font-weight: normal;
 }
 
-/* marker img 방향 / 범례 아이콘 동일 class 사용가능 */
+/* marker img 諛⑺뼢 / 踰붾? ?꾩씠肄??숈씪 class ?ъ슜媛??*/
 .map_marker_up {
     transform: rotate(180deg);
 }
@@ -3546,7 +3552,7 @@ footer {
     transform: rotate(180deg);
 }
 
-/* 240715 : 경영 및 서비스 평가 추가 */
+/* 240715 : 寃쎌쁺 諛??쒕퉬???됯? 異붽? */
 .tbl .cmn_pop_ipt .iptCol2 {
     display: flex;
     align-items: center;
@@ -3730,7 +3736,7 @@ footer {
 
 
 
-/* 노선 주요경로 시간표 팝업 */
+/* ?몄꽑 二쇱슂寃쎈줈 ?쒓컙???앹뾽 */
 .modalTime {
     width: 100%;
     height: 100%;
@@ -3760,13 +3766,13 @@ footer {
 .ttList {
     width: 100%;
     border-radius: 8px;
-    background: #e7f7e3;
+    background: var(--primary-bg);
     display: flex;
     align-items: center;
 }
 
 .ttList li {
-    color: #054a31;
+    color: var(--primary-focus);
     font-size: 14px;
     font-weight: 500;
     width: 100%;
@@ -3805,7 +3811,7 @@ footer {
 }
 
 .tblTime tr .bgPoint_02 {
-    background: #eafae5;
+    background: var(--primary-bg-hover);
 }
 
 .tblTime tr .bgPoint {
@@ -3813,7 +3819,7 @@ footer {
 }
 
 .cmtBox {
-    border: 1px solid #a5e2c5;
+    border: 1px solid var(--primary-border);
     border-radius: 12px;
     padding: 16px 20px;
     font-size: 14px;
@@ -3821,7 +3827,7 @@ footer {
     color: #012011;
 }
 
-/* 241002 페이지 추가 */
+/* 241002 ?섏씠吏 異붽? */
 .popCont.type02 {
     padding: 0;
     max-height: none;
@@ -3902,7 +3908,7 @@ footer {
 .btnArrWrap .btnArr.on:focus {
     background: url('../images/btn_arr_on.png') no-repeat center #fff;
     background-size: 24px;
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
 }
 
 .iconOder {
@@ -3966,7 +3972,7 @@ footer {
 }
 
 .btnPlus {
-    border: 1px solid #00b272;
+    border: 1px solid var(--primary-color);
     background: url('../images/btn_plus.png') no-repeat center;
     background-size: 24px;
 }
@@ -4025,7 +4031,7 @@ footer {
     max-height: calc(100vh - 525px);
 }
 
-/* 왼쪽 패널 접힘 상태 */
+/* ?쇱そ ?⑤꼸 ?묓옒 ?곹깭 */
 .subContWrap.left-closed .subContL {
     width: 44px;
     padding: 20px 8px;
@@ -4037,10 +4043,10 @@ footer {
 
 .subContWrap.left-closed .subContL .left-body {
     display: none;
-    /* 내용 숨김, 버튼만 남김 */
+    /* ?댁슜 ?④?, 踰꾪듉留??④? */
 }
 
-/* 분석결과 검은 박스 (스크린샷 스타일) */
+/* 遺꾩꽍寃곌낵 寃? 諛뺤뒪 (?ㅽ겕由곗꺑 ?ㅽ??? */
 .resultBox {
     height: 215px;
     border: 1px solid #111;
@@ -4048,7 +4054,7 @@ footer {
     color: #0f0;
 }
 
-/* 섹션 토글 show/hide (이미 있다면 중복 추가 X) */
+/* ?뱀뀡 ?좉? show/hide (?대? ?덈떎硫?以묐났 異붽? X) */
 .leftInfo .infoList {
     display: none;
 }
@@ -4057,7 +4063,7 @@ footer {
     display: block;
 }
 
-/* 섹션 제목 내 작은 안내 문구 */
+/* ?뱀뀡 ?쒕ぉ ???묒? ?덈궡 臾멸뎄 */
 .infoTit .titNote {
     margin-left: 6px;
     font-size: 12px;
@@ -4066,12 +4072,12 @@ footer {
     letter-spacing: -0.2px;
 }
 
-/* 왼쪽 패널 상단 작은 접기 버튼 */
+/* ?쇱そ ?⑤꼸 ?곷떒 ?묒? ?묎린 踰꾪듉 */
 .collapseBar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* 기존 flex-end → space-between */
+    /* 湲곗〈 flex-end ??space-between */
     gap: 8px;
     margin-bottom: 8px;
 }
@@ -4094,10 +4100,10 @@ footer {
 }
 
 .btnCollapse:hover {
-    background: #eafae5;
+    background: var(--primary-bg-hover);
 }
 
-/* 왼쪽 버튼 줄바꿈/자동폭 */
+/* ?쇱そ 踰꾪듉 以꾨컮轅??먮룞??*/
 .subContL .btnWrap.type01.btnRowFit {
     justify-content: space-between;
     flex-wrap: wrap;
@@ -4107,10 +4113,10 @@ footer {
 .subContL .btnWrap.type01.btnRowFit .k-button {
     flex: 1 1 auto;
     min-width: 110px;
-    /* 너무 작아지는 것 방지 */
+    /* ?덈Т ?묒븘吏??寃?諛⑹? */
 }
 
-/* 프롬프트 지침 텍스트박스 간격 */
+/* ?꾨＼?꾪듃 吏移??띿뒪?몃컯??媛꾧꺽 */
 .leftInfo .promptArea {
     margin: 6px 0 12px;
 }
@@ -4123,7 +4129,7 @@ footer {
 }
 
 
-/* 섹션 헤더: 제목 버튼 + 우측 액션(‘기존’) */
+/* ?뱀뀡 ?ㅻ뜑: ?쒕ぉ 踰꾪듉 + ?곗륫 ?≪뀡(?섍린議닳? */
 .infoTitRow {
     display: flex;
     align-items: center;
@@ -4140,7 +4146,7 @@ footer {
     border-top: none;
 }
 
-/* 행 안의 제목 버튼은 보더/패딩/케럿 제거 (행이 다 담당) */
+/* ???덉쓽 ?쒕ぉ 踰꾪듉? 蹂대뜑/?⑤뵫/耳???쒓굅 (?됱씠 ???대떦) */
 .infoTitRow .infoTit {
     flex: 1;
     border: 0 !important;
@@ -4156,16 +4162,16 @@ footer {
     content: none !important;
 }
 
-/* 케럿 제거 */
+/* 耳???쒓굅 */
 /* .infoTit { justify-content:flex-start; } */
 
-/* 화살표 왼쪽에 붙는 작은 영역(‘기존’ 버튼 담는 자리) */
+/* ?붿궡???쇱そ??遺숇뒗 ?묒? ?곸뿭(?섍린議닳?踰꾪듉 ?대뒗 ?먮━) */
 .infoTitAddon {
     display: flex;
     align-items: center;
 }
 
-/* 헤더용 미니 버튼 */
+/* ?ㅻ뜑??誘몃땲 踰꾪듉 */
 .btnMini {
     height: 28px;
     padding: 0 10px;
@@ -4173,18 +4179,20 @@ footer {
     border-radius: 6px;
 }
 
-/* 제목 버튼의 기본 ▾ 화살표 제거(별도 caret 쓸 거라) */
+/* ?쒕ぉ 踰꾪듉??湲곕낯 ???붿궡???쒓굅(蹂꾨룄 caret ??嫄곕씪) */
 .infoTit.no-caret::after {
     content: none;
 }
 
-/* 화살표 전용 버튼 */
+/* ?붿궡???꾩슜 踰꾪듉 */
 .infoCaret {
     width: 24px;
     height: 24px;
     border: none;
     background: transparent;
-    background: url('../images/icon_dropdown.png') no-repeat center / 24px 24px;
+    background-color: var(--primary-color);
+    -webkit-mask: url('../images/icon_dropdown.png') no-repeat center / 24px 24px;
+    mask: url('../images/icon_dropdown.png') no-repeat center / 24px 24px;
     transform: rotate(0deg);
     transition: transform .15s ease;
 }
@@ -4198,7 +4206,7 @@ footer {
 }
 
 
-/* 표시용 Kendo TextArea */
+/* ?쒖떆??Kendo TextArea */
 .k-textarea.ta-display,
 .k-textarea.ta-display:hover {
     background: transparent !important;
@@ -4214,13 +4222,13 @@ footer {
     resize: none;
     height: auto;
     min-height: 110px;
-    /* 필요 없으면 제거 가능 */
+    /* ?꾩슂 ?놁쑝硫??쒓굅 媛??*/
     white-space: pre-wrap;
     caret-color: transparent;
-    /* 캐럿 숨김 */
+    /* 罹먮읉 ?④? */
 }
 
-/*기존 프롬프트 팝업 css*/
+/*湲곗〈 ?꾨＼?꾪듃 ?앹뾽 css*/
 .secTitle {
     display: flex;
     align-items: center;
@@ -4232,7 +4240,7 @@ footer {
     width: 6px;
     height: 18px;
     border-radius: 4px;
-    background: #00b272;
+    background: var(--primary-color);
 }
 
 .secTitle .text {
@@ -4249,13 +4257,13 @@ footer {
     font-weight: 500;
 }
 
-/* 기존 프롬프트 팝업: 내용(오른쪽 칸)만 볼드 해제 */
+/* 湲곗〈 ?꾨＼?꾪듃 ?앹뾽: ?댁슜(?ㅻⅨ履?移?留?蹂쇰뱶 ?댁젣 */
 .modal .prompt-text,
 .modal .prompt-text * {
     font-weight: 400 !important;
 }
 
-/* 서버에서 <b>/<strong>/<h*>로 내려오면 그것도 평문으로 */
+/* ?쒕쾭?먯꽌 <b>/<strong>/<h*>濡??대젮?ㅻ㈃ 洹멸쾬???됰Ц?쇰줈 */
 .modal .prompt-text b,
 .modal .prompt-text strong,
 .modal .prompt-text h1,
@@ -4267,7 +4275,7 @@ footer {
     font-weight: 400 !important;
 }
 
-/* --- 프롬프트 행: 두 줄 미리보기/토글 --- */
+/* --- ?꾨＼?꾪듃 ?? ??以?誘몃━蹂닿린/?좉? --- */
 .modal .prompt-text.clamp-2 {
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -4278,7 +4286,7 @@ footer {
 
 .modal .prompt-text.expanded {
     display: block;
-    /* 전체 표시 */
+    /* ?꾩껜 ?쒖떆 */
 }
 
 .modal .prompt-text,
@@ -4286,7 +4294,7 @@ footer {
     white-space: pre-wrap;
 }
 
-/* 행 우측 액션 영역 */
+/* ???곗륫 ?≪뀡 ?곸뿭 */
 .modal .rowActions {
     display: flex;
     align-items: center;
@@ -4294,27 +4302,29 @@ footer {
     justify-content: flex-end;
 }
 
-/* 토글 아이콘(기존 드롭다운 아이콘 재사용) */
+/* ?좉? ?꾩씠肄?湲곗〈 ?쒕∼?ㅼ슫 ?꾩씠肄??ъ궗?? */
 .modal .toggleBtn {
     width: 28px;
     height: 28px;
     border: 1px solid #d3d7d5;
     border-radius: 6px;
-    background: url('../images/icon_dropdown.png') no-repeat center #fff;
+    background-color: var(--primary-color);
+    -webkit-mask: url('../images/icon_dropdown.png') no-repeat center;
+    mask: url('../images/icon_dropdown.png') no-repeat center;
     background-size: 20px 20px;
     transform: rotate(0deg);
     transition: transform .15s ease, background-color .15s ease, border-color .15s ease;
 }
 
 .modal .toggleBtn:hover {
-    background-color: #eafae5;
+    background-color: var(--primary-bg-hover);
 }
 
 .modal .toggleBtn.on {
     transform: rotate(180deg);
 }
 
-/* 선택 버튼은 존재하는 .btnMini 사용(이미지에 맞춰 가독성 약간 보강) */
+/* ?좏깮 踰꾪듉? 議댁옱?섎뒗 .btnMini ?ъ슜(?대?吏??留욎떠 媛?낆꽦 ?쎄컙 蹂닿컯) */
 .modal .btnMini {
     height: 28px;
     padding: 0 10px;
@@ -4324,11 +4334,11 @@ footer {
 
 .prompt-text {
     white-space: pre-wrap;
-    /* 줄바꿈과 공백 유지 */
+    /* 以꾨컮轅덇낵 怨듬갚 ?좎? */
     word-break: break-word;
-    /* 긴 단어 줄바꿈 */
+    /* 湲??⑥뼱 以꾨컮轅?*/
     line-height: 1.5;
-    /* 보기 좋게 줄 간격 */
+    /* 蹂닿린 醫뗪쾶 以?媛꾧꺽 */
 }
 
 .meta2 {
@@ -4346,8 +4356,8 @@ footer {
 }
 
 
-/* ---메뉴바--- */
-/* 공통 아이콘 버튼 */
+/* ---硫붾돱諛?-- */
+/* 怨듯넻 ?꾩씠肄?踰꾪듉 */
 .iconBtn,
 .userBtn {
     display: inline-flex;
@@ -4365,12 +4375,12 @@ footer {
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* 드롭다운 컨테이너 */
+/* ?쒕∼?ㅼ슫 而⑦뀒?대꼫 */
 .menu-dd {
     position: relative;
 }
 
-/* 카드 드롭다운 */
+/* 移대뱶 ?쒕∼?ㅼ슫 */
 .dropdown-card {
     position: absolute;
     right: 0;
@@ -4383,7 +4393,7 @@ footer {
     z-index: 1000;
 }
 
-/* 항목 */
+/* ??ぉ */
 .dd-item {
     width: 100%;
     display: flex;
@@ -4406,7 +4416,7 @@ footer {
     justify-content: flex-start;
 }
 
-/* 아이콘 자리 */
+/* ?꾩씠肄??먮━ */
 .dd-icon {
     width: 22px;
     display: inline-flex;
@@ -4419,7 +4429,7 @@ footer {
     height: 100%;
 }
 
-/* Kendo Grid 내 라디오 버튼 강제 표시 */
+/* Kendo Grid ???쇰뵒??踰꾪듉 媛뺤젣 ?쒖떆 */
 .k-grid input[type="radio"] {
     appearance: none !important;
     -webkit-appearance: none !important;
@@ -4430,24 +4440,24 @@ footer {
     visibility: visible !important;
     overflow: visible !important;
     border: 2px solid #ccc !important;
-    /* 연한 회색 테두리 */
+    /* ?고븳 ?뚯깋 ?뚮몢由?*/
     border-radius: 50%;
     background: #fff;
     position: relative;
     cursor: pointer;
 }
 
-/* 체크된 상태에서 내부만 초록색으로 채움 */
+/* 泥댄겕???곹깭?먯꽌 ?대?留?珥덈줉?됱쑝濡?梨꾩? */
 .k-grid input[type="radio"]:checked {
-    border-color: #a5e2c5 !important;
-    /* 테두리도 약간 초록빛 */
-    background-color: #00b272 !important;
-    /* 내부 채움 */
+    border-color: var(--primary-border) !important;
+    /* ?뚮몢由щ룄 ?쎄컙 珥덈줉鍮?*/
+    background-color: var(--primary-color) !important;
+    /* ?대? 梨꾩? */
     box-shadow: inset 0 0 0 4px #fff;
-    /* 가운데 하얀 원 유지 */
+    /* 媛?대뜲 ?섏? ???좎? */
 }
 
-/* Kendo 팝업 메뉴가 모달보다 위에 표시되도록 (정렬/필터 포함) */
+/* Kendo ?앹뾽 硫붾돱媛 紐⑤떖蹂대떎 ?꾩뿉 ?쒖떆?섎룄濡?(?뺣젹/?꾪꽣 ?ы븿) */
 .k-animation-container,
 .k-popup,
 .k-grid-columnmenu-popup,
@@ -4456,8 +4466,8 @@ footer {
     z-index: 10050 !important;
 }
 
-/* 설명 툴팁 관련 CSS */
-/* info 아이콘 (밝은 회색) */
+/* ?ㅻ챸 ?댄똻 愿??CSS */
+/* info ?꾩씠肄?(諛앹? ?뚯깋) */
 .info-icon {
     display: inline-block;
     margin-left: 6px;
@@ -4476,7 +4486,7 @@ footer {
     filter: brightness(0.8);
 }
 
-/* floating tooltip 기본 스타일 */
+/* floating tooltip 湲곕낯 ?ㅽ???*/
 .floating-tooltip {
     position: absolute;
     background: #ffffff;
@@ -4487,27 +4497,27 @@ footer {
     border-radius: 10px;
     border: 1px solid #e0e0e0;
     box-shadow: 0 6px 16px rgba(26, 127, 86, 0.15);
-    /* 록톤 그림자 */
+    /* 濡앺넠 洹몃┝??*/
     transform: translateX(-50%);
     pointer-events: none;
     z-index: 999999;
     animation: tooltipFade 0.2s ease forwards;
 
-    /* 폭 자동 조정 */
+    /* ???먮룞 議곗젙 */
     display: inline-block;
     width: auto;
-    /* 내용에 따라 자동 조정 */
+    /* ?댁슜???곕씪 ?먮룞 議곗젙 */
     min-width: 250px;
-    /* 최소 크기 */
+    /* 理쒖냼 ?ш린 */
     max-width: 500px;
-    /* 너무 길면 제한 */
+    /* ?덈Т 湲몃㈃ ?쒗븳 */
     white-space: normal;
-    /* 자동 줄바꿈 허용 */
+    /* ?먮룞 以꾨컮轅??덉슜 */
     word-break: keep-all;
-    /* 단어 단위로 줄바꿈 (가독성 좋음) */
+    /* ?⑥뼱 ?⑥쐞濡?以꾨컮轅?(媛?낆꽦 醫뗭쓬) */
 }
 
-/* 제목 영역 */
+/* ?쒕ぉ ?곸뿭 */
 .tooltip-title {
     display: flex;
     align-items: center;
@@ -4515,12 +4525,12 @@ footer {
     font-weight: 700;
     font-size: 14px;
     color: #1a7f56;
-    /* 초록 포인트 */
+    /* 珥덈줉 ?ъ씤??*/
     margin-bottom: 0;
-    /* 기본 여백 제거 */
+    /* 湲곕낯 ?щ갚 ?쒓굅 */
 }
 
-/* 원 안의 i 아이콘 */
+/* ???덉쓽 i ?꾩씠肄?*/
 .tooltip-title::before {
     content: "";
     display: inline-block;
@@ -4531,11 +4541,11 @@ footer {
     vertical-align: middle;
     flex-shrink: 0;
     margin-top: 1px;
-    /* 정렬 보정 */
+    /* ?뺣젹 蹂댁젙 */
 }
 
 
-/* 본문 (15줄까지만 표시) */
+/* 蹂몃Ц (15以꾧퉴吏留??쒖떆) */
 .tooltip-body {
     margin-top: 8px;
     display: -webkit-box;
@@ -4547,7 +4557,7 @@ footer {
     line-height: 1.5;
 }
 
-/* 위쪽으로 뜰 때 */
+/* ?꾩そ?쇰줈 ????*/
 @keyframes tooltipFade {
     from {
         opacity: 0;
@@ -4560,7 +4570,7 @@ footer {
     }
 }
 
-/* 아래쪽으로 뜰 때 */
+/* ?꾨옒履쎌쑝濡?????*/
 .tooltip-bottom {
     animation: tooltipFadeUp 0.25s ease forwards;
 }

@@ -1,8 +1,9 @@
-
 /* 공통 하이라이트 변수: 한 줄로 전체 색상 변경 가능 */
 #grid_01 {
-  --grid-hl: #eafae5;         /* 하이라이트(배경) */
-  --grid-hl-border: #b7eec7;  /* 테두리 톤 */
+  --grid-hl: var(--primary-bg-hover);
+  /* 하이라이트(배경) */
+  --grid-hl-border: var(--primary-border-light);
+  /* 테두리 톤 */
 }
 
 /* 셀 강조 (소분류 셀 선택 등) */
@@ -44,6 +45,7 @@
 #grid_01 .k-table-thead [role="columnheader"] {
   overflow: visible;
 }
+
 #grid_01 .k-table-thead [role="columnheader"] span {
   white-space: nowrap;
 }
@@ -51,7 +53,7 @@
 /* 체크박스 스타일(행 + 헤더 공통) */
 .k-table .k-checkbox-wrap .k-checkbox[type='checkbox'] {
   display: inline-block;
-  border: 1px solid #a5e2c5;
+  border: 1px solid var(--primary-border-light);
   width: 20px;
   height: 20px;
   cursor: pointer;
@@ -61,8 +63,9 @@
   background: #fff;
   border-radius: 4px;
 }
+
 .k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:checked {
-  border: 1px solid #00b272;
+  border: 1px solid var(--primary-color);
   background: url(/src/assets/images/checkbox_on.png) no-repeat center #fff;
   background-size: 12px 10px;
 }
@@ -72,9 +75,11 @@
   background: #f2f4f6 !important;
   color: #9aa0a6;
 }
+
 #grid_01 .k-table-tbody tr.row-pending-delete td {
   text-decoration: line-through;
 }
+
 /* 편집/클릭 방지(삭제/취소 버튼은 가능) */
 #grid_01 .k-table-tbody tr.row-pending-delete td *:not(button):not(.k-button) {
   pointer-events: none;
@@ -93,6 +98,7 @@
   box-shadow: none !important;
   background: transparent !important;
 }
+
 /* 포커스 링 제거 */
 .lv3-editor.lv3-overlay .k-dropdownlist.k-focus,
 .lv3-editor.lv3-overlay .k-picker.k-focus,
@@ -106,6 +112,7 @@
   outline: none !important;
   box-shadow: none !important;
 }
+
 /* 드롭다운 버튼 테두리 무력화 */
 .lv3-editor.lv3-overlay .k-input-button,
 .lv3-editor.lv3-overlay .k-input-button:focus,
@@ -113,6 +120,7 @@
   border: 0 !important;
   box-shadow: none !important;
 }
+
 /* 높이 100% 채우기 */
 .lv3-editor.lv3-overlay .lv3-editor-ddl,
 .lv3-editor.lv3-overlay .lv3-editor-ddl .k-picker,
@@ -130,7 +138,10 @@
 }
 
 /* 오버레이 크기/테두리 */
-.lv3-editor.lv3-overlay { box-sizing: border-box; }
+.lv3-editor.lv3-overlay {
+  box-sizing: border-box;
+}
+
 .lv3-editor.lv3-overlay .k-dropdownlist,
 .lv3-editor.lv3-overlay .k-picker,
 .lv3-editor.lv3-overlay .k-input,
@@ -149,38 +160,47 @@
 }
 
 /* 소분류 일괄 선택된 행 전체 강조 (통일 색) */
-.cmn_grid .k-grid tbody tr.lv3-row-selected > td {
+.cmn_grid .k-grid tbody tr.lv3-row-selected>td {
   background-color: var(--grid-hl) !important;
 }
+
 /* (선택) 살짝 테두리 */
 .cmn_grid .k-grid tbody tr.lv3-row-selected {
   box-shadow: inset 0 0 0 1px var(--grid-hl-border);
 }
 
-.row-pending-delete { opacity: .55; } 
+.row-pending-delete {
+  opacity: .55;
+}
 
 /* 슬라이드 */
 /* 선택(채워진) 트랙 */
 .tempCtrl .k-slider-selection,
-.tempCtrl .k-slider .k-selected-range {          /* 테마/버전에 따라 쓰이는 경우 */
-  background-color: #00b272 !important;
+.tempCtrl .k-slider .k-selected-range {
+  /* 테마/버전에 따라 쓰이는 경우 */
+  background-color: var(--primary-color) !important;
 }
 
 /* 핸들(엄지) */
 .tempCtrl .k-draghandle,
 .tempCtrl .k-slider .k-draghandle,
-.tempCtrl .k-slider .k-draghandle::before,       /* 일부 테마는 ::before에 색을 줌 */
-.tempCtrl .k-slider .k-draghandle-icon,          /* 아이콘 엘리먼트가 있는 테마 */
-.tempCtrl .k-slider .k-thumb {                    /* 어떤 테마는 k-thumb 클래스 사용 */
-  background-color: #00b272 !important;
-  border-color: #00b272 !important;
+.tempCtrl .k-slider .k-draghandle::before,
+/* 일부 테마는 ::before에 색을 줌 */
+.tempCtrl .k-slider .k-draghandle-icon,
+/* 아이콘 엘리먼트가 있는 테마 */
+.tempCtrl .k-slider .k-thumb {
+  /* 어떤 테마는 k-thumb 클래스 사용 */
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
 }
 
 /* 에러셀 기본 스타일 */
 #grid_01 td.cell-error {
   position: relative;
-  box-shadow: inset 0 0 0 2px #E74C3C;  /* 빨간 테두리 */
-  padding-right: 42px;                  /* 배지 자리 */
+  box-shadow: inset 0 0 0 2px #E74C3C;
+  /* 빨간 테두리 */
+  padding-right: 42px;
+  /* 배지 자리 */
 }
 
 /* 에러 배지 */
@@ -192,37 +212,41 @@
   font-size: 12px;
   font-weight: 700;
   color: #E74C3C;
-  background: rgba(231,76,60,.08);
+  background: rgba(231, 76, 60, .08);
   border: 1px solid #E74C3C;
   border-radius: 4px;
   padding: 1px 6px;
   line-height: 1.6;
-  pointer-events: none;  /* 입력 방해 X */
+  pointer-events: none;
+  /* 입력 방해 X */
   white-space: nowrap;
 }
 
 /*분석 결과창*/
 .resultBox {
-   height: 320px;
-    overflow-y: auto;
-    white-space: pre-wrap;
-    background: #000;
-    color: #3cff6b;
-    padding: 12px;
-    border-radius: 6px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-  }
+  height: 320px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  background: #000;
+  color: var(--primary-border-light);
+  padding: 12px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
 
-  /* 좌/우 50:50 고정 */
+/* 좌/우 50:50 고정 */
 .two-grid-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr !important; /* 기존 560px 1fr 등을 덮어씀 */
+  grid-template-columns: 1fr 1fr !important;
+  /* 기존 560px 1fr 등을 덮어씀 */
   gap: 16px;
   align-items: start;
 }
 
 /* 자식 패널이 그리드 안에서 넘치지 않도록 */
-.two-grid-layout .panel { min-width: 0; }
+.two-grid-layout .panel {
+  min-width: 0;
+}
 
 /* (선택) 좁은 화면에선 1열로 쌓기 */
 @media (max-width: 1200px) {
@@ -230,26 +254,32 @@
     grid-template-columns: 1fr;
   }
 }
+
 /* 헤더에 버튼을 오른쪽으로 붙이기 */
-.subTit.subTit--with-actions{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;  /* 왼쪽 텍스트 / 오른쪽 버튼 */
-  width:100%;
+.subTit.subTit--with-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 왼쪽 텍스트 / 오른쪽 버튼 */
+  width: 100%;
 }
-.subTit.subTit--with-actions .actions{
-  display:flex;
-  gap:8px;
+
+.subTit.subTit--with-actions .actions {
+  display: flex;
+  gap: 8px;
 }
 
 .option-setting-layout {
   display: flex;
-  align-items: flex-start;   /* 위쪽 정렬 */
+  align-items: flex-start;
+  /* 위쪽 정렬 */
 }
 
 .grid-area {
-  flex: 1;                  /* 그리드가 가로 공간 대부분 차지 */
-  min-width: 0;             /* flex 아이템 넘침 방지 */
+  flex: 1;
+  /* 그리드가 가로 공간 대부분 차지 */
+  min-width: 0;
+  /* flex 아이템 넘침 방지 */
 }
 
 .lv3-panel-header {
@@ -264,7 +294,8 @@
 .lv3-panel-body {
   padding: 6px;
   overflow-y: auto;
-  max-height: calc(100% - 80px); /* 검색창 영역 제외 */
+  max-height: calc(100% - 80px);
+  /* 검색창 영역 제외 */
 }
 
 .lv3-search {
@@ -304,6 +335,7 @@
   margin-top: 20px;
   font-size: 13px;
 }
+
 /* .subCont.subContR {
   display: block;     
   overflow: visible;    
@@ -313,14 +345,18 @@
   display: flex;
   width: 100%;
   height: 100%;
-  overflow: hidden; /* 전체 레이아웃에서 스크롤 방지 */
+  overflow: hidden;
+  /* 전체 레이아웃에서 스크롤 방지 */
 }
 
 .gridWithPanel .grid-area {
   flex: 1;
-  overflow: auto; /* 스크롤은 여기서만 허용 */
-  min-width: 0;   /* flex 안에서 overflow 잘 동작하도록 */
+  overflow: auto;
+  /* 스크롤은 여기서만 허용 */
+  min-width: 0;
+  /* flex 안에서 overflow 잘 동작하도록 */
 }
+
 .lv3-panel-wrap {
   position: relative;
 }
@@ -330,20 +366,25 @@
   top: 100px;
   right: 0;
   height: calc(100% - 100px);
-  width: 280px; /* 고정폭으로 잡고 */
+  width: 280px;
+  /* 고정폭으로 잡고 */
   background: #fff;
   border-left: 1px solid #ddd;
-  box-shadow: -2px 0 8px rgba(0,0,0,0.08);
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   z-index: 100;
   border-radius: 8px 0 0 8px;
-  transform: translateX(100%); /* 기본: 화면 밖으로 */
-  transition: transform 0.25s ease-out; /* GPU 전용 transition */
-  will-change: transform; /* 브라우저에 미리 힌트 주기 */
+  transform: translateX(100%);
+  /* 기본: 화면 밖으로 */
+  transition: transform 0.25s ease-out;
+  /* GPU 전용 transition */
+  will-change: transform;
+  /* 브라우저에 미리 힌트 주기 */
 }
 
 .lv3-side-panel.open {
-  transform: translateX(0); /* 열릴 때 오른쪽에서 슬라이드 인 */
+  transform: translateX(0);
+  /* 열릴 때 오른쪽에서 슬라이드 인 */
 }
 
 /* 토글 버튼도 패널에 맞춰 살짝 이동 */
@@ -365,13 +406,14 @@
   will-change: transform;
 }
 
-.lv3-side-panel.open + .lv3-panel-toggle {
-  transform: translateX(-280px); /* 패널 폭만큼 이동 */
+.lv3-side-panel.open+.lv3-panel-toggle {
+  transform: translateX(-280px);
+  /* 패널 폭만큼 이동 */
 }
 
 /* 드래그 중 실시간 하이라이트 */
 #grid_01.is-dragging .k-grid-table tr.drag-highlight {
-  background-color: #eafae5;
+  background-color: var(--primary-bg-hover);
 }
 
 /* 드래그 중 선택 방지 */

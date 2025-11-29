@@ -1,0 +1,226 @@
+@charset "utf-8";
+
+/* ========================================
+   CSS Theme System - 5 Sub-Projects
+   ======================================== */
+
+/* Default Theme Variables (AI오픈분석 - Orange) */
+:root {
+    /* Primary Colors - More sophisticated Orange */
+    --primary-color: #F97316;
+    /* Tailwind Orange 500 */
+    --primary-hover: #EA580C;
+    /* Tailwind Orange 600 */
+    --primary-focus: #C2410C;
+    /* Tailwind Orange 700 */
+    --primary-dark: #9A3412;
+    /* Tailwind Orange 800 */
+
+    /* Background Colors */
+    --primary-bg-light: rgba(249, 115, 22, 0.08);
+    --primary-bg-medium: rgba(249, 115, 22, 0.15);
+    --primary-bg-hover: #FFF7ED;
+    /* Orange 50 */
+    --primary-bg-selected: #FFEDD5;
+    /* Orange 100 */
+
+    /* Border Colors */
+    --primary-border: #F97316;
+    --primary-border-light: #FDBA74;
+    /* Orange 300 */
+    --primary-border-hover: #EA580C;
+    --primary-border-focus: #C2410C;
+
+    /* Text Colors */
+    --primary-text: #F97316;
+    --primary-text-dark: #9A3412;
+
+    /* Header Gradient */
+    --header-bg-gradient: linear-gradient(to right, #FFF7ED, #FFEDD5);
+}
+
+/* Theme: 설문제작 (Purple) */
+[data-theme="survey-creation"] {
+    /* More sophisticated Purple */
+    --primary-color: #8B5CF6;
+    /* Violet 500 */
+    --primary-hover: #7C3AED;
+    /* Violet 600 */
+    --primary-focus: #6D28D9;
+    /* Violet 700 */
+    --primary-dark: #5B21B6;
+    /* Violet 800 */
+
+    --primary-bg-light: rgba(139, 92, 246, 0.08);
+    --primary-bg-medium: rgba(139, 92, 246, 0.15);
+    --primary-bg-hover: #F5F3FF;
+    /* Violet 50 */
+    --primary-bg-selected: #EDE9FE;
+    /* Violet 100 */
+
+    --primary-border: #8B5CF6;
+    --primary-border-light: #C4B5FD;
+    /* Violet 300 */
+    --primary-border-hover: #7C3AED;
+    --primary-border-focus: #6D28D9;
+
+    --primary-text: #8B5CF6;
+    --primary-text-dark: #5B21B6;
+
+    --header-bg-gradient: linear-gradient(to right, #F5F3FF, #EDE9FE);
+}
+
+/* Theme: 데이터현황 (Blue) */
+[data-theme="data-dashboard"] {
+    /* More sophisticated Blue */
+    --primary-color: #3B82F6;
+    /* Blue 500 */
+    --primary-hover: #2563EB;
+    /* Blue 600 */
+    --primary-focus: #1D4ED8;
+    /* Blue 700 */
+    --primary-dark: #1E40AF;
+    /* Blue 800 */
+
+    --primary-bg-light: rgba(59, 130, 246, 0.08);
+    --primary-bg-medium: rgba(59, 130, 246, 0.15);
+    --primary-bg-hover: #EFF6FF;
+    /* Blue 50 */
+    --primary-bg-selected: #DBEAFE;
+    /* Blue 100 */
+
+    --primary-border: #3B82F6;
+    --primary-border-light: #93C5FD;
+    /* Blue 300 */
+    --primary-border-hover: #2563EB;
+    --primary-border-focus: #1D4ED8;
+
+    --primary-text: #3B82F6;
+    --primary-text-dark: #1E40AF;
+
+    --header-bg-gradient: linear-gradient(to right, #EFF6FF, #DBEAFE);
+}
+
+/* Theme: 데이터관리 (Teal) */
+[data-theme="data-management"] {
+    /* More sophisticated Teal */
+    --primary-color: #10B981;
+    /* Emerald 500 */
+    --primary-hover: #059669;
+    /* Emerald 600 */
+    --primary-focus: #047857;
+    /* Emerald 700 */
+    --primary-dark: #065F46;
+    /* Emerald 800 */
+
+    --primary-bg-light: rgba(16, 185, 129, 0.08);
+    --primary-bg-medium: rgba(16, 185, 129, 0.15);
+    --primary-bg-hover: #ECFDF5;
+    /* Emerald 50 */
+    --primary-bg-selected: #D1FAE5;
+    /* Emerald 100 */
+
+    --primary-border: #10B981;
+    --primary-border-light: #6EE7B7;
+    /* Emerald 300 */
+    --primary-border-hover: #059669;
+    --primary-border-focus: #047857;
+
+    --primary-text: #10B981;
+    --primary-text-dark: #065F46;
+
+    --header-bg-gradient: linear-gradient(to right, #ECFDF5, #D1FAE5);
+}
+
+/* Theme: AI오픈분석 (Orange) - Default */
+[data-theme="ai-open-analysis"] {
+    --primary-color: #F97316;
+    --primary-hover: #EA580C;
+    --primary-focus: #C2410C;
+    --primary-dark: #9A3412;
+
+    --primary-bg-light: rgba(249, 115, 22, 0.08);
+    --primary-bg-medium: rgba(249, 115, 22, 0.15);
+    --primary-bg-hover: #FFF7ED;
+    --primary-bg-selected: #FFEDD5;
+
+    --primary-border: #F97316;
+    --primary-border-light: #FDBA74;
+    --primary-border-hover: #EA580C;
+    --primary-border-focus: #C2410C;
+
+    --primary-text: #F97316;
+    --primary-text-dark: #9A3412;
+
+    --header-bg-gradient: linear-gradient(to right, #FFF7ED, #FFEDD5);
+}
+
+/* Theme: 응답자관리 (Indigo) */
+[data-theme="respondent-management"] {
+    /* More sophisticated Indigo */
+    --primary-color: #6366F1;
+    /* Indigo 500 */
+    --primary-hover: #4F46E5;
+    /* Indigo 600 */
+    --primary-focus: #4338CA;
+    /* Indigo 700 */
+    --primary-dark: #3730A3;
+    /* Indigo 800 */
+
+    --primary-bg-light: rgba(99, 102, 241, 0.08);
+    --primary-bg-medium: rgba(99, 102, 241, 0.15);
+    --primary-bg-hover: #EEF2FF;
+    /* Indigo 50 */
+    --primary-bg-selected: #E0E7FF;
+    /* Indigo 100 */
+
+    --primary-border: #6366F1;
+    --primary-border-light: #A5B4FC;
+    /* Indigo 300 */
+    --primary-border-hover: #4F46E5;
+    --primary-border-focus: #4338CA;
+
+    --primary-text: #6366F1;
+    --primary-text-dark: #3730A3;
+
+    --header-bg-gradient: linear-gradient(to right, #EEF2FF, #E0E7FF);
+}
+
+/* Common Static Colors (Theme-independent) */
+:root {
+    /* Neutral Colors */
+    --color-black: #111827;
+    /* Gray 900 */
+    --color-dark-gray: #374151;
+    /* Gray 700 */
+    --color-medium-gray: #6B7280;
+    /* Gray 500 */
+    --color-light-gray: #D1D5DB;
+    /* Gray 300 */
+    --color-border-gray: #E5E7EB;
+    /* Gray 200 */
+    --color-bg-gray: #F9FAFB;
+    /* Gray 50 */
+    --color-disabled-bg: #F3F4F6;
+    /* Gray 100 */
+    --color-white: #fff;
+
+    /* Status Colors */
+    --color-red: #EF4444;
+    --color-red-hover: #DC2626;
+    --color-red-focus: #B91C1C;
+    --color-red-bg: #FEE2E2;
+
+    --color-green: #10B981;
+    --color-green-hover: #059669;
+    --color-green-focus: #047857;
+
+    --color-blue: #3B82F6;
+    --color-yellow: #F59E0B;
+
+    /* Grid Colors */
+    --grid-border: #E5E7EB;
+    --grid-header-bg: #F9FAFB;
+    --grid-header-text: #374151;
+    --grid-header-border: #E5E7EB;
+}
