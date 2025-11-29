@@ -127,8 +127,10 @@ function LoadingSpinner(props) {
                     ? <article className={"modal on no-dim"} style={maskStyle}>
                         <div className="loading">
                             <div className="survey-loading-spinner">
-                                <div className="checkmark checkmark-1"></div>
-                                <div className="checkmark checkmark-2"></div>
+                                <div className="dot"></div>
+                                <div className="dot"></div>
+                                <div className="dot"></div>
+                                <div className="dot"></div>
                             </div>
                             <p>분석중입니다...</p>
                         </div>
