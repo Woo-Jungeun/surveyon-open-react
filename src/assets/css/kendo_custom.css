@@ -492,8 +492,19 @@ div.k-grid-header {
 
 .k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:checked {
   border: 1px solid var(--primary-color);
-  background: url('../images/checkbox_on.png') no-repeat center #fff;
-  background-size: 12px 10px;
+  background: #fff;
+}
+
+.k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:checked::before {
+  content: "";
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--primary-color);
+  -webkit-mask: url('../images/checkbox_on.png') no-repeat center;
+  mask: url('../images/checkbox_on.png') no-repeat center;
+  -webkit-mask-size: 12px 10px;
+  mask-size: 12px 10px;
 }
 
 .k-table .k-checkbox-wrap .k-checkbox[type='checkbox']:focus {
@@ -756,12 +767,7 @@ div.k-grid-norecords {
   font-size: 14px;
 }
 
-.k-dropdownlist.k-picker>button {
-  width: 32px;
-  height: 32px;
-  background: url("../images/icon_dropdown.png")center center no-repeat;
-  background-size: 24px;
-}
+.k-dropdownlist.k-picker>button { width: 32px; height: 32px; background-color: var(--primary-color); -webkit-mask: url("../images/icon_dropdown.png") center center no-repeat; mask: url("../images/icon_dropdown.png") center center no-repeat; -webkit-mask-size: 24px; mask-size: 24px; border: none; }
 
 .k-dropdownlist.k-picker>button svg {
   display: none;
@@ -841,13 +847,7 @@ div.k-grid-norecords {
   font-size: 14px;
 }
 
-.k-combobox>button {
-  width: 32px;
-  height: 100%;
-  background: url("../images/icon_dropdown.png")center center no-repeat;
-  background-size: 24px;
-  border: 0;
-}
+.k-combobox>button { width: 32px; height: 100%; background-color: var(--primary-color); -webkit-mask: url("../images/icon_dropdown.png") center center no-repeat; mask: url("../images/icon_dropdown.png") center center no-repeat; -webkit-mask-size: 24px; mask-size: 24px; border: 0; }
 
 .k-combobox>button:hover {
   background-color: inherit;
@@ -1567,3 +1567,4 @@ input[type='checkbox']+label {
   padding-top: 8px;
   padding-bottom: 8px;
 }
+
