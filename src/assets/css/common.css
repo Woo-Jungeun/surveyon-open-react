@@ -4524,3 +4524,246 @@ footer {
         transform: translate(-50%, 2px);
     }
 }
+
+/* =========================================
+   Modal Theme Overrides
+========================================= */
+
+/* --- Purple Theme (Login, Main) #7c3aed --- */
+.purple-theme.modal .k-button-solid-primary,
+.purple-theme.modal .btnM[themeColor="primary"] {
+    background-color: #7c3aed !important;
+    border-color: #7c3aed !important;
+    color: #fff !important;
+}
+
+.purple-theme.modal .k-button-solid-primary:hover,
+.purple-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #6366f1 !important;
+    border-color: #6366f1 !important;
+}
+
+.purple-theme.modal .btnTxt.type01 {
+    color: #6366f1 !important;
+    border-color: #6366f1 !important;
+}
+
+.purple-theme.modal .btnTxt.type01:hover {
+    background-color: #f5f3ff !important;
+}
+
+.modal.purple-theme .iconNoti,
+.purple-theme.modal .iconNoti {
+    background: none !important;
+}
+
+.modal.purple-theme .iconNoti::before,
+.purple-theme.modal .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%237c3aed'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%237c3aed'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+}
+
+
+/* --- Survey Creation Theme (Purple) #A060FF --- */
+.survey-create-theme.modal .k-button-solid-primary,
+.survey-create-theme.modal .btnM[themeColor="primary"] {
+    background-color: #A060FF !important;
+    border-color: #A060FF !important;
+    color: #fff !important;
+}
+
+.survey-create-theme.modal .k-button-solid-primary:hover,
+.survey-create-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #8a4de3 !important;
+    border-color: #8a4de3 !important;
+}
+
+.survey-create-theme.modal .btnTxt.type01 {
+    color: #A060FF !important;
+    border-color: #A060FF !important;
+}
+
+.survey-create-theme.modal .btnTxt.type01:hover {
+    background-color: #f8f3ff !important;
+}
+
+.modal.survey-create-theme .iconNoti,
+.survey-create-theme.modal .iconNoti {
+    background: none !important;
+}
+
+.modal.survey-create-theme .iconNoti::before,
+.survey-create-theme.modal .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%23A060FF'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%23A060FF'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+}
+
+
+/* --- Data Dashboard Theme (Blue) #4EA3FF --- */
+.data-dashboard-theme.modal .k-button-solid-primary,
+.data-dashboard-theme.modal .btnM[themeColor="primary"] {
+    background-color: #4EA3FF !important;
+    border-color: #4EA3FF !important;
+    color: #fff !important;
+}
+
+.data-dashboard-theme.modal .k-button-solid-primary:hover,
+.data-dashboard-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+}
+
+.data-dashboard-theme.modal .btnTxt.type01 {
+    color: #4EA3FF !important;
+    border-color: #4EA3FF !important;
+}
+
+.data-dashboard-theme.modal .btnTxt.type01:hover {
+    background-color: #eff6ff !important;
+}
+
+.modal.data-dashboard-theme .iconNoti,
+.data-dashboard-theme.modal .iconNoti {
+    background: none !important;
+}
+
+.modal.data-dashboard-theme .iconNoti::before,
+.data-dashboard-theme.modal .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%234EA3FF'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%234EA3FF'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+}
+
+
+/* --- Data Management Theme (Green) #23C6A3 --- */
+.data-management-theme.modal .k-button-solid-primary,
+.data-management-theme.modal .btnM[themeColor="primary"] {
+    background-color: #23C6A3 !important;
+    border-color: #23C6A3 !important;
+    color: #fff !important;
+}
+
+.data-management-theme.modal .k-button-solid-primary:hover,
+.data-management-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #1ea88a !important;
+    border-color: #1ea88a !important;
+}
+
+.data-management-theme.modal .btnTxt.type01 {
+    color: #23C6A3 !important;
+    border-color: #23C6A3 !important;
+}
+
+.data-management-theme.modal .btnTxt.type01:hover {
+    background-color: #f0fdf9 !important;
+}
+
+.modal.data-management-theme .iconNoti,
+.data-management-theme.modal .iconNoti {
+    background: none !important;
+}
+
+.modal.data-management-theme .iconNoti::before,
+.data-management-theme.modal .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%2323C6A3'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%2323C6A3'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+}
+
+
+/* --- Respondent Management Theme (Indigo) #6D67FF --- */
+.respondent-theme.modal .k-button-solid-primary,
+.respondent-theme.modal .btnM[themeColor="primary"] {
+    background-color: #6D67FF !important;
+    border-color: #6D67FF !important;
+    color: #fff !important;
+}
+
+.respondent-theme.modal .k-button-solid-primary:hover,
+.respondent-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #5850ec !important;
+    border-color: #5850ec !important;
+}
+
+.respondent-theme.modal .btnTxt.type01 {
+    color: #6D67FF !important;
+    border-color: #6D67FF !important;
+}
+
+.respondent-theme.modal .btnTxt.type01:hover {
+    background-color: #f5f5ff !important;
+}
+
+.modal.respondent-theme .iconNoti,
+.respondent-theme.modal .iconNoti {
+    background: none !important;
+}
+
+.modal.respondent-theme .iconNoti::before,
+.respondent-theme.modal .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%236D67FF'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%236D67FF'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+}
+
+
+/* --- Orange Theme (Default/AI Open Analysis) #FF913A --- */
+.orange-theme.modal .k-button-solid-primary,
+.orange-theme.modal .btnM[themeColor="primary"] {
+    background-color: #FF913A !important;
+    border-color: #FF913A !important;
+    color: #fff !important;
+}
+
+.orange-theme.modal .k-button-solid-primary:hover,
+.orange-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #e07b2e !important;
+    border-color: #e07b2e !important;
+}
+
+.orange-theme.modal .btnTxt.type01 {
+    color: #FF913A !important;
+    border-color: #FF913A !important;
+}
+
+.orange-theme.modal .btnTxt.type01:hover {
+    background-color: #fff8f0 !important;
+}
+
+.modal.orange-theme .iconNoti,
+.orange-theme.modal .iconNoti {
+    background: none !important;
+}
+
+.modal.orange-theme .iconNoti::before,
+.orange-theme.modal .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%23FF913A'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%23FF913A'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+}

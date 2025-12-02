@@ -277,6 +277,18 @@ function ModalProvider(props) {
         close(null);
     }
 
+    // 테마 클래스 결정 (경로 기반)
+    const getThemeClass = (path) => {
+        if (path === "/" || path === "/login") return "purple-theme";
+        if (path.startsWith("/survey_creation")) return "survey-create-theme";
+        if (path.startsWith("/data_dashboard")) return "data-dashboard-theme";
+        if (path.startsWith("/data_management")) return "data-management-theme";
+        if (path.startsWith("/respondent_management")) return "respondent-theme";
+        return "orange-theme"; // 기본값 (오렌지) - /ai_open_analysis 포함
+    };
+
+    const themeClass = getThemeClass(pathname);
+
     return (
         <modalContext.Provider value={{
             close, showAlert, showConfirm
@@ -297,6 +309,7 @@ function ModalProvider(props) {
                 code={modal.code}
                 allowRender={matchPath(modal.visibleOn)}
                 zIndex={modal.zIndex}
+                themeClass={themeClass}
             />
         </modalContext.Provider>
     );
@@ -313,7 +326,7 @@ function Modal(props) {
     const windowRef = useRef();
     if (!props.allowRender) return null; // 라우트가 안 맞으면 표시 자체를 안 함
     return (
-        <div>
+        <div className={props.themeClass ? `${props.themeClass}-modal` : ""}>
             {
                 props.show ?
                     props.type !== "contents" ?
@@ -322,7 +335,7 @@ function Modal(props) {
                         // 3. confirm 일 경우, btn 파라미터가 있는지 판별하고
                         //    있을 경우, btns의 갯수만큼 버튼 생성
                         //    없을 경우, 확인/취소 버튼을 default로 생성
-                        <article className="modal on"
+                        <article className={`modal on ${props.themeClass || ""}`}
                             style={props.zIndex != null ? { zIndex: props.zIndex } : undefined}
                         >
                             <div className={"cmn_popup"} style={{ width: "480px" }}>

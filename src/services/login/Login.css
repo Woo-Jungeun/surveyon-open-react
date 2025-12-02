@@ -11,7 +11,7 @@
 
 /* 작은 점 패턴 */
 .dot-pattern {
-    background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0);
+    background-image: radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.3) 1px, transparent 0);
     background-size: 40px 40px;
 }
 
@@ -30,7 +30,7 @@
     backdrop-filter: blur(10px);
     border-radius: 8px;
     padding: 8px 16px;
-    border: 1px solid rgba(255,255,255,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     display: inline-flex;
     align-items: center;
@@ -80,12 +80,13 @@
 
 .hero-title {
     font-family: system-ui, -apple-system, sans-serif;
-    font-size:1.5rem;
+    font-size: 1.5rem;
     font-weight: 900;
     background: linear-gradient(135deg, #ffffff, #e0e7ff, #c7d2fe);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 32px rgba(255,255,255,0.28);
+    text-shadow: 0 0 32px rgba(255, 255, 255, 0.28);
 }
 
 .login-subtitle {
@@ -101,12 +102,13 @@
 .login-card {
     padding: 48px;
     border-radius: 16px;
-    background: rgba(255,255,255,0.96);
+    background: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.3);
-    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
     text-align: left;
-    font-size: 16px; /* 전체 텍스트 기본 크기 증가 */
+    font-size: 16px;
+    /* 전체 텍스트 기본 크기 증가 */
 }
 
 /* Title */
@@ -202,40 +204,252 @@
     gap: 6px;
 }
 
-.login-remember input[type="checkbox"] {
-    appearance: auto !important;
-    -webkit-appearance: auto !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-
-    width: 18px !important;
-    height: 18px !important;
-    margin-right: 6px;
-
-    accent-color: #6366f1 !important; /* 체크 표시 색상 */
-    background-color: #fff !important;
-    border: 1px solid #999 !important;
-
-    cursor: pointer;
-}
-/* 아이디 기억하기 체크박스 */
-/* ---------------------------
-   커스텀 체크박스 (loginChk)
---------------------------- */
+/* 아이디 기억하기 체크박스 (일반 input 태그용) */
 .loginChk {
     appearance: none !important;
     -webkit-appearance: none !important;
+    width: 20px !important;
+    height: 20px !important;
+    border: 2px solid #7c3aed !important;
+    border-radius: 4px !important;
+    background-color: #fff !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
 
-    width: 18px;
-    height: 18px;
-    border: 2px solid #7c3aed;
-    border-radius: 4px;
-    background: #fff;
-    cursor: pointer;
-    margin-right: 6px;
+    /* 혹시 모를 Kendo 스타일 초기화 */
+    background-image: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.loginChk:hover {
+    border-color: #6366f1 !important;
+}
+
+.loginChk:checked {
+    background-color: #7c3aed !important;
+    border-color: #7c3aed !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.loginChk:focus {
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+/* 가상 요소 초기화 (Kendo 잔재 제거) */
+.loginChk::before,
+.loginChk::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* 전역 스타일로 인해 label 앞에 생기는 가상 요소(오렌지색 박스) 제거 */
+.loginBtm label::before,
+.loginBtm label::after {
+    display: none !important;
+    content: none !important;
+}
+
+.login-findpw {
+    font-size: 16px;
+    color: #6366f1;
+    text-decoration: none;
+}
+
+.login-findpw:hover {
+    color: #4f46e5;
+}
+
+/* =========================================
+   Login Button
+========================================= */
+.login-button {
+    width: 100%;
+    height: 54px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed) !important;
+    color: #fff;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    box-shadow: 0 10px 20px rgba(90, 0, 180, 0.25);
+    transition: 0.2s;
+    opacity: 1 !important;
+}
+
+.login-button:hover {
+    background: linear-gradient(90deg, #4338ca, #6b21a8) !important;
+    box-shadow: 0 12px 24px rgba(70, 0, 160, 0.35);
+}
+
+/* =========================================
+   Signup Text
+========================================= */
+.login-signup {
+    margin-top: 24px;
+    font-size: 16px;
+    text-align: center;
+    color: #666;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 18px;
+}
+
+.signup-link {
+    color: #6366f1;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+/* =========================================
+   Bottom Menu
+========================================= */
+.login-bottom-menu {
+    margin-top: 32px;
+    text-align: center;
+    opacity: 0.9;
+    font-size: 16px;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-title-sub {
+    font-size: 16px;
+    color: #636363;
+    margin-top: 4px;
+    margin-bottom: 24px;
+}
+
+/* =========================================
+   Input Fields
+========================================= */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.login-field label {
+    font-size: 16px;
+    color: #444;
+    font-weight: 500;
+}
+
+.login-input-wrap {
     position: relative;
-    box-sizing: border-box;
-    transition: all 0.2s ease;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 22px;
+    height: 22px;
+    color: #9ca3af;
+}
+
+.login-input {
+    width: 100%;
+    height: 50px;
+    padding-left: 44px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #f9fafb;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+.login-input:focus {
+    background: white;
+    border-color: #818cf8;
+    outline: none;
+}
+
+/* =========================================
+   Checkbox & Find Password
+========================================= */
+.login-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+}
+
+.login-remember {
+    color: #555;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* 아이디 기억하기 체크박스 (일반 input 태그용) */
+.loginChk {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    width: 20px !important;
+    height: 20px !important;
+    border: 2px solid #7c3aed !important;
+    border-radius: 4px !important;
+    background-color: #fff !important;
+    cursor: pointer !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+    position: relative !important;
+    transition: all 0.2s ease !important;
+
+    /* 혹시 모를 Kendo 스타일 초기화 */
+    background-image: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+.loginChk:hover {
+    border-color: #6366f1 !important;
+}
+
+.loginChk:checked {
+    background-color: #7c3aed !important;
+    border-color: #7c3aed !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+    background-size: 100% 100% !important;
+    background-position: center !important;
+    background-repeat: no-repeat !important;
+}
+
+.loginChk:focus {
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+/* 가상 요소 초기화 (Kendo 잔재 제거) */
+.loginChk::before,
+.loginChk::after {
+    display: none !important;
+    content: none !important;
+}
+
+/* 전역 스타일로 인해 label 앞에 생기는 가상 요소(오렌지색 박스) 제거 */
+.loginBtm label::before,
+.loginBtm label::after {
+    display: none !important;
+    content: none !important;
 }
 
 .login-findpw {

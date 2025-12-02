@@ -121,22 +121,14 @@ const Login = () => {
                                     />
                                 </div>
                             </div>
-                            {/* <input
-                                type="checkbox"
-                                id="chk_01"
-                                className="loginChk"
-                                checked={isSavedId}
-                                onChange={onCheckSavedId}
-                            />
-                                    <label htmlFor="chk_01">아이디 기억하기</label>
-                             */}
+
                             <div className="loginBtm">
-                                <Input
+                                <input
                                     type="checkbox"
                                     id="chk_01"
                                     className="loginChk"
                                     checked={isSavedId}
-                                    onClick={onCheckSavedId}
+                                    onChange={onCheckSavedId}
                                 />
                                 <label htmlFor="chk_01">아이디 기억하기</label>
                             </div>
