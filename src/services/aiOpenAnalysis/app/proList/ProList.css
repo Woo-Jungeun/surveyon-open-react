@@ -1,74 +1,341 @@
-/* 색상 변수 */
-:root{
-  --chip-blue:     #2563eb; /* 분석 */
-  --chip-gray:     #6b7280; /* 머지 */
-  --chip-red:      #ef4444; /* 제외 */
-  --chip-disabled: #9ca3af; /* 잠금(비활성) */
+/* ==========================================================================
+   Modern Grid Style (Based on analysis-modern-view.css)
+   ========================================================================== */
+
+/* Grid Container */
+.cmn_grid.multihead {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-family: 'Pretendard', sans-serif;
+  background: #fff;
 }
 
-/* 텍스트 칩 버튼 기본 */
-.cmn_grid.multihead .k-button.chip{
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  padding: 0 !important;
-  min-width: 0 !important;
-  height: auto !important;
+/* Header Style */
+.cmn_grid.multihead .k-grid-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.cmn_grid.multihead .k-grid-header .k-header {
+  background-color: #f8f9fa;
+  color: #666;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 10px 12px;
+  border-color: #e0e0e0;
+  vertical-align: middle;
+  text-align: center;
+}
+
+/* Body Row Style */
+.cmn_grid.multihead .k-grid-content tr {
+  transition: background-color 0.2s;
+}
+
+.cmn_grid.multihead .k-grid-content tr:hover {
+  background-color: #fafafa;
+}
+
+.cmn_grid.multihead .k-grid-content td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  color: #1a1a1a;
+  font-size: 14px;
+  vertical-align: middle;
+  height: 48px;
+}
+
+/* ==========================================================================
+   Button Designs (Analysis, Exclude, Merge) - Replaces Text Chips
+   ========================================================================== */
+
+/* Chip Button Base */
+.cmn_grid.multihead .k-button.chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  line-height: 1.1;
-  font-size: 12px;
-  font-weight: 700;
+  justify-content: center;
+  padding: 6px 8px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
   cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent !important;
+  gap: 4px;
+  line-height: 1.2;
+  min-width: 64px !important;
+  height: 30px !important;
+  box-shadow: none !important;
 }
 
-/* 상태별 색 */
-.cmn_grid.multihead .k-button.chip--analysis{ color: var(--chip-blue) !important; }
-.cmn_grid.multihead .k-button.chip--merge{    color: var(--chip-gray) !important; }
-.cmn_grid.multihead .k-button.chip--exclude{  color: var(--chip-red)  !important; }
+/* Analysis State (Blue) */
+.cmn_grid.multihead .k-button.chip--analysis {
+  background-color: #e3f2fd !important;
+  color: #1976d2 !important;
+  border-color: #bbdefb !important;
+}
 
-/* 잠금(비활성) 처리 */
+.cmn_grid.multihead .k-button.chip--analysis:hover {
+  background-color: #bbdefb !important;
+  color: #1565c0 !important;
+}
+
+/* Merge State (Gray) */
+.cmn_grid.multihead .k-button.chip--merge {
+  background-color: #f5f5f5 !important;
+  color: #616161 !important;
+  border-color: #e0e0e0 !important;
+}
+
+.cmn_grid.multihead .k-button.chip--merge:hover {
+  background-color: #e0e0e0 !important;
+  color: #424242 !important;
+}
+
+/* Exclude State (Red) */
+.cmn_grid.multihead .k-button.chip--exclude {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+  border-color: #ffcdd2 !important;
+}
+
+.cmn_grid.multihead .k-button.chip--exclude:hover {
+  background-color: #ffcdd2 !important;
+  color: #b71c1c !important;
+}
+
+/* Disabled State */
 .cmn_grid.multihead .k-button.chip--disabled,
-.cmn_grid.multihead .k-button.chip[disabled]{
-  color: var(--chip-disabled) !important;
+.cmn_grid.multihead .k-button.chip[disabled] {
+  background-color: #f5f5f5 !important;
+  color: #9e9e9e !important;
+  border-color: #e0e0e0 !important;
   cursor: not-allowed;
-  opacity: .6;
-  text-decoration: none !important;
+  opacity: 0.8;
 }
 
-/* 체크 아이콘 */
-.cmn_grid.multihead .k-button.chip .chip-check{
-  font-weight: 800;
-  font-size: 12px;
-  line-height: 1;
+/* Check Icon */
+.cmn_grid.multihead .k-button.chip .chip-check {
+  font-size: 14px;
+  font-weight: bold;
 }
+
+/* ==========================================================================
+   Header Buttons (Small)
+   ========================================================================== */
+
+/* Base Small Button Style */
+.cmn_grid.multihead .btnS {
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  box-sizing: border-box;
+}
+
+.cmn_grid.multihead .btnS:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+/* Force Button Style for Text Buttons (제외, X, O) */
+.cmn_grid.multihead .btnTxt,
+.cmn_grid.multihead .btnType02 {
+  border: 1px solid #d1d5db !important;
+  background-color: #fff !important;
+  color: #374151 !important;
+  text-decoration: none !important;
+  padding: 4px 10px !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+}
+
+.cmn_grid.multihead .btnTxt:hover,
+.cmn_grid.multihead .btnType02:hover {
+  background-color: #f3f4f6 !important;
+  border-color: #9ca3af !important;
+  color: #111 !important;
+}
+
+/* ==========================================================================
+   Lock Icon / Edit Buttons
+   ========================================================================== */
+
+/* Lock Icon Container */
+.cmn_grid.multihead .lock-icon-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #e0e0e0;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #757575;
+  margin: 0 auto;
+}
+
+.cmn_grid.multihead .lock-icon-btn:hover {
+  background-color: #f5f5f5;
+  color: #424242;
+}
+
+.cmn_grid.multihead .lock-icon-btn.locked {
+  background-color: #fff8e1;
+  border-color: #ffe082;
+  color: #ffa000;
+}
+
+/* ==========================================================================
+   Functional Styles (Preserved)
+   ========================================================================== */
 
 /* 문항통합저장 두번째 컬럼: 값 다를 때 노란색 */
-.cell-merge-diff { background: #fff7b0 !important; }
+.cell-merge-diff {
+  background: #fff9c4 !important;
+}
 
 /* 인풋 */
-.merge-input{
+.merge-input {
   width: 100%;
   box-sizing: border-box;
-  height: 28px;
-  padding: 4px 6px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
+  height: 32px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
   font-size: 13px;
+  transition: all 0.2s;
 }
-.merge-input:focus{
-  border-color: #7aa8ff;
-  box-shadow: 0 0 0 2px rgba(122,168,255,0.15);
+
+.merge-input:focus {
+  border-color: #ff8024;
+  box-shadow: 0 0 0 2px rgba(255, 128, 36, 0.15);
+  outline: none;
 }
-.merge-input:disabled{
-  background: #f5f5f7;
-  color: #999;
+
+.merge-input:disabled {
+  background: #f9fafb;
+  color: #9ca3af;
   cursor: not-allowed;
+  border-color: #e5e7eb;
 }
 
 /* ─── 헤더 하단 선 제거: 문항최종 / 문항통합저장 ─── */
 .cmn_grid.multihead .k-grid-header .k-header.sub-no-bottom-border,
-.cmn_grid.multihead thead th.sub-no-bottom-border{
+.cmn_grid.multihead thead th.sub-no-bottom-border {
   border-bottom: 0 !important;
+}
+
+/* Cell Wrap */
+.cell-wrap {
+  white-space: normal !important;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+/* Medium Button (Settings, etc.) */
+.cmn_grid.multihead .btnM {
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+/* Primary Button (Orange Background - Default for 분석 보기) */
+.cmn_grid.multihead .btnM.k-button-solid-primary {
+  background-color: #ff8024 !important;
+  color: #fff !important;
+  border: 1px solid #ff8024 !important;
+}
+
+.cmn_grid.multihead .btnM.k-button-solid-primary:hover {
+  background-color: #f57c00 !important;
+  color: #fff !important;
+}
+
+/* Setting Button Outline Style (White Background, Orange Border) */
+.cmn_grid.multihead .btn-setting-outline.k-button-solid-primary {
+  background-color: #fff !important;
+  color: #ff8024 !important;
+  border: 1px solid #ff8024 !important;
+}
+
+.cmn_grid.multihead .btn-setting-outline.k-button-solid-primary:hover {
+  background-color: #fff3e0 !important;
+  color: #e65100 !important;
+}
+
+.cmn_grid.multihead .btnM.k-button-solid-base {
+  background-color: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.cmn_grid.multihead .btnM.btnM--disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ==========================================================================
+   Page Title Area
+   ========================================================================== */
+
+.subTitWrap {
+  margin: 16px 0;
+}
+
+.pro-list-header .subTit {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pro-list-header .titTxt {
+  font-size: 22px;
+  font-weight: 700;
+  color: #111;
+  display: flex;
+  align-items: center;
+  margin: 0;
+}
+
+.pro-list-header .projectName {
+  font-size: 16px;
+  font-weight: 400;
+  color: #757575;
+  margin-left: 12px;
+}
+
+.pro-list-header .info-icon {
+  margin-left: 8px;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  vertical-align: middle;
+}
+
+.pro-list-header .info-icon:hover {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Grid Container Wrapper - Prevent Scrollbars
+   ========================================================================== */
+
+.subContWrap {
+  padding: 0 8px 0 16px;
 }

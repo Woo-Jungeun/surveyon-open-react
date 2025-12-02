@@ -947,8 +947,8 @@ footer {
 .subTitWrap {
     width: 100%;
     padding: 0 20px;
-    height: 52px;
-    border-bottom: 1px solid #d3d7d5;
+    height: 30px;
+    /* border-bottom: 1px solid #d3d7d5; */
     display: inline-flex;
     flex-direction: row-reverse;
     justify-content: start;

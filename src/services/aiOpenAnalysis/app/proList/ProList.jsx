@@ -696,7 +696,7 @@ const ProList = () => {
                         key={c.field}
                         field={c.field}
                         title={c.title}
-                        width={c.width ?? '72px'}
+                        width={c.width ?? '90px'}
                         sortable={false}
                         filterable={false}
                         columnMenu={undefined}
@@ -734,7 +734,7 @@ const ProList = () => {
                         key={c.field}
                         field={c.field}
                         title={c.title}
-                        width={c.width ?? '72px'}
+                        width={c.width ?? '90px'}
                         sortable={false}
                         filterable={false}
                         columnMenu={undefined}
@@ -761,7 +761,7 @@ const ProList = () => {
                                                 if (!locked && !blockWhenDirty()) goOpenSetting(merge_qnum);
                                             }}
                                         >
-                                            분석
+                                            분석보기
                                         </Button>
                                     )}
                                 </td>
@@ -802,15 +802,25 @@ const ProList = () => {
                                     onMouseDown={(e) => e.stopPropagation()}
                                     onClick={(e) => e.stopPropagation()}
                                 >
-                                    <Button
-                                        className={`btnS k-icon-button${locked ? '' : ''}`}
+                                    <div
+                                        className={`lock-icon-btn ${locked ? 'locked' : ''}`}
                                         onClick={() => toggleRowLock(dataItem)}
                                         title={locked ? '잠금 해제' : '잠금'}
                                     >
                                         <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden="true">
-                                            {locked ? '🔒' : '🔓'}
+                                            {locked ? (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                                </svg>
+                                            ) : (
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                                    <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                                                </svg>
+                                            )}
                                         </span>
-                                    </Button>
+                                    </div>
                                 </td>
                             );
                         }}
@@ -835,7 +845,7 @@ const ProList = () => {
                             }
                             return (
                                 <td style={{ textAlign: "center" }}>
-                                    <Button className="btnM" themeColor="primary"
+                                    <Button className="btnM btn-setting-outline" themeColor="primary"
                                         onClick={(e) => { e.stopPropagation(); setPopupShow(true); }}
                                         onMouseDown={(e) => e.stopPropagation()} >
                                         설정
@@ -1003,10 +1013,10 @@ const ProList = () => {
 
         return (
             <>
-                <article className="subTitWrap">
+                <article className="subTitWrap pro-list-header">
                     <div className="subTit">
                         <h2 className="titTxt">문항 목록
-                            {state?.projectname && (<span className="projectName"> {state.projectname}</span>)}
+                            {(state?.projectname || sessionStorage.getItem("projectname")) && (<span className="projectName"> {state?.projectname || sessionStorage.getItem("projectname")}</span>)}
                             <span
                                 className="info-icon"
                                 data-tooltip={`문항 목록|조사(Qmaster): 등록 시 오픈응답문항 중 텍스트로 입력된 데이터 자동 등록\n신규(수동): "문항등록"을 통해 엑셀로 문항을 선택하여 등록`}
@@ -1038,7 +1048,7 @@ const ProList = () => {
                                 <KendoGrid
                                     // key={gridKey}
                                     parentProps={{
-                                        height: "750px",
+                                        height: "calc(100vh - 170px)",
                                         data: dataWithProxies,
                                         dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                                         selectedState,
