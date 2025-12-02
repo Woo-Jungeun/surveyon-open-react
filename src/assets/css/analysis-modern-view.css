@@ -333,3 +333,8 @@
     transform: rotate(135deg);
     margin-left: -4px;
 }
+
+/* 그리드 스크롤 마지막까지 내릴 수 있도록 */
+.analysis-dashboard-v2 .k-grid-content {
+    padding-bottom: 50px !important;
+}
