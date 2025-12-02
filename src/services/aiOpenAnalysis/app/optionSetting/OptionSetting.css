@@ -121,7 +121,7 @@
   box-shadow: none !important;
 }
 
-/* 높이 100% 채우기 */
+/* ?�이 100% 채우�?*/
 .lv3-editor.lv3-overlay .lv3-editor-ddl,
 .lv3-editor.lv3-overlay .lv3-editor-ddl .k-picker,
 .lv3-editor.lv3-overlay .lv3-editor-ddl .k-input,
@@ -321,7 +321,7 @@
 }
 
 .lv3-panel-item:hover {
-  background: #f0f8f5;
+  background: var(--primary-bg-hover);
 }
 
 .lv3-panel-item .code {
@@ -420,4 +420,12 @@
 #grid_01.is-dragging {
   user-select: none;
   cursor: ns-resize;
+}
+
+#grid_01 .k-grid-table tr {
+  height: 38px;
+}
+
+#grid_01 .k-grid-table td {
+  line-height: 38px;
 }

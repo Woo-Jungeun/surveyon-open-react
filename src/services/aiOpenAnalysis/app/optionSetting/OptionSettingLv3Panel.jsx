@@ -117,11 +117,9 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
 
       {/* 토글 버튼 */}
       <div
-        className="lv3-panel-toggle"
+        className={`lv3-panel-toggle ${open ? "open" : ""}`}
         onClick={() => onClose(!open)}
-      >
-        {open ? ">>" : "<<"}
-      </div>
+      ></div>
     </div>
   );
 });

@@ -15,6 +15,7 @@ import moment from "moment";
 import OptionSettingExcelUploadErrorPopup from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingExcelUploadErrorPopup.jsx";
 import * as XLSX from "xlsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import "@/assets/css/analysis-modern-view.css";
 
 /**
  * 분석 > Body
@@ -576,7 +577,7 @@ const OptionSettingBody = () => {
   };
 
   return (
-    <Fragment>
+    <div className="analysis-dashboard-v2">
       <article className="subTitWrap">
         <p className="subStep">
           <span>{TITLE_LIST[0]}</span>
@@ -628,62 +629,66 @@ const OptionSettingBody = () => {
         </div>
 
         <div className="subCont subContR">
-          <div className="btnBox tabMenu mgB12">
-            <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("1")}>
-              응답 데이터
-              <span
-                className="info-icon"
-                data-tooltip={`응답 데이터|보기 데이터 기준 "응답자분석" 결과 (중복 제거)`}
-              ></span>
-            </Button>
-            <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("2")}>
-              보기 데이터
-              <span
-                className="info-icon"
-                data-tooltip={`보기 데이터|"보기분석" 결과`}
-              ></span>
-            </Button>
-            <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("3")}>
-              rawdata
-              <span
-                className="info-icon"
-                data-tooltip={`rawdata|PID 별 응답자 데이터 기준으로 응답자 분석 결과 제시`}
-              ></span>
-            </Button>
-            <CommonActionButton label="엑셀 다운로드" onClick={onClickExcelDownload}
-              tooltipText={`엑셀 다운로드|응답 데이터, 보기데이터, rawdata(세로), rawdata(가로) 엑셀포맷으로 추출(rawdata는 SAV 파일에 바로 붙여넣기 가능한 포맷)`} />
-            <CommonActionButton label="엑셀 업로드" onClick={onClickExcelUpload}
-              tooltipText={`엑셀 업로드|응답 데이터, 보기데이터 시트의 수정된 데이터를 한번에 업데이트 실행\n(주의:웹 수정과 엑셀 수정은 병행하지 마세요.)`} />
-            <CommonActionButton label="보기 불러오기" onClick={openExloadWindow}
-              tooltipText={`보기 불러오기|기존 설문온 프로젝트/문항의 보기 데이터를 불러옵니다.`} />
-            <div style={{ display: "inline-flex", alignItems: "center" }}>
-              <DropDownList
-                key={`lvcode-${tabDivision}`}
-                style={{ width: 140 }}
-                data={LVCODE_OPTION}
-                dataItemKey="value"
-                textField="text"
-                value={lvCodeDraft}
-                disabled={tabDivision !== "2"}           //탭2에서 활성화
-                onChange={(e) => {
-                  if (tabDivision === "2") {
-                    const next = e.value;
-                    setLvCodeDraft(next);
-                    setUnsaved(prev => ({ ...prev, [tabDivision]: next?.value !== lvCodeCommitted?.value }));
-                    // 히스토리에 현재 선택을 push (중복 방지)
-                    const h = stageHistRef.current;
-                    const last = h.back[h.back.length - 1];
-                    if (!last || last.value !== next.value) {
-                      h.back.push(next);
-                      h.fwd.length = 0;
+          <div className="tab-action-container">
+            <div className="btnBox tabMenu">
+              <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("1")}>
+                응답 데이터
+                <span
+                  className="info-icon"
+                  data-tooltip={`응답 데이터|보기 데이터 기준 "응답자분석" 결과 (중복 제거)`}
+                ></span>
+              </Button>
+              <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("2")}>
+                보기 데이터
+                <span
+                  className="info-icon"
+                  data-tooltip={`보기 데이터|"보기분석" 결과`}
+                ></span>
+              </Button>
+              <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("3")}>
+                rawdata
+                <span
+                  className="info-icon"
+                  data-tooltip={`rawdata|PID 별 응답자 데이터 기준으로 응답자 분석 결과 제시`}
+                ></span>
+              </Button>
+              <div style={{ display: "inline-flex", alignItems: "center", marginLeft: "8px" }}>
+                <DropDownList
+                  key={`lvcode-${tabDivision}`}
+                  style={{ width: 140 }}
+                  data={LVCODE_OPTION}
+                  dataItemKey="value"
+                  textField="text"
+                  value={lvCodeDraft}
+                  disabled={tabDivision !== "2"}           //탭2에서 활성화
+                  onChange={(e) => {
+                    if (tabDivision === "2") {
+                      const next = e.value;
+                      setLvCodeDraft(next);
+                      setUnsaved(prev => ({ ...prev, [tabDivision]: next?.value !== lvCodeCommitted?.value }));
+                      // 히스토리에 현재 선택을 push (중복 방지)
+                      const h = stageHistRef.current;
+                      const last = h.back[h.back.length - 1];
+                      if (!last || last.value !== next.value) {
+                        h.back.push(next);
+                        h.fwd.length = 0;
+                      }
                     }
-                  }
-                }}
-              />
-              <span
-                className="info-icon"
-                data-tooltip={`단계설정|1단계(소분류), 2단계(중분류), 3단계(대분류) 선택하여 해당 분류까지 분석됨\n(단, 보기분석시 "분류 개수 설정"에 따라 분석 진행)`}
-              ></span>
+                  }}
+                />
+                <span
+                  className="info-icon"
+                  data-tooltip={`단계설정|1단계(소분류), 2단계(중분류), 3단계(대분류) 선택하여 해당 분류까지 분석됨\n(단, 보기분석시 "분류 개수 설정"에 따라 분석 진행)`}
+                ></span>
+              </div>
+            </div>
+            <div className="action-buttons-group">
+              <CommonActionButton label="엑셀 다운로드" onClick={onClickExcelDownload}
+                tooltipText={`엑셀 다운로드|응답 데이터, 보기데이터, rawdata(세로), rawdata(가로) 엑셀포맷으로 추출(rawdata는 SAV 파일에 바로 붙여넣기 가능한 포맷)`} />
+              <CommonActionButton label="엑셀 업로드" onClick={onClickExcelUpload}
+                tooltipText={`엑셀 업로드|응답 데이터, 보기데이터 시트의 수정된 데이터를 한번에 업데이트 실행\n(주의:웹 수정과 엑셀 수정은 병행하지 마세요.)`} />
+              <CommonActionButton label="보기 불러오기" onClick={openExloadWindow}
+                tooltipText={`보기 불러오기|기존 설문온 프로젝트/문항의 보기 데이터를 불러옵니다.`} />
             </div>
           </div>
           <div className="gridWithPanel">
@@ -769,7 +774,7 @@ const OptionSettingBody = () => {
           errorList={errorList}
         />
       )}
-    </Fragment>
+    </div>
   );
 };
 

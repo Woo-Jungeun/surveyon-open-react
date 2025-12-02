@@ -1,0 +1,335 @@
+@charset "utf-8";
+
+/* Modern Analysis Dashboard V2 */
+
+.analysis-dashboard-v2 {
+    --primary-color: #ff8024;
+    --primary-bg: #fffbf7;
+    --primary-bg-hover: #fff0e0;
+    --primary-bg-selected: #ffe0c2;
+    --text-color: #1a1a1a;
+    --text-secondary: #666;
+    --border-color: #e0e0e0;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --header-height: 60px;
+    --left-panel-width: 400px;
+
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 60px);
+    max-height: calc(100vh - 60px);
+    width: 100%;
+    overflow: hidden;
+    background-color: #f8f9fa;
+    box-sizing: border-box;
+}
+
+/* Header */
+.analysis-dashboard-v2 .subTitWrap {
+    height: var(--header-height) !important;
+    min-height: var(--header-height) !important;
+    max-height: var(--header-height) !important;
+    background: #fff !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 0 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+}
+
+.analysis-dashboard-v2 .subTitWrap .subStep {
+    display: none !important;
+}
+
+.analysis-dashboard-v2 .subTit {
+    margin: 0 !important;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.analysis-dashboard-v2 .subTit .titTxt {
+    font-size: 20px !important;
+    font-weight: 700 !important;
+    color: var(--text-color) !important;
+}
+
+.analysis-dashboard-v2 .subTitWrap .btnWrap {
+    position: static !important;
+    display: flex;
+    gap: 8px;
+}
+
+/* Content Wrapper */
+.analysis-dashboard-v2 .subContWrap {
+    display: flex !important;
+    flex-direction: row !important;
+    width: 100% !important;
+    flex: 1 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Left Panel */
+.analysis-dashboard-v2 .subContL {
+    width: var(--left-panel-width) !important;
+    min-width: var(--left-panel-width) !important;
+    flex: 0 0 var(--left-panel-width) !important;
+    border-right: 1px solid var(--border-color) !important;
+    background: #fff !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    padding: 24px 20px 24px 24px !important;
+    box-sizing: border-box !important;
+}
+
+/* Left Panel Closed State */
+.analysis-dashboard-v2 .subContWrap.left-closed .subContL {
+    width: 0 !important;
+    min-width: 0 !important;
+    flex: 0 0 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: none !important;
+    position: relative !important;
+}
+
+.analysis-dashboard-v2 .subContWrap.left-closed .collapseBar {
+    position: fixed !important;
+    left: 0 !important;
+    top: 120px !important;
+    z-index: 1000 !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin-bottom: 0 !important;
+}
+
+.analysis-dashboard-v2 .subContWrap.left-closed .btnCollapse {
+    width: auto !important;
+    height: 24px !important;
+    min-width: 32px !important;
+    padding: 0 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border: 1px solid #d3d7d5 !important;
+    background: #fff !important;
+    border-radius: 6px !important;
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+.analysis-dashboard-v2 .subContWrap.left-closed .subContR {
+    padding-left: 48px !important;
+    padding-right: 48px !important;
+}
+
+/* Right Panel */
+.analysis-dashboard-v2 .subContR {
+    flex: 1 !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    padding: 24px !important;
+    background: #f8f9fa !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    position: relative;
+}
+
+/* Grid Area */
+.analysis-dashboard-v2 .grid-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+    background: #fff;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    margin-bottom: 25px;
+}
+
+.analysis-dashboard-v2 .grid-area .cmn_grid {
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 0 !important;
+}
+
+/* Tab and Action Button Container */
+.analysis-dashboard-v2 .tab-action-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px !important;
+    gap: 16px;
+    flex-shrink: 0;
+    min-height: 40px;
+}
+
+/* Tabs */
+.analysis-dashboard-v2 .btnBox.tabMenu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 0 !important;
+    flex-wrap: wrap;
+}
+
+.analysis-dashboard-v2 .action-buttons-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.analysis-dashboard-v2 .btnTab {
+    background: #fff !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: 20px !important;
+    padding: 6px 16px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: var(--text-secondary) !important;
+    height: 32px !important;
+    transition: all 0.2s ease;
+}
+
+.analysis-dashboard-v2 .btnTab:hover {
+    background: var(--primary-bg-hover) !important;
+    color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+}
+
+.analysis-dashboard-v2 .btnTab.on {
+    background: var(--primary-color) !important;
+    color: #fff !important;
+    border-color: var(--primary-color) !important;
+}
+
+/* Grid Layout */
+.analysis-dashboard-v2 .gridWithPanel {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+    min-height: 0;
+}
+
+/* Meta2 */
+.analysis-dashboard-v2 .meta2 {
+    text-align: right;
+    margin-bottom: 8px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding-right: 16px;
+}
+
+.analysis-dashboard-v2 .meta2 .row1 {
+    margin-bottom: 4px;
+}
+
+.analysis-dashboard-v2 .meta2 b {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* Lv3 Panel */
+.analysis-dashboard-v2 .lv3-panel-wrap {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 0;
+    z-index: 900;
+    pointer-events: none;
+    overflow: visible;
+}
+
+.analysis-dashboard-v2 .lv3-side-panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 320px;
+    height: 100%;
+    background: #fff;
+    border-left: 1px solid var(--border-color);
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    transform: translateX(calc(100% + 24px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    pointer-events: auto;
+    z-index: 901;
+    overflow: hidden;
+}
+
+.analysis-dashboard-v2 .lv3-side-panel.open {
+    transform: translateX(-24px);
+}
+
+/* Lv3 Panel Toggle Button */
+.analysis-dashboard-v2 .lv3-panel-toggle {
+    position: absolute;
+    left: -48px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+    background: #fff;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+    z-index: 902;
+}
+
+.analysis-dashboard-v2 .lv3-panel-toggle:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.analysis-dashboard-v2 .lv3-panel-toggle.open {
+    transform: translate(-344px, -50%);
+}
+
+.analysis-dashboard-v2 .lv3-panel-toggle::before {
+    content: '';
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid var(--text-secondary);
+    border-left: 2px solid var(--text-secondary);
+    transform: rotate(-45deg);
+    margin-left: 4px;
+    transition: all 0.2s ease;
+}
+
+.analysis-dashboard-v2 .lv3-panel-toggle:hover::before {
+    border-color: #fff;
+}
+
+.analysis-dashboard-v2 .lv3-panel-toggle.open::before {
+    transform: rotate(135deg);
+    margin-left: -4px;
+}
