@@ -1,4 +1,4 @@
-@charset "utf-8";
+﻿@charset "utf-8";
 @import "reset.css";
 
 :root {
@@ -4476,7 +4476,7 @@ footer {
     margin-bottom: 0;
 }
 
-/* 제목의 i 아이콘 */
+/* ?쒕ぉ??i ?꾩씠肄?*/
 .tooltip-title::before {
     content: "";
     display: inline-block;
@@ -5293,8 +5293,8 @@ footer {
     padding: 0 8px 0 16px;
 }
 
-/* Excel 탭 스타일 */
 .excel-upload-container {
+    top: 10px;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -5419,7 +5419,7 @@ footer {
     color: #fff;
 }
 
-/* 가이드 모달 스타일 */
+/* 媛?대뱶 紐⑤떖 ?ㅽ???*/
 .excel-guide-modal {
     position: fixed;
     top: 0;
@@ -5566,8 +5566,10 @@ footer {
 .excel-guide-table tbody td:last-child {
     background: #f5f5f5;
 }
+
 /* Excel Tab Styles - Re-added */
 .excel-upload-container {
+    top: 10px;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -5714,6 +5716,12 @@ footer {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
+    max-height: 50px;
+    /* 理쒕? ?믪씠 ?쒗븳 */
+    overflow-y: auto;
+    /* ?몃줈 ?ㅽ겕濡??앹꽦 */
+    align-content: flex-start;
+    /* ?꾩씠?쒕뱾???꾩そ遺??梨꾩썙吏?꾨줉 */
 }
 
 .excel-selected-item {
@@ -5740,4 +5748,3 @@ footer {
     border: none;
     margin-top: 8px;
 }
-
