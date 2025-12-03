@@ -286,104 +286,110 @@ const ProRegisterPopup = (parentProps) => {
 
     return (
       <Fragment>
-        <div id="grid_01">
-          <KendoGrid
-            parentProps={{
-              height: "640px", // 권장: 고정 높이로 스크롤 안정화
-              data: popupGridData,
-              dataItemKey: "__rowKey",
-              selectedState,
-              setSelectedState,
-              selectedField: SELECTED_FIELD,
-              idGetter,
-              sortable: { mode: "multiple", allowUnsort: true },
-              filterable: true,
-              sortChange: ({ sort }) => setSort(sort ?? []),
-              filterChange: ({ filter }) => setFilter(filter ?? undefined),
-              sort,
-              filter,
-              multiSelect: true,
-              linkRowClickToSelection: false,
-              editable: "incell",
-              onItemChange: handleItemChange,
+        <div className="cmn_gird_wrap">
+          <div id="grid_01" className="cmn_grid singlehead">
+            <KendoGrid
+              parentProps={{
+                height: "640px", // 권장: 고정 높이로 스크롤 안정화
+                data: popupGridData,
+                dataItemKey: "__rowKey",
+                selectedState,
+                setSelectedState,
+                selectedField: SELECTED_FIELD,
+                idGetter,
+                sortable: { mode: "multiple", allowUnsort: true },
+                filterable: true,
+                sortChange: ({ sort }) => setSort(sort ?? []),
+                filterChange: ({ filter }) => setFilter(filter ?? undefined),
+                sort,
+                filter,
+                multiSelect: true,
+                linkRowClickToSelection: false,
+                editable: "incell",
+                onItemChange: handleItemChange,
 
-              // checkbox 클릭일 때만 선택 변경 (행 클릭 시 선택 X)
-              onSelectionChange: (e) => {
-                const input = e?.syntheticEvent?.target;
-                if (!input || input.type !== "checkbox") return;
+                // checkbox 클릭일 때만 선택 변경 (행 클릭 시 선택 X)
+                onSelectionChange: (e) => {
+                  const input = e?.syntheticEvent?.target;
+                  if (!input || input.type !== "checkbox") return;
 
-                const { dataItem } = e;
-                if (dataItem.isDuplicate) return; // 중복행 선택 불가
+                  const { dataItem } = e;
+                  if (dataItem.isDuplicate) return; // 중복행 선택 불가
 
-                const key = dataItem.__rowKey;
-                setSelectedState((prev) => {
-                  const prevVal = !!prev[key];
-                  const nextVal = !prevVal;
-                  if (prevVal === nextVal) return prev;
-                  return { ...prev, [key]: nextVal };
-                });
-              },
-
-              // 헤더 전체 선택: 중복행은 제외
-              onHeaderSelectionChange: (e) => {
-                rememberScroll(); // 스크롤 저장
-                const checked = e?.syntheticEvent?.target?.checked;
-                setSelectedState((prev) => {
-                  const next = { ...prev };
-                  popupGridData.forEach((r) => {
-                    if (r.isDuplicate) next[r.__rowKey] = false;
-                    else next[r.__rowKey] = !!checked;
+                  const key = dataItem.__rowKey;
+                  setSelectedState((prev) => {
+                    const prevVal = !!prev[key];
+                    const nextVal = !prevVal;
+                    if (prevVal === nextVal) return prev;
+                    return { ...prev, [key]: nextVal };
                   });
-                  return next;
-                });
-              },
+                },
 
-              // 행 클릭은 편집만 수행 (선택과 분리)
-              onRowClick: (e) => {
-                e.preventDefault?.();
-                e.syntheticEvent?.stopPropagation?.();
-                const { dataItem } = e;
-                rememberScroll();
-                setEditingKey(dataItem.__rowKey);
-              },
+                // 헤더 전체 선택: 중복행은 제외
+                onHeaderSelectionChange: (e) => {
+                  rememberScroll(); // 스크롤 저장
+                  const checked = e?.syntheticEvent?.target?.checked;
+                  setSelectedState((prev) => {
+                    const next = { ...prev };
+                    popupGridData.forEach((r) => {
+                      if (r.isDuplicate) next[r.__rowKey] = false;
+                      else next[r.__rowKey] = !!checked;
+                    });
+                    return next;
+                  });
+                },
 
-              // 중복행: 회색 처리 + 완전 클릭 차단 (체크박스 포함)
-              rowRender: (row, rowProps) => {
-                const item = rowProps.dataItem;
-                if (!item?.isDuplicate) return row;
-                const rowStyle = {
-                  backgroundColor: "#f5f5f5",
-                  color: "#999",
-                  pointerEvents: "none",
-                };
-                return cloneElement(row, { style: rowStyle });
-              },
-            }}
-          >
-            {columns
-              .filter((c) => c.show !== false)
-              .map((c) => (
-                <Column
-                  key={c.field}
-                  field={c.field}
-                  title={c.title}
-                  columnMenu={columnMenu}
-                  editable={c.field === "question"}
-                  // question만 커스텀 셀(포커스 안정) / column은 '중복' 배지
-                  cell={
-                    c.field === "question"
-                      ? QuestionCell
-                      : c.field === "column"
-                        ? ColumnCell
-                        : undefined
-                  }
-                />
-              ))}
-          </KendoGrid>
+                // 행 클릭은 편집만 수행 (선택과 분리)
+                onRowClick: (e) => {
+                  e.preventDefault?.();
+                  e.syntheticEvent?.stopPropagation?.();
+                  const { dataItem } = e;
+                  rememberScroll();
+                  setEditingKey(dataItem.__rowKey);
+                },
+
+                // 중복행: 회색 처리 + 완전 클릭 차단 (체크박스 포함)
+                rowRender: (row, rowProps) => {
+                  const item = rowProps.dataItem;
+                  if (!item?.isDuplicate) return row;
+                  const rowStyle = {
+                    backgroundColor: "#f5f5f5",
+                    color: "#999",
+                    pointerEvents: "none",
+                  };
+                  return cloneElement(row, { style: rowStyle });
+                },
+              }}
+            >
+              {columns
+                .filter((c) => c.show !== false)
+                .map((c) => (
+                  <Column
+                    key={c.field}
+                    field={c.field}
+                    title={c.title}
+                    columnMenu={columnMenu}
+                    editable={c.field === "question"}
+                    // question만 커스텀 셀(포커스 안정) / column은 '중복' 배지
+                    cell={
+                      c.field === "question"
+                        ? QuestionCell
+                        : c.field === "column"
+                          ? ColumnCell
+                          : undefined
+                    }
+                  />
+                ))}
+            </KendoGrid>
+          </div>
         </div>
 
         <div style={{ display: "flex", justifyContent: "flex-end", padding: "18px 12px" }}>
-          <Button themeColor="primary" onClick={handleSelectConfirm}>
+          <Button
+            themeColor="primary"
+            onClick={handleSelectConfirm}
+            style={{ padding: "10px 30px", fontSize: "15px", fontWeight: "600" }}
+          >
             선택 완료
           </Button>
         </div>
