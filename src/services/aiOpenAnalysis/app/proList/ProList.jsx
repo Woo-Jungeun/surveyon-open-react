@@ -11,7 +11,7 @@ import { ProListApi } from "@/services/aiOpenAnalysis/app/proList/ProListApi.js"
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";    // 필터문항설정 팝업
-import "@/services/aiOpenAnalysis/app/proList/ProList.css";
+
 import { modalContext } from "@/components/common/Modal.jsx";
 import moment from "moment";
 

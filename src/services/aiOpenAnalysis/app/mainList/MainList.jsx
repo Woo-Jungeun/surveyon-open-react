@@ -8,6 +8,7 @@ import { MainListApi } from "@/services/aiOpenAnalysis/app/mainList/MainListApi.
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 
+
 /**
  * 프로젝트 목록
  *
@@ -76,7 +77,7 @@ const MainList = () => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
         return (
             <Fragment>
-                <article className="subTitWrap">
+                <article className="subTitWrap pro-list-header">
                     <div className="subTit">
                         <h2 className="titTxt">
                             프로젝트 목록
@@ -102,10 +103,10 @@ const MainList = () => {
                 <article className="subContWrap">
                     <div className="subCont">
                         <div className="cmn_gird_wrap">
-                            <div id="grid_01" className="cmn_grid" style={{ cursor: "pointer" }} >
+                            <div id="grid_01" className="cmn_grid singlehead" style={{ cursor: "pointer" }} >
                                 <KendoGrid
                                     parentProps={{
-                                        height: "750px",
+                                        height: "calc(100vh - 170px)",
                                         data: dataState?.data,       // props에서 직접 전달
                                         dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                                         selectedState,
