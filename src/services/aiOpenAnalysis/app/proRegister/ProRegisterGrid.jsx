@@ -61,7 +61,7 @@ const ProRegisterGrid = ({ onDataLength }) => {
     return (
       <Fragment>
         <div className="cmn_gird_wrap">
-          <div id="grid_01" className="cmn_grid">
+          <div id="grid_01" className="cmn_grid singlehead">
             <KendoGrid
               parentProps={{
                 height: "400px",

@@ -42,7 +42,7 @@ const ProRegisterTab1 = (props) => {
             const res = await proRegisterMutation.mutateAsync(payload);
             if (res?.success === "777") {
                 modal.showConfirm("알림", "문항이 등록되었습니다.", {
-                    btns: [{ title: "확인", click: () => navigate("/ai_open_analysis/ai_open_analysis/pro_list") }],   ////문항 목록 페이지로 이동
+                    btns: [{ title: "확인", click: () => navigate("/ai_open_analysis/ai_open_analysis/pro_list") }],
                 });
             } else {
                 modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
@@ -57,64 +57,82 @@ const ProRegisterTab1 = (props) => {
     return (
         <Fragment>
             {/* 그리드 */}
-            <ProRegisterGrid data={gridData} setData={setGridData} onDataLength={(cnt) => setHasData(cnt > 0)} />
+            <div style={{ marginBottom: "20px" }}>
+                <ProRegisterGrid data={gridData} setData={setGridData} onDataLength={(cnt) => setHasData(cnt > 0)} />
+            </div>
 
             {/* 정보 */}
             <form onSubmit={handleSubmit}>
-                <div className="popCont">
-                    <div className="popTbl">
-                        <div className="cmn_pop_ipt">
-                            <span style={{ width: "200px" }}>웹프로젝트명</span>
-                            <Input
-                                className="k-input k-input-solid"
-                                value={projectnum || ""}
-                                disabled
-                            />
-                        </div>
-
-                        <div className="cmn_pop_ipt">
-                            <span style={{ width: "200px" }}>조사명</span>
-                            <Input
-                                className="k-input k-input-solid"
-                                value={projectname || ""}
-                                disabled
-                            />
-                        </div>
+                <div style={{
+                    background: "#f8f9fa",
+                    borderRadius: "12px",
+                    padding: "20px",
+                    maxWidth: "600px",
+                    margin: "0 auto"
+                }}>
+                    <div style={{ marginBottom: "16px" }}>
+                        <label style={{
+                            display: "block",
+                            marginBottom: "6px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "#333"
+                        }}>
+                            웹프로젝트명
+                        </label>
+                        <Input
+                            className="k-input k-input-solid"
+                            value={projectnum || ""}
+                            disabled
+                            style={{ width: "100%" }}
+                        />
                     </div>
-                </div>
 
-                <div
-                    className="popBtn"
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center", // 수평 가운데 정렬
-                        justifyContent: "center", // 수직 가운데 정렬
-                        marginTop: "20px",
-                    }}
-                >
-                    <div className="btnWrap" style={{ textAlign: "center" }}>
+                    <div style={{ marginBottom: "20px" }}>
+                        <label style={{
+                            display: "block",
+                            marginBottom: "6px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            color: "#333"
+                        }}>
+                            조사명
+                        </label>
+                        <Input
+                            className="k-input k-input-solid"
+                            value={projectname || ""}
+                            disabled
+                            style={{ width: "100%" }}
+                        />
+                    </div>
+
+                    <div style={{ textAlign: "center" }}>
                         <Button
                             type="submit"
                             className="btnL"
                             themeColor="primary"
                             disabled={loading || !hasData}
+                            style={{
+                                minWidth: "180px",
+                                height: "44px",
+                                fontSize: "15px",
+                                fontWeight: "600"
+                            }}
                         >
-                            등록
+                            {loading ? "등록 중..." : "등록"}
                         </Button>
+
+                        <div style={{
+                            marginTop: "12px",
+                            color: hasData ? "#666" : "#ff4646",
+                            fontSize: "13px",
+                            lineHeight: "1.4"
+                        }}>
+                            {hasData
+                                ? "문항추가, 응답자 데이터 추가를 자동으로 등록합니다."
+                                : "데이터맵이 등록되지 않았습니다. 웹 제작 담당자에게 문의 및 데이터맵을 저장해 주세요."}
+                        </div>
                     </div>
-                </div>
-                <div
-                    style={{
-                        marginTop: "12px",
-                        textAlign: "center",
-                        color: "#555",
-                        fontSize: "14px",
-                    }}
-                >
-                    {hasData
-                        ? "문항추가, 응답자 데이터 추가를 자동으로 등록합니다."
-                        : "데이터맵이 등록되지 않았습니다. 웹 제작 담당자에게 문의 및 데이터맵을 저장해 주세요."}
                 </div>
             </form>
         </Fragment>
