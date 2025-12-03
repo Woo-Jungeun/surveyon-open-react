@@ -108,38 +108,76 @@ const ProEnterTab1 = (props) => {
 
         return (
             <Fragment>
-                <div id="grid_01" className="cmn_grid">
-                    <KendoGrid
-                        parentProps={{
-                            data: dataState?.data,       // props에서 직접 전달
-                            dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
-                            selectedState,
-                            setSelectedState,
-                            selectedField,               //  선택 필드 전달
-                            onRowClick,
-                            idGetter,                     // GridData가 만든 getter 그대로
-                            // useClientProcessing: true,                         // 클라 처리
-                            sortable: { mode: "multiple", allowUnsort: true },
-                            filterable: true,
-                            sort,
-                            filter,
-                            sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
-                            filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
-                            rowRender: (tr, rowProps) => {
-                                // 설문온등록여부가 등록이 아닐 경우 커서 포인터 
-                                return React.cloneElement(tr, {
-                                    ...tr.props,
-                                    style: {
-                                        ...(tr.props.style || {}),
-                                        cursor: rowProps.dataItem?.gubunYN !== "등록" ? "pointer" : "default"
-                                    }
-                                });
-                            }
-                        }}
-                    >
-                        {columns.filter(c => c.show !== false).map((c) => {
-                            if (c.field === "gubunYN") {
-                                // 설문온등록여부 컬럼에만 스타일 적용
+                <div className="cmn_gird_wrap">
+                    <div id="grid_01" className="cmn_grid singlehead">
+                        <KendoGrid
+                            parentProps={{
+                                height: "calc(100vh - 250px)",
+                                data: dataState?.data,       // props에서 직접 전달
+                                dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
+                                selectedState,
+                                setSelectedState,
+                                selectedField,               //  선택 필드 전달
+                                onRowClick,
+                                idGetter,                     // GridData가 만든 getter 그대로
+                                // useClientProcessing: true,                         // 클라 처리
+                                sortable: { mode: "multiple", allowUnsort: true },
+                                filterable: true,
+                                sort,
+                                filter,
+                                sortChange: ({ sort }) => { setSort(sort ?? []); onPrefsChange?.({ sort: sort ?? [] }); },
+                                filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
+                                rowRender: (tr, rowProps) => {
+                                    // 설문온등록여부가 등록이 아닐 경우 커서 포인터 
+                                    return React.cloneElement(tr, {
+                                        ...tr.props,
+                                        style: {
+                                            ...(tr.props.style || {}),
+                                            cursor: rowProps.dataItem?.gubunYN !== "등록" ? "pointer" : "default"
+                                        }
+                                    });
+                                }
+                            }}
+                        >
+                            {columns.filter(c => c.show !== false).map((c) => {
+                                if (c.field === "gubunYN") {
+                                    // 설문온등록여부 컬럼에만 스타일 적용
+                                    return (
+                                        <Column
+                                            key={c.field}
+                                            field={c.field}
+                                            title={c.title}
+                                            width={c.width}
+                                            editable={c.editable}
+                                            columnMenu={columnMenu}
+                                            cell={(props) => {
+                                                const value = props.dataItem[c.field];
+                                                const isNotRegistered = value !== "등록"; // 등록이 아닐 때만 강조
+                                                const cellStyle = isNotRegistered
+                                                    ? {
+                                                        background: "#fff5f5",
+                                                        color: "#c62828",
+                                                        fontWeight: "600",
+                                                        border: "1px solid #ffcdd2",
+                                                        padding: "6px 12px",
+                                                        textAlign: "center",
+                                                        borderRadius: "6px",
+                                                    }
+                                                    : {
+                                                        textAlign: "center",
+                                                        color: "#666",
+                                                    };
+
+                                                return (
+                                                    <td style={cellStyle}>
+                                                        {value || ""}
+                                                    </td>
+                                                );
+                                            }}
+                                        />
+                                    );
+                                }
+                                // 일반 텍스트 컬럼
                                 return (
                                     <Column
                                         key={c.field}
@@ -148,39 +186,11 @@ const ProEnterTab1 = (props) => {
                                         width={c.width}
                                         editable={c.editable}
                                         columnMenu={columnMenu}
-                                        cell={(props) => {
-                                            const value = props.dataItem[c.field];
-                                            const isNotRegistered = value !== "등록"; // 등록이 아닐 때만 강조
-                                            const cellStyle = isNotRegistered
-                                                ? {
-                                                    border: "2px solid #d9534f", // 빨간 테두리
-                                                    padding: "2px 6px",
-                                                    textAlign: "center",
-                                                }
-                                                : { textAlign: "center" };
-
-                                            return (
-                                                <td style={cellStyle}>
-                                                    {value || ""}
-                                                </td>
-                                            );
-                                        }}
                                     />
                                 );
-                            }
-                            // 일반 텍스트 컬럼
-                            return (
-                                <Column
-                                    key={c.field}
-                                    field={c.field}
-                                    title={c.title}
-                                    width={c.width}
-                                    editable={c.editable}
-                                    columnMenu={columnMenu}
-                                />
-                            );
-                        })}
-                    </KendoGrid>
+                            })}
+                        </KendoGrid>
+                    </div>
                 </div>
             </Fragment>
         );

@@ -941,6 +941,9 @@ footer {
     font-weight: normal;
     line-height: 1.53;
     letter-spacing: -0.6px;
+    text-align: left !important;
+    display: block !important;
+    width: 100% !important;
 }
 
 /* sub layout */
@@ -949,7 +952,7 @@ footer {
     padding: 0 20px;
     height: 30px;
     /* border-bottom: 1px solid #d3d7d5; */
-    display: inline-flex;
+    display: flex;
     flex-direction: row-reverse;
     justify-content: start;
 }
@@ -1008,7 +1011,7 @@ footer {
 }
 
 .subContWrap .subCont {
-    height: calc(100vh - 145px);
+    height: calc(100vh - 125px);
     overflow-y: scroll;
 }
 
@@ -2943,6 +2946,7 @@ footer {
 .tabMenu {
     display: inline-flex;
     gap: 8px;
+    margin-bottom: 20px;
 }
 
 .tabMenu .btnTab {
@@ -5258,7 +5262,7 @@ footer {
 }
 
 .pro-list-header .titTxt {
-    font-size: 22px;
+    font-size: 25px;
     font-weight: 700;
     color: #111;
     display: flex;
