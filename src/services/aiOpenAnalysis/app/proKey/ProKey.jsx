@@ -141,66 +141,73 @@ const ProKey = () => {
       <article className="subContWrap">
         <div className="subCont">
           <form onSubmit={handleSubmit}>
-            <div className="popCont">
-              <div className="popTbl">
-                {/* 사용자 */}
-                <div className="cmn_pop_ipt">
-                  <span style={{ width: "200px" }}>사용자</span>
-                  <Input
-                    className="k-input k-input-solid"
-                    value={auth?.user?.userNm || ""}
-                    disabled
-                  />
-                </div>
-
-                {/* API KEY 유형 */}
-                <div className="cmn_pop_ipt">
-                  <span style={{ width: "190px" }}>* API KEY 유형선택
+            <table className="pro-permission-table">
+              <colgroup>
+                <col style={{ width: "180px" }} />
+                <col />
+              </colgroup>
+              <tbody>
+                <tr>
+                  <th>사용자</th>
+                  <td>
+                    <Input
+                      className="k-input k-input-solid"
+                      value={auth?.user?.userNm || ""}
+                      disabled
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th>
+                    <span className="required">*</span> API KEY 유형선택
                     <span
                       className="info-icon"
                       data-tooltip={`API KEY 유형선택|부서나 개인이 등록한 APIKEY가 없을 경우 "회사공용"을 등록하여 사용하기`}
+                      style={{ marginLeft: "5px" }}
                     ></span>
-                  </span>
-                  <DropDownList
-                    data={apiTypeList}
-                    textField="label"
-                    dataItemKey="value"
-                    value={apiTypeList.find((t) => t.value === formData.api_gubun)}
-                    onChange={(e) => handleChange("api_gubun", e.value.value)}
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* API 이름 */}
-                <div className="cmn_pop_ipt">
-                  <span style={{ width: "200px" }}>* API 이름</span>
-                  <Input
-                    className="k-input k-input-solid"
-                    value={formData.api_name}
-                    onChange={(e) => handleChange("api_name", e.value)}
-                    disabled={loading}
-                  />
-                </div>
-
-                {/* API KEY */}
-                <div className="cmn_pop_ipt">
-                  <span style={{ width: "200px" }}>* API KEY</span>
-                  <Input
-                    className="k-input k-input-solid"
-                    value={formData.api_key}
-                    onChange={(e) => handleChange("api_key", e.value)}
-                    disabled={loading}
-                  />
-                </div>
-              </div>
-            </div>
+                  </th>
+                  <td>
+                    <DropDownList
+                      data={apiTypeList}
+                      textField="label"
+                      dataItemKey="value"
+                      value={apiTypeList.find((t) => t.value === formData.api_gubun)}
+                      onChange={(e) => handleChange("api_gubun", e.value.value)}
+                      disabled={loading}
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th><span className="required">*</span> API 이름</th>
+                  <td>
+                    <Input
+                      className="k-input k-input-solid"
+                      value={formData.api_name}
+                      onChange={(e) => handleChange("api_name", e.value)}
+                      disabled={loading}
+                    />
+                  </td>
+                </tr>
+                <tr>
+                  <th><span className="required">*</span> API KEY</th>
+                  <td>
+                    <Input
+                      className="k-input k-input-solid"
+                      value={formData.api_key}
+                      onChange={(e) => handleChange("api_key", e.value)}
+                      disabled={loading}
+                    />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
 
             {/* 등록 버튼 */}
-            <div className="popBtn">
-              <div className="btnWrap">
+            <div className="popBtn" style={{ marginTop: "12px", marginBottom: "0px" }}>
+              <div className="btnWrap" style={{ display: "flex", width: "100%", justifyContent: "flex-end" }}>
                 <Button
                   type="submit"
-                  className="btnL"
+                  className="btnM"
                   themeColor="primary"
                   disabled={loading}
                 >

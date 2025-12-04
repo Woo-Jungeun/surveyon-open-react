@@ -163,10 +163,10 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
   return (
     <Fragment>
       <div className="cmn_gird_wrap">
-        <div id="grid_apiKey" className="cmn_grid">
+        <div id="grid_apiKey" className="cmn_grid singlehead">
           <KendoGrid
             parentProps={{
-              height: "400px",
+              height: "450px",
               data: processedData.data,
               total: processedData.total,
               dataItemKey: DATA_ITEM_KEY,
@@ -178,29 +178,29 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
               filter,
             }}
           >
-          
+
             {columns.filter((c) => c.show !== false).map((c) => {
-               if (c.field === "default_use") {
+              if (c.field === "default_use") {
                 return (
                   <Column
                     key={c.field}
                     field="useyn_id"
                     title={c.title}
                     headerCell={() => (
-                        <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-                          기본 사용설정
-                          <span
-                            className="info-icon"
-                            data-tooltip={` 기본 사용설정|API KEY 여러 개 등록 및 관리가 가능하며,\n"기본 사용설정"된 KEY 기준으로 분석·비용이 청구됩니다.`}
-                          ></span>
-                        </span>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        기본 사용설정
+                        <span
+                          className="info-icon"
+                          data-tooltip={` 기본 사용설정|API KEY 여러 개 등록 및 관리가 가능하며,\n"기본 사용설정"된 KEY 기준으로 분석·비용이 청구됩니다.`}
+                        ></span>
+                      </span>
                     )}
                     width={c.width}
                     columnMenu={undefined}
                     cell={(props) => {
                       const { api_id } = props.dataItem;
                       const checked = selectedApiId === api_id;
-              
+
                       return (
                         <td style={{ textAlign: "center" }}>
                           <input
@@ -219,49 +219,49 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
                   />
                 );
               }
-                if (c.field === "delete") {
-                  // 유형이 "회사"일 경우 삭제 버튼 숨김
-                  return (
-                    <Column
-                      key={c.field}
-                      field="delete"
-                      title={c.title}
-                      width={c.width}
-                      columnMenu={undefined}
-                      cell={(props) => {
-                        const isCompany = props.dataItem.api_gubun === "회사";
-                        return (
-                          <td style={{ textAlign: "center" }}>
-                            {!isCompany && (
-                              <Button
-                                className="btnM"
-                                themeColor="primary"
-                                onClick={() =>
-                                  handleDelete(props.dataItem.no, props.dataItem.api_id, props.dataItem.api_gubun)
-                                }
-                              >
-                                삭제
-                              </Button>
-                            )}
-                          </td>
-                        );
-                      }}
-                    />
-                  );
-                }
-
-                // 기본 컬럼
+              if (c.field === "delete") {
+                // 유형이 "회사"일 경우 삭제 버튼 숨김
                 return (
                   <Column
                     key={c.field}
-                    field={c.field}
+                    field="delete"
                     title={c.title}
                     width={c.width}
-                    editable={c.editable}
-                    columnMenu={columnMenu}
+                    columnMenu={undefined}
+                    cell={(props) => {
+                      const isCompany = props.dataItem.api_gubun === "회사";
+                      return (
+                        <td style={{ textAlign: "center" }}>
+                          {!isCompany && (
+                            <Button
+                              className="btnM"
+                              themeColor="primary"
+                              onClick={() =>
+                                handleDelete(props.dataItem.no, props.dataItem.api_id, props.dataItem.api_gubun)
+                              }
+                            >
+                              삭제
+                            </Button>
+                          )}
+                        </td>
+                      );
+                    }}
                   />
                 );
-              })}
+              }
+
+              // 기본 컬럼
+              return (
+                <Column
+                  key={c.field}
+                  field={c.field}
+                  title={c.title}
+                  width={c.width}
+                  editable={c.editable}
+                  columnMenu={columnMenu}
+                />
+              );
+            })}
           </KendoGrid>
         </div>
       </div>
