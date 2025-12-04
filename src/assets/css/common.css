@@ -5606,3 +5606,29 @@ footer {
 .infoTitRow .btnMini {
     margin: 0 !important;
 }
+/* Fix scroll area for grid */
+.subContWrap {
+    height: calc(100vh - 60px) !important;
+    overflow: hidden !important;
+}
+
+.subCont.subContR {
+    height: 100% !important;
+    overflow: auto !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.cmn_grid {
+    height: 100% !important;
+    overflow: hidden !important;
+}
+
+.cmn_grid .k-grid {
+    height: 100% !important;
+}
+
+.cmn_grid .k-grid-content {
+    max-height: none !important;
+    overflow-y: auto !important;
+}
