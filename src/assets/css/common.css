@@ -4051,7 +4051,7 @@ footer {
 }
 
 .resultBox {
-    height: 215px;
+    height: 175px;
     border: 1px solid #111;
     background: #000;
     color: #0f0;
@@ -5503,4 +5503,17 @@ footer {
     width: 100%;
     max-width: 100%;
     /* 꽉 차게 */
+}
+
+.infoTitRow+.infoList {
+    padding-top: 16px;
+}
+
+/* Reduce spacing between inputs and buttons in left panel */
+.leftInfo .btnWrap {
+    margin-top: 12px;
+}
+
+.leftInfo .cmn_pop_ipt:last-of-type {
+    margin-bottom: 0;
 }
