@@ -4375,11 +4375,8 @@ footer {
 }
 
 .dd-item:hover {
-    background: rgba(0, 0, 0, 0.06);
-}
-
-.dd-item.only {
-    justify-content: flex-start;
+    background: #fff3e0 !important;
+    color: #ff8024 !important;
 }
 
 .dd-icon {

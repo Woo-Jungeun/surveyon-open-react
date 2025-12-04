@@ -34,7 +34,7 @@ const MenuBar = () => {
   const userAuth = auth?.user?.userAuth || "";
   const userGroup = auth?.user?.userGroup || "";
   const roleSource = userAuth || userGroup; //권한 없으면 그룹으로 체크 
-  const manage = ["고객", "일반"].some(role =>roleSource.includes(role));
+  const manage = ["고객", "일반"].some(role => roleSource.includes(role));
 
   const modal = useContext(modalContext);
   const navigate = useNavigate();
@@ -97,10 +97,35 @@ const MenuBar = () => {
     </svg>
   );
 
-  // 유저(사람) 아이콘 -todo 임시
+  // 유저(사람) 아이콘 (SVG)
   const UserIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0 2c-5 0-9 2.5-9 5.5V21h18v-1.5C21 16.5 17 14 12 14Z" />
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+  );
+
+  // 사용자 설정 아이콘 (SVG)
+  const UserSettingIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+      <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+  );
+
+  // API 설정 아이콘 (SVG)
+  const ApiSettingIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path>
+    </svg>
+  );
+
+  // 로그아웃 아이콘 (SVG)
+  const LogoutIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+      <polyline points="16 17 21 12 16 7"></polyline>
+      <line x1="21" y1="12" x2="9" y2="12"></line>
     </svg>
   );
   return (
@@ -176,7 +201,7 @@ const MenuBar = () => {
                             navigate('/ai_open_analysis/pro_permission');
                           }}
                         >
-                          <span className="dd-icon">👤</span>
+                          <span className="dd-icon"><UserSettingIcon /></span>
                           <span>사용자 설정</span>
                         </button>
                       )}
@@ -193,7 +218,7 @@ const MenuBar = () => {
                         navigate('/ai_open_analysis/pro_key');
                       }}
                     >
-                      <span className="dd-icon">🔑</span>
+                      <span className="dd-icon"><ApiSettingIcon /></span>
                       <span>API 설정</span>
                     </button>
                   )}
@@ -222,7 +247,7 @@ const MenuBar = () => {
             {userOpen && (
               <div className="dropdown-card user-card">
                 <button type="button" className="dd-item only" onClick={doLogout}>
-                  <span className="dd-icon">↪</span>
+                  <span className="dd-icon"><LogoutIcon /></span>
                   <span>로그아웃</span>
                 </button>
               </div>
