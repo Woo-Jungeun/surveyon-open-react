@@ -4051,7 +4051,7 @@ footer {
 }
 
 .resultBox {
-    height: 175px;
+    height: 200px;
     border: 1px solid #111;
     background: #000;
     color: #0f0;
@@ -5249,11 +5249,6 @@ footer {
     cursor: not-allowed;
 }
 
-/* Page Title Area (Common) */
-.subTitWrap {
-    margin: 16px 0;
-}
-
 .pro-list-header .subTit {
     display: flex;
     align-items: center;
@@ -5606,6 +5601,7 @@ footer {
 .infoTitRow .btnMini {
     margin: 0 !important;
 }
+
 /* Fix scroll area for grid */
 .subContWrap {
     height: calc(100vh - 60px) !important;
