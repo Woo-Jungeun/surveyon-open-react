@@ -7,6 +7,7 @@ import { ProPermissionApi } from "@/services/aiOpenAnalysis/app/proPermission/Pr
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { process } from "@progress/kendo-data-query";
+
 /**
  *  사용자 설정 > 그리드
  *
@@ -65,6 +66,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
       onSortChange={(e) => setSort(e ?? [])} // sortArr는 배열 형태
     />
   );
+
   const handleDelete = async (id) => {
     try {
       modal.showConfirm("알림", "선택한 사용자를 삭제하시겠습니까?", {
@@ -106,7 +108,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
   return (
     <Fragment>
       <div className="cmn_gird_wrap">
-        <div id="grid" className="cmn_grid">
+        <div id="grid" className="cmn_grid singlehead">
           <KendoGrid
             parentProps={{
               height: "400px",
