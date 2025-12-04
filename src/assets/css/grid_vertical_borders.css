@@ -1,0 +1,20 @@
+/* Grid Header Vertical Separators */
+.cmn_grid.singlehead .k-grid-header .k-header {
+    border-right: 1px solid #e0e0e0;
+}
+
+.cmn_grid.multihead .k-grid-header .k-header:last-child,
+.cmn_grid.singlehead .k-grid-header .k-header:last-child {
+    border-right: none;
+}
+
+/* Grid Body Vertical Separators (Optional) */
+.cmn_grid.multihead .k-grid-content td,
+.cmn_grid.singlehead .k-grid-content td {
+    border-right: 1px solid #f0f0f0;
+}
+
+.cmn_grid.multihead .k-grid-content td:last-child,
+.cmn_grid.singlehead .k-grid-content td:last-child {
+    border-right: none;
+}
