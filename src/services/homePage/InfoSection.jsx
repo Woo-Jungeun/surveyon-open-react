@@ -31,7 +31,7 @@ const InfoSection = () => {
           title: "로그아웃",
           click: async () => {
             try {
-              dispatch(logout()); 
+              dispatch(logout());
               await persistor.purge();
               removeCookie("TOKEN", { path: "/" });
               sessionStorage.setItem("projectnum", "");
@@ -39,7 +39,7 @@ const InfoSection = () => {
               sessionStorage.setItem("servername", "");
               sessionStorage.setItem("projectpof", "");
               navigate("/");
-       
+
             } catch {
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
             }
@@ -70,7 +70,7 @@ const InfoSection = () => {
           <span className="hp-logo-text">설문온</span>
         </div>
 
-     
+
         {/* ▣ 로그인 여부에 따른 분기 */}
         {!isLoggedIn ? (
           <button className="hp-login-btn" onClick={() => navigate("/login")}>
@@ -186,8 +186,8 @@ const InfoSection = () => {
           </div>
 
           <div className="hp-hero-buttons">
-            <button className="hp-btn-primary" onClick={() => navigate("/login")}>시작하기</button>
-            <button className="hp-btn-outline">더 알아보기</button>
+            {/* <button className="hp-btn-primary" onClick={() => navigate("/login")}>시작하기</button>
+            <button className="hp-btn-outline">더 알아보기</button> */}
           </div>
         </div>
 
