@@ -291,7 +291,7 @@ const ProPermission = () => {
                   </td>
                 </tr>
                 <tr>
-                  <th><span className="required">*</span> POF</th>
+                  <th>POF <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                   <td>
                     <Input
                       className="k-input k-input-solid"
@@ -302,7 +302,7 @@ const ProPermission = () => {
                   </td>
                 </tr>
                 <tr>
-                  <th><span className="required">*</span> 권한</th>
+                  <th>권한 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                   <td>
                     <DropDownList
                       data={[
@@ -324,7 +324,7 @@ const ProPermission = () => {
                 {["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun) ? (
                   <>
                     <tr>
-                      <th><span className="required">*</span> 고객명</th>
+                      <th>고객명 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                       <td>
                         <Input
                           className="k-input k-input-solid"
@@ -335,7 +335,7 @@ const ProPermission = () => {
                       </td>
                     </tr>
                     <tr>
-                      <th><span className="required">*</span> 고객 이메일</th>
+                      <th>고객 이메일 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                       <td>
                         <Input
                           className="k-input k-input-solid"
@@ -346,7 +346,7 @@ const ProPermission = () => {
                       </td>
                     </tr>
                     <tr>
-                      <th><span className="required">*</span> 고객 비밀번호</th>
+                      <th>고객 비밀번호 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                       <td>
                         <Input
                           type="password"
@@ -358,7 +358,7 @@ const ProPermission = () => {
                       </td>
                     </tr>
                     <tr>
-                      <th><span className="required">*</span> 만료일자</th>
+                      <th>만료일자 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                       <td>
                         <div style={{ width: "200px" }}>
                           <DatePicker
@@ -377,7 +377,7 @@ const ProPermission = () => {
                 ) : (
                   /* 고객/일반 외 → 작업자 이름 */
                   <tr>
-                    <th><span className="required">*</span> 작업자</th>
+                    <th>작업자 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                     <td>
                       <DropDownList
                         data={filteredUsers}

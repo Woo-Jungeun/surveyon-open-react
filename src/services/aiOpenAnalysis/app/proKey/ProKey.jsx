@@ -159,7 +159,7 @@ const ProKey = () => {
                 </tr>
                 <tr>
                   <th>
-                    <span className="required">*</span> API KEY 유형선택
+                    API KEY 유형선택 <span className="required" style={{ color: "#ff5252" }}>*</span>
                     <span
                       className="info-icon"
                       data-tooltip={`API KEY 유형선택|부서나 개인이 등록한 APIKEY가 없을 경우 "회사공용"을 등록하여 사용하기`}
@@ -178,7 +178,7 @@ const ProKey = () => {
                   </td>
                 </tr>
                 <tr>
-                  <th><span className="required">*</span> API 이름</th>
+                  <th>API 이름 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                   <td>
                     <Input
                       className="k-input k-input-solid"
@@ -189,7 +189,7 @@ const ProKey = () => {
                   </td>
                 </tr>
                 <tr>
-                  <th><span className="required">*</span> API KEY</th>
+                  <th>API KEY <span className="required" style={{ color: "#ff5252" }}>*</span></th>
                   <td>
                     <Input
                       className="k-input k-input-solid"
