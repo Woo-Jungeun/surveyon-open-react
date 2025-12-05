@@ -80,6 +80,11 @@ const MenuSection = () => {
         <p className="hp-menu-desc">
           설문온의 강력한 5가지 핵심 기능을 경험해보세요
         </p>
+        {!isLoggedIn && (
+          <p className="hp-menu-desc" style={{ color: "#FF5252", marginTop: "8px", fontWeight: "500" }}>
+            * 로그인 후 이용 가능합니다.
+          </p>
+        )}
       </div>
 
       <div className="hp-menu-grid">
@@ -111,6 +116,8 @@ const MenuSection = () => {
 
               <h3 className="hp-menu-card-title">{item.title}</h3>
               <p className="hp-menu-card-desc">{item.description}</p>
+
+
 
               <button
                 className={`hp-menu-card-btn ${!isLoggedIn ? "disabled" : ""}`}
