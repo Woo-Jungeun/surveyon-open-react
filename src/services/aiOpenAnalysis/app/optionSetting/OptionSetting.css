@@ -1,6 +1,10 @@
 /* 행 강조 (일반 클릭 / Kendo selected) */
+:root {
+  --grid-hl: var(--primary-bg-selected);
+}
+
 #grid_01 .k-table-tbody tr.row-active,
-#grid_01 .k-table-tbody tr.k-selected {
+#grid_01 .k-table-tbody tr.lv3-row-selected {
   background: var(--grid-hl) !important;
 }
 
