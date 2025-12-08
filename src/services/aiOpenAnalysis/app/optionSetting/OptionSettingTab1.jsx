@@ -2,6 +2,7 @@ import React, { memo, Fragment, useEffect, useState, useRef, useCallback, useMem
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
+import { process } from "@progress/kendo-data-query";
 import { OptionSettingApi } from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingApi.js";
 import { Button } from "@progress/kendo-react-buttons";
 import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
@@ -248,20 +249,32 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const [skip, setSkip] = useState(0);
         const take = 500;
 
-        // 전체 데이터에 프록시 추가 (정렬/필터는 전체 데이터에 적용)
+        // 전체 데이터에 프록시 추가
         const { dataWithProxies, proxyField } = useMemo(
             () => addSortProxies(dataState?.data || []),
             [dataState?.data]
         );
 
-        // 정렬/필터 적용 후 현재 페이지 데이터만 슬라이싱
-        const paginatedData = useMemo(() => {
-            return dataWithProxies.slice(skip, skip + take);
-        }, [dataWithProxies, skip, take]);
         const mappedSort = useMemo(
             () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
             [sort, proxyField]
         );
+
+        // 수동으로 process() 사용해서 정렬/필터 적용 (전체 데이터 기준)
+        const processedResult = useMemo(() => {
+            return process(dataWithProxies, {
+                sort: mappedSort,
+                filter: filter
+            });
+        }, [dataWithProxies, mappedSort, filter]);
+
+        // 필터/정렬 적용된 전체 데이터
+        const filteredSortedData = processedResult.data;
+
+        // 현재 페이지 데이터만 슬라이싱
+        const paginatedData = useMemo(() => {
+            return filteredSortedData.slice(skip, skip + take);
+        }, [filteredSortedData, skip, take]);
         const rememberScroll = useCallback(() => {
             const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
             if (grid) {
@@ -1060,8 +1073,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         parentProps={{
                             data: paginatedData,
                             onProcessedDataUpdate: (arr) => {
-                                setProcessedMirror(arr);
-                                if (arr && arr.length > 0) {
+                                // Grid의 처리 결과 대신 우리가 처리한 데이터 사용
+                                setProcessedMirror(filteredSortedData);
+                                if (filteredSortedData && filteredSortedData.length > 0) {
                                     // Kendo가 실제 화면 데이터 계산 완료 → 로딩 닫기
                                     loadingSpinner.hide();
                                 }
@@ -1091,7 +1105,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             },
                             pageSize: 500,
                             skip: skip,
-                            total: dataState?.data?.length || 0,
+                            total: filteredSortedData.length,
                             onPageChange: (e) => {
                                 setSkip(e.page.skip);
                             },
