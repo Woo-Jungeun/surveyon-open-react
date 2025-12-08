@@ -1,4 +1,3 @@
-/* 행 강조 (일반 클릭 / Kendo selected) */
 :root {
   --grid-hl: #FFF0E0;
 }
@@ -244,7 +243,180 @@
   white-space: nowrap;
 }
 
-/*분석 결과창*/
+.resultBox {
+  height: 320px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  background: #000;
+  color: var(--primary-border-light);
+  padding: 12px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+/* �???50:50 고정 */
+.two-grid-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 16px;
+  align-items: start;
+}
+
+.two-grid-layout .panel {
+  min-width: 0;
+}
+
+@media (max-width: 1200px) {
+  .two-grid-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.subTit.subTit--with-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.subTit.subTit--with-actions .actions {
+  display: flex;
+  gap: 8px;
+}
+
+.option-setting-layout {
+  display: flex;
+  align-items: flex-start;
+}
+
+.grid-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.lv3-panel-header {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: #fafafa;
+}
+
+.lv3-panel-body {
+  padding: 6px;
+  overflow-y: auto;
+  max-height: calc(100% - 80px);
+}
+
+.lv3-search {
+  flex: 1;
+  border: 1px solid #ccc;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.lv3-panel-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.lv3-panel-item {
+  padding: 8px 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.lv3-panel-item:hover {
+  background: var(--primary-bg-hover);
+}
+
+.lv3-panel-item .code {
+  color: #888;
+  font-size: 12px;
+}
+
+.lv3-empty {
+  text-align: center;
+  color: #aaa;
+  margin-top: 20px;
+  font-size: 13px;
+}
+
+/* .subCont.subContR {
+  display: block;     
+  overflow: visible;    
+} */
+
+.gridWithPanel {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gridWithPanel .grid-area {
+  flex: 1;
+  overflow: auto;
+  min-width: 0;
+}
+
+.lv3-panel-wrap {
+  position: relative;
+}
+
+.lv3-side-panel {
+  position: fixed;
+  top: 100px;
+  right: 0;
+  height: calc(100% - 100px);
+  width: 280px;
+  background: #fff;
+  border-left: 1px solid #ddd;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  z-index: 100;
+  border-radius: 8px 0 0 8px;
+  transform: translateX(100%);
+  transition: transform 0.25s ease-out;
+  will-change: transform;
+}
+
+.lv3-side-panel.open {
+  transform: translateX(0);
+}
+
+.lv3-panel-toggle {
+  position: fixed;
+  top: 110px;
+  width: 24px;
+  height: 40px;
+  background: #eee;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  right: 0;
+  transition: transform 0.25s ease-out;
+  will-change: transform;
+}
+
+.lv3-side-panel.open+.lv3-panel-toggle {
+  transform: translateX(-280px);
+}
+
+#grid_01.is-dragging .k-grid-table tr.drag-highlight {
+  background-color: var(--primary-bg-hover);
+}
+
+/*분석 결과�?/
 .resultBox {
   height: 320px;
   overflow-y: auto;
@@ -446,4 +618,173 @@
 
 #grid_01 .k-grid-table tr {
   height: 38px;
+}
+
+#grid_01 .k-pager {
+  padding: 8px 20px 35px 20px !important;
+  background: #fafafa !important;
+  border-top: 2px solid #e0e0e0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+}
+
+#grid_01 .k-pager .k-pager-numbers {
+  display: flex !important;
+  gap: 8px !important;
+}
+
+#grid_01 .k-pager .k-button,
+#grid_01 .k-pager .k-link {
+  min-width: 36px !important;
+  height: 36px !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+#grid_01 .k-pager .k-button:hover,
+#grid_01 .k-pager .k-link:hover {
+  background: #ff7f2a !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
+}
+
+#grid_01 .k-pager .k-selected {
+  background: #ff6b00 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+#grid_01 .k-pager .k-pager-info {
+  font-size: 14px !important;
+  color: #666 !important;
+  font-weight: 500 !important;
+  margin: 0 16px !important;
+}
+
+#grid_01 .k-pager .k-button:disabled {
+  opacity: 0.4 !important;
+  cursor: not-allowed !important;
+}
+
+#grid_01 .k-pager .k-button {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+#grid_01 .k-pager .k-button:not(.k-selected),
+#grid_01 .k-pager .k-link:not(.k-selected) {
+  background: white !important;
+  color: #333 !important;
+  border: 1px solid #ddd !important;
+}
+
+#grid_01 .k-pager .k-button:not(.k-selected):hover,
+#grid_01 .k-pager .k-link:not(.k-selected):hover {
+  background: #ff7f2a !important;
+  color: white !important;
+  border-color: #ff7f2a !important;
+}
+
+#grid_01 .k-pager .k-selected {
+  background: #ff9d5c !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+#grid_01 .k-pager .k-button:not(.k-selected):hover,
+#grid_01 .k-pager .k-link:not(.k-selected):hover {
+  background: #ffb380 !important;
+  color: white !important;
+  border-color: #ffb380 !important;
+}
+
+#grid_01 .k-pager-wrap {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+#grid_01 .k-pager .k-selected {
+  background: #ff8533 !important;
+  color: white !important;
+  font-weight: 600 !important;
+}
+
+#grid_01 .k-pager .k-button:not(.k-selected):hover,
+#grid_01 .k-pager .k-link:not(.k-selected):hover {
+  background: #ffa366 !important;
+  color: white !important;
+  border-color: #ffa366 !important;
+}
+
+#grid_01 .k-pager {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+#grid_01 .k-pager>* {
+  margin: 0 auto !important;
+}
+
+#grid_01 .k-pager {
+  text-align: center !important;
+}
+
+#grid_01 .k-pager>* {
+  margin: 0 auto !important;
+  display: inline-block !important;
+}
+
+#grid_01 .k-pager .k-pager-numbers-wrap {
+  display: inline-flex !important;
+  justify-content: center !important;
+}
+
+#grid_01 .k-pager-wrap,
+#grid_01 .k-pager {
+  width: 100% !important;
+  display: flex !important;
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+#grid_01 .k-pager .k-pager-info {
+  position: absolute !important;
+  right: 20px !important;
+  margin: 0 !important;
+}
+
+#grid_01 .k-pager .k-pager-numbers-wrap {
+  margin: 0 !important;
+}
+
+#grid_01 .k-pager .k-pager-numbers {
+  gap: 8px !important;
+}
+
+#grid_01 .k-pager .k-button,
+#grid_01 .k-pager .k-link {
+  margin: 0 4px !important;
+}
+
+#grid_01 .k-pager .k-button.k-selected,
+#grid_01 .k-pager .k-link.k-selected {
+  background: #ff8533 !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-color: #ff8533 !important;
+}
+
+#grid_01 .k-pager .k-button:not(.k-selected):not(:hover),
+#grid_01 .k-pager .k-link:not(.k-selected):not(:hover) {
+  background: white !important;
+  color: #333 !important;
+  border: 1px solid #ddd !important;
 }

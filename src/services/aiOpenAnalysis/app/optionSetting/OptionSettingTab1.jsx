@@ -243,10 +243,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const reportedInitialAnalysisRef = useRef(false); // 분석값 최초 보고 여부
         const suppressNextClickRef = useRef(false); //Ctrl 토글 후 Kendo 기본 click 한 번 차단
         const [processedMirror, setProcessedMirror] = useState([]);
+
+        // 페이지네이션 state
+        const [skip, setSkip] = useState(0);
+        const take = 500;
+
+        // 전체 데이터에 프록시 추가 (정렬/필터는 전체 데이터에 적용)
         const { dataWithProxies, proxyField } = useMemo(
             () => addSortProxies(dataState?.data || []),
             [dataState?.data]
         );
+
+        // 정렬/필터 적용 후 현재 페이지 데이터만 슬라이싱
+        const paginatedData = useMemo(() => {
+            return dataWithProxies.slice(skip, skip + take);
+        }, [dataWithProxies, skip, take]);
         const mappedSort = useMemo(
             () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
             [sort, proxyField]
@@ -1041,13 +1052,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b>
                     </div>
                 </div>
-                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`}>
+                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`} style={{ marginBottom: '80px' }}>
                     <KendoGrid
                         rowHeight={38}
                         // key={`lv-${lvCode}-${gridEpoch}`}
                         key={`lv-${lvCode}`}
                         parentProps={{
-                            data: dataWithProxies,
+                            data: paginatedData,
                             onProcessedDataUpdate: (arr) => {
                                 setProcessedMirror(arr);
                                 if (arr && arr.length > 0) {
@@ -1063,12 +1074,27 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             setSelectedState: setSelectedStateGuarded,
                             idGetter: (r) => r.__rowKey,
                             multiSelect: true,
+                            selectAllMode: 'page',  // 헤더 체크박스는 현재 페이지만 선택
                             selectionColumnAfterField: anchorField, // 체크박스 선택 컬럼을 원하는 위치에 삽입 
                             linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
                             selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
                             rowRender,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
+                            pageable: {
+                                buttonCount: 5,
+                                info: true,
+                                type: 'numeric',
+                                pageSizes: false,
+                                previousNext: true,
+                                position: 'both'
+                            },
+                            pageSize: 500,
+                            skip: skip,
+                            total: dataState?.data?.length || 0,
+                            onPageChange: (e) => {
+                                setSkip(e.page.skip);
+                            },
                             sort: mappedSort,
                             filter: filter,
                             sortChange: ({ sort: next }) => {

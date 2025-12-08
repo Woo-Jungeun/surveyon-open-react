@@ -62,7 +62,7 @@ const KendoGrid = ({ parentProps, children }) => {
     const dataWithSelection = useMemo(() => {
         if (!selectedField || !dataItemKey) return viewData;
         if (!selectedState) return viewData;
-    
+
         const keys = Object.keys(selectedState);
         // 선택된 key가 하나도 없고, viewData에도 selected true인 애가 없다면 그대로 반환
         if (keys.length === 0) {
@@ -71,20 +71,20 @@ const KendoGrid = ({ parentProps, children }) => {
             );
             if (!hasSelectedRow) return viewData;
         }
-    
+
         const next = (viewData || []).map((item) => {
             const key = idGetter(item);
             const isSelected = !!selectedState[key];
-    
+
             if (item[selectedField] === isSelected) return item;
             return {
                 ...item,
                 [selectedField]: isSelected,
             };
         });
-    
+
         return next;
-    }, [viewData, selectedState, selectedField, idGetter, dataItemKey]);    
+    }, [viewData, selectedState, selectedField, idGetter, dataItemKey]);
 
     // 마지막으로 정렬/필터 적용한 상태 기억
     const sortKeyRef = useRef(JSON.stringify(sort || []));
@@ -344,7 +344,9 @@ const KendoGrid = ({ parentProps, children }) => {
                                     });
                                     return;
                                 }
-                                const next = {};
+                                // 이전 선택 상태 유지하면서 현재 페이지만 업데이트
+                                const next = { ...selectedState };
+                                // viewData는 이미 현재 페이지 데이터만 포함
                                 (viewData || []).forEach((item) => {
                                     const key = idGetter(item);
                                     if (!key) return;
@@ -400,16 +402,25 @@ const KendoGrid = ({ parentProps, children }) => {
             onSortChange={sortChange}          // setSort와 연결됨
             onFilterChange={filterChange}      // setFilter와 연결됨
 
-            pageable={isPage ? { info: false } : false}
-            skip={page?.skip}
-            take={page?.take}
-            total={viewTotal}
-            onPageChange={pageChange}
+
+
+            pageable={parentProps?.pageable ?? (isPage ? { info: false } : false)}
+            skip={parentProps?.skip ?? page?.skip}
+            take={parentProps?.pageSize ?? page?.take}
+            total={parentProps?.total ?? viewTotal}
+            onPageChange={(e) => {
+                if (parentProps?.onPageChange) {
+                    parentProps.onPageChange(e);
+                } else if (pageChange) {
+                    pageChange(e);
+                } else { }
+            }}
 
             rowRender={rowRender}
             dataItemKey={dataItemKey}
             selectedField={selectedField}
             selectable={{ enabled: true, mode: selectMode }}
+            selectAllMode={parentProps?.selectAllMode || 'all'}
             onSelectionChange={onSelectionChange}
             onHeaderSelectionChange={onHeaderSelectionChange}
             editField={editField}
