@@ -1,6 +1,6 @@
 /* 행 강조 (일반 클릭 / Kendo selected) */
 :root {
-  --grid-hl: var(--primary-bg-selected);
+  --grid-hl: #FFF0E0;
 }
 
 #grid_01 .k-table-tbody tr.row-active,
@@ -25,6 +25,37 @@
 #grid_01.lv3-dd-open {
   --kendo-selected-bg: transparent !important;
 }
+
+/* Kendo Grid 기본 선택 색상을 연한 색상으로 통일 */
+#grid_01 .k-table-tbody tr.k-selected,
+#grid_01 .k-table-tbody tr.k-table-row.k-selected,
+#grid_01 .k-table-tbody tr[aria-selected="true"] {
+  background: var(--grid-hl) !important;
+}
+
+#grid_01 .k-table-tbody tr.k-selected>td,
+#grid_01 .k-table-tbody tr.k-table-row.k-selected>td,
+#grid_01 .k-table-tbody tr[aria-selected="true"]>td {
+  background: var(--grid-hl) !important;
+}
+
+/* 모든 행을 연한 색으로 강제 통일 */
+#grid_01 .k-table-tbody tr.row-active,
+#grid_01 .k-table-tbody tr.lv3-row-selected,
+#grid_01 .k-table-tbody tr.k-selected,
+#grid_01 .k-table-tbody tr.k-table-row.k-selected,
+#grid_01 .k-table-tbody tr[aria-selected="true"] {
+  background-color: #FFF0E0 !important;
+}
+
+#grid_01 .k-table-tbody tr.row-active>td,
+#grid_01 .k-table-tbody tr.lv3-row-selected>td,
+#grid_01 .k-table-tbody tr.k-selected>td,
+#grid_01 .k-table-tbody tr[aria-selected="true"]>td {
+  background-color: #FFF0E0 !important;
+}
+
+
 
 /* (선택) 필터 행 숨김 */
 .k-grid .k-filter-row {
