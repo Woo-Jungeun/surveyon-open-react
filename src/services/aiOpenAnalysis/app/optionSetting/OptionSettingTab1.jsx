@@ -260,16 +260,45 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             [sort, proxyField]
         );
 
-        // 수동으로 process() 사용해서 정렬/필터 적용 (전체 데이터 기준)
-        const processedResult = useMemo(() => {
-            return process(dataWithProxies, {
-                sort: mappedSort,
-                filter: filter
-            });
-        }, [dataWithProxies, mappedSort, filter]);
+        // 정렬된 순서를 state로 저장
+        const [sortedKeys, setSortedKeys] = useState([]);
 
-        // 필터/정렬 적용된 전체 데이터
-        const filteredSortedData = processedResult.data;
+        // 이전 정렬/필터 상태를 추적
+        const prevSortRef = useRef(null);
+        const prevFilterRef = useRef(null);
+
+        // 정렬이나 필터가 변경될 때만 재정렬
+        useEffect(() => {
+            // 정렬/필터가 실제로 변경되었는지 확인
+            const sortChanged = JSON.stringify(mappedSort) !== JSON.stringify(prevSortRef.current);
+            const filterChanged = JSON.stringify(filter) !== JSON.stringify(prevFilterRef.current);
+
+            if (sortChanged || filterChanged || sortedKeys.length === 0) {
+                // 정렬/필터가 변경되었거나 초기 상태일 때만 재정렬
+                prevSortRef.current = mappedSort;
+                prevFilterRef.current = filter;
+
+                const result = process(dataWithProxies, {
+                    sort: mappedSort,
+                    filter: filter
+                });
+                setSortedKeys(result.data.map(item => item.__rowKey));
+            }
+        }, [dataWithProxies, mappedSort, filter]); // 모든 의존성 포함
+
+        // 데이터가 변경되면 순서는 유지하고 값만 업데이트
+        const filteredSortedData = useMemo(() => {
+            if (sortedKeys.length === 0) {
+                // 초기 상태: 원본 데이터 사용
+                return dataWithProxies;
+            }
+
+            // 기존 순서대로 새 데이터를 재배열
+            const dataMap = new Map(dataWithProxies.map(item => [item.__rowKey, item]));
+            return sortedKeys
+                .map(key => dataMap.get(key))
+                .filter(item => item !== undefined);
+        }, [dataWithProxies, sortedKeys]);
 
         // 현재 페이지 데이터만 슬라이싱
         const paginatedData = useMemo(() => {
