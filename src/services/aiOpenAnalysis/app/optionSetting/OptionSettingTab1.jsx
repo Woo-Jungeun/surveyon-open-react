@@ -266,25 +266,66 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         // 이전 정렬/필터 상태를 추적
         const prevSortRef = useRef(null);
         const prevFilterRef = useRef(null);
+        const prevDataLengthRef = useRef(0);
 
         // 정렬이나 필터가 변경될 때만 재정렬
         useEffect(() => {
             // 정렬/필터가 실제로 변경되었는지 확인
             const sortChanged = JSON.stringify(mappedSort) !== JSON.stringify(prevSortRef.current);
             const filterChanged = JSON.stringify(filter) !== JSON.stringify(prevFilterRef.current);
+            const dataLengthChanged = dataWithProxies.length !== prevDataLengthRef.current;
 
             if (sortChanged || filterChanged || sortedKeys.length === 0) {
                 // 정렬/필터가 변경되었거나 초기 상태일 때만 재정렬
                 prevSortRef.current = mappedSort;
                 prevFilterRef.current = filter;
+                prevDataLengthRef.current = dataWithProxies.length;
 
                 const result = process(dataWithProxies, {
                     sort: mappedSort,
                     filter: filter
                 });
                 setSortedKeys(result.data.map(item => item.__rowKey));
+            } else if (dataLengthChanged) {
+                // 데이터 개수만 변경 (추가/삭제): 새 행을 올바른 위치에 삽입
+                prevDataLengthRef.current = dataWithProxies.length;
+
+                const currentKeys = new Set(sortedKeys);
+                const newRows = dataWithProxies.filter(item => !currentKeys.has(item.__rowKey));
+
+                if (newRows.length > 0) {
+                    // 새 행들을 dataWithProxies에서의 위치에 맞게 삽입
+                    const newSortedKeys = [...sortedKeys];
+
+                    newRows.forEach(newRow => {
+                        // dataWithProxies에서 새 행의 인덱스 찾기
+                        const newRowIndex = dataWithProxies.findIndex(item => item.__rowKey === newRow.__rowKey);
+
+                        if (newRowIndex > 0) {
+                            // 이전 행의 __rowKey 찾기
+                            const prevRow = dataWithProxies[newRowIndex - 1];
+                            const prevKey = prevRow.__rowKey;
+
+                            // sortedKeys에서 이전 행의 위치 찾기
+                            const insertIndex = newSortedKeys.indexOf(prevKey);
+
+                            if (insertIndex !== -1) {
+                                // 이전 행 바로 다음에 삽입
+                                newSortedKeys.splice(insertIndex + 1, 0, newRow.__rowKey);
+                            } else {
+                                // 이전 행을 찾을 수 없으면 끝에 추가
+                                newSortedKeys.push(newRow.__rowKey);
+                            }
+                        } else {
+                            // 첫 번째 행이면 맨 앞에 추가
+                            newSortedKeys.unshift(newRow.__rowKey);
+                        }
+                    });
+
+                    setSortedKeys(newSortedKeys);
+                }
             }
-        }, [dataWithProxies, mappedSort, filter]); // 모든 의존성 포함
+        }, [dataWithProxies, mappedSort, filter, sortedKeys]); // sortedKeys도 의존성에 추가
 
         // 데이터가 변경되면 순서는 유지하고 값만 업데이트
         const filteredSortedData = useMemo(() => {
@@ -317,7 +358,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (scrollTopRef.current > 0) {
                 grid.scrollTop = scrollTopRef.current;
             }
-        }, [dataState?.data]);
+        }, [paginatedData]); // paginatedData가 변경될 때 스크롤 복원
 
         useEffect(() => {
             const rowsNow = dataState?.data || [];
@@ -1137,6 +1178,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             total: filteredSortedData.length,
                             onPageChange: (e) => {
                                 setSkip(e.page.skip);
+                                setSelectedRowKey(null); // 페이지 변경 시 행 선택 초기화
                             },
                             sort: mappedSort,
                             filter: filter,
