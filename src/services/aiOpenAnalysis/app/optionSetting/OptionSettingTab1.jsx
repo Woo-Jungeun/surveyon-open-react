@@ -391,6 +391,45 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [dataState?.data, hasAllRowKeys]);
 
+        // 드래그 종료 시 소분류 패널 자동 열기
+        const wasDraggingRef = useRef(false);
+
+        useEffect(() => {
+            const handleMouseDown = () => {
+                wasDraggingRef.current = false;
+            };
+
+            const handleMouseMove = () => {
+                if (draggingRef.current) {
+                    wasDraggingRef.current = true;
+                }
+            };
+
+            const handleMouseUp = () => {
+                setTimeout(() => {
+                    // 드래그가 발생했고 선택된 셀이 있으면 패널 열기
+                    if (wasDraggingRef.current && lv3SelKeysRef.current.size > 0) {
+                        const selectedRows = (dataState?.data || []).filter(r => lv3SelKeysRef.current.has(getKey(r)));
+                        if (selectedRows.length > 0) {
+                            rememberScroll(); // 스크롤 위치 저장
+                            const targetCodes = selectedRows.map(r => r.lv123code);
+                            onOpenLv3Panel?.(selectedRows, targetCodes);
+                        }
+                    }
+                    wasDraggingRef.current = false;
+                }, 150); // 드래그 상태 업데이트 대기
+            };
+
+            window.addEventListener('mousedown', handleMouseDown);
+            window.addEventListener('mousemove', handleMouseMove);
+            window.addEventListener('mouseup', handleMouseUp);
+            return () => {
+                window.removeEventListener('mousedown', handleMouseDown);
+                window.removeEventListener('mousemove', handleMouseMove);
+                window.removeEventListener('mouseup', handleMouseUp);
+            };
+        }, [dataState?.data, onOpenLv3Panel]);
+
         // 수정로그 commit 
         const onUnsavedChangeRef = useRef(onUnsavedChange);
         const onHasEditLogChangeRef = useRef(onHasEditLogChange);
@@ -935,6 +974,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         e.stopPropagation();
                         return; // Kendo 기본 클릭(선택 리셋) 방지
                     }
+
+                    // 체크박스, 추가, 삭제 버튼 클릭은 제외
+                    const target = e.target;
+                    const isCheckbox = target.closest('.k-checkbox-cell') ||
+                        target.closest('.k-selectioncheckbox') ||
+                        target.closest('input[type="checkbox"]');
+                    const isButton = target.closest('.btnM');
+
+                    if (!isCheckbox && !isButton) {
+                        // 소분류 패널 자동 열기 (클릭한 행만 사용)
+                        const targetRows = [rowProps.dataItem];
+                        const targetCodes = targetRows.map(r => r.lv123code);
+                        onOpenLv3Panel?.(targetRows, targetCodes);
+                    }
+
                     if (!e.defaultPrevented) trEl.props.onClick?.(e);
                 },
             });
