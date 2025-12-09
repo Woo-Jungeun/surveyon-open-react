@@ -147,7 +147,7 @@ const MenuBar = () => {
         <html>
         <head>
           <meta charset="UTF-8">
-          <title>설문온 메뉴얼</title>
+          <title>설문온 매뉴얼</title>
           <style>
             body {
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -164,8 +164,8 @@ const MenuBar = () => {
           </style>
         </head>
         <body>
-          <h1>설문온 메뉴얼</h1>
-          <p>메뉴얼 내용이 여기에 표시됩니다.</p>
+          <h1>설문온 매뉴얼</h1>
+          <p>매뉴얼 내용이 여기에 표시됩니다.</p>
         </body>
         </html>
       `);
