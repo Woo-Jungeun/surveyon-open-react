@@ -11,7 +11,7 @@ import { DatePicker } from "@progress/kendo-react-dateinputs";
 import moment from "moment";
 
 /**
- * 사용자 설정
+ * 권한 관리
  *
  * @author jewoo
  * @since 2025-10-17<br />
@@ -65,11 +65,11 @@ const ProPermission = () => {
       if (res?.success === "777") {
         setGridData(res?.resultjson || []);
       } else {
-        modal.showErrorAlert("에러", "사용자 설정 목록을 불러오지 못했습니다.");
+        modal.showErrorAlert("에러", "권한 관리 목록을 불러오지 못했습니다.");
       }
 
     } catch (err) {
-      modal.showErrorAlert("에러", "사용자 설정 조회 중 오류가 발생했습니다.");
+      modal.showErrorAlert("에러", "권한 관리 조회 중 오류가 발생했습니다.");
     }
   };
 
@@ -245,19 +245,15 @@ const ProPermission = () => {
 
   return (
     <Fragment>
-      <article className="subTitWrap">
-        <p className="subStep">
-          <span>사용자 설정</span>
-          <span> 프로젝트 권한 등록
+      <article className="subTitWrap pro-list-header">
+        <div className="subTit">
+          <h2 className="titTxt">
+            프로젝트 권한 관리
             <span
               className="info-icon"
-              data-tooltip={`프로젝트 권한 등록|등록된 프로젝트를 기준으로 다른 작업자에게 읽기, 쓰기, 권한을 부여합니다.`}
+              data-tooltip={`프로젝트 권한 관리|등록된 프로젝트를 기준으로 다른 작업자에게 읽기, 쓰기, 권한을 부여합니다.`}
             ></span>
-          </span>
-        </p>
-
-        <div className="subTit">
-          <h2 className="titTxt">프로젝트 권한 등록</h2>
+          </h2>
         </div>
       </article>
 
@@ -440,7 +436,7 @@ const ProPermission = () => {
             </div>
           </form>
 
-          {/* 사용자 설정 목록 */}
+          {/* 권한 관리 목록 */}
           <ProPermissionGrid data={gridData} setData={setGridData} fetchData={fetchData} />
         </div>
       </article>

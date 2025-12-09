@@ -105,7 +105,7 @@ const MenuBar = () => {
     </svg>
   );
 
-  // 사용자 설정 아이콘 (SVG)
+  // 권한 관리 아이콘 (SVG)
   const UserSettingIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -191,7 +191,7 @@ const MenuBar = () => {
                 <div className="dropdown-card apps-card">
                   {(projectnum && projectname) && (
                     <>
-                      {/* 사용자 설정: 일반, 고객만 안보이게 */}
+                      {/* 권한 관리: 일반, 고객만 안보이게(임시) */}
                       {!manage && (
                         <button
                           type="button"
@@ -202,7 +202,7 @@ const MenuBar = () => {
                           }}
                         >
                           <span className="dd-icon"><UserSettingIcon /></span>
-                          <span>사용자 설정</span>
+                          <span>권한 관리</span>
                         </button>
                       )}
                     </>

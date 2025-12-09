@@ -9,7 +9,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { process } from "@progress/kendo-data-query";
 
 /**
- *  사용자 설정 > 그리드
+ *  권한 관리 > 그리드
  *
  * @author jewoo
  * @since 2025-10-02<br />
