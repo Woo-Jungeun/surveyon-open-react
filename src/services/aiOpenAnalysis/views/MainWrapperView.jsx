@@ -17,7 +17,35 @@ const MainWrapperView = (props) => {
             <section>
                 <Outlet />
             </section>
-            <footer>Copyright © Hankook Research all rights reserved.</footer>
+            <footer style={{
+                width: '100%',
+                background: '#ffffff',
+                borderTop: '1px solid rgba(0, 0, 0, 0.08)',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '0 20px'
+            }}>
+                <div style={{
+                    maxWidth: '1280px',
+                    width: '100%',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    color: '#777'
+                }}>
+                    <p style={{ margin: 0 }}>© 2025 설문온 SurveyOn. All rights reserved.</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                        <span style={{
+                            width: '9px',
+                            height: '9px',
+                            background: '#22c55e',
+                            borderRadius: '50%'
+                        }}></span>
+                        시스템 정상 운영중
+                    </div>
+                </div>
+            </footer>
         </Fragment>
     );
 };

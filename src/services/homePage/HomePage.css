@@ -82,11 +82,25 @@
 }
 
 /* Utilities */
-.homepage-container .flex { display: flex; }
-.homepage-container .relative { position: relative; }
-.homepage-container .absolute { position: absolute; }
-.homepage-container .grid { display: grid; }
-.homepage-container .hidden { display: none; }
+.homepage-container .flex {
+  display: flex;
+}
+
+.homepage-container .relative {
+  position: relative;
+}
+
+.homepage-container .absolute {
+  position: absolute;
+}
+
+.homepage-container .grid {
+  display: grid;
+}
+
+.homepage-container .hidden {
+  display: none;
+}
 
 /* Dot pattern 사용되는 부분만 유지 */
 .homepage-container .dot-pattern {
@@ -101,13 +115,11 @@
   height: 650px;
   position: relative;
   padding: 20px 0;
-  background: linear-gradient(
-    145deg,
-    #5A4BFF 0%,
-    #6847F7 40%,
-    #7D3BEF 70%,
-    #9B2FD1 100%
-  );
+  background: linear-gradient(145deg,
+      #5A4BFF 0%,
+      #6847F7 40%,
+      #7D3BEF 70%,
+      #9B2FD1 100%);
   overflow: hidden;
   color: white;
 }
@@ -163,8 +175,8 @@
   gap: 6px;
   padding: 10px 28px;
   border-radius: 10px;
-  background: rgba(255,255,255,0.15);
-  border: 1px solid rgba(255,255,255,0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.4);
   color: white;
   cursor: pointer;
   backdrop-filter: blur(8px);
@@ -172,7 +184,7 @@
 }
 
 .homepage-container .hp-login-btn:hover {
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Hero Inner */
@@ -266,11 +278,12 @@
   padding: 14px 24px;
   border-radius: 10px;
   background: transparent;
-  border: 2px solid rgba(255,255,255,0.4);
+  border: 2px solid rgba(255, 255, 255, 0.4);
   color: white;
   cursor: pointer;
   transition: 0.25s;
 }
+
 /* ============================
    오른쪽 카드 전체 영역
 ============================ */
@@ -292,11 +305,12 @@
   position: absolute;
   width: 270px;
   padding: 22px 26px;
-  background: linear-gradient(
-    135deg,
-    rgba(52, 76, 175, 0.85),   /* 밝은 네이비 (#344CAF) */
-    rgba(94, 78, 199, 0.90)    /* 퍼플/블루(#5E4EC7) */
-  );
+  background: linear-gradient(135deg,
+      rgba(52, 76, 175, 0.85),
+      /* 밝은 네이비 (#344CAF) */
+      rgba(94, 78, 199, 0.90)
+      /* 퍼플/블루(#5E4EC7) */
+    );
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   backdrop-filter: blur(16px);
@@ -330,7 +344,7 @@
 
 .homepage-container .hp-card-sub {
   margin-top: 6px;
-  font-size: 0.75rem; 
+  font-size: 0.75rem;
   opacity: 0.75;
 }
 
@@ -343,6 +357,7 @@
   font-size: 0.82rem;
   opacity: 0.8;
 }
+
 /* AI 텍스트 분석 — 좌측 상단 */
 .homepage-container .hp-card-text {
   top: 60px;
@@ -392,7 +407,7 @@
 
 .homepage-container .hp-chip-tag {
   padding: 6px 13px;
-  background: rgba(255,255,255,0.22);
+  background: rgba(255, 255, 255, 0.22);
   border-radius: 999px;
   font-size: 0.82rem;
   white-space: nowrap;
@@ -404,37 +419,73 @@
   align-items: flex-end;
   gap: 6px;
   margin-top: 14px;
-  height: 26px; /* 전체 높이 */
+  height: 26px;
+  /* 전체 높이 */
 }
 
 /* 막대 그래프 형태 */
 .homepage-container .hp-accuracy-unit {
   width: 10px;
   border-radius: 3px;
-  background: rgba(255,255,255,0.45);
+  background: rgba(255, 255, 255, 0.45);
   transition: height 0.3s ease;
 }
 
 /* 개별 막대 높이 (점점 증가) */
-.homepage-container .hp-accuracy-unit:nth-child(1) { height: 20%; }
-.homepage-container .hp-accuracy-unit:nth-child(2) { height: 30%; }
-.homepage-container .hp-accuracy-unit:nth-child(3) { height: 40%; }
-.homepage-container .hp-accuracy-unit:nth-child(4) { height: 50%; }
-.homepage-container .hp-accuracy-unit:nth-child(5) { height: 60%; }
-.homepage-container .hp-accuracy-unit:nth-child(6) { height: 70%; }
-.homepage-container .hp-accuracy-unit:nth-child(7) { height: 80%; }
-.homepage-container .hp-accuracy-unit:nth-child(8) { height: 90%; }
-.homepage-container .hp-accuracy-unit:nth-child(9) { height: 100%; }
-.homepage-container .hp-accuracy-unit:nth-child(10) { height: 100%; }
-.homepage-container .hp-accuracy-unit:nth-child(11) { height: 100%; }
-.homepage-container .hp-accuracy-unit:nth-child(12) { height: 100%; }
+.homepage-container .hp-accuracy-unit:nth-child(1) {
+  height: 20%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(2) {
+  height: 30%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(3) {
+  height: 40%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(4) {
+  height: 50%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(5) {
+  height: 60%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(6) {
+  height: 70%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(7) {
+  height: 80%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(8) {
+  height: 90%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(9) {
+  height: 100%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(10) {
+  height: 100%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(11) {
+  height: 100%;
+}
+
+.homepage-container .hp-accuracy-unit:nth-child(12) {
+  height: 100%;
+}
 
 /* 감정 분석 바 */
 .homepage-container .hp-progress {
   width: 100%;
   height: 8px;
   margin-top: 12px;
-  background: rgba(255,255,255,0.25);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 8px;
   overflow: hidden;
 }
@@ -451,13 +502,25 @@
   text-align: right;
   opacity: 0.85;
 }
+
 /* ============================
    infoSection Floating Background Circles
 ============================ */
 @keyframes floatSoft {
-  0%   { transform: translateY(0) scale(1); opacity: 0.35; }
-  50%  { transform: translateY(-25px) scale(1.05); opacity: 0.55; }
-  100% { transform: translateY(0) scale(1); opacity: 0.35; }
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 0.35;
+  }
+
+  50% {
+    transform: translateY(-25px) scale(1.05);
+    opacity: 0.55;
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.35;
+  }
 }
 
 .hp-shape {
@@ -469,6 +532,7 @@
   animation: floatSoft 12s ease-in-out infinite;
   z-index: 1;
 }
+
 /* ================================
    Menu Section
 ================================ */
@@ -509,11 +573,11 @@
 .hp-menu-card {
   background: #ffffff;
   border-radius: 20px;
-  border: 1px solid rgba(0,0,0,0.06);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   padding: 26px;
   box-shadow:
-    0 8px 20px rgba(0,0,0,0.04),
-    0 12px 38px rgba(0,0,0,0.06);
+    0 8px 20px rgba(0, 0, 0, 0.04),
+    0 12px 38px rgba(0, 0, 0, 0.06);
   position: relative;
   overflow: hidden;
   transition: 0.3s ease;
@@ -521,17 +585,16 @@
 
 /* Hover 시 부드러운 색상 강조 */
 .hp-menu-card:hover {
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--menu-color) 16%, white 84%),
-    color-mix(in srgb, var(--menu-color) 8%, white 92%)
-  );
+  background: linear-gradient(135deg,
+      color-mix(in srgb, var(--menu-color) 16%, white 84%),
+      color-mix(in srgb, var(--menu-color) 8%, white 92%));
 
   transform: translateY(-6px) scale(1.01);
   box-shadow:
-    0 12px 28px rgba(0,0,0,0.06),
-    0 20px 45px rgba(0,0,0,0.08);
+    0 12px 28px rgba(0, 0, 0, 0.06),
+    0 20px 45px rgba(0, 0, 0, 0.08);
 }
+
 /* Status badge */
 .hp-menu-status {
   position: absolute;
@@ -544,7 +607,7 @@
   border-radius: 40px;
 
   font-weight: 400;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   transition: 0.25s ease;
   opacity: 0.95;
 }
@@ -560,7 +623,7 @@
   margin-bottom: 20px;
 
   /* Glass-like */
-  background: rgba(255,255,255,0.4);
+  background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(8px);
 }
 
@@ -622,7 +685,7 @@
   height: 60px;
   position: relative;
   background: #ffffff;
-  border-top: 1px solid rgba(0,0,0,0.08);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -648,9 +711,10 @@
 .hp-status-dot {
   width: 9px;
   height: 9px;
-  background: #d9534f;
+  background: #22c55e;
   border-radius: 50%;
 }
+
 /* ===============================
    🔹 User Button (로그인 상태)
 =============================== */
@@ -663,8 +727,8 @@
   align-items: center;
   gap: 8px;
 
-  background: rgba(255,255,255,0.25);
-  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.35);
   color: white;
 
   backdrop-filter: blur(14px);
@@ -677,7 +741,7 @@
 }
 
 .hp-user-btn:hover {
-  background: rgba(255,255,255,0.38);
+  background: rgba(255, 255, 255, 0.38);
 }
 
 .hp-user-icon {
@@ -705,8 +769,15 @@
 }
 
 @keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .hp-dd-item {
