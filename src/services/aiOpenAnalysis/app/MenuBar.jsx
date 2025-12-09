@@ -120,6 +120,15 @@ const MenuBar = () => {
     </svg>
   );
 
+  // 매뉴얼 아이콘 (물음표)
+  const ManualIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+    </svg>
+  );
+
   // 로그아웃 아이콘 (SVG)
   const LogoutIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -128,6 +137,41 @@ const MenuBar = () => {
       <line x1="21" y1="12" x2="9" y2="12"></line>
     </svg>
   );
+
+  // 매뉴얼 새창 열기
+  const openManual = () => {
+    const manualWindow = window.open('', 'manual', 'width=1000,height=800,scrollbars=yes');
+    if (manualWindow) {
+      manualWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>설문온 메뉴얼</title>
+          <style>
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              padding: 40px;
+              max-width: 900px;
+              margin: 0 auto;
+              line-height: 1.6;
+            }
+            h1 {
+              color: #333;
+              border-bottom: 2px solid #5A4BFF;
+              padding-bottom: 10px;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>설문온 메뉴얼</h1>
+          <p>메뉴얼 내용이 여기에 표시됩니다.</p>
+        </body>
+        </html>
+      `);
+      manualWindow.document.close();
+    }
+  };
   return (
     <Fragment>
       <header key={location.pathname}>
@@ -222,6 +266,19 @@ const MenuBar = () => {
                       <span>API 설정</span>
                     </button>
                   )}
+
+                  {/* 매뉴얼 */}
+                  <button
+                    type="button"
+                    className="dd-item"
+                    onClick={() => {
+                      setAppsOpen(false);
+                      openManual();
+                    }}
+                  >
+                    <span className="dd-icon"><ManualIcon /></span>
+                    <span>매뉴얼</span>
+                  </button>
                 </div>
               )}
             </div>
