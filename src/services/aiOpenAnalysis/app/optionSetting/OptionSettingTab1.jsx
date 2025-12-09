@@ -360,6 +360,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             }
         }, [paginatedData]); // paginatedData가 변경될 때 스크롤 복원
 
+        // 페이지 변경 시 스크롤 맨 위로 이동
+        useEffect(() => {
+            const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+            if (grid) {
+                grid.scrollTop = 0;
+            }
+        }, [skip]); // skip 값이 변경될 때마다 실행
+
         useEffect(() => {
             const rowsNow = dataState?.data || [];
             if (!rowsNow.length || !hasAllRowKeys) return;
