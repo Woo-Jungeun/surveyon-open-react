@@ -88,47 +88,73 @@ const MenuSection = () => {
       </div>
 
       <div className="hp-menu-grid">
-        {menuItems.map((item) => (
-          <div
-            key={item.id}
-            className="hp-menu-card"
-            style={{ "--menu-color": item.color, "--menu-bg": item.bg }}
-          >
-            <div
-              className="hp-menu-card-top"
-              style={{ backgroundColor: item.color }}
-            ></div>
+        {menuItems.map((item) => {
+          // 설문제작, 데이터관리, 응답자관리는 항상 disabled
+          const isDisabled = !isLoggedIn ||
+            item.id === "survey-creation" ||
+            item.id === "data-management" ||
+            item.id === "respondent-management";
 
+          const handleCardClick = () => {
+            if (isDisabled) return;
+
+            // 데이터현황은 Figma로 이동
+            if (item.id === "data-dashboard") {
+              window.open("https://www.figma.com/make/u0CvOS5hjvbUv9C6aisDE6/Flowchart-Builder--%EB%B3%B5%EC%82%AC-?t=AWSAkepOTGxvb6VA-20&fullscreen=1", "_blank");
+            } else {
+              navigate(item.path);
+            }
+          };
+
+          return (
             <div
-              className="hp-menu-status"
-              style={{ backgroundColor: item.statusColor }}
+              key={item.id}
+              className="hp-menu-card"
+              style={{
+                "--menu-color": item.color,
+                "--menu-bg": item.bg,
+                cursor: isDisabled ? "not-allowed" : "pointer"
+              }}
+              onClick={handleCardClick}
             >
-              {item.status}
-            </div>
-
-            <div className="hp-menu-content">
               <div
-                className="hp-menu-icon-wrap"
-                style={{ backgroundColor: item.bg }}
+                className="hp-menu-card-top"
+                style={{ backgroundColor: item.color }}
+              ></div>
+
+              <div
+                className="hp-menu-status"
+                style={{ backgroundColor: item.statusColor }}
               >
-                <item.icon className="hp-menu-icon" style={{ color: item.color }} />
+                {item.status}
               </div>
 
-              <h3 className="hp-menu-card-title">{item.title}</h3>
-              <p className="hp-menu-card-desc">{item.description}</p>
+              <div className="hp-menu-content">
+                <div
+                  className="hp-menu-icon-wrap"
+                  style={{ backgroundColor: item.bg }}
+                >
+                  <item.icon className="hp-menu-icon" style={{ color: item.color }} />
+                </div>
 
+                <h3 className="hp-menu-card-title">{item.title}</h3>
+                <p className="hp-menu-card-desc">{item.description}</p>
 
-
-              <button
-                className={`hp-menu-card-btn ${!isLoggedIn ? "disabled" : ""}`}
-                style={{ backgroundColor: item.color }}
-                disabled={!isLoggedIn}
-                onClick={() => isLoggedIn && navigate(item.path)}   // 로그인 시에만 이동
-              > 시작하기 →
-              </button>
+                <button
+                  className={`hp-menu-card-btn ${isDisabled ? "disabled" : ""}`}
+                  style={{ backgroundColor: item.color }}
+                  disabled={isDisabled}
+                  onClick={(e) => {
+                    e.stopPropagation(); // 카드 클릭과 중복 방지
+                    handleCardClick();
+                  }}
+                >
+                  시작하기 →
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section >
   );
