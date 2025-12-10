@@ -325,7 +325,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     setSortedKeys(newSortedKeys);
                 }
             }
-        }, [dataWithProxies, mappedSort, filter, sortedKeys]); // sortedKeys도 의존성에 추가
+        }, [dataWithProxies, mappedSort, filter]);
 
         // 데이터가 변경되면 순서는 유지하고 값만 업데이트
         const filteredSortedData = useMemo(() => {
