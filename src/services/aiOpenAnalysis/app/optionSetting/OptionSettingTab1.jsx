@@ -1292,11 +1292,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         style={{ cursor: "pointer" }}
                                                         onMouseDown={(e) => e.stopPropagation()}
                                                         onClick={(e) => {
-                                                            e.stopPropagation();
+                                                            e.stopPropagation(); // 행 클릭 이벤트(단일 선택 강제) 방지
+
                                                             rememberScroll();  // 스크롤 저장
 
                                                             const td = e.currentTarget.closest('td');
                                                             const rect = td?.getBoundingClientRect?.();
+                                                            const rowKey = getKey(cellProps.dataItem);
+
                                                             if (rect) lastCellRectRef.current = rect;
                                                             lastFocusedKeyRef.current = rowKey;
                                                             anchorIndexRef.current = cellProps.dataIndex;
@@ -1307,7 +1310,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                                 lv3AnchorElRef.current = td;
                                                             }
 
-                                                            const selectedRows = (dataState?.data || []).filter(r => lv3SelKeys.has(getKey(r)));
+                                                            // 클릭한 행이 선택된 상태가 아니라면 하이라이트 적용
+                                                            if (!lv3SelKeys.has(rowKey)) {
+                                                                setLv3SelKeys(new Set([rowKey]));
+                                                            }
+
+                                                            // 현재 클릭한 행을 포함하여 타겟 계산
+                                                            const currentKeys = lv3SelKeys.has(rowKey) ? lv3SelKeys : new Set([rowKey]);
+                                                            const selectedRows = (dataState?.data || []).filter(r => currentKeys.has(getKey(r)));
                                                             const targetRows = selectedRows.length > 0 ? selectedRows : [cellProps.dataItem];
                                                             const targetCodes = targetRows.map(r => r.lv123code);
 
