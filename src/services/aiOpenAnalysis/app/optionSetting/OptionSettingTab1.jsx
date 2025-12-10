@@ -1227,14 +1227,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             rowRender,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
-                            pageable: {
+                            pageable: filteredSortedData.length > 500 ? {
                                 buttonCount: 5,
                                 info: true,
                                 type: 'numeric',
                                 pageSizes: false,
                                 previousNext: true,
                                 position: 'both'
-                            },
+                            } : false,
                             pageSize: 500,
                             skip: skip,
                             total: filteredSortedData.length,
