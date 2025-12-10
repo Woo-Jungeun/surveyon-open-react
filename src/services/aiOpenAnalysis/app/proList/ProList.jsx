@@ -217,13 +217,43 @@ const ProList = () => {
         URL.revokeObjectURL(url);
     };
 
-    // 보기추출 엑셀 다운로드  이벤트
-    const handleExportExcel = async () => {
+    // 보기추출(개발자용) 엑셀 다운로드 이벤트
+    const handleExportExcelDev = async () => {
         try {
             const payload = {
                 user: auth?.user?.userId || "",
                 projectnum,
                 gb: "export_lb_excel"
+            };
+            const res = await excelDownloadMutation.mutateAsync(payload);
+
+            const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
+
+            if (!blob) {
+                modal.showErrorAlert("에러", "보기추출 파일을 받지 못했습니다.");
+                return;
+            }
+
+            if (blob.type?.includes("application/json")) {
+                modal.showErrorAlert("에러", "보기 추출 요청이 거부되었습니다.");
+                return;
+            }
+
+            saveBlobWithName(blob, `open.xlsx`);
+
+        } catch (err) {
+            console.error(err);
+            modal.showErrorAlert("오류", "보기 추출 중 오류가 발생했습니다.");
+        }
+    };
+
+    // 보기추출(DP용) 엑셀 다운로드 이벤트
+    const handleExportExcelDP = async () => {
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: "export_lb_dp"
             };
             const res = await excelDownloadMutation.mutateAsync(payload);
 
@@ -1025,7 +1055,11 @@ const ProList = () => {
 
                         <div className="btnWrap">
                             {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                                <GridHeaderBtnTxt onClick={handleExportExcel}>보기 추출 (개발자용)
+                                <GridHeaderBtnTxt onClick={handleExportExcelDev}>보기 추출 (개발자용)
+                                </GridHeaderBtnTxt>
+                            )}
+                            {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
+                                <GridHeaderBtnTxt onClick={handleExportExcelDP}>보기 추출 (DP용)
                                 </GridHeaderBtnTxt>
                             )}
 
