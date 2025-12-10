@@ -671,7 +671,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const onRowMouseDown = useCallback((rowProps, e) => {
             if (e.target.closest(ROW_EXCLUSION_SELECTOR)) return;
 
-            const idx = rowProps.dataIndex;
+            const idx = rowProps.dataIndex + skip;
             const row = rowProps.dataItem;
             const key = getKey(row);
 
@@ -718,12 +718,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 grid.dataset.dragStart = idx;
                 grid.dataset.dragEnd = idx;
             }
-        }, [getKey, rangeToKeys]);
+        }, [getKey, rangeToKeys, skip]);
 
         // 드래그 중 범위 갱신
         const onRowMouseEnter = useCallback((rowProps) => {
             if (!draggingRef.current || anchorIndexRef.current == null) return;
-            const idx = rowProps.dataIndex;
+            const idx = rowProps.dataIndex + skip;
             lastIndexRef.current = idx;
             rangeToKeys(anchorIndexRef.current, idx);
 
@@ -734,11 +734,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 const start = Math.min(anchorIndexRef.current, idx);
                 const end = Math.max(anchorIndexRef.current, idx);
                 trs.forEach(tr => {
-                    const i = Number(tr.dataset.index);
+                    const i = Number(tr.dataset.index) + skip;
                     tr.classList.toggle("drag-highlight", i >= start && i <= end);
                 });
             }
-        }, [rangeToKeys]);
+        }, [rangeToKeys, skip]);
 
         // mouseup(드래그 종료): 자동으로 에디터 열지 않음 (중복 오픈 방지)
         useEffect(() => {
