@@ -19,7 +19,7 @@ const OptionItem = memo(({ opt, targets, onApply }) => {
  * @since 2025-09-30<br />
  */
 
-const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onApply }) => {
+const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onApply, pinned, onTogglePin }) => {
   const [searchTerm, setSearchTerm] = useState("");   // 검색어 상태 관리
   const deferredSearchTerm = useDeferredValue(searchTerm);   // 입력 반응성은 유지하되, 필터링 연산은 한 박자 늦게 처리 (렉 제거 핵심)
   const panelRef = useRef(null);
@@ -29,6 +29,7 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
     if (!open) return; // 닫혀 있으면 리스너 안 붙임
 
     const handleOutsideClick = (e) => {
+      if (pinned) return;
       // 패널 내부를 클릭한 경우 → 무시
       if (panelRef.current && panelRef.current.contains(e.target)) {
         return;
@@ -48,7 +49,7 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick, true);
     };
-  }, [open, onClose]);
+  }, [open, onClose, pinned]);
 
   // codeId 자연스러운 정렬용 키
   const natKey = (v) => {
@@ -90,7 +91,27 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
       {/* 패널 */}
       <aside ref={panelRef} className={`lv3-side-panel ${open ? "open" : ""}`}>
         <div className="lv3-panel-header">
-          <h3>소분류 선택</h3>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h3>소분류 선택</h3>
+            <button
+              type="button"
+              onClick={onTogglePin}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: "4px",
+                color: pinned ? "#FF6358" : "#999",
+                display: "flex",
+                alignItems: "center"
+              }}
+              title={pinned ? "고정 해제" : "패널 고정"}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill={pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 12V4H17V2H7V4H8V12L6 14V16H11V22H13V16H18V14L16 12Z" />
+              </svg>
+            </button>
+          </div>
           <input
             type="text"
             placeholder="소분류를 검색하세요."

@@ -117,6 +117,8 @@ const OptionSettingBody = () => {
   const [isLv3PanelOpen, setIsLv3PanelOpen] = useState(false);
   const [lv3Options, setLv3Options] = useState([]);  // 패널에 줄 옵션 데이터
   const [lv3Targets, setLv3Targets] = useState(new Set());
+  const [isLv3PanelPinned, setIsLv3PanelPinned] = useState(false);
+  const handleToggleLv3PanelPin = useCallback(() => setIsLv3PanelPinned(v => !v), []);
 
   // Tab1 → 패널 열기 요청
   const handleOpenLv3Panel = useCallback((targetRows, codeIds) => {
@@ -754,11 +756,13 @@ const OptionSettingBody = () => {
                 onOptionsLoaded={(list) => setLv3Options(list)}
                 onApply={async (targets, opt) => {
                   tab1Ref.current?.applyLv3To?.(targets, opt);
-                  setIsLv3PanelOpen(false);
+                  if (!isLv3PanelPinned) setIsLv3PanelOpen(false);
                   // await fetchLv3Options();
                 }}
                 options={lv3Options}                      // 소분류 코드 
                 onRequestLv3Refresh={fetchLv3Options}
+                pinned={isLv3PanelPinned}
+                onTogglePin={handleToggleLv3PanelPin}
               />
             }
           </div>
