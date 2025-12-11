@@ -788,3 +788,86 @@
   color: #333 !important;
   border: 1px solid #ddd !important;
 }
+/* ===================================================
+     OPTION SETTING RESPONSIVE
+=================================================== */
+
+/* Tablet (1024px 이하) */
+@media (max-width: 1024px) {
+    .two-grid-layout {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .lv3-side-panel {
+        width: 320px;
+    }
+}
+
+/* Mobile (768px 이하) */
+@media (max-width: 768px) {
+    .option-setting-layout {
+        flex-direction: column;
+    }
+
+    .grid-area {
+        width: 100%;
+        margin-bottom: 20px;
+    }
+
+    .lv3-side-panel {
+        width: 100%;
+        max-width: 100%;
+        border-left: none;
+        border-radius: 8px 8px 0 0;
+        top: auto;
+        bottom: 0;
+        height: 80vh;
+        transform: translateY(100%);
+    }
+
+    .lv3-side-panel.open {
+        transform: translateY(0);
+    }
+
+    .lv3-panel-toggle {
+        top: auto;
+        bottom: 80vh; /* 패널 높이만큼 위로 */
+        right: 20px;
+        transform: translateY(0);
+        border-radius: 4px 4px 0 0;
+        width: 40px;
+        height: 24px;
+    }
+
+    .lv3-side-panel.open + .lv3-panel-toggle {
+        transform: translateY(0); /* 모바일에서는 별도 이동 불필요하거나 조정 */
+        bottom: 80vh;
+    }
+
+    .subTit.subTit--with-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .subTit.subTit--with-actions .actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* Mobile Small (480px 이하) */
+@media (max-width: 480px) {
+    .lv3-panel-item {
+        padding: 6px 8px;
+    }
+    
+    .lv3-panel-item .code {
+        font-size: 11px;
+    }
+    
+    .resultBox {
+        font-size: 12px;
+        padding: 8px;
+    }
+}

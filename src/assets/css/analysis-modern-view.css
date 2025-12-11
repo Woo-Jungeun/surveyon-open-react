@@ -338,3 +338,117 @@
 .analysis-dashboard-v2 .k-grid-content {
     padding-bottom: 50px !important;
 }
+/* ===================================================
+     MODERN ANALYSIS VIEW RESPONSIVE
+=================================================== */
+
+/* Tablet (1024px 이하) */
+@media (max-width: 1024px) {
+    .analysis-dashboard-v2 {
+        --left-panel-width: 320px;
+    }
+    
+    .analysis-dashboard-v2 .subContL {
+        padding: 20px 16px !important;
+    }
+    
+    .analysis-dashboard-v2 .subContR {
+        padding: 20px !important;
+    }
+}
+
+/* Mobile (768px 이하) */
+@media (max-width: 768px) {
+    .analysis-dashboard-v2 {
+        height: auto;
+        max-height: none;
+        overflow: auto;
+    }
+
+    .analysis-dashboard-v2 .subContWrap {
+        flex-direction: column !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    /* 왼쪽 패널을 모바일에서는 상단에 배치하거나 숨김 처리 (여기서는 상단 배치 예시) */
+    .analysis-dashboard-v2 .subContL {
+        width: 100% !important;
+        min-width: 100% !important;
+        flex: none !important;
+        height: auto !important;
+        max-height: 300px;
+        border-right: none !important;
+        border-bottom: 1px solid var(--border-color) !important;
+    }
+
+    .analysis-dashboard-v2 .subContR {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 16px !important;
+    }
+
+    .analysis-dashboard-v2 .grid-area {
+        height: 500px; /* 모바일에서 그리드 높이 고정 */
+        margin-bottom: 16px;
+    }
+
+    .analysis-dashboard-v2 .tab-action-container {
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+    }
+    
+    .analysis-dashboard-v2 .action-buttons-group {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    /* Lv3 Side Panel Mobile */
+    .analysis-dashboard-v2 .lv3-side-panel {
+        width: 100%;
+        top: auto;
+        bottom: 0;
+        height: 80vh;
+        border-left: none;
+        border-radius: 12px 12px 0 0;
+        transform: translateY(100%);
+    }
+
+    .analysis-dashboard-v2 .lv3-side-panel.open {
+        transform: translateY(0);
+    }
+
+    .analysis-dashboard-v2 .lv3-panel-toggle {
+        left: auto;
+        right: 20px;
+        top: auto;
+        bottom: 80vh;
+        transform: translateY(50%); /* 위치 조정 */
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+    
+    .analysis-dashboard-v2 .lv3-panel-toggle.open {
+        transform: translateY(50%);
+    }
+}
+
+/* Mobile Small (480px 이하) */
+@media (max-width: 480px) {
+    .analysis-dashboard-v2 .subTit .titTxt {
+        font-size: 16px !important;
+    }
+
+    .analysis-dashboard-v2 .btnTab {
+        font-size: 12px !important;
+        padding: 4px 12px !important;
+        height: 28px !important;
+    }
+    
+    .analysis-dashboard-v2 .subContL,
+    .analysis-dashboard-v2 .subContR {
+        padding: 12px !important;
+    }
+}

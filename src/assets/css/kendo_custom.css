@@ -1568,3 +1568,124 @@ input[type='checkbox']+label {
   padding-bottom: 8px;
 }
 
+
+/* ===================================================
+     KENDO UI RESPONSIVE
+=================================================== */
+
+/* Tablet (1024px 이하) */
+@media (max-width: 1024px) {
+    /* Input & Button Sizes */
+    .k-input-solid,
+    .k-input-solid.err,
+    .btnM,
+    .k-picker-solid,
+    .k-dropdownlist,
+    .k-combobox,
+    .k-upload .k-upload-button {
+        height: 32px !important;
+        font-size: 13px !important;
+    }
+
+    .k-button-solid-primary,
+    .btnL {
+        font-size: 13px !important;
+        padding: 4px 14px !important;
+    }
+
+    /* Grid Header & Cell */
+    .k-grid-header th.k-header,
+    .k-grid th,
+    .k-grid td,
+    .cmn_grid:not(.multihead) .k-grid-header th.k-header,
+    .cmn_grid:not(.multihead) .k-grid th,
+    .cmn_grid:not(.multihead) .k-grid .k-grid-container .k-grid-content td {
+        font-size: 13px !important;
+        padding: 0 10px !important;
+    }
+}
+
+/* Mobile (768px 이하) */
+@media (max-width: 768px) {
+    /* Input & Button Sizes */
+    .k-input-solid,
+    .k-input-solid.err,
+    .btnM,
+    .k-picker-solid,
+    .k-dropdownlist,
+    .k-combobox,
+    .k-upload .k-upload-button {
+        height: 30px !important;
+        font-size: 12px !important;
+        padding: 0 10px !important;
+    }
+
+    .k-button-solid-primary,
+    .btnL {
+        font-size: 12px !important;
+        padding: 4px 12px !important;
+        height: 30px !important;
+    }
+
+    /* Grid Header & Cell */
+    .k-grid-header th.k-header,
+    .k-grid th,
+    .k-grid td,
+    .cmn_grid:not(.multihead) .k-grid-header th.k-header,
+    .cmn_grid:not(.multihead) .k-grid th,
+    .cmn_grid:not(.multihead) .k-grid .k-grid-container .k-grid-content td {
+        font-size: 12px !important;
+        padding: 0 8px !important;
+        height: 40px !important;
+    }
+
+    /* Pager */
+    .k-pager-numbers .k-button {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 12px !important;
+    }
+    
+    .k-pager-nav {
+        width: 32px !important;
+        height: 32px !important;
+    }
+
+    /* Calendar & Datepicker */
+    .k-datepicker > button,
+    .k-datetimepicker .k-button-md.k-icon-button {
+        width: 28px !important;
+    }
+}
+
+/* Mobile Small (480px 이하) */
+@media (max-width: 480px) {
+    /* Input & Button Sizes */
+    .k-input-solid,
+    .k-input-solid.err,
+    .btnM,
+    .k-picker-solid,
+    .k-dropdownlist,
+    .k-combobox,
+    .k-upload .k-upload-button {
+        height: 28px !important;
+        font-size: 11px !important;
+        padding: 0 8px !important;
+    }
+
+    .k-button-solid-primary,
+    .btnL {
+        font-size: 11px !important;
+        padding: 3px 10px !important;
+        height: 28px !important;
+    }
+
+    /* Grid Header & Cell */
+    .k-grid-header th.k-header,
+    .k-grid th,
+    .k-grid td {
+        font-size: 11px !important;
+        padding: 0 5px !important;
+        height: 36px !important;
+    }
+}

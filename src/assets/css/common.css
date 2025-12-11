@@ -1,6 +1,6 @@
 @charset "utf-8";
 @import "reset.css";
-/* @import "grid_vertical_borders.css"; */
+@import "grid_vertical_borders.css";
 
 :root {
     --left-panel-width: 500px;
@@ -5505,7 +5505,7 @@ footer {
 .pro-permission-table .k-datepicker {
     width: 100%;
     max-width: 100%;
-    /* 꽉 차게 */
+    /* �?차게 */
 }
 
 .infoTitRow+.infoList {
@@ -5608,4 +5608,332 @@ footer {
 
 .infoTitRow .btnMini {
     margin: 0 !important;
+}
+
+/* ===================================================
+     RESPONSIVE MEDIA QUERIES
+=================================================== */
+
+/* Tablet (1024px ����) */
+@media (max-width: 1024px) {
+
+    /* Layout */
+    #wrap {
+        min-width: 100% !important;
+    }
+
+    .container {
+        max-width: 95% !important;
+        padding: 0 20px !important;
+    }
+
+    /* Typography */
+    body {
+        font-size: 15px !important;
+    }
+
+    h1 {
+        font-size: 1.8rem !important;
+    }
+
+    h2 {
+        font-size: 1.5rem !important;
+    }
+
+    h3 {
+        font-size: 1.3rem !important;
+    }
+
+    h4 {
+        font-size: 1.1rem !important;
+    }
+
+    /* Logo & Header */
+    .logo {
+        font-size: 18px !important;
+    }
+
+    .projectListBtn {
+        font-size: 13px !important;
+        padding: 8px 14px !important;
+    }
+
+    /* Navigation */
+    .navWrap {
+        font-size: 13px !important;
+    }
+
+    .navWrap .nav.depth01>li>a {
+        padding: 10px 14px !important;
+        font-size: 13px !important;
+    }
+
+    .userWrap {
+        gap: 15px !important;
+        font-size: 13px !important;
+    }
+
+    /* Buttons */
+    .k-button,
+    .btnPrimary,
+    .btnSecondary {
+        font-size: 13px !important;
+        padding: 8px 14px !important;
+    }
+
+    /* Inputs */
+    .k-textbox,
+    .k-input,
+    input,
+    select,
+    textarea {
+        font-size: 13px !important;
+        padding: 8px !important;
+    }
+
+    /* Grid */
+    .k-grid td,
+    .k-grid th {
+        font-size: 13px !important;
+        padding: 8px !important;
+    }
+
+    /* Titles */
+    .titWrap,
+    .pageTitle {
+        font-size: 18px !important;
+    }
+}
+
+/* Mobile (768px ����) */
+@media (max-width: 768px) {
+
+    /* Layout */
+    #wrap {
+        min-width: 100% !important;
+        padding: 0 !important;
+    }
+
+    .container {
+        max-width: 100% !important;
+        padding: 0 16px !important;
+    }
+
+    .contWrap {
+        padding: 10px !important;
+    }
+
+    /* Typography */
+    body {
+        font-size: 14px !important;
+    }
+
+    h1 {
+        font-size: 1.5rem !important;
+    }
+
+    h2 {
+        font-size: 1.3rem !important;
+    }
+
+    h3 {
+        font-size: 1.1rem !important;
+    }
+
+    h4 {
+        font-size: 1rem !important;
+    }
+
+    /* Logo & Header */
+    .logo {
+        font-size: 16px !important;
+    }
+
+    .projectListBtn {
+        font-size: 12px !important;
+        padding: 6px 12px !important;
+    }
+
+    /* Navigation */
+    .navWrap {
+        display: none !important;
+    }
+
+    .userWrap {
+        gap: 10px !important;
+        font-size: 12px !important;
+    }
+
+    .userName::before,
+    .iconSetPw::before,
+    .iconLogout::before {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    /* Buttons */
+    .k-button,
+    .btnPrimary,
+    .btnSecondary,
+    .btnMini {
+        font-size: 12px !important;
+        padding: 6px 12px !important;
+    }
+
+    /* Inputs */
+    .k-textbox,
+    .k-input,
+    input,
+    select,
+    textarea {
+        font-size: 12px !important;
+        padding: 6px !important;
+        height: 36px !important;
+    }
+
+    /* Grid */
+    .k-grid {
+        font-size: 12px !important;
+    }
+
+    .k-grid td,
+    .k-grid th {
+        font-size: 12px !important;
+        padding: 6px !important;
+    }
+
+    /* Titles & Labels */
+    .titWrap,
+    .pageTitle {
+        font-size: 16px !important;
+    }
+
+    .formLabel,
+    label {
+        font-size: 12px !important;
+    }
+
+    /* Panels */
+    .panelWrap,
+    .boxWrap {
+        padding: 12px !important;
+    }
+
+    /* Decorative Lines */
+    .decoLine {
+        margin-top: 20px !important;
+        padding-top: 20px !important;
+    }
+
+    .decoLineS {
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+    }
+}
+
+/* Mobile Small (480px ����) */
+@media (max-width: 480px) {
+
+    /* Layout */
+    .container {
+        padding: 0 12px !important;
+    }
+
+    .contWrap {
+        padding: 8px !important;
+    }
+
+    /* Typography */
+    body {
+        font-size: 13px !important;
+    }
+
+    h1 {
+        font-size: 1.3rem !important;
+    }
+
+    h2 {
+        font-size: 1.1rem !important;
+    }
+
+    h3 {
+        font-size: 1rem !important;
+    }
+
+    h4 {
+        font-size: 0.95rem !important;
+    }
+
+    /* Logo & Header */
+    .logo {
+        font-size: 14px !important;
+    }
+
+    .projectListBtn {
+        font-size: 11px !important;
+        padding: 5px 10px !important;
+    }
+
+    /* User Menu */
+    .userWrap {
+        gap: 8px !important;
+        font-size: 11px !important;
+    }
+
+    /* Buttons */
+    .k-button,
+    .btnPrimary,
+    .btnSecondary,
+    .btnMini {
+        font-size: 11px !important;
+        padding: 5px 10px !important;
+    }
+
+    /* Inputs */
+    .k-textbox,
+    .k-input,
+    input,
+    select,
+    textarea {
+        font-size: 11px !important;
+        padding: 5px !important;
+        height: 32px !important;
+    }
+
+    /* Grid */
+    .k-grid {
+        font-size: 11px !important;
+    }
+
+    .k-grid td,
+    .k-grid th {
+        font-size: 11px !important;
+        padding: 4px !important;
+    }
+
+    /* Titles & Labels */
+    .titWrap,
+    .pageTitle {
+        font-size: 14px !important;
+    }
+
+    .formLabel,
+    label {
+        font-size: 11px !important;
+    }
+
+    /* Panels */
+    .panelWrap,
+    .boxWrap {
+        padding: 8px !important;
+    }
+}
+
+
+/* Mobile Small (480px ����) */
+@media (max-width: 480px) {
+    .modal {
+        width: 100vw !important;
+        left: 0 !important;
+    }
 }
