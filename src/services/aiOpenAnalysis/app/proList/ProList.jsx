@@ -227,6 +227,11 @@ const ProList = () => {
             };
             const res = await excelDownloadMutation.mutateAsync(payload);
 
+            if (res?.success === "720") {
+                modal.showErrorAlert("알림", "분석된 보기가 없습니다.");
+                return;
+            }
+
             const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
 
             if (!blob) {
@@ -256,6 +261,11 @@ const ProList = () => {
                 gb: "export_lb_dp"
             };
             const res = await excelDownloadMutation.mutateAsync(payload);
+
+            if (res?.success === "720") {
+                modal.showErrorAlert("알림", "분석된 보기가 없습니다.");
+                return;
+            }
 
             const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
 
