@@ -2,6 +2,7 @@ import { useMutation } from "react-query";
 import api from "@/common/queries/Api.js";
 import { useContext } from "react";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import axios from "axios";
 
 /**
  *  프로젝트 등록 > API
@@ -17,28 +18,43 @@ export function ProEnterApi() {
     const proEnterData = useMutation(
         async (data) => await api.post(data.params, "/pro_enter_api.aspx"),
         {
-         onMutate: (vars) => { 
-            loadingSpinner.show(); 
-        },
-         onSettled: () => {  
-            loadingSpinner.hide(); 
-        }
+            onMutate: (vars) => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
         }
     );
     // 보기 등록 API
     const proEnterSaveData = useMutation(
         async (data) => await api.post(data, "/pro_enter_api.aspx"),
         {
-         onMutate: (vars) => { 
-            loadingSpinner.show(); 
-        },
-         onSettled: () => {  
-            loadingSpinner.hide(); 
-        }
+            onMutate: (vars) => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
         }
     );
+
+    // POF 조회 API (h-pro api : Vite 프록시 경유)
+    const getPofInfo = useMutation(
+        async (pofNumber) => {
+            const url = `/api/pofInfo?pofNumber=${pofNumber}`;
+            const res = await axios.post(url);
+            return res.data;
+        },
+        {
+            onMutate: () => { },
+            onSettled: () => { }
+        }
+    );
+
     return {
         proEnterData,
-        proEnterSaveData
+        proEnterSaveData,
+        getPofInfo
     };
 }

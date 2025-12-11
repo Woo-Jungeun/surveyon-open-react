@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { Input } from "@progress/kendo-react-inputs";
+import { ComboBox } from "@progress/kendo-react-dropdowns";
 import { useSelector } from "react-redux";
 import { ProEnterApi } from "@/services/aiOpenAnalysis/app/proEnter/ProEnterApi";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -17,18 +18,56 @@ const ProEnterTab3 = () => {
     const modal = useContext(modalContext);
     const navigate = useNavigate();
 
-    const { proEnterSaveData } = ProEnterApi();
+    const { proEnterSaveData, getPofInfo } = ProEnterApi();
 
-    const [pof, setPof] = useState("");
+    const [pof, setPof] = useState(null); // ComboBox value object or string
+    const [pofList, setPofList] = useState([]);
     const [projectname, setProjectname] = useState("");
     const [loading, setLoading] = useState(false);
+
+    // POF 검색
+    const handlePofFilterChange = async (event) => {
+        const filter = event.filter?.value || "";
+        console.log("Filter change:", filter);
+
+        if (filter && filter.length >= 4) { // 4글자 이상일 때 검색
+            try {
+                console.log("Calling POF API with:", filter);
+                const data = await getPofInfo.mutateAsync(filter);
+                console.log("POF API response:", data);
+
+                // API 응답: { POF번호: "...", 프로젝트명: "...", ... }
+                // 배열로 변환
+                const list = data ? [data] : [];
+                setPofList(list);
+            } catch (e) {
+                console.error("POF fetch error", e);
+                setPofList([]);
+            }
+        } else {
+            // 4글자 미만이면 목록 초기화
+            setPofList([]);
+        }
+    };
+
+    const handlePofChange = (event) => {
+        const val = event.value;
+        console.log("POF change:", val);
+        setPof(val);
+
+        // 선택된 객체에서 프로젝트명을 조사명에 자동 입력
+        if (val && typeof val === 'object' && val['프로젝트명']) {
+            setProjectname(val['프로젝트명']);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (loading) return;
 
         // --- 유효성 검사 ---
-        const pofTrim = String(pof ?? "").trim();
+        const pofValue = pof && typeof pof === 'object' ? pof['POF번호'] : pof;
+        const pofTrim = String(pofValue ?? "").trim();
         const nameTrim = String(projectname ?? "").trim();
 
         const errs = [];
@@ -123,13 +162,18 @@ const ProEnterTab3 = () => {
                 <div className="cmn_pop_ipt" style={{ flexDirection: 'column', gap: '8px' }}>
                     <span className="iptTit" style={{ width: '100%', marginBottom: '4px', color: '#333', fontWeight: '500' }}>POF <span style={{ color: '#ff5252' }}>*</span></span>
                     <div style={{ width: "100%" }}>
-                        <Input
-                            className="k-input k-input-solid"
-                            value={pof}
-                            onChange={(e) => setPof(e.target.value)}
-                            disabled={loading}
-                            placeholder="프로젝트 번호를 입력해주세요. (예: 2025-00-0000)"
+                        <ComboBox
                             style={{ width: "100%", height: '40px' }}
+                            data={pofList}
+                            value={pof}
+                            onChange={handlePofChange}
+                            onFilterChange={handlePofFilterChange}
+                            filterable={true}
+                            allowCustom={true}
+                            textField="POF번호"
+                            dataItemKey="pofID"
+                            placeholder="프로젝트 번호를 입력해주세요. (예: 2025-00-0000)"
+                            disabled={loading}
                         />
                         <div style={{
                             fontSize: "12px",
