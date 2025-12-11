@@ -279,7 +279,7 @@ const ProList = () => {
                 return;
             }
 
-            saveBlobWithName(blob, `open.xlsx`);
+            saveBlobWithName(blob, `open.txt`);
 
         } catch (err) {
             console.error(err);
