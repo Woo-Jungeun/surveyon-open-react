@@ -522,3 +522,132 @@
     justify-content: center;
     gap: 12px;
 }
+
+/* ===================================================
+     RESPONSIVE MEDIA QUERIES
+=================================================== */
+
+/* Tablet (1024px 이하) */
+@media (max-width: 1024px) {
+    .login-card-wrap {
+        max-width: 450px;
+        padding: 0 20px;
+    }
+
+    .login-card {
+        padding: 40px;
+    }
+
+    .hero-title {
+        font-size: 1.3rem;
+    }
+
+    .login-subtitle {
+        font-size: 16px;
+    }
+}
+
+/* Mobile (768px 이하) */
+@media (max-width: 768px) {
+    .login-back-area {
+        top: 16px;
+        left: 16px;
+    }
+
+    .login-card-wrap {
+        max-width: 100%;
+        padding: 0 16px;
+    }
+
+    .login-card {
+        padding: 32px 24px;
+    }
+
+    .login-logo-box {
+        padding: 10px 20px;
+    }
+
+    .hero-title {
+        font-size: 1.2rem;
+    }
+
+    .login-subtitle {
+        font-size: 15px;
+        margin-bottom: 24px;
+    }
+
+    .login-title-wrap h2 {
+        font-size: 20px;
+    }
+
+    .login-title-sub {
+        font-size: 14px;
+    }
+
+    .login-input {
+        height: 48px;
+        font-size: 15px;
+    }
+
+    .login-button {
+        height: 50px;
+        font-size: 15px;
+    }
+
+    .login-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .login-signup {
+        font-size: 14px;
+    }
+}
+
+/* Mobile Small (480px 이하) */
+@media (max-width: 480px) {
+    .login-card {
+        padding: 24px 20px;
+    }
+
+    .login-logo-box {
+        padding: 8px 16px;
+        gap: 8px;
+    }
+
+    .hero-title {
+        font-size: 1.1rem;
+    }
+
+    .login-subtitle {
+        font-size: 14px;
+    }
+
+    .login-title-wrap h2 {
+        font-size: 18px;
+    }
+
+    .login-icon-circle {
+        width: 36px;
+        height: 36px;
+    }
+
+    .login-input {
+        height: 46px;
+        font-size: 14px;
+    }
+
+    .login-button {
+        height: 48px;
+        font-size: 14px;
+    }
+
+    .login-field label {
+        font-size: 14px;
+    }
+
+    .login-findpw {
+        font-size: 14px;
+    }
+}
