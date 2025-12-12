@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -83,7 +83,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     const qidRef = useRef("");
     useEffect(() => {
         qidRef.current = qid;
-    }, [qid]);
+        if (qid) {
+            onQidLoaded?.(qid);
+        }
+    }, [qid, onQidLoaded]);
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
     const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
     const nextTabRef = useRef(null);    //탭 이동
@@ -422,7 +425,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         });
         applySearchResult(d);
         return d;
-    }, [optionEditData, projectnum, qnum]);
+    }, [optionEditData, projectnum, qnum, onQidLoaded]);
 
     useEffect(() => {
         searchInfo();   // 최초 조회

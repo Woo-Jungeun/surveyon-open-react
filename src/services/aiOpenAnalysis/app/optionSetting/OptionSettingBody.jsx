@@ -112,6 +112,7 @@ const OptionSettingBody = () => {
   const tab1Ref = useRef(null);
   const tab2Ref = useRef(null);
   const [responseCount, setResponseCount] = useState(0);  // 탭1 데이터 갯수
+  const [qid, setQid] = useState(""); // qid 상태 추가
 
   // 오른쪽 패널 관련 state
   const [isLv3PanelOpen, setIsLv3PanelOpen] = useState(false);
@@ -627,6 +628,7 @@ const OptionSettingBody = () => {
             lv3Options={lv3Options}
             responseCount={responseCount}
             fetchLv3Options={fetchLv3Options}
+            onQidLoaded={setQid}
           />
         </div>
 
@@ -723,6 +725,7 @@ const OptionSettingBody = () => {
                   ref={tab2Ref}
                   projectnum={projectnum}
                   qnum={qnum}
+                  qid={qid}
                   lvCode={lvCodeDraft.value}
                   onSaved={() => {
                     // 저장 성공 → 더티 해제 + 단계 커밋

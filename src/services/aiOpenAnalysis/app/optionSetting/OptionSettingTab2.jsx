@@ -43,7 +43,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum } = props;
+    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum, qid } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "lv3"];
     // 스크롤 위치 저장용 ref
@@ -160,7 +160,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         />
     ), [columns, forcedHidden, stageFields, onPrefsChange, filter]);
 
-    const { optionEditData, optionSaveData } = OptionSettingApi();
+    const { optionEditData, optionSaveData, optionAnalysisStart } = OptionSettingApi();
     const [editField] = useState("inEdit");
 
     // GridData가 내려주는 최신 컨텍스트를 저장
@@ -735,6 +735,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
+            console.log("saveC")
             if (typeof document !== "undefined" && document.activeElement) {
                 document.activeElement.blur();
             }
@@ -788,7 +789,22 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     onUnsavedChange?.(false);                // 미저장 해제
                     onHasEditLogChange?.(false);
                     baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
-                    handleSearch(); // 재조회 
+                    handleSearch(); // 재조회
+
+                    const analysisPayload = {
+                        user: auth?.user?.userId || "",
+                        projectnum,
+                        qid,
+                        opencodeResponse: "Y",
+                        action: "start",
+                    };
+                    console.log("analysisPayload", analysisPayload)
+                    const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
+                    if (analysisRes?.success === "777") {
+                        modal.showErrorAlert("에러", "오류가 발생했습니다.");
+                        return false;
+                    }
+
                     return true;  //성공
                 } else if (res?.success == "762") {
                     modal.showErrorAlert("에러", res?.message); //"보기 코드 중복, 빈값 발견"
