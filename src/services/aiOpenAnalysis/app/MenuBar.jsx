@@ -26,6 +26,8 @@ const normalize = (p) => {
 const trailFor = (key) => {
   if (key === "/ai_open_analysis/option_setting") return ["/ai_open_analysis", "/ai_open_analysis/pro_list", "/ai_open_analysis/option_setting"];
   if (key === "/ai_open_analysis/pro_list") return ["/ai_open_analysis", "/ai_open_analysis/pro_list"];
+  if (key === "/ai_open_analysis/pro_permission") return ["/ai_open_analysis", "/ai_open_analysis/pro_list"];
+  if (key === "/ai_open_analysis/pro_register") return ["/ai_open_analysis", "/ai_open_analysis/pro_list"];
   return ["/ai_open_analysis"];
 };
 
