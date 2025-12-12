@@ -1347,7 +1347,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
                                         cell={(p) => {
                                             const r = p.dataItem;
-                                            const codeId = String(r?.lv123code ?? "").trim();
+                                            const codeId = String(r?.[c.field] ?? "").trim();
                                             const codeName = String(r?.lv3 ?? "").trim();
 
                                             // 패널에서 받아온 옵션 확인
@@ -1360,7 +1360,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         <span title={codeId}>{codeId}</span>
                                                     ) :
                                                         /* 코드 없지만 이름은 있고, lv3Options에도 없으면 등록 버튼 */
-                                                        (!!codeName && !matchedOpt) ? (
+                                                        (c.field === 'lv123code' && !!codeName && !matchedOpt) ? (
                                                             <Button
                                                                 className="btnM"
                                                                 themeColor="primary"
