@@ -127,7 +127,7 @@ const ProKey = () => {
 
   return (
     <Fragment>
-      <article className="subTitWrap">
+      <article className="subTitWrap pro-list-header">
         <div className="subTit">
           <h2 className="titTxt">API KEY 등록
             <span
@@ -140,82 +140,114 @@ const ProKey = () => {
 
       <article className="subContWrap">
         <div className="subCont">
-          <form onSubmit={handleSubmit}>
-            <table className="pro-permission-table">
-              <colgroup>
-                <col style={{ width: "180px" }} />
-                <col />
-              </colgroup>
-              <tbody>
-                <tr>
-                  <th>사용자</th>
-                  <td>
-                    <Input
-                      className="k-input k-input-solid"
-                      value={auth?.user?.userNm || ""}
-                      disabled
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th>
-                    API KEY 유형선택 <span className="required" style={{ color: "#ff5252" }}>*</span>
-                    <span
-                      className="info-icon"
-                      data-tooltip={`API KEY 유형선택|부서나 개인이 등록한 APIKEY가 없을 경우 "회사공용"을 등록하여 사용하기`}
-                      style={{ marginLeft: "5px" }}
-                    ></span>
-                  </th>
-                  <td>
-                    <DropDownList
-                      data={apiTypeList}
-                      textField="label"
-                      dataItemKey="value"
-                      value={apiTypeList.find((t) => t.value === formData.api_gubun)}
-                      onChange={(e) => handleChange("api_gubun", e.value.value)}
-                      disabled={loading}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th>API 이름 <span className="required" style={{ color: "#ff5252" }}>*</span></th>
-                  <td>
-                    <Input
-                      className="k-input k-input-solid"
-                      value={formData.api_name}
-                      onChange={(e) => handleChange("api_name", e.value)}
-                      disabled={loading}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th>API KEY <span className="required" style={{ color: "#ff5252" }}>*</span></th>
-                  <td>
-                    <Input
-                      className="k-input k-input-solid"
-                      value={formData.api_key}
-                      onChange={(e) => handleChange("api_key", e.value)}
-                      disabled={loading}
-                    />
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            paddingBottom: '20px'
+          }}>
+            <form onSubmit={handleSubmit} style={{
+              width: '100%',
+              maxWidth: '500px',
+              background: '#fff',
+              border: '1px solid #e0e0e0',
+              borderRadius: '8px',
+              padding: '15px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px'
+            }}>
+              {/* Header inside form */}
+              <div style={{ textAlign: 'center', paddingBottom: '5px', borderBottom: '1px solid #f0f0f0', marginBottom: '5px' }}>
+                <h3 style={{
+                  fontSize: '20px',
+                  fontWeight: '700',
+                  color: '#333',
+                  marginBottom: '2px',
+                }}>
+                  API KEY 등록
+                </h3>
+                <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
+                  OPENAI API KEY를 등록합니다.
+                </p>
+              </div>
 
-            {/* 등록 버튼 */}
-            <div className="popBtn" style={{ marginTop: "12px", marginBottom: "0px" }}>
-              <div className="btnWrap" style={{ display: "flex", width: "100%", justifyContent: "flex-end" }}>
+              {/* Row 1: 사용자 */}
+              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>사용자</span>
+                <Input
+                  className="k-input k-input-solid"
+                  value={auth?.user?.userNm || ""}
+                  disabled
+                  style={{ flex: 1, height: '28px', background: '#f5f5f5', border: '1px solid #ddd' }}
+                />
+              </div>
+
+              {/* Row 2: API KEY 유형선택 */}
+              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>
+                  유형선택 <span style={{ color: '#ff5252' }}>*</span>
+                  <span
+                    className="info-icon"
+                    data-tooltip={`API KEY 유형선택|부서나 개인이 등록한 APIKEY가 없을 경우 "회사공용"을 등록하여 사용하기`}
+                    style={{ marginLeft: "5px" }}
+                  ></span>
+                </span>
+                <DropDownList
+                  data={apiTypeList}
+                  textField="label"
+                  dataItemKey="value"
+                  value={apiTypeList.find((t) => t.value === formData.api_gubun)}
+                  onChange={(e) => handleChange("api_gubun", e.value.value)}
+                  disabled={loading}
+                  style={{ flex: 1, height: '28px' }}
+                />
+              </div>
+
+              {/* Row 3: API 이름 */}
+              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>API 이름 <span style={{ color: '#ff5252' }}>*</span></span>
+                <Input
+                  className="k-input k-input-solid"
+                  value={formData.api_name}
+                  onChange={(e) => handleChange("api_name", e.value)}
+                  disabled={loading}
+                  style={{ flex: 1, height: '28px' }}
+                />
+              </div>
+
+              {/* Row 4: API KEY */}
+              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>API KEY <span style={{ color: '#ff5252' }}>*</span></span>
+                <Input
+                  className="k-input k-input-solid"
+                  value={formData.api_key}
+                  onChange={(e) => handleChange("api_key", e.value)}
+                  disabled={loading}
+                  style={{ flex: 1, height: '28px' }}
+                />
+              </div>
+
+              <div style={{ marginTop: '15px', textAlign: 'center' }}>
                 <Button
                   type="submit"
-                  className="btnM"
                   themeColor="primary"
                   disabled={loading}
+                  style={{
+                    width: '100%',
+                    maxWidth: '200px',
+                    height: '32px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    borderRadius: '6px',
+                    backgroundColor: '#ff8024',
+                    border: 'none'
+                  }}
                 >
                   등록
                 </Button>
               </div>
-            </div>
-          </form>
+            </form>
+          </div>
 
           {/* 등록된 API KEY 목록 */}
           <ProKeyGrid data={gridData} setData={setGridData} fetchData={fetchData} />

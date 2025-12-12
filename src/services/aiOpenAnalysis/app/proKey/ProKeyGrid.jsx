@@ -166,7 +166,7 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
         <div id="grid_apiKey" className="cmn_grid singlehead">
           <KendoGrid
             parentProps={{
-              height: "450px",
+              height: "410px",
               data: processedData.data,
               total: processedData.total,
               dataItemKey: DATA_ITEM_KEY,
