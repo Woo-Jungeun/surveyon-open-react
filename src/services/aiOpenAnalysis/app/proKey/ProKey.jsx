@@ -132,7 +132,7 @@ const ProKey = () => {
           <h2 className="titTxt">API KEY 등록
             <span
               className="info-icon"
-              data-tooltip={`API KEY 등록|사용자 계정 전체 프로젝트 기준으로 OPENAI API KEY를 등록해야\n 자동 "보기분석", "응답자분석", "번역" 실행이 가능합니다.`}
+              data-tooltip={`API KEY 등록|사용자 계정 전체 프로젝트 기준으로 OPEN AI API KEY를 등록해야\n 자동 "보기분석", "응답자분석", "번역" 실행이 가능합니다.`}
             ></span>
           </h2>
         </div>
@@ -167,7 +167,7 @@ const ProKey = () => {
                   API KEY 등록
                 </h3>
                 <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
-                  OPENAI API KEY를 등록합니다.
+                  OPEN AI API KEY를 등록합니다.
                 </p>
               </div>
 
