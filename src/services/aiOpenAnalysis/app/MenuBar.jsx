@@ -1,3 +1,4 @@
+import { Home } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -9,7 +10,7 @@ import { useCookies } from "react-cookie";
  * 프로젝트 목록 클릭 시 → 탭: ["/ai_open_analysis"]
  * 문항 목록 이동 시 → 탭: ["/ai_open_analysis", "/ai_open_analysis/pro_list"]
  * 분석 이동 시 → 탭: ["/ai_open_analysis", "/ai_open_analysis/pro_list", "/ai_open_analysis/option_setting"]
-*/
+ */
 const ROUTE_LABEL = {
   "/ai_open_analysis": "프로젝트 목록",
   "/ai_open_analysis/pro_list": "문항 목록",
@@ -175,19 +176,55 @@ const MenuBar = () => {
   return (
     <Fragment>
       <header key={location.pathname}>
-        <h1
-          className="logo"
-          style={{ cursor: "pointer" }}
-          onClick={() => {
-            sessionStorage.setItem("projectnum", "");
-            sessionStorage.setItem("projectname", "");
-            sessionStorage.setItem("servername", "");
-            sessionStorage.setItem("projectpof", "");
-            navigate("/");
-          }}
-        >
-          설문온 <span className="fcG">OPEN</span>
-        </h1>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <button
+            type="button"
+            onClick={() => {
+              sessionStorage.setItem("projectnum", "");
+              sessionStorage.setItem("projectname", "");
+              sessionStorage.setItem("servername", "");
+              sessionStorage.setItem("projectpof", "");
+              navigate("/");
+            }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 10px",
+              borderRadius: "6px",
+              border: "none",
+              background: "transparent",
+              fontSize: "15px",
+              fontWeight: 600,
+              color: "#555",
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = "rgba(0,0,0,0.05)";
+              e.currentTarget.style.color = "#333";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = "transparent";
+              e.currentTarget.style.color = "#555";
+            }}
+          >
+            <Home size={18} />
+            <span>홈</span>
+          </button>
+
+          <div style={{ width: "1px", height: "14px", background: "#dcdcdc", margin: "0 2px" }}></div>
+
+          <h1
+            className="logo"
+            style={{ cursor: "pointer", fontSize: "22px", fontWeight: "700", display: "flex", alignItems: "center", letterSpacing: "-0.5px" }}
+            onClick={() => {
+              navigate("/ai_open_analysis");
+            }}
+          >
+            <span style={{ color: "#FF913A", marginRight: "2px" }}>AI</span>오픈분석
+          </h1>
+        </div>
 
         <div className="navWrap">
           <ul className="nav depth01">
