@@ -1176,18 +1176,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, []);
 
         // Body 초기 lvcode 전달
-        useEffect(() => {
-            if (reportedLvcodeRef.current) return;
-            if (!optionEditData?.data) return;
-            if (!onInitLvCode) return;
+        const reportedLvcodeRef = useRef(false);
 
-            const res = optionEditData.data;
-            const fetchedLv = String(res?.lvcode ?? res?.resultjson?.[0]?.lvcode ?? "").trim();
-            if (["1", "2", "3"].includes(fetchedLv)) {
-                onInitLvCode(fetchedLv);
-                reportedLvcodeRef.current = true;
-            }
-        }, [optionEditData?.data, onInitLvCode]);
 
         return (
             <Fragment>
@@ -1489,6 +1479,16 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 ...optionEditData,
                 mutateAsync: async (params) => {
                     const res = await optionEditData.mutateAsync(params);
+
+                    // Body 초기 lvcode 전달 (Interceptor)
+                    if (!reportedLvcodeRef.current && onInitLvCode) {
+                        const fetchedLv = String(res?.lvcode ?? res?.resultjson?.[0]?.lvcode ?? "").trim();
+                        if (["1", "2", "3"].includes(fetchedLv)) {
+                            onInitLvCode(fetchedLv);
+                            reportedLvcodeRef.current = true;
+                        }
+                    }
+
                     // resultjson이 빈 배열일 경우 로딩바 닫기
                     if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
                         loadingSpinner.hide();
