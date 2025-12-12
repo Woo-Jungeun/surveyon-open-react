@@ -18,3 +18,8 @@
 .cmn_grid.singlehead .k-grid-content td:last-child {
     border-right: none;
 }
+
+/* OptionSetting Grid Data Vertical Borders */
+#grid_01 .k-table-tbody td {
+    border-right: 1px solid #e0e0e0;
+}

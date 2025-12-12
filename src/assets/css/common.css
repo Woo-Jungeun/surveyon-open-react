@@ -5002,7 +5002,7 @@ footer {
     border-color: #e0e0e0;
     vertical-align: middle;
     text-align: center;
-    /* border-right: 1px solid #e0e0e0; */
+    border-right: 1px solid #e0e0e0;
 }
 
 /* Header Style - Singlehead (Wide 16px 12px) */
