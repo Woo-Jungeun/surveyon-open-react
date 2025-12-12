@@ -20,8 +20,8 @@ export function OptionSettingApi() {
             onMutate: (variables) => {
                 if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum") loadingSpinner.show();
             },
-            onSettled: () => {
-                // loadingSpinner.hide(); 
+            onSettled: (variables) => {
+                if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum") loadingSpinner.hide();
             }
         }
     );
@@ -31,10 +31,10 @@ export function OptionSettingApi() {
         (data) => api.post(data, "/option_save_api.aspx"),
         {
             onMutate: (variables) => {
-                if (variables?.gb !== "info") loadingSpinner.show();
+                if (variables?.gb !== "info" && variables?.gb !== "lb") loadingSpinner.show();
             },
             onSettled: (data, error, variables) => {
-                if (variables?.gb !== "info") loadingSpinner.hide();
+                if (variables?.gb !== "info" && variables?.gb !== "lb") loadingSpinner.hide();
             }
         }
     );

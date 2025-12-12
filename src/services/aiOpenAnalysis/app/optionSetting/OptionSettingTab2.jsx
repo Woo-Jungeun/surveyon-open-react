@@ -735,7 +735,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         /* 저장: 보류 삭제 커밋 + 번호/키 재계산 + __isNew 해제 + API 호출 */
         const saveChanges = useCallback(async () => {
-            console.log("saveC")
             if (typeof document !== "undefined" && document.activeElement) {
                 document.activeElement.blur();
             }
@@ -789,7 +788,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     onUnsavedChange?.(false);                // 미저장 해제
                     onHasEditLogChange?.(false);
                     baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
-                    handleSearch(); // 재조회
+                    // handleSearch(); // 재조회
 
                     const analysisPayload = {
                         user: auth?.user?.userId || "",
