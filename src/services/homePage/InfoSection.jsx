@@ -4,7 +4,7 @@ import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3 } from "luc
 import { useSelector, useDispatch } from "react-redux";
 import { useCookies } from "react-cookie";
 import { modalContext } from "@/components/common/Modal.jsx";
-import logoImg from "@/assets/images/hrc_logo.png";
+import logoImg from "@/assets/images/favicon.svg";
 import { motion } from "framer-motion";
 import { logout } from "@/common/redux/action/AuthAction";
 
@@ -67,7 +67,7 @@ const InfoSection = () => {
       <div className="hp-hero-nav">
         <div className="hp-nav-left">
           <img src={logoImg} alt="설문온 로고" className="hp-logo-img" />
-          <span className="hp-logo-text">설문온</span>
+          {/* <span className="hp-logo-text">설문온</span> */}
         </div>
 
 
