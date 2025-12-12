@@ -111,7 +111,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
         <div id="grid" className="cmn_grid singlehead">
           <KendoGrid
             parentProps={{
-              height: "400px",
+              height: "360px",
               data: processedData.data,
               total: processedData.total,
               dataItemKey: DATA_ITEM_KEY,
