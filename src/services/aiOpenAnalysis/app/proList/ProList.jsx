@@ -167,7 +167,7 @@ const ProList = () => {
 
         // ----- ADMIN -----
         { field: "useYN", title: "관리", group: "ADMIN", show: true, order: 1, width: "130px" },
-        { field: "exclude", title: "", group: "ADMIN", show: true, order: 2 },
+        { field: "exclude", title: "", group: "ADMIN", show: true, order: 2, width: "100px" },
 
         // ----- EDIT  → "문항통합"으로 합치기 -----
         withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
