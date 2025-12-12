@@ -165,9 +165,9 @@ const ProList = () => {
         { field: "filterSetting", title: "필터문항 설정", group: "VIEW", show: true, editable: false, allowHide: false, order: 9 },
         { field: "tokens_text", title: "예상비용", group: "VIEW", show: true, allowHide: false, order: 10 },
 
-        // ----- ADMIN → "분석/제외"로 합치기 -----
-        { field: "useYN", title: "분석", group: "ADMIN", show: true, order: 1 },
-        { field: "exclude", title: "제외", group: "ADMIN", show: true, order: 2 },
+        // ----- ADMIN -----
+        { field: "useYN", title: "관리", group: "ADMIN", show: true, order: 1, width: "130px" },
+        { field: "exclude", title: "", group: "ADMIN", show: true, order: 2 },
 
         // ----- EDIT  → "문항통합"으로 합치기 -----
         withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
@@ -729,21 +729,25 @@ const ProList = () => {
                 return <td>{isMergeRow(row) ? '' : row?.[field]}</td>;
             };
 
-            // ADMIN: 분석(버튼 헤더)
+            // ADMIN: 분석 (헤더에 버튼 2개 몰아넣기)
             if (c.field === 'useYN') {
                 return (
                     <Column
                         key={c.field}
                         field={c.field}
                         title={c.title}
-                        width={c.width ?? '90px'}
+                        width={c.width ?? '130px'}
                         sortable={false}
                         filterable={false}
                         columnMenu={undefined}
                         headerCell={() => (
-                            <HeaderBtn className="btnS" onClick={actions.onHeaderUseYN}>
-                                분석
-                            </HeaderBtn>
+                            <HeaderLabeledBtnGroup
+                                // label="관리"
+                                buttons={[
+                                    { text: '분석', className: 'btnS', onClick: actions.onHeaderUseYN },
+                                    { text: '제외', className: 'btnS btnTxt type01', onClick: actions.onHeaderExclude },
+                                ]}
+                            />
                         )}
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
@@ -767,22 +771,18 @@ const ProList = () => {
                     />
                 );
             }
-            // ADMIN: 제외(버튼 헤더)
+            // ADMIN: 제외 (헤더 비우기)
             if (c.field === 'exclude') {
                 return (
                     <Column
                         key={c.field}
                         field={c.field}
-                        title={c.title}
+                        title=""
                         width={c.width ?? '90px'}
                         sortable={false}
                         filterable={false}
                         columnMenu={undefined}
-                        headerCell={() => (
-                            <HeaderBtn className="btnS btnTxt type01" onClick={actions.onHeaderExclude}>
-                                제외
-                            </HeaderBtn>
-                        )}
+                        headerCell={() => <></>}
                         cell={(cellProps) => {
                             const row = cellProps.dataItem;
                             const { merge_qnum } = row;
@@ -810,6 +810,7 @@ const ProList = () => {
                     />
                 );
             }
+
             // EDIT: 수정(헤더에 버튼 2개)
             if (c.field === 'project_lock') {
                 return (
