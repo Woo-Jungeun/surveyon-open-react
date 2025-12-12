@@ -835,31 +835,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
                 if (message) errors.push(message);
             };
-            // 2) 단계별 필수 필드 정의
-            //    lvcode=1  → 소분류 코드/소분류만 필수
-            //    lvcode=2  → 중분류 코드/중분류 + 소분류 코드/소분류 필수
-            //    lvcode=3  → 대분류 코드/대분류 + 중분류 코드/중분류 + 소분류 코드/소분류 필수
-            const requiredFields =
-                lvCode === "1"
-                    ? [
-                        { f: "lv123code", label: "소분류 코드" },
-                        { f: "lv3", label: "소분류" },
-                    ]
-                    : lvCode === "2"
-                        ? [
-                            { f: "lv2code", label: "중분류 코드" },
-                            { f: "lv2", label: "중분류" },
-                            { f: "lv123code", label: "소분류 코드" },
-                            { f: "lv3", label: "소분류" },
-                        ]
-                        : [
-                            { f: "lv1code", label: "대분류 코드" },
-                            { f: "lv1", label: "대분류" },
-                            { f: "lv2code", label: "중분류 코드" },
-                            { f: "lv2", label: "중분류" },
-                            { f: "lv123code", label: "소분류 코드" },
-                            { f: "lv3", label: "소분류" },
-                        ];
+            // 2) 소분류 코드/소분류만 필수
+            const requiredFields = [
+                { f: "lv123code", label: "소분류 코드" },
+                { f: "lv3", label: "소분류" },
+            ];
 
             // 3) 필수값 체크
             rows.forEach((r) => {
@@ -917,27 +897,27 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
         const NamedTextCell = useCallback((cellProps) => {
             const { dataItem, field } = cellProps;
             const editable = dataItem?.inEdit && NAMED_FIELDS.has(field);
-        
+
             // 에러 감지
             const hasError = dataItem?.__errors?.has?.(field);
             const errorKind = dataItem?.__errorKinds?.[field];
             const errorLabel = errorKind === "dup" ? "중복" : "빈값";
-        
+
             const rowKey = keyOf(dataItem);
             const inputId = `${field}-${rowKey}`;   // 고유 id
             const initialValue = dataItem?.[field] ?? "";
-        
+
             // blur 시점에만 상위(onItemChange)로 최종 값 전달
             const handleBlurClose = (e) => {
                 const finalValue = e.target.value;
-        
+
                 // 1) GridData(onItemChange)로 최종 값 전달
                 cellProps.onChange?.({
                     dataItem,
                     field,
                     value: finalValue,
                 });
-        
+
                 // 2) 편집 모드 해제
                 setDataState((prev) => ({
                     ...prev,
@@ -946,7 +926,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     ),
                 }));
             };
-        
+
             // 일반 셀 (편집 아닐 때)
             if (!editable) {
                 return (
@@ -956,7 +936,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     </td>
                 );
             }
-        
+
             return (
                 <td
                     className={`k-table-td ${hasError ? "cell-error" : ""}`}
@@ -966,7 +946,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     <label htmlFor={inputId} className="hidden">
                         {field}
                     </label>
-        
+
                     {TEXTAREA_FIELDS.has(field) ? (
                         <textarea
                             id={inputId}
@@ -999,7 +979,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 </td>
             );
         }, [keyOf, setDataState]);
-        
+
         // --- API 요청 페이로드 변환: 현재 그리드 행 -> 저장 포맷 ---
         const buildSavePayload = (rows, qnum) => {
             // __pendingDelete 행은 제외(=실제 삭제 반영), __isNew 플래그/로컬키는 서버로 안보냄
