@@ -8,6 +8,18 @@
  * icon: SVG 아이콘 경로 또는 SVG 코드
  */
 
+
+import img1 from '@/assets/images/manual/1.png';
+import img2 from '@/assets/images/manual/2.png';
+import img3 from '@/assets/images/manual/3.png';
+import img4 from '@/assets/images/manual/4.png';
+import img5 from '@/assets/images/manual/5.png';
+import img6 from '@/assets/images/manual/6.png';
+import img7 from '@/assets/images/manual/7.png';
+import img7_2 from '@/assets/images/manual/7_2.png';
+import img7_3 from '@/assets/images/manual/7_3.png';
+import img8 from '@/assets/images/manual/8.png';
+
 export const manualData = [
     {
         id: "intro",
@@ -162,7 +174,7 @@ export const manualData = [
                         <div class="guide-title">1. 프로젝트 등록</div>
                     </div>
                     <div class="guide-body">
-                        <img src="/manual_images/1.png" class="guide-image" alt="프로젝트 등록 화면">
+                        <img src="${img1}" class="guide-image" alt="프로젝트 등록 화면">
                         <div class="guide-info">
                             <div class="note-yellow"><strong>조사등록:</strong> 솔루션개발본부 담당자가 등록 (큐마조사와 연동)</div>
                             <div class="note-green"><strong>신규등록:</strong> 연구부서 담당자가 등록</div>
@@ -176,7 +188,7 @@ export const manualData = [
                         <div class="guide-title">2. API 설정</div>
                     </div>
                     <div class="guide-body">
-                        <img src="/manual_images/2.png" class="guide-image" alt="API 설정 화면">
+                        <img src="${img2}" class="guide-image" alt="API 설정 화면">
                         <div class="guide-info">
                             <p>Open AI API KEY를 등록합니다. (자동분석 시 유료 API가 실행됩니다)</p>
                         </div>
@@ -189,10 +201,10 @@ export const manualData = [
                         <div class="guide-title">3. 권한 관리 (프로젝트별)</div>
                     </div>
                     <div class="guide-body">
-                        <img src="/manual_images/3.png" class="guide-image" alt="권한 관리 화면">
+                        <img src="${img3}" class="guide-image" alt="권한 관리 화면">
                         <div class="guide-info">
                             <div class="note-yellow"><strong>조사등록:</strong> 솔루션개발본부 담당자 → 메인 연구원 등록 → 메인 연구원 → 다른 한국리서치 직원 등록</div>
-                            <div class="note-green"><strong>신규등록:</strong> 담당연구원 → 다른 한국리서치 직원 등록</div>
+                            <div class="note-green"><strong>신규등록:</strong> 담당 연구원 → 다른 한국리서치 직원 등록</div>
                         </div>
                     </div>
                 </div>
@@ -203,10 +215,10 @@ export const manualData = [
                         <div class="guide-title">4. 문항목록 / 문항등록</div>
                     </div>
                     <div class="guide-body">
-                        <img src="/manual_images/4.png" class="guide-image" alt="문항 등록 화면">
+                        <img src="${img4}" class="guide-image" alt="문항 등록 화면">
                         <div class="guide-info">
                             <div class="note-yellow"><strong>조사등록:</strong> 조사DB데이터 자동 등록 (문자열 응답 모두)</div>
-                            <div class="note-green"><strong>신규등록:</strong> 담당연구원 - 엑셀파일로 문항선택 후 등록</div>
+                            <div class="note-green"><strong>신규등록:</strong> 담당 연구원 - 엑셀파일로 문항선택 후 등록</div>
                         </div>
                     </div>
                 </div>
@@ -222,11 +234,11 @@ export const manualData = [
                                 <li><strong>분석:</strong> 분석 할 문항만 체크</li>
                                 <li><strong>제외:</strong> 분류 안 할 문항 체크</li>
                                 <li><strong>분석보기:</strong> 각 문항별 카테고리 자동분류 페이지 이동</li>
-                                <li><strong>문항통합저장:</strong> 한번에 분류할 문항 정의 후 기준으로 일괄 분류</li>
+                                <li><strong>문항통합저장:</strong> 한번에 분류 할 문항 정의 후 기준으로 일괄 분류</li>
                                 <li><strong>수정허용/불가:</strong> 분석 완료 후 수정 불가 설정</li>
                             </ul>
                         </div>
-                        <img src="/manual_images/5.png" class="guide-image" alt="분석 보기 화면">
+                        <img src="${img5}" class="guide-image" alt="분석 보기 화면">
                     </div>
                 </div>
 
@@ -246,7 +258,7 @@ export const manualData = [
                                 <li><strong>창의성 조절:</strong> 0에 가까울 수록 동일한 분류</li>
                             </ul>
                         </div>
-                        <img src="/manual_images/6.png" class="guide-image" alt="옵션 설정 화면">
+                        <img src="${img6}" class="guide-image" alt="옵션 설정 화면">
                     </div>
                 </div>
 
@@ -259,12 +271,12 @@ export const manualData = [
                         <div class="guide-info">
                             <ul>
                                 <li><strong>분석 / 번역:</strong> 옵션 / 결과 언어 선택 기준으로 번역됨</li>
-                                <li><strong>분석 / 보기:</strong> 문항와 응답데이터, 프롬프트 정의를 기준으로 보기 데이터 자동 카테고리 분석 / 코드화</li>
-                                <li><strong>분석 / 응답자 분석(NEW):</strong> 문항와 보기데이터, 프롬프트 정의를 기준으로 응답 데이터 자동 카테고리 분석 / 코드화</li>
+                                <li><strong>분석 / 보기:</strong> 문항과 응답데이터, 프롬프트 정의를 기준으로 보기 데이터 자동 카테고리 분석 / 코드화</li>
+                                <li><strong>분석 / 응답자 분석(NEW):</strong> 문항과 보기데이터, 프롬프트 정의를 기준으로 응답 데이터 자동 카테고리 분석 / 코드화</li>
                                 <li><strong>분석 / 응답자 빈셀 & 기타:</strong> 응답자 분석 후 빈셀과 기타를 다시 재분류 (필수 2회 자동 구동)</li>
                             </ul>
                         </div>
-                        <img src="/manual_images/7.png" class="guide-image" alt="분석 화면" width="300px">
+                        <img src="${img7}" class="guide-image" alt="분석 화면" width="300px">
                     </div>
                 </div>
 
@@ -282,9 +294,9 @@ export const manualData = [
                                 <li><strong>엑셀 다운로드/업로드:</strong> 데이터 수정 및 일괄 업데이트</li>
                             </ul>
                         </div>
-                        <img src="/manual_images/7_3.png" class="guide-image" alt="응답 데이터 화면" width="100%">
+                        <img src="${img7_3}" class="guide-image" alt="응답 데이터 화면" width="100%">
                         <div style="margin-top: 10px;"></div>
-                        <img src="/manual_images/7_2.png" class="guide-image" alt="보기 데이터 화면" width="100%">
+                        <img src="${img7_2}" class="guide-image" alt="보기 데이터 화면" width="100%">
                     </div>
                 </div>
 
@@ -297,11 +309,11 @@ export const manualData = [
                         <div class="guide-info">
                             <p>다른 조사의 보기항목을 등록하여 새로운 데이터에 자동분류합니다.</p>
                             <ul>
-                                <li><strong>엑셀보기 추가시:</strong> 오른쪽 "보기엑셀샘플" -> 보기엑셀업로드 -> 보기저장</li>
-                                <li><strong>기존분석 보기 추가시:</strong> 왼쪽 기존 분석된 프로젝트/문항선택 -> 오른쪽 보기 확인 -> 보기저장</li>
+                                <li><strong>엑셀보기 추가시:</strong> 오른쪽 "보기엑셀샘플" → 보기엑셀업로드 → 보기저장</li>
+                                <li><strong>기존분석 보기 추가시:</strong> 왼쪽 기존 분석된 프로젝트/문항선택 → 오른쪽 보기 확인 → 보기저장</li>
                             </ul>
                         </div>
-                        <img src="/manual_images/8.png" class="guide-image" alt="보기 불러오기 화면" width="100%">
+                        <img src="${img8}" class="guide-image" alt="보기 불러오기 화면" width="100%">
                     </div>
                 </div>
 

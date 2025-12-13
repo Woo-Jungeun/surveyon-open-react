@@ -1,4 +1,5 @@
 import { Home } from "lucide-react";
+import manualCss from '@/assets/css/manual.css?inline';
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -157,7 +158,7 @@ const MenuBar = () => {
             <title>통합 웹 매뉴얼</title>
             <!-- Pretendard Font (CDN) -->
             <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
-            <link rel="stylesheet" href="/css/manual.css" />
+            <style>${manualCss}</style>
         </head>
         <body>
             
