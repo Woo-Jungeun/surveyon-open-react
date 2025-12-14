@@ -90,10 +90,10 @@ export const manualData = [
                         <div class="step-content">
                             <span class="step-title">프로젝트 등록</span>
                             <div class="step-desc">
-                                조사DB(솔루션개발본부) 또는 신규등록(연구부서)을 통해 프로젝트를 생성합니다.
+                                조사DB(솔루션본부) 또는 신규등록(연구부서)을 통해 프로젝트를 생성합니다.
                             </div>
                             <div class="step-meta">
-                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션개발본부</span> <span class="badge badge-green">연구부서</span>
+                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션본부</span> <span class="badge badge-green">연구부서</span>
                             </div>
                         </div>
                     </div>
@@ -106,7 +106,7 @@ export const manualData = [
                                 프로젝트 목록 및 권한 관리 메뉴에서 분석 대상을 설정합니다.
                             </div>
                             <div class="step-meta">
-                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션개발본부</span> <span class="badge badge-green">연구부서</span>
+                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션본부</span> <span class="badge badge-green">연구부서</span>
                             </div>
                         </div>
                     </div>
@@ -155,10 +155,10 @@ export const manualData = [
                         <div class="step-content">
                             <span class="step-title">문항별 분석 완료 및 데이터 전달</span>
                             <div class="step-desc">
-                                분석 완료 후 솔루션개발본부 담당자에게 공지하고 진행 사이트 현황을 제시합니다.
+                                분석 완료 후 솔루션본부 담당자에게 공지하고 진행 사이트 현황을 제시합니다.
                             </div>
                             <div class="step-meta">
-                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션개발본부</span> <span class="badge badge-green">연구부서</span> <span class="badge badge-gray">조사지원팀</span>
+                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션본부</span> <span class="badge badge-green">연구부서</span> <span class="badge badge-gray">조사지원팀</span>
                             </div>
                         </div>
                     </div>
@@ -176,7 +176,7 @@ export const manualData = [
                     <div class="guide-body">
                         <img src="${img1}" class="guide-image" alt="프로젝트 등록 화면">
                         <div class="guide-info">
-                            <div class="note-yellow"><strong>조사등록:</strong> 솔루션개발본부 담당자가 등록 (큐마조사와 연동)</div>
+                            <div class="note-yellow"><strong>조사등록:</strong> 솔루션본부 담당자가 등록 (큐마조사와 연동)</div>
                             <div class="note-green"><strong>신규등록:</strong> 연구부서 담당자가 등록</div>
                         </div>
                     </div>
@@ -203,7 +203,7 @@ export const manualData = [
                     <div class="guide-body">
                         <img src="${img3}" class="guide-image" alt="권한 관리 화면">
                         <div class="guide-info">
-                            <div class="note-yellow"><strong>조사등록:</strong> 솔루션개발본부 담당자 → 메인 연구원 등록 → 메인 연구원 → 다른 한국리서치 직원 등록</div>
+                            <div class="note-yellow"><strong>조사등록:</strong> 솔루션본부 담당자 → 메인 연구원 등록 → 메인 연구원 → 다른 한국리서치 직원 등록</div>
                             <div class="note-green"><strong>신규등록:</strong> 담당 연구원 → 다른 한국리서치 직원 등록</div>
                         </div>
                     </div>
