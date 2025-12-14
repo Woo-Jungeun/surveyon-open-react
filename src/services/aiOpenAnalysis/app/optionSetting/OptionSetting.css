@@ -33,8 +33,8 @@
   /* Allow shrinking for small data */
   min-height: 0 !important;
   /* Allow shrinking */
-  overflow-y: auto !important;
-  /* Hide scrollbar when not needed */
+  overflow-y: scroll !important;
+  /* Always show scrollbar track to match header padding */
   overflow-x: auto !important;
   /* Ensure horizontal scroll works */
 }
@@ -46,7 +46,8 @@
 }
 
 #grid_01 .k-grid-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #fff;
+  /* Make track invisible/white to blend in */
   border-radius: 5px;
 }
 
@@ -493,7 +494,6 @@
 .two-grid-layout {
   display: grid;
   grid-template-columns: 1fr 1fr !important;
-  /* 기존 560px 1fr 등을 덮어씀 */
   gap: 16px;
   align-items: start;
 }
@@ -682,7 +682,7 @@
 }
 
 #grid_01 .k-pager {
-  padding: 8px 20px 35px 20px !important;
+  padding: 8px 20px 8px 20px !important;
   background: #fafafa !important;
   border-top: 2px solid #e0e0e0 !important;
   display: flex !important;
@@ -935,11 +935,13 @@
   }
 }
 
-/* Remove padding from header to match body (no scrollbar gap) - REMOVED to fix alignment */
-/* Instead, style the header wrap background to match header cells so the scrollbar gap looks intentional */
-#grid_01 .k-grid-header,
-#grid_01 .k-grid-header-wrap {
+/* Force header padding to match custom scrollbar width (12px) to fix misalignment */
+#grid_01 .k-grid-header {
+  padding-right: 12px !important;
   background-color: #f8f9fa !important;
   border-right: 1px solid #e0e0e0;
-  /* Match header cell border */
+}
+
+#grid_01 .k-grid-header-wrap {
+  border-right: 1px solid #e0e0e0;
 }

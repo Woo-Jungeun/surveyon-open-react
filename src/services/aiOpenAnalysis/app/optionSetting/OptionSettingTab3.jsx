@@ -78,7 +78,7 @@ const OptionSettingTab3 = (props) => {
                 return { ...c, show: false, allowHide: false };
             }
             // 2. 1단계일 때, 원본내용/응답내용/소분류 컬럼의 width 제거 (꽉 차게)
-            if (lvCode === "1" && ["answer_origin", "answerfin", "lv3"].includes(c.field)) {
+            if (lvCode === "1" && ["answer_origin", "answerfin", "lv3", "pid"].includes(c.field)) {
                 const { width, ...rest } = c; // width 제외
                 return rest;
             }
