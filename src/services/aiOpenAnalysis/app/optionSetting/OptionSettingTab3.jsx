@@ -47,15 +47,15 @@ const OptionSettingTab3 = (props) => {
 
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "pid", title: "PID", show: true, allowHide: false },
-            { field: "qnum", title: "문번호", show: true, allowHide: false },
-            { field: "cid", title: "멀티", show: true, allowHide: false },
-            { field: "answer_origin", title: "원본 내용", show: true, allowHide: false },
-            { field: "answerfin", title: "응답 내용", show: true, allowHide: false },
-            { field: "lv1", title: "대분류", show: true, allowHide: false },
-            { field: "lv2", title: "중분류", show: true, allowHide: false },
-            { field: "lv3", title: "소분류", show: true, allowHide: false },
-            { field: "sentiment", title: "sentiment", show: true, allowHide: false }
+            { field: "pid", title: "PID", show: true, allowHide: false, width: "130px" },
+            { field: "qnum", title: "문번호", show: true, allowHide: false, width: "130px" },
+            { field: "cid", title: "멀티", show: true, allowHide: false, width: "90px" },
+            { field: "answer_origin", title: "원본 내용", show: true, allowHide: false, width: "150px" },
+            { field: "answerfin", title: "응답 내용", show: true, allowHide: false, width: "150px" },
+            { field: "lv1", title: "대분류", show: true, allowHide: false, width: "120px" },
+            { field: "lv2", title: "중분류", show: true, allowHide: false, width: "120px" },
+            { field: "lv3", title: "소분류", show: true, allowHide: false, width: "120px" },
+            { field: "sentiment", title: "sentiment", show: true, allowHide: false, width: "150px" }
         ]);
 
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
@@ -72,12 +72,19 @@ const OptionSettingTab3 = (props) => {
 
     // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
     const effectiveColumns = useMemo(() => {
-        return columns.map(c =>
-            forcedHidden.has(c.field)
-                ? { ...c, show: false, allowHide: false }
-                : c
-        );
-    }, [columns, forcedHidden]);
+        return columns.map(c => {
+            // 1. 강제 숨김 처리
+            if (forcedHidden.has(c.field)) {
+                return { ...c, show: false, allowHide: false };
+            }
+            // 2. 1단계일 때, 원본내용/응답내용/소분류 컬럼의 width 제거 (꽉 차게)
+            if (lvCode === "1" && ["answer_origin", "answerfin", "lv3"].includes(c.field)) {
+                const { width, ...rest } = c; // width 제외
+                return rest;
+            }
+            return c;
+        });
+    }, [columns, forcedHidden, lvCode]);
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -128,11 +135,10 @@ const OptionSettingTab3 = (props) => {
 
         return (
             <Fragment>
-                <div id="grid_01" className="cmn_grid">
+                <div id="grid_01" className={`cmn_grid ${String(lvCode) !== "1" ? "force-scroll" : ""}`} style={{ marginBottom: '0px' }}>
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
-                            height: "680px",
                             data: dataWithProxies,       // props에서 직접 전달
                             dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
                             selectedState,

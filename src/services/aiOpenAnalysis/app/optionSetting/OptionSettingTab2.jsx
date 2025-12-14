@@ -55,18 +55,18 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     */
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "no", title: "no", show: true, editable: false, width: "100px" },
-            { field: "qnum", title: "문번호", show: true, editable: false },
-            { field: "lv1code", title: "대분류 코드", show: true },
-            { field: "lv1", title: "대분류", show: true },
+            { field: "no", title: "no", show: true, editable: false, width: "80px" },
+            { field: "qnum", title: "문번호", show: true, editable: false, width: "100px" },
+            { field: "lv1code", title: "대분류 코드", show: true, width: "140px" },
+            { field: "lv1", title: "대분류", show: true, width: "210px" },
             { field: "lv2code", title: "중분류 코드", show: true, width: "140px" },
             { field: "lv2", title: "중분류", show: true, width: "210px" },
             { field: "lv123code", title: "소분류 코드", show: true, allowHide: false, width: "140px" },
             { field: "lv3", title: "소분류", show: true, allowHide: false, width: "210px" },
-            { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false },
-            { field: "ex_gubun", title: "보기유형", show: true, editable: false, allowHide: false },
-            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false },
-            { field: "add", title: "추가", show: true, editable: true, allowHide: false },
+            { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false, width: "150px" },
+            { field: "ex_gubun", title: "보기유형", show: true, editable: false, allowHide: false, width: "150px" },
+            { field: "delete", title: "삭제", show: true, editable: true, allowHide: false, width: "120px" },
+            { field: "add", title: "추가", show: true, editable: true, allowHide: false, width: "120px" },
         ]);
 
     // 단계별 강제 숨김 컬럼
@@ -1074,7 +1074,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         </span>
                     </div>
                 )}
-                <div id="grid_01" className="cmn_grid" ref={gridRootRef}>
+                <div id="grid_01" className={`cmn_grid ${String(lvCode) !== "1" ? "force-scroll" : ""}`} ref={gridRootRef}>
                     <KendoGrid
                         // key={`lv-${lvCode}`}
                         key="tab2-grid"
@@ -1127,6 +1127,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         key={c.field}
                                         field="delete"
                                         title={c.title}
+                                        width={c.width}
                                         sortable={false}
                                         columnMenu={undefined}
                                         cell={(props) => {
@@ -1161,6 +1162,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         key={c.field}
                                         field="add"
                                         title={c.title}
+                                        width={c.width}
                                         sortable={false}
                                         columnMenu={undefined}
                                         cell={(props) => {

@@ -127,18 +127,18 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
             // { field: "fixed_key", title: "키", show: false, editable: false },
-            { field: "answer_origin", title: "원본 응답", show: true, editable: false, width: "230px", allowHide: false },
+            { field: "answer_origin", title: "원본 응답", show: true, editable: false, width: "300px", allowHide: false },
             { field: "cid", title: "멀티", show: true, editable: false, width: "100px", allowHide: false },
-            { field: "answer", title: "클리닝 응답", show: true, editable: false, width: "230px", allowHide: false },
+            { field: "answer", title: "클리닝 응답", show: true, editable: false, width: "300px", allowHide: false },
             { field: "lv1code", title: "대분류 코드", show: true, editable: false, width: "150px" },
-            { field: "lv1", title: "대분류", show: true, editable: false, width: "200px" },
+            { field: "lv1", title: "대분류", show: true, editable: false, width: "250px" },
             { field: "lv2code", title: "중분류 코드", show: true, editable: false, width: "150px" },
-            { field: "lv2", title: "중분류", show: true, editable: false, width: "200px" },
+            { field: "lv2", title: "중분류", show: true, editable: false, width: "250px" },
             { field: "lv123code", title: "소분류 코드", show: true, editable: false, width: "150px", allowHide: false },
-            { field: "lv3", title: "소분류", show: true, editable: true, width: "200px", allowHide: false },
+            { field: "lv3", title: "소분류", show: true, editable: true, width: "250px", allowHide: false },
             { field: "sentiment", title: "sentiment", show: true, editable: false, width: "150px" },
-            { field: "add", title: "추가", show: true, editable: true, width: "100px", allowHide: false },
-            { field: "delete", title: "삭제", show: true, editable: true, width: "100px", allowHide: false }
+            { field: "add", title: "추가", show: true, editable: true, width: "120px", allowHide: false },
+            { field: "delete", title: "삭제", show: true, editable: true, width: "120px", allowHide: false }
         ]);
 
     // 1단계: lv1, lv2 숨김 / 2단계: lv1 숨김 / 3단계: 숨김 없음
@@ -154,11 +154,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
     const effectiveColumns = useMemo(() => {
-        return columns.map(c =>
-            forcedHidden.has(c.field)
-                ? { ...c, show: false, allowHide: false }
-                : c
-        );
+        return columns.map(c => {
+            if (forcedHidden.has(c.field)) {
+                return { ...c, show: false, allowHide: false };
+            }
+            // 1단계일 때, 원본응답/클리닝응답/소분류 컬럼의 width 제거 (꽉 차게)
+            if (lvCode === "1" && ["answer_origin", "answer", "lv3"].includes(c.field)) {
+                const { width, ...rest } = c;
+                return rest;
+            }
+            return c;
+        });
     }, [columns, forcedHidden, stageFields]);
 
     // 정렬/필터를 controlled로
@@ -1187,7 +1193,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b>
                     </div>
                 </div>
-                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`} style={{ marginBottom: '80px' }}>
+                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${String(lvCode) !== "1" ? "force-scroll" : ""} ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`} style={{ marginBottom: '0px' }}>
                     <KendoGrid
                         rowHeight={38}
                         // key={`lv-${lvCode}-${gridEpoch}`}
@@ -1371,6 +1377,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         key={c.field}
                                         field="add"
                                         title={c.title}
+                                        width={c.width}
                                         sortable={false}
                                         columnMenu={undefined}
                                         cell={(props) => {
@@ -1400,6 +1407,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         key={c.field}
                                         field="delete"
                                         title={c.title}
+                                        width={c.width}
                                         sortable={false}
                                         columnMenu={undefined}
                                         cell={(props) => {

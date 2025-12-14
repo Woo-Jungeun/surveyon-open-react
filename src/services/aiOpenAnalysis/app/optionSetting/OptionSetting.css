@@ -4,6 +4,63 @@
   --grid-hl: #FFF0E0;
 }
 
+/* Force grid tables to expand beyond container width to trigger horizontal scroll ONLY when force-scroll class is present */
+#grid_01.force-scroll .k-grid-header table,
+#grid_01.force-scroll .k-grid-content table {
+  min-width: 2000px !important;
+}
+
+/* Ensure consistent column alignment for ALL levels */
+#grid_01 .k-grid-header table,
+#grid_01 .k-grid-content table {
+  table-layout: fixed !important;
+}
+
+/* Ensure the main grid container shrinks to fit content */
+#grid_01 .k-grid {
+  height: auto !important;
+  min-height: 0 !important;
+  /* Allow shrinking */
+}
+
+/* Add padding to lift the scrollbar and prevent it from covering content */
+#grid_01 .k-grid-content {
+  padding-bottom: 0 !important;
+  /* Remove extra padding */
+  max-height: 650px !important;
+  /* Limit height for large data */
+  height: auto !important;
+  /* Allow shrinking for small data */
+  min-height: 0 !important;
+  /* Allow shrinking */
+  overflow-y: auto !important;
+  /* Hide scrollbar when not needed */
+  overflow-x: auto !important;
+  /* Ensure horizontal scroll works */
+}
+
+/* Custom Scrollbar Styling for better visibility */
+#grid_01 .k-grid-content::-webkit-scrollbar {
+  height: 12px !important;
+  width: 12px !important;
+}
+
+#grid_01 .k-grid-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 5px;
+}
+
+#grid_01 .k-grid-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 5px;
+  border: 2px solid #f1f1f1;
+  /* Creates padding effect */
+}
+
+#grid_01 .k-grid-content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
 #grid_01 .k-table-tbody tr.row-active,
 #grid_01 .k-table-tbody tr.lv3-row-selected {
   background: var(--grid-hl) !important;
@@ -146,7 +203,7 @@
   box-shadow: none !important;
 }
 
-/* ?�이 100% 채우�?*/
+
 .lv3-editor.lv3-overlay .lv3-editor-ddl,
 .lv3-editor.lv3-overlay .lv3-editor-ddl .k-picker,
 .lv3-editor.lv3-overlay .lv3-editor-ddl .k-input,
@@ -258,7 +315,7 @@
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
 }
 
-/* �???50:50 고정 */
+/* ???50:50 고정 */
 .two-grid-layout {
   display: grid;
   grid-template-columns: 1fr 1fr !important;
@@ -717,6 +774,7 @@
   background: #ff8533 !important;
   color: white !important;
   font-weight: 600 !important;
+  border-color: #ff8533 !important;
 }
 
 #grid_01 .k-pager .k-button:not(.k-selected):hover,
@@ -875,4 +933,10 @@
     font-size: 12px;
     padding: 8px;
   }
+}
+
+/* Remove padding from header to match body (no scrollbar gap) */
+#grid_01 .k-grid-header,
+#grid_01 .k-grid-header-wrap {
+  padding-right: 0 !important;
 }
