@@ -83,12 +83,18 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
     // 렌더링용 값: 강제 규칙만 입혀서 사용(상태/부모는 건드리지 않음)
     const effectiveColumns = useMemo(() => {
-        return columns.map(c =>
-            forcedHidden.has(c.field)
-                ? { ...c, show: false, allowHide: false }
-                : c
-        );
-    }, [columns, forcedHidden]);
+        return columns.map(c => {
+            if (forcedHidden.has(c.field)) {
+                return { ...c, show: false, allowHide: false };
+            }
+            // 1단계일 때, 소분류/보기유형 컬럼의 width 제거 (꽉 차게)
+            if (lvCode === "1" && ["lv3", "ex_gubun"].includes(c.field)) {
+                const { width, ...rest } = c;
+                return rest;
+            }
+            return c;
+        });
+    }, [columns, forcedHidden, lvCode]);
 
     /**
      * 단계 변경 시 컬럼 상태 정규화:
