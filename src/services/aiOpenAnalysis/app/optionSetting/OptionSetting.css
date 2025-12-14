@@ -935,8 +935,11 @@
   }
 }
 
-/* Remove padding from header to match body (no scrollbar gap) */
+/* Remove padding from header to match body (no scrollbar gap) - REMOVED to fix alignment */
+/* Instead, style the header wrap background to match header cells so the scrollbar gap looks intentional */
 #grid_01 .k-grid-header,
 #grid_01 .k-grid-header-wrap {
-  padding-right: 0 !important;
+  background-color: #f8f9fa !important;
+  border-right: 1px solid #e0e0e0;
+  /* Match header cell border */
 }
