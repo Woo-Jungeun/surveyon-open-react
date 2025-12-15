@@ -478,6 +478,7 @@ const ProList = () => {
                 }
 
                 // 다음 재조회에서 1회 입력 캐시 초기화 + 재조회
+                handleSearch?.();
                 pendingFlushRef.current = true;
                 setTimeStamp(Date.now());
             } catch (e) {
