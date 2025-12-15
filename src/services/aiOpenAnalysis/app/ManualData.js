@@ -19,6 +19,7 @@ import img7 from '@/assets/images/manual/7.png';
 import img7_2 from '@/assets/images/manual/7_2.png';
 import img7_3 from '@/assets/images/manual/7_3.png';
 import img8 from '@/assets/images/manual/8.png';
+import img9 from '@/assets/images/manual/9.png';
 
 export const manualData = [
     {
@@ -90,8 +91,9 @@ export const manualData = [
                         <div class="step-content">
                             <span class="step-title">프로젝트 등록</span>
                             <div class="step-desc">
-                                조사DB(솔루션본부) 또는 신규등록(연구부서)을 통해 프로젝트를 생성합니다.
+                                조사DB(솔루션본부, 담당자) 또는 신규등록(연구부서)을 통해 프로젝트를 생성합니다.
                             </div>
+                               <img src="${img9}" class="guide-image" alt="프로젝트 등록 상세" style="margin-top: 10px; width: 450px;">
                             <div class="step-meta">
                                 <strong>담당자:</strong> <span class="badge badge-blue">솔루션본부</span> <span class="badge badge-green">연구부서</span>
                             </div>
