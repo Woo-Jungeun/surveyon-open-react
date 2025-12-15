@@ -16,14 +16,19 @@
     padding: 0;
 }
 
-body {
+.manual-container {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
     background-color: var(--bg-color);
     color: var(--text-color);
     line-height: 1.6;
     display: flex;
+    width: 100vw;
     height: 100vh;
     overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
 }
 
 /* Sidebar Styling */
@@ -440,7 +445,7 @@ li {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    body {
+    .manual-container {
         flex-direction: column;
         overflow: auto;
         /* Allow body scroll on mobile */

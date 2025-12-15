@@ -9,6 +9,7 @@ import busGif from "@/assets/images/bus_loading.gif";
 import "@/common/utils/tooltip.js";
 
 import AiOpenAnalysisRoutes from "@/services/aiOpenAnalysis";
+import ManualPage from "@/services/aiOpenAnalysis/app/ManualPage";
 function App() {
   const [cookies] = useCookies();
   const auth = useSelector((store) => store.auth);
@@ -34,6 +35,7 @@ function App() {
         ---------------------------- */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/manual" element={<ManualPage />} />
 
         {/* -----------------------------------
             2. 로그인된 경우만 접근 가능한 내부 페이지
