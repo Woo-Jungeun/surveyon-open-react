@@ -794,7 +794,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     onUnsavedChange?.(false);                // 미저장 해제
                     onHasEditLogChange?.(false);
                     baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
-                    // handleSearch(); // 재조회
+                    handleSearch(); // 재조회
 
                     const analysisPayload = {
                         user: auth?.user?.userId || "",
@@ -803,7 +803,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         opencodeResponse: "Y",
                         action: "start",
                     };
-                    console.log("analysisPayload", analysisPayload)
                     const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
                     if (analysisRes?.success === "777") {
                         modal.showErrorAlert("에러", "오류가 발생했습니다.");
