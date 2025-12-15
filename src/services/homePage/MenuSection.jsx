@@ -93,17 +93,17 @@ const MenuSection = () => {
           const isDisabled = !isLoggedIn ||
             item.id === "survey-creation" ||
             item.id === "data-management" ||
-            item.id === "respondent-management";
+            item.id === "respondent-management" || item.id === "data-dashboard";
 
           const handleCardClick = () => {
             if (isDisabled) return;
 
             // 데이터현황은 Figma로 이동
-            if (item.id === "data-dashboard") {
-              window.open("https://www.figma.com/make/u0CvOS5hjvbUv9C6aisDE6/Flowchart-Builder--%EB%B3%B5%EC%82%AC-?t=AWSAkepOTGxvb6VA-20&fullscreen=1", "_blank");
-            } else {
-              navigate(item.path);
-            }
+            // if (item.id === "data-dashboard") {
+            //   window.open("https://www.figma.com/make/u0CvOS5hjvbUv9C6aisDE6/Flowchart-Builder--%EB%B3%B5%EC%82%AC-?t=AWSAkepOTGxvb6VA-20&fullscreen=1", "_blank");
+            // } else {
+            navigate(item.path);
+            // }
           };
 
           return (
