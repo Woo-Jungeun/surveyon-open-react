@@ -38,7 +38,7 @@ const ProPermission = () => {
     worker_id: "",
     worker_password: "",
     worker_position: "",
-    worker_expired: "",
+    worker_expired: moment().add(100, 'years').toDate(),
   });
 
   // 공통 업데이트 핸들러
@@ -175,7 +175,7 @@ const ProPermission = () => {
                   worker_id: "",
                   worker_password: "",
                   worker_position: "",
-                  worker_expired: "",
+                  worker_expired: moment().add(100, 'years').toDate(),
                 });
               },
             },
@@ -265,6 +265,12 @@ const ProPermission = () => {
         .custom-datepicker .k-input-button {
             background: transparent !important;
             border: none !important;
+        }
+        .custom-datepicker .k-input-button svg {
+            display: block !important;
+            width: 24px;
+            height: 24px;
+            color: #ff8024 !important;
         }
       `}</style>
       <article className="subTitWrap pro-list-header">
@@ -371,8 +377,8 @@ const ProPermission = () => {
                     "제작자(관리,읽기,쓰기)",
                     "연구원(읽기,쓰기)",
                     // todo 임시 주석
-                    "고객(읽기)",
-                    "일반(읽기)",
+                    // "고객(읽기)",
+                    // "일반(읽기)",
                   ]}
                   value={formData.permission_gubun}
                   onChange={(e) => handleChange("permission_gubun", e.value)}
@@ -452,22 +458,23 @@ const ProPermission = () => {
                       style={{ flex: 1, height: '28px' }}
                     />
                   </div>
-                  <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                    <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '12px' }}>만료일자 <span style={{ color: '#ff5252' }}>*</span></span>
-                    <DatePicker
-                      className="custom-datepicker"
-                      value={formData.worker_expired ? new Date(formData.worker_expired) : null}
-                      format={"yyyy-MM-dd"}
-                      min={new Date()} // 오늘 이후만 선택 가능
-                      required={false}
-                      disabled={loading}
-                      editable={false}
-                      onChange={(e) => handleChange("worker_expired", e.value)}
-                      style={{ flex: 1, width: '100%', height: '28px' }}
-                    />
-                  </div>
                 </>
               )}
+
+              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '12px' }}>만료일자 <span style={{ color: '#ff5252' }}>*</span></span>
+                <DatePicker
+                  className="custom-datepicker"
+                  value={formData.worker_expired ? new Date(formData.worker_expired) : null}
+                  format={"yyyy-MM-dd"}
+                  max={new Date(2200, 11, 31)}
+                  required={false}
+                  disabled={loading}
+                  editable={false}
+                  onChange={(e) => handleChange("worker_expired", e.value)}
+                  style={{ flex: 1, width: '100%', height: '28px' }}
+                />
+              </div>
 
               <div style={{ marginTop: '15px', textAlign: 'center' }}>
                 <Button
