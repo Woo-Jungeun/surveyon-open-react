@@ -467,7 +467,8 @@ const ProPermission = () => {
                   className="custom-datepicker"
                   value={formData.worker_expired ? new Date(formData.worker_expired) : null}
                   format={"yyyy-MM-dd"}
-                  max={new Date(2200, 11, 31)}
+                  min={new Date()} // 오늘 이후만 선택 가능
+                  max={new Date(2200, 12, 31)}
                   required={false}
                   disabled={loading}
                   editable={false}
