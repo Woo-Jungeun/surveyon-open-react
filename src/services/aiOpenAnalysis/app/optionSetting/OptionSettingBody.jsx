@@ -131,10 +131,17 @@ const OptionSettingBody = () => {
   /*버튼 이벤트 핸들러*/
   const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();
   const onTab2SaveClick = async () => {
-    const ok = await tab2Ref.current?.saveChanges?.();
-    if (ok) {
-      // 저장 성공 → Lv3 코드 재조회
-      await fetchLv3Options();
+    try {
+      loadingSpinner.show();
+      const ok = await tab2Ref.current?.saveChanges?.();
+      if (ok) {
+        // 저장 성공 → Lv3 코드 재조회
+        await fetchLv3Options(true);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loadingSpinner.hide();
     }
   };
 
@@ -348,7 +355,7 @@ const OptionSettingBody = () => {
   }, []);
 
   //-----------------소분류 코드 중앙 관리-----------------
-  const fetchLv3Options = useCallback(async () => {
+  const fetchLv3Options = useCallback(async (skipSpinner = false) => {
     try {
       const res = await optionEditData.mutateAsync({
         params: {
@@ -356,11 +363,12 @@ const OptionSettingBody = () => {
           projectnum,
           qnum,
           gb: "lb",
+          skipSpinner,
         },
       });
 
       if (res.success === "777") {
-        loadingSpinner.hide();  // 로딩바 닫기 
+        if (!skipSpinner) loadingSpinner.hide();  // 로딩바 닫기 
       }
 
       const seen = new Set();

@@ -86,12 +86,13 @@ const GridData = ({
 
     const handleSearch = async (arg) => {
         const params = arg?.params ?? initialParams ?? {};   // 기본 파라미터는 initialParams
+        const skipSpinner = arg?.skipSpinner ?? false;
 
         if (inFlightRef.current || !searchMutation) return;
         inFlightRef.current = true;
 
         try {
-            const res = await searchMutation.mutateAsync({ params });
+            const res = await searchMutation.mutateAsync({ params: { ...params, skipSpinner } });
             const raw = res?.resultjson ?? [];
 
             // 복합키 + 행번호

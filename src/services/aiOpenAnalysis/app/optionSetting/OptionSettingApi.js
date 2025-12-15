@@ -18,10 +18,10 @@ export function OptionSettingApi() {
         async (data) => await api.post(data.params, "/option_edit_api.aspx"),
         {
             onMutate: (variables) => {
-                if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum") loadingSpinner.show();
+                if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum" && !variables?.params?.skipSpinner) loadingSpinner.show();
             },
-            onSettled: (variables) => {
-                if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum") loadingSpinner.hide();
+            onSettled: (data, error, variables) => {
+                if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum" && !variables?.params?.skipSpinner) loadingSpinner.hide();
             }
         }
     );
@@ -31,10 +31,10 @@ export function OptionSettingApi() {
         (data) => api.post(data, "/option_save_api.aspx"),
         {
             onMutate: (variables) => {
-                if (variables?.gb !== "info" && variables?.gb !== "lb") loadingSpinner.show();
+                if (variables?.gb !== "info" && variables?.gb !== "lb" && !variables?.skipSpinner) loadingSpinner.show();
             },
             onSettled: (data, error, variables) => {
-                if (variables?.gb !== "info" && variables?.gb !== "lb") loadingSpinner.hide();
+                if (variables?.gb !== "info" && variables?.gb !== "lb" && !variables?.skipSpinner) loadingSpinner.hide();
             }
         }
     );

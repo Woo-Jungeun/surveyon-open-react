@@ -88,7 +88,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 return { ...c, show: false, allowHide: false };
             }
             // 1단계일 때, 소분류/보기유형 컬럼의 width 제거 (꽉 차게)
-            if (lvCode === "1" && ["lv3", "ex_gubun"].includes(c.field)) {
+            if (lvCode === "1" && ["lv3"].includes(c.field)) {
                 const { width, ...rest } = c;
                 return rest;
             }
@@ -786,7 +786,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 3) 저장 API 호출
             try {
                 const payload = buildSavePayload(normalized, qnum);
-                const res = await optionSaveData.mutateAsync(payload);
+                const res = await optionSaveData.mutateAsync({ ...payload, skipSpinner: true });
                 if (res?.success == "777") {
                     setErrorMarks(new Map());   //에러 초기화
                     // modal.showAlert("알림", "소분류 드롭다운 목록이 적용되었습니다."); // 성공 팝업 표출
@@ -794,7 +794,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     onUnsavedChange?.(false);                // 미저장 해제
                     onHasEditLogChange?.(false);
                     baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
-                    handleSearch(); // 재조회
+                    handleSearch({ skipSpinner: true }); // 재조회
 
                     const analysisPayload = {
                         user: auth?.user?.userId || "",
