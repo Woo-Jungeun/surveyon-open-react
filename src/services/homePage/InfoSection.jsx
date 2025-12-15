@@ -4,7 +4,7 @@ import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3 } from "luc
 import { useSelector, useDispatch } from "react-redux";
 import { useCookies } from "react-cookie";
 import { modalContext } from "@/components/common/Modal.jsx";
-import logoImg from "@/assets/images/favicon.svg";
+import logoImg from "@/assets/images/logo_red.png";
 import { motion } from "framer-motion";
 import { logout } from "@/common/redux/action/AuthAction";
 
