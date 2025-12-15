@@ -27,7 +27,7 @@ const ACTION_LABEL = {
     recallResponse: "응답자 빈셀&기타",
 };
 const MODAL_SCOPE = {
-    visibleOn: "/option_setting",
+    visibleOn: (path) => path.includes("/option_setting"),
     autoCloseOnRouteChange: true,
     // zIndex: 2000, // 필요하면 추가
 };
