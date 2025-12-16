@@ -1710,3 +1710,46 @@ input[type='checkbox']+label {
     height: 36px !important;
   }
 }
+
+/* Override for multihead grid headers to allow wrapping */
+.cmn_grid.multihead .k-grid .k-table-th {
+  white-space: pre-wrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* Comprehensive Multi-line Header Support for Multihead Grids */
+.cmn_grid.multihead .k-grid-header th.k-header,
+.cmn_grid.multihead .k-grid-header th.k-header .k-cell-inner,
+.cmn_grid.multihead .k-grid-header th.k-header .k-link,
+.cmn_grid.multihead .k-grid-header th.k-header .k-column-title {
+  height: auto !important;
+  white-space: pre-wrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.2 !important;
+}
+
+.cmn_grid.multihead .k-grid-header th.k-header .k-cell-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Multi-line Header Support for Singlehead Grids (e.g. Project List) */
+.cmn_grid.singlehead .k-grid-header th.k-header,
+.cmn_grid.singlehead .k-grid-header th.k-header .k-cell-inner,
+.cmn_grid.singlehead .k-grid-header th.k-header .k-link,
+.cmn_grid.singlehead .k-grid-header th.k-header .k-column-title {
+  height: auto !important;
+  white-space: pre-wrap !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.2 !important;
+}
+
+.cmn_grid.singlehead .k-grid-header th.k-header .k-cell-inner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}

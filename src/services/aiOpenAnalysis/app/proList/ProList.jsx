@@ -11,6 +11,7 @@ import { ProListApi } from "@/services/aiOpenAnalysis/app/proList/ProListApi.js"
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";    // 필터문항설정 팝업
+import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
 
 import { modalContext } from "@/components/common/Modal.jsx";
 import moment from "moment";
@@ -159,10 +160,10 @@ const ProList = () => {
         withSubgroup("문항최종", 2)({ field: "question_fin", title: "문항최종", group: "VIEW", show: true, allowHide: false, order: 4, width: "350px", wrap: true }),
 
         { field: "status_cnt", title: "응답자수", group: "VIEW", show: true, allowHide: false, order: 5 },
-        { field: "status_cnt_duplicated", title: "분석대상수", group: "VIEW", show: true, allowHide: false, order: 6 },
-        { field: "status_cnt_fin", title: "분석완료수", group: "VIEW", show: true, allowHide: false, order: 7 },
+        { field: "status_cnt_duplicated", title: "분석\n대상수", group: "VIEW", show: true, allowHide: false, order: 6 },
+        { field: "status_cnt_fin", title: "분석\n완료수", group: "VIEW", show: true, allowHide: false, order: 7 },
         { field: "status_text", title: "진행상황", group: "VIEW", show: true, allowHide: false, order: 8 },
-        { field: "filterSetting", title: "필터문항 설정", group: "VIEW", show: true, editable: false, allowHide: false, order: 9 },
+        { field: "filterSetting", title: "필터문항\n설정", group: "VIEW", show: true, editable: false, allowHide: false, order: 9 },
         { field: "tokens_text", title: "예상비용", group: "VIEW", show: true, allowHide: false, order: 10 },
 
         // ----- ADMIN -----

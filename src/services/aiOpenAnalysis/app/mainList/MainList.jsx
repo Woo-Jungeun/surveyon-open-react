@@ -31,14 +31,14 @@ const MainList = () => {
     const [columns, setColumns] = useState(() =>
         [
             { field: "no", title: "no", show: true, editable: false, width: "90px", allowHide: false },
-            { field: "projectpof", title: "프로젝트 번호", show: true, editable: false, allowHide: false },
-            { field: "projectnum", title: "웹프로젝트 번호", show: true, editable: false, width: "200px", allowHide: false },
+            { field: "projectpof", title: "프로젝트\n번호", show: true, editable: false, allowHide: false },
+            { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "200px", allowHide: false },
             { field: "projectname", title: "프로젝트명", show: true, editable: false, width: "350px", allowHide: false },
             { field: "register_userid", title: "등록자명", show: true, editable: false, allowHide: false },
             { field: "register_date", title: "등록일", show: true, editable: false, allowHide: false },
-            { field: "servername", title: "오픈서버정보", show: true, editable: false, allowHide: false },
-            { field: "project_use_name", title: "오픈작업자", show: true, editable: false, allowHide: false },
-            { field: "project_update_date", title: "업데이트일자", show: true, editable: false, allowHide: false },
+            { field: "servername", title: "오픈\n서버정보", show: true, editable: false, allowHide: false },
+            { field: "project_use_name", title: "오픈\n작업자", show: true, editable: false, allowHide: false },
+            { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, allowHide: false },
             { field: "project_status", title: "작업현황", show: true, editable: true, allowHide: false },
             { field: "usergroup", title: "권한정보", show: true, editable: true, width: "200px", allowHide: false },
         ]);
