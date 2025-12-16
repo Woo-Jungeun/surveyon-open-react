@@ -945,3 +945,73 @@
 #grid_01 .k-grid-header-wrap {
   border-right: 1px solid #e0e0e0;
 }
+
+/* Filter Toggle Button */
+.filter-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  background-color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: #374151;
+  height: 30px;
+}
+
+.filter-toggle-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111;
+}
+
+.filter-toggle-btn.active {
+  border-color: var(--primary-color, #008000);
+  color: var(--primary-color, #008000);
+}
+
+.filter-toggle-btn.active:hover {
+  background-color: var(--primary-bg-hover, #d1e7dd);
+}
+
+.filter-toggle-btn .check-icon {
+  font-size: 14px;
+  line-height: 1;
+  margin-right: 2px;
+}
+
+/* Header Layout */
+.meta-header-layout {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  padding: 0 4px;
+  width: 100%;
+}
+
+.meta-header-left {
+  text-align: left;
+}
+
+.meta-header-right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  /* No font/color overrides - inherited from .meta2 */
+}
+
+/* Override Header Layout for vertical centering */
+.meta-header-layout {
+  align-items: center !important;
+}
+
+
+/* Nudge button down slightly for visual centering */
+.meta-header-left {
+  margin-top: 4px;
+}

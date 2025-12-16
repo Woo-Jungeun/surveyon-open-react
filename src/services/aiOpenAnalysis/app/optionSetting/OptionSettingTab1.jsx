@@ -102,6 +102,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const SELECTED_FIELD = "selected";
     const { optionEditData, optionSaveData } = OptionSettingApi();
     const [editField] = useState("inEdit");
+    // 검증 안 된 데이터만 보기 필터 상태 (GridRenderer가 리마운트되어도 유지되도록 상위로 이동)
+    const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
 
     const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
@@ -231,7 +233,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const GridRenderer = memo(forwardRef((props, ref) => {
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
-            sigStackRef, makeTab1Signature, scrollTopRef
+            sigStackRef, makeTab1Signature, scrollTopRef,
+            showUnverifiedOnly, setShowUnverifiedOnly
         } = props;
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
@@ -256,9 +259,22 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const take = 500;
 
         // 전체 데이터에 프록시 추가
+        // const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false); // 상위로 이동됨
+
+        const filteredData = useMemo(() => {
+            const raw = dataState?.data || [];
+            if (!showUnverifiedOnly) return raw;
+            // 검증 안된 데이터 = 체크박스(selectedState)가 체크되지 않은 데이터
+            return raw.filter(r => {
+                const k = getKey(r);
+                // selectedState에 키가 없거나 false이면 검증 안된 것
+                return !selectedState?.[k];
+            });
+        }, [dataState?.data, showUnverifiedOnly, selectedState]);
+
         const { dataWithProxies, proxyField } = useMemo(
-            () => addSortProxies(dataState?.data || []),
-            [dataState?.data]
+            () => addSortProxies(filteredData),
+            [filteredData]
         );
 
         const mappedSort = useMemo(
@@ -329,6 +345,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     });
 
                     setSortedKeys(newSortedKeys);
+                } else {
+                    // 삭제된 경우 (필터링 등으로 인해): sortedKeys에서 제거
+                    const currentDataKeys = new Set(dataWithProxies.map(item => item.__rowKey));
+                    setSortedKeys(sortedKeys.filter(key => currentDataKeys.has(key)));
                 }
             }
         }, [dataWithProxies, mappedSort, filter]);
@@ -1187,10 +1207,21 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <div className="meta2">
-                    <div className="row1">업데이트 날짜: {updatedAt}</div>
-                    <div className="row2">
-                        분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b>
+                <div className="meta-header-layout">
+                    <div className="meta-header-left">
+                        <button
+                            className={`filter-toggle-btn ${showUnverifiedOnly ? 'active' : ''}`}
+                            onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
+                        >
+                            <span className="check-icon">{showUnverifiedOnly ? '☑' : '☐'}</span>
+                            검증 안 된 데이터만 보기
+                        </button>
+                    </div>
+                    <div className="meta-header-right meta2">
+                        <div className="row1">업데이트 날짜: {updatedAt}</div>
+                        <div className="row2">
+                            <span>분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b></span>
+                        </div>
                     </div>
                 </div>
                 <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${String(lvCode) !== "1" ? "force-scroll" : ""} ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`} style={{ marginBottom: '0px' }}>
@@ -1477,8 +1508,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             makeTab1Signature={makeTab1Signature}
             ref={gridRef}
             scrollTopRef={scrollTopRef}
+            showUnverifiedOnly={showUnverifiedOnly}
+            setShowUnverifiedOnly={setShowUnverifiedOnly}
         />
-    ), [hist, makeTab1Signature, sort, filter]);
+    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly]);
 
     return (
         <GridData
