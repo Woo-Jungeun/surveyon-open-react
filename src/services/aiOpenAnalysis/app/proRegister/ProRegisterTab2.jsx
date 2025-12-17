@@ -191,6 +191,14 @@ const ProRegisterTab2 = () => {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: "array" });
         const jsonData = buildJsonData(workbook, selectData);
+
+        if (jsonData.length === 0) {
+          modal.showErrorAlert(
+            "알림",
+            "엑셀에 등록할 응답 데이터가 없거나, \n엑셀 형식이 가이드와 일치하지 않습니다."
+          );
+          return;
+        }
         const cleanModel = analysisModel.replace(/\(.*\)/g, "").trim();
 
         const payload = {
