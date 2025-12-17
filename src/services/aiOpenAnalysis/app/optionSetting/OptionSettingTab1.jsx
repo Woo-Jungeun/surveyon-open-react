@@ -242,7 +242,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             showUnverifiedOnly, setShowUnverifiedOnly,
             isLeftOpen
         } = props;
-        console.log(isLeftOpen)
+
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [isDragging, setIsDragging] = useState(false);
