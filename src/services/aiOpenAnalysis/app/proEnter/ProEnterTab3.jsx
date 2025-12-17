@@ -24,17 +24,17 @@ const ProEnterTab3 = () => {
     const [pofList, setPofList] = useState([]);
     const [projectname, setProjectname] = useState("");
     const [loading, setLoading] = useState(false);
+    const [filter, setFilter] = useState("");
 
     // POF 검색
     const handlePofFilterChange = async (event) => {
-        const filter = event.filter?.value || "";
-        console.log("Filter change:", filter);
+        const val = event.filter?.value || "";
+        setFilter(val);
+        setPof(val); // 입력 중인 값을 state에 반영하여 리렌더링 시 되돌아가는 현상 방지
 
-        if (filter && filter.length >= 4) { // 4글자 이상일 때 검색
+        if (val && val.length >= 4) { // 4글자 이상일 때 검색
             try {
-                console.log("Calling POF API with:", filter);
-                const data = await getPofInfo.mutateAsync(filter);
-                console.log("POF API response:", data);
+                const data = await getPofInfo.mutateAsync(val);
 
                 // API 응답: { POF번호: "...", 프로젝트명: "...", ... }
                 // 배열로 변환
@@ -168,10 +168,11 @@ const ProEnterTab3 = () => {
                             value={pof}
                             onChange={handlePofChange}
                             onFilterChange={handlePofFilterChange}
+                            filter={filter}
                             filterable={true}
                             allowCustom={true}
                             textField="POF번호"
-                            dataItemKey="pofID"
+                            dataItemKey="POF번호"
                             placeholder="프로젝트 번호를 입력해주세요. (예: 2025-00-0000)"
                             disabled={loading}
                         />
