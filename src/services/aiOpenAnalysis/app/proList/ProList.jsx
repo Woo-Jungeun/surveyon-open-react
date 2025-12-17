@@ -163,12 +163,12 @@ const ProList = () => {
         { field: "status_cnt_duplicated", title: "분석\n대상수", group: "VIEW", show: true, allowHide: false, order: 6 },
         { field: "status_cnt_fin", title: "분석\n완료수", group: "VIEW", show: true, allowHide: false, order: 7 },
         { field: "status_text", title: "진행상황", group: "VIEW", show: true, allowHide: false, order: 8 },
-        { field: "filterSetting", title: "필터문항\n설정", group: "VIEW", show: true, editable: false, allowHide: false, order: 9 },
+        { field: "filterSetting", title: "필터문항\n설정", group: "VIEW", show: true, editable: false, allowHide: true, order: 9 },
         { field: "tokens_text", title: "예상비용", group: "VIEW", show: true, allowHide: false, order: 10 },
 
         // ----- ADMIN -----
         { field: "useYN", title: "관리", group: "ADMIN", show: true, order: 1, width: "130px" },
-        { field: "exclude", title: "", group: "ADMIN", show: true, order: 2, width: "100px" },
+        { field: "exclude", title: "분석보기", group: "ADMIN", show: true, order: 2, width: "100px" },
 
         // ----- EDIT  → "문항통합"으로 합치기 -----
         withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
