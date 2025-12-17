@@ -286,11 +286,16 @@ const ProRegisterPopup = (parentProps) => {
 
     return (
       <Fragment>
+        <style>{`
+          #grid_01 .k-grid-content {
+            max-height: 500px !important;
+          }
+        `}</style>
         <div className="cmn_gird_wrap">
           <div id="grid_01" className="cmn_grid singlehead">
             <KendoGrid
               parentProps={{
-                height: "640px", // 권장: 고정 높이로 스크롤 안정화
+                height: "auto", // CSS max-height 제어
                 data: popupGridData,
                 dataItemKey: "__rowKey",
                 selectedState,
@@ -384,7 +389,7 @@ const ProRegisterPopup = (parentProps) => {
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", padding: "18px 12px" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end", padding: "18px 12px 16px 12px" }}>
           <Button
             themeColor="primary"
             onClick={handleSelectConfirm}
@@ -399,7 +404,7 @@ const ProRegisterPopup = (parentProps) => {
 
   return (
     <article className={`modal ${modalOnOff}`}>
-      <div className="cmn_popup">
+      <div className="cmn_popup" style={{ maxHeight: "750px" }}>
         <div className="popTit">
           <h3>문항 선택 팝업
             <span
