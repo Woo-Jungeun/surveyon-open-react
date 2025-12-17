@@ -43,7 +43,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const auth = useSelector((store) => store.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum, qid } = props;
+    const { onUnsavedChange, onSaved, persistedPrefs, onPrefsChange, onHasEditLogChange, projectnum, qnum, qid, isLeftOpen } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = ["lv123code", "lv3"];
     // 스크롤 위치 저장용 ref
@@ -87,14 +87,19 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             if (forcedHidden.has(c.field)) {
                 return { ...c, show: false, allowHide: false };
             }
-            // 1단계일 때, 소분류/보기유형 컬럼의 width 제거 (꽉 차게)
-            if (lvCode === "1" && ["lv3"].includes(c.field)) {
+            // 왼쪽 패널이 닫혀있으면 모든 단계에서 주요 컬럼 너비 제거
+            if (!isLeftOpen && ["lv3", "lv2", "lv1"].includes(c.field)) {
+                const { width, ...rest } = c;
+                return rest;
+            }
+            // 왼쪽 패널이 열려있으면 1단계일 때만 소분류/보기유형 컬럼의 width 제거
+            if (isLeftOpen && lvCode === "1" && ["lv3"].includes(c.field)) {
                 const { width, ...rest } = c;
                 return rest;
             }
             return c;
         });
-    }, [columns, forcedHidden, lvCode]);
+    }, [columns, forcedHidden, lvCode, isLeftOpen]);
 
     /**
      * 단계 변경 시 컬럼 상태 정규화:
@@ -210,7 +215,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const GridRenderer = (props) => {
         const {
             dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch,
-            hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature, scrollTopRef
+            hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature, scrollTopRef,
+            isLeftOpen
         } = props;
 
         const { dataWithProxies, proxyField } = useMemo(
@@ -1079,7 +1085,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                         </span>
                     </div>
                 )}
-                <div id="grid_01" className={`cmn_grid ${String(lvCode) !== "1" ? "force-scroll" : ""}`} ref={gridRootRef}>
+                <div id="grid_01" className={`cmn_grid singlehead ${isLeftOpen && String(lvCode) !== "1" ? "force-scroll" : ""}`} ref={gridRootRef}>
                     <KendoGrid
                         // key={`lv-${lvCode}`}
                         key="tab2-grid"
@@ -1267,6 +1273,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     sigStackRef={sigStackRef}
                     makeTab2Signature={makeTab2Signature}
                     scrollTopRef={scrollTopRef}
+                    isLeftOpen={isLeftOpen}
                 />
             )}
         />

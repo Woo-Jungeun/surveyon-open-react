@@ -730,6 +730,7 @@ const OptionSettingBody = () => {
                     handleOpenLv3Panel(...args);
                   }}
                   onResponseCountChange={setResponseCount}
+                  isLeftOpen={isLeftOpen}
                 />
               ) : tabDivision === "2" ? (
                 <OptionSettingTab2
@@ -749,6 +750,7 @@ const OptionSettingBody = () => {
                   onHasEditLogChange={defer((v) => setCanSave(prev => ({ ...prev, "2": !!v })))}
                   persistedPrefs={gridPrefs["2"]}
                   onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
+                  isLeftOpen={isLeftOpen}
                 />
               ) : <OptionSettingTab3
                 lvCode={lvCodeDraft.value}
@@ -756,6 +758,7 @@ const OptionSettingBody = () => {
                 qnum={qnum}
                 persistedPrefs={gridPrefs["3"]}
                 onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
+                isLeftOpen={isLeftOpen}
               />
               }
             </div>

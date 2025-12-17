@@ -42,7 +42,7 @@ const OptionSettingTab3 = (props) => {
     const auth = useSelector((store) => store.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const lvCode = String(props.lvCode); // 분류 단계 코드
-    const { persistedPrefs, onPrefsChange, projectnum, qnum } = props;
+    const { persistedPrefs, onPrefsChange, projectnum, qnum, isLeftOpen } = props;
     const DATA_ITEM_KEY = ["pid", "cid"];   // 다중 키 
 
     const [columns, setColumns] = useState(() =>
@@ -77,14 +77,19 @@ const OptionSettingTab3 = (props) => {
             if (forcedHidden.has(c.field)) {
                 return { ...c, show: false, allowHide: false };
             }
-            // 2. 1단계일 때, 원본내용/응답내용/소분류 컬럼의 width 제거 (꽉 차게)
-            if (lvCode === "1" && ["answer_origin", "answerfin", "lv3", "pid"].includes(c.field)) {
+            // 왼쪽 패널이 닫혀있으면 모든 단계에서 주요 컬럼 너비 제거
+            if (!isLeftOpen && ["answer_origin", "answerfin", "lv1", "lv2", "lv3", "pid"].includes(c.field)) {
+                const { width, ...rest } = c;
+                return rest;
+            }
+            // 왼쪽 패널이 열려있으면 1단계일 때만 원본내용/응답내용/소분류 컬럼의 width 제거
+            if (isLeftOpen && lvCode === "1" && ["answer_origin", "answerfin", "lv3", "pid"].includes(c.field)) {
                 const { width, ...rest } = c; // width 제외
                 return rest;
             }
             return c;
         });
-    }, [columns, forcedHidden, lvCode]);
+    }, [columns, forcedHidden, lvCode, isLeftOpen]);
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -123,7 +128,7 @@ const OptionSettingTab3 = (props) => {
 
     //grid rendering 
     const GridRenderer = (props) => {
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
+        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, isLeftOpen } = props;
         const { dataWithProxies, proxyField } = useMemo(
             () => addSortProxies(dataState?.data || []),
             [dataState?.data]
@@ -135,7 +140,7 @@ const OptionSettingTab3 = (props) => {
 
         return (
             <Fragment>
-                <div id="grid_01" className={`cmn_grid ${String(lvCode) !== "1" ? "force-scroll" : ""}`} style={{ marginBottom: '0px' }}>
+                <div id="grid_01" className={`cmn_grid singlehead ${isLeftOpen && String(lvCode) !== "1" ? "force-scroll" : ""}`} style={{ marginBottom: '0px' }}>
                     <KendoGrid
                         key={`lv-${lvCode}`}
                         parentProps={{
@@ -232,7 +237,7 @@ const OptionSettingTab3 = (props) => {
                 qnum: qnum,
                 gb: "list",
             }}
-            renderItem={(props) => <GridRenderer {...props} />}
+            renderItem={(props) => <GridRenderer {...props} isLeftOpen={isLeftOpen} />}
 
         />
     );

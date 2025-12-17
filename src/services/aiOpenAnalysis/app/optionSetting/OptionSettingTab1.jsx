@@ -96,7 +96,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
         , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel
-        , lv3Options, onRequestLv3Refresh, onResponseCountChange } = props;
+        , lv3Options, onRequestLv3Refresh, onResponseCountChange, isLeftOpen } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const SELECTED_FIELD = "selected";
@@ -160,14 +160,19 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (forcedHidden.has(c.field)) {
                 return { ...c, show: false, allowHide: false };
             }
-            // 1단계일 때, 원본응답/클리닝응답/소분류 컬럼의 width 제거 (꽉 차게)
-            if (lvCode === "1" && ["answer_origin", "answer", "lv3"].includes(c.field)) {
+            // 왼쪽 패널이 닫혀있으면 모든 단계에서 주요 컬럼 너비 제거
+            if (!isLeftOpen && ["answer_origin", "answer", "lv3", "lv2", "lv1"].includes(c.field)) {
+                const { width, ...rest } = c;
+                return rest;
+            }
+            // 왼쪽 패널이 열려있으면 1단계일 때만 주요 컬럼 너비 제거
+            if (isLeftOpen && lvCode === "1" && ["answer_origin", "answer", "lv3"].includes(c.field)) {
                 const { width, ...rest } = c;
                 return rest;
             }
             return c;
         });
-    }, [columns, forcedHidden, stageFields]);
+    }, [columns, forcedHidden, stageFields, lvCode, isLeftOpen]);
 
     // 정렬/필터를 controlled로
     const [sort, setSort] = useState(persistedPrefs?.sort ?? []);
@@ -234,8 +239,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const { dataState, setDataState, selectedState, setSelectedState,
             handleSearch, hist, baselineDidRef, baselineAfterReloadRef,
             sigStackRef, makeTab1Signature, scrollTopRef,
-            showUnverifiedOnly, setShowUnverifiedOnly
+            showUnverifiedOnly, setShowUnverifiedOnly,
+            isLeftOpen
         } = props;
+        console.log(isLeftOpen)
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [isDragging, setIsDragging] = useState(false);
@@ -1224,7 +1231,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div ref={gridRootRef} id="grid_01" className={`cmn_grid ${String(lvCode) !== "1" ? "force-scroll" : ""} ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`} style={{ marginBottom: '0px' }}>
+                <div ref={gridRootRef} id="grid_01" className={`cmn_grid singlehead ${isLeftOpen && String(lvCode) !== "1" ? "force-scroll" : ""} ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`} style={{ marginBottom: '0px' }}>
                     <KendoGrid
                         rowHeight={38}
                         // key={`lv-${lvCode}-${gridEpoch}`}
@@ -1510,8 +1517,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             scrollTopRef={scrollTopRef}
             showUnverifiedOnly={showUnverifiedOnly}
             setShowUnverifiedOnly={setShowUnverifiedOnly}
+            isLeftOpen={isLeftOpen}
         />
-    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly]);
+    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly, isLeftOpen]);
 
     return (
         <GridData
