@@ -5,26 +5,14 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { Fragment, useEffect } from "react";
 import { useCookies } from "react-cookie";
 import PageNotFound from "@/services/aiOpenAnalysis/app/pageNotFound/PageNotFound";
-import busGif from "@/assets/images/bus_loading.gif";
 import "@/common/utils/tooltip.js";
 
 import AiOpenAnalysisRoutes from "@/services/aiOpenAnalysis";
 import ManualPage from "@/services/aiOpenAnalysis/app/ManualPage";
+
 function App() {
   const [cookies] = useCookies();
   const auth = useSelector((store) => store.auth);
-  useEffect(() => {
-    const link = document.createElement("link");
-    link.rel = "preload";
-    link.as = "image";
-    link.href = busGif; // Vite가 빌드 시 해시가 붙은 실제 URL로 변환됨
-    document.head.appendChild(link);
-
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
-
   const isLoggedIn = auth?.isLogin && cookies?.TOKEN;
 
   return (
