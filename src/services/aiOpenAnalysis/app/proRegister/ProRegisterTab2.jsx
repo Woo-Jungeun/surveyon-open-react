@@ -38,6 +38,7 @@ const ProRegisterTab2 = () => {
 
   const handleFileChange = (e) => {
     const f = e.target.files?.[0];
+    setSelectData([]); // 파일 변경 시 선택된 문항 초기화
     if (!f) {
       setFile(null);
       setIdList([]);
