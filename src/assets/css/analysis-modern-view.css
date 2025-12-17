@@ -106,7 +106,7 @@
 .analysis-dashboard-v2 .subContWrap.left-closed .collapseBar {
     position: fixed !important;
     left: 0 !important;
-    top: 120px !important;
+    top: 145px !important;
     z-index: 1000 !important;
     background: transparent !important;
     border-radius: 0 !important;
@@ -338,26 +338,27 @@
 .analysis-dashboard-v2 .k-grid-content {
     padding-bottom: 50px !important;
 }
+
 /* ===================================================
      MODERN ANALYSIS VIEW RESPONSIVE
 =================================================== */
 
-/* Tablet (1024px ¿Ã«œ) */
+/* Tablet (1024px ÔøΩÔøΩÔøΩÔøΩ) */
 @media (max-width: 1024px) {
     .analysis-dashboard-v2 {
         --left-panel-width: 320px;
     }
-    
+
     .analysis-dashboard-v2 .subContL {
         padding: 20px 16px !important;
     }
-    
+
     .analysis-dashboard-v2 .subContR {
         padding: 20px !important;
     }
 }
 
-/* Mobile (768px ¿Ã«œ) */
+/* Mobile (768px Ïù¥Ìïò) */
 @media (max-width: 768px) {
     .analysis-dashboard-v2 {
         height: auto;
@@ -371,7 +372,6 @@
         overflow: visible !important;
     }
 
-    /* øﬁ¬  ∆–≥Œ¿ª ∏πŸ¿œø°º≠¥¬ ªÛ¥‹ø° πËƒ°«œ∞≈≥™ º˚±Ë √≥∏Æ (ø©±‚º≠¥¬ ªÛ¥‹ πËƒ° øπΩ√) */
     .analysis-dashboard-v2 .subContL {
         width: 100% !important;
         min-width: 100% !important;
@@ -389,7 +389,7 @@
     }
 
     .analysis-dashboard-v2 .grid-area {
-        height: 500px; /* ∏πŸ¿œø°º≠ ±◊∏ÆµÂ ≥Ù¿Ã ∞Ì¡§ */
+        height: 500px;
         margin-bottom: 16px;
     }
 
@@ -398,7 +398,7 @@
         align-items: flex-start;
         height: auto;
     }
-    
+
     .analysis-dashboard-v2 .action-buttons-group {
         width: 100%;
         justify-content: flex-end;
@@ -424,18 +424,18 @@
         right: 20px;
         top: auto;
         bottom: 80vh;
-        transform: translateY(50%); /* ¿ßƒ° ¡∂¡§ */
+        transform: translateY(50%);
         width: 40px;
         height: 40px;
         border-radius: 50%;
     }
-    
+
     .analysis-dashboard-v2 .lv3-panel-toggle.open {
         transform: translateY(50%);
     }
 }
 
-/* Mobile Small (480px ¿Ã«œ) */
+/* Mobile Small (480px Ïù¥Ìïò) */
 @media (max-width: 480px) {
     .analysis-dashboard-v2 .subTit .titTxt {
         font-size: 16px !important;
@@ -446,7 +446,7 @@
         padding: 4px 12px !important;
         height: 28px !important;
     }
-    
+
     .analysis-dashboard-v2 .subContL,
     .analysis-dashboard-v2 .subContR {
         padding: 12px !important;
