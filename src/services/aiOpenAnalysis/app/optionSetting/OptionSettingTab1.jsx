@@ -1519,7 +1519,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setShowUnverifiedOnly={setShowUnverifiedOnly}
             isLeftOpen={isLeftOpen}
         />
-    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly, isLeftOpen]);
+    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly, isLeftOpen, effectiveColumns]);
 
     return (
         <GridData
