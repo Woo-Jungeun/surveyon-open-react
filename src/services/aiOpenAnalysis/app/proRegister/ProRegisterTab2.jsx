@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext, Fragment, useCallback } from "react";
+﻿import React, { useState, useRef, useContext, Fragment, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -253,10 +253,11 @@ const ProRegisterTab2 = () => {
   };
 
   const openGuideWindow = () => {
-    const guideWindow = window.open('', '엑셀 작성 가이드', 'width=900,height=850,scrollbars=yes');
-    const guideHTML = getExcelGuideHTML();
-    guideWindow.document.write(guideHTML);
-    guideWindow.document.close();
+    window.open(
+      '/excel_guide',
+      '엑셀 작성 가이드',
+      'width=900,height=780,scrollbars=no,resizable=no'
+    );
   };
 
   return (

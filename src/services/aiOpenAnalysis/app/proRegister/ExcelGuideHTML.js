@@ -14,7 +14,8 @@ export const getExcelGuideHTML = () => `
     }
 
     body {
-      padding: 30px;
+      min-width: 900px !important;
+      padding: 25px;
       background: #f5f5f5;
       margin: 0;
     }
@@ -23,7 +24,7 @@ export const getExcelGuideHTML = () => `
       max-width: 850px;
       margin: 0 auto;
       background: #fff;
-      padding: 40px;
+      padding: 10px 20px !important;
       border-radius: 12px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     }
