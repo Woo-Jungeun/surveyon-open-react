@@ -42,7 +42,7 @@ const ProRegisterTab1 = (props) => {
             const res = await proRegisterMutation.mutateAsync(payload);
             if (res?.success === "777") {
                 modal.showConfirm("알림", "문항이 등록되었습니다.", {
-                    btns: [{ title: "확인", click: () => navigate("/ai_open_analysis/ai_open_analysis/pro_list") }],
+                    btns: [{ title: "확인", click: () => navigate("/ai_open_analysis/pro_list") }],
                 });
             } else {
                 modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
