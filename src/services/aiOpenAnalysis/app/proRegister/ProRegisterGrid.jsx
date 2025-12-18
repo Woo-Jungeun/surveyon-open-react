@@ -27,7 +27,7 @@ const ProRegisterGrid = ({ onDataLength }) => {
     [
       { field: "no", title: "no", show: true, editable: false, width: "150px", allowHide: false },
       { field: "qnum", title: "qnum", show: true, editable: false, width: "300px", allowHide: false },
-      { field: "question", title: "question", show: true, editable: false, allowHide: false },
+      { field: "question", title: "등록된 맵의 오픈문항", show: true, editable: false, allowHide: false },
     ]);
 
   // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
