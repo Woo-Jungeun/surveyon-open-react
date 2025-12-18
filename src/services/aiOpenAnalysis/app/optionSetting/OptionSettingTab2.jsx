@@ -48,6 +48,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const DATA_ITEM_KEY = ["lv123code", "lv3"];
     // 스크롤 위치 저장용 ref
     const scrollTopRef = useRef(0);
+    const scrollLeftRef = useRef(0);
 
     /**
      * 숨김처리 여부 allowHide (true/false)
@@ -213,7 +214,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     const GridRenderer = (props) => {
         const {
             dataState, setDataState, selectedState, setSelectedState, idGetter, dataItemKey, handleSearch,
-            hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature, scrollTopRef,
+            hist, baselineDidRef, baselineAfterReloadRef, baselineSigRef, sigStackRef, makeTab2Signature, scrollTopRef, scrollLeftRef,
             isLeftOpen
         } = props;
 
@@ -230,6 +231,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
             if (grid) {
                 scrollTopRef.current = grid.scrollTop;
+                scrollLeftRef.current = grid.scrollLeft;
             }
         }, []);
 
@@ -238,6 +240,9 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             if (!grid) return;
             if (scrollTopRef.current > 0) {
                 grid.scrollTop = scrollTopRef.current;
+            }
+            if (scrollLeftRef.current > 0) {
+                grid.scrollLeft = scrollLeftRef.current;
             }
         }, [dataState?.data]);
 
@@ -1271,6 +1276,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     sigStackRef={sigStackRef}
                     makeTab2Signature={makeTab2Signature}
                     scrollTopRef={scrollTopRef}
+                    scrollLeftRef={scrollLeftRef}
                     isLeftOpen={isLeftOpen}
                 />
             )}
