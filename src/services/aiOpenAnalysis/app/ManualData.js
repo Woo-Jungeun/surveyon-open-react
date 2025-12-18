@@ -414,42 +414,43 @@ export const manualData = [
             <h2>5. 응답자 관리</h2>
             <p>상태 관리 및 AI 성실도 분류 및 관리</p>
         `
-    },
-    {
-        id: "style_guide",
-        title: "6. 스타일 가이드",
-        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.01 17.461 2 12 2z"></path></svg>`,
-        content: `
-            <h2>스타일 가이드</h2>
-            <p>매뉴얼 작성 시 사용할 수 있는 다양한 스타일 예시입니다.</p>
-            
-            <h3>1. 강조 박스 (Note) 스타일</h3>
-            <p>상황에 맞는 색상을 선택하여 사용하세요. <code>class="note-색상명"</code></p>
-            
-            <div class="note-orange">기본/주의 (Orange): class="note-orange" (또는 note)</div>
-            <div class="note-blue">정보/알림 (Blue): class="note-blue"</div>
-            <div class="note-green">성공/완료 (Green): class="note-green"</div>
-            <div class="note-red">경고/오류 (Red): class="note-red"</div>
-            <div class="note-purple">팁/제안 (Purple): class="note-purple"</div>
-            <div class="note-gray">참고/기타 (Gray): class="note-gray"</div>
-            <div class="note-teal">Teal: class="note-teal"</div>
-            <div class="note-indigo">Indigo: class="note-indigo"</div>
-            <div class="note-pink">Pink: class="note-pink"</div>
-            <div class="note-yellow">Yellow: class="note-yellow"</div>
-
-            <h3>2. 이미지 스타일</h3>
-            
-            <h4>Style 1: 심플 보더 (class="img-style-simple")</h4>
-            <img src="https://via.placeholder.com/600x200" class="img-style-simple" alt="예시 이미지">
-            
-            <h4>Style 2: 그림자 효과 (class="img-style-shadow")</h4>
-            <img src="https://via.placeholder.com/600x200" class="img-style-shadow" alt="예시 이미지">
-            
-            <h4>Style 3: 캡션 포함 (class="img-style-caption")</h4>
-            <div class="img-style-caption">
-                <img src="https://via.placeholder.com/600x200" alt="예시 이미지">
-                <div class="img-caption-text">이미지 하단에 설명을 입력할 수 있습니다.</div>
-            </div>
-        `
     }
+    // ,
+    // {
+    //     id: "style_guide",
+    //     title: "6. 스타일 가이드",
+    //     icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.01 17.461 2 12 2z"></path></svg>`,
+    //     content: `
+    //         <h2>스타일 가이드</h2>
+    //         <p>매뉴얼 작성 시 사용할 수 있는 다양한 스타일 예시입니다.</p>
+
+    //         <h3>1. 강조 박스 (Note) 스타일</h3>
+    //         <p>상황에 맞는 색상을 선택하여 사용하세요. <code>class="note-색상명"</code></p>
+
+    //         <div class="note-orange">기본/주의 (Orange): class="note-orange" (또는 note)</div>
+    //         <div class="note-blue">정보/알림 (Blue): class="note-blue"</div>
+    //         <div class="note-green">성공/완료 (Green): class="note-green"</div>
+    //         <div class="note-red">경고/오류 (Red): class="note-red"</div>
+    //         <div class="note-purple">팁/제안 (Purple): class="note-purple"</div>
+    //         <div class="note-gray">참고/기타 (Gray): class="note-gray"</div>
+    //         <div class="note-teal">Teal: class="note-teal"</div>
+    //         <div class="note-indigo">Indigo: class="note-indigo"</div>
+    //         <div class="note-pink">Pink: class="note-pink"</div>
+    //         <div class="note-yellow">Yellow: class="note-yellow"</div>
+
+    //         <h3>2. 이미지 스타일</h3>
+
+    //         <h4>Style 1: 심플 보더 (class="img-style-simple")</h4>
+    //         <img src="https://via.placeholder.com/600x200" class="img-style-simple" alt="예시 이미지">
+
+    //         <h4>Style 2: 그림자 효과 (class="img-style-shadow")</h4>
+    //         <img src="https://via.placeholder.com/600x200" class="img-style-shadow" alt="예시 이미지">
+
+    //         <h4>Style 3: 캡션 포함 (class="img-style-caption")</h4>
+    //         <div class="img-style-caption">
+    //             <img src="https://via.placeholder.com/600x200" alt="예시 이미지">
+    //             <div class="img-caption-text">이미지 하단에 설명을 입력할 수 있습니다.</div>
+    //         </div>
+    //     `
+    // }
 ];
