@@ -55,12 +55,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
     */
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "no", title: "no", show: true, editable: false, width: "80px" },
+            { field: "no", title: "no", show: true, editable: false, width: "80px", allowHide: false },
             // { field: "qnum", title: "문번호", show: true, editable: false, width: "100px" },
-            { field: "lv1code", title: "대분류 코드", show: true, width: "140px" },
-            { field: "lv1", title: "대분류", show: true, width: "210px" },
-            { field: "lv2code", title: "중분류 코드", show: true, width: "140px" },
-            { field: "lv2", title: "중분류", show: true, width: "210px" },
+            { field: "lv1code", title: "대분류 코드", show: true, width: "140px", allowHide: false },
+            { field: "lv1", title: "대분류", show: true, width: "210px", allowHide: false },
+            { field: "lv2code", title: "중분류 코드", show: true, width: "140px", allowHide: false },
+            { field: "lv2", title: "중분류", show: true, width: "210px", allowHide: false },
             { field: "lv123code", title: "소분류 코드", show: true, allowHide: false, width: "140px" },
             { field: "lv3", title: "소분류", show: true, allowHide: false, width: "210px" },
             { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false, width: "150px" },
@@ -148,8 +148,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             columns={columns
                 // 단계 규칙으로 '강제 숨김' 대상만 메뉴에서 제거
                 .filter(c => !forcedHidden.has(c.field))
-                // 단계 컬럼도 메뉴에 표시 + 숨김 가능
-                .map(c => stageFields.has(c.field) ? { ...c, allowHide: true } : c)
             }
             onColumnsChange={(updated) => {
                 const map = new Map(updated.map(c => [c.field, c]));
