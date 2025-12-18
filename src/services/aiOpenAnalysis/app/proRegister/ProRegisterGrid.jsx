@@ -60,11 +60,15 @@ const ProRegisterGrid = ({ onDataLength }) => {
 
     return (
       <Fragment>
+        <style>{`
+          #grid_01 .k-grid-content {
+            max-height: 350px !important;
+          }
+        `}</style>
         <div className="cmn_gird_wrap">
           <div id="grid_01" className="cmn_grid singlehead">
             <KendoGrid
               parentProps={{
-                height: "400px",
                 data: dataState?.data,
                 dataItemKey,
                 selectedState,
