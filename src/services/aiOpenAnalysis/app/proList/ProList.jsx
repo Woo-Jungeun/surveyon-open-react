@@ -1167,7 +1167,7 @@ const ProList = () => {
                                                         {g.name === "ADMIN" && (
                                                             <span
                                                                 className="info-icon"
-                                                                data-tooltip={`ADMIN|• ✓분석: 분석 할 문항만 체크\n• ✓제외: 분석 안 할 문항 체크\n• 분석 버튼: 각 문항별 카테고리 자동분류 페이지로 이동`}
+                                                                data-tooltip={`ADMIN|• ✓분석: 분석 할 문항만 체크\n• ✓제외: 분석 안 할 문항 체크\n• 분석보기 버튼: 각 문항별 카테고리 자동분류 페이지로 이동`}
                                                             ></span>
                                                         )}
                                                         {g.name === "EDIT" && (
