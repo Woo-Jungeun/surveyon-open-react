@@ -6205,6 +6205,7 @@ footer {
         margin: -5px;
     }
 }
+
 /* ProEnter New Registration Form Responsive - Fit to screen */
 @media (max-width: 1024px) {
     .pro-enter-new-container {
@@ -6214,7 +6215,7 @@ footer {
         padding: 20px !important;
         width: 100% !important;
     }
-    
+
     .pro-enter-new-form {
         width: 100% !important;
         max-width: 600px !important;
@@ -6225,5 +6226,65 @@ footer {
 @media (min-width: 770px) and (max-width: 1023px) {
     .pro-enter-new-container {
         padding: 15px !important;
+    }
+}
+
+/* Tablet Header Responsive Styles - Complete */
+@media (min-width: 769px) and (max-width: 1024px) {
+    header {
+        display: flex !important;
+        visibility: visible !important;
+        padding: 0 10px !important;
+    }
+
+    .navWrap .nav.depth01>li>a {
+        padding: 0px 8px !important;
+        font-size: 14px !important;
+    }
+
+    .userWrap {
+        display: flex !important;
+        visibility: visible !important;
+        margin-left: auto !important;
+        margin-right: 800px !important;
+        padding-right: 10px !important;
+    }
+}
+
+@media (min-width: 770px) and (max-width: 900px) {
+    .navWrap .nav.depth01>li>a {
+        padding: 0px 6px !important;
+        font-size: 13px !important;
+    }
+
+    .userWrap {
+        margin-left: auto !important;
+        margin-right: 900px !important;
+        padding-right: 8px !important;
+    }
+}
+
+@media (min-width: 800px) and (max-width: 900px) {
+    .logo {
+        font-size: 16px !important;
+    }
+
+    .navWrap .nav.depth01>li>a {
+        padding: 0px 5px !important;
+        font-size: 13px !important;
+    }
+
+    .userWrap {
+        margin-left: auto !important;
+        margin-right: 800px !important;
+        padding-right: 5px !important;
+    }
+
+    .userBtn {
+        font-size: 12px !important;
+    }
+
+    .userBtn span {
+        font-size: 12px !important;
     }
 }
