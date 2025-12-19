@@ -452,3 +452,43 @@
         padding: 12px !important;
     }
 }
+
+/* Mobile (768px 이하) */
+@media (max-width: 768px) {
+    .analysis-dashboard-v2 {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+    }
+
+    .analysis-dashboard-v2 .subContL {
+        max-height: none !important;
+        overflow-y: visible !important;
+        padding: 16px !important;
+    }
+
+    .analysis-dashboard-v2 .subContR {
+        width: 100% !important;
+        padding: 16px !important;
+    }
+
+    .analysis-dashboard-v2 .grid-area {
+        height: 600px !important;
+        min-height: 600px !important;
+    }
+
+    .analysis-dashboard-v2 .tab-action-container {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    .analysis-dashboard-v2 .action-buttons-group {
+        width: 100% !important;
+        justify-content: flex-start !important;
+    }
+
+    .analysis-dashboard-v2 .btnBox.tabMenu {
+        width: 100% !important;
+    }
+}
