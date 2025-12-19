@@ -63,13 +63,7 @@ const ProRegisterTab1 = (props) => {
 
             {/* 정보 */}
             <form onSubmit={handleSubmit}>
-                <div style={{
-                    background: "#f8f9fa",
-                    borderRadius: "12px",
-                    padding: "20px",
-                    maxWidth: "600px",
-                    margin: "0 auto"
-                }}>
+                <div className="pro-register-form-wrap">
                     <div style={{ marginBottom: "16px" }}>
                         <label style={{
                             display: "block",

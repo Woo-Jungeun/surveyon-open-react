@@ -5259,6 +5259,9 @@ footer {
 .analysis-dashboard-v2 .subTitWrap {
     margin: 0 !important;
     padding-top: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    height: auto !important;
 }
 
 .pro-list-header .subTit {
@@ -5312,7 +5315,8 @@ footer {
 }
 
 .excel-upload-form {
-    width: 500px;
+    width: 100%;
+    max-width: 500px;
     background: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 12px;
@@ -5901,7 +5905,7 @@ footer {
 
     /* Logo & Header */
     .logo {
-        font-size: 14px !important;
+        font-size: 12px !important;
     }
 
     .projectListBtn {
@@ -5988,4 +5992,112 @@ footer {
         font-size: 14px !important;
     }
 
+}
+
+/* Project Register Form Alignment */
+.pro-register-form-wrap {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+@media (max-width: 1024px) {
+    .pro-register-form-wrap {
+        margin: 0 !important;
+    }
+}
+
+/* Excel Tab Responsive Alignment */
+@media (max-width: 1024px) {
+    .excel-upload-container {
+        position: static !important;
+        transform: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        padding-top: 0 !important;
+    }
+}
+
+
+/* AI Logo Styling */
+.ai-logo-text {
+    color: #FF913A !important;
+    margin-right: 2px;
+    font-size: inherit !important;
+}
+
+/* Excel Tab Visibility Fix */
+@media (max-width: 1024px) {
+    .excel-upload-container {
+        max-height: none !important;
+        overflow: visible !important;
+        height: auto !important;
+    }
+}
+
+
+/* Tablet Menu Visibility Fix (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .navWrap .nav li a {
+        font-size: 15px !important;
+        padding: 0 12px !important;
+    }
+
+    .userWrap {
+        display: flex !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        gap: 10px !important;
+    }
+
+    .userWrap .userBtn {
+        font-size: 13px !important;
+    }
+}
+
+
+/* ProEnter New Registration Tab Alignment */
+.pro-enter-new-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-top: 40px;
+    width: auto;
+}
+
+.pro-enter-new-form {
+    width: 600px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .pro-enter-new-container {
+        position: static !important;
+        transform: none !important;
+        padding-top: 0 !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .pro-enter-new-form {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+}
+
+
+/* ProEnter Form Height Fix */
+@media (max-width: 1024px) {
+    .subContWrap .subCont {
+        height: auto !important;
+        overflow: visible !important;
+    }
 }

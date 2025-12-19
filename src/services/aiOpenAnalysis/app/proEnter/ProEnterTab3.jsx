@@ -116,23 +116,8 @@ const ProEnterTab3 = () => {
     };
 
     return (
-        <div style={{
-            position: 'absolute',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            paddingTop: '40px',
-            width: 'auto'
-        }}>
-            <form onSubmit={handleSubmit} style={{
-                width: '600px',
-                background: '#fff',
-                border: '1px solid #e0e0e0',
-                borderRadius: '8px',
-                padding: '40px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '24px'
-            }}>
+        <div className="pro-enter-new-container">
+            <form onSubmit={handleSubmit} className="pro-enter-new-form">
                 {/* Header */}
                 <div style={{ textAlign: 'center', paddingBottom: '10px', borderBottom: '1px solid #f0f0f0', marginBottom: '10px' }}>
                     <h3 style={{
