@@ -200,7 +200,7 @@ const MenuBar = () => {
               navigate("/ai_open_analysis");
             }}
           >
-            <span style={{ color: "#FF913A", marginRight: "2px" }}>AI</span>오픈분석
+            <span className="ai-logo-text">AI</span>오픈분석
           </h1>
         </div>
 
