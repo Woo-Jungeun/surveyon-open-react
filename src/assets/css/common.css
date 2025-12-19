@@ -6101,3 +6101,73 @@ footer {
         overflow: visible !important;
     }
 }
+
+/* Project Permission Management Form Alignment */
+.pro-permission-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.pro-permission-form {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (max-width: 1024px) {
+    .pro-permission-container {
+        display: block !important;
+        padding-top: 0 !important;
+    }
+
+    .pro-permission-form {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+}
+
+/* ProKey Form Alignment */
+.pro-key-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.pro-key-form {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+@media (max-width: 1024px) {
+    .subContWrap {
+        min-width: auto !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .pro-key-container {
+        display: flex !important;
+        justify-content: flex-start !important;
+        padding-bottom: 20px !important;
+    }
+
+    .pro-key-form {
+        width: 100% !important;
+        max-width: 500px !important;
+        margin: 0 !important;
+    }
+}

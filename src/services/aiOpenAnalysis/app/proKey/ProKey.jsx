@@ -140,22 +140,8 @@ const ProKey = () => {
 
       <article className="subContWrap">
         <div className="subCont">
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            paddingBottom: '20px'
-          }}>
-            <form onSubmit={handleSubmit} style={{
-              width: '100%',
-              maxWidth: '500px',
-              background: '#fff',
-              border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '15px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '2px'
-            }}>
+          <div className="pro-key-container">
+            <form onSubmit={handleSubmit} className="pro-key-form">
               {/* Header inside form */}
               <div style={{ textAlign: 'center', paddingBottom: '5px', borderBottom: '1px solid #f0f0f0', marginBottom: '5px' }}>
                 <h3 style={{

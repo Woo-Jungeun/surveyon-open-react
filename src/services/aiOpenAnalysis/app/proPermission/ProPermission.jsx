@@ -254,6 +254,7 @@ const ProPermission = () => {
         .custom-datepicker .k-input,
         .custom-datepicker .k-input-inner {
             width: 100% !important;
+            height: 20px !important;
         }
         .custom-datepicker .k-input-button,
         .custom-datepicker .k-select,
@@ -296,29 +297,14 @@ const ProPermission = () => {
                 data-tooltip={`프로젝트 삭제|프로젝트 삭제 시 모든 문항이 함께 삭제되므로 신중히 진행하세요.`}
               ></span>
             </Button>
-          </div>
-        </div>
-      </article>
+          </div >
+        </div >
+      </article >
 
       <article className="subContWrap">
         <div className="subCont">
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            // paddingTop: '10px',
-            paddingBottom: '20px'
-          }}>
-            <form onSubmit={handleSubmit} style={{
-              width: '100%',
-              maxWidth: '500px',
-              background: '#fff',
-              border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              padding: '15px',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '2px'
-            }}>
+          <div className="pro-permission-container">
+            <form onSubmit={handleSubmit} className="pro-permission-form">
               {/* Header inside form */}
               <div style={{ textAlign: 'center', paddingBottom: '5px', borderBottom: '1px solid #f0f0f0', marginBottom: '5px' }}>
                 <h3 style={{
@@ -503,7 +489,7 @@ const ProPermission = () => {
           <ProPermissionGrid data={gridData} setData={setGridData} fetchData={fetchData} />
         </div>
       </article>
-    </Fragment>
+    </Fragment >
   );
 };
 
