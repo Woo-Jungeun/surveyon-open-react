@@ -14,7 +14,7 @@ const ProListPopup = (parentProps) => {
 
   return (
     <article className={`modal ${modalOnOff}`}>
-      <div className="cmn_popup" style={{ width: "1000px", maxHeight: 720, overflow: "hidden" }}>
+      <div className="cmn_popup" style={{ width: "600px", maxHeight: 720, overflow: "hidden" }}>
         <div className="popTit">
           <h3>필터 문항 설정 팝업</h3>
           <a className="btnClose" onClick={handleCancelButton}><span className="hidden">close</span></a>
