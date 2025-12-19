@@ -254,7 +254,6 @@ const ProPermission = () => {
         .custom-datepicker .k-input,
         .custom-datepicker .k-input-inner {
             width: 100% !important;
-            height: 20px !important;
         }
         .custom-datepicker .k-input-button,
         .custom-datepicker .k-select,

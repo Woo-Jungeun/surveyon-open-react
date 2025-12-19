@@ -6171,3 +6171,37 @@ footer {
         margin: 0 !important;
     }
 }
+
+/* DatePicker Input Height Fix - Responsive */
+.custom-datepicker .k-input-inner {
+    width: 100% !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+@media (max-width: 1440px) {
+    .custom-datepicker .k-input-inner {
+        height: 32px !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .custom-datepicker .k-input-inner {
+        height: 28px !important;
+    }
+}
+
+@media (max-width: 769px) {
+    .custom-datepicker .k-input-inner {
+        height: 18px !important;
+    }
+}
+
+@media (min-width: 770px) and (max-width: 1023px) {
+    .custom-datepicker .k-input-inner {
+        height: 10px !important;
+        margin: -5px;
+    }
+}
