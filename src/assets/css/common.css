@@ -5780,7 +5780,7 @@ footer {
 
     .navWrap .nav.depth01>li>a {
         padding: 0 6px !important;
-        font-size: 12px !important;
+        font-size: 14px !important;
         white-space: nowrap;
         height: 40px !important;
         line-height: 40px !important;
@@ -6239,7 +6239,7 @@ footer {
 
     .navWrap .nav.depth01>li>a {
         padding: 0px 8px !important;
-        font-size: 14px !important;
+        font-size: 16px !important;
     }
 
     .userWrap {
@@ -6254,7 +6254,7 @@ footer {
 @media (min-width: 770px) and (max-width: 900px) {
     .navWrap .nav.depth01>li>a {
         padding: 0px 6px !important;
-        font-size: 13px !important;
+        font-size: 16px !important;
     }
 
     .userWrap {
@@ -6271,7 +6271,7 @@ footer {
 
     .navWrap .nav.depth01>li>a {
         padding: 0px 5px !important;
-        font-size: 13px !important;
+        font-size: 16px !important;
     }
 
     .userWrap {
