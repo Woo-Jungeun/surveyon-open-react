@@ -5615,7 +5615,7 @@ footer {
      RESPONSIVE MEDIA QUERIES
 =================================================== */
 
-/* Tablet (1024px ����) */
+/* Tablet (1024px 이하) */
 @media (max-width: 1024px) {
 
     /* Layout */
@@ -5706,8 +5706,13 @@ footer {
     }
 }
 
-/* Mobile (768px ����) */
+/* Mobile (768px 이하) */
 @media (max-width: 768px) {
+
+    /* Force left alignment for header */
+    header {
+        justify-content: flex-start !important;
+    }
 
     /* Layout */
     #wrap {
@@ -5757,12 +5762,35 @@ footer {
 
     /* Navigation */
     .navWrap {
-        display: none !important;
+        display: flex !important;
+        flex: 0 1 auto !important;
+        min-width: 0;
+        overflow-x: auto !important;
+        overflow-y: hidden;
+    }
+
+    .navWrap .nav.depth01 {
+        gap: 0 4px !important;
+        justify-content: flex-start !important;
+    }
+
+    .navWrap .nav.depth01>li>a {
+        padding: 0 6px !important;
+        font-size: 12px !important;
+        white-space: nowrap;
+        height: 40px !important;
+        line-height: 40px !important;
+    }
+
+    .logoWrap {
+        flex: 0 0 auto !important;
     }
 
     .userWrap {
+        flex: 0 0 auto !important;
         gap: 10px !important;
         font-size: 12px !important;
+        margin-left: 10px !important;
     }
 
     .userName::before,
@@ -5832,8 +5860,14 @@ footer {
     }
 }
 
-/* Mobile Small (480px ����) */
+/* Mobile Small (480px 이하) */
 @media (max-width: 480px) {
+
+    /* Hide 'Home' text to save space */
+    .home-btn span {
+        display: none !important;
+    }
+
 
     /* Layout */
     .container {
@@ -5877,7 +5911,7 @@ footer {
 
     /* User Menu */
     .userWrap {
-        gap: 8px !important;
+        gap: 6px !important;
         font-size: 11px !important;
     }
 
@@ -5928,13 +5962,30 @@ footer {
     .boxWrap {
         padding: 8px !important;
     }
-}
 
+    /* Merged from other blocks */
 
-/* Mobile Small (480px ����) */
-@media (max-width: 480px) {
     .modal {
         width: 100vw !important;
         left: 0 !important;
     }
+
+
+
+    /* Hide 'Home' text */
+    .home-btn span {
+        display: none !important;
+    }
+
+    /* Compact User Menu */
+    .userWrap {
+        gap: 6px !important;
+        font-size: 11px !important;
+    }
+
+    /* Ensure logo scales if needed */
+    .logo {
+        font-size: 14px !important;
+    }
+
 }

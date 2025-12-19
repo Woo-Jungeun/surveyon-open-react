@@ -153,9 +153,10 @@ const MenuBar = () => {
   return (
     <Fragment>
       <header key={location.pathname}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="logoWrap" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
             type="button"
+            className="home-btn"
             onClick={() => {
               sessionStorage.setItem("projectnum", "");
               sessionStorage.setItem("projectname", "");
