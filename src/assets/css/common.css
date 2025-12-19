@@ -6205,3 +6205,25 @@ footer {
         margin: -5px;
     }
 }
+/* ProEnter New Registration Form Responsive - Fit to screen */
+@media (max-width: 1024px) {
+    .pro-enter-new-container {
+        position: static !important;
+        transform: none !important;
+        left: auto !important;
+        padding: 20px !important;
+        width: 100% !important;
+    }
+    
+    .pro-enter-new-form {
+        width: 100% !important;
+        max-width: 600px !important;
+        margin: 0 !important;
+    }
+}
+
+@media (min-width: 770px) and (max-width: 1023px) {
+    .pro-enter-new-container {
+        padding: 15px !important;
+    }
+}
