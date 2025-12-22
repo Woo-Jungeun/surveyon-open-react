@@ -901,8 +901,8 @@
 /* Mobile Small (480px) */
 @media (max-width: 480px) {
   .homepage-container .hp-logo-img {
-    width: 50px !important;
-    height: 50px !important;
+    width: 100px !important;
+    height: 100px !important;
   }
 
   .homepage-container .hp-title {
@@ -932,5 +932,58 @@
 @media (max-width: 1200px) {
   .homepage-container .hp-visual-area {
     display: none !important;
+  }
+}
+
+/* Mobile InfoSection - Left Align */
+@media (max-width: 768px) {
+  .homepage-container .hp-hero-inner {
+    align-items: flex-start !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .homepage-container .hp-hero-text {
+    text-align: left !important;
+    align-items: flex-start !important;
+  }
+
+  .homepage-container .hp-title {
+    text-align: left !important;
+  }
+
+  .homepage-container .hp-subtext {
+    text-align: left !important;
+  }
+
+  .homepage-container .hp-hero-buttons {
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .homepage-container .hp-hero-inner {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+
+/* Mobile Navigation - Left Align */
+@media (max-width: 768px) {
+  .homepage-container .hp-hero-nav {
+    align-items: flex-start !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .homepage-container .hp-nav-left {
+    justify-content: flex-start !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .homepage-container .hp-hero-nav {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
   }
 }
