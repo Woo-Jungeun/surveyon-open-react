@@ -2770,7 +2770,6 @@ footer {
 
 .iconErr,
 .iconNoti {
-    display: inline-flex;
     align-items: center;
 }
 
