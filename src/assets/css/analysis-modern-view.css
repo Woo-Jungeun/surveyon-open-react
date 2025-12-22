@@ -343,7 +343,7 @@
      MODERN ANALYSIS VIEW RESPONSIVE
 =================================================== */
 
-/* Tablet (1024px ����) */
+/* Tablet (1024px 이하) */
 @media (max-width: 1024px) {
     .analysis-dashboard-v2 {
         --left-panel-width: 320px;
