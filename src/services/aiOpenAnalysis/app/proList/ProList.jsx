@@ -698,10 +698,19 @@ const ProList = () => {
         );
 
         // 헤더 버튼(2개)
-        const HeaderBtnGroup = ({ buttons }) => (
+        const HeaderBtnGroup = ({ buttons, disabled }) => (
             <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                 {buttons.map((b, i) => (
-                    <Button key={i} className={b.className ?? 'btnS'} onClick={b.onClick}>
+                    <Button
+                        key={i}
+                        className={b.className ?? 'btnS'}
+                        onClick={disabled ? undefined : b.onClick}
+                        style={{
+                            opacity: disabled ? 0.5 : 1,
+                            cursor: disabled ? 'not-allowed' : 'pointer',
+                            pointerEvents: disabled ? 'none' : 'auto'
+                        }}
+                    >
                         {b.text}
                     </Button>
                 ))}
@@ -709,13 +718,13 @@ const ProList = () => {
         );
 
         // 라벨 + 버튼그룹(세로 스택)
-        const HeaderLabeledBtnGroup = ({ label, buttons }) => (
+        const HeaderLabeledBtnGroup = ({ label, buttons, disabled }) => (
             <div
                 onClick={(e) => e.stopPropagation()}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: '5px' }}
             >
                 <span style={{ fontWeight: 500 }}>{label}</span>
-                <HeaderBtnGroup buttons={buttons} />
+                <HeaderBtnGroup buttons={buttons} disabled={disabled} />
             </div>
         );
 
@@ -749,6 +758,7 @@ const ProList = () => {
                                     { text: '분석', className: 'btnS', onClick: actions.onHeaderUseYN },
                                     { text: '제외', className: 'btnS btnTxt type01', onClick: actions.onHeaderExclude },
                                 ]}
+                                disabled={dataWithProxies.length === 0}
                             />
                         )}
                         cell={(cellProps) => {
@@ -830,6 +840,7 @@ const ProList = () => {
                                     { text: 'X', className: 'btnS btnTxt type02', onClick: () => bulkSetLock(true) },
                                     { text: 'O', className: 'btnS btnType02', onClick: () => bulkSetLock(false) },
                                 ]}
+                                disabled={dataWithProxies.length === 0}
                             />
                         )}
                         cell={(cellProps) => {
@@ -1196,7 +1207,15 @@ const ProList = () => {
                                                                     it.sub === "문항통합저장"
                                                                         ? () => (
                                                                             <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", justifyContent: "center" }}>
-                                                                                <Button className="btnS btnType04" onClick={actions.onHeaderMergeSave}>
+                                                                                <Button
+                                                                                    className="btnS btnType04"
+                                                                                    onClick={dataWithProxies.length === 0 ? undefined : actions.onHeaderMergeSave}
+                                                                                    style={{
+                                                                                        opacity: dataWithProxies.length === 0 ? 0.5 : 1,
+                                                                                        cursor: dataWithProxies.length === 0 ? 'not-allowed' : 'pointer',
+                                                                                        pointerEvents: dataWithProxies.length === 0 ? 'none' : 'auto'
+                                                                                    }}
+                                                                                >
                                                                                     문항통합저장
                                                                                 </Button>
                                                                             </div>
