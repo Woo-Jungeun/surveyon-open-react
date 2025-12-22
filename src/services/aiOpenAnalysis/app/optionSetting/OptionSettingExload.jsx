@@ -404,7 +404,7 @@ const OptionSettingExload = () => {
                     </article>
 
                     <div className="cmn_gird_wrap">
-                        <div id="grid_left" className="cmn_grid">
+                        <div id="grid_left" className="cmn_grid singlehead">
                             <KendoGrid
                                 parentProps={{
                                     data: dataState?.data,
@@ -437,6 +437,7 @@ const OptionSettingExload = () => {
                             </KendoGrid>
                         </div>
                     </div>
+                    <div style={{ borderTop: "1px solid #e0e0e0" }}></div>
                 </div>
             );
         }, [leftFilter, leftColumns, leftSort]
@@ -498,7 +499,7 @@ const OptionSettingExload = () => {
                 </article>
 
                 <div className="cmn_gird_wrap">
-                    <div id="grid_right" className="cmn_grid">
+                    <div id="grid_right" className="cmn_grid singlehead">
                         <KendoGrid
                             parentProps={{
                                 data: rightRows,
@@ -522,11 +523,23 @@ const OptionSettingExload = () => {
                     </div>
                     {/* 보기 등록 버튼 */}
                     {rightRows.length !== 0 &&
-                        <div style={{ display: "flex", justifyContent: "flex-end", padding: "16px 8px" }}>
+                        <div style={{
+                            display: "flex",
+                            justifyContent: "center",
+                            padding: "20px 16px",
+                            borderTop: "1px solid #e0e0e0",
+                            // background: "#fafafa"
+                        }}>
                             <Button
                                 className="btnTxt"
                                 type="button"
                                 onClick={handleRegisterClick}
+                                style={{
+                                    minWidth: "140px",
+                                    padding: "10px 24px",
+                                    fontSize: "15px",
+                                    fontWeight: "600"
+                                }}
                             >
                                 보기등록
                             </Button>
