@@ -132,7 +132,7 @@ function LoadingSpinner(props) {
                                 <div className="dot"></div>
                                 <div className="dot"></div>
                             </div>
-                            <p>분석중입니다...</p>
+                            <p>분석 중입니다...</p>
                         </div>
                     </article>
                     : null

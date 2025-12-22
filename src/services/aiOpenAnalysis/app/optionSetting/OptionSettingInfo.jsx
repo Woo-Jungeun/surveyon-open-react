@@ -272,7 +272,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                 const put = (s) => appendLog(s.endsWith("\n") ? s : s + "\n");
                 // 분석 결과창에 출력
                 if (isRunning) {
-                    put("분석중입니다...");
+                    put("분석 중입니다...");
                     setAnalyzing(true);              // 로딩바 on
                     if (job) {
                         const ok = await joinJob(job);
