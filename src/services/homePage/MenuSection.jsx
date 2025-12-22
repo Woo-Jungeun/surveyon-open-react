@@ -78,7 +78,7 @@ const MenuSection = () => {
       <div className="hp-menu-title-wrap">
         <h2 className="hp-menu-title">통합 플랫폼 기능</h2>
         <p className="hp-menu-desc">
-          설문온의 강력한 5가지 핵심 기능을 경험해보세요
+          설문온의 강력한 5가지 핵심 기능을 경험해보세요.
         </p>
         {!isLoggedIn && (
           <p className="hp-menu-desc" style={{ color: "#FF5252", marginTop: "8px", fontWeight: "500" }}>

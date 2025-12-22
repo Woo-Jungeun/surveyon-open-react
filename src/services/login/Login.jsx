@@ -85,7 +85,7 @@ const Login = () => {
                             </div>
                             <h2>로그인</h2>
                         </div>
-                        <p className="login-title-sub">계정에 로그인하여 모든 기능을 이용하세요</p>
+                        <p className="login-title-sub">계정에 로그인하여 모든 기능을 이용하세요.</p>
 
                         <form onSubmit={handleLogin} className="login-form">
                             <div className="login-field">
@@ -95,7 +95,7 @@ const Login = () => {
                                     <input
                                         type="text"
                                         className="login-input"
-                                        placeholder="아이디를 입력하세요"
+                                        placeholder="아이디를 입력하세요."
                                         value={formData.user}
                                         onChange={(e) =>
                                             setFormData((prev) => ({ ...prev, user: e.target.value }))
@@ -112,7 +112,7 @@ const Login = () => {
                                     <input
                                         type="password"
                                         className="login-input"
-                                        placeholder="비밀번호를 입력하세요"
+                                        placeholder="비밀번호를 입력하세요."
                                         value={formData.pass}
                                         onChange={(e) =>
                                             setFormData((prev) => ({ ...prev, pass: e.target.value }))

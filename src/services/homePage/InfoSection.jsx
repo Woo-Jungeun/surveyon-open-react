@@ -160,7 +160,7 @@ const InfoSection = () => {
 
           <p className="hp-subtext">
             설문 제작부터 데이터 분석까지<br />
-            하나의 플랫폼에서 모든 것을 경험하세요
+            하나의 플랫폼에서 모든 것을 경험하세요.
           </p>
 
           <div className="hp-feature-list">
