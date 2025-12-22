@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 
 /**
  * 분석 > 정보 영역 > 프롬프트 지침 > [기존] 버튼 팝업  
@@ -39,22 +39,78 @@ const OptionSettingPopup = (parentProps) => {
   );
 
   /**
+   * 테이블 행 컴포넌트 (Overflow 체크를 위해 분리)
+   */
+  const LogRow = ({ time, text, type, onPick, popupShow }) => {
+    const [opened, setOpened] = useState(false);
+    const [showToggle, setShowToggle] = useState(false);
+    const textRef = useRef(null);
+
+    // 텍스트가 2줄을 넘는지 체크 (popupShow가 true가 될 때도 체크해야 함)
+    useEffect(() => {
+      if (!popupShow) return; // 팝업이 닫혀있으면 계산 불필요
+
+      // 약간의 지연을 주어 렌더링이 완료된 후 계산하도록 함 (안전장치)
+      const timer = setTimeout(() => {
+        const el = textRef.current;
+        if (el) {
+          if (el.scrollHeight > el.clientHeight) {
+            setShowToggle(true);
+          } else {
+            setShowToggle(false);
+          }
+        }
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }, [text, popupShow]);
+
+    const thStyle = { width: 220, padding: "8px 10px", textAlign: "left", verticalAlign: "top", borderBottom: "1px solid #d3d7d5", background: "#f7f7f7", fontWeight: 500 };
+    const tdStyle = { padding: "8px 10px", verticalAlign: "top", borderBottom: "1px solid #d3d7d5" };
+
+    return (
+      <tr>
+        <th style={thStyle}>{time}</th>
+        <td style={tdStyle}>
+          <div
+            ref={textRef}
+            className={`prompt-text ${opened ? "expanded" : "clamp-2"}`}
+            title={!opened && showToggle ? text : undefined}
+            style={{ wordBreak: "break-all" }}
+          >
+            {String(text)}
+          </div>
+        </td>
+        <td style={{ ...tdStyle, width: 96 }}>
+          <div className="rowActions">
+            {showToggle && (
+              <button
+                type="button"
+                className={`toggleBtn ${opened ? "on" : ""}`}
+                aria-label={opened ? "접기" : "펼치기"}
+                onClick={() => setOpened(!opened)}
+              />
+            )}
+            <button
+              type="button"
+              className="k-button k-button-solid-primary btnMini"
+              onClick={() => onPick(time, text)}
+            >
+              선택
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  };
+
+  /**
    * 테이블: 각 행
    * - 본문은 기본 2줄로 줄임(클램프)
    * - 우측 아이콘 클릭 시 전체 보기/접기
    * - "선택" 버튼 제공 (부모에 {type, time, text} 전달)
    */
-  const LogTable = ({ rows, type }) => {
-    const [openKeys, setOpenKeys] = useState(() => new Set());
-
-    const toggle = (key) => {
-      setOpenKeys(prev => {
-        const next = new Set(prev);
-        next.has(key) ? next.delete(key) : next.add(key);
-        return next;
-      });
-    };
-
+  const LogTable = ({ rows, type, popupShow }) => {
     //선택 버튼 클릭 시 핸들러(분석정보 프롬픈트 textarea에 적용)
     const onPick = (time, text) => {
       if (typeof onSelectPrompt === "function") {
@@ -65,8 +121,6 @@ const OptionSettingPopup = (parentProps) => {
     if (rows.length === 0) return <p style={{ color: "#69706d" }}>표시할 데이터가 없습니다.</p>;
 
     const tableStyle = { width: "100%", borderCollapse: "collapse" };
-    const thStyle = { width: 220, padding: "8px 10px", textAlign: "left", verticalAlign: "top", borderBottom: "1px solid #d3d7d5", background: "#f7f7f7", fontWeight: 500 };
-    const tdStyle = { padding: "8px 10px", verticalAlign: "top", borderBottom: "1px solid #d3d7d5" };
 
     return (
       <table style={tableStyle}>
@@ -76,37 +130,16 @@ const OptionSettingPopup = (parentProps) => {
           <col style={{ width: 96 }} />
         </colgroup>
         <tbody>
-          {rows.map(([time, text], idx) => {
-            const key = `${type}-${time}-${idx}`;
-            const opened = openKeys.has(key);
-            return (
-              <tr key={key}>
-                <th style={thStyle}>{time}</th>
-                <td style={tdStyle}>
-                  <div className={`prompt-text ${opened ? "expanded" : "clamp-2"}`}>
-                    {String(text)}
-                  </div>
-                </td>
-                <td style={{ ...tdStyle, width: 96 }}>
-                  <div className="rowActions">
-                    <button
-                      type="button"
-                      className={`toggleBtn ${opened ? "on" : ""}`}
-                      aria-label={opened ? "접기" : "펼치기"}
-                      onClick={() => toggle(key)}
-                    />
-                    <button
-                      type="button"
-                      className="k-button k-button-solid-primary btnMini"
-                      onClick={() => onPick(time, text)}
-                    >
-                      선택
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            );
-          })}
+          {rows.map(([time, text], idx) => (
+            <LogRow
+              key={`${type}-${time}-${idx}`}
+              time={time}
+              text={text}
+              type={type}
+              onPick={onPick}
+              popupShow={popupShow}
+            />
+          ))}
         </tbody>
       </table>
     );
@@ -123,13 +156,13 @@ const OptionSettingPopup = (parentProps) => {
         <div className="popCont" style={{ maxHeight: 600, overflowY: "auto" }}>
           {/* 보기 프롬프트 */}
           <SectionTitle label="보기 프롬프트" count={rowsEx.length} />
-          <LogTable rows={rowsEx} type="ex" />
+          <LogTable rows={rowsEx} type="ex" popupShow={popupShow} />
 
           <div className="decoLineS" />
 
           {/* 응답 프롬프트 */}
           <SectionTitle label="응답 프롬프트" count={rowsRes.length} />
-          <LogTable rows={rowsRes} type="res" />
+          <LogTable rows={rowsRes} type="res" popupShow={popupShow} />
         </div>
       </div>
     </article>
