@@ -298,7 +298,8 @@ const ProRegisterTab2 = () => {
               분석모델선택 <span className="required">*</span>
             </label>
             <DropDownList
-              data={["설문온", "댓글분석(예정)", "기사분석(예정)"]}
+              // data={["설문온", "댓글분석(예정)", "기사분석(예정)"]}
+              data={["설문온"]}
               value={analysisModel}
               onChange={(e) => setAnalysisModel(e.value)}
               disabled={loading}
