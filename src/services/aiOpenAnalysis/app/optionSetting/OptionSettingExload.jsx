@@ -390,10 +390,15 @@ const OptionSettingExload = () => {
                 <div className="panel left">
                     <article className="subTitWrap">
                         <div className="subTit">
-                            {/* <h2 className="titTxt">프로젝트 목록</h2> */}
-                            <div className="kvline">
-                                <span className="kv"><b>프로젝트번호</b> : <em>{projectnum}</em></span>
-                                <span className="kv"><b>문항정보</b> : <em>{qnum}</em></span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '4px 0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontWeight: 600, color: '#666', fontSize: '14px' }}>프로젝트번호</span>
+                                    <span style={{ fontWeight: 700, color: '#ff6b00', fontSize: '14px' }}>{projectnum}</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <span style={{ fontWeight: 600, color: '#666', fontSize: '14px' }}>문항정보</span>
+                                    <span style={{ fontWeight: 700, color: '#ff6b00', fontSize: '14px' }}>{qnum}</span>
+                                </div>
                             </div>
                         </div>
                     </article>
@@ -443,8 +448,38 @@ const OptionSettingExload = () => {
                 <article className="subTitWrap">
                     <div className="subTit subTit--with-actions">
                         <div className="kvline">
-                            <span className="kv"><b>보기정보 </b></span>
-                            <span className="kv" style={{ display: "block", fontSize: "13px" }}>{questionText}</span>
+                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '4px 0' }}>
+                                <span style={{ fontWeight: 600, color: '#666', minWidth: '95px', fontSize: '14px', paddingTop: '2px' }}>보기정보</span>
+                                <div style={{ flex: 1, position: 'relative', overflow: 'hidden', marginRight: '10px' }}>
+                                    <span
+                                        style={{
+                                            color: '#333',
+                                            fontSize: '13px',
+                                            lineHeight: '1.6',
+                                            display: '-webkit-box',
+                                            WebkitLineClamp: 2,
+                                            WebkitBoxOrient: 'vertical',
+                                            overflow: 'hidden',
+                                            wordBreak: 'break-word',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (questionText && e.target.scrollHeight > e.target.clientHeight) {
+                                                e.target.style.WebkitLineClamp = 'unset';
+                                                e.target.style.maxHeight = 'none';
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (questionText) {
+                                                e.target.style.WebkitLineClamp = '2';
+                                                e.target.style.maxHeight = '';
+                                            }
+                                        }}
+                                    >
+                                        {questionText}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <div>
