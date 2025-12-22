@@ -27,25 +27,26 @@ const OptionSettingExcelUploadErrorPopup = ({ popupShow, onClose, errorList = []
       return <p style={{ padding: 12, color: "#888" }}>표시할 오류 데이터가 없습니다.</p>;
 
     return (
-      <div style={{ overflowY: "auto", maxHeight: "230px", borderRadius: 6}}>
+      <div style={{ overflowY: "auto", overflowX: "auto", maxHeight: "400px", borderRadius: 6 }}>
         <table
           className="k-grid k-table"
           style={{
             width: "100%",
+            minWidth: "950px", // 최소 너비 확보
             borderCollapse: "collapse",
             borderSpacing: 0,
-            tableLayout: "fixed",       
+            tableLayout: "fixed",
             border: "1px solid #d3d7d5",
             boxSizing: "border-box",
           }}
         >
           <colgroup>
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
+            <col style={{ width: "150px" }} />
+            <col style={{ width: "100px" }} />
+            <col style={{ width: "200px" }} />
+            <col style={{ width: "200px" }} />
+            <col style={{ width: "100px" }} />
+            <col style={{ width: "200px" }} />
           </colgroup>
 
           <thead>
@@ -55,34 +56,35 @@ const OptionSettingExcelUploadErrorPopup = ({ popupShow, onClose, errorList = []
                 borderBottom: "1px solid #d3d7d5",
               }}
             >
-              <th style={{ width: "150px" }}>key</th>
-              <th style={{ width: "100px" }}>복수</th>
-              <th style={{ width: "200px" }}>응답내용</th>
-              <th style={{ width: "200px" }}>소분류</th>
-              <th style={{ width: "100px", textAlign: "center" }}>lv123</th>
-              <th style={{ width: "200px" }}>에러내용</th>
+              <th style={{ width: "150px", textAlign: "center", padding: "8px" }}>key</th>
+              <th style={{ width: "100px", textAlign: "center", padding: "8px" }}>복수</th>
+              <th style={{ width: "200px", textAlign: "center", padding: "8px" }}>응답내용</th>
+              <th style={{ width: "200px", textAlign: "center", padding: "8px" }}>소분류코드</th>
+              <th style={{ width: "100px", textAlign: "center", padding: "8px" }}>소분류</th>
+              <th style={{ width: "200px", textAlign: "center", padding: "8px" }}>에러내용</th>
             </tr>
           </thead>
 
           <tbody>
             {rows.map((r, idx) => (
               <tr key={`${r.fixed_key || r.key || "row"}-${idx}`}>
-                <td style={{ width: "150px" }}>{r.fixed_key || r.key || "-"}</td>
-                <td style={{ width: "100px", textAlign: "center" }}>{r.cid || "-"}</td>
+                <td style={{ width: "150px", textAlign: "center", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.fixed_key || r.key || "-"}</td>
+                <td style={{ width: "100px", textAlign: "center", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.cid || "-"}</td>
                 <td
                   style={{
                     width: "200px",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
+                    padding: "8px",
+                    wordBreak: "break-all",
+                    whiteSpace: "normal",
+                    verticalAlign: "middle"
                   }}
                   title={r.answer_origin || "-"}
                 >
                   {r.answer_origin || "-"}
                 </td>
-                <td style={{ width: "200px", }}>{r.lv3 || "-"}</td>
-                <td style={{ width: "100px", textAlign: "center" }}>{r.lv123code || "-"}</td>
-                <td style={{ width: "200px", color: "#c63d3d", fontWeight: 500 }}>
+                <td style={{ width: "200px", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.lv3 || "-"}</td>
+                <td style={{ width: "100px", textAlign: "center", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.lv123code || "-"}</td>
+                <td style={{ width: "200px", padding: "8px", color: "#c63d3d", fontWeight: 500, wordBreak: "break-all", verticalAlign: "middle" }}>
                   {r.error_msg || "-"}
                 </td>
               </tr>
