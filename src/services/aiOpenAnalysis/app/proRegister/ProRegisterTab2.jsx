@@ -129,9 +129,12 @@ const ProRegisterTab2 = () => {
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    const questionRow = json[0];
     const headers = json[1];
     const rows = json.slice(2);
-    const idIndex = headers.indexOf(idColumn);
+
+    // idColumn은 첫 번째 행(questionRow)에서 선택되므로 거기서 인덱스를 찾아야 함
+    const idIndex = questionRow.indexOf(idColumn);
 
     const result = [];
 
@@ -243,7 +246,7 @@ const ProRegisterTab2 = () => {
         else {
           modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
         }
-      }
+      };
       reader.readAsArrayBuffer(file);
     } catch (err) {
       modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
@@ -404,4 +407,5 @@ const ProRegisterTab2 = () => {
     </>
   );
 };
+
 export default ProRegisterTab2;
