@@ -250,7 +250,7 @@ const MenuBar = () => {
 
               {appsOpen && (
                 <div className="dropdown-card apps-card">
-                  {(projectnum && projectname) && (
+                  {activePath !== "/ai_open_analysis" && (
                     <>
                       {/* 권한 관리: 일반, 고객만 안보이게(임시) */}
                       {!manage && (
@@ -270,7 +270,7 @@ const MenuBar = () => {
                   )}
 
                   {/* API 설정:  일반, 고객만 안보이게 */}
-                  {!manage && (
+                  {/* {!manage && (
                     <button
                       type="button"
                       className="dd-item"
@@ -282,7 +282,7 @@ const MenuBar = () => {
                       <span className="dd-icon"><ApiSettingIcon /></span>
                       <span>API 설정</span>
                     </button>
-                  )}
+                  )} */}
 
                   {/* 매뉴얼 */}
                   <button

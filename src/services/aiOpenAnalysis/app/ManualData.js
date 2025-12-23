@@ -123,20 +123,6 @@ export const manualData = [
                     <div class="process-step">
                         <div class="step-number">03</div>
                         <div class="step-content">
-                            <span class="step-title">OPENAI API KEY 등록</span>
-                            <div class="step-desc">
-                                API 설정 메뉴에서 Key를 등록합니다.
-                            </div>
-                            <div class="step-meta">
-                                <strong>담당자:</strong> <span class="badge badge-green">연구부서</span>
-                                <button class="btn-detail" data-detail="detail_process_3">상세 보기</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="process-step">
-                        <div class="step-number">04</div>
-                        <div class="step-content">
                             <span class="step-title">문항목록 분석할 문항 확인</span>
                             <div class="step-desc">
                                 분석/제외/문항통합/수정(Lock) 옵션을 선택하여 분석할 문항을 확정합니다.
@@ -149,7 +135,7 @@ export const manualData = [
                     </div>
 
                     <div class="process-step">
-                        <div class="step-number">05</div>
+                        <div class="step-number">04</div>
                         <div class="step-content">
                             <span class="step-title">문항별 분석 시작</span>
                             <div class="step-desc">
@@ -162,7 +148,7 @@ export const manualData = [
                         </div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">06</div>
+                        <div class="step-number">05</div>
                         <div class="step-content">
                             <span class="step-title">분석 데이터 관리</span>
                             <div class="step-desc">
@@ -175,7 +161,7 @@ export const manualData = [
                         </div>
                     </div>
                     <div class="process-step">
-                        <div class="step-number">07</div>
+                        <div class="step-number">06</div>
                         <div class="step-content">
                             <span class="step-title">문항별 분석 완료 및 데이터 전달</span>
                             <div class="step-desc">
@@ -266,27 +252,27 @@ export const manualData = [
                 </div>
             </div>
         `,
+        // detail_process_3: `
+        //     <h3>OPENAI API KEY 등록 상세 가이드</h3>
+        //     <div class="guide-section">
+        //         <p>API KEY는 OPENAI에서 발급받은 키를 입력합니다. (자동분석 시 유료 API가 실행됩니다.)</p>
+
+
+        //         <div class="note-yellow">
+        //               <ul>
+        //                 <li><strong>유형선택:</strong> 개인키(개인법인카드등록된키),부서공용키(부서에서 관리하고 있는 키),회사공용키(경영지원에서 관리하고 있는 키)  </li>
+        //                 <img src="${img2}" class="guide-image" alt="API KEY 등록 화면"  >
+        //             </ul>
+        //         </div>
+        //         <div class="note-green">
+        //               <ul>
+        //                 <li><strong>API KEY 목록 > 기본사용설정(필수):</strong>키 등록 후  "기본사용설정" 에 해당되는 키를 필수 선택해야 APIKEY가 설정됩니다. </li>
+        //                 <img src="${img2_1}" class="guide-image" alt="API KEY 등록 화면" width="100%">
+        //             </ul>
+        //         </div>
+        //     </div>
+        // `,
         detail_process_3: `
-            <h3>OPENAI API KEY 등록 상세 가이드</h3>
-            <div class="guide-section">
-                <p>API KEY는 OPENAI에서 발급받은 키를 입력합니다. (자동분석 시 유료 API가 실행됩니다.)</p>
-                
-                     
-                <div class="note-yellow">
-                      <ul>
-                        <li><strong>유형선택:</strong> 개인키(개인법인카드등록된키),부서공용키(부서에서 관리하고 있는 키),회사공용키(경영지원에서 관리하고 있는 키)  </li>
-                        <img src="${img2}" class="guide-image" alt="API KEY 등록 화면"  >
-                    </ul>
-                </div>
-                <div class="note-green">
-                      <ul>
-                        <li><strong>API KEY 목록 > 기본사용설정(필수):</strong>키 등록 후  "기본사용설정" 에 해당되는 키를 필수 선택해야 APIKEY가 설정됩니다. </li>
-                        <img src="${img2_1}" class="guide-image" alt="API KEY 등록 화면" width="100%">
-                    </ul>
-                </div>
-            </div>
-        `,
-        detail_process_4: `
             <h3>문항목록 > 문항 등록, 문항옵션 상세 가이드</h3>
             <div class="guide-section">
                 <p>문항목록에서 "조사등록"에서 자동 등록된 문항 제시 및 "신규등록"에서 "문항추가" 엑셀로 직접 업로드한 문항 목록 페이지 </p>
@@ -323,7 +309,7 @@ export const manualData = [
                 </div>
             </div>
         `,
-        detail_process_5: `
+        detail_process_4: `
             <h3>문항별 분석 시작 상세 가이드</h3>
             <div class="guide-section">
                 <p>문항 질문 + 응답자 데이터 기준으로 보기 분석, 응답자 분석을 수행하는 페이지 입니다.</p>
@@ -354,7 +340,7 @@ export const manualData = [
                 </div>  
             </div>
         `,
-        detail_process_6: `
+        detail_process_5: `
             <div class="guide-section">
                 <h3>분석데이터/엑셀</h3>    
                 <div class="note-yellow">
@@ -391,7 +377,7 @@ export const manualData = [
                 </div>
             </div>
         `,
-        detail_process_7: `
+        detail_process_6: `
             <h3>프로젝트 분석 대상 등록 상세 가이드</h3>
             <div class="guide-section">
                 <p>프로젝트별 분석 대상을 등록하는 페이지 입니다. </p>
