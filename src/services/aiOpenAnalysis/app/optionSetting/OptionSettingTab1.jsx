@@ -119,7 +119,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
         reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
         applyLv3To: (targets, opt) => gridRef.current?.applyLv3To?.(targets, opt),
-
+        resetAutoSelection: () => gridRef.current?.resetAutoSelection?.(),
     }));
 
     /**
@@ -876,7 +876,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, []);
 
         useImperativeHandle(ref, () => ({
-            applyLv3To
+            applyLv3To,
+            resetAutoSelection: () => { shouldAutoApplySelectionRef.current = true; }
         }));
         /*----------소분류 드래그-------*/
 

@@ -566,6 +566,7 @@ const OptionSettingBody = () => {
                   // 탭1로 이동
                   setTabDivision("1");
                   // 탭1 데이터 재조회
+                  tab1Ref.current?.resetAutoSelection?.();
                   tab1Ref.current?.reload?.();
                   // 보기불러오기 성공 후 Lv3 코드 다시 조회
                   fetchLv3Options();
