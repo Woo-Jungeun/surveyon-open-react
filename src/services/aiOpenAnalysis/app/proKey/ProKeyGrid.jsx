@@ -221,6 +221,7 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
               }
               if (c.field === "delete") {
                 // 유형이 "회사"일 경우 삭제 버튼 숨김
+                // 유형이 "부서"일 경우 등록한 본인만 삭제 가능
                 return (
                   <Column
                     key={c.field}
@@ -229,20 +230,34 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
                     width={c.width}
                     columnMenu={undefined}
                     cell={(props) => {
-                      const isCompany = props.dataItem.api_gubun === "회사";
+                      const { api_gubun, reg_id } = props.dataItem;
+                      const currentUserId = auth?.user?.userId;
+                      const currentUserName = auth?.user?.userName;
+                      // console.log(currentUserId)
+                      // 1. 회사 공용키: 삭제 불가
+                      if (api_gubun === "회사공용키") {
+                        return <td style={{ textAlign: "center" }}></td>;
+                      }
+
+                      // 2. 부서 공용키: 등록자 본인만 삭제 가능
+                      if (api_gubun === "부서공용키") {
+                        if (reg_id !== currentUserId) {
+                          return <td style={{ textAlign: "center" }}></td>;
+                        }
+                      }
+
+                      // 3. 그 외(개인키 등) or 부서키 본인: 삭제 버튼 표시
                       return (
                         <td style={{ textAlign: "center" }}>
-                          {!isCompany && (
-                            <Button
-                              className="btnM"
-                              themeColor="primary"
-                              onClick={() =>
-                                handleDelete(props.dataItem.no, props.dataItem.api_id, props.dataItem.api_gubun)
-                              }
-                            >
-                              삭제
-                            </Button>
-                          )}
+                          <Button
+                            className="btnM"
+                            themeColor="primary"
+                            onClick={() =>
+                              handleDelete(props.dataItem.no, props.dataItem.api_id, props.dataItem.api_gubun)
+                            }
+                          >
+                            삭제
+                          </Button>
                         </td>
                       );
                     }}
