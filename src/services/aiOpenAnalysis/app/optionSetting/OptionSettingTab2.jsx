@@ -805,18 +805,18 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     baselineAfterReloadRef.current = true;   // 재조회 후 베이스라인 재설정
                     handleSearch({ skipSpinner: true }); // 재조회
 
-                    const analysisPayload = {
-                        user: auth?.user?.userId || "",
-                        projectnum,
-                        qid,
-                        opencodeResponse: "Y",
-                        action: "start",
-                    };
-                    const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
-                    if (analysisRes?.success === "777") {
-                        modal.showErrorAlert("에러", "오류가 발생했습니다.");
-                        return false;
-                    }
+                    // const analysisPayload = {
+                    //     user: auth?.user?.userId || "",
+                    //     projectnum,
+                    //     qid,
+                    //     opencodeResponse: "Y",
+                    //     action: "start",
+                    // };
+                    // const analysisRes = await optionAnalysisStart.mutateAsync(analysisPayload);
+                    // if (analysisRes?.success === "777") {
+                    //     modal.showErrorAlert("에러", "오류가 발생했습니다.");
+                    //     return false;
+                    // }
 
                     return true;  //성공
                 } else if (res?.success == "762") {
