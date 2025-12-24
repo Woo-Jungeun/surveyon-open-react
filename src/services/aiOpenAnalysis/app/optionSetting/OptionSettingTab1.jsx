@@ -1215,6 +1215,16 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
+                <style>{`
+                    #grid_01 .k-grid-content td {
+                        user-select: none;
+                    }
+                    #grid_01 .k-grid-content td input,
+                    #grid_01 .k-grid-content td textarea {
+                        user-select: text;
+                        cursor: text;
+                    }
+                `}</style>
                 <div className="meta-header-layout">
                     <div className="meta-header-left">
                         <button
