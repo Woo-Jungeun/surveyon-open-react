@@ -133,6 +133,9 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
                     width={c.width}
                     columnMenu={undefined}
                     cell={(props) => {
+                      if (props.dataItem.no === 1) {
+                        return <td style={{ textAlign: "center" }}></td>;
+                      }
                       return (
                         <td style={{ textAlign: "center" }}>
                           <Button
