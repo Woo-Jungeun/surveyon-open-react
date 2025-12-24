@@ -117,7 +117,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
         saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
-        reload: () => latestCtxRef.current?.handleSearch?.(), // 재조회
+        reload: () => {
+            gridRef.current?.resetAutoSelection?.(); // 재조회 시 선택 로직 초기화
+            latestCtxRef.current?.handleSearch?.();
+        },
         applyLv3To: (targets, opt) => gridRef.current?.applyLv3To?.(targets, opt),
         resetAutoSelection: () => gridRef.current?.resetAutoSelection?.(),
     }));

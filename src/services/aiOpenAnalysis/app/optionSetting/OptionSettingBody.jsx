@@ -197,6 +197,49 @@ const OptionSettingBody = () => {
     });
   }, [modal]);
 
+  //-----------------소분류 코드 중앙 관리-----------------
+  const fetchLv3Options = useCallback(async (skipSpinner = false) => {
+    try {
+      const res = await optionEditData.mutateAsync({
+        params: {
+          user: auth?.user?.userId || "",
+          projectnum,
+          qnum,
+          gb: "lb",
+          skipSpinner,
+        },
+      });
+
+      if (res.success === "777") {
+        if (!skipSpinner) loadingSpinner.hide();  // 로딩바 닫기 
+      }
+
+      const seen = new Set();
+      const list = (res?.resultjson ?? []).reduce((acc, r) => {
+        const lv3 = (r?.lv3 ?? "").trim();
+        const lv123code = (r?.lv123code ?? "").trim();
+        if (!lv3 || seen.has(lv3)) return acc;
+        seen.add(lv3);
+        acc.push({
+          codeId: lv123code,
+          codeName: lv3,
+          lv1: r?.lv1 ?? "",
+          lv2: r?.lv2 ?? "",
+          lv1code: r?.lv1code ?? "",
+          lv2code: r?.lv2code ?? "",
+          lv123code: r?.lv123code ?? "",
+          ex_gubun: r?.ex_gubun ?? "",    // Info 쪽에서 필요
+        });
+        return acc;
+      }, []);
+      setLv3Options(list);
+      return { resultjson: list };
+    } catch (err) {
+      console.error("lv3 fetch error", err);
+      throw err;
+    }
+  }, [optionEditData, projectnum, qnum]);
+
   // 현재 탭 저장 실행 => 성공(true)만 이동 허용
   const saveTab = useCallback(async (tab) => {
     if (tab === "1") {
@@ -205,10 +248,15 @@ const OptionSettingBody = () => {
     }
     if (tab === "2") {
       const ret = tab2Ref.current?.saveChanges?.();
-      return ret && typeof ret.then === "function" ? !!(await ret) : false;
+      const ok = ret && typeof ret.then === "function" ? !!(await ret) : false;
+      if (ok) {
+        // 저장 성공 → Lv3 코드 재조회 (오른쪽 패널 및 데이터 동기화)
+        await fetchLv3Options(true);
+      }
+      return ok;
     }
     return false; // 탭3은 저장 없음
-  }, []);
+  }, [fetchLv3Options]);
 
   const trySwitchTab = useCallback(async (next) => {
     if (next === tabDivision) return;
@@ -353,49 +401,6 @@ const OptionSettingBody = () => {
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, []);
-
-  //-----------------소분류 코드 중앙 관리-----------------
-  const fetchLv3Options = useCallback(async (skipSpinner = false) => {
-    try {
-      const res = await optionEditData.mutateAsync({
-        params: {
-          user: auth?.user?.userId || "",
-          projectnum,
-          qnum,
-          gb: "lb",
-          skipSpinner,
-        },
-      });
-
-      if (res.success === "777") {
-        if (!skipSpinner) loadingSpinner.hide();  // 로딩바 닫기 
-      }
-
-      const seen = new Set();
-      const list = (res?.resultjson ?? []).reduce((acc, r) => {
-        const lv3 = (r?.lv3 ?? "").trim();
-        const lv123code = (r?.lv123code ?? "").trim();
-        if (!lv3 || seen.has(lv3)) return acc;
-        seen.add(lv3);
-        acc.push({
-          codeId: lv123code,
-          codeName: lv3,
-          lv1: r?.lv1 ?? "",
-          lv2: r?.lv2 ?? "",
-          lv1code: r?.lv1code ?? "",
-          lv2code: r?.lv2code ?? "",
-          lv123code: r?.lv123code ?? "",
-          ex_gubun: r?.ex_gubun ?? "",    // Info 쪽에서 필요
-        });
-        return acc;
-      }, []);
-      setLv3Options(list);
-      return { resultjson: list };
-    } catch (err) {
-      console.error("lv3 fetch error", err);
-      throw err;
-    }
-  }, [optionEditData, projectnum, qnum]);
 
   useEffect(() => {
     // 최초 1회 호출 
@@ -566,7 +571,6 @@ const OptionSettingBody = () => {
                   // 탭1로 이동
                   setTabDivision("1");
                   // 탭1 데이터 재조회
-                  tab1Ref.current?.resetAutoSelection?.();
                   tab1Ref.current?.reload?.();
                   // 보기불러오기 성공 후 Lv3 코드 다시 조회
                   fetchLv3Options();
