@@ -5,6 +5,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { process } from "@progress/kendo-data-query";
 import { OptionSettingApi } from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingApi.js";
 import { Button } from "@progress/kendo-react-buttons";
+import { DropDownList } from "@progress/kendo-react-dropdowns";
 import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { modalContext } from "@/components/common/Modal.jsx";
@@ -19,8 +20,11 @@ const ROW_EXCLUSION_SELECTOR = [
     '.k-selectioncheckbox', '.k-checkbox-cell',
     '.k-checkbox', '.k-checkbox-box', '.k-checkbox-wrap',
     'label.k-checkbox-label', 'label[for]',
-    'input[type="checkbox"]', '[role="checkbox"]'
+    'input[type="checkbox"]', '[role="checkbox"]',
+    'td[data-field="sentiment"]'
 ].join(',');
+
+const SENTIMENT_OPTIONS = ["positive", "negative", "neutral"];
 
 const getKey = (row) => {
     if (!row) return null;
@@ -141,7 +145,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             { field: "lv2", title: "중분류", show: true, editable: false, width: "250px" },
             { field: "lv123code", title: "소분류 코드", show: true, editable: false, width: "150px", allowHide: false },
             { field: "lv3", title: "소분류", show: true, editable: true, width: "250px", allowHide: false },
-            { field: "sentiment", title: "sentiment", show: true, editable: false, width: "150px" },
+            { field: "sentiment", title: "sentiment", show: true, editable: false, width: "170px" },
             { field: "add", title: "추가", show: true, editable: true, width: "120px", allowHide: false },
             { field: "delete", title: "삭제", show: true, editable: true, width: "120px", allowHide: false }
         ]);
@@ -974,12 +978,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // 클릭 행 
         const rowRender = (trEl, rowProps) => {
-            // console.log(
-            //     "%c[ROW RENDER]",
-            //     "color:#32CD32;font-weight:bold",
-            //     rowProps?.dataItem?.__rowKey,
-            //     "selected=", rowProps?.dataItem?.selected
-            // );
             // 헤더/푸터/그룹 헤더는 Kendo 기본 이벤트 유지해야 정렬/필터 정상 작동
             if (!rowProps.dataItem) {
                 return trEl;   // 절대 커스텀 이벤트 넣지 말기
@@ -1014,14 +1012,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         return; // Kendo 기본 클릭(선택 리셋) 방지
                     }
 
-                    // 체크박스, 추가, 삭제 버튼 클릭은 제외
+                    // 체크박스, 추가, 삭제 버튼, sentiment 클릭은 제외
                     const target = e.target;
                     const isCheckbox = target.closest('.k-checkbox-cell') ||
                         target.closest('.k-selectioncheckbox') ||
                         target.closest('input[type="checkbox"]');
                     const isButton = target.closest('.btnM');
+                    const isSentiment = target.closest('td[data-field="sentiment"]');
 
-                    if (!isCheckbox && !isButton) {
+                    if (!isCheckbox && !isButton && !isSentiment) {
                         // 소분류 패널 자동 열기 (클릭한 행만 사용)
                         const targetRows = [rowProps.dataItem];
                         const targetCodes = targetRows.map(r => r.lv123code);
@@ -1368,6 +1367,66 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                     />
                                 );
                             }
+                            if (c.field === 'sentiment') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={c.field}
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        cell={(props) => {
+                                            const row = props.dataItem;
+                                            const inEdit = getKey(row) === selectedRowKey;
+                                            const handleChange = (e) => {
+                                                const val = e.target.value;
+                                                setDataState(prev => {
+                                                    const next = prev.data.map(r => getKey(r) === getKey(row) ? { ...r, sentiment: val } : r);
+                                                    commitSmartRef.current?.(next);
+                                                    return { ...prev, data: next };
+                                                });
+                                            };
+
+                                            const cellProps = {
+                                                style: props.style,
+                                                className: props.className,
+                                                "data-field": "sentiment",
+                                                colSpan: props.colSpan,
+                                                role: "gridcell",
+                                                "aria-colindex": props.columnIndex + 1,
+                                                "aria-selected": props.isSelected
+                                            };
+
+                                            if (inEdit) {
+                                                return (
+                                                    <td
+                                                        {...cellProps}
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        onMouseDown={(e) => e.stopPropagation()}
+                                                    >
+                                                        <DropDownList
+                                                            data={SENTIMENT_OPTIONS}
+                                                            value={row.sentiment}
+                                                            onChange={handleChange}
+                                                        />
+                                                    </td>
+                                                );
+                                            }
+                                            return (
+                                                <td
+                                                    {...cellProps}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onRowClick({ dataItem: row });
+                                                    }}
+                                                >
+                                                    {row.sentiment}
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
                             if (c.field === 'lv1code' || c.field === 'lv2code' || c.field === 'lv123code') {
                                 return (
                                     <Column
@@ -1517,7 +1576,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setShowUnverifiedOnly={setShowUnverifiedOnly}
             isLeftOpen={isLeftOpen}
         />
-    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly, isLeftOpen, effectiveColumns]);
+    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly, isLeftOpen, effectiveColumns, selectedRowKey]);
 
     return (
         <GridData
