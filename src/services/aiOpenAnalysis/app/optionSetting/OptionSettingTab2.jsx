@@ -1021,7 +1021,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     qnum: String(qnum ?? ""),
                     lv1code: String(r.lv1code ?? ""),
                     lv2code: String(r.lv2code ?? ""),
-                    lv321code: "", // ← 항상 빈값
+                    lv321code: String(r.lv321code ?? ""),
                     summary: String(r.summary ?? ""),
                     ex_gubun: String(r.ex_gubun ?? "analysis"),
                     lv23code: String(r.lv23code ?? ""),
