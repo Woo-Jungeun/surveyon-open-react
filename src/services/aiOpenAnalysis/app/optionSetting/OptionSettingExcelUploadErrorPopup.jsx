@@ -27,7 +27,7 @@ const OptionSettingExcelUploadErrorPopup = ({ popupShow, onClose, errorList = []
       return <p style={{ padding: 12, color: "#888" }}>표시할 오류 데이터가 없습니다.</p>;
 
     return (
-      <div style={{ overflowY: "auto", overflowX: "auto", maxHeight: "400px", borderRadius: 6 }}>
+      <div style={{ overflowY: "auto", overflowX: "auto", maxHeight: "230px", borderRadius: 6 }}>
         <table
           className="k-grid k-table"
           style={{
@@ -70,23 +70,10 @@ const OptionSettingExcelUploadErrorPopup = ({ popupShow, onClose, errorList = []
               <tr key={`${r.fixed_key || r.key || "row"}-${idx}`}>
                 <td style={{ width: "150px", textAlign: "center", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.fixed_key || r.key || "-"}</td>
                 <td style={{ width: "100px", textAlign: "center", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.cid || "-"}</td>
-                <td
-                  style={{
-                    width: "200px",
-                    padding: "8px",
-                    wordBreak: "break-all",
-                    whiteSpace: "normal",
-                    verticalAlign: "middle"
-                  }}
-                  title={r.answer_origin || "-"}
-                >
-                  {r.answer_origin || "-"}
-                </td>
-                <td style={{ width: "200px", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.lv3 || "-"}</td>
-                <td style={{ width: "100px", textAlign: "center", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.lv123code || "-"}</td>
-                <td style={{ width: "200px", padding: "8px", color: "#c63d3d", fontWeight: 500, wordBreak: "break-all", verticalAlign: "middle" }}>
-                  {r.error_msg || "-"}
-                </td>
+                <td style={{ width: "200px", padding: "8px", wordBreak: "break-all", whiteSpace: "normal", verticalAlign: "middle" }}>{r.answer_origin || "-"}</td>
+                <td style={{ width: "200px", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.lv123code || "-"}</td>
+                <td style={{ width: "100px", textAlign: "center", padding: "8px", wordBreak: "break-all", verticalAlign: "middle" }}>{r.lv3 || "-"}</td>
+                <td style={{ width: "200px", padding: "8px", color: "#ff5252", fontWeight: 500, wordBreak: "break-all", verticalAlign: "middle" }}>{r.error_msg || "-"}</td>
               </tr>
             ))}
           </tbody>
