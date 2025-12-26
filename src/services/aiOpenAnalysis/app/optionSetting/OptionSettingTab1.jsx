@@ -15,7 +15,7 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 // 드래그 제외 셀렉터: 바깥에 선언해 매 렌더마다 재생성 방지
 const ROW_EXCLUSION_SELECTOR = [
-    '.lv3-popup', '.lv3-editor', '.lv3-opener', '.k-animation-container',
+    '.lv3-popup', '.lv3-editor', '.k-animation-container',
     '.k-input', '.k-dropdownlist', '.k-button',
     '.k-selectioncheckbox', '.k-checkbox-cell',
     '.k-checkbox', '.k-checkbox-box', '.k-checkbox-wrap',
