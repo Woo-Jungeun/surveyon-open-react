@@ -1,4 +1,4 @@
-import React, { memo, Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
+﻿import React, { memo, Fragment, useEffect, useState, useRef, useCallback, useMemo, useContext, forwardRef, useImperativeHandle, useLayoutEffect } from "react";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -713,12 +713,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             lastFocusedKeyRef.current = key;
 
-            // Ctrl/Shift 클릭 로직은 그대로 유지
-            if (!e.shiftKey && !e.ctrlKey && !e.metaKey && lv3SelKeys.size > 0 && lv3SelKeys.has(key)) {
-                anchorIndexRef.current = idx;
-                lastIndexRef.current = idx;
-                return;
-            }
             if (e.shiftKey && anchorIndexRef.current != null) {
                 selectionModeRef.current = 'range';
                 rangeToKeys(anchorIndexRef.current, idx);
@@ -1218,16 +1212,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <style>{`
-                    #grid_01 .k-grid-content td {
-                        user-select: none;
-                    }
-                    #grid_01 .k-grid-content td input,
-                    #grid_01 .k-grid-content td textarea {
-                        user-select: text;
-                        cursor: text;
-                    }
-                `}</style>
                 <div className="meta-header-layout">
                     <div className="meta-header-left">
                         <button
