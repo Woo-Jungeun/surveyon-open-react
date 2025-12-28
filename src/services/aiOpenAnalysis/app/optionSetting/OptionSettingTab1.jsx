@@ -215,7 +215,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     ), [columns, forcedHidden, stageFields, filter, onPrefsChange]);
 
     /* 선택된 행 key */
-    const [selectedRowKey, setSelectedRowKey] = useState(null);
+    // const [selectedRowKey, setSelectedRowKey] = useState(null); // GridRenderer 내부로 이동
+    // const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // GridRenderer 내부로 이동
 
     /*-----수정 로그 관련-----*/
     const makeTab1Signature = useCallback((rows = []) => {
@@ -253,9 +254,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const rows = dataState?.data ?? [];
         const hasAllRowKeys = useMemo(() => (dataState?.data ?? []).every(r => !!r?.__rowKey), [dataState?.data]);
         const [isDragging, setIsDragging] = useState(false);
+        /* 선택된 행 key (GridRenderer 내부에서 관리하여 상위 리렌더링 방지) */
+        const [selectedRowKey, setSelectedRowKey] = useState(null);
+
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
-        const lv3SelKeysRef = useRef(new Set());
         const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 화면 표시용 (mouseup 때만 변경)
+        const lv3SelKeysRef = useRef(lv3SelKeys);
+
+        // lv3SelKeys 변경될 때마다 ref 동기화
+        useEffect(() => {
+            lv3SelKeysRef.current = lv3SelKeys;
+        }, [lv3SelKeys]);
         const draggingRef = useRef(false);
         const anchorIndexRef = useRef(null);
         const lastIndexRef = useRef(null);
@@ -1576,7 +1585,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setShowUnverifiedOnly={setShowUnverifiedOnly}
             isLeftOpen={isLeftOpen}
         />
-    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly, isLeftOpen, effectiveColumns, selectedRowKey]);
+    ), [hist, makeTab1Signature, sort, filter, showUnverifiedOnly, isLeftOpen, effectiveColumns]);
 
     return (
         <GridData
