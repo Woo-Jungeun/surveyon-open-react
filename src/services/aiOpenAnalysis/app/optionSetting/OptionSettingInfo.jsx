@@ -711,9 +711,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         {/* 문항 요약 */}
                         <div className="cmn_pop_ipt">
                             <TextArea
-                                className="k-input-solid"
-                                style={{ height: "50px", minHeight: "50px", maxHeight: "50px", resize: "none", width: "100%" }}
-
+                                className="custom-padding-textarea k-input-solid"
                                 value={
                                     data?.keyword_string && data.keyword_string.trim() !== ""
                                         ? data.keyword_string
