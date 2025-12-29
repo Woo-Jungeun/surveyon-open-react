@@ -15,7 +15,7 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 // 드래그 제외 셀렉터: 바깥에 선언해 매 렌더마다 재생성 방지
 const ROW_EXCLUSION_SELECTOR = [
-    '.lv3-popup', '.lv3-editor', '.k-animation-container', '.lv3-opener',
+    '.lv3-popup', '.lv3-editor', '.k-animation-container',
     '.k-input', '.k-dropdownlist', '.k-button',
     '.k-selectioncheckbox', '.k-checkbox-cell',
     '.k-checkbox', '.k-checkbox-box', '.k-checkbox-wrap',
@@ -260,6 +260,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         /** ===== 소분류 셀: 엑셀식 선택 + 드롭다운 ===== */
         const [lv3SelKeys, setLv3SelKeys] = useState(new Set()); // 화면 표시용 (mouseup 때만 변경)
         const lv3SelKeysRef = useRef(lv3SelKeys);
+        const dragStartPosRef = useRef({ x: 0, y: 0 }); // 드래그 시작 좌표
+        const rowElementsRef = useRef(null); // 드래그 성능 최적화: 행 요소 캐싱
 
         // lv3SelKeys 변경될 때마다 ref 동기화
         useEffect(() => {
@@ -456,9 +458,17 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 wasDraggingRef.current = false;
             };
 
-            const handleMouseMove = () => {
+            const handleMouseMove = (e) => {
                 if (draggingRef.current) {
-                    wasDraggingRef.current = true;
+                    if (!wasDraggingRef.current) {
+                        // 드래그 임계값 체크 (5px)
+                        const start = dragStartPosRef.current;
+                        const dist = Math.hypot(e.clientX - start.x, e.clientY - start.y);
+                        if (dist > 5) {
+                            setIsDragging(true); // 실제 움직임이 발생했을 때만 렌더링
+                            wasDraggingRef.current = true;
+                        }
+                    }
                 }
             };
 
@@ -751,7 +761,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // 드래그 시작 (상태 변경 없음)
             selectionModeRef.current = 'drag';
             draggingRef.current = true;
-            setIsDragging(true);
+            dragStartPosRef.current = { x: e.clientX, y: e.clientY };
+            // setIsDragging(true); // mousemove에서 임계값 체크 후 실행
             anchorIndexRef.current = idx;
             lastIndexRef.current = idx;
 
@@ -760,6 +771,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             if (grid) {
                 grid.dataset.dragStart = idx;
                 grid.dataset.dragEnd = idx;
+                // 성능 최적화: 드래그 시작 시점에 행 요소들 캐싱 (매번 querySelectorAll 하지 않도록)
+                rowElementsRef.current = grid.querySelectorAll(".k-grid-table tr[data-index]");
             }
         }, [getKey, rangeToKeys, skip]);
 
@@ -773,7 +786,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             // 실시간 하이라이트 표시
             const grid = gridRootRef.current;
             if (grid) {
-                const trs = grid.querySelectorAll(".k-grid-table tr[data-index]");
+                // 캐싱된 행 요소 사용 (없으면 폴백으로 쿼리)
+                const trs = rowElementsRef.current || grid.querySelectorAll(".k-grid-table tr[data-index]");
                 const start = Math.min(anchorIndexRef.current, idx);
                 const end = Math.max(anchorIndexRef.current, idx);
                 trs.forEach(tr => {
@@ -790,6 +804,19 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                 draggingRef.current = false;
                 setIsDragging(false);
+
+                // 드래그 모드였으나 실제 드래그(이동)가 없었다면, 단순 클릭이므로 선택 상태 업데이트 건너뜀
+                // (Click 이벤트가 처리하도록 함)
+                if (selectionModeRef.current === 'drag' && !wasDraggingRef.current) {
+                    selectionModeRef.current = null;
+                    const grid = gridRootRef.current;
+                    if (grid) {
+                        delete grid.dataset.dragStart;
+                        delete grid.dataset.dragEnd;
+                    }
+                    return;
+                }
+
                 selectionModeRef.current = null;
 
                 // 최종 선택 확정: 여기서 한 번만 렌더 발생
@@ -801,8 +828,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 if (grid) {
                     delete grid.dataset.dragStart;
                     delete grid.dataset.dragEnd;
-                    grid.querySelectorAll(".drag-highlight").forEach(tr => tr.classList.remove("drag-highlight"));
+                    // 캐싱된 요소 사용하여 클래스 제거
+                    const trs = rowElementsRef.current || grid.querySelectorAll(".drag-highlight");
+                    trs.forEach(tr => tr.classList.remove("drag-highlight"));
                 }
+                rowElementsRef.current = null; // 캐시 초기화
 
                 // 필요 시 GridRenderer에게 콜백 전달 (선택 완료 시점)
                 if (typeof props?.onDragSelectionEnd === "function") {
@@ -1329,8 +1359,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 >
                                                     <div
                                                         className="lv3-opener"
-                                                        style={{ cursor: "pointer" }}
-                                                        onMouseDown={(e) => e.stopPropagation()}
+                                                        style={{ cursor: "context-menu" }}
+                                                        // onMouseDown={(e) => e.stopPropagation()}
                                                         onClick={(e) => {
                                                             e.stopPropagation(); // 행 클릭 이벤트(단일 선택 강제) 방지
 
@@ -1367,9 +1397,11 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         <span className="lv3-display">{currentValue || "소분류 선택"}</span>
                                                     </div>
 
-                                                    {hasReqError && (
-                                                        <span className="cell-error-badge">빈값</span>
-                                                    )}
+                                                    {
+                                                        hasReqError && (
+                                                            <span className="cell-error-badge">빈값</span>
+                                                        )
+                                                    }
                                                 </td>
                                             );
                                         }}
