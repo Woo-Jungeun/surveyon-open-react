@@ -9,13 +9,14 @@ import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { useContext } from "react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { AES256 } from "@/common/utils/AES256"
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export function LoginApi() {
     const dispatch = useDispatch();
     const [, setCookie, removeCookie] = useCookies();
     const modal = useContext(modalContext);
     const navigate = useNavigate();
+    const location = useLocation();
 
     /**
      * 로그인 api
@@ -38,7 +39,9 @@ export function LoginApi() {
                     return out;
                 };
                 if (res?.success === "777") {
-                    navigate("/"); // 홈으로 이동
+                    console.log(location.state?.from)
+                    const from = location.state?.from || "/";
+                    navigate(from); // 이전 페이지 또는 홈으로 이동
                     // 성공 처리: 스토어/쿠키/세션 동기화
                     const out = parseOutput(res?.output);
                     const info = Array.isArray(out) ? out[0] : out || {};
@@ -55,7 +58,7 @@ export function LoginApi() {
                     // 2) 쿠키 저장 (로그인키)
                     if (loginkey) {
                         setCookie("TOKEN", loginkey, { path: "/", sameSite: "Lax" }); // 필요시 secure:true
-                      }
+                    }
                 }
                 // else if (res.status === "NS_ER_AT_02") {
                 //     modal.showErrorAlert(res.status, "중복 로그인이 감지되었습니다.");    //axios에서 처리
@@ -64,8 +67,8 @@ export function LoginApi() {
             },
             onError: (err, v) => {
                 modal?.showErrorAlert?.("NETWORK", "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-               // v?.options?.onError?.(err);
-              },
+                // v?.options?.onError?.(err);
+            },
             onMutate: () => {
                 // loadingSpinner.show();
             },

@@ -90,13 +90,18 @@ const MenuSection = () => {
       <div className="hp-menu-grid">
         {menuItems.map((item) => {
           // 설문제작, 데이터관리, 응답자관리는 항상 disabled
-          const isDisabled = !isLoggedIn ||
+          const isDisabled =
             item.id === "survey-creation" ||
             item.id === "data-management" ||
             item.id === "respondent-management" || item.id === "data-dashboard";
 
           const handleCardClick = () => {
             if (isDisabled) return;
+
+            if (!isLoggedIn) {
+              navigate("/login", { state: { from: item.path } });
+              return;
+            }
 
             // 데이터현황은 Figma로 이동
             // if (item.id === "data-dashboard") {
