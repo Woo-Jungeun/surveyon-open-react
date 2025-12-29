@@ -710,11 +710,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     <div className="mgB12">
                         {/* 문항 요약 */}
                         <div className="cmn_pop_ipt">
-                            {/* <span className="iptTit">
-                                {(qnum ? `${qnum} ` : "")}문항
-                            </span> */}
-                            <Input
-                                className="k-input k-input-solid"
+                            <TextArea
+                                className="k-input-solid"
+                                style={{ height: "50px", minHeight: "50px", maxHeight: "50px", resize: "none", width: "100%" }}
+
                                 value={
                                     data?.keyword_string && data.keyword_string.trim() !== ""
                                         ? data.keyword_string
@@ -748,7 +747,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         <div className="promptArea">
                             <TextArea
                                 className="promptBox"
-                                rows={4}
+                                rows={5}
                                 placeholder="프롬프트 지침을 입력하세요."
                                 value={data?.prompt_string || ""}
                                 onChange={(e) => onChangeInputEvent(e, "prompt_string")}
