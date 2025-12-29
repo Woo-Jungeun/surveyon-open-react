@@ -692,7 +692,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     return (
         <Fragment>
             <div className="collapseBar">
-                {isOpen && <div className="collapseTitle">{projectnum || "-"}</div>}
+                {isOpen && <div className="collapseTitle">{(qnum ? `${qnum} ` : "")}문항</div>}
                 <Button
                     type="button"
                     className="btnCollapse"
@@ -710,9 +710,9 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     <div className="mgB12">
                         {/* 문항 요약 */}
                         <div className="cmn_pop_ipt">
-                            <span className="iptTit">
+                            {/* <span className="iptTit">
                                 {(qnum ? `${qnum} ` : "")}문항
-                            </span>
+                            </span> */}
                             <Input
                                 className="k-input k-input-solid"
                                 value={
@@ -748,7 +748,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         <div className="promptArea">
                             <TextArea
                                 className="promptBox"
-                                rows={5}
+                                rows={4}
                                 placeholder="프롬프트 지침을 입력하세요."
                                 value={data?.prompt_string || ""}
                                 onChange={(e) => onChangeInputEvent(e, "prompt_string")}
