@@ -248,7 +248,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         const COMPOSITE_KEY_FIELD = "__rowKey";  // 키값
         const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row), []);
-        const qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요)
+        // const qnum = dataState?.data?.[0]?.qnum ?? "";   // 문번호 저장 (행 추가 시 필요) -> 부모 prop 사용
         latestCtxRef.current = { dataState, setDataState, selectedState, idGetter, handleSearch };    // 최신 컨텍스트 저장
 
         // 행마다 __rowKey가 없으면 만들어서 주입 (lv123code + no 기반)
@@ -727,7 +727,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     scrollTopRef.current = grid.scrollHeight; // 다음 복원 루프용
                 }
             });
-        }, [applyLiveDupMarks]);
+        }, [applyLiveDupMarks, qnum]);
 
         // 행 클릭 시 편집기능 open
         const onRowClick = useCallback((e) => {
@@ -831,7 +831,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 return false;   // 실패 시 그리드 상태 변경 안 함
             }
 
-        }, []);
+        }, [qnum]);
 
         // 부모에서 호출할 수 있도록 ref에 연결
         saveChangesRef.current = saveChanges;
