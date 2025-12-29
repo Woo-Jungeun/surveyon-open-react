@@ -605,7 +605,11 @@ const OptionSettingBody = () => {
         </p>
 
         <div className="subTit">
-          <h2 className="titTxt">{TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}</h2>
+          <h2 className="titTxt">
+            {TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}
+            {sessionStorage.getItem("projectname") && (<span className="projectName" style={{ color: "#757575", fontSize: "16px", fontWeight: "400", marginLeft: "12px" }}> {sessionStorage.getItem("projectname")}</span>)}
+          </h2>
+
 
           {tabDivision === "1" && (
             <div className="btnWrap">
