@@ -806,11 +806,10 @@ const ProList = () => {
                                     onClick={(e) => e.stopPropagation()}>
                                     {!excluded && !isMergeRow(row) && ( // 머지 행이면 숨김
                                         <Button
-                                            className={`btnM ${locked ? 'btnM--disabled' : ''}`}
-                                            themeColor={locked ? 'base' : 'primary'}
-                                            disabled={locked}
+                                            className="btnM"
+                                            themeColor="primary"
                                             onClick={() => {
-                                                if (!locked && !blockWhenDirty()) goOpenSetting(merge_qnum);
+                                                if (!blockWhenDirty()) goOpenSetting(merge_qnum);
                                             }}
                                         >
                                             분석보기
