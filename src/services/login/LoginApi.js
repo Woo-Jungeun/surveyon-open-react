@@ -39,7 +39,6 @@ export function LoginApi() {
                     return out;
                 };
                 if (res?.success === "777") {
-                    console.log(location.state?.from)
                     const from = location.state?.from || "/";
                     navigate(from); // 이전 페이지 또는 홈으로 이동
                     // 성공 처리: 스토어/쿠키/세션 동기화
