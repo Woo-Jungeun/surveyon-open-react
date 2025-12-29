@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, project_lock }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -860,83 +860,87 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     </Section>
 
                     {/* 버튼 3개 */}
-                    <div className="btnWrap type01 btnRowFit">
-                        <Button className="btnTxt" disabled={saving}
-                            onClick={() => runInfoSave("translateResponse")}>
-                            번역
-                        </Button>
-
-                        <Button themeColor="primary" disabled={saving}
-                            onClick={async () => {
-                                try {
-                                    const hasAnalysis = (lv3Options ?? []).some(
-                                        (r) => r.ex_gubun?.trim?.() === "analysis"
-                                    );
-                                    if (hasAnalysis) {
-                                        modal.showConfirm(
-                                            "알림",
-                                            "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
-                                            {
-                                                btns: [
-                                                    { title: "취소" },
-                                                    { title: "확인", click: () => runInfoSave("classified") },
-                                                ],
-                                            }
-                                        );
-                                    } else {
-                                        runInfoSave("classified");
-                                    }
-                                } catch (err) {
-                                    console.error("분석 전 확인 오류", err);
-                                    modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
-                                }
-                            }}
-                        >
-                            보기분석
-                        </Button>
-
-                        <Button themeColor="primary" disabled={saving}
-                            onClick={() => {
-                                try {
-                                    if (responseCount < 0) {
-                                        modal.showConfirm(
-                                            "알림",
-                                            "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
-                                            {
-                                                btns: [
-                                                    { title: "취소" },
-                                                    { title: "확인", click: () => runInfoSave("response") },
-                                                ],
-                                            }
-                                        );
-                                    } else {
-                                        runInfoSave("response");
-                                    }
-                                } catch (err) {
-                                    console.error("응답자분석 전 확인 오류", err);
-                                    modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
-                                }
-                            }}>
-                            응답자분석(NEW)
-                        </Button>
-
-                        {showEmptyEtcBtn && (
+                    {project_lock !== '수정불가' && (
+                        <div className="btnWrap type01 btnRowFit">
                             <Button className="btnTxt" disabled={saving}
-                                onClick={() => runInfoSave("recallResponse")}>
-                                응답자 빈셀&기타
+                                onClick={() => runInfoSave("translateResponse")}>
+                                번역
                             </Button>
-                        )}
-                    </div>
+
+                            <Button themeColor="primary" disabled={saving}
+                                onClick={async () => {
+                                    try {
+                                        const hasAnalysis = (lv3Options ?? []).some(
+                                            (r) => r.ex_gubun?.trim?.() === "analysis"
+                                        );
+                                        if (hasAnalysis) {
+                                            modal.showConfirm(
+                                                "알림",
+                                                "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
+                                                {
+                                                    btns: [
+                                                        { title: "취소" },
+                                                        { title: "확인", click: () => runInfoSave("classified") },
+                                                    ],
+                                                }
+                                            );
+                                        } else {
+                                            runInfoSave("classified");
+                                        }
+                                    } catch (err) {
+                                        console.error("분석 전 확인 오류", err);
+                                        modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
+                                    }
+                                }}
+                            >
+                                보기분석
+                            </Button>
+
+                            <Button themeColor="primary" disabled={saving}
+                                onClick={() => {
+                                    try {
+                                        if (responseCount < 0) {
+                                            modal.showConfirm(
+                                                "알림",
+                                                "기존 분석 결과가 있습니다.\n삭제 후 새로 분석하시겠습니까?",
+                                                {
+                                                    btns: [
+                                                        { title: "취소" },
+                                                        { title: "확인", click: () => runInfoSave("response") },
+                                                    ],
+                                                }
+                                            );
+                                        } else {
+                                            runInfoSave("response");
+                                        }
+                                    } catch (err) {
+                                        console.error("응답자분석 전 확인 오류", err);
+                                        modal.showErrorAlert("오류", "기존 분석 여부 확인 중 문제가 발생했습니다.");
+                                    }
+                                }}>
+                                응답자분석(NEW)
+                            </Button>
+
+                            {showEmptyEtcBtn && (
+                                <Button className="btnTxt" disabled={saving}
+                                    onClick={() => runInfoSave("recallResponse")}>
+                                    응답자 빈셀&기타
+                                </Button>
+                            )}
+                        </div>
+                    )}
                     {/* 분석결과 */}
-                    <div className="mgT16">
-                        <div ref={logRef} className="resultBox" aria-label="분석결과창">
-                            {logText}
+                    {project_lock !== '수정불가' && (
+                        <div className="mgT16">
+                            <div ref={logRef} className="resultBox" aria-label="분석결과창">
+                                {logText}
+                            </div>
+                            <div className="mgT10" style={{ display: "flex", justifyContent: "space-between" }}>
+                                {userPerm === 2 && <Button className="btnTxt type02" onClick={deleteQnum}>문항 삭제</Button>}
+                                {/* <Button className="btnTxt type02" onClick={clearLog}>로그 지우기</Button> */}
+                            </div>
                         </div>
-                        <div className="mgT10" style={{ display: "flex", justifyContent: "space-between" }}>
-                            {userPerm === 2 && <Button className="btnTxt type02" onClick={deleteQnum}>문항 삭제</Button>}
-                            {/* <Button className="btnTxt type02" onClick={clearLog}>로그 지우기</Button> */}
-                        </div>
-                    </div>
+                    )}
                 </div>
             )}
             {/* 기존 프롬프트 내용 팝업 */}

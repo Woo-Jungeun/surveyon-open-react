@@ -178,7 +178,7 @@ const ProList = () => {
     ]);
 
     // 행 클릭 → /option_setting 로 이동
-    const goOpenSetting = ((merge_qnum) => navigate('/ai_open_analysis/option_setting', { state: { projectnum, qnum: merge_qnum, userPerm: userPerm } }));
+    const goOpenSetting = ((merge_qnum, project_lock) => navigate('/ai_open_analysis/option_setting', { state: { projectnum, qnum: merge_qnum, userPerm: userPerm, project_lock } }));
 
     // 권한 반영 컬럼 배열
     const columnsForPerm = useMemo(() => {
@@ -809,7 +809,7 @@ const ProList = () => {
                                             className="btnM"
                                             themeColor="primary"
                                             onClick={() => {
-                                                if (!blockWhenDirty()) goOpenSetting(merge_qnum);
+                                                if (!blockWhenDirty()) goOpenSetting(merge_qnum, row.project_lock);
                                             }}
                                         >
                                             분석보기

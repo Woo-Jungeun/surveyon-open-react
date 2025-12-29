@@ -645,6 +645,7 @@ const OptionSettingBody = () => {
               });
             }, [])}
             userPerm={state?.userPerm}  // 권한 체크 
+            project_lock={state?.project_lock}
             lv3Options={lv3Options}
             responseCount={responseCount}
             fetchLv3Options={fetchLv3Options}
