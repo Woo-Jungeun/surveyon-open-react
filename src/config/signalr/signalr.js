@@ -1,8 +1,16 @@
 import { urlJoin } from "@/common/utils/urlJoin";
 
-const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL !== undefined ? import.meta.env.VITE_API_BASE_URL : ((typeof window !== 'undefined' && window.API_CONFIG?.API_BASE_URL) || "");
-const VITE_DEFAULT_PATH = import.meta.env.VITE_DEFAULT_PATH !== undefined ? import.meta.env.VITE_DEFAULT_PATH : ((typeof window !== 'undefined' && window.API_CONFIG?.DEFAULT_PATH) || "/o");
-const VITE_SIGNALR_PATH = import.meta.env.VITE_SIGNALR_PATH !== undefined ? import.meta.env.VITE_SIGNALR_PATH : ((typeof window !== 'undefined' && window.API_CONFIG?.SIGNALR_PATH) || "signalr");
+const VITE_API_BASE_URL = import.meta.env.DEV
+  ? (import.meta.env.VITE_API_BASE_URL || "")
+  : ((typeof window !== 'undefined' && window.API_CONFIG?.API_BASE_URL) || import.meta.env.VITE_API_BASE_URL || "");
+
+const VITE_DEFAULT_PATH = import.meta.env.DEV
+  ? (import.meta.env.VITE_DEFAULT_PATH || "/o")
+  : ((typeof window !== 'undefined' && window.API_CONFIG?.DEFAULT_PATH) || import.meta.env.VITE_DEFAULT_PATH || "/o");
+
+const VITE_SIGNALR_PATH = import.meta.env.DEV
+  ? (import.meta.env.VITE_SIGNALR_PATH || "signalr")
+  : ((typeof window !== 'undefined' && window.API_CONFIG?.SIGNALR_PATH) || import.meta.env.VITE_SIGNALR_PATH || "signalr");
 
 // dev/dev-local → "/o/signalr"  (Vite 프록시가 son 또는 localhost로 전달)
 // prod         → "https://son.hrc.kr/o/signalr"
