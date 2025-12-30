@@ -1,8 +1,8 @@
 import { urlJoin } from "@/common/utils/urlJoin";
 
 const {
-  VITE_API_BASE_URL = window.API_CONFIG?.API_BASE_URL || "",   // prod: https://son.hrc.kr / dev: ""
-  VITE_DEFAULT_PATH = "/o", // 공통 prefix
+  VITE_API_BASE_URL = (typeof window !== 'undefined' && window.API_CONFIG?.API_BASE_URL) || "",   // prod: https://son.hrc.kr / dev: ""
+  VITE_DEFAULT_PATH = (typeof window !== 'undefined' && window.API_CONFIG?.DEFAULT_PATH) || "/o", // 공통 prefix
   VITE_SIGNALR_PATH = "signalr",
 } = import.meta.env;
 

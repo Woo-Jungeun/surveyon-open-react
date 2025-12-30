@@ -1,7 +1,7 @@
 import { apiAxios } from "@/config/axios/Axios.jsx";
 import moment from "moment";
 
-const { VITE_DEFAULT_PATH } = import.meta.env;
+const VITE_DEFAULT_PATH = (typeof window !== 'undefined' && window.API_CONFIG?.DEFAULT_PATH) || "/o";
 const join = (p) => (VITE_DEFAULT_PATH.replace(/\/+$/, '') + '/' + String(p).replace(/^\/+/, ''));
 
 export default {
@@ -33,15 +33,15 @@ export default {
     // 파일 다운로드(Blob)용
     async file(data, url) {
         const response = await apiAxios.post(
-          join(url),
-          data,
-          {
-            headers: { "Content-Type": "application/json" },
-            responseType: "blob",
-          }
+            join(url),
+            data,
+            {
+                headers: { "Content-Type": "application/json" },
+                responseType: "blob",
+            }
         );
         return response;
-      },
+    },
 
     /*signalR 기능 시 사용*/
     /**
