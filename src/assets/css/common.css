@@ -89,31 +89,11 @@
 
 .decoS::after {
     content: "*";
-    display: inline-block;
-    color: #ff4646;
-    margin-left: 2px;
-}
-
-.line {
-    display: inline-block;
-    width: 1px;
-    height: 20px;
-    margin-left: 8px;
-    padding-left: 8px;
-    border-left: 1px solid #d3d7d5;
-}
-
-.line_02 {
-    display: inline-block;
-    width: 1px;
-    height: 14px;
-    margin-left: 8px;
-    padding-left: 8px;
     border-left: 1px solid #69706d;
 }
 
 section {
-    min-width: 1680px;
+    width: 100%;
 }
 
 /* size */
