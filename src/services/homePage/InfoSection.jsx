@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3 } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useCookies } from "react-cookie";
+import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import logoImg from "@/assets/images/logo_red.png";
 import { motion } from "framer-motion";
 import { logout } from "@/common/redux/action/AuthAction";
+import { LoginApi } from "@/services/login/LoginApi.js";
 
 const InfoSection = () => {
   const navigate = useNavigate();
@@ -22,6 +24,8 @@ const InfoSection = () => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  const { logoutMutation } = LoginApi();
+
   /** 로그아웃 처리 */
   const doLogout = async () => {
     modal.showConfirm("알림", "로그아웃하시겠습니까?", {
@@ -31,16 +35,24 @@ const InfoSection = () => {
           title: "로그아웃",
           click: async () => {
             try {
-              dispatch(logout());
-              await persistor.purge();
-              removeCookie("TOKEN", { path: "/" });
-              sessionStorage.setItem("projectnum", "");
-              sessionStorage.setItem("projectname", "");
-              sessionStorage.setItem("servername", "");
-              sessionStorage.setItem("projectpof", "");
-              navigate("/");
-
-            } catch {
+              // 로그아웃 api
+              const res = await logoutMutation.mutateAsync({ user: auth?.user?.userId, gb: "out" });
+              console.log(res?.success)
+              console.log(res?.success === "777")
+              if (res?.success === "777") {
+                dispatch(logout());
+                await persistor.purge();
+                removeCookie("TOKEN", { path: "/" });
+                sessionStorage.setItem("projectnum", "");
+                sessionStorage.setItem("projectname", "");
+                sessionStorage.setItem("servername", "");
+                sessionStorage.setItem("projectpof", "");
+                navigate("/");
+              } else {
+                modal.showAlert("알림", "로그아웃을 하지 못했습니다.");
+              }
+            } catch (e) {
+              console.log("catch", e)
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
             }
           },
