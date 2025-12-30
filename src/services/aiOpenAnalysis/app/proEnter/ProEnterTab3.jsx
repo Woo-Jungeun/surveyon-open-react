@@ -52,7 +52,6 @@ const ProEnterTab3 = () => {
 
     const handlePofChange = (event) => {
         const val = event.value;
-        console.log("POF change:", val);
         setPof(val);
 
         // 선택된 객체에서 프로젝트명을 조사명에 자동 입력

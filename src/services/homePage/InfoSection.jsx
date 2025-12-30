@@ -37,8 +37,6 @@ const InfoSection = () => {
             try {
               // 로그아웃 api
               const res = await logoutMutation.mutateAsync({ user: auth?.user?.userId, gb: "out" });
-              console.log(res?.success)
-              console.log(res?.success === "777")
               if (res?.success === "777") {
                 dispatch(logout());
                 await persistor.purge();
@@ -51,8 +49,7 @@ const InfoSection = () => {
               } else {
                 modal.showAlert("알림", "로그아웃을 하지 못했습니다.");
               }
-            } catch (e) {
-              console.log("catch", e)
+            } catch {
               modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
             }
           },

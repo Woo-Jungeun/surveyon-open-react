@@ -1,8 +1,7 @@
-import {Button} from "@progress/kendo-react-buttons";
-import {useNavigate} from "react-router-dom";
+import { Button } from "@progress/kendo-react-buttons";
+import { useNavigate } from "react-router-dom";
 
 const PageNotFound = () => {
-    console.log("PageNotFound")
     const navigate = useNavigate()
 
     return (
