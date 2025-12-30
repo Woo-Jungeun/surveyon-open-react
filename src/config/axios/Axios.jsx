@@ -10,7 +10,7 @@ function joinURL(base, path) {
 }
 const BASE_URL = import.meta.env.DEV
     ? ""                                  // 로컬은 프록시 타니까 baseURL 비움
-    : (import.meta.env.VITE_API_BASE_URL || "https://son.hrc.kr"); // 운영 호스트만(뒤에 /o 넣지 말기!)
+    : (window.API_CONFIG?.API_BASE_URL || "https://son.hrc.kr"); // 운영 호스트만(뒤에 /o 넣지 말기!)
 
 /** axios 인스턴스 (글로벌 defaults 대신 인스턴스에만 설정) */
 export const apiAxios = axios.create({
@@ -33,7 +33,7 @@ apiAxios.interceptors.request.use(
             const h = (config.headers ||= {});
             delete h["Content-Type"]; delete h["content-type"];
             if (h.common) delete h.common["Content-Type"];
-            if (h.post)   delete h.post["Content-Type"];
+            if (h.post) delete h.post["Content-Type"];
         }
         return config;
     },
