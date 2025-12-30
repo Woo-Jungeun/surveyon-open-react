@@ -1,12 +1,11 @@
 import { Home } from "lucide-react";
-import manualCss from '@/assets/css/manual.css?inline';
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useCookies } from "react-cookie";
-import { manualData } from "./ManualData";
+import { LoginApi } from "@/services/login/LoginApi.js";
 
 /**
  * 프로젝트 목록 클릭 시 → 탭: ["/ai_open_analysis"]
@@ -50,6 +49,8 @@ const MenuBar = () => {
   const projectnum = sessionStorage.getItem("projectnum");
   const projectname = sessionStorage.getItem("projectname");
 
+  const { logoutMutation } = LoginApi();
+
   // 드롭다운 상태
   const [appsOpen, setAppsOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
@@ -77,15 +78,21 @@ const MenuBar = () => {
           title: "로그아웃",
           click: async () => {
             try {
-              await persistor.purge();
-              removeCookie("TOKEN", { path: "/" });
-              sessionStorage.setItem("projectnum", "");
-              sessionStorage.setItem("projectname", "");
-              sessionStorage.setItem("servername", "");
-              sessionStorage.setItem("projectpof", "");
-              navigate("/login"); // 로그아웃 시 홈으로
+              // 로그아웃 api
+              const res = await logoutMutation.mutateAsync({ user: auth?.user?.userId, gb: "out" });
+              if (res?.success === "777") {
+                await persistor.purge();
+                removeCookie("TOKEN", { path: "/" });
+                sessionStorage.setItem("projectnum", "");
+                sessionStorage.setItem("projectname", "");
+                sessionStorage.setItem("servername", "");
+                sessionStorage.setItem("projectpof", "");
+                navigate("/login"); // 로그아웃 시 홈으로
+              } else {
+                modal.showAlert("알림", "로그아웃을 하지 못했습니다.");
+              }
             } catch {
-              modal.showAlert("알림", "로그아웃을 하지 못하였습니다.");
+              modal.showAlert("알림", "로그아웃을 하지 못했습니다.");
             }
           },
         },

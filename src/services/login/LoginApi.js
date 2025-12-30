@@ -103,9 +103,7 @@ export function LoginApi() {
      * 로그아웃 api
      * */
     const logoutMutation = useMutation(
-        async () => {
-            return await api.post({}, "/v1/logout");
-        },
+        async (payload) => await api.post(payload, "/pro_login_api.aspx"),
         {
             onSuccess: (res, v) => {
                 v?.options?.onSuccess?.();
