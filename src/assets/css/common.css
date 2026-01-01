@@ -6090,11 +6090,6 @@ footer {
 }
 
 @media (max-width: 768px) {
-    .pro-list-header .titTxt {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-    }
-
     .pro-list-header .projectName {
         font-size: 13px !important;
         margin-left: 0 !important;
