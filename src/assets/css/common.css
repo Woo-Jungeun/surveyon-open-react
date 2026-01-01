@@ -294,75 +294,12 @@ section {
     align-items: center;
 }
 
-.loginContents {
-    width: 400px;
-}
-
-.loginContents .loginLogo,
-.loginContents .loginLogo>span.fcGreen {
-    font-size: 40px;
-    letter-spacing: -1.6px;
-    line-height: 1;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 60px;
-}
-
-.loginContents .loginForm {
-    display: flex;
-    flex-direction: column;
-    gap: 12px 0;
-}
-
-.loginContents .loginForm .k-input-solid {
-    height: 60px;
-    font-size: 18px;
-    padding: 0 20px;
-}
-
-.loginContents .loginBtm {
-    display: flex;
-    justify-content: space-between;
-    margin: 12px 0 40px;
-}
-
-.loginContents .loginBtm .loginChk {
-    color: #69706d;
-    font-size: 15px;
-    font-weight: normal;
-}
-
-.loginContents .loginBtm .loginIdFw {
-    font-size: 15px;
-    font-weight: normal;
-    color: #afb6b2;
-}
-
-.loginContents .loginBtn {
-    margin-bottom: 60px;
-    width: 100%;
-}
-
-.loginContents .loginBtn .k-button-text {
-    font-size: 18px;
-}
-
-.loginCmt {
-    font-size: 15px;
-    font-weight: normal;
-    color: #012011;
-    text-align: center;
-}
-
-.loginContents .fcG {
-    font-weight: 500;
-}
-
 /* header */
 header {
     padding: 0 25px 0 20px;
     background: var(--header-bg-gradient);
     width: 100%;
+    max-width: 100vw;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -5610,51 +5547,6 @@ footer {
         padding: 0 20px !important;
     }
 
-    /* Typography */
-    body {
-        font-size: 15px !important;
-    }
-
-    h1 {
-        font-size: 1.8rem !important;
-    }
-
-    h2 {
-        font-size: 1.5rem !important;
-    }
-
-    h3 {
-        font-size: 1.3rem !important;
-    }
-
-    h4 {
-        font-size: 1.1rem !important;
-    }
-
-    /* Logo & Header */
-    .logo {
-        font-size: 18px !important;
-    }
-
-    .projectListBtn {
-        font-size: 13px !important;
-        padding: 8px 14px !important;
-    }
-
-    /* Navigation */
-    .navWrap {
-        font-size: 13px !important;
-    }
-
-    .navWrap .nav.depth01>li>a {
-        padding: 2px 14px !important;
-        font-size: 16px !important;
-    }
-
-    .userWrap {
-        gap: 15px !important;
-        font-size: 13px !important;
-    }
 
     /* Buttons */
     .k-button,
@@ -5690,11 +5582,6 @@ footer {
 
 /* Mobile (768px 이하) */
 @media (max-width: 768px) {
-
-    /* Force left alignment for header */
-    header {
-        justify-content: flex-start !important;
-    }
 
     /* Layout */
     #wrap {
@@ -6207,65 +6094,6 @@ footer {
     }
 }
 
-/* Tablet Header Responsive Styles - Complete */
-@media (min-width: 769px) and (max-width: 1024px) {
-    header {
-        display: flex !important;
-        visibility: visible !important;
-        padding: 0 10px !important;
-    }
-
-    .navWrap .nav.depth01>li>a {
-        padding: 0px 8px !important;
-        font-size: 16px !important;
-    }
-
-    .userWrap {
-        display: flex !important;
-        visibility: visible !important;
-        margin-left: auto !important;
-        margin-right: 800px !important;
-        padding-right: 10px !important;
-    }
-}
-
-@media (min-width: 770px) and (max-width: 900px) {
-    .navWrap .nav.depth01>li>a {
-        padding: 0px 6px !important;
-        font-size: 16px !important;
-    }
-
-    .userWrap {
-        margin-left: auto !important;
-        margin-right: 900px !important;
-        padding-right: 8px !important;
-    }
-}
-
-@media (min-width: 800px) and (max-width: 900px) {
-    .logo {
-        font-size: 16px !important;
-    }
-
-    .navWrap .nav.depth01>li>a {
-        padding: 0px 5px !important;
-        font-size: 16px !important;
-    }
-
-    .userWrap {
-        margin-left: auto !important;
-        margin-right: 800px !important;
-        padding-right: 5px !important;
-    }
-
-    .userBtn {
-        font-size: 12px !important;
-    }
-
-    .userBtn span {
-        font-size: 12px !important;
-    }
-}
 
 /* Pro List Header - Project Name Responsive */
 @media (max-width: 1024px) {
