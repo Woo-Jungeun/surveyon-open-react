@@ -6074,7 +6074,7 @@ footer {
 
 @media (min-width: 770px) and (max-width: 1023px) {
     .custom-datepicker .k-input-inner {
-        height: 10px !important;
+        height: 11px !important;
         margin: -5px;
     }
 }
