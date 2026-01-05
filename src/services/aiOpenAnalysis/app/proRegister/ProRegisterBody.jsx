@@ -28,7 +28,7 @@ const ProRegisterBody = () => {
       </article>
 
       <article className={`subContWrap`}>
-        <div className="subCont">
+        <div className="subCont scrollable">
           <div className="btnBox tabMenu  ">
             {servername !== "NEW" &&
               <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("1")}>
@@ -42,9 +42,9 @@ const ProRegisterBody = () => {
             <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("2")}>
               Excel
               <span
-                  className="info-icon"
-                  data-tooltip={`Excel|"엑셀 샘플" 규칙에 따라 문항등록 가능`}
-                ></span>
+                className="info-icon"
+                data-tooltip={`Excel|"엑셀 샘플" 규칙에 따라 문항등록 가능`}
+              ></span>
             </Button>
           </div>
 

@@ -5871,6 +5871,8 @@ footer {
 @media (max-width: 1024px) {
     .pro-register-form-wrap {
         margin: 0 !important;
+        max-width: 100vw !important;
+        width: 100% !important;
     }
 }
 
@@ -6105,4 +6107,9 @@ footer {
 .info-icon {
     white-space: nowrap !important;
     display: inline-block !important;
+}
+
+.subCont.scrollable {
+    overflow-y: auto !important;
+    padding-bottom: 50px !important;
 }
