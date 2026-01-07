@@ -36,7 +36,7 @@ const BoardSection = () => {
             <div className="board-cards-grid">
                 {/* 공지사항 */}
                 <div className="board-card" style={{ '--card-color': '#7C9CBF' }}>
-                    <div className="board-card-header" onClick={() => navigate('/notice')}>
+                    <div className="board-card-header" onClick={() => navigate('/board/notice')}>
                         <div className="board-card-title-area">
                             <span className="board-card-icon">📢</span>
                             <div>
@@ -63,9 +63,9 @@ const BoardSection = () => {
                     </div>
                 </div>
 
-                {/* Patch Note */}
+                {/* Patch Notes */}
                 <div className="board-card" style={{ '--card-color': '#9B8FAA' }}>
-                    <div className="board-card-header" onClick={() => navigate('/patchnote')}>
+                    <div className="board-card-header" onClick={() => navigate('/board/patchnote')}>
                         <div className="board-card-title-area">
                             <span className="board-card-icon">📝</span>
                             <div>

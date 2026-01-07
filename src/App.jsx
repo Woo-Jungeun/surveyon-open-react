@@ -11,6 +11,7 @@ import AiOpenAnalysisRoutes from "@/services/aiOpenAnalysis";
 import ManualPage from "@/services/aiOpenAnalysis/app/ManualPage";
 import ExcelGuidePage from "@/services/aiOpenAnalysis/app/proRegister/ExcelGuidePage";
 import MainLayout from "@/layouts/MainLayout";
+import BoardList from "@/services/board/BoardList";
 
 function App() {
   const [cookies] = useCookies();
@@ -27,6 +28,8 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/board/notice" element={<BoardList type="notice" />} />
+          <Route path="/board/patchnote" element={<BoardList type="patchnote" />} />
 
           {/* -----------------------------------
               2. 로그인된 경우만 접근 가능한 내부 페이지
