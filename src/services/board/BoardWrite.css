@@ -1,0 +1,230 @@
+.bw-container {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+    padding: 60px 40px;
+    position: relative;
+}
+
+.bw-back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background: #fff;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 100;
+}
+
+.bw-back-btn:hover {
+    background: #f9fafb;
+    color: #333;
+}
+
+.bw-content-wrapper {
+    max-width: 1000px;
+    margin: 40px auto 0;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+.bw-header {
+    padding: 32px 40px;
+    border-bottom: 1px solid #eee;
+}
+
+.bw-page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 0;
+}
+
+.bw-form {
+    padding: 40px;
+}
+
+.bw-form-group {
+    margin-bottom: 24px;
+}
+
+.bw-form-group label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.bw-input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.bw-input:focus {
+    border-color: var(--board-color, #7C9CBF);
+    box-shadow: 0 0 0 3px rgba(124, 156, 191, 0.1);
+}
+
+.bw-textarea {
+    width: 100%;
+    height: 400px;
+    padding: 16px;
+    font-size: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    resize: vertical;
+    outline: none;
+    line-height: 1.6;
+}
+
+.bw-textarea:focus {
+    border-color: var(--board-color, #7C9CBF);
+    box-shadow: 0 0 0 3px rgba(124, 156, 191, 0.1);
+}
+
+.bw-file-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.bw-file-input {
+    display: none;
+}
+
+.bw-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.bw-file-label:hover {
+    background: #f9fafb;
+    border-color: #ccc;
+    color: #333;
+}
+
+.bw-file-info {
+    font-size: 13px;
+    color: #888;
+}
+
+.bw-file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.bw-file-list li {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: #fcfcfc;
+    border-bottom: 1px solid #eee;
+    font-size: 14px;
+}
+
+.bw-file-list li:last-child {
+    border-bottom: none;
+}
+
+.bw-file-name {
+    flex: 1;
+    color: #333;
+    font-weight: 500;
+}
+
+.bw-file-size {
+    color: #888;
+    font-size: 13px;
+    margin-right: 12px;
+}
+
+.bw-file-remove {
+    background: none;
+    border: none;
+    padding: 4px;
+    color: #999;
+    cursor: pointer;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.bw-file-remove:hover {
+    background: #eee;
+    color: #ef4444;
+}
+
+.bw-footer {
+    padding: 20px 40px;
+    background: #f9fafb;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.bw-btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+}
+
+.bw-btn-cancel {
+    background: white;
+    border: 1px solid #ddd;
+    color: #666;
+}
+
+.bw-btn-cancel:hover {
+    background: #f0f0f0;
+}
+
+.bw-btn-submit {
+    background: var(--board-color, #7C9CBF);
+    color: white;
+}
+
+.bw-btn-submit:hover {
+    filter: brightness(0.9);
+    transform: translateY(-1px);
+}
