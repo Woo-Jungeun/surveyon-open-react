@@ -43,7 +43,11 @@ export function ProEnterApi() {
     const getPofInfo = useMutation(
         async (pofNumber) => {
             const url = `/api/pofInfo?pofNumber=${pofNumber}`;
-            const res = await axios.post(url);
+            const res = await axios.post(url, {}, {
+                headers: {
+                    'apikey': 'xDhxuxOyYA11l8GOKT1D7ixLMM5nriduk3Wx8j7YadswCPii8P35DMEQE9i7ALElIQaM/DT9OELQM3oYx+MatQLiRYU1hlFM+b0k9t/+hbc='
+                }
+            });
             return res.data;
         },
         {
