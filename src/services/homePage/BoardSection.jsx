@@ -1,6 +1,5 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import './BoardSection.css';
 
 const BoardSection = () => {
     const navigate = useNavigate();
@@ -31,7 +30,7 @@ const BoardSection = () => {
         <div className="board-section">
             <div className="board-section-header">
                 <h2>설문온 게시판 안내</h2>
-                <p>필요한 정보를 빠르게 찾아보세요</p>
+                <p>필요한 정보를 빠르게 찾아보세요.</p>
             </div>
 
             <div className="board-cards-grid">
