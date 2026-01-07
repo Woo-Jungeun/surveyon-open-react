@@ -3,21 +3,7 @@
     min-height: 100vh;
     background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
     padding: 60px 40px;
-}
-
-/* Header */
-.bl-header {
-    max-width: 1200px;
-    margin: 0 auto 48px;
-    text-align: center;
-}
-
-.bl-header-content {
     position: relative;
-    padding: 40px 20px;
-    background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .bl-home-btn {
@@ -25,7 +11,7 @@
     top: 20px;
     left: 20px;
     padding: 10px 20px;
-    background: #7C9CBF;
+    background: var(--board-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -36,12 +22,28 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    z-index: 100;
 }
 
 .bl-home-btn:hover {
-    background: #6B8AAE;
+    background: var(--board-color, #7C9CBF);
+    filter: brightness(0.9);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(124, 156, 191, 0.3);
+}
+
+/* Header */
+.bl-header {
+    max-width: 1200px;
+    margin: 0 auto 48px;
+    text-align: center;
+}
+
+.bl-header-content {
+    padding: 40px 20px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .bl-header-title {
@@ -116,13 +118,13 @@
 
 .bl-search-input:focus {
     outline: none;
-    border-color: #7C9CBF;
+    border-color: var(--board-color, #7C9CBF);
     box-shadow: 0 0 0 3px rgba(124, 156, 191, 0.1);
 }
 
 .bl-search-btn {
     padding: 10px 20px;
-    background: #7C9CBF;
+    background: var(--board-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -132,7 +134,8 @@
 }
 
 .bl-search-btn:hover {
-    background: #6B8AAE;
+    background: var(--board-color, #7C9CBF);
+    filter: brightness(0.9);
     transform: translateY(-1px);
 }
 
@@ -254,13 +257,13 @@
 
 .bl-page-btn:hover:not(:disabled) {
     background: #f9fafb;
-    border-color: #7C9CBF;
-    color: #7C9CBF;
+    border-color: var(--board-color, #7C9CBF);
+    color: var(--board-color, #7C9CBF);
 }
 
 .bl-page-btn.active {
-    background: #7C9CBF;
-    border-color: #7C9CBF;
+    background: var(--board-color, #7C9CBF);
+    border-color: var(--board-color, #7C9CBF);
     color: white;
 }
 

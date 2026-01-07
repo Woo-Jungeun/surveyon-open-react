@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Megaphone, FileText, MessageCircle, Bot, History } from 'lucide-react';
 
 const BoardSection = () => {
     const navigate = useNavigate();
@@ -38,7 +39,7 @@ const BoardSection = () => {
                 <div className="board-card" style={{ '--card-color': '#7C9CBF' }}>
                     <div className="board-card-header" onClick={() => navigate('/board/notice')}>
                         <div className="board-card-title-area">
-                            <span className="board-card-icon">📢</span>
+                            <span className="board-card-icon"><Megaphone size={28} color="#7C9CBF" /></span>
                             <div>
                                 <h3>공지사항</h3>
                                 <p>설문온 업데이트 소식</p>
@@ -54,7 +55,7 @@ const BoardSection = () => {
                                 onClick={(e) => handleItemClick(e, '/notice', item.id)}
                             >
                                 <div className="board-list-content">
-                                    <span className="board-list-icon">📄</span>
+                                    <span className="board-list-icon"><FileText size={14} color="#7C9CBF" /></span>
                                     <span className="board-list-title">{item.title}</span>
                                 </div>
                                 <span className="board-list-date">{item.date}</span>
@@ -67,7 +68,7 @@ const BoardSection = () => {
                 <div className="board-card" style={{ '--card-color': '#9B8FAA' }}>
                     <div className="board-card-header" onClick={() => navigate('/board/patchnote')}>
                         <div className="board-card-title-area">
-                            <span className="board-card-icon">📝</span>
+                            <span className="board-card-icon"><History size={28} color="#9B8FAA" /></span>
                             <div>
                                 <h3>Patch Notes</h3>
                                 <p>설문온 버전 관리</p>
@@ -83,7 +84,7 @@ const BoardSection = () => {
                                 onClick={(e) => handleItemClick(e, '/patchnote', item.id)}
                             >
                                 <div className="board-list-content">
-                                    <span className="board-list-icon">📄</span>
+                                    <span className="board-list-icon"><FileText size={14} color="#9B8FAA" /></span>
                                     <span className="board-list-title">
                                         [{item.version}] {item.title}
                                     </span>
@@ -100,7 +101,7 @@ const BoardSection = () => {
                     <div className="board-card board-card-small" style={{ '--card-color': '#6B7FBF' }}>
                         <div className="board-card-header" onClick={() => navigate('/inquiry')}>
                             <div className="board-card-title-area">
-                                <span className="board-card-icon">💬</span>
+                                <span className="board-card-icon"><MessageCircle size={28} color="#6B7FBF" /></span>
                                 <div>
                                     <h3>문의하기</h3>
                                     <p>메뉴별 문의사항 및 답변</p>
@@ -118,7 +119,7 @@ const BoardSection = () => {
                     <div className="board-card board-card-small" style={{ '--card-color': '#B8B8C0' }}>
                         <div className="board-card-header" onClick={() => alert('AI 챗봇 서비스는 2차 개발 예정입니다.')}>
                             <div className="board-card-title-area">
-                                <span className="board-card-icon">🤖</span>
+                                <span className="board-card-icon"><Bot size={28} color="#B8B8C0" /></span>
                                 <div>
                                     <h3>FAQ</h3>
                                     <p>AI 챗봇 서비스</p>

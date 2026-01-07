@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Megaphone, FileText, History } from 'lucide-react';
 import './BoardList.css';
 
 const BoardList = ({ type = 'notice' }) => {
@@ -13,15 +13,15 @@ const BoardList = ({ type = 'notice' }) => {
     const boardConfig = {
         notice: {
             title: '공지사항',
-            icon: '📢',
+            icon: <Megaphone size={36} color="#7C9CBF" />,
             color: '#7C9CBF',
-            description: '설문온의 새로운 소식과 업데이트를 확인하세요'
+            description: '설문온의 새로운 소식과 업데이트를 확인하세요.'
         },
         patchnote: {
             title: 'Patch Notes',
-            icon: '📝',
+            icon: <History size={36} color="#9B8FAA" />,
             color: '#9B8FAA',
-            description: '설문온의 버전별 업데이트 내역을 확인하세요'
+            description: '설문온의 버전별 업데이트 내역을 확인하세요.'
         }
     };
 
@@ -74,13 +74,14 @@ const BoardList = ({ type = 'notice' }) => {
     };
 
     return (
-        <div className="bl-container">
+        <div className="bl-container" style={{ '--board-color': config.color }}>
+            <button className="bl-home-btn" onClick={() => navigate('/')}>
+                <ArrowLeft size={16} />
+                메인으로
+            </button>
+
             <div className="bl-header">
                 <div className="bl-header-content">
-                    <button className="bl-home-btn" onClick={() => navigate('/')}>
-                        <ArrowLeft size={16} />
-                        메인으로
-                    </button>
                     <div className="bl-header-title">
                         <span className="bl-header-icon">{config.icon}</span>
                         <h1>{config.title}</h1>
@@ -105,7 +106,7 @@ const BoardList = ({ type = 'notice' }) => {
                             }}
                             className="bl-search-input"
                         />
-                        <button className="bl-search-btn">🔍</button>
+                        <button className="bl-search-btn">검색</button>
                     </div>
                 </div>
 
@@ -137,6 +138,7 @@ const BoardList = ({ type = 'notice' }) => {
                                     )}
                                     <td className="bl-col-title">
                                         <div className="bl-title-wrapper">
+                                            <FileText size={16} color={config.color} style={{ minWidth: '16px' }} />
                                             <span className="bl-title-text">{item.title}</span>
                                             {item.isNew && <span className="bl-new-badge">NEW</span>}
                                         </div>
