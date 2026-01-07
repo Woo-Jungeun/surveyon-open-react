@@ -1,9 +1,11 @@
-﻿import React from 'react';
+﻿import React, { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Megaphone, FileText, MessageCircle, Bot, History } from 'lucide-react';
+import { modalContext } from "@/components/common/Modal";
 
 const BoardSection = () => {
     const navigate = useNavigate();
+    const { showAlert } = useContext(modalContext);
 
     // 임시 데이터 (추후 API 연동)
     const noticeData = [
@@ -52,7 +54,7 @@ const BoardSection = () => {
                             <div
                                 key={item.id}
                                 className="board-list-item"
-                                onClick={(e) => handleItemClick(e, '/notice', item.id)}
+                                onClick={(e) => handleItemClick(e, '/board/notice', item.id)}
                             >
                                 <div className="board-list-content">
                                     <span className="board-list-icon"><FileText size={14} color="#7C9CBF" /></span>
@@ -81,7 +83,7 @@ const BoardSection = () => {
                             <div
                                 key={item.id}
                                 className="board-list-item"
-                                onClick={(e) => handleItemClick(e, '/patchnote', item.id)}
+                                onClick={(e) => handleItemClick(e, '/board/patchnote', item.id)}
                             >
                                 <div className="board-list-content">
                                     <span className="board-list-icon"><FileText size={14} color="#9B8FAA" /></span>
@@ -117,7 +119,7 @@ const BoardSection = () => {
 
                     {/* FAQ */}
                     <div className="board-card board-card-small" style={{ '--card-color': '#B8B8C0' }}>
-                        <div className="board-card-header" onClick={() => alert('AI 챗봇 서비스는 2차 개발 예정입니다.')}>
+                        <div className="board-card-header" onClick={() => showAlert('알림', 'FAQ 서비스는 2차 개발 예정입니다.')}>
                             <div className="board-card-title-area">
                                 <span className="board-card-icon"><Bot size={28} color="#B8B8C0" /></span>
                                 <div>
@@ -130,7 +132,7 @@ const BoardSection = () => {
                         <div className="board-card-action">
                             <button
                                 className="board-view-more disabled"
-                                onClick={() => alert('AI 챗봇 서비스는 2차 개발 예정입니다.')}
+                                onClick={() => showAlert('알림', 'FAQ 서비스는 2차 개발 예정입니다.')}
                             >
                                 준비 중
                             </button>
