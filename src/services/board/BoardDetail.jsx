@@ -95,9 +95,7 @@ const BoardDetail = () => {
                 </div>
 
                 <div className="bd-footer">
-                    <button className="bd-btn bd-btn-list" onClick={() => navigate(`/board/${type}`)}>
-                        목록
-                    </button>
+
                     {/* 관리자 권한 체크 후 표시 */}
                     <div className="bd-admin-btns">
                         <button className="bd-btn bd-btn-edit" onClick={() => navigate(`/board/${type}/write/${id}`)}>수정</button>

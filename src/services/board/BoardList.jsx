@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Megaphone, FileText, History, PenSquare } from 'lucide-react';
+import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search } from 'lucide-react';
 import './BoardList.css';
 
 const BoardList = ({ type = 'notice' }) => {
@@ -107,7 +107,9 @@ const BoardList = ({ type = 'notice' }) => {
                             }}
                             className="bl-search-input"
                         />
-                        <button className="bl-search-btn">검색</button>
+                        <button className="bl-search-btn">
+                            <Search size={18} />
+                        </button>
                     </div>
 
                     <div className="bl-actions">
@@ -126,7 +128,7 @@ const BoardList = ({ type = 'notice' }) => {
                                 {type === 'patchnotes' && <th className="bl-col-version">버전</th>}
                                 <th className="bl-col-title">제목</th>
                                 <th className="bl-col-date">등록일</th>
-                                <th className="bl-col-writer">등록자</th>
+                                <th className="bl-col-writer">작성자</th>
                                 <th className="bl-col-views">조회수</th>
                             </tr>
                         </thead>

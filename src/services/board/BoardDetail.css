@@ -169,7 +169,7 @@
     background: #f9fafb;
     border-top: 1px solid #eee;
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
 }
 

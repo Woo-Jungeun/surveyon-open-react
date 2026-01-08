@@ -1,0 +1,369 @@
+.id-container {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+    padding: 20px 40px;
+    position: relative;
+}
+
+.id-back-btn {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background: #6b7fbf;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 100;
+}
+
+.id-back-btn:hover {
+    background: #6a89ab;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.id-content-wrapper {
+    max-width: 1000px;
+    margin: 40px auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Section Styles */
+.id-section {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.id-header {
+    padding: 30px 40px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.id-status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.id-status-badge.waiting {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.id-status-badge.answered {
+    background: #e0f2fe;
+    color: #0284c7;
+}
+
+.id-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.id-secret-icon {
+    color: #94a3b8;
+}
+
+.id-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.id-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.id-meta-divider {
+    width: 1px;
+    height: 12px;
+    background: #cbd5e1;
+}
+
+.id-body {
+    padding: 40px;
+    display: flex;
+    gap: 24px;
+    flex-direction: column;
+}
+
+.id-label {
+    font-size: 24px;
+    font-weight: 900;
+    color: #6b7fbf;
+    line-height: 1;
+}
+
+.id-text {
+    flex: 1;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #334155;
+}
+
+/* Attachments */
+.id-attachments {
+    padding: 0 40px 30px;
+    border-top: 1px solid #f1f5f9;
+    margin-top: -10px;
+}
+
+.id-attachments-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+    margin: 20px 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.id-attachments-title span {
+    color: #6b7fbf;
+    font-weight: 700;
+}
+
+.id-attachments-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.id-attachments-list li a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.id-attachments-list li a:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.id-file-icon {
+    font-size: 16px;
+}
+
+.id-file-name {
+    font-size: 13px;
+    color: #334155;
+    font-weight: 500;
+}
+
+.id-file-size {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* Answer Section */
+.answer-section {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.answer-header {
+    background: #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.id-answer-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.answer-label {
+    color: #0284c7;
+}
+
+.id-no-answer {
+    padding: 60px;
+    text-align: center;
+    color: #94a3b8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.id-no-answer p {
+    font-size: 18px;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.id-no-answer span {
+    font-size: 14px;
+}
+
+/* Footer */
+.id-footer {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 20px;
+}
+
+.id-user-btns {
+    display: flex;
+    gap: 12px;
+}
+
+.id-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.id-btn-edit {
+    background: #6b7fbf;
+    color: white;
+}
+
+.id-btn-edit:hover {
+    background: #6a89ab;
+}
+
+.id-btn-delete {
+    background: #ef4444;
+    color: white;
+}
+
+.id-btn-delete:hover {
+    background: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .id-container {
+        padding: 40px 20px;
+    }
+
+    .id-header,
+    .id-body {
+        padding: 24px;
+    }
+
+    .id-body {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .id-label {
+        font-size: 20px;
+    }
+
+    .answer-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+/* Answer Form */
+.id-answer-form {
+    width: 100%;
+}
+
+.answer-body {
+    flex-direction: column;
+    gap: 16px;
+}
+
+.id-answer-input {
+    width: 100%;
+    min-height: 150px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    resize: vertical;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #334155;
+    font-family: inherit;
+}
+
+.id-answer-input:focus {
+    outline: none;
+    border-color: #6b7fbf;
+    box-shadow: 0 0 0 3px rgba(107, 127, 191, 0.1);
+}
+
+.id-answer-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.id-btn-register {
+    background: #6b7fbf;
+    color: white;
+}
+
+.id-btn-register:hover {
+    background: #5a6ea6;
+}
+
+.id-btn-submit {
+    background: #6b7fbf;
+    color: white;
+}
+
+.id-btn-submit:hover {
+    background: #5a6ea6;
+}
+
+.id-btn-cancel {
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+.id-btn-cancel:hover {
+    background: #f1f5f9;
+    color: #475569;
+}

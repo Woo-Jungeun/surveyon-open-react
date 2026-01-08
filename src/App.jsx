@@ -14,6 +14,9 @@ import MainLayout from "@/layouts/MainLayout";
 import BoardList from "@/services/board/BoardList";
 import BoardDetail from "@/services/board/BoardDetail";
 import BoardWrite from "@/services/board/BoardWrite";
+import InquiryList from "@/services/inquiry/InquiryList";
+import InquiryDetail from "@/services/inquiry/InquiryDetail";
+import InquiryWrite from "@/services/inquiry/InquiryWrite";
 
 function App() {
   const [cookies] = useCookies();
@@ -35,6 +38,12 @@ function App() {
           <Route path="/board/:type/write" element={<BoardWrite />} />
           <Route path="/board/:type/write/:id" element={<BoardWrite />} />
           <Route path="/board/:type/:id" element={<BoardDetail />} />
+
+          {/* Inquiry Routes */}
+          <Route path="/inquiry" element={<InquiryList />} />
+          <Route path="/inquiry/write" element={<InquiryWrite />} />
+          <Route path="/inquiry/write/:id" element={<InquiryWrite />} />
+          <Route path="/inquiry/view/:id" element={<InquiryDetail />} />
 
           {/* -----------------------------------
               2. 로그인된 경우만 접근 가능한 내부 페이지
