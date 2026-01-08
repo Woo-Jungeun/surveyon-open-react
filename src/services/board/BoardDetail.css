@@ -125,13 +125,12 @@
     list-style: none;
     padding: 0;
     margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .bd-attachments-list li {
-    margin-bottom: 8px;
-}
-
-.bd-attachments-list li:last-child {
     margin-bottom: 0;
 }
 

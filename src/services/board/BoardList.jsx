@@ -17,7 +17,7 @@ const BoardList = ({ type = 'notice' }) => {
             color: '#7C9CBF',
             description: '설문온의 새로운 소식과 업데이트를 확인하세요.'
         },
-        patchnote: {
+        patchnotes: {
             title: 'Patch Notes',
             icon: <History size={36} color="#9B8FAA" />,
             color: '#9B8FAA',
@@ -41,7 +41,7 @@ const BoardList = ({ type = 'notice' }) => {
         { id: 10, title: '데이터 분석 기능 업데이트', date: '2024-09-01', writer: '관리자1', views: 765, isNew: false },
     ];
 
-    const patchNoteData = [
+    const patchNotesData = [
         { id: 1, version: 'v2.0.4', title: 'AI 분석 기능 개선', date: '2025-12-15', writer: '관리자1', views: 432, isNew: true },
         { id: 2, version: 'v2.0.3', title: '그리드 성능 최적화', date: '2025-12-01', writer: '관리자2', views: 321, isNew: true },
         { id: 3, version: 'v2.0.2', title: '메이저 업데이트', date: '2025-11-20', writer: '관리자1', views: 654, isNew: false },
@@ -52,7 +52,7 @@ const BoardList = ({ type = 'notice' }) => {
         { id: 8, version: 'v1.8.5', title: '보안 강화', date: '2025-09-20', writer: '관리자1', views: 654, isNew: false },
     ];
 
-    const data = type === 'notice' ? noticeData : patchNoteData;
+    const data = type === 'notice' ? noticeData : patchNotesData;
 
     // 검색 필터링
     const filteredData = data.filter(item =>
@@ -123,7 +123,7 @@ const BoardList = ({ type = 'notice' }) => {
                         <thead>
                             <tr>
                                 <th className="bl-col-no">번호</th>
-                                {type === 'patchnote' && <th className="bl-col-version">버전</th>}
+                                {type === 'patchnotes' && <th className="bl-col-version">버전</th>}
                                 <th className="bl-col-title">제목</th>
                                 <th className="bl-col-date">등록일</th>
                                 <th className="bl-col-writer">등록자</th>
@@ -138,7 +138,7 @@ const BoardList = ({ type = 'notice' }) => {
                                     className="bl-row"
                                 >
                                     <td className="bl-col-no">{filteredData.length - (startIndex + index)}</td>
-                                    {type === 'patchnote' && (
+                                    {type === 'patchnotes' && (
                                         <td className="bl-col-version">
                                             <span className="bl-version-badge" style={{ backgroundColor: config.color }}>
                                                 {item.version}

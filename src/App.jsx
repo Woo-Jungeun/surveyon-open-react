@@ -31,7 +31,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/board/notice" element={<BoardList type="notice" />} />
-          <Route path="/board/patchnote" element={<BoardList type="patchnote" />} />
+          <Route path="/board/patchnotes" element={<BoardList type="patchnotes" />} />
           <Route path="/board/:type/write" element={<BoardWrite />} />
           <Route path="/board/:type/write/:id" element={<BoardWrite />} />
           <Route path="/board/:type/:id" element={<BoardDetail />} />

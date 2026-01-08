@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Upload, X } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X, Type, FileText } from 'lucide-react';
 import './BoardWrite.css';
 
 const BoardWrite = () => {
@@ -26,7 +26,7 @@ const BoardWrite = () => {
             title: '공지사항',
             color: '#7C9CBF',
         },
-        patchnote: {
+        patchnotes: {
             title: 'Patch Notes',
             color: '#9B8FAA',
         }
@@ -46,9 +46,9 @@ const BoardWrite = () => {
 
     return (
         <div className="bw-container" style={{ '--board-color': config.color }}>
-            <button className="bw-back-btn" onClick={() => navigate(`/board/${type}`)}>
+            <button className="bw-back-btn" onClick={() => navigate(isEdit ? `/board/${type}/${id}` : `/board/${type}`)}>
                 <ArrowLeft size={16} />
-                취소
+                {isEdit ? '이전으로' : '목록으로'}
             </button>
 
             <div className="bw-content-wrapper">
@@ -58,7 +58,10 @@ const BoardWrite = () => {
 
                 <div className="bw-form">
                     <div className="bw-form-group">
-                        <label>제목</label>
+                        <label>
+                            <Type size={16} />
+                            제목
+                        </label>
                         <input
                             type="text"
                             className="bw-input"
@@ -69,7 +72,10 @@ const BoardWrite = () => {
                     </div>
 
                     <div className="bw-form-group">
-                        <label>내용</label>
+                        <label>
+                            <FileText size={16} />
+                            내용
+                        </label>
                         <textarea
                             className="bw-textarea"
                             placeholder="내용을 입력하세요"
@@ -115,7 +121,7 @@ const BoardWrite = () => {
                 </div>
 
                 <div className="bw-footer">
-                    <button className="bw-btn bw-btn-cancel" onClick={() => navigate(`/board/${type}`)}>
+                    <button className="bw-btn bw-btn-cancel" onClick={() => navigate(isEdit ? `/board/${type}/${id}` : `/board/${type}`)}>
                         취소
                     </button>
                     <button className="bw-btn bw-btn-submit" onClick={handleSubmit}>

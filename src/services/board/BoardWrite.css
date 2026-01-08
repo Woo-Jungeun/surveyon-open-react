@@ -1,7 +1,7 @@
 .bw-container {
     min-height: 100vh;
     background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
-    padding: 60px 40px;
+    padding: 30px 20px;
     position: relative;
 }
 
@@ -30,17 +30,20 @@
 }
 
 .bw-content-wrapper {
-    max-width: 1000px;
-    margin: 40px auto 0;
+    max-width: 900px;
+    margin: 20px auto 0;
     background: white;
-    border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border-radius: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
     overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.02);
 }
 
 .bw-header {
-    padding: 32px 40px;
-    border-bottom: 1px solid #eee;
+    padding: 24px 40px;
+    border-bottom: 1px solid #f0f0f0;
+    background: linear-gradient(to right, #ffffff, #fafbfc);
+    position: relative;
 }
 
 .bw-page-title {
@@ -51,51 +54,63 @@
 }
 
 .bw-form {
-    padding: 40px;
+    padding: 30px 40px;
 }
 
 .bw-form-group {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .bw-form-group label {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 15px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.bw-form-group label svg {
+    color: var(--board-color, #7C9CBF);
 }
 
 .bw-input {
     width: 100%;
-    padding: 14px 16px;
+    padding: 16px 20px;
     font-size: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    border-radius: 12px;
     transition: all 0.2s ease;
     outline: none;
+    color: #334155;
 }
 
 .bw-input:focus {
+    background-color: white;
     border-color: var(--board-color, #7C9CBF);
-    box-shadow: 0 0 0 3px rgba(124, 156, 191, 0.1);
+    box-shadow: 0 0 0 4px rgba(124, 156, 191, 0.1);
 }
 
 .bw-textarea {
     width: 100%;
-    height: 400px;
-    padding: 16px;
+    height: 300px;
+    padding: 20px;
     font-size: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    border-radius: 12px;
     resize: vertical;
     outline: none;
-    line-height: 1.6;
+    line-height: 1.7;
+    color: #334155;
 }
 
 .bw-textarea:focus {
+    background-color: white;
     border-color: var(--board-color, #7C9CBF);
-    box-shadow: 0 0 0 3px rgba(124, 156, 191, 0.1);
+    box-shadow: 0 0 0 4px rgba(124, 156, 191, 0.1);
 }
 
 .bw-file-upload {
@@ -113,21 +128,22 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
+    padding: 12px 20px;
     background: white;
-    border: 1px solid #ddd;
+    border: 1px solid var(--board-color, #7C9CBF);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: #555;
+    color: var(--board-color, #7C9CBF);
     cursor: pointer;
     transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .bw-file-label:hover {
-    background: #f9fafb;
-    border-color: #ccc;
-    color: #333;
+    background: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .bw-file-info {
@@ -139,51 +155,54 @@
     list-style: none;
     padding: 0;
     margin: 0;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .bw-file-list li {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    padding: 12px 16px;
-    background: #fcfcfc;
-    border-bottom: 1px solid #eee;
-    font-size: 14px;
-}
-
-.bw-file-list li:last-child {
-    border-bottom: none;
+    padding: 6px 12px;
+    background: #f0f4f8;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #333;
+    border: 1px solid #e1e5e9;
 }
 
 .bw-file-name {
-    flex: 1;
-    color: #333;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-weight: 500;
 }
 
 .bw-file-size {
-    color: #888;
-    font-size: 13px;
-    margin-right: 12px;
+    color: #666;
+    font-size: 12px;
+    margin-left: 6px;
+    margin-right: 8px;
 }
 
 .bw-file-remove {
     background: none;
     border: none;
-    padding: 4px;
+    padding: 0;
     color: #999;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    width: 20px;
+    height: 20px;
 }
 
 .bw-file-remove:hover {
-    background: #eee;
+    background: #e2e8f0;
     color: #ef4444;
 }
 

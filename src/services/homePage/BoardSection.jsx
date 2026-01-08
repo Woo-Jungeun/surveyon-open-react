@@ -16,7 +16,7 @@ const BoardSection = () => {
         { id: 5, title: '신규 기능 업데이트 안내', date: '2024-11-01' }
     ];
 
-    const patchNoteData = [
+    const patchNotesData = [
         { id: 1, version: 'v2.0.4', title: 'AI 분석 기능 개선', date: '2025-12-15' },
         { id: 2, version: 'v2.0.3', title: '그리드 성능 최적화', date: '2025-12-01' },
         { id: 3, version: 'v2.0.2', title: '메이저 업데이트', date: '2025-11-20' },
@@ -68,7 +68,7 @@ const BoardSection = () => {
 
                 {/* Patch Notes */}
                 <div className="board-card" style={{ '--card-color': '#9B8FAA' }}>
-                    <div className="board-card-header" onClick={() => navigate('/board/patchnote')}>
+                    <div className="board-card-header" onClick={() => navigate('/board/patchnotes')}>
                         <div className="board-card-title-area">
                             <span className="board-card-icon"><History size={28} color="#9B8FAA" /></span>
                             <div>
@@ -79,11 +79,11 @@ const BoardSection = () => {
                         <span className="board-card-badge">TOP 5</span>
                     </div>
                     <div className="board-card-list">
-                        {patchNoteData.map((item) => (
+                        {patchNotesData.map((item) => (
                             <div
                                 key={item.id}
                                 className="board-list-item"
-                                onClick={(e) => handleItemClick(e, '/board/patchnote', item.id)}
+                                onClick={(e) => handleItemClick(e, '/board/patchnotes', item.id)}
                             >
                                 <div className="board-list-content">
                                     <span className="board-list-icon"><FileText size={14} color="#9B8FAA" /></span>

@@ -13,7 +13,7 @@ const BoardDetail = () => {
             title: '공지사항',
             color: '#7C9CBF',
         },
-        patchnote: {
+        patchnotes: {
             title: 'Patch Notes',
             color: '#9B8FAA',
         }
@@ -42,7 +42,7 @@ const BoardDetail = () => {
 
     return (
         <div className="bd-container" style={{ '--board-color': config.color }}>
-            <button className="bd-back-btn" onClick={() => navigate(`/board/${type}`)}>
+            <button className="bw-back-btn" onClick={() => navigate(`/board/${type}`)}>
                 <ArrowLeft size={16} />
                 목록으로
             </button>
