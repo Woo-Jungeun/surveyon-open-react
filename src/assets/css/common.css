@@ -5226,8 +5226,10 @@ footer {
     transform: translateX(-50%);
     padding-top: 10px;
     width: auto;
-    max-height: calc(100vh - 150px);
-    overflow: hidden;
+    /* max-height: calc(100vh - 150px);
+    overflow: hidden; */
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 .excel-upload-form {
@@ -5240,6 +5242,7 @@ footer {
     display: flex;
     flex-direction: column;
     gap: 9px;
+    padding-bottom: 50px;
 }
 
 .excel-form-header {
