@@ -1625,7 +1625,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             searchMutation={{
                 ...optionEditData,
                 mutateAsync: async (params) => {
-                    const res = await optionEditData.mutateAsync(params);
+                    loadingSpinner.show();
+                    const res = await optionEditData.mutateAsync({ ...params, skipSpinner: true });
 
                     // Body 초기 lvcode 전달 (Interceptor)
                     if (!reportedLvcodeRef.current && onInitLvCode) {
