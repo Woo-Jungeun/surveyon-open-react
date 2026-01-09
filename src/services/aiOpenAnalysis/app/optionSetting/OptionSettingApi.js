@@ -31,10 +31,14 @@ export function OptionSettingApi() {
         (data) => api.post(data, "/option_save_api.aspx"),
         {
             onMutate: (variables) => {
-                if (variables?.gb !== "info" && variables?.gb !== "lb" && !variables?.skipSpinner) loadingSpinner.show();
+                if (variables?.gb !== "info"
+                    // && variables?.gb !== "lb" 
+                    && !variables?.skipSpinner) loadingSpinner.show();
             },
             onSettled: (data, error, variables) => {
-                if (variables?.gb !== "info" && variables?.gb !== "lb" && !variables?.skipSpinner) loadingSpinner.hide();
+                if (variables?.gb !== "info"
+                    // && variables?.gb !== "lb" 
+                    && !variables?.skipSpinner) loadingSpinner.hide();
             }
         }
     );
