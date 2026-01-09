@@ -105,8 +105,28 @@ const KendoGrid = ({ parentProps, children }) => {
         onProcessedDataUpdateRef.current = onProcessedDataUpdate;
     }, [onProcessedDataUpdate]);
 
+    const pinnedBottomPredicate = parentProps?.pinnedBottomPredicate;
+
     useEffect(() => {
         const data = rawData;
+
+        // 1) Pinned vs Unpinned 분리
+        let pinned = [];
+        let unpinned = [];
+
+        if (typeof pinnedBottomPredicate === "function") {
+            pinned = [];
+            unpinned = [];
+            for (const item of data) {
+                if (pinnedBottomPredicate(item)) {
+                    pinned.push(item);
+                } else {
+                    unpinned.push(item);
+                }
+            }
+        } else {
+            unpinned = data;
+        }
 
         // sort/filter 내용 기준으로 변경 여부 판단
         const nextSortKey = JSON.stringify(sort || []);
@@ -114,9 +134,7 @@ const KendoGrid = ({ parentProps, children }) => {
         const sortChanged = sortKeyRef.current !== nextSortKey;
         const filterChanged = filterKeyRef.current !== nextFilterKey;
 
-        // console.log("[KendoGrid effect]", { sortChanged, filterChanged, sort, filter });
-
-        // 공통 헬퍼: 정렬된 전체 목록(sortedAll)에 필터만 적용
+        // 공통 헬퍼: 정렬된 목록(sortedAll)에 필터만 적용
         const applyFilterOnly = (sortedAll) => {
             if (!filter) {
                 return {
@@ -140,36 +158,40 @@ const KendoGrid = ({ parentProps, children }) => {
             }
         };
 
-        // 처음 로드이거나, 정렬/필터가 내용상 바뀐 경우
+        // 처음 로드이거나, 정렬/필터가 내용상 바뀐 경우 (Unpinned 대상)
         if (!initializedRef.current || sortChanged || filterChanged) {
             initializedRef.current = true;
             sortKeyRef.current = nextSortKey;
             filterKeyRef.current = nextFilterKey;
 
-            let sortedAll = [];
-            if (Array.isArray(data)) {
+            let sortedUnpinned = [];
+            if (Array.isArray(unpinned)) {
                 if (sort && sort.length) {
                     // 정렬만 수행
                     try {
-                        const sorted = process(data, { sort });
-                        sortedAll = sorted.data || [];
+                        const sorted = process(unpinned, { sort });
+                        sortedUnpinned = sorted.data || [];
                     } catch (err) {
                         console.warn("process sort error", err);
-                        sortedAll = data.slice();
+                        sortedUnpinned = unpinned.slice();
                     }
                 } else {
-                    sortedAll = data.slice();
+                    sortedUnpinned = unpinned.slice();
                 }
             }
 
-            // 전체 정렬된 순서를 기억 (필터 적용 전 순서)
-            orderRef.current = sortedAll.map((item) => idGetterRef.current(item));
+            // Unpinned 정렬된 순서를 기억 (필터 적용 전 순서)
+            orderRef.current = sortedUnpinned.map((item) => idGetterRef.current(item));
 
-            // 필터 적용
-            const { data: finalData, total } = applyFilterOnly(sortedAll);
+            // 필터 적용 (Unpinned만)
+            const { data: finalUnpinned, total: unpinnedTotal } = applyFilterOnly(sortedUnpinned);
+
+            // 최종: Unpinned(필터됨) + Pinned(그대로)
+            const finalData = [...finalUnpinned, ...pinned];
+            const finalTotal = unpinnedTotal + pinned.length;
 
             setViewData(finalData);
-            setViewTotal(total);
+            setViewTotal(finalTotal);
             onProcessedDataUpdateRef.current?.(finalData);
             return;
         }
@@ -183,15 +205,16 @@ const KendoGrid = ({ parentProps, children }) => {
         const afterMap = new Map();   // 기존행 key -> [그 뒤에 붙일 신규 행들...]
         const orphans = [];           // 기준 없이 떠 있는 신규행 (나중에 맨 뒤)
 
-        for (let i = 0; i < data.length; i++) {
-            const row = data[i];
+        // Unpinned 데이터만 순서 유지 로직 적용
+        for (let i = 0; i < unpinned.length; i++) {
+            const row = unpinned[i];
             const k = idGetterRef.current(row);
             if (k == null) continue;
 
             if (prevKeySet.has(k)) {
                 keyToRow.set(k, row);
             } else {
-                const prevRow = i > 0 ? data[i - 1] : null;
+                const prevRow = i > 0 ? unpinned[i - 1] : null;
                 const prevKey = prevRow ? idGetterRef.current(prevRow) : null;
 
                 if (prevKey && prevKeySet.has(prevKey)) {
@@ -203,42 +226,46 @@ const KendoGrid = ({ parentProps, children }) => {
             }
         }
 
-        const sortedAll = [];
+        const sortedUnpinned = [];
 
         // 기존 순서를 따라가면서, 각 행 뒤에 붙기로 한 신규행도 같이 밀어 넣기
         for (const baseKey of orderRef.current || []) {
             const baseRow = keyToRow.get(baseKey);
             if (!baseRow) continue;
 
-            sortedAll.push(baseRow);
+            sortedUnpinned.push(baseRow);
             keyToRow.delete(baseKey);
 
             const attached = afterMap.get(baseKey);
             if (attached) {
                 for (const r of attached) {
-                    sortedAll.push(r);
+                    sortedUnpinned.push(r);
                 }
             }
         }
 
         // 혹시 orderRef에 없던 기존 행이 남아 있으면 그냥 뒤에
         for (const row of keyToRow.values()) {
-            sortedAll.push(row);
+            sortedUnpinned.push(row);
         }
         // 기준 없던 신규행도 맨 뒤
         for (const row of orphans) {
-            sortedAll.push(row);
+            sortedUnpinned.push(row);
         }
 
         // 새 순서를 기준으로 다시 저장 (다음 변경 때 기준)
-        orderRef.current = sortedAll.map(item => idGetterRef.current(item));
+        orderRef.current = sortedUnpinned.map(item => idGetterRef.current(item));
 
-        const { data: finalData, total } = applyFilterOnly(sortedAll);
+        const { data: finalUnpinned, total: unpinnedTotal } = applyFilterOnly(sortedUnpinned);
+
+        // 최종: Unpinned(필터됨) + Pinned(그대로)
+        const finalData = [...finalUnpinned, ...pinned];
+        const finalTotal = unpinnedTotal + pinned.length;
 
         setViewData(finalData);
-        setViewTotal(total);
+        setViewTotal(finalTotal);
         onProcessedDataUpdateRef.current?.(finalData);
-    }, [rawData, sort, filter]);
+    }, [rawData, sort, filter, parentProps?.pinnedBottomPredicate]);
 
     /** ---------- 선택(행/체크박스) 처리 ---------- */
     // 체크박스에서 발생한 이벤트인지 판별

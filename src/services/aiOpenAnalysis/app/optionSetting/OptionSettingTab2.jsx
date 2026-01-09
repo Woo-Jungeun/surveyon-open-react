@@ -1128,6 +1128,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                 onPrefsChange?.({ sort: nextRaw ?? [] });
                             },
                             filterChange: ({ filter }) => { setFilter(filter ?? null); onPrefsChange?.({ filter: filter ?? null }); },
+                            pinnedBottomPredicate: (r) => r.__isNew, // 새 행은 항상 맨 아래 고정
                             noRecordsExtra: (
                                 // 데이터가 하나도 없을 때 “추가” 버튼 표출 
                                 <Button
