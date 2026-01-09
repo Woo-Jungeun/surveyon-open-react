@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3 } from "lucide-react";
+import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3, FileText, Database, Users } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useCookies } from "react-cookie";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
@@ -174,23 +174,28 @@ const InfoSection = () => {
 
           <div className="hp-feature-list">
             <div className="hp-feature-item">
-              <Sparkles className="hp-feature-icon" />
-              <span>AI 기반 분석</span>
+              <FileText className="hp-feature-icon" />
+              <span>설문제작</span>
             </div>
 
             <div className="hp-feature-item">
               <BarChart3 className="hp-feature-icon" />
-              <span>실시간 데이터</span>
+              <span>데이터현황</span>
             </div>
 
             <div className="hp-feature-item">
-              <Zap className="hp-feature-icon" />
-              <span>빠른 설문 제작</span>
+              <Database className="hp-feature-icon" />
+              <span>데이터관리</span>
             </div>
 
-            <div className="hp-feature-item">
+            <div className="hp-feature-item" onClick={() => navigate("/ai_open_analysis")} style={{ cursor: "pointer" }}>
               <BrainCircuit className="hp-feature-icon" />
-              <span>통합 플랫폼</span>
+              <span>AI오픈분석</span>
+            </div>
+
+            <div className="hp-feature-item">
+              <Users className="hp-feature-icon" />
+              <span>응답자관리</span>
             </div>
           </div>
 
