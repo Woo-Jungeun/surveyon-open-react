@@ -213,13 +213,10 @@ const OptionSettingBody = () => {
       if (res.success === "777") {
         if (!skipSpinner) loadingSpinner.hide();  // 로딩바 닫기 
       }
-
-      const seen = new Set();
       const list = (res?.resultjson ?? []).reduce((acc, r) => {
         const lv3 = (r?.lv3 ?? "").trim();
         const lv123code = (r?.lv123code ?? "").trim();
-        if (!lv3 || seen.has(lv3)) return acc;
-        seen.add(lv3);
+        if (!lv3) return acc;
         acc.push({
           codeId: lv123code,
           codeName: lv3,
