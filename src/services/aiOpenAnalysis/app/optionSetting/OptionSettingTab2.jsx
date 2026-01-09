@@ -955,6 +955,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 }));
             };
 
+            // 엔터 키 입력 시 편집 종료 (blur 유발)
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // 줄바꿈 방지 (textarea)
+                    e.target.blur();    // blur 이벤트 발생 -> handleBlurClose 실행됨
+                }
+            };
+
             // 일반 셀 (편집 아닐 때)
             if (!editable) {
                 return (
@@ -982,6 +990,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             // IME 보호: controlled → uncontrolled 로 변경
                             defaultValue={initialValue}
                             onBlur={handleBlurClose}
+                            onKeyDown={handleKeyDown}
                             rows={1}
                             style={{
                                 width: "100%",
@@ -998,6 +1007,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             // value → defaultValue
                             defaultValue={initialValue}
                             onBlur={handleBlurClose}
+                            onKeyDown={handleKeyDown}
                             autoComplete="on"
                             className="k-input k-input-solid"
                             style={{ width: "100%" }}
