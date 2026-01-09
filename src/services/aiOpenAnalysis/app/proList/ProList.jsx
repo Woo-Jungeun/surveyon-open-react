@@ -12,9 +12,7 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { Button } from "@progress/kendo-react-buttons";
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";    // 필터문항설정 팝업
 import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
-
 import { modalContext } from "@/components/common/Modal.jsx";
-import moment from "moment";
 
 /**
  * 문항 목록
@@ -126,6 +124,30 @@ const ProList = () => {
         setMergeSavedBaseline(new Map(rows.map(r => [r.id, r.merge_qnum || ""])));
         setMergeEditsById(new Map(rows.map(r => [r.id, r.merge_qnum || ""])));
     }, [proListData?.data?.resultjson]);
+
+    // Lifted state from GridRenderer
+    const [locksById, setLocksById] = useState(new Map());          // 행 잠금상태
+    const [excludedById, setExcludedById] = useState(new Map());    // 분석/제외 토글 상태
+
+    // useYN 기반으로 제외 여부 파싱
+    const deriveExcluded = useCallback((row) => {
+        const u = String(row?.useYN ?? "").trim();
+        if (u === "제외") return true;       // 제외
+        return false;                        // '분석', '머지', 공백 등은 포함
+    }, []);
+
+    // 초기화: API 데이터 들어올 때 한 번 세팅
+    useEffect(() => {
+        const rows = proListData?.data?.resultjson ?? [];
+        const m = new Map();
+        const l = new Map();
+        rows.forEach((row) => {
+            m.set(row?.id, deriveExcluded(row));
+            l.set(row?.id, row?.project_lock === "수정불가");
+        });
+        setExcludedById(m);
+        setLocksById(l);
+    }, [proListData?.data?.resultjson, deriveExcluded]);
 
     //컬럼 표출 권한 체크
     const [userPerm, setUserPerm] = useState(PERM.READ);
@@ -292,12 +314,9 @@ const ProList = () => {
     const GridRenderer = (props) => {
         const renderCount = useRef(0);
         renderCount.current += 1;
-        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch, scrollTopRef, mergeSavedBaseline, setMergeSavedBaseline } = props;
+        const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField, handleSearch, scrollTopRef, mergeSavedBaseline, setMergeSavedBaseline, locksById, setLocksById, excludedById, setExcludedById } = props;
 
         const groupOrder = ["VIEW", "ADMIN", "EDIT"]; // 상단 그룹 순서
-
-        const [locksById, setLocksById] = useState(new Map());          // 행 잠금상태
-        const [excludedById, setExcludedById] = useState(new Map());    // 분석/제외 토글 상태
 
         const pendingFlushRef = useRef(false); // 저장 후 1회 입력 캐시 초기화 플래그
         const { dataWithProxies, proxyField } = useMemo(
@@ -488,26 +507,7 @@ const ProList = () => {
             }
         };
 
-        // ---------------- analysis helpers ----------------
-        // useYN 기반으로 제외 여부 파싱
-        const deriveExcluded = (row) => {
-            const u = String(row?.useYN ?? "").trim();
-            if (u === "제외") return true;       // 제외
-            return false;                        // '분석', '머지', 공백 등은 포함
-        };
-
-        // 초기화: API 데이터 들어올 때 한 번 세팅
-        useEffect(() => {
-            const m = new Map();
-            (dataState?.data ?? []).forEach((row) => {
-                m.set(row?.id, deriveExcluded(row));
-            });
-            setExcludedById(m);
-        }, [dataState?.data]);
-
-        const isExcluded = (row) =>
-            excludedById.has(row?.id) ? !!excludedById.get(row?.id) : deriveExcluded(row);
-
+        const isExcluded = (row) => !!excludedById.get(row?.id);
         const setExcluded = (row, excluded) =>
             setExcludedById(m => { const n = new Map(m); n.set(row.id, excluded); return n; });
 
@@ -523,12 +523,7 @@ const ProList = () => {
             };
             rememberScroll(); // 스크롤 위치 저장 
             const res = await editMutation.mutateAsync(payload);
-            if (res?.success === "777") {
-                // if (refresh) {
-                //     setTimeStamp(Date.now());
-                //     setGridDataKey((k) => k + 1);
-                // }
-            } else {
+            if (res?.success !== "777") {
                 modal.showErrorAlert("에러", "오류가 발생했습니다.");
             }
         };
@@ -580,14 +575,6 @@ const ProList = () => {
         };
 
         // ---------------- lock helpers ----------------
-        // 행별 잠금상태 초기화: API의 project_lock 값에 맞춤
-        useEffect(() => {
-            const map = new Map();
-            (dataState?.data ?? []).forEach((row) => {
-                map.set(row?.id, row?.project_lock === "수정불가");
-            });
-            setLocksById(map);
-        }, [dataState?.data, idGetter]);
 
         const isLocked = (row) => !!locksById.get(row?.id);
         const setRowLocked = (row, locked) =>
@@ -634,9 +621,7 @@ const ProList = () => {
             };
             rememberScroll(); // 스크롤 위치 저장 
             const res = await editMutation.mutateAsync(payload);
-            if (res?.success === "777") {
-                //handleSearch?.();   // 재조회
-            } else {
+            if (res?.success !== "777") {
                 modal.showErrorAlert("에러", "오류가 발생했습니다.");
             }
         };
@@ -1267,6 +1252,10 @@ const ProList = () => {
                     setMergeEditsById={setMergeEditsById}
                     mergeSavedBaseline={mergeSavedBaseline}
                     setMergeSavedBaseline={setMergeSavedBaseline}
+                    locksById={locksById}
+                    setLocksById={setLocksById}
+                    excludedById={excludedById}
+                    setExcludedById={setExcludedById}
                 />}
         />
     );
