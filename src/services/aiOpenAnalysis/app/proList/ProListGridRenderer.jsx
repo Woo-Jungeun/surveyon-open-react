@@ -706,6 +706,7 @@ const ProListGridRenderer = (props) => {
                     filterable={false}
                     columnMenu={undefined}
                     headerCell={() => <></>}
+                    cell={c.wrap ? WrapCell(c.field) : undefined}
                 />
             );
         }
@@ -738,23 +739,48 @@ const ProListGridRenderer = (props) => {
                                 onMouseDown={(e) => e.stopPropagation()}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <input
-                                    type="text"
+                                <textarea
+                                    ref={(el) => {
+                                        if (el) {
+                                            // Mount 시 높이 자동 조절
+                                            el.style.height = 'auto';
+                                            el.style.height = el.scrollHeight + 'px';
+                                        }
+                                    }}
                                     className="merge-input"
                                     key={`${row.id}:${cur}`}     // 재조회로 값이 바뀌면 인풋을 리마운트
                                     defaultValue={cur}           // 타이핑 중에는 리렌더 안 일어남(포커스 유지)
                                     disabled={disabled}
                                     placeholder="번호 입력"
-
+                                    rows={1}
+                                    style={{
+                                        resize: 'none',
+                                        minHeight: '30px',
+                                        height: 'auto',
+                                        width: '100%',
+                                        overflow: 'hidden',
+                                        whiteSpace: 'pre-wrap', // 줄바꿈 허용
+                                        lineHeight: '1.5'
+                                    }}
                                     onInput={(e) => {
                                         const now = norm(e.currentTarget.value);
                                         if (!tdRef.current) return;
+
+                                        // Auto-resize
+                                        e.currentTarget.style.height = 'auto';
+                                        e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+
                                         if (disabled) return;
                                         if (now !== baseline) tdRef.current.classList.add('cell-merge-diff');
                                         else tdRef.current.classList.remove('cell-merge-diff');
                                     }}
                                     onBlur={(e) => setMergeVal(row, e.currentTarget.value)} // 포커스 빠질 때만 저장
-                                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur(); }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault(); // 줄바꿈 방지 (엔터로 저장/블러)
+                                            e.currentTarget.blur();
+                                        }
+                                    }}
                                 />
                             </td>
                         );

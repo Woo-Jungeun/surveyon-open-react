@@ -117,7 +117,7 @@ const ProList = () => {
         { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "150px" },
 
         // 문항최종(이미 묶음)
-        withSubgroup("문항최종", 1)({ field: "qnum_text", title: "문항최종번호", group: "VIEW", show: true, allowHide: false, order: 4 }),
+        withSubgroup("문항최종", 1)({ field: "qnum_text", title: "문항최종번호", group: "VIEW", show: true, allowHide: false, order: 4, wrap: true }),
         withSubgroup("문항최종", 2)({ field: "question_fin", title: "문항최종", group: "VIEW", show: true, allowHide: false, order: 4, width: "350px", wrap: true }),
 
         { field: "status_cnt", title: "응답자수", group: "VIEW", show: true, allowHide: false, order: 5 },
@@ -132,8 +132,8 @@ const ProList = () => {
         { field: "exclude", title: "분석보기", group: "ADMIN", show: true, order: 2, width: "100px" },
 
         // ----- EDIT  → "문항통합"으로 합치기 -----
-        withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
-        withSubgroup("문항통합저장", 2)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
+        withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1, wrap: true }),
+        withSubgroup("문항통합저장", 2)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1, wrap: true }),
 
         { field: "project_lock", title: "수정", group: "EDIT", show: true, allowHide: false, order: 2 },
     ]);
