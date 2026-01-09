@@ -82,7 +82,8 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
 
     const lowerTerm = deferredSearchTerm.toLowerCase();
     return sortedOptions.filter(opt =>
-      opt.codeName && opt.codeName.toLowerCase().includes(lowerTerm)
+      (opt.codeName && opt.codeName.toLowerCase().includes(lowerTerm)) ||
+      (opt.codeId && String(opt.codeId).toLowerCase().includes(lowerTerm))
     );
   }, [sortedOptions, deferredSearchTerm]);
 
@@ -114,7 +115,7 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
           </div>
           <input
             type="text"
-            placeholder="소분류를 검색하세요."
+            placeholder="소분류명 또는 소분류 코드를 검색하세요."
             className="lv3-search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
