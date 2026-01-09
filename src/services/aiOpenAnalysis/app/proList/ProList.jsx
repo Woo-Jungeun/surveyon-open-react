@@ -524,10 +524,10 @@ const ProList = () => {
             rememberScroll(); // 스크롤 위치 저장 
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
-                if (refresh) {
-                    setTimeStamp(Date.now());
-                    setGridDataKey((k) => k + 1);
-                }
+                // if (refresh) {
+                //     setTimeStamp(Date.now());
+                //     setGridDataKey((k) => k + 1);
+                // }
             } else {
                 modal.showErrorAlert("에러", "오류가 발생했습니다.");
             }
@@ -635,7 +635,7 @@ const ProList = () => {
             rememberScroll(); // 스크롤 위치 저장 
             const res = await editMutation.mutateAsync(payload);
             if (res?.success === "777") {
-                handleSearch?.();   // 재조회
+                //handleSearch?.();   // 재조회
             } else {
                 modal.showErrorAlert("에러", "오류가 발생했습니다.");
             }

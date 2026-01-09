@@ -18,10 +18,10 @@ export function ProListApi() {
         async (data) => await api.post(data.params, "/pro_list_api.aspx"),
         {
             onMutate: (vars) => {
-                //    loadingSpinner.show(); 
+                loadingSpinner.show();
             },
             onSettled: () => {
-                //    loadingSpinner.hide(); 
+                loadingSpinner.hide();
             }
         }
     );
