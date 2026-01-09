@@ -115,7 +115,7 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
           </div>
           <input
             type="text"
-            placeholder="소분류명 또는 소분류 코드를 검색하세요."
+            placeholder="소분류 명 또는 소분류 코드를 검색하세요."
             className="lv3-search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
