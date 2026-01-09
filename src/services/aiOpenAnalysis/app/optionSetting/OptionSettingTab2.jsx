@@ -1052,7 +1052,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             for (let i = rows.length - 1; i >= 0; i--) {
                 const r = rows[i];
                 if (r?.__pendingDelete === true) continue;
-                if (r?.ex_gubun === "survey") continue;
                 return keyOf(r);
             }
             // 전부 삭제대기/설문이면 물리적 마지막 행을 fallback(없으면 null)
