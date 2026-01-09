@@ -59,7 +59,7 @@ const BoardWrite = () => {
                 <div className="bw-form">
                     <div className="bw-form-group">
                         <label>
-                            <Type size={16} />
+                            {/* <Type size={16} /> */}
                             제목
                         </label>
                         <input
@@ -73,7 +73,7 @@ const BoardWrite = () => {
 
                     <div className="bw-form-group">
                         <label>
-                            <FileText size={16} />
+                            {/* <FileText size={16} /> */}
                             내용
                         </label>
                         <textarea
