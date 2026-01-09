@@ -727,7 +727,8 @@ const ProListGridRenderer = (props) => {
                         const tdRef = useRef(null);
                         const locked = isLocked(row); // "수정불가"면 true
                         const excluded = isExcluded(row);
-                        const disabled = locked || excluded;
+                        // editable prop이 false면(관리자가 아니면) disabled 처리
+                        const disabled = locked || excluded || (c.editable === false);
                         const baseline = mergeSavedBaseline.get(row.id) ?? original;
 
                         return (

@@ -2,15 +2,8 @@ import React, { useState, useCallback, useEffect, useContext, useRef, useMemo } 
 import { useDispatch, useSelector } from "react-redux";
 import { login } from "@/common/redux/action/AuthAction";
 import { useNavigate, useLocation } from "react-router-dom";
-import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
-import GridHeaderBtnTxt from "@/components/style/button/GridHeaderBtnTxt.jsx";
 import GridData from "@/components/common/grid/GridData.jsx";
-import KendoGrid from "@/components/kendo/KendoGrid.jsx";
-import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { ProListApi } from "@/services/aiOpenAnalysis/app/proList/ProListApi.js";
-import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-import { Button } from "@progress/kendo-react-buttons";
-import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";    // 필터문항설정 팝업
 import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import ProListGridRenderer from "./ProListGridRenderer";
@@ -142,7 +135,7 @@ const ProList = () => {
         withSubgroup("문항통합저장", 1)({ field: "qnum_text", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
         withSubgroup("문항통합저장", 2)({ field: "merge_qnum", title: "", group: "EDIT", show: true, allowHide: false, order: 1 }),
 
-        { field: "project_lock", title: "수정", group: "EDIT", show: true, order: 2 },
+        { field: "project_lock", title: "수정", group: "EDIT", show: true, allowHide: false, order: 2 },
     ]);
 
     // 행 클릭 → /option_setting 로 이동
@@ -155,27 +148,15 @@ const ProList = () => {
         return columns.map((c) => {
             const need = (FIELD_MIN_PERM[c.field] ?? GROUP_MIN_PERM[c.group || "VIEW"] ?? PERM.READ);
             const canSee = hasPerm(userPerm, need);
-            return { ...c, show: (c.show !== false) && canSee };
+            // merge_qnum은 관리자(MANAGE)만 수정 가능
+            let editable = c.editable;
+            if (c.field === 'merge_qnum') {
+                editable = hasPerm(userPerm, PERM.MANAGE);
+            }
+
+            return { ...c, show: (c.show !== false) && canSee, editable };
         });
     }, [columns, userPerm]);
-
-    // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
-    const columnMenu = useMemo(() => {
-        const handleColumnsChange = (updated) => {
-            const map = new Map(updated.map(c => [c.field, c]));
-            setColumns(prev => prev.map(c => map.get(c.field) ? { ...c, ...map.get(c.field) } : c));
-        };
-        return (menuProps) => (
-            <ExcelColumnMenu
-                {...menuProps}
-                columns={columnsForPerm}
-                onColumnsChange={handleColumnsChange}
-                filter={filter}
-                onFilterChange={(e) => setFilter(e ?? null)}
-                onSortChange={(e) => setSort(e ?? [])}
-            />
-        );
-    }, [columnsForPerm, filter]);
 
     const saveBlobWithName = useCallback((blob, filename = "download.xlsx") => {
         const url = URL.createObjectURL(blob);

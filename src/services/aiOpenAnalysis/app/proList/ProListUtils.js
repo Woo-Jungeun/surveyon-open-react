@@ -28,6 +28,8 @@ export const FIELD_MIN_PERM = {
     tokens_text: PERM.READ,
     filterSetting: PERM.WRITE,
     project_lock: PERM.MANAGE,
+    qnum_text: PERM.WRITE,
+    merge_qnum: PERM.WRITE,
 };
 
 // 정렬 
