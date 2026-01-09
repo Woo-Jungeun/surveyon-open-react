@@ -67,7 +67,6 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             { field: "ex_sum", title: "집계현황", show: true, editable: false, allowHide: false, width: "150px" },
             { field: "ex_gubun", title: "보기유형", show: true, editable: false, allowHide: false, width: "150px" },
             { field: "delete", title: "삭제", show: true, editable: true, allowHide: false, width: "120px" },
-            { field: "add", title: "추가", show: true, editable: true, allowHide: false, width: "120px" },
         ]);
 
     // 단계별 강제 숨김 컬럼
@@ -1069,8 +1068,16 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <div className="meta2">
+                <div className="meta2" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div className="row1">업데이트 날짜: {dataState?.data?.[0]?.update_date ?? '-'}</div>
+                    <Button
+                        themeColor="primary"
+                        className="btnM"
+                        onClick={addButtonClick}
+                        style={{ marginLeft: "auto" }}
+                    >
+                        + 보기 데이터 추가
+                    </Button>
                 </div>
                 {/* 삭제 안내 배너 */}
                 {hasPendingDelete && (
@@ -1169,35 +1176,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                     />
                                 );
                             }
-                            if (c.field === 'add') {
-                                return (
-                                    <Column
-                                        key={c.field}
-                                        field="add"
-                                        title={c.title}
-                                        width={c.width}
-                                        sortable={false}
-                                        columnMenu={undefined}
-                                        cell={(props) => {
-                                            const row = props.dataItem;
-                                            const isLast = keyOf(row) === lastAddableKey;
-                                            return (
-                                                <td
-                                                    style={{ textAlign: "center" }}
-                                                    onMouseDown={(e) => e.stopPropagation()}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    {isLast ? (
-                                                        <Button className="btnM" themeColor="primary" onClick={addButtonClick}>
-                                                            추가
-                                                        </Button>
-                                                    ) : null}
-                                                </td>
-                                            );
-                                        }}
-                                    />
-                                );
-                            }
+
                             const useNamed = ["lv1", "lv1code", "lv2", "lv2code", "lv3", "lv123code"].includes(c.field);
 
                             // 코드 컬럼이면 proxy 필드로 정렬

@@ -1251,7 +1251,13 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         return (
             <Fragment>
                 <div className="meta-header-layout">
-                    <div className="meta-header-left">
+                    <div className="meta-header-left meta2">
+                        <div className="row1">업데이트 날짜: {updatedAt}</div>
+                        <div className="row2" style={{ textAlign: "left", marginLeft: "10px" }}>
+                            <span>분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b></span>
+                        </div>
+                    </div>
+                    <div className="meta-header-right">
                         <button
                             className={`filter-toggle-btn ${showUnverifiedOnly ? 'active' : ''}`}
                             onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
@@ -1259,12 +1265,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             <span className="check-icon">{showUnverifiedOnly ? '☑' : '☐'}</span>
                             검증 안 된 데이터만 보기
                         </button>
-                    </div>
-                    <div className="meta-header-right meta2">
-                        <div className="row1">업데이트 날짜: {updatedAt}</div>
-                        <div className="row2">
-                            <span>분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b></span>
-                        </div>
                     </div>
                 </div>
                 <div ref={gridRootRef} id="grid_01" className={`cmn_grid singlehead ${isLeftOpen && String(lvCode) !== "1" ? "force-scroll" : ""} ${hasLv3CellSelection ? "lv3-cell-select" : ""} ${isDragging ? "is-dragging" : ""}`} style={{ marginBottom: '0px' }}>

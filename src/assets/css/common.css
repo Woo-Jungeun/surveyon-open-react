@@ -2434,37 +2434,6 @@ footer {
     margin-bottom: 12px;
 }
 
-/* form type */
-.iptCal {
-    display: flex;
-}
-
-.iptCal.col2 {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.iptCal.row2 {
-    flex-direction: column;
-    gap: 12px;
-}
-
-.iptCal.row2 .inpArea {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.iptCal.row2 .inpArea .k-input-solid {
-    width: 196px;
-}
-
-.iptCal.row2 .inpArea .iptCalTxt {
-    font-size: 14px;
-    color: #343b37;
-}
-
 .bgBox {
     padding: 20px;
     border: 1px solid #e0efe8;
