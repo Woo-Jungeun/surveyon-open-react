@@ -723,7 +723,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 if (row) s.add(getKey(row));
             }
             lv3SelKeysRef.current = s; // ref에만 저장 (렌더 유발 X)
-            return s;
         }, [processedMirror, getKey]);
         const lastCellRectRef = useRef(null); //마지막 셀의 DOM 좌표 기억용 ref 추가
 
@@ -739,11 +738,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
             if (e.shiftKey && anchorIndexRef.current != null) {
                 selectionModeRef.current = 'range';
-                const s = rangeToKeys(anchorIndexRef.current, idx);
-                setLv3SelKeys(s);
+                rangeToKeys(anchorIndexRef.current, idx);
                 lastIndexRef.current = idx;
-                // e.preventDefault(); // 클릭 이벤트가 발생해야 suppressNextClickRef가 소비됨
-                suppressNextClickRef.current = true;
                 return;
             }
             if (e.ctrlKey || e.metaKey) {
@@ -755,8 +751,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     const next = new Set(prev);
                     next.has(key) ? next.delete(key) : next.add(key);
                     return next;
-                    return next;
                 });
+                e.preventDefault();
+                e.stopPropagation();
                 suppressNextClickRef.current = true;
                 return;
             }
@@ -848,11 +845,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, []);
 
 
-        // lv3SelKeys 상태가 변경되면 ref도 동기화 (onRowClick 등에서 최신 상태 참조 보장)
-        useEffect(() => {
-            lv3SelKeysRef.current = lv3SelKeys;
-        }, [lv3SelKeys]);
-
         // 최신 값들을 ref에 동기화 (렌더마다 가벼운 할당만)
         useEffect(() => {
             keyHandlerStateRef.current = {
@@ -938,13 +930,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             setSelectedRowKey(clickedKey);
 
             // 드래그/다중선택이 있어도 행 클릭하면 "그 행만" 연두색으로 남기기
-            // 단, 이미 선택된 행을 클릭한 경우(일괄 편집 의도)에는 리셋하지 않음
-            if (!lv3SelKeysRef.current.has(clickedKey)) {
-                const nextSel = new Set();
-                if (clickedKey != null) nextSel.add(clickedKey);
-                setLv3SelKeys(nextSel);
-                lv3SelKeysRef.current = nextSel;
-            }
+            const nextSel = new Set();
+            if (clickedKey != null) nextSel.add(clickedKey);
+            setLv3SelKeys(nextSel);
+            lv3SelKeysRef.current = nextSel;
 
             // Shift+클릭 / 드래그 선택을 위해 기준 인덱스(anchor / last)를 클릭한 행으로 리셋
             const rowIndex = rows.findIndex(r => getKey(r) === clickedKey);
@@ -1051,7 +1040,6 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 ...trEl.props,
                 'data-index': rowProps.dataIndex,
                 className: cls,
-                style: { ...trEl.props.style, userSelect: 'none' }, // 텍스트 선택 방지
                 onPointerDown: (e) => { onRowMouseDown(rowProps, e); trEl.props.onPointerDown?.(e); },
                 onPointerEnter: (e) => { onRowMouseEnter(rowProps, e); trEl.props.onPointerEnter?.(e); },
                 onDragStart: (e) => e.preventDefault(), // 네이티브 드래그로 텍스트 선택되는 것 방지
@@ -1072,13 +1060,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     const isSentiment = target.closest('td[data-field="sentiment"]');
 
                     if (!isCheckbox && !isButton && !isSentiment) {
-                        // 소분류 패널 자동 열기 (다중 선택 지원)
-                        const key = getKey(rowProps.dataItem);
-                        // 클릭한 행이 선택된 상태라면, 선택된 모든 행을 타겟으로 함
-                        const currentKeys = lv3SelKeysRef.current.has(key) ? lv3SelKeysRef.current : new Set([key]);
-                        const selectedRows = (dataState?.data || []).filter(r => currentKeys.has(getKey(r)));
-                        const targetRows = selectedRows.length > 0 ? selectedRows : [rowProps.dataItem];
-
+                        // 소분류 패널 자동 열기 (클릭한 행만 사용)
+                        const targetRows = [rowProps.dataItem];
                         const targetCodes = targetRows.map(r => r.lv123code);
                         onOpenLv3Panel?.(targetRows, targetCodes);
                     }
@@ -1398,12 +1381,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                             }
 
                                                             // 클릭한 행이 선택된 상태가 아니라면 하이라이트 적용
-                                                            if (!lv3SelKeysRef.current.has(rowKey)) {
+                                                            if (!lv3SelKeys.has(rowKey)) {
                                                                 setLv3SelKeys(new Set([rowKey]));
                                                             }
 
                                                             // 현재 클릭한 행을 포함하여 타겟 계산
-                                                            const currentKeys = lv3SelKeysRef.current.has(rowKey) ? lv3SelKeysRef.current : new Set([rowKey]);
+                                                            const currentKeys = lv3SelKeys.has(rowKey) ? lv3SelKeys : new Set([rowKey]);
                                                             const selectedRows = (dataState?.data || []).filter(r => currentKeys.has(getKey(r)));
                                                             const targetRows = selectedRows.length > 0 ? selectedRows : [cellProps.dataItem];
                                                             const targetCodes = targetRows.map(r => r.lv123code);
