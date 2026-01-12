@@ -188,7 +188,17 @@ const InfoSection = () => {
               <span>데이터관리</span>
             </div>
 
-            <div className="hp-feature-item" onClick={() => navigate("/ai_open_analysis")} style={{ cursor: "pointer" }}>
+            <div
+              className="hp-feature-item"
+              onClick={() => {
+                if (!isLoggedIn) {
+                  navigate("/login", { state: { from: "/ai_open_analysis" } });
+                } else {
+                  navigate("/ai_open_analysis");
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <BrainCircuit className="hp-feature-icon" />
               <span>AI오픈분석</span>
             </div>
