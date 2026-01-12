@@ -540,15 +540,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 const getKey = (r) => r?.__rowKey;
 
                 // 현재 행 제외 후 해당 codeField의 숫자 최대값 + 1
-                const maxPlus1 = (codeField) =>
-                    String(
-                        Math.max(
-                            0,
-                            ...rows
-                                .filter(r => getKey(r) !== rowKey)
-                                .map(r => parseInt(String(r?.[codeField] ?? "").replace(/\D/g, ""), 10) || 0)
-                        ) + 1
+                const maxPlus1 = (codeField) => {
+                    const maxVal = Math.max(
+                        0,
+                        ...rows
+                            .filter(r => getKey(r) !== rowKey)
+                            .map(r => parseInt(String(r?.[codeField] ?? "").replace(/\D/g, ""), 10) || 0)
                     );
+                    let next = maxVal + 1;
+                    if (next >= 9997 && next <= 9999) next = 10000;
+                    return String(next);
+                };
 
                 // 처리 대상(대/중분류) 쌍을 찾음
                 const PAIRS = [
@@ -690,7 +692,9 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 0,
                 ...data.map(r => parseInt(String(r?.lv123code ?? "").replace(/\D/g, ""), 10) || 0)
             );
-            const nextLv123 = String(maxLv123 + 1);
+            let nextVal = maxLv123 + 1;
+            if (nextVal >= 9997 && nextVal <= 9999) nextVal = 10000;
+            const nextLv123 = String(nextVal);
             const tmpKey =
                 (typeof crypto !== "undefined" && crypto.randomUUID)
                     ? crypto.randomUUID()
