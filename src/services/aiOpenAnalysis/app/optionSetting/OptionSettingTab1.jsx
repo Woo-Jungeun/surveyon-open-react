@@ -713,6 +713,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             shouldAutoApplySelectionRef.current = false;
         }, [rows]);
 
+        const suppressLv3ClickRef = useRef(false); // 드래그 후 lv3 클릭 방지용
+
         // 현재 데이터 인덱스 범위를 선택키로 변환
         const rangeToKeys = useCallback((a, b) => {
             const min = Math.min(a, b);
@@ -802,14 +804,14 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
         // mouseup(드래그 종료): 자동으로 에디터 열지 않음 (중복 오픈 방지)
         useEffect(() => {
-            const end = () => {
+            const end = (e) => {
                 if (!draggingRef.current) return;
 
                 draggingRef.current = false;
                 setIsDragging(false);
 
                 // 드래그 모드였으나 실제 드래그(이동)가 없었다면, 단순 클릭이므로 선택 상태 업데이트 건너뜀
-                // (Click 이벤트가 처리하도록 함)
+                // (Click 이벤트가 처리하도록 함) -> 수정: 다중 선택 상태에서 단일 행 클릭 시 선택 초기화
                 if (selectionModeRef.current === 'drag' && !wasDraggingRef.current) {
                     selectionModeRef.current = null;
                     const grid = gridRootRef.current;
@@ -817,7 +819,20 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         delete grid.dataset.dragStart;
                         delete grid.dataset.dragEnd;
                     }
+
+                    // 단순 클릭 시: 해당 행 하나만 선택되도록 리셋
+                    // 단, lv3-opener(소분류 셀) 클릭인 경우는 여기서 처리하지 않고 lv3 onClick에 위임
+                    const isLv3Opener = e.target && e.target.closest && e.target.closest('.lv3-opener');
+                    if (!isLv3Opener && lastFocusedKeyRef.current) {
+                        setLv3SelKeys(new Set([lastFocusedKeyRef.current]));
+                    }
                     return;
+                }
+
+                // 드래그가 실제로 일어났다면, lv3 클릭 이벤트(패널 열기) 방지
+                if (wasDraggingRef.current) {
+                    suppressLv3ClickRef.current = true;
+                    setTimeout(() => { suppressLv3ClickRef.current = false; }, 100);
                 }
 
                 selectionModeRef.current = null;
@@ -1380,6 +1395,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                         // onMouseDown={(e) => e.stopPropagation()}
                                                         onClick={(e) => {
                                                             e.stopPropagation(); // 행 클릭 이벤트(단일 선택 강제) 방지
+                                                            if (suppressLv3ClickRef.current) return; // 드래그 직후 클릭 방지
 
                                                             rememberScroll();  // 스크롤 저장
 
@@ -1389,26 +1405,48 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                                                             if (rect) lastCellRectRef.current = rect;
                                                             lastFocusedKeyRef.current = rowKey;
-                                                            anchorIndexRef.current = cellProps.dataIndex;
-                                                            lastIndexRef.current = cellProps.dataIndex;
+
+                                                            // Shift 클릭 시에는 anchorIndexRef를 업데이트하지 않음 (기존 anchor 유지)
+                                                            if (!e.shiftKey) {
+                                                                anchorIndexRef.current = cellProps.dataIndex;
+                                                                lastIndexRef.current = cellProps.dataIndex;
+                                                            }
 
                                                             if (td) {
                                                                 lastCellElRef.current = td;
                                                                 lv3AnchorElRef.current = td;
                                                             }
 
-                                                            // 클릭한 행이 선택된 상태가 아니라면 하이라이트 적용
-                                                            if (!lv3SelKeysRef.current.has(rowKey)) {
-                                                                setLv3SelKeys(new Set([rowKey]));
+                                                            const isSimpleClick = !e.ctrlKey && !e.shiftKey && !e.metaKey;
+
+                                                            if (isSimpleClick) {
+                                                                const currentSel = lv3SelKeysRef.current;
+                                                                if (currentSel.has(rowKey) && currentSel.size > 1) {
+                                                                    const selectedRows = (dataState?.data || []).filter(r => currentSel.has(getKey(r)));
+                                                                    const targetRows = selectedRows.length > 0 ? selectedRows : [cellProps.dataItem];
+                                                                    const targetCodes = targetRows.map(r => r.lv123code);
+                                                                    onOpenLv3Panel?.(targetRows, targetCodes);
+                                                                } else {
+                                                                    // 단순 클릭 시: 무조건 해당 행만 선택 (기존 다중선택 해제)
+                                                                    setLv3SelKeys(new Set([rowKey]));
+
+                                                                    // 패널 열기 (단일 대상)
+                                                                    onOpenLv3Panel?.([cellProps.dataItem], [cellProps.dataItem.lv123code]);
+                                                                }
+                                                            } else {
+                                                                // 클릭한 행이 선택된 상태가 아니라면 하이라이트 적용
+                                                                if (!lv3SelKeysRef.current.has(rowKey)) {
+                                                                    setLv3SelKeys(new Set([rowKey]));
+                                                                }
+
+                                                                // 현재 클릭한 행을 포함하여 타겟 계산
+                                                                const currentKeys = lv3SelKeysRef.current.has(rowKey) ? lv3SelKeysRef.current : new Set([rowKey]);
+                                                                const selectedRows = (dataState?.data || []).filter(r => currentKeys.has(getKey(r)));
+                                                                const targetRows = selectedRows.length > 0 ? selectedRows : [cellProps.dataItem];
+                                                                const targetCodes = targetRows.map(r => r.lv123code);
+
+                                                                onOpenLv3Panel?.(targetRows, targetCodes);
                                                             }
-
-                                                            // 현재 클릭한 행을 포함하여 타겟 계산
-                                                            const currentKeys = lv3SelKeysRef.current.has(rowKey) ? lv3SelKeysRef.current : new Set([rowKey]);
-                                                            const selectedRows = (dataState?.data || []).filter(r => currentKeys.has(getKey(r)));
-                                                            const targetRows = selectedRows.length > 0 ? selectedRows : [cellProps.dataItem];
-                                                            const targetCodes = targetRows.map(r => r.lv123code);
-
-                                                            onOpenLv3Panel?.(targetRows, targetCodes);
                                                         }}
                                                     >
                                                         <span className="lv3-display">{currentValue || "소분류 선택"}</span>
