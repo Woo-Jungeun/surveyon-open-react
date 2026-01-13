@@ -26,7 +26,7 @@ const BoardSection = () => {
 
     const handleItemClick = (e, path, itemId) => {
         e.stopPropagation();
-        navigate(`${path}/${itemId}`);
+        navigate(`${path}/${itemId}`, { state: { from: 'home' } });
     };
 
     return (
@@ -64,6 +64,11 @@ const BoardSection = () => {
                             </div>
                         ))}
                     </div>
+                    {/* <div className="board-card-action">
+                        <button className="board-view-more" onClick={() => navigate('/board/notice')}>
+                            바로가기 →
+                        </button>
+                    </div> */}
                 </div>
 
                 {/* Patch Notes */}
@@ -95,6 +100,11 @@ const BoardSection = () => {
                             </div>
                         ))}
                     </div>
+                    {/* <div className="board-card-action">
+                        <button className="board-view-more" onClick={() => navigate('/board/patchnotes')}>
+                            바로가기 →
+                        </button>
+                    </div> */}
                 </div>
 
                 {/* 문의하기 & FAQ 컬럼 */}

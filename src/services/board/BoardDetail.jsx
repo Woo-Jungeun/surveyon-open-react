@@ -1,11 +1,13 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Eye, User } from 'lucide-react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Calendar, Eye, User, Home } from 'lucide-react';
 import './BoardDetail.css';
 
 const BoardDetail = () => {
     const { type, id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+    const isFromHome = location.state?.from === 'home';
 
     // 게시판 설정 (BoardList와 동일)
     const boardConfig = {
@@ -42,10 +44,17 @@ const BoardDetail = () => {
 
     return (
         <div className="bd-container" style={{ '--board-color': config.color }}>
-            <button className="bw-back-btn" onClick={() => navigate(`/board/${type}`)}>
-                <ArrowLeft size={16} />
-                목록으로
-            </button>
+            {isFromHome ? (
+                <button className="bw-back-btn" onClick={() => navigate('/')}>
+                    <Home size={16} />
+                    메인으로
+                </button>
+            ) : (
+                <button className="bw-back-btn" onClick={() => navigate(`/board/${type}`)}>
+                    <ArrowLeft size={16} />
+                    목록으로
+                </button>
+            )}
 
             <div className="bd-content-wrapper">
                 <div className="bd-header">
