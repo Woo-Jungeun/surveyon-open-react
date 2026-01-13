@@ -261,6 +261,201 @@
 }
 
 .iw-btn-submit {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.iw-input,
+.iw-textarea {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #334155;
+    background: #f8fafc;
+    transition: all 0.2s;
+}
+
+.iw-input:focus,
+.iw-textarea:focus {
+    outline: none;
+    border-color: #6b7fbf;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(124, 156, 191, 0.1);
+}
+
+.iw-textarea {
+    height: 200px;
+    resize: none;
+    line-height: 1.6;
+}
+
+/* File Upload */
+.iw-file-upload {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.iw-file-input {
+    display: none;
+}
+
+.iw-file-upload .iw-file-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7fbf;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.iw-file-label:hover {
+    background: #f8fafc;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-color: #94a3b8;
+}
+
+.iw-file-info {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+.iw-file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.iw-file-list li {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    background: #f0f4f8;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #333;
+    border: 1px solid #e1e5e9;
+}
+
+.iw-file-name {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.iw-file-size {
+    color: #666;
+    font-size: 12px;
+    margin-left: 6px;
+    margin-right: 8px;
+}
+
+.iw-file-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    color: #999;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    width: 20px;
+    height: 20px;
+}
+
+.iw-file-remove:hover {
+    background: #e2e8f0;
+    color: #ef4444;
+}
+
+/* Secret Toggle */
+.iw-secret-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.secret-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: white;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.secret-btn.active {
+    background: #6b7fbf;
+    color: white;
+    border-color: #6b7fbf;
+}
+
+.secret-desc {
+    font-size: 13px;
+    color: #94a3b8;
+}
+
+/* Footer */
+.iw-footer {
+    margin-top: 40px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.iw-btn {
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.iw-btn-cancel {
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+.iw-btn-cancel:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.iw-btn-submit {
     background: #6b7fbf;
     border: 1px solid #6b7fbf;
     color: white;
@@ -276,17 +471,215 @@
 /* Responsive */
 @media (max-width: 768px) {
     .iw-container {
-        padding: 40px 20px;
+        padding: 80px 20px 40px;
+        max-width: 100vw;
+        overflow-x: hidden;
     }
 
-    .iw-header,
-    .iw-form {
-        padding: 24px;
+    .iw-textarea:focus {
+        outline: none;
+        border-color: #6b7fbf;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(124, 156, 191, 0.1);
     }
 
-    .iw-secret-toggle {
-        flex-direction: column;
-        align-items: flex-start;
+    .iw-textarea {
+        height: 200px;
+        resize: none;
+        line-height: 1.6;
+    }
+
+    /* File Upload */
+    .iw-file-upload {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .iw-file-input {
+        display: none;
+    }
+
+    .iw-file-upload .iw-file-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #6b7fbf;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .iw-file-label:hover {
+        background: #f8fafc;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-color: #94a3b8;
+    }
+
+    .iw-file-info {
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    .iw-file-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
         gap: 8px;
     }
-}
+
+    .iw-file-list li {
+        display: inline-flex;
+        align-items: center;
+        padding: 6px 12px;
+        background: #f0f4f8;
+        border-radius: 20px;
+        font-size: 13px;
+        color: #333;
+        border: 1px solid #e1e5e9;
+    }
+
+    .iw-file-name {
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 500;
+    }
+
+    .iw-file-size {
+        color: #666;
+        font-size: 12px;
+        margin-left: 6px;
+        margin-right: 8px;
+    }
+
+    .iw-file-remove {
+        background: none;
+        border: none;
+        padding: 0;
+        color: #999;
+        cursor: pointer;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        width: 20px;
+        height: 20px;
+    }
+
+    .iw-file-remove:hover {
+        background: #e2e8f0;
+        color: #ef4444;
+    }
+
+    /* Secret Toggle */
+    .iw-secret-toggle {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .secret-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 16px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        background: white;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .secret-btn.active {
+        background: #6b7fbf;
+        color: white;
+        border-color: #6b7fbf;
+    }
+
+    .secret-desc {
+        font-size: 13px;
+        color: #94a3b8;
+    }
+
+    /* Footer */
+    .iw-footer {
+        margin-top: 40px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+    }
+
+    .iw-btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .iw-btn-cancel {
+        background: white;
+        border: 1px solid #cbd5e1;
+        color: #64748b;
+    }
+
+    .iw-btn-cancel:hover {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .iw-btn-submit {
+        background: #6b7fbf;
+        border: 1px solid #6b7fbf;
+        color: white;
+    }
+
+    .iw-btn-submit:hover {
+        background: #6a89ab;
+        border-color: #6a89ab;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(124, 156, 191, 0.2);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .iw-container {
+            padding: 80px 20px 40px;
+            max-width: 100vw;
+            overflow-x: hidden;
+        }
+
+        .iw-header,
+        .iw-form {
+            padding: 24px;
+        }
+
+        .iw-secret-toggle {
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+    }
