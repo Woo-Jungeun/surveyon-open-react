@@ -678,7 +678,7 @@
 }
 
 /* Responsive */
-@media (max-width: 1024px) {
+@media (max-width: 1440px) {
     .id-container {
         padding: 80px 20px 40px;
         max-width: 100vw;
