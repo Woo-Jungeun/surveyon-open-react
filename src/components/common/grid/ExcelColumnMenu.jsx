@@ -47,6 +47,7 @@ export default function ExcelColumnMenu(props) {
     // 값 없으면 해당 필드의 필터 제거
     if (!value?.trim()) {
       onFilterChange?.(mergeFilter(filter, null, column.field));
+      onCloseMenu?.();
       return;
     }
     // 숫자 컬럼 → eq 숫자, 그 외 → contains 문자열
