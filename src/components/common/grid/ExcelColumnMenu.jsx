@@ -66,7 +66,7 @@ export default function ExcelColumnMenu(props) {
 
   // --------- Columns Chooser 관련 ---------
   const [q, setQ] = useState('');
- 
+
   const hideables = useMemo(
     () => columns.filter(c => c.allowHide !== false),
     [columns]
@@ -89,7 +89,7 @@ export default function ExcelColumnMenu(props) {
     <div style={styles.wrap}>
       {/* Sort */}
       <div style={styles.section}>
-        <GridColumnMenuSort {...props} onSortChange={(sort) => onSortChange?.(sort)}/></div>
+        <GridColumnMenuSort {...props} onSortChange={(sort) => onSortChange?.(sort)} /></div>
 
       {/* 간단 필터: 텍스트 + 적용/지우기만 표시 */}
       <div style={styles.section}>
@@ -97,6 +97,12 @@ export default function ExcelColumnMenu(props) {
         <Input
           value={value}
           onChange={(e) => setValue(e.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              applySimpleFilter();
+            }
+          }}
           placeholder={isNumeric ? '숫자 입력' : '텍스트 입력'}
           type={isNumeric ? 'number' : 'text'}
           style={{ marginBottom: 8 }}
@@ -123,6 +129,12 @@ export default function ExcelColumnMenu(props) {
           <Input
             value={q}
             onChange={(e) => setQ(e.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
             placeholder="컬럼 검색"
             style={{ marginBottom: 8 }}
           />
