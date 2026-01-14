@@ -1216,6 +1216,28 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                 );
                             }
 
+                            if (c.field === 'ex_gubun') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={c.field}
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        headerCell={() => (
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                                                {c.title}
+                                                <span
+                                                    className="info-icon"
+                                                    data-tooltip={`보기유형|• survey: 설문지 원본 보기 데이터 ('보기분석' 시 유지)\n• analysis: 분석된 보기 데이터 ('보기분석' 시 변경)`}
+                                                ></span>
+                                            </div>
+                                        )}
+                                        columnMenu={columnMenu}
+                                    />
+                                );
+                            }
+
                             // 나머지 컬럼
                             return (
                                 <Column

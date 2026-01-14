@@ -1416,6 +1416,15 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         title={c.title}
                                         width={c.width}
                                         editable={c.editable}
+                                        headerCell={() => (
+                                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                                                {c.title}
+                                                <span
+                                                    className="info-icon"
+                                                    data-tooltip={`sentiment|• 응답자 분석 시 기본 제공되는 감정 분류이며,\n 다른 분석 결과에는 영향을 주지 않습니다.\n• 활용 시 엑셀 다운로드의 rawdata 시트를 참고해 주세요.`}
+                                                ></span>
+                                            </div>
+                                        )}
                                         cell={(props) => {
                                             const row = props.dataItem;
                                             const inEdit = getKey(row) === selectedRowKey;
