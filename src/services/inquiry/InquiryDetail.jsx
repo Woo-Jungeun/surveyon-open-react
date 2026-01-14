@@ -23,6 +23,8 @@ const InquiryDetail = () => {
             <p>아이디는 testuser123 입니다.</p>
             <p>확인 부탁드립니다.</p>
         `,
+        //// todo 
+        // answer: null,
         answer: {
             writer: '관리자',
             date: '2025-01-09',
