@@ -186,6 +186,75 @@
     --header-bg-gradient: linear-gradient(to right, #EEF2FF, #E0E7FF);
 }
 
+/* Theme: Board Notice (Blue-Grey) */
+[data-theme="board-notice"] {
+    --primary-color: #7C9CBF;
+    --primary-hover: #6A8BAE;
+    --primary-focus: #587A9D;
+    --primary-dark: #46698C;
+
+    --primary-bg-light: rgba(124, 156, 191, 0.08);
+    --primary-bg-medium: rgba(124, 156, 191, 0.15);
+    --primary-bg-hover: color-mix(in srgb, #7C9CBF, white 90%);
+    --primary-bg-selected: color-mix(in srgb, #7C9CBF, white 80%);
+
+    --primary-border: #7C9CBF;
+    --primary-border-light: color-mix(in srgb, #7C9CBF, white 40%);
+    --primary-border-hover: #6A8BAE;
+    --primary-border-focus: #587A9D;
+
+    --primary-text: #7C9CBF;
+    --primary-text-dark: #46698C;
+
+    --header-bg-gradient: linear-gradient(to right, color-mix(in srgb, #7C9CBF, white 90%), color-mix(in srgb, #7C9CBF, white 80%));
+}
+
+/* Theme: Board Patch Notes (Purple-Grey) */
+[data-theme="board-patchnotes"] {
+    --primary-color: #9B8FAA;
+    --primary-hover: #8A7E99;
+    --primary-focus: #796D88;
+    --primary-dark: #685C77;
+
+    --primary-bg-light: rgba(155, 143, 170, 0.08);
+    --primary-bg-medium: rgba(155, 143, 170, 0.15);
+    --primary-bg-hover: color-mix(in srgb, #9B8FAA, white 90%);
+    --primary-bg-selected: color-mix(in srgb, #9B8FAA, white 80%);
+
+    --primary-border: #9B8FAA;
+    --primary-border-light: color-mix(in srgb, #9B8FAA, white 40%);
+    --primary-border-hover: #8A7E99;
+    --primary-border-focus: #796D88;
+
+    --primary-text: #9B8FAA;
+    --primary-text-dark: #685C77;
+
+    --header-bg-gradient: linear-gradient(to right, color-mix(in srgb, #9B8FAA, white 90%), color-mix(in srgb, #9B8FAA, white 80%));
+}
+
+/* Theme: Board Inquiry (Indigo-Blue) */
+[data-theme="board-inquiry"] {
+    --primary-color: #6b7fbf;
+    --primary-hover: #5a6eae;
+    --primary-focus: #495d9d;
+    --primary-dark: #384c8c;
+
+    --primary-bg-light: rgba(107, 127, 191, 0.08);
+    --primary-bg-medium: rgba(107, 127, 191, 0.15);
+    --primary-bg-hover: color-mix(in srgb, #6b7fbf, white 90%);
+    --primary-bg-selected: color-mix(in srgb, #6b7fbf, white 80%);
+
+    --primary-border: #6b7fbf;
+    --primary-border-light: color-mix(in srgb, #6b7fbf, white 40%);
+    --primary-border-hover: #5a6eae;
+    --primary-border-focus: #495d9d;
+
+    --primary-text: #6b7fbf;
+    --primary-text-dark: #384c8c;
+
+    --header-bg-gradient: linear-gradient(to right, color-mix(in srgb, #6b7fbf, white 90%), color-mix(in srgb, #6b7fbf, white 80%));
+}
+
 /* Common Static Colors (Theme-independent) */
 :root {
     /* Neutral Colors */

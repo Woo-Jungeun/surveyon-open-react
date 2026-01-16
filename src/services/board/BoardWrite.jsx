@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, X, Type, FileText } from 'lucide-react';
+import { DatePicker } from '@progress/kendo-react-dateinputs';
 import './BoardWrite.css';
 
 const BoardWrite = () => {
@@ -10,6 +11,7 @@ const BoardWrite = () => {
 
     const [title, setTitle] = useState(isEdit ? '[임시] 수정할 제목' : '');
     const [content, setContent] = useState(isEdit ? '수정할 내용...' : '');
+    const [publishedAt, setPublishedAt] = useState(new Date());
     const [files, setFiles] = useState([]);
 
     const handleFileChange = (e) => {
@@ -45,7 +47,7 @@ const BoardWrite = () => {
     };
 
     return (
-        <div className="bw-container" style={{ '--board-color': config.color }}>
+        <div className="bw-container" data-theme={`board-${type}`}>
             <button className="bw-back-btn" onClick={() => navigate(isEdit ? `/board/${type}/${id}` : `/board/${type}`)}>
                 <ArrowLeft size={16} />
                 {isEdit ? '이전으로' : '목록으로'}
@@ -69,6 +71,29 @@ const BoardWrite = () => {
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                         />
+                    </div>
+
+                    <div className="bw-form-group">
+                        <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                            <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '15px' }}>
+                                공개 일시
+                            </span>
+                            <DatePicker
+                                className="custom-datepicker"
+                                value={publishedAt}
+                                format={"yyyy-MM-dd HH:mm:ss"}
+                                min={new Date()} // 오늘 이후만 선택 가능
+                                max={new Date(2200, 12, 31)}
+                                required={false}
+                                editable={false}
+                                onChange={(e) => setPublishedAt(e.value)}
+                                style={{ flex: 1, width: '100%', height: '45px' }}
+                                popupSettings={{
+                                    className: 'bw-datetime-popup',
+                                    style: { '--primary-color': config.color }
+                                }}
+                            />
+                        </div>
                     </div>
 
                     <div className="bw-form-group">

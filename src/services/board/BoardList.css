@@ -11,7 +11,7 @@
     top: 20px;
     left: 20px;
     padding: 10px 20px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -26,7 +26,7 @@
 }
 
 .bl-home-btn:hover {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-hover, #6A8BAE);
     filter: brightness(0.9);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(124, 156, 191, 0.3);
@@ -130,7 +130,7 @@
 
 .bl-search-btn {
     padding: 10px 20px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -141,7 +141,7 @@
 }
 
 .bl-search-btn:hover {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-hover, #6A8BAE);
     filter: brightness(0.9);
     transform: translateY(-1px);
 }
@@ -247,7 +247,7 @@
 .bl-new-badge {
     display: inline-block;
     padding: 3px 8px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     font-size: 11px;
     font-weight: 500;
@@ -328,7 +328,7 @@
 
 .bl-search-btn {
     padding: 10px 20px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -339,7 +339,7 @@
 }
 
 .bl-search-btn:hover {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-hover, #6A8BAE);
     filter: brightness(0.9);
     transform: translateY(-1px);
 }
@@ -445,7 +445,7 @@
 .bl-new-badge {
     display: inline-block;
     padding: 3px 8px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     font-size: 11px;
     font-weight: 500;
@@ -522,7 +522,7 @@
 
 .bl-search-btn {
     padding: 10px 20px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -533,7 +533,7 @@
 }
 
 .bl-search-btn:hover {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-hover, #6A8BAE);
     filter: brightness(0.9);
     transform: translateY(-1px);
 }
@@ -639,7 +639,7 @@
 .bl-new-badge {
     display: inline-block;
     padding: 3px 8px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     font-size: 11px;
     font-weight: 500;
@@ -719,7 +719,7 @@
 
 .bl-search-btn {
     padding: 10px 20px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -730,7 +730,7 @@
 }
 
 .bl-search-btn:hover {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-hover, #6A8BAE);
     filter: brightness(0.9);
     transform: translateY(-1px);
 }

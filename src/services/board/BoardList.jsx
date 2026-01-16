@@ -13,13 +13,13 @@ const BoardList = ({ type = 'notice' }) => {
     const boardConfig = {
         notice: {
             title: '공지사항',
-            icon: <Megaphone size={36} color="var(--board-notice-color)" />,
+            icon: <Megaphone size={36} color="var(--primary-color)" />,
             color: 'var(--board-notice-color)',
             description: '설문온의 새로운 소식과 업데이트를 확인하세요.'
         },
         patchnotes: {
             title: 'Patch Notes',
-            icon: <History size={36} color="var(--board-patchnotes-color)" />,
+            icon: <History size={36} color="var(--primary-color)" />,
             color: 'var(--board-patchnotes-color)',
             description: '설문온의 버전별 업데이트 내역을 확인하세요.'
         }
@@ -74,7 +74,7 @@ const BoardList = ({ type = 'notice' }) => {
     };
 
     return (
-        <div className="bl-container" style={{ '--board-color': config.color }}>
+        <div className="bl-container" data-theme={`board-${type}`}>
             <button className="bl-home-btn" onClick={() => navigate('/')}>
                 <ArrowLeft size={16} />
                 메인으로
@@ -142,14 +142,14 @@ const BoardList = ({ type = 'notice' }) => {
                                     <td className="bl-col-no">{filteredData.length - (startIndex + index)}</td>
                                     {type === 'patchnotes' && (
                                         <td className="bl-col-version">
-                                            <span className="bl-version-badge" style={{ backgroundColor: config.color }}>
+                                            <span className="bl-version-badge">
                                                 {item.version}
                                             </span>
                                         </td>
                                     )}
                                     <td className="bl-col-title">
                                         <div className="bl-title-wrapper">
-                                            <FileText size={16} color={config.color} style={{ minWidth: '16px' }} />
+                                            <FileText size={16} color="var(--primary-color)" style={{ minWidth: '16px' }} />
                                             <span className="bl-title-text">{item.title}</span>
                                             {item.isNew && <span className="bl-new-badge"> NEW </span>}
                                         </div>

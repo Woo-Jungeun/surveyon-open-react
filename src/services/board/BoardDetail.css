@@ -10,7 +10,7 @@
     top: 20px;
     left: 20px;
     padding: 10px 20px;
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
     border: none;
     border-radius: 8px;
@@ -25,7 +25,7 @@
 }
 
 .bd-back-btn:hover {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-hover, #6A8BAE);
     filter: brightness(0.9);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -117,7 +117,7 @@
 }
 
 .bd-attachments-title span {
-    color: var(--board-color, #7C9CBF);
+    color: var(--primary-color, #7C9CBF);
     font-weight: 700;
 }
 
@@ -149,8 +149,8 @@
 }
 
 .bd-attachments-list a:hover {
-    border-color: var(--board-color, #7C9CBF);
-    color: var(--board-color, #7C9CBF);
+    border-color: var(--primary-border, #7C9CBF);
+    color: var(--primary-color, #7C9CBF);
     background: #f9fafb;
 }
 
@@ -200,7 +200,7 @@
 }
 
 .bd-btn-edit {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
 }
 

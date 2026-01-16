@@ -43,7 +43,7 @@ const BoardDetail = () => {
     };
 
     return (
-        <div className="bd-container" style={{ '--board-color': config.color }}>
+        <div className="bd-container" data-theme={`board-${type}`}>
             {isFromHome ? (
                 <button className="bw-back-btn" onClick={() => navigate('/')}>
                     <Home size={16} />

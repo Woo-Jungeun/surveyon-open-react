@@ -72,7 +72,7 @@
 }
 
 .bw-form-group label svg {
-    color: var(--board-color, #7C9CBF);
+    color: var(--primary-color, #7C9CBF);
 }
 
 .bw-input {
@@ -89,8 +89,8 @@
 
 .bw-input:focus {
     background-color: white;
-    border-color: var(--board-color, #7C9CBF);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--board-color), transparent 90%);
+    border-color: var(--primary-border, #7C9CBF);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color), transparent 90%);
 }
 
 .bw-textarea {
@@ -109,8 +109,8 @@
 
 .bw-textarea:focus {
     background-color: white;
-    border-color: var(--board-color, #7C9CBF);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--board-color), transparent 90%);
+    border-color: var(--primary-border, #7C9CBF);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color), transparent 90%);
 }
 
 .bw-file-upload {
@@ -130,11 +130,11 @@
     gap: 8px;
     padding: 12px 20px;
     background: white;
-    border: 1px solid var(--board-color, #7C9CBF);
+    border: 1px solid var(--primary-border, #7C9CBF);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--board-color, #7C9CBF);
+    color: var(--primary-color, #7C9CBF);
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -239,13 +239,74 @@
 }
 
 .bw-btn-submit {
-    background: var(--board-color, #7C9CBF);
+    background: var(--primary-color, #7C9CBF);
     color: white;
 }
 
 .bw-btn-submit:hover {
     filter: brightness(0.9);
     transform: translateY(-1px);
+}
+
+/* DatePicker Customization (Input) */
+.bw-container .custom-datepicker {
+    width: 100% !important;
+    flex: 1;
+}
+
+.bw-container .custom-datepicker .k-dateinput,
+.bw-container .custom-datepicker .k-input,
+.bw-container .custom-datepicker .k-input-inner {
+    width: 100% !important;
+}
+
+.bw-container .custom-datepicker .k-input-button,
+.bw-container .custom-datepicker .k-select,
+.bw-container .custom-datepicker .k-button-icon,
+.bw-container .custom-datepicker .k-svg-icon,
+.bw-container .custom-datepicker .k-icon {
+    color: var(--primary-color, #7C9CBF) !important;
+}
+
+.bw-container .custom-datepicker .k-input-button {
+    background: transparent !important;
+    border: none !important;
+}
+
+.bw-container .custom-datepicker .k-input-button svg {
+    display: block !important;
+    width: 24px;
+    height: 24px;
+    color: var(--primary-color, #7C9CBF) !important;
+}
+
+/* Focus State Override */
+.bw-container .custom-datepicker .k-input-inner:focus,
+.bw-container .custom-datepicker .k-dateinput:focus-within,
+.bw-container .custom-datepicker.k-state-focused,
+.bw-container .custom-datepicker.k-focus {
+    border-color: var(--primary-border, #7C9CBF) !important;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color), transparent 90%) !important;
+}
+
+/* DatePicker Popup Customization */
+/* Calendar Header (Month/Year) hover effect */
+.bw-datetime-popup .k-calendar-header .k-button:hover {
+    color: var(--primary-color, #7C9CBF);
+    background-color: color-mix(in srgb, var(--primary-color), transparent 90%);
+}
+
+/* Selected Date Cell */
+.bw-datetime-popup .k-calendar .k-calendar-td.k-selected .k-link,
+.bw-datetime-popup .k-calendar .k-calendar-td.k-state-selected .k-link {
+    background-color: var(--primary-color, #7C9CBF) !important;
+    border-color: var(--primary-color, #7C9CBF) !important;
+    box-shadow: none !important;
+}
+
+/* Today Link */
+.bw-datetime-popup .k-calendar .k-calendar-td.k-today .k-link {
+    color: var(--primary-color, #7C9CBF) !important;
 }
 
 /* Responsive */
