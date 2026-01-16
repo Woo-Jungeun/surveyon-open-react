@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, Upload, X, Type, FileText, Lock, LockOpen } from 'lucide-react';
-import './BoardWrite.css';
+import './Board.css';
 
 const BoardWrite = () => {
     const { type, id } = useParams(); // id가 있으면 수정 모드

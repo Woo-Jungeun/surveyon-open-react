@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft } from 'lucide-react';
-import './InquiryList.css';
+import './Inquiry.css';
 
 const InquiryList = () => {
     const navigate = useNavigate();

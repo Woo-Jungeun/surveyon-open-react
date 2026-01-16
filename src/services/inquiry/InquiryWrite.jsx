@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Save, Lock, Unlock, Upload, X, FileText } from 'lucide-react';
-import './InquiryWrite.css';
+import './Inquiry.css';
 
 const InquiryWrite = () => {
     const navigate = useNavigate();

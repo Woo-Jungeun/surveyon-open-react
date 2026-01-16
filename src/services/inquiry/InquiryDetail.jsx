@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Calendar, MessageCircle, Lock } from 'lucide-react';
-import './InquiryDetail.css';
+import './Inquiry.css';
 
 const InquiryDetail = () => {
     const { id } = useParams();

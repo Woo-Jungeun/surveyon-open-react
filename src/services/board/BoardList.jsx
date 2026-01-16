@@ -1,7 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search } from 'lucide-react';
-import './BoardList.css';
+import './Board.css';
 
 const BoardList = ({ type = 'notice' }) => {
     const navigate = useNavigate();

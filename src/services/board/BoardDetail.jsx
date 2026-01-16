@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Eye, User, Home } from 'lucide-react';
-import './BoardDetail.css';
+import './Board.css';
 
 const BoardDetail = () => {
     const { type, id } = useParams();
