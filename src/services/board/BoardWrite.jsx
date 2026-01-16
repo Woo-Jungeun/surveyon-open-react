@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Upload, X, Type, FileText } from 'lucide-react';
-import { DatePicker } from '@progress/kendo-react-dateinputs';
+import { ArrowLeft, Save, Upload, X, Type, FileText, Lock, LockOpen } from 'lucide-react';
 import './BoardWrite.css';
 
 const BoardWrite = () => {
@@ -11,7 +10,7 @@ const BoardWrite = () => {
 
     const [title, setTitle] = useState(isEdit ? '[임시] 수정할 제목' : '');
     const [content, setContent] = useState(isEdit ? '수정할 내용...' : '');
-    const [publishedAt, setPublishedAt] = useState(new Date());
+    const [isSecret, setIsSecret] = useState(false);
     const [files, setFiles] = useState([]);
 
     const handleFileChange = (e) => {
@@ -73,28 +72,7 @@ const BoardWrite = () => {
                         />
                     </div>
 
-                    <div className="bw-form-group">
-                        <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                            <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '15px' }}>
-                                공개 일시
-                            </span>
-                            <DatePicker
-                                className="custom-datepicker"
-                                value={publishedAt}
-                                format={"yyyy-MM-dd HH:mm:ss"}
-                                min={new Date()} // 오늘 이후만 선택 가능
-                                max={new Date(2200, 12, 31)}
-                                required={false}
-                                editable={false}
-                                onChange={(e) => setPublishedAt(e.value)}
-                                style={{ flex: 1, width: '100%', height: '45px' }}
-                                popupSettings={{
-                                    className: 'bw-datetime-popup',
-                                    style: { '--primary-color': config.color }
-                                }}
-                            />
-                        </div>
-                    </div>
+
 
                     <div className="bw-form-group">
                         <label>
@@ -142,6 +120,31 @@ const BoardWrite = () => {
                                 ))}
                             </ul>
                         )}
+                    </div>
+
+                    <div className="bw-form-group">
+                        <label>공개 설정</label>
+                        <div className="bw-visibility-toggle">
+                            <button
+                                type="button"
+                                className={`bw-visibility-btn ${!isSecret ? 'active' : ''}`}
+                                onClick={() => setIsSecret(false)}
+                            >
+                                <LockOpen size={16} />
+                                공개
+                            </button>
+                            <button
+                                type="button"
+                                className={`bw-visibility-btn ${isSecret ? 'active' : ''}`}
+                                onClick={() => setIsSecret(true)}
+                            >
+                                <Lock size={16} />
+                                비공개
+                            </button>
+                            {isSecret && (
+                                <span className="bw-visibility-desc">작성자와 관리자만 볼 수 있습니다.</span>
+                            )}
+                        </div>
                     </div>
                 </div>
 
