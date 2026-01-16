@@ -8,6 +8,8 @@ const InquiryList = () => {
     const [expandedId, setExpandedId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('전체');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 5;
 
     const categories = ['전체', '설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리'];
 
@@ -45,6 +47,36 @@ const InquiryList = () => {
         },
         {
             id: 4,
+            category: '설문제작',
+            title: '로그인이 안됩니다.',
+            writer: '홍*동',
+            date: '2025-01-08',
+            status: 'waiting', // waiting, answered
+            isSecret: true,
+            content: '로그인을 시도했는데 계속 오류가 발생합니다. 확인 부탁드립니다.'
+        },
+        {
+            id: 5,
+            category: '데이터현황',
+            title: '설문조사 결과 다운로드 문의',
+            writer: '김*수',
+            date: '2025-01-07',
+            status: 'answered',
+            isSecret: false,
+            content: '설문조사 결과를 엑셀로 다운로드 받고 싶은데 기능이 어디에 있나요?'
+        },
+        {
+            id: 6,
+            category: '데이터관리',
+            title: '서비스 이용료 관련 문의',
+            writer: '이*영',
+            date: '2025-01-06',
+            status: 'answered',
+            isSecret: true,
+            content: '서비스 이용료가 월 얼마인지 궁금합니다.'
+        },
+        {
+            id: 7,
             category: 'AI오픈분석',
             title: 'AI 분석 결과가 이상합니다.',
             writer: '박*민',
@@ -54,7 +86,7 @@ const InquiryList = () => {
             content: 'AI 분석 결과가 실제 데이터와 다르게 나오는 것 같습니다.'
         },
         {
-            id: 5,
+            id: 8,
             category: '응답자관리',
             title: '응답자 목록 엑셀 업로드 문의',
             writer: '최*우',
@@ -71,6 +103,12 @@ const InquiryList = () => {
 
     const handleSearch = (e) => {
         setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const filteredData = inquiryData.filter(item => {
@@ -78,6 +116,11 @@ const InquiryList = () => {
         const matchesCategory = activeTab === '전체' || item.category === activeTab;
         return matchesSearch && matchesCategory;
     });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     return (
         <div className="inquiry-container" data-theme="board-inquiry">
@@ -138,7 +181,7 @@ const InquiryList = () => {
                 </div>
 
                 <div className="inquiry-list">
-                    {filteredData.map((item) => (
+                    {currentData.map((item) => (
                         <div key={item.id} className={`inquiry-item ${expandedId === item.id ? 'expanded' : ''}`}>
                             <div className="inquiry-item-header" onClick={() => toggleExpand(item.id)}>
                                 <div className="inquiry-status">
@@ -180,6 +223,34 @@ const InquiryList = () => {
                         </div>
                     ))}
                 </div>
+
+                {totalPages > 1 && (
+                    <div className="inquiry-pagination">
+                        <button
+                            className="inquiry-page-btn"
+                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            «
+                        </button>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <button
+                                key={i + 1}
+                                className={`inquiry-page-btn ${currentPage === i + 1 ? 'active' : ''}`}
+                                onClick={() => handlePageChange(i + 1)}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+                        <button
+                            className="inquiry-page-btn"
+                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                        >
+                            »
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -39,11 +39,11 @@ const BoardList = ({ type = 'notice' }) => {
         { id: 8, title: '설문온 모바일 앱 출시 안내', date: '2024-09-25', writer: '관리자1', views: 987, isNew: false },
         { id: 9, title: '설문 응답률 향상을 위한 팁', date: '2024-09-15', writer: '관리자2', views: 432, isNew: false },
         { id: 10, title: '데이터 분석 기능 업데이트', date: '2024-09-01', writer: '관리자1', views: 765, isNew: false },
-        { id: 6, title: '개인정보 처리방침 변경 안내', date: '2024-10-20', writer: '관리자1', views: 321, isNew: false },
-        { id: 7, title: '2024년 하반기 서비스 개선 계획', date: '2024-10-10', writer: '관리자1', views: 654, isNew: false },
-        { id: 8, title: '설문온 모바일 앱 출시 안내', date: '2024-09-25', writer: '관리자1', views: 987, isNew: false },
-        { id: 9, title: '설문 응답률 향상을 위한 팁', date: '2024-09-15', writer: '관리자2', views: 432, isNew: false },
-        { id: 10, title: '데이터 분석 기능 업데이트', date: '2024-09-01', writer: '관리자1', views: 765, isNew: false },
+        { id: 11, title: '개인정보 처리방침 변경 안내', date: '2024-10-20', writer: '관리자1', views: 321, isNew: false },
+        { id: 12, title: '2024년 하반기 서비스 개선 계획', date: '2024-10-10', writer: '관리자1', views: 654, isNew: false },
+        { id: 13, title: '설문온 모바일 앱 출시 안내', date: '2024-09-25', writer: '관리자1', views: 987, isNew: false },
+        { id: 14, title: '설문 응답률 향상을 위한 팁', date: '2024-09-15', writer: '관리자2', views: 432, isNew: false },
+        { id: 15, title: '데이터 분석 기능 업데이트', date: '2024-09-01', writer: '관리자1', views: 765, isNew: false },
     ];
 
     const patchNotesData = [
