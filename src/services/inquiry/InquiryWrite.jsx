@@ -32,7 +32,7 @@ const InquiryWrite = () => {
     };
 
     return (
-        <div className="iw-container">
+        <div className="iw-container" data-theme="board-inquiry">
             <button className="bw-back-btn" onClick={() => navigate(isEdit ? `/inquiry/view/${id}` : '/inquiry')}>
                 <ArrowLeft size={16} />
                 {isEdit ? '이전으로' : '목록으로'}

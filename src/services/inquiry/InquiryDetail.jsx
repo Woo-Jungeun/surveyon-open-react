@@ -37,7 +37,7 @@ const InquiryDetail = () => {
     };
 
     return (
-        <div className="id-container">
+        <div className="id-container" data-theme="board-inquiry">
             <button className="bw-back-btn" onClick={() => navigate('/inquiry')}>
                 <ArrowLeft size={16} />
                 목록으로

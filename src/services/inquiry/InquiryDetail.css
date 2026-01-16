@@ -10,7 +10,7 @@
     top: 20px;
     left: 20px;
     padding: 10px 20px;
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
     border: none;
     border-radius: 8px;
@@ -25,7 +25,7 @@
 }
 
 .id-back-btn:hover {
-    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
+    background: var(--primary-hover, #5a6ea8);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -115,7 +115,7 @@
 .id-label {
     font-size: 24px;
     font-weight: 900;
-    color: var(--board-inquiry-color, #6b7fbf);
+    color: var(--primary-color, #6b7fbf);
     line-height: 1;
 }
 
@@ -144,7 +144,7 @@
 }
 
 .id-attachments-title span {
-    color: var(--board-inquiry-color, #6b7fbf);
+    color: var(--primary-color, #6b7fbf);
     font-weight: 700;
 }
 
@@ -260,7 +260,7 @@
 }
 
 .id-btn-edit {
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
 }
 
@@ -294,7 +294,7 @@
 .id-label {
     font-size: 24px;
     font-weight: 900;
-    color: #6b7fbf;
+    color: var(--primary-color, #6b7fbf);
     line-height: 1;
 }
 
@@ -323,7 +323,7 @@
 }
 
 .id-attachments-title span {
-    color: #6b7fbf;
+    color: var(--primary-color, #6b7fbf);
     font-weight: 700;
 }
 
@@ -601,7 +601,7 @@
 }
 
 .id-btn-edit:hover {
-    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
+    background: var(--primary-hover, #5a6ea8);
 }
 
 .id-btn-delete {
@@ -633,37 +633,24 @@
     font-size: 15px;
     line-height: 1.6;
     color: #334155;
-    font-family: inherit;
-}
-
-.id-answer-input:focus {
-    outline: none;
-    border-color: #6b7fbf;
-    box-shadow: 0 0 0 3px rgba(107, 127, 191, 0.1);
-}
-
-.id-answer-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
 }
 
 .id-btn-register {
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
 }
 
 .id-btn-register:hover {
-    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
+    background: var(--primary-hover, #5a6ea8);
 }
 
 .id-btn-submit {
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
 }
 
 .id-btn-submit:hover {
-    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
+    background: var(--primary-hover, #5a6ea8);
 }
 
 .id-btn-cancel {

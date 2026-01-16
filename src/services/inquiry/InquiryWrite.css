@@ -10,7 +10,7 @@
     top: 20px;
     left: 20px;
     padding: 10px 20px;
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
     border: none;
     border-radius: 8px;
@@ -25,7 +25,7 @@
 }
 
 .iw-back-btn:hover {
-    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
+    background: var(--primary-hover, #5a6ea8);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -88,9 +88,9 @@
 .iw-input:focus,
 .iw-textarea:focus {
     outline: none;
-    border-color: var(--board-inquiry-color, #6b7fbf);
+    border-color: var(--primary-border, #6b7fbf);
     background: white;
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), transparent 90%);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color), transparent 90%);
 }
 
 .iw-textarea {
@@ -121,7 +121,7 @@
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
-    color: var(--board-inquiry-color, #6b7fbf);
+    color: var(--primary-color, #6b7fbf);
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -217,9 +217,9 @@
 }
 
 .secret-btn.active {
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
-    border-color: var(--board-inquiry-color, #6b7fbf);
+    border-color: var(--primary-color, #6b7fbf);
 }
 
 .secret-desc {
@@ -261,18 +261,18 @@
 }
 
 .iw-btn-submit {
-    background: var(--board-inquiry-color, #6b7fbf);
-    border: 1px solid var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
+    border: 1px solid var(--primary-border, #6b7fbf);
     color: white;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), transparent 80%);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 80%);
 }
 
 .iw-btn-submit:hover {
-    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
-    border-color: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
+    background: var(--primary-hover, #5a6ea8);
+    border-color: var(--primary-hover, #5a6ea8);
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), transparent 80%);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 80%);
 }
 
 /* Responsive */

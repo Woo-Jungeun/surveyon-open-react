@@ -10,7 +10,7 @@
     top: 20px;
     left: 20px;
     padding: 10px 20px;
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
     border: none;
     border-radius: 8px;
@@ -25,7 +25,7 @@
 }
 
 .inquiry-home-btn:hover {
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-hover, #5a6ea8);
     filter: brightness(0.9);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(107, 127, 191, 0.3);
@@ -98,14 +98,14 @@
 }
 
 .inquiry-tab:hover {
-    color: var(--board-inquiry-color, #6b7fbf);
+    color: var(--primary-color, #6b7fbf);
     background: #f8fafc;
     border-radius: 8px 8px 0 0;
 }
 
 .inquiry-tab.active {
-    color: var(--board-inquiry-color, #6b7fbf);
-    border-bottom-color: var(--board-inquiry-color, #6b7fbf);
+    color: var(--primary-color, #6b7fbf);
+    border-bottom-color: var(--primary-color, #6b7fbf);
 }
 
 /* Toolbar */
@@ -162,13 +162,13 @@
 
 .inquiry-search input:focus {
     outline: none;
-    border-color: var(--board-inquiry-color, #6b7fbf);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), transparent 90%);
+    border-color: var(--primary-border, #6b7fbf);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color), transparent 90%);
 }
 
 .inquiry-search-btn {
     padding: 10px 20px;
-    background: var(--board-inquiry-color, #6b7fbf);
+    background: var(--primary-color, #6b7fbf);
     color: white;
     border: none;
     border-radius: 8px;
@@ -179,15 +179,15 @@
 }
 
 .inquiry-search-btn:hover {
-    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
+    background: var(--primary-hover, #5a6ea8);
     transform: translateY(-1px);
 }
 
 .inquiry-write-btn {
     padding: 10px 20px;
     background: white;
-    color: var(--board-inquiry-color, #6b7fbf);
-    border: 1px solid var(--board-inquiry-color, #6b7fbf);
+    color: var(--primary-color, #6b7fbf);
+    border: 1px solid var(--primary-border, #6b7fbf);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
@@ -225,8 +225,8 @@
 }
 
 .inquiry-item.expanded {
-    border-color: var(--board-inquiry-color, #6b7fbf);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), transparent 90%);
+    border-color: var(--primary-border, #6b7fbf);
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 90%);
 }
 
 .inquiry-item-header {
@@ -308,7 +308,7 @@
 
 .inquiry-item.expanded .inquiry-toggle {
     transform: rotate(180deg);
-    color: var(--board-inquiry-color, #6b7fbf);
+    color: var(--primary-color, #6b7fbf);
 }
 
 /* Expanded Body */
