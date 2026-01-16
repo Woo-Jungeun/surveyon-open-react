@@ -10,7 +10,7 @@
     top: 20px;
     left: 20px;
     padding: 10px 20px;
-    background: #6b7fbf;
+    background: var(--board-inquiry-color, #6b7fbf);
     color: white;
     border: none;
     border-radius: 8px;
@@ -25,7 +25,7 @@
 }
 
 .id-back-btn:hover {
-    background: #6a89ab;
+    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -115,7 +115,7 @@
 .id-label {
     font-size: 24px;
     font-weight: 900;
-    color: #6b7fbf;
+    color: var(--board-inquiry-color, #6b7fbf);
     line-height: 1;
 }
 
@@ -144,7 +144,7 @@
 }
 
 .id-attachments-title span {
-    color: #6b7fbf;
+    color: var(--board-inquiry-color, #6b7fbf);
     font-weight: 700;
 }
 
@@ -260,7 +260,7 @@
 }
 
 .id-btn-edit {
-    background: #6b7fbf;
+    background: var(--board-inquiry-color, #6b7fbf);
     color: white;
 }
 
@@ -596,12 +596,12 @@
 }
 
 .id-btn-edit {
-    background: #6b7fbf;
+    background: var(--board-inquiry-color, #6b7fbf);
     color: white;
 }
 
 .id-btn-edit:hover {
-    background: #6a89ab;
+    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
 }
 
 .id-btn-delete {
@@ -649,21 +649,21 @@
 }
 
 .id-btn-register {
-    background: #6b7fbf;
+    background: var(--board-inquiry-color, #6b7fbf);
     color: white;
 }
 
 .id-btn-register:hover {
-    background: #5a6ea6;
+    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
 }
 
 .id-btn-submit {
-    background: #6b7fbf;
+    background: var(--board-inquiry-color, #6b7fbf);
     color: white;
 }
 
 .id-btn-submit:hover {
-    background: #5a6ea6;
+    background: color-mix(in srgb, var(--board-inquiry-color, #6b7fbf), black 10%);
 }
 
 .id-btn-cancel {

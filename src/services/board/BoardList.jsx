@@ -13,14 +13,14 @@ const BoardList = ({ type = 'notice' }) => {
     const boardConfig = {
         notice: {
             title: '공지사항',
-            icon: <Megaphone size={36} color="#7C9CBF" />,
-            color: '#7C9CBF',
+            icon: <Megaphone size={36} color="var(--board-notice-color)" />,
+            color: 'var(--board-notice-color)',
             description: '설문온의 새로운 소식과 업데이트를 확인하세요.'
         },
         patchnotes: {
             title: 'Patch Notes',
-            icon: <History size={36} color="#9B8FAA" />,
-            color: '#9B8FAA',
+            icon: <History size={36} color="var(--board-patchnotes-color)" />,
+            color: 'var(--board-patchnotes-color)',
             description: '설문온의 버전별 업데이트 내역을 확인하세요.'
         }
     };

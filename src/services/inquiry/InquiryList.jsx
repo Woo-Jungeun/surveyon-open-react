@@ -89,7 +89,7 @@ const InquiryList = () => {
             <div className="inquiry-header">
                 <div className="inquiry-header-content">
                     <div className="inquiry-header-title">
-                        <span className="inquiry-header-icon"><MessageCircle size={36} color="#6b7fbf" /></span>
+                        <span className="inquiry-header-icon"><MessageCircle size={36} color="var(--board-inquiry-color)" /></span>
                         <h1>문의하기</h1>
                     </div>
                     <p className="inquiry-header-desc">궁금한 점을 남겨주시면 빠르게 답변해 드립니다.</p>

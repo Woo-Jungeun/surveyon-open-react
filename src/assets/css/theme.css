@@ -223,4 +223,9 @@
     --grid-header-bg: #F9FAFB;
     --grid-header-text: #374151;
     --grid-header-border: #E5E7EB;
+
+    /* Board Theme Colors */
+    --board-notice-color: #7C9CBF;
+    --board-patchnotes-color: #9B8FAA;
+    --board-inquiry-color: #6b7fbf;
 }

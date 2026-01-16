@@ -13,11 +13,11 @@ const BoardDetail = () => {
     const boardConfig = {
         notice: {
             title: '공지사항',
-            color: '#7C9CBF',
+            color: 'var(--board-notice-color)',
         },
         patchnotes: {
             title: 'Patch Notes',
-            color: '#9B8FAA',
+            color: 'var(--board-patchnotes-color)',
         }
     };
 
