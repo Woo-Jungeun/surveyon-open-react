@@ -177,7 +177,7 @@ const ManualPage = () => {
                         </li>
                     ))}
                 </ul>
-                {/* {!isPreview && (
+                {!isPreview && (
                     <div style={{ padding: '20px', borderTop: '1px solid #eee' }}>
                         <button
                             onClick={() => window.open(`/manual/editor?id=${currentId}`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes')}
@@ -200,7 +200,7 @@ const ManualPage = () => {
                             매뉴얼 수정
                         </button>
                     </div>
-                )} */}
+                )}
             </nav>
 
             {/* Main Content */}

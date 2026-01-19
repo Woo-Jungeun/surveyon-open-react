@@ -63,8 +63,16 @@ const ManualEditor = () => {
         };
 
         document.addEventListener('mousedown', handleClickOutside);
+
+        // Prevent window scrollbars when editor is open (Popup mode)
+        document.body.style.overflow = 'hidden';
+        document.body.style.margin = '0';
+
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
+            // Restore body styles on unmount
+            document.body.style.overflow = '';
+            document.body.style.margin = '';
         };
     }, []);
 

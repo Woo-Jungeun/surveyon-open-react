@@ -113,10 +113,3 @@
     box-shadow: 0 0 0 3px rgba(107, 127, 191, 0.1) !important;
     outline: none !important;
 }
-
-/* Global Body Reset for Popup */
-body {
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
