@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight } from 'lucide-react';
 import './Inquiry.css';
 
 const InquiryList = () => {
     const navigate = useNavigate();
-    const [expandedId, setExpandedId] = useState(null);
+    const [expandedIds, setExpandedIds] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('전체');
     const [currentPage, setCurrentPage] = useState(1);
@@ -23,7 +23,20 @@ const InquiryList = () => {
             date: '2025-01-08',
             status: 'waiting', // waiting, answered
             isSecret: true,
-            content: '로그인을 시도했는데 계속 오류가 발생합니다. 확인 부탁드립니다.'
+            content: '로그인을 시도했는데 계속 오류가 발생합니다. 확인 부탁드립니다.',
+            depth: 0
+        },
+        {
+            id: 100,
+            category: '설문제작',
+            title: '[RE]: 로그인이 안됩니다.',
+            writer: '홍*동',
+            date: '2025-01-08',
+            status: 'waiting',
+            isSecret: true,
+            content: '추가로 확인해보니 비밀번호가 틀렸다고 나옵니다.',
+            depth: 1,
+            parentId: 1
         },
         {
             id: 2,
@@ -98,7 +111,13 @@ const InquiryList = () => {
     ];
 
     const toggleExpand = (id) => {
-        setExpandedId(expandedId === id ? null : id);
+        const newExpandedIds = new Set(expandedIds);
+        if (newExpandedIds.has(id)) {
+            newExpandedIds.delete(id);
+        } else {
+            newExpandedIds.add(id);
+        }
+        setExpandedIds(newExpandedIds);
     };
 
     const handleSearch = (e) => {
@@ -181,47 +200,59 @@ const InquiryList = () => {
                 </div>
 
                 <div className="inquiry-list">
-                    {currentData.map((item) => (
-                        <div key={item.id} className={`inquiry-item ${expandedId === item.id ? 'expanded' : ''}`}>
-                            <div className="inquiry-item-header" onClick={() => toggleExpand(item.id)}>
-                                <div className="inquiry-status">
-                                    {item.status === 'answered' ? (
-                                        <span className="status-badge answered">답변완료</span>
-                                    ) : (
-                                        <span className="status-badge waiting">답변대기</span>
-                                    )}
-                                </div>
-                                <div className="inquiry-info">
-                                    <h3 className="inquiry-item-title">
-                                        {item.isSecret && <Lock size={14} className="secret-icon" />}
-                                        <span className="category-badge">{item.category}</span>
-                                        {item.title}
-                                    </h3>
-                                    <div className="inquiry-meta">
-                                        <span>{item.writer}</span>
-                                        <span className="divider">|</span>
-                                        <span>{item.date}</span>
+                    {currentData.map((item, index) => {
+                        const nextItem = currentData[index + 1];
+                        const prevItem = currentData[index - 1];
+
+                        const hasReply = nextItem && nextItem.parentId === item.id;
+                        const isReply = item.depth > 0;
+                        const isParentExpanded = isReply && prevItem && prevItem.id === item.parentId && expandedIds.has(prevItem.id);
+                        const isChildExpanded = hasReply && nextItem && expandedIds.has(nextItem.id);
+                        const isAttachedAndExpanded = isReply && prevItem && prevItem.id === item.parentId && expandedIds.has(item.id);
+
+                        return (
+                            <div key={item.id} className={`inquiry-item ${expandedIds.has(item.id) ? 'expanded' : ''} ${hasReply ? 'has-reply' : ''} ${isReply ? 'is-reply' : ''} ${isParentExpanded ? 'parent-expanded' : ''} ${isChildExpanded ? 'child-expanded' : ''} ${isAttachedAndExpanded ? 'attached-expanded' : ''}`}>
+                                <div className="inquiry-item-header" onClick={() => toggleExpand(item.id)}>
+                                    <div className="inquiry-status">
+                                        {item.status === 'answered' ? (
+                                            <span className="status-badge answered">답변완료</span>
+                                        ) : (
+                                            <span className="status-badge waiting">답변대기</span>
+                                        )}
+                                    </div>
+                                    <div className="inquiry-info">
+                                        <h3 className="inquiry-item-title" style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingLeft: item.depth > 0 ? `${item.depth * 20}px` : '0' }}>
+                                            {item.depth > 0 && <CornerDownRight size={16} className="reply-icon" style={{ color: '#666' }} />}
+                                            {item.isSecret && <Lock size={14} className="secret-icon" />}
+                                            <span className="category-badge">{item.category}</span>
+                                            {item.title}
+                                        </h3>
+                                        <div className="inquiry-meta">
+                                            <span>{item.writer}</span>
+                                            <span className="divider">|</span>
+                                            <span>{item.date}</span>
+                                        </div>
+                                    </div>
+                                    <div className="inquiry-toggle">
+                                        {expandedIds.has(item.id) ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                     </div>
                                 </div>
-                                <div className="inquiry-toggle">
-                                    {expandedId === item.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                                </div>
+                                {expandedIds.has(item.id) && (
+                                    <div className="inquiry-item-body">
+                                        <div className="inquiry-preview-content">
+                                            {item.content}
+                                        </div>
+                                        <button
+                                            className="inquiry-detail-btn"
+                                            onClick={() => navigate(`/inquiry/view/${item.id}`)}
+                                        >
+                                            상세 보기
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                            {expandedId === item.id && (
-                                <div className="inquiry-item-body">
-                                    <div className="inquiry-preview-content">
-                                        {item.content}
-                                    </div>
-                                    <button
-                                        className="inquiry-detail-btn"
-                                        onClick={() => navigate(`/inquiry/view/${item.id}`)}
-                                    >
-                                        상세 보기
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
 
                 {totalPages > 1 && (

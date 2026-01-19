@@ -220,7 +220,6 @@
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     overflow: hidden;
-    transition: all 0.2s ease;
 }
 
 .inquiry-item:hover {
@@ -1153,13 +1152,97 @@
         gap: 12px;
     }
 
-    .id-label {
-        font-size: 20px;
-    }
-
     .answer-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
+}
+
+/* ==========================================================================
+   Consolidated Grouping Styles for Follow-up Questions
+   ========================================================================== */
+
+/* Remove gap between grouped items */
+.inquiry-list {
+    gap: 0 !important;
+}
+
+.inquiry-item {
+    margin-bottom: 12px;
+}
+
+/* Default State: Attached but visually separated by dashed line */
+.inquiry-item.has-reply {
+    margin-bottom: 0;
+    border-bottom: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: none;
+}
+
+.inquiry-item.is-reply {
+    margin-top: 0;
+    border-top: 1px dashed #e2e8f0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    background: #fafbfc;
+}
+
+.inquiry-item.is-reply:hover {
+    background: #f1f5f9;
+}
+
+/* 
+   Expanded State Logic:
+   1. Parent Expanded: Attach to child, theme border on outer edges, NO middle separator.
+   2. Child Expanded: Attach to parent, theme border on outer edges, NO middle separator.
+   3. Both Expanded: Handled by individual rules, ensuring seamless connection.
+*/
+
+/* Parent Expanded: Attach to child with theme border */
+.inquiry-item.has-reply.expanded {
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+    /* No middle border */
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    /* Theme border is applied by default .expanded class */
+}
+
+.inquiry-item.is-reply.parent-expanded {
+    margin-top: -1px !important;
+    border: 1px solid var(--primary-border, #6b7fbf) !important;
+    /* Theme border */
+    border-top: none !important;
+    /* No middle border */
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 90%);
+}
+
+/* Child Expanded: Attach to parent with theme border */
+.inquiry-item.has-reply.child-expanded {
+    margin-bottom: 0 !important;
+    border: 1px solid var(--primary-border, #6b7fbf) !important;
+    /* Theme border */
+    border-bottom: none !important;
+    /* No middle border */
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 90%);
+}
+
+/* Child Expanded (Self): Ensure top border is removed when attached to parent */
+.inquiry-item.is-reply.attached-expanded {
+    margin-top: -1px !important;
+    border-top: none !important;
+    /* No middle border */
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+/* Child Expanded (Self): If NOT attached (fallback or standalone), theme top border */
+.inquiry-item.is-reply.expanded:not(.attached-expanded) {
+    border-top: 1px solid var(--primary-border, #6b7fbf) !important;
 }

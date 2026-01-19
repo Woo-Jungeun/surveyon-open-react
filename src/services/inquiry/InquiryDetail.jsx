@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Calendar, MessageCircle, Lock } from 'lucide-react';
+import { ArrowLeft, User, Calendar, MessageCircle, Lock, MessageCirclePlus } from 'lucide-react';
 import './Inquiry.css';
 
 const InquiryDetail = () => {
@@ -170,6 +170,23 @@ const InquiryDetail = () => {
                             <>
                                 <button className="id-btn id-btn-edit" onClick={() => navigate(`/inquiry/write/${id}`)}>문의 수정</button>
                                 <button className="id-btn id-btn-delete">문의 삭제</button>
+
+                                {/* 답변 완료 시 추가 질문하기 버튼 표시 */}
+                                {inquiryData.status === 'answered' && (
+                                    <button
+                                        className="id-btn id-btn-reply"
+                                        onClick={() => navigate('/inquiry/write', {
+                                            state: {
+                                                parentId: id,
+                                                parentTitle: inquiryData.title
+                                            }
+                                        })}
+                                        style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 16px', border: '1px solid #ddd', borderRadius: '4px', background: 'white', cursor: 'pointer' }}
+                                    >
+                                        <MessageCirclePlus size={16} />
+                                        추가 질문하기
+                                    </button>
+                                )}
                             </>
                         )}
                         {currentUserRole === 'ADMIN' && (

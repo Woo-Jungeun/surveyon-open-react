@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Save, Lock, Unlock, Upload, X, FileText } from 'lucide-react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { ArrowLeft, Save, Lock, Unlock, Upload, X, FileText, CornerDownRight } from 'lucide-react';
 import './Inquiry.css';
 
 const InquiryWrite = () => {
     const navigate = useNavigate();
     const { id } = useParams(); // id가 있으면 수정 모드
+    const location = useLocation();
     const isEdit = !!id;
 
-    const [title, setTitle] = useState(isEdit ? '[임시] 수정할 제목' : '');
+    // 답글(추가 질문) 모드 확인
+    const parentId = location.state?.parentId;
+    const parentTitle = location.state?.parentTitle;
+    const isReply = !!parentId;
+
+    const [title, setTitle] = useState(
+        isEdit ? '[임시] 수정할 제목' :
+            isReply ? `[RE]: ${parentTitle}` : ''
+    );
     const [content, setContent] = useState(isEdit ? '수정할 내용...' : '');
     const [isSecret, setIsSecret] = useState(true);
     const [files, setFiles] = useState([]);
@@ -40,7 +49,15 @@ const InquiryWrite = () => {
 
             <div className="iw-content-wrapper">
                 <div className="iw-header">
-                    <h1 className="iw-page-title">문의하기 {isEdit ? '수정' : '작성'}</h1>
+                    <h1 className="iw-page-title">
+                        문의하기 {isEdit ? '수정' : isReply ? '추가 질문 작성' : '작성'}
+                    </h1>
+                    {isReply && (
+                        <div className="iw-reply-info" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#666', fontSize: '14px', marginTop: '8px' }}>
+                            <CornerDownRight size={16} />
+                            <span>원글: {parentTitle}</span>
+                        </div>
+                    )}
                     <p className="iw-page-desc">
                         문의하신 내용은 관리자 확인 후 답변해 드립니다.
                     </p>
