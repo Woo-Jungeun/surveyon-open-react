@@ -5,13 +5,48 @@ import manualCss from '@/assets/css/manual.css?inline';
 
 const ManualPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const currentId = searchParams.get('id') || (manualData.length > 0 ? manualData[0].id : null);
+    const isPreview = searchParams.get('preview') === 'true';
+
+    // Preview Logic
+    const [displayData, setDisplayData] = useState(manualData);
+
+    useEffect(() => {
+        if (isPreview) {
+            const previewDataStr = localStorage.getItem('manual_preview_data');
+            if (previewDataStr) {
+                try {
+                    const previewItem = JSON.parse(previewDataStr);
+
+                    // Merge preview item into manualData
+                    const updatedData = manualData.map(item =>
+                        item.id === previewItem.id ? previewItem : item
+                    );
+
+                    // If it's a new item (not in manualData), append it
+                    if (!manualData.find(item => item.id === previewItem.id)) {
+                        updatedData.push(previewItem);
+                    }
+
+                    setDisplayData(updatedData);
+                } catch (e) {
+                    console.error("Failed to parse preview data", e);
+                    setDisplayData(manualData);
+                }
+            } else {
+                setDisplayData(manualData);
+            }
+        } else {
+            setDisplayData(manualData);
+        }
+    }, [isPreview]);
+
+    const currentId = searchParams.get('id') || (displayData.length > 0 ? displayData[0].id : null);
 
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [contentOpacity, setContentOpacity] = useState(1);
     const contentAreaRef = useRef(null);
 
-    const currentItem = manualData.find(item => item.id === currentId);
+    const currentItem = displayData.find(item => item.id === currentId);
 
     useEffect(() => {
         // Inject CSS
@@ -99,7 +134,9 @@ const ManualPage = () => {
 
         setContentOpacity(0);
         setTimeout(() => {
-            setSearchParams({ id });
+            const newParams = new URLSearchParams(searchParams);
+            newParams.set('id', id);
+            setSearchParams(newParams);
             setContentOpacity(1);
             window.scrollTo(0, 0);
             setIsMobileOpen(false);
@@ -128,7 +165,7 @@ const ManualPage = () => {
                     </h1>
                 </div>
                 <ul className="menu-list">
-                    {manualData.map(item => (
+                    {displayData.map(item => (
                         <li key={item.id} className="menu-item">
                             <button
                                 className={`menu-btn ${item.id === currentId ? 'active' : ''}`}
@@ -140,6 +177,30 @@ const ManualPage = () => {
                         </li>
                     ))}
                 </ul>
+                {/* {!isPreview && (
+                    <div style={{ padding: '20px', borderTop: '1px solid #eee' }}>
+                        <button
+                            onClick={() => window.open(`/manual/editor?id=${currentId}`, '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes')}
+                            style={{
+                                width: '100%',
+                                padding: '10px',
+                                background: '#f1f5f9',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '8px',
+                                color: '#475569',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            매뉴얼 수정
+                        </button>
+                    </div>
+                )} */}
             </nav>
 
             {/* Main Content */}

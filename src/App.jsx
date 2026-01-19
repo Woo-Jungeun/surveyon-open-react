@@ -9,6 +9,7 @@ import "@/common/utils/tooltip.js";
 
 import AiOpenAnalysisRoutes from "@/services/aiOpenAnalysis";
 import ManualPage from "@/services/aiOpenAnalysis/app/ManualPage";
+import ManualEditor from "@/services/aiOpenAnalysis/app/ManualEditor";
 import ExcelGuidePage from "@/services/aiOpenAnalysis/app/proRegister/ExcelGuidePage";
 import MainLayout from "@/layouts/MainLayout";
 import BoardList from "@/services/board/BoardList";
@@ -65,6 +66,7 @@ function App() {
             3. 독립적인 페이지 (Global CSS 미적용)
         ---------------------------- */}
         <Route path="/manual" element={<ManualPage />} />
+        <Route path="/manual/editor" element={<ManualEditor />} />
         <Route path="/excel_guide" element={<ExcelGuidePage />} />
       </Routes>
     </Fragment>

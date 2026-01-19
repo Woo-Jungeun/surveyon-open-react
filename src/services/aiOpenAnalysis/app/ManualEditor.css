@@ -1,0 +1,122 @@
+.snippet-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: white;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.snippet-btn:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Dropdown Styles */
+.custom-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-dropdown-trigger {
+    width: 100%;
+    padding: 14px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #334155;
+    background: #f8fafc;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+
+.custom-dropdown-trigger:hover {
+    border-color: #94a3b8;
+    background: white;
+}
+
+.custom-dropdown-trigger.open {
+    border-color: #6b7fbf;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(107, 127, 191, 0.1);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+.dropdown-arrow {
+    color: #64748b;
+    transition: transform 0.2s;
+}
+
+.dropdown-arrow.open {
+    transform: rotate(180deg);
+    color: #6b7fbf;
+}
+
+.custom-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #6b7fbf;
+    border-top: none;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px 0;
+}
+
+.custom-dropdown-item {
+    padding: 10px 16px;
+    font-size: 15px;
+    color: #334155;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.custom-dropdown-item:hover {
+    background: #f1f5f9;
+    color: #6b7fbf;
+}
+
+.custom-dropdown-item.selected {
+    background: #e0f2fe;
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 4px 0;
+}
+
+/* Enforce Blue Focus for all inputs */
+.iw-input:focus,
+.iw-textarea:focus {
+    border-color: #6b7fbf !important;
+    box-shadow: 0 0 0 3px rgba(107, 127, 191, 0.1) !important;
+    outline: none !important;
+}
+
+/* Global Body Reset for Popup */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
