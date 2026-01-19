@@ -3,7 +3,12 @@ import moment from "moment";
 
 const VITE_DEFAULT_PATH = (typeof window !== 'undefined' && window.API_CONFIG?.DEFAULT_PATH) || "/o";
 const join = (p) => (VITE_DEFAULT_PATH.replace(/\/+$/, '') + '/' + String(p).replace(/^\/+/, ''));
-
+// URL이 '/api'로 시작하거나 'http'로 시작하면 그대로 사용, 아니면 DEFAULT_PATH 붙임
+// const join = (p) => {
+//     const path = String(p);
+//     if (path.startsWith("/api") || path.startsWith("http")) return path;
+//     return VITE_DEFAULT_PATH.replace(/\/+$/, '') + '/' + path.replace(/^\/+/, '');
+// };
 export default {
 
     async post(data, url) {
