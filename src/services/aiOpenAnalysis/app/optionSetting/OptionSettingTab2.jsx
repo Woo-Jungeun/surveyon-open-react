@@ -1084,14 +1084,57 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             <Fragment>
                 <div className="meta2" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div className="row1">업데이트 날짜: {dataState?.data?.[0]?.update_date ?? '-'}</div>
-                    <Button
-                        themeColor="primary"
-                        className="btnM"
-                        onClick={addButtonClick}
-                        style={{ marginLeft: "auto" }}
-                    >
-                        + 보기 데이터 추가
-                    </Button>
+                    <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
+                        {/* <Button
+                            themeColor="primary"
+                            className="btnM"
+                            onClick={() => {
+                                modal.showConfirm("알림", "보기유형:survey를 제외한 모든 보기레이블을 삭제하시겠습니까?", {
+                                    btns: [
+                                        {
+                                            title: "취소",
+                                            className: "btnM btnTxt type01",
+                                            click: () => { }
+                                        },
+                                        {
+                                            title: "확인",
+                                            className: "btnM",
+                                            themeColor: "primary",
+                                            click: async () => {
+                                                try {
+                                                    const payload = {
+                                                        user: auth?.user?.userId || "",
+                                                        projectnum: projectnum,
+                                                        qnum: qnum,
+                                                        gb: "alldel"
+                                                    };
+                                                    const res = await optionSaveData.mutateAsync(payload);
+                                                    if (res?.success == "777") {
+                                                        // 성공 시 재조회
+                                                        handleSearch();
+                                                        modal.showAlert("알림", "초기화 되었습니다.");
+                                                    } else {
+                                                        modal.showErrorAlert("에러", res?.message || "초기화 중 오류가 발생했습니다.");
+                                                    }
+                                                } catch (e) {
+                                                    modal.showErrorAlert("에러", "초기화 중 오류가 발생했습니다.");
+                                                }
+                                            }
+                                        }
+                                    ]
+                                });
+                            }}
+                        >
+                            전체 초기화
+                        </Button> */}
+                        <Button
+                            themeColor="primary"
+                            className="btnM"
+                            onClick={addButtonClick}
+                        >
+                            + 보기 데이터 추가
+                        </Button>
+                    </div>
                 </div>
                 {/* 삭제 안내 배너 */}
                 {hasPendingDelete && (
