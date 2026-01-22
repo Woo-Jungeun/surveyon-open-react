@@ -10,7 +10,7 @@ export function BoardApi() {
 
     // 데이터 조회 API
     const top5Notices = useMutation(
-        async () => await api.post({}, "/notice/top5.aspx", "API_BASE_URL_BOARD"),
+        async () => await api.post({}, "/notice/top5", "API_BASE_URL_BOARD"),
         {
             onMutate: (vars) => {
                 loadingSpinner.show();
