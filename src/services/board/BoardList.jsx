@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search, Paperclip } from 'lucide-react';
+import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search, Paperclip, Lock } from 'lucide-react';
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import moment from 'moment';
@@ -56,7 +56,8 @@ const BoardList = ({ type = 'notice' }) => {
             writer: item.author || '관리자',
             views: item.viewCount || 0,
             isNew: item.isNew || false,
-            hasAttachment: item.hasAttachment || false
+            hasAttachment: item.hasAttachment || false,
+            isVisible: item.isVisible
         })) : [];
     };
 
@@ -161,6 +162,7 @@ const BoardList = ({ type = 'notice' }) => {
                                             <div className="bl-title-wrapper">
                                                 {/* <FileText size={16} color="var(--primary-color)" style={{ minWidth: '16px' }} /> */}
                                                 <span className="bl-title-text">{item.title}</span>
+                                                {!item.isVisible && <Lock size={14} color="#666" style={{ marginLeft: '4px' }} />}
                                                 {item.hasAttachment && <Paperclip size={14} color="#666" style={{ marginLeft: '4px' }} />}
                                                 {item.isNew && <span className="bl-new-badge"> NEW </span>}
                                             </div>
