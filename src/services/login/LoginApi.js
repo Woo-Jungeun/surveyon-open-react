@@ -24,7 +24,7 @@ export function LoginApi() {
                 user: data?.user ?? "",
                 pass: AES256.Crypto.encryptAES256(String(data?.pass ?? "")),    //암호화
             };
-            return await api.post(payload, "/pro_login_api.aspx");
+            return await api.post(payload, "/pro_login_api.aspx", "EX_API_BASE_URL");
         },
         {
             onSuccess: (res, v) => {
@@ -72,7 +72,7 @@ export function LoginApi() {
      * 로그아웃 api
      * */
     const logoutMutation = useMutation(
-        async (payload) => await api.post(payload, "/pro_login_api.aspx"),
+        async (payload) => await api.post(payload, "/pro_login_api.aspx", "EX_API_BASE_URL"),
         {
             onSuccess: (res, v) => {
                 v?.options?.onSuccess?.();

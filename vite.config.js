@@ -36,6 +36,12 @@ export default defineConfig(({ mode }) => {
                         secure: false,               // 자체서명/개발용 인증서면 false
                         ws: true,                    // SignalR WebSocket
                     },
+                    // /APIs 로 시작하는 요청 프록시 (BoardApi 등)
+                    "^/APIs(?:/|$)": {
+                        target: env.VITE_PROXY_URL,
+                        changeOrigin: true,
+                        secure: false,
+                    },
                     // H-PRO API 프록시 
                     "/api": {
                         target: "https://hpropublic.hrcglobal.com",

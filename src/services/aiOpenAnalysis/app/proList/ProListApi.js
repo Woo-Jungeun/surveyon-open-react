@@ -15,7 +15,7 @@ export function ProListApi() {
 
     // 데이터 조회 API
     const proListData = useMutation(
-        async (data) => await api.post(data.params, "/pro_list_api.aspx"),
+        async (data) => await api.post(data.params, "/pro_list_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 loadingSpinner.show();
@@ -27,7 +27,7 @@ export function ProListApi() {
     );
     // 수정/수정불가, 분석/제외, 문항통합저장버튼
     const editMutation = useMutation(
-        async (data) => await api.post(data, "/pro_list_api.aspx"),
+        async (data) => await api.post(data, "/pro_list_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 //loadingSpinner.show(); 
@@ -39,7 +39,7 @@ export function ProListApi() {
     );
     // 보기추출 파일 다운로드
     const excelDownloadMutation = useMutation(
-        async (data) => await api.file(data, "/pro_list_api.aspx"),
+        async (data) => await api.file(data, "/pro_list_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 //loadingSpinner.show(); 

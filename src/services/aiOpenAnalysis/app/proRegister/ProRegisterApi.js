@@ -15,7 +15,7 @@ export function ProRegisterApi() {
 
     // 데이터 조회 API
     const proRegisterMutation = useMutation(
-        async (data) => await api.post(data.params, "/pro_register_api.aspx"),
+        async (data) => await api.post(data.params, "/pro_register_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (data) => {
                 //gb 값이 db_enter일 때만 멘트 지정
@@ -36,7 +36,7 @@ export function ProRegisterApi() {
 
     // 샘플 다운로드 
     const sampleDownloadData = useMutation(
-        async (data) => await api.file(data, "/pro_register_api.aspx"),
+        async (data) => await api.file(data, "/pro_register_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 //loadingSpinner.show(); 

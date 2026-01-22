@@ -15,14 +15,14 @@ export function MainListApi() {
 
     // 데이터 조회 API
     const mainListData = useMutation(
-        async (data) => await api.post(data.params, "/main_list_api.aspx"),
+        async (data) => await api.post(data.params, "/main_list_api.aspx", "EX_API_BASE_URL"),
         {
-         onMutate: (vars) => { 
-            loadingSpinner.show(); 
-        },
-         onSettled: () => {  
-            loadingSpinner.hide(); 
-        }
+            onMutate: (vars) => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
         }
     );
 

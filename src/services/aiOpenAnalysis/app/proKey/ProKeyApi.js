@@ -11,30 +11,30 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
  */
 export function ProKeyApi() {
 
-    const loadingSpinner = useContext(loadingSpinnerContext);
+  const loadingSpinner = useContext(loadingSpinnerContext);
 
-    // api key 조회, 등록 API
-    const proKeyData = useMutation(
-        async (data) => await api.post(data?.params, "/pro_key_api.aspx"),
-        {
-            onMutate: (vars) => {
-              // gb 값이 api_useyn_update일 경우 로딩바 표시하지 않음
-              const gbValue = vars?.params?.gb;
-              if (gbValue !== "api_useyn_update") {
-                loadingSpinner.show();
-              }
-            },
-            onSettled: (data, error, vars) => {
-              // gb값이 api_useyn_update가 아닐 때만 닫기
-              const gbValue = vars?.params?.gb;
-              if (gbValue !== "api_useyn_update") {
-                loadingSpinner.hide();
-              }
-            },
-          }
-        );
+  // api key 조회, 등록 API
+  const proKeyData = useMutation(
+    async (data) => await api.post(data?.params, "/pro_key_api.aspx", "EX_API_BASE_URL"),
+    {
+      onMutate: (vars) => {
+        // gb 값이 api_useyn_update일 경우 로딩바 표시하지 않음
+        const gbValue = vars?.params?.gb;
+        if (gbValue !== "api_useyn_update") {
+          loadingSpinner.show();
+        }
+      },
+      onSettled: (data, error, vars) => {
+        // gb값이 api_useyn_update가 아닐 때만 닫기
+        const gbValue = vars?.params?.gb;
+        if (gbValue !== "api_useyn_update") {
+          loadingSpinner.hide();
+        }
+      },
+    }
+  );
 
-    return {
-        proKeyData
-    };
+  return {
+    proKeyData
+  };
 }

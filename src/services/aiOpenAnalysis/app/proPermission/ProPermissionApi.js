@@ -14,7 +14,7 @@ export function ProPermissionApi() {
     const loadingSpinner = useContext(loadingSpinnerContext);
 
     const proPermissionData = useMutation(
-        async (data) => await api.post(data?.params, "/pro_permission_api.aspx"),
+        async (data) => await api.post(data?.params, "/pro_permission_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 loadingSpinner.show();

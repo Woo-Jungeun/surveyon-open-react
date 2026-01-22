@@ -15,7 +15,7 @@ export function OptionSettingApi() {
 
     // 데이터 조회 API
     const optionEditData = useMutation(
-        async (data) => await api.post(data.params, "/option_edit_api.aspx"),
+        async (data) => await api.post(data.params, "/option_edit_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (variables) => {
                 if (variables?.params?.gb !== "info" && variables?.params?.gb !== "del_qnum" && !variables?.params?.skipSpinner) loadingSpinner.show();
@@ -28,7 +28,7 @@ export function OptionSettingApi() {
 
     // 데이터 저장 API
     const optionSaveData = useMutation(
-        (data) => api.post(data, "/option_save_api.aspx"),
+        (data) => api.post(data, "/option_save_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (variables) => {
                 if (variables?.gb !== "info"
@@ -47,7 +47,7 @@ export function OptionSettingApi() {
     const optionAnalysisStart = useMutation(
         async (data) => {
             //loadingSpinner.show();
-            return await api.urlencoded("/option_analysis_api.aspx", data);
+            return await api.urlencoded("/option_analysis_api.aspx", data, "EX_API_BASE_URL");
         },
         {
             //onSettled: () => loadingSpinner.hide()
@@ -56,24 +56,24 @@ export function OptionSettingApi() {
 
     // 상태(status) - GET ?action=status&job=...
     const optionAnalysisStatus = useMutation(
-        async (params) => await api.getWithParams("/option_analysis_api.aspx", params)
+        async (params) => await api.getWithParams("/option_analysis_api.aspx", params, "EX_API_BASE_URL")
     );
 
     // 초기화(clear) - GET ?action=clear&job=...
     const optionAnalysisClear = useMutation(
-        async (params) => await api.getWithParams("/option_analysis_api.aspx", params)
+        async (params) => await api.getWithParams("/option_analysis_api.aspx", params, "EX_API_BASE_URL")
     );
 
     // 분석 상태값 api
     const optionStatus = useMutation(
         async (params) => {
-            return await api.post(params, "/option_status_api.aspx");
+            return await api.post(params, "/option_status_api.aspx", "EX_API_BASE_URL");
         }
     );
 
     // 보기 불러오기 api -projectlist
     const projectListData = useMutation(
-        async (data) => await api.post(data.params, "/pro_exload_api.aspx"),
+        async (data) => await api.post(data.params, "/pro_exload_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 //loadingSpinner.show(); 
@@ -86,7 +86,7 @@ export function OptionSettingApi() {
 
     // 보기 불러오기 api -excellist
     const excelListData = useMutation(
-        async (data) => await api.post(data, "/pro_exload_api.aspx"),
+        async (data) => await api.post(data, "/pro_exload_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 //loadingSpinner.show(); 
@@ -99,7 +99,7 @@ export function OptionSettingApi() {
 
     // 샘플 다운로드 
     const sampleDownloadData = useMutation(
-        async (data) => await api.file(data, "/pro_exload_api.aspx"),
+        async (data) => await api.file(data, "/pro_exload_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 //loadingSpinner.show(); 
@@ -111,7 +111,7 @@ export function OptionSettingApi() {
     );
     // 엑셀 파일 다운로드
     const excelDownloadData = useMutation(
-        async (data) => await api.file(data, "/option_edit_api.aspx"),
+        async (data) => await api.file(data, "/option_edit_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
                 //loadingSpinner.show(); 
