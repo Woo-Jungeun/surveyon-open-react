@@ -10,6 +10,9 @@ const routeThemeMap = {
   '/data_management': 'data-management',
   '/ai_open_analysis': 'ai-open-analysis',
   '/respondent_management': 'respondent-management',
+  '/board/notice': 'respondent-management',
+  '/board/patchnotes': 'respondent-management',
+  '/board': 'respondent-management',
 };
 
 export const ThemeProvider = ({ children }) => {

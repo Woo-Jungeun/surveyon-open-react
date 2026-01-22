@@ -284,7 +284,10 @@ function ModalProvider(props) {
         if (path.startsWith("/data_dashboard")) return "data-dashboard-theme";
         if (path.startsWith("/data_management")) return "data-management-theme";
         if (path.startsWith("/respondent_management")) return "respondent-theme";
-        return "orange-theme"; // 기본값 (오렌지) - /ai_open_analysis 포함
+        if (path.startsWith("/board/notice")) return "purple-theme";
+        if (path.startsWith("/board/patchnotes")) return "purple-theme";
+        if (path.startsWith("/board")) return "purple-theme"; // 기본 게시판 테마
+        return "purple-theme"; // 기본값
     };
 
     const themeClass = getThemeClass(pathname);

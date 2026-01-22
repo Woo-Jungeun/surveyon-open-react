@@ -44,7 +44,7 @@ const BoardDetail = () => {
     }, [type, id]);
 
     const handleDelete = () => {
-        modal.showConfirm('삭제 확인', '정말로 삭제하시겠습니까?', {
+        modal.showConfirm('알림', '정말로 삭제하시겠습니까?', {
             btns: [
                 {
                     title: "취소",
