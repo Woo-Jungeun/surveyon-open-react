@@ -1,13 +1,28 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search } from 'lucide-react';
+import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search, Paperclip } from 'lucide-react';
 import './Board.css';
+import { BoardApi } from "@/services/board/BoardApi";
+import moment from 'moment';
 
 const BoardList = ({ type = 'notice' }) => {
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
+
+    // API 연동
+    const { noticeList, patchNotesList } = BoardApi();
+    const { data: noticeResult } = noticeList;
+    const { data: patchResult } = patchNotesList;
+
+    useEffect(() => {
+        if (type === 'notice') {
+            noticeList.mutate();
+        } else if (type === 'patchnotes') {
+            patchNotesList.mutate();
+        }
+    }, [type]);
 
     // 게시판 설정
     const boardConfig = {
@@ -27,44 +42,33 @@ const BoardList = ({ type = 'notice' }) => {
 
     const config = boardConfig[type];
 
-    // 임시 데이터 (추후 API 연동)
-    const noticeData = [
-        { id: 1, title: '[2026-1] 2026-1학기 신편입생 모집 안내', date: '2025-12-01', writer: '관리자1', views: 1234, isNew: true },
-        { id: 2, title: '[2026-1] 사이버대학의 선택 기준과 합격 전략', date: '2024-10-04', writer: '관리자2', views: 856, isNew: false },
-        { id: 3, title: '[2026-1] 온라인 입학설명회 신청 안내', date: '2024-11-28', writer: '관리자1', views: 542, isNew: true },
-        { id: 4, title: '설문온 시스템 정기 점검 안내', date: '2024-11-15', writer: '관리자4', views: 423, isNew: false },
-        { id: 5, title: '신규 기능 업데이트 안내', date: '2024-11-01', writer: '관리자3', views: 789, isNew: false },
-        { id: 6, title: '개인정보 처리방침 변경 안내', date: '2024-10-20', writer: '관리자1', views: 321, isNew: false },
-        { id: 7, title: '2024년 하반기 서비스 개선 계획', date: '2024-10-10', writer: '관리자1', views: 654, isNew: false },
-        { id: 8, title: '설문온 모바일 앱 출시 안내', date: '2024-09-25', writer: '관리자1', views: 987, isNew: false },
-        { id: 9, title: '설문 응답률 향상을 위한 팁', date: '2024-09-15', writer: '관리자2', views: 432, isNew: false },
-        { id: 10, title: '데이터 분석 기능 업데이트', date: '2024-09-01', writer: '관리자1', views: 765, isNew: false },
-        { id: 11, title: '개인정보 처리방침 변경 안내', date: '2024-10-20', writer: '관리자1', views: 321, isNew: false },
-        { id: 12, title: '2024년 하반기 서비스 개선 계획', date: '2024-10-10', writer: '관리자1', views: 654, isNew: false },
-        { id: 13, title: '설문온 모바일 앱 출시 안내', date: '2024-09-25', writer: '관리자1', views: 987, isNew: false },
-        { id: 14, title: '설문 응답률 향상을 위한 팁', date: '2024-09-15', writer: '관리자2', views: 432, isNew: false },
-        { id: 15, title: '데이터 분석 기능 업데이트', date: '2024-09-01', writer: '관리자1', views: 765, isNew: false },
-    ];
+    // 데이터 가공
+    const processData = (result) => {
+        const list = Array.isArray(result)
+            ? result
+            : (result?.resultjson || result?.data || result?.result || []);
 
-    const patchNotesData = [
-        { id: 1, version: 'v2.0.4', title: 'AI 분석 기능 개선', date: '2025-12-15', writer: '관리자1', views: 432, isNew: true },
-        { id: 2, version: 'v2.0.3', title: '그리드 성능 최적화', date: '2025-12-01', writer: '관리자2', views: 321, isNew: true },
-        { id: 3, version: 'v2.0.2', title: '메이저 업데이트', date: '2025-11-20', writer: '관리자1', views: 654, isNew: false },
-        { id: 4, version: 'v2.0.1', title: '속도 업데이트', date: '2025-11-10', writer: '관리자4', views: 234, isNew: false },
-        { id: 5, version: 'v2.0.0', title: '초기 패치', date: '2025-11-01', writer: '관리자3', views: 876, isNew: false },
-        { id: 6, version: 'v1.9.5', title: '버그 수정 및 안정화', date: '2025-10-15', writer: '관리자1', views: 543, isNew: false },
-        { id: 7, version: 'v1.9.0', title: 'UI/UX 개선', date: '2025-10-01', writer: '관리자2', views: 432, isNew: false },
-        { id: 8, version: 'v1.8.5', title: '보안 강화', date: '2025-09-20', writer: '관리자1', views: 654, isNew: false },
-    ];
+        return Array.isArray(list) ? list.map(item => ({
+            id: item.id,
+            title: item.title,
+            version: item.version,
+            date: item.createdAt ? moment(item.createdAt).format('YYYY-MM-DD') : '',
+            writer: item.author || '관리자',
+            views: item.viewCount || 0,
+            isNew: item.isNew || false,
+            hasAttachment: item.hasAttachment || false
+        })) : [];
+    };
 
-    const data = type === 'notice' ? noticeData : patchNotesData;
+    // API 데이터 사용
+    const apiData = type === 'notice' ? processData(noticeResult) : processData(patchResult);
 
-    // 검색 필터링
-    const filteredData = data.filter(item =>
+    // 검색 필터링 (화면단 처리)
+    const filteredData = apiData.filter(item =>
         item.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // 페이지네이션
+    // 페이지네이션 (화면단 처리)
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
@@ -138,32 +142,41 @@ const BoardList = ({ type = 'notice' }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {currentData.map((item, index) => (
-                                <tr
-                                    key={item.id}
-                                    onClick={() => handleRowClick(item.id)}
-                                    className="bl-row"
-                                >
-                                    <td className="bl-col-no">{filteredData.length - (startIndex + index)}</td>
-                                    {type === 'patchnotes' && (
-                                        <td className="bl-col-version">
-                                            <span className="bl-version-badge">
-                                                {item.version}
-                                            </span>
+                            {currentData.length > 0 ? (
+                                currentData.map((item, index) => (
+                                    <tr
+                                        key={item.id}
+                                        onClick={() => handleRowClick(item.id)}
+                                        className="bl-row"
+                                    >
+                                        <td className="bl-col-no">{filteredData.length - (startIndex + index)}</td>
+                                        {type === 'patchnotes' && (
+                                            <td className="bl-col-version">
+                                                <span className="bl-version-badge">
+                                                    {item.version}
+                                                </span>
+                                            </td>
+                                        )}
+                                        <td className="bl-col-title">
+                                            <div className="bl-title-wrapper">
+                                                {/* <FileText size={16} color="var(--primary-color)" style={{ minWidth: '16px' }} /> */}
+                                                <span className="bl-title-text">{item.title}</span>
+                                                {item.hasAttachment && <Paperclip size={14} color="#666" style={{ marginLeft: '4px' }} />}
+                                                {item.isNew && <span className="bl-new-badge"> NEW </span>}
+                                            </div>
                                         </td>
-                                    )}
-                                    <td className="bl-col-title">
-                                        <div className="bl-title-wrapper">
-                                            <FileText size={16} color="var(--primary-color)" style={{ minWidth: '16px' }} />
-                                            <span className="bl-title-text">{item.title}</span>
-                                            {item.isNew && <span className="bl-new-badge"> NEW </span>}
-                                        </div>
+                                        <td className="bl-col-date">{item.date}</td>
+                                        <td className="bl-col-writer">{item.writer}</td>
+                                        <td className="bl-col-views">{item.views.toLocaleString()}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={type === 'patchnotes' ? 6 : 5} className="bl-no-data">
+                                        데이터가 없습니다.
                                     </td>
-                                    <td className="bl-col-date">{item.date}</td>
-                                    <td className="bl-col-writer">{item.writer}</td>
-                                    <td className="bl-col-views">{item.views.toLocaleString()}</td>
                                 </tr>
-                            ))}
+                            )}
                         </tbody>
                     </table>
                 </div>

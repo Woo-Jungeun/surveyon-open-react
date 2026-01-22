@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Eye, User, Home } from 'lucide-react';
 import './Board.css';
+import { BoardApi } from "@/services/board/BoardApi";
+import moment from 'moment';
 
 const BoardDetail = () => {
     const { type, id } = useParams();
@@ -9,7 +11,36 @@ const BoardDetail = () => {
     const location = useLocation();
     const isFromHome = location.state?.from === 'home';
 
-    // 게시판 설정 (BoardList와 동일)
+    // API 연동
+    const { noticeDetail, patchNotesDetail } = BoardApi();
+    const [detailData, setDetailData] = useState(null);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                let result;
+                if (type === 'notice') {
+                    result = await noticeDetail.mutateAsync({ id: id });
+                } else if (type === 'patchnotes') {
+                    result = await patchNotesDetail.mutateAsync({ id: id });
+                }
+
+                if (result) {
+                    // API 응답 구조에 따라 데이터 추출
+                    const data = result.resultjson || result.data || result;
+                    setDetailData(data);
+                }
+            } catch (error) {
+                console.error("Failed to fetch detail:", error);
+            }
+        };
+
+        if (id) {
+            fetchData();
+        }
+    }, [type, id]);
+
+    // 게시판 설정
     const boardConfig = {
         notice: {
             title: '공지사항',
@@ -23,24 +54,18 @@ const BoardDetail = () => {
 
     const config = boardConfig[type] || boardConfig.notice;
 
-    // 임시 데이터 (실제로는 API로 데이터를 가져와야 함)
-    const mockData = {
-        id: id,
-        title: type === 'notice' ? '[2026-1] 공지사항 안내' : '[v2.0.4] 버전 업그레이드 안내',
-        writer: '관리자',
-        date: '2025-12-01',
-        views: 1234,
-        content: `
-            <p>안녕하세요, 설문온 관리자입니다.</p>
-            <br />
-            <p>상세 페이지입니다.</p>
-            <br />
-            <p><strong>일정 안내</strong></p>
-            <p>- 2025.12.01 ~ 2026.01.10</p>
-            <br />
-            <p>감사합니다.</p>
-        `
-    };
+    if (!detailData) {
+        return <div className="bd-loading">Loading...</div>;
+    }
+
+    // 데이터 가공
+    const title = type === 'patchnotes' && detailData.version
+        ? `[${detailData.version}] ${detailData.title}`
+        : detailData.title;
+
+    const date = detailData.createdAt
+        ? moment(detailData.createdAt).format('YYYY-MM-DD HH:mm:ss')
+        : '';
 
     return (
         <div className="bd-container" data-theme={`board-${type}`}>
@@ -59,57 +84,53 @@ const BoardDetail = () => {
             <div className="bd-content-wrapper">
                 <div className="bd-header">
                     <div className="bd-category">{config.title}</div>
-                    <h1 className="bd-title">{mockData.title}</h1>
+                    <h1 className="bd-title">{title}</h1>
                     <div className="bd-meta">
                         <div className="bd-meta-item">
                             <User size={14} />
-                            <span>{mockData.writer}</span>
+                            <span>{detailData.author || '관리자'}</span>
                         </div>
                         <div className="bd-meta-divider"></div>
                         <div className="bd-meta-item">
                             <Calendar size={14} />
-                            <span>{mockData.date}</span>
+                            <span>{date}</span>
                         </div>
                         <div className="bd-meta-divider"></div>
                         <div className="bd-meta-item">
                             <Eye size={14} />
-                            <span>{mockData.views.toLocaleString()}</span>
+                            <span>{(detailData.viewCount || 0).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="bd-body">
-                    <div dangerouslySetInnerHTML={{ __html: mockData.content }} />
+                    <div dangerouslySetInnerHTML={{ __html: detailData.content }} />
                 </div>
 
-                {/* 첨부파일 영역 */}
-                <div className="bd-attachments">
-                    <div className="bd-attachments-title">첨부파일 <span>2</span></div>
-                    <ul className="bd-attachments-list">
-                        <li>
-                            <a href="#" onClick={(e) => e.preventDefault()}>
-                                <span className="bd-file-icon">📎</span>
-                                <span className="bd-file-name">첨부파일1.pdf</span>
-                                <span className="bd-file-size">(2.5MB)</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#" onClick={(e) => e.preventDefault()}>
-                                <span className="bd-file-icon">📎</span>
-                                <span className="bd-file-name">첨부파일2.hwp</span>
-                                <span className="bd-file-size">(54KB)</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                {/* 첨부파일 영역 (데이터가 있을 경우에만 표시) */}
+                {detailData.attachments && detailData.attachments.length > 0 && (
+                    <div className="bd-attachments">
+                        <div className="bd-attachments-title">첨부파일 <span>{detailData.attachments.length}</span></div>
+                        <ul className="bd-attachments-list">
+                            {detailData.attachments.map((file, index) => (
+                                <li key={index}>
+                                    <a href="#" onClick={(e) => { e.preventDefault(); /* 파일 다운로드 로직 추가 필요 */ }}>
+                                        <span className="bd-file-icon">📎</span>
+                                        <span className="bd-file-name">{file.originalName}</span>
+                                        <span className="bd-file-size">({(file.fileSize / 1024).toFixed(1)}KB)</span>
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
 
                 <div className="bd-footer">
-
-                    {/* 관리자 권한 체크 후 표시 */}
-                    <div className="bd-admin-btns">
+                    {/* 관리자 권한 체크 후 표시 (추후 구현) */}
+                    {/* <div className="bd-admin-btns">
                         <button className="bd-btn bd-btn-edit" onClick={() => navigate(`/board/${type}/write/${id}`)}>수정</button>
                         <button className="bd-btn bd-btn-delete">삭제</button>
-                    </div>
+                    </div> */}
                 </div>
             </div>
         </div>

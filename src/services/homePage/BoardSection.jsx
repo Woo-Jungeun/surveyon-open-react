@@ -9,41 +9,60 @@ const BoardSection = () => {
     const navigate = useNavigate();
     const { showAlert } = useContext(modalContext);
 
-    // 공지사항 API 연동
-    const { top5Notices } = BoardApi();
-    const { data: apiResult } = top5Notices;
+    // API 연동
+    const { top5Notices, top5PatchNotes } = BoardApi();
+    const { data: noticeResult } = top5Notices;
+    const { data: patchResult } = top5PatchNotes;
 
     useEffect(() => {
         top5Notices.mutate();
+        top5PatchNotes.mutate();
     }, []);
 
-    console.log("apiResult", apiResult);
+    // 데이터 가공 헬퍼
+    const processData = (result) => {
+        const list = Array.isArray(result)
+            ? result
+            : (result?.resultjson || result?.data || result?.result || []);
 
-    // API 응답 구조에 따라 배열 추출 (배열이거나, resultjson/data/result 프로퍼티 확인)
-    const noticeList = Array.isArray(apiResult)
-        ? apiResult
-        : (apiResult?.resultjson || apiResult?.data || apiResult?.result || []);
+        return Array.isArray(list) ? list.map(item => ({
+            id: item.id,
+            title: item.title,
+            version: item.version, // 패치노트용
+            date: item.createdAt ? moment(item.createdAt).format('YYYY-MM-DD') : ''
+        })) : [];
+    };
 
-    const noticeData = Array.isArray(noticeList) ? noticeList.map(item => ({
-        id: item.id,
-        title: item.title,
-        date: item.createdAt ? moment(item.createdAt).format('YYYY-MM-DD') : ''
-    })) : [];
-
-    console.log("noticeData", noticeData)
-
-    const patchNotesData = [
-        { id: 1, version: 'v2.0.4', title: 'AI 분석 기능 개선', date: '2025-12-15' },
-        { id: 2, version: 'v2.0.3', title: '그리드 성능 최적화', date: '2025-12-01' },
-        { id: 3, version: 'v2.0.2', title: '메이저 업데이트', date: '2025-11-20' },
-        { id: 4, version: 'v2.0.1', title: '속도 업데이트', date: '2025-11-10' },
-        { id: 5, version: 'v2.0.0', title: '초기 패치', date: '2025-11-01' }
-    ];
+    const noticeData = processData(noticeResult);
+    const patchNotesData = processData(patchResult);
 
     const handleItemClick = (e, path, itemId) => {
         e.stopPropagation();
         navigate(`${path}/${itemId}`, { state: { from: 'home' } });
     };
+
+    // 공통 리스트 컴포넌트
+    const BoardList = ({ items, path, iconColor, isPatchNote = false }) => (
+        <div className="board-card-list">
+            {items.map((item) => (
+                <div
+                    key={item.id}
+                    className="board-list-item"
+                    onClick={(e) => handleItemClick(e, path, item.id)}
+                >
+                    <div className="board-list-content">
+                        <span className="board-list-icon">
+                            <FileText size={14} color={iconColor} />
+                        </span>
+                        <span className="board-list-title">
+                            {isPatchNote && item.version ? `[${item.version}] ` : ''}{item.title}
+                        </span>
+                    </div>
+                    <span className="board-list-date">{item.date}</span>
+                </div>
+            ))}
+        </div>
+    );
 
     return (
         <div className="board-section">
@@ -65,26 +84,11 @@ const BoardSection = () => {
                         </div>
                         <span className="board-card-badge">TOP 5</span>
                     </div>
-                    <div className="board-card-list">
-                        {noticeData.map((item) => (
-                            <div
-                                key={item.id}
-                                className="board-list-item"
-                                onClick={(e) => handleItemClick(e, '/board/notice', item.id)}
-                            >
-                                <div className="board-list-content">
-                                    <span className="board-list-icon"><FileText size={14} color="#7C9CBF" /></span>
-                                    <span className="board-list-title">{item.title}</span>
-                                </div>
-                                <span className="board-list-date">{item.date}</span>
-                            </div>
-                        ))}
-                    </div>
-                    {/* <div className="board-card-action">
-                        <button className="board-view-more" onClick={() => navigate('/board/notice')}>
-                            바로가기 →
-                        </button>
-                    </div> */}
+                    <BoardList
+                        items={noticeData}
+                        path="/board/notice"
+                        iconColor="#7C9CBF"
+                    />
                 </div>
 
                 {/* Patch Notes */}
@@ -99,28 +103,12 @@ const BoardSection = () => {
                         </div>
                         <span className="board-card-badge">TOP 5</span>
                     </div>
-                    <div className="board-card-list">
-                        {patchNotesData.map((item) => (
-                            <div
-                                key={item.id}
-                                className="board-list-item"
-                                onClick={(e) => handleItemClick(e, '/board/patchnotes', item.id)}
-                            >
-                                <div className="board-list-content">
-                                    <span className="board-list-icon"><FileText size={14} color="#9B8FAA" /></span>
-                                    <span className="board-list-title">
-                                        [{item.version}] {item.title}
-                                    </span>
-                                </div>
-                                <span className="board-list-date">{item.date}</span>
-                            </div>
-                        ))}
-                    </div>
-                    {/* <div className="board-card-action">
-                        <button className="board-view-more" onClick={() => navigate('/board/patchnotes')}>
-                            바로가기 →
-                        </button>
-                    </div> */}
+                    <BoardList
+                        items={patchNotesData}
+                        path="/board/patchnotes"
+                        iconColor="#9B8FAA"
+                        isPatchNote={true}
+                    />
                 </div>
 
                 {/* 문의하기 & FAQ 컬럼 */}
