@@ -77,12 +77,32 @@ export function BoardApi() {
         }
     );
 
+    // 공지사항 트랜잭션 (등록/수정/삭제)
+    const noticeTransaction = useMutation(
+        async (data) => await api.post(data, "/notice", "API_BASE_URL_BOARD"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
+    // 패치노트 트랜잭션 (등록/수정/삭제)
+    const patchNotesTransaction = useMutation(
+        async (data) => await api.post(data, "/patchnotes", "API_BASE_URL_BOARD"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
     return {
         top5Notices,
         top5PatchNotes,
         noticeList,
         patchNotesList,
         noticeDetail,
-        patchNotesDetail
+        patchNotesDetail,
+        noticeTransaction,
+        patchNotesTransaction
     };
 }

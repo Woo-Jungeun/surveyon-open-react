@@ -1,18 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Calendar, Eye, User, Home } from 'lucide-react';
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import moment from 'moment';
+import { modalContext } from "@/components/common/Modal";
 
 const BoardDetail = () => {
     const { type, id } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
     const isFromHome = location.state?.from === 'home';
+    const modal = useContext(modalContext);
 
     // API 연동
-    const { noticeDetail, patchNotesDetail } = BoardApi();
+    const { noticeDetail, patchNotesDetail, noticeTransaction, patchNotesTransaction } = BoardApi();
     const [detailData, setDetailData] = useState(null);
 
     useEffect(() => {
@@ -32,6 +34,7 @@ const BoardDetail = () => {
                 }
             } catch (error) {
                 console.error("Failed to fetch detail:", error);
+                modal.showErrorAlert('오류', '데이터를 불러오는 중 오류가 발생했습니다.');
             }
         };
 
@@ -39,6 +42,44 @@ const BoardDetail = () => {
             fetchData();
         }
     }, [type, id]);
+
+    const handleDelete = () => {
+        modal.showConfirm('삭제 확인', '정말로 삭제하시겠습니까?', {
+            btns: [
+                {
+                    title: "취소",
+                    click: () => { }
+                },
+                {
+                    title: "확인",
+                    click: async () => {
+                        try {
+                            let result;
+                            const payload = {
+                                gb: 'delete',
+                                id: id
+                            };
+
+                            if (type === 'notice') {
+                                result = await noticeTransaction.mutateAsync(payload);
+                            } else if (type === 'patchnotes') {
+                                result = await patchNotesTransaction.mutateAsync(payload);
+                            }
+
+                            if (result) {
+                                modal.showAlert('알림', '삭제되었습니다.', null, () => {
+                                    navigate(`/board/${type}`);
+                                });
+                            }
+                        } catch (error) {
+                            console.error("Delete failed:", error);
+                            modal.showErrorAlert('오류', '삭제 중 오류가 발생했습니다.');
+                        }
+                    }
+                }
+            ]
+        });
+    };
 
     // 게시판 설정
     const boardConfig = {
@@ -126,11 +167,11 @@ const BoardDetail = () => {
                 )}
 
                 <div className="bd-footer">
-                    {/* 관리자 권한 체크 후 표시 (추후 구현) */}
-                    {/* <div className="bd-admin-btns">
+                    {/* 관리자 권한 체크 후 표시 (현재는 항상 표시) */}
+                    <div className="bd-admin-btns">
                         <button className="bd-btn bd-btn-edit" onClick={() => navigate(`/board/${type}/write/${id}`)}>수정</button>
-                        <button className="bd-btn bd-btn-delete">삭제</button>
-                    </div> */}
+                        <button className="bd-btn bd-btn-delete" onClick={handleDelete}>삭제</button>
+                    </div>
                 </div>
             </div>
         </div>

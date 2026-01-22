@@ -792,6 +792,10 @@
     font-size: 16px;
     line-height: 1.8;
     color: #333;
+    white-space: pre-wrap;
+    /* 줄바꿈, 띄어쓰기 보존 */
+    word-break: break-all;
+    /* 긴 단어 줄바꿈 */
 }
 
 .bd-body p {
