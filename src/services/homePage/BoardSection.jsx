@@ -1,20 +1,36 @@
-﻿import React, { useContext } from 'react';
+﻿import React, { useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Megaphone, FileText, MessageCircle, Bot, History } from 'lucide-react';
 import { modalContext } from "@/components/common/Modal";
+import { BoardApi } from "@/services/board/BoardApi";
+import moment from 'moment';
 
 const BoardSection = () => {
     const navigate = useNavigate();
     const { showAlert } = useContext(modalContext);
 
-    // 임시 데이터 (추후 API 연동)
-    const noticeData = [
-        { id: 1, title: '[2026-1] 공지사항 공지사항 공지사항 공지사항 공지사항 공지사항 공지사항', date: '2025-12-01' },
-        { id: 2, title: '[2026-1] 공지사항2', date: '2024-10-04' },
-        { id: 3, title: '[2026-1] 공지사항1', date: '2024-11-28' },
-        { id: 4, title: '설문온 시스템 정기 점검 안내', date: '2024-11-15' },
-        { id: 5, title: '신규 기능 업데이트 안내', date: '2024-11-01' }
-    ];
+    // 공지사항 API 연동
+    const { top5Notices } = BoardApi();
+    const { data: apiResult } = top5Notices;
+
+    useEffect(() => {
+        top5Notices.mutate();
+    }, []);
+
+    console.log("apiResult", apiResult);
+
+    // API 응답 구조에 따라 배열 추출 (배열이거나, resultjson/data/result 프로퍼티 확인)
+    const noticeList = Array.isArray(apiResult)
+        ? apiResult
+        : (apiResult?.resultjson || apiResult?.data || apiResult?.result || []);
+
+    const noticeData = Array.isArray(noticeList) ? noticeList.map(item => ({
+        id: item.id,
+        title: item.title,
+        date: item.createdAt ? moment(item.createdAt).format('YYYY-MM-DD') : ''
+    })) : [];
+
+    console.log("noticeData", noticeData)
 
     const patchNotesData = [
         { id: 1, version: 'v2.0.4', title: 'AI 분석 기능 개선', date: '2025-12-15' },
