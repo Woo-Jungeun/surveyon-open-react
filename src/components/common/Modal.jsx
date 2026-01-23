@@ -287,6 +287,7 @@ function ModalProvider(props) {
         if (path.startsWith("/board/notice")) return "purple-theme";
         if (path.startsWith("/board/patchnotes")) return "purple-theme";
         if (path.startsWith("/board")) return "purple-theme"; // 기본 게시판 테마
+        if (path.startsWith("/inquiry")) return "purple-theme";
         return "purple-theme"; // 기본값
     };
 

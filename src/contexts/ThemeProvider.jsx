@@ -13,6 +13,7 @@ const routeThemeMap = {
   '/board/notice': 'respondent-management',
   '/board/patchnotes': 'respondent-management',
   '/board': 'respondent-management',
+  '/inquiry': 'respondent-management',
 };
 
 export const ThemeProvider = ({ children }) => {
