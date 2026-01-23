@@ -4,10 +4,15 @@ import { Megaphone, FileText, MessageCircle, Bot, History } from 'lucide-react';
 import { modalContext } from "@/components/common/Modal";
 import { BoardApi } from "@/services/board/BoardApi";
 import moment from 'moment';
+import { useSelector } from 'react-redux';
+import { useCookies } from 'react-cookie';
 
 const BoardSection = () => {
     const navigate = useNavigate();
-    const { showAlert } = useContext(modalContext);
+    const { showAlert, showConfirm } = useContext(modalContext);
+    const auth = useSelector((store) => store.auth);
+    const [cookies] = useCookies(["TOKEN"]);
+    const isLoggedIn = auth?.isLogin && cookies?.TOKEN;
 
     // API 연동
     const { top5Notices, top5PatchNotes } = BoardApi();
@@ -39,6 +44,25 @@ const BoardSection = () => {
     const handleItemClick = (e, path, itemId) => {
         e.stopPropagation();
         navigate(`${path}/${itemId}`, { state: { from: 'home' } });
+    };
+
+    const handleInquiryClick = () => {
+        if (!isLoggedIn) {
+            showConfirm("알림", "로그인 후 이용 가능합니다.", {}, {
+                btns: [
+                    {
+                        title: "취소",
+                        click: () => { }
+                    },
+                    {
+                        title: "로그인하기",
+                        click: () => navigate('/login', { state: { from: '/inquiry' } })
+                    }
+                ]
+            });
+            return;
+        }
+        navigate('/inquiry');
     };
 
     // 공통 리스트 컴포넌트
@@ -115,7 +139,7 @@ const BoardSection = () => {
                 <div className="board-card-stack">
                     {/* 문의하기 */}
                     <div className="board-card board-card-small" style={{ '--card-color': '#6B7FBF' }}>
-                        <div className="board-card-header" onClick={() => navigate('/inquiry')}>
+                        <div className="board-card-header" onClick={handleInquiryClick}>
                             <div className="board-card-title-area">
                                 <span className="board-card-icon"><MessageCircle size={28} color="#6B7FBF" /></span>
                                 <div>
@@ -125,7 +149,7 @@ const BoardSection = () => {
                             </div>
                         </div>
                         <div className="board-card-action">
-                            <button className="board-view-more" onClick={() => navigate('/inquiry')}>
+                            <button className="board-view-more" onClick={handleInquiryClick}>
                                 바로가기 →
                             </button>
                         </div>
