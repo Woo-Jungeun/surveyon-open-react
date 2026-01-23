@@ -23,6 +23,8 @@ const InquiryWrite = () => {
     // 답글(추가 질문) 모드 확인
     const parentId = location.state?.parentId;
     const parentTitle = location.state?.parentTitle;
+    const parentCategory = location.state?.parentCategory;
+    const initialIsSecret = location.state?.isSecret;
 
     const isReply = !!parentId;
 
@@ -30,7 +32,7 @@ const InquiryWrite = () => {
     const { inquiryTransaction, inquiryDetail } = InquiryApi();
 
     const categories = ['설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
-    const [category, setCategory] = useState(categories[0]);
+    const [category, setCategory] = useState(isReply ? parentCategory : categories[0]);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
 
@@ -38,7 +40,7 @@ const InquiryWrite = () => {
         isReply ? `[RE]: ${parentTitle}` : ''
     );
     const [content, setContent] = useState('');
-    const [isSecret, setIsSecret] = useState(true);
+    const [isSecret, setIsSecret] = useState(isReply ? initialIsSecret : true);
     const [files, setFiles] = useState([]);
 
     // 수정 모드일 때 기존 데이터 불러오기
@@ -54,8 +56,9 @@ const InquiryWrite = () => {
                         setTitle(response.title || '');
                         setContent(response.content || '');
                         setIsSecret(response.isSecret ?? true);
-                        // attachments가 있다면 처리 (필요시)
-                        // setFiles(response.attachments || []);
+                        if (response.attachments) {
+                            setFiles(response.attachments);
+                        }
                     }
                 } catch (error) {
                     console.error('문의 데이터 로드 실패:', error);
@@ -108,7 +111,21 @@ const InquiryWrite = () => {
                 author: userName,
                 userId: userId,
                 is_admin: isAdmin,
-                attachments: files.length > 0 ? files : []
+                attachments: files.map(file => {
+                    if (file instanceof File) {
+                        return {
+                            id: 0,
+                            boardType: "QNA",
+                            referenceId: isEdit ? parseInt(id) : 0,
+                            fileGuid: "",
+                            originalName: file.name,
+                            saveName: "",
+                            fileSize: file.size,
+                            createdAt: new Date().toISOString()
+                        };
+                    }
+                    return file;
+                })
             };
 
             // 수정 모드인 경우 id 추가
@@ -253,22 +270,27 @@ const InquiryWrite = () => {
                     <div className="iw-form-group">
                         <label>공개 설정</label>
                         <div className="iw-secret-toggle">
-                            <button
-                                className={`secret-btn ${!isSecret ? 'active' : ''}`}
-                                onClick={() => setIsSecret(false)}
-                            >
-                                <Unlock size={16} />
-                                공개
-                            </button>
+                            {!(isReply && initialIsSecret) && (
+                                <button
+                                    className={`secret-btn ${!isSecret ? 'active' : ''}`}
+                                    onClick={() => setIsSecret(false)}
+                                >
+                                    <Unlock size={16} />
+                                    공개
+                                </button>
+                            )}
                             <button
                                 className={`secret-btn ${isSecret ? 'active' : ''}`}
                                 onClick={() => setIsSecret(true)}
+                                disabled={isReply && initialIsSecret}
                             >
                                 <Lock size={16} />
                                 비공개
                             </button>
                             <span className="secret-desc">
-                                {isSecret ? '작성자와 관리자만 볼 수 있습니다.' : '모든 사용자가 볼 수 있습니다.'}
+                                {isReply && initialIsSecret
+                                    ? '부모 문의가 비공개이므로 추가 질문도 비공개로 고정됩니다.'
+                                    : isSecret ? '작성자와 관리자만 볼 수 있습니다.' : '모든 사용자가 볼 수 있습니다.'}
                             </span>
                         </div>
                     </div>

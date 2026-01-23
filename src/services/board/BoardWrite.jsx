@@ -40,7 +40,9 @@ const BoardWrite = () => {
                         if (type === 'patchnotes') {
                             setVersion(data.version || '');
                         }
-                        // 첨부파일 처리 로직은 추후 구현 (현재는 UI만)
+                        if (data.attachments) {
+                            setFiles(data.attachments);
+                        }
                     }
                 } catch (error) {
                     console.error("Failed to fetch detail:", error);
@@ -91,7 +93,21 @@ const BoardWrite = () => {
             isVisible: !isSecret,
             author: "관리자",
             hasAttachment: files.length > 0,
-            attachments: [] // 첨부파일 처리는 추후 구현
+            attachments: files.map(file => {
+                if (file instanceof File) {
+                    return {
+                        id: 0,
+                        boardType: type === 'notice' ? 'NOTICE' : 'PATCH',
+                        referenceId: isEdit ? parseInt(id) : 0,
+                        fileGuid: "",
+                        originalName: file.name,
+                        saveName: "",
+                        fileSize: file.size,
+                        createdAt: new Date().toISOString()
+                    };
+                }
+                return file;
+            })
         };
 
         if (isEdit) {

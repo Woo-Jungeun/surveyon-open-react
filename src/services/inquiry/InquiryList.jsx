@@ -50,13 +50,29 @@ const InquiryList = () => {
                         status: item.status ? item.status.toLowerCase() : 'waiting',
                         isSecret: item.isSecret,
                         content: item.content,
-                        depth: item.depth || (item.parentId ? 1 : 0), // 답변글 들여쓰기 (API 응답에 depth가 없으므로 parentId로 판단)
+                        depth: item.depth || (item.parentId ? 1 : 0),
                         parentId: item.parentId,
-                        viewCount: item.viewCount || 0
+                        viewCount: item.viewCount || 0,
+                        createdAt: item.createdAt
                     }));
-                    setServerData(mappedData);
+
+                    // 부모-자식 관계로 데이터 재정렬
+                    const organizedData = [];
+                    const parents = mappedData.filter(item => !item.parentId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                    parents.forEach(parent => {
+                        organizedData.push(parent);
+                        // 해당 부모의 자식들을 찾아 시간순으로 추가
+                        const children = mappedData.filter(item => item.parentId === parent.id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                        organizedData.push(...children);
+                    });
+
+                    // 부모가 없는(데이터 오류 등) 자식들도 마지막에 추가
+                    const orphans = mappedData.filter(item => item.parentId && !parents.find(p => p.id === item.parentId));
+                    organizedData.push(...orphans);
+
+                    setServerData(organizedData);
                 } else if (response && response.list) {
-                    // 응답이 { list: [], total: 10 } 형태로 감싸져 있는 경우
                     const mappedData = response.list.map(item => ({
                         id: item.id,
                         category: item.category,
@@ -68,9 +84,23 @@ const InquiryList = () => {
                         content: item.content,
                         depth: item.depth || 0,
                         parentId: item.parentId,
-                        viewCount: item.viewCount || 0
+                        viewCount: item.viewCount || 0,
+                        createdAt: item.createdAt
                     }));
-                    setServerData(mappedData);
+
+                    const organizedData = [];
+                    const parents = mappedData.filter(item => !item.parentId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                    parents.forEach(parent => {
+                        organizedData.push(parent);
+                        const children = mappedData.filter(item => item.parentId === parent.id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                        organizedData.push(...children);
+                    });
+
+                    const orphans = mappedData.filter(item => item.parentId && !parents.find(p => p.id === item.parentId));
+                    organizedData.push(...orphans);
+
+                    setServerData(organizedData);
                 }
             }
         });
@@ -171,11 +201,13 @@ const InquiryList = () => {
                         const nextItem = currentData[index + 1];
                         const prevItem = currentData[index - 1];
 
-                        const hasReply = nextItem && nextItem.parentId === item.id;
                         const isReply = item.depth > 0;
-                        const isParentExpanded = isReply && prevItem && prevItem.id === item.parentId && expandedIds.has(prevItem.id);
+                        // 다음 아이템이 현재 아이템의 답글이거나, 현재 아이템이 답글이면서 다음 아이템도 같은 부모의 답글인 경우
+                        const hasReply = nextItem && (nextItem.parentId === item.id || (isReply && nextItem.parentId === item.parentId));
+
+                        const isParentExpanded = isReply && prevItem && (prevItem.id === item.parentId || prevItem.parentId === item.parentId) && expandedIds.has(prevItem.id);
                         const isChildExpanded = hasReply && nextItem && expandedIds.has(nextItem.id);
-                        const isAttachedAndExpanded = isReply && prevItem && prevItem.id === item.parentId && expandedIds.has(item.id);
+                        const isAttachedAndExpanded = isReply && prevItem && (prevItem.id === item.parentId || prevItem.parentId === item.parentId) && expandedIds.has(item.id);
 
                         return (
                             <div key={item.id} className={`inquiry-item ${expandedIds.has(item.id) ? 'expanded' : ''} ${hasReply ? 'has-reply' : ''} ${isReply ? 'is-reply' : ''} ${isParentExpanded ? 'parent-expanded' : ''} ${isChildExpanded ? 'child-expanded' : ''} ${isAttachedAndExpanded ? 'attached-expanded' : ''}`}>

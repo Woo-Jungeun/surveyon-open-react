@@ -250,37 +250,41 @@ const InquiryDetail = () => {
                     <div className="id-user-btns">
                         {isAdmin === 0 && (
                             <>
-                                <button className="id-btn id-btn-edit" onClick={() => navigate(`/inquiry/write/${id}`)}>문의 수정</button>
-                                <button className="id-btn id-btn-delete" onClick={() => {
-                                    modal.showConfirm('알림', '정말 이 문의를 삭제하시겠습니까?', {
-                                        btns: [
-                                            { title: "취소", click: () => { } },
-                                            {
-                                                title: "확인",
-                                                click: async () => {
-                                                    try {
-                                                        const payload = {
-                                                            gb: "delete",
-                                                            userId: userId,
-                                                            is_admin: isAdmin,
-                                                            id: parseInt(id)
-                                                        };
+                                {inquiryData.status !== 'answered' && (
+                                    <>
+                                        <button className="id-btn id-btn-edit" onClick={() => navigate(`/inquiry/write/${id}`)}>문의 수정</button>
+                                        <button className="id-btn id-btn-delete" onClick={() => {
+                                            modal.showConfirm('알림', '정말 이 문의를 삭제하시겠습니까?', {
+                                                btns: [
+                                                    { title: "취소", click: () => { } },
+                                                    {
+                                                        title: "확인",
+                                                        click: async () => {
+                                                            try {
+                                                                const payload = {
+                                                                    gb: "delete",
+                                                                    userId: userId,
+                                                                    is_admin: isAdmin,
+                                                                    id: parseInt(id)
+                                                                };
 
-                                                        const response = await inquiryTransaction.mutateAsync(payload);
-                                                        console.log('문의 삭제 응답:', response);
+                                                                const response = await inquiryTransaction.mutateAsync(payload);
+                                                                console.log('문의 삭제 응답:', response);
 
-                                                        modal.showAlert('알림', '문의가 삭제되었습니다.', null, () => {
-                                                            navigate('/inquiry');
-                                                        });
-                                                    } catch (error) {
-                                                        console.error('문의 삭제 실패:', error);
-                                                        modal.showErrorAlert('오류', '문의 삭제에 실패했습니다. 다시 시도해주세요.');
+                                                                modal.showAlert('알림', '문의가 삭제되었습니다.', null, () => {
+                                                                    navigate('/inquiry');
+                                                                });
+                                                            } catch (error) {
+                                                                console.error('문의 삭제 실패:', error);
+                                                                modal.showErrorAlert('오류', '문의 삭제에 실패했습니다. 다시 시도해주세요.');
+                                                            }
+                                                        }
                                                     }
-                                                }
-                                            }
-                                        ]
-                                    });
-                                }}>문의 삭제</button>
+                                                ]
+                                            });
+                                        }}>문의 삭제</button>
+                                    </>
+                                )}
 
                                 {/* 답변 완료 시 추가 질문하기 버튼 표시 */}
                                 {inquiryData.status === 'answered' && (
@@ -289,10 +293,11 @@ const InquiryDetail = () => {
                                         onClick={() => navigate('/inquiry/write', {
                                             state: {
                                                 parentId: id,
-                                                parentTitle: inquiryData.title
+                                                parentTitle: inquiryData.title,
+                                                parentCategory: inquiryData.category,
+                                                isSecret: inquiryData.isSecret
                                             }
                                         })}
-                                        style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 16px', border: '1px solid #ddd', borderRadius: '8px', background: 'white', cursor: 'pointer' }}
                                     >
                                         <MessageCirclePlus size={16} />
                                         추가 질문하기

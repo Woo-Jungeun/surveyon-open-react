@@ -1184,6 +1184,22 @@
     background: #dc2626;
 }
 
+.id-btn-reply {
+    background: white;
+    color: #475569;
+    border: 1px solid #ddd !important;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.id-btn-reply:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1 !important;
+    color: #1e293b;
+}
+
 .id-answer-actions {
     display: flex;
     gap: 10px;
@@ -1299,58 +1315,45 @@
     border-top: 1px dashed #e2e8f0;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
-    background: #fafbfc;
+    background: #fbfcfd;
 }
 
 .inquiry-item.is-reply:hover {
-    background: #f1f5f9;
+    background: #f8fafc;
 }
-
-/* 
-   Expanded State Logic:
-   1. Parent Expanded: Attach to child, theme border on outer edges, NO middle separator.
-   2. Child Expanded: Attach to parent, theme border on outer edges, NO middle separator.
-   3. Both Expanded: Handled by individual rules, ensuring seamless connection.
-*/
 
 /* Parent Expanded: Attach to child with theme border */
 .inquiry-item.has-reply.expanded {
     margin-bottom: 0 !important;
     border-bottom: none !important;
-    /* No middle border */
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
-    /* Theme border is applied by default .expanded class */
+    box-shadow: none !important;
 }
 
 .inquiry-item.is-reply.parent-expanded {
-    margin-top: -1px !important;
-    border: 1px solid var(--primary-border, #6b7fbf) !important;
-    /* Theme border */
+    margin-top: 0 !important;
+
     border-top: none !important;
-    /* No middle border */
     border-top-left-radius: 0 !important;
     border-top-right-radius: 0 !important;
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 90%);
+
 }
 
 /* Child Expanded: Attach to parent with theme border */
 .inquiry-item.has-reply.child-expanded {
     margin-bottom: 0 !important;
-    border: 1px solid var(--primary-border, #6b7fbf) !important;
-    /* Theme border */
+
     border-bottom: none !important;
-    /* No middle border */
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 90%);
+
 }
 
 /* Child Expanded (Self): Ensure top border is removed when attached to parent */
 .inquiry-item.is-reply.attached-expanded {
-    margin-top: -1px !important;
+    margin-top: 0 !important;
     border-top: none !important;
-    /* No middle border */
     border-top-left-radius: 0 !important;
     border-top-right-radius: 0 !important;
 }
