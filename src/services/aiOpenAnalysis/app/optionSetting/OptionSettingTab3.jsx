@@ -6,6 +6,8 @@ import { OptionSettingApi } from "@/services/aiOpenAnalysis/app/optionSetting/Op
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { useSelector } from "react-redux";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { process } from "@progress/kendo-data-query";
+import GridDataCount from "@/components/common/grid/GridDataCount";
 
 // 정렬 
 const natKey = (v) => {
@@ -138,8 +140,21 @@ const OptionSettingTab3 = (props) => {
             [sort, proxyField]
         );
 
+        // 필터링된 데이터 개수 계산
+        const filteredCount = useMemo(() => {
+            const result = process(dataWithProxies, { filter });
+            return result.total;
+        }, [dataWithProxies, filter]);
+
         return (
             <Fragment>
+                <div className="meta-header-layout">
+                    <div className="meta-header-left meta2">
+                        <div style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '4px' }}>
+                            <GridDataCount total={filteredCount} label="필터 결과" unit="건" />
+                        </div>
+                    </div>
+                </div>
                 <div id="grid_01" className={`cmn_grid singlehead ${isLeftOpen && String(lvCode) !== "1" ? "force-scroll" : ""}`} style={{ marginBottom: '0px' }}>
                     <KendoGrid
                         key={`lv-${lvCode}`}

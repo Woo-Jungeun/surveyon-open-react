@@ -7,6 +7,8 @@ import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridHeaderBtnTxt from "@/components/style/button/GridHeaderBtnTxt.jsx";
 import { PERM, hasPerm, addSortProxies, GROUP_MIN_PERM, FIELD_MIN_PERM } from "./ProListUtils";
+import GridDataCount from "@/components/common/grid/GridDataCount";
+import { process } from "@progress/kendo-data-query";
 
 const ProListGridRenderer = (props) => {
     const renderCount = useRef(0);
@@ -45,6 +47,13 @@ const ProListGridRenderer = (props) => {
         () => (sort || []).map(s => ({ ...s, field: proxyField[s.field] ?? s.field })),
         [sort, proxyField]
     );
+
+    // 필터링된 데이터 개수 계산
+    const processedData = useMemo(
+        () => process(dataWithProxies, { filter }),
+        [dataWithProxies, filter]
+    );
+    const filteredCount = processedData.total;
 
     // 저장 여부 확인 
     const blockWhenDirty = useCallback(() => {
@@ -851,6 +860,7 @@ const ProListGridRenderer = (props) => {
 
             <article className="subContWrap">
                 <div className="subCont">
+                    <GridDataCount total={filteredCount} />
                     <div className="cmn_gird_wrap">
                         <div id="grid_01" className="cmn_grid multihead">
                             <KendoGrid

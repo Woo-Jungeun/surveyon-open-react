@@ -7,6 +7,7 @@ import { ProPermissionApi } from "@/services/aiOpenAnalysis/app/proPermission/Pr
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { process } from "@progress/kendo-data-query";
+import GridDataCount from "@/components/common/grid/GridDataCount";
 
 /**
  *  권한 관리 > 그리드
@@ -108,6 +109,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
   return (
     <Fragment>
       <div className="cmn_gird_wrap">
+        <GridDataCount total={processedData.total} />
         <div id="grid" className="cmn_grid singlehead">
           <KendoGrid
             parentProps={{

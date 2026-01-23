@@ -9,6 +9,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from "@/hooks/useUpdateHistory";
 import { useSelector } from "react-redux";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { process } from "@progress/kendo-data-query";
+import GridDataCount from "@/components/common/grid/GridDataCount";
 
 const natKey = (v) => {
     if (v == null) return Number.NEGATIVE_INFINITY;
@@ -244,6 +246,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 grid.scrollLeft = scrollLeftRef.current;
             }
         }, [dataState?.data]);
+
+        // 필터링된 데이터 개수 계산
+        const filteredCount = useMemo(() => {
+            const result = process(dataWithProxies, { filter });
+            return result.total;
+        }, [dataWithProxies, filter]);
 
         const COMPOSITE_KEY_FIELD = "__rowKey";  // 키값
         const getKey = useCallback((row) => row?.__rowKey ?? makeRowKey(row), []);
@@ -1082,9 +1090,14 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <div className="meta2" style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div className="row1">업데이트 날짜: {dataState?.data?.[0]?.update_date ?? '-'}</div>
-                    <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
+                <div className="meta-header-layout" style={{ marginBottom: '8px' }}>
+                    <div className="meta-header-left meta2">
+                        <div className="row1" style={{ color: '#888', fontSize: '13px', textAlign: 'left', marginLeft: '0', paddingLeft: '0' }}>업데이트 날짜: {dataState?.data?.[0]?.update_date ?? '-'}</div>
+                        <div className="row2" style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '4px' }}>
+                            <GridDataCount total={filteredCount} label="필터 결과" unit="건" />
+                        </div>
+                    </div>
+                    <div className="meta-header-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         {/* <Button
                             themeColor="primary"
                             className="btnM"

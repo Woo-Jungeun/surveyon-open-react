@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import ExcelColumnMenu from "@/components/common/grid/ExcelColumnMenu";
 import { ProKeyApi } from "@/services/aiOpenAnalysis/app/proKey/ProKeyApi";
 import { modalContext } from "@/components/common/Modal";
+import GridDataCount from "@/components/common/grid/GridDataCount";
 
 /**
  *  API KEY 등록 > 그리드
@@ -163,6 +164,7 @@ const ProKeyGrid = ({ data = [], setData, fetchData }) => {
   return (
     <Fragment>
       <div className="cmn_gird_wrap">
+        <GridDataCount total={processedData.total} />
         <div id="grid_apiKey" className="cmn_grid singlehead">
           <KendoGrid
             parentProps={{

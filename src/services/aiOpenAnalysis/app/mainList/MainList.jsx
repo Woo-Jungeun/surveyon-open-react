@@ -7,6 +7,8 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { MainListApi } from "@/services/aiOpenAnalysis/app/mainList/MainListApi.js";
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
+import GridDataCount from "@/components/common/grid/GridDataCount";
+import { process } from "@progress/kendo-data-query";
 
 
 /**
@@ -75,6 +77,11 @@ const MainList = () => {
     //grid rendering 
     const GridRenderer = (props) => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
+
+        // 필터링된 데이터 개수 계산
+        const processedData = process(dataState?.data || [], { filter });
+        const filteredCount = processedData.total;
+
         return (
             <Fragment>
                 <article className="subTitWrap pro-list-header">
@@ -102,6 +109,7 @@ const MainList = () => {
 
                 <article className="subContWrap">
                     <div className="subCont">
+                        <GridDataCount total={filteredCount} />
                         <div className="cmn_gird_wrap">
                             <div id="grid_01" className="cmn_grid singlehead" style={{ cursor: "pointer" }} >
                                 <KendoGrid

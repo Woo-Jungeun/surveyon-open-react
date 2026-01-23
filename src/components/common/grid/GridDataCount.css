@@ -1,0 +1,31 @@
+/* Grid Data Count Component Styles */
+.grid-data-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px;
+    height: 24px;
+    background-color: #f8fafc;
+    /* 더 연한 배경 */
+    border-radius: 4px;
+    font-size: 12px;
+    /* 폰트 살짝 축소 */
+    color: #64748b;
+    vertical-align: middle;
+    border: 1px solid #f1f5f9;
+}
+
+.grid-data-count__label {
+    font-weight: 500;
+}
+
+.grid-data-count__number {
+    color: #ff7a30;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.grid-data-count__unit {
+    font-weight: 500;
+    margin-left: -2px;
+}

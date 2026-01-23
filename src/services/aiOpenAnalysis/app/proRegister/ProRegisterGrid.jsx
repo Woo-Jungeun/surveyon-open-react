@@ -7,6 +7,8 @@ import { MainListApi } from "@/services/aiOpenAnalysis/app/mainList/MainListApi.
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import { ProRegisterApi } from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterApi.js";
+import GridDataCount from "@/components/common/grid/GridDataCount";
+import { process } from "@progress/kendo-data-query";
 /**
  *  문항등록 > DB > 그리드
  *
@@ -58,6 +60,10 @@ const ProRegisterGrid = ({ onDataLength }) => {
       onDataLength?.(dataState?.data?.length || 0);
     }, [dataState?.data]);
 
+    // 필터링된 데이터 개수 계산
+    const processedData = process(dataState?.data || [], { filter });
+    const filteredCount = processedData.total;
+
     return (
       <Fragment>
         <style>{`
@@ -66,6 +72,7 @@ const ProRegisterGrid = ({ onDataLength }) => {
           }
         `}</style>
         <div className="cmn_gird_wrap">
+          <GridDataCount total={filteredCount} />
           <div id="grid_01" className="cmn_grid singlehead">
             <KendoGrid
               parentProps={{
