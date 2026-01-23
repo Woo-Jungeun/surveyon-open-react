@@ -1,4 +1,5 @@
 import React, { Fragment, useState, useRef, forwardRef, useImperativeHandle, useCallback, useContext, useMemo, useEffect, useLayoutEffect } from "react";
+import { RotateCcw, Plus } from 'lucide-react';
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -1090,19 +1091,25 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
 
         return (
             <Fragment>
-                <div className="meta-header-layout" style={{ marginBottom: '8px' }}>
+                <div className="meta-header-layout">
                     <div className="meta-header-left meta2">
                         <div className="row1" style={{ color: '#888', fontSize: '13px', textAlign: 'left', marginLeft: '0', paddingLeft: '0' }}>업데이트 날짜: {dataState?.data?.[0]?.update_date ?? '-'}</div>
                         <div className="row2" style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '4px' }}>
                             <GridDataCount total={filteredCount} label="필터 결과" unit="건" />
                         </div>
                     </div>
-                    <div className="meta-header-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {/* <Button
+                    <div className="meta-header-right" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
+                        <Button
                             themeColor="primary"
                             className="btnM"
                             onClick={() => {
-                                modal.showConfirm("알림", "보기유형:survey를 제외한 모든 보기레이블을 삭제하시겠습니까?", {
+                                const hasAnalysisData = (dataState?.data || []).some(r => r.ex_gubun === 'analysis');
+                                if (!hasAnalysisData) {
+                                    modal.showAlert("알림", "보기유형이 analysis인 데이터가 존재하지 않습니다.");
+                                    return;
+                                }
+
+                                modal.showConfirm("알림", "보기유형이 analysis인 모든 보기 레이블을 삭제하시겠습니까?", {
                                     btns: [
                                         {
                                             title: "취소",
@@ -1122,12 +1129,12 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                                         gb: "alldel"
                                                     };
                                                     const res = await optionSaveData.mutateAsync(payload);
-                                                    if (res?.success == "777") {
+                                                    if (res?.success === "777") {
                                                         // 성공 시 재조회
                                                         handleSearch();
                                                         modal.showAlert("알림", "초기화 되었습니다.");
                                                     } else {
-                                                        modal.showErrorAlert("에러", res?.message || "초기화 중 오류가 발생했습니다.");
+                                                        modal.showErrorAlert(res?.success || "에러", res?.message || res?.contents || "초기화 중 오류가 발생했습니다.");
                                                     }
                                                 } catch (e) {
                                                     modal.showErrorAlert("에러", "초기화 중 오류가 발생했습니다.");
@@ -1138,14 +1145,20 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                 });
                             }}
                         >
-                            전체 초기화
-                        </Button> */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <RotateCcw size={16} />
+                                전체 초기화
+                            </div>
+                        </Button>
                         <Button
                             themeColor="primary"
                             className="btnM"
                             onClick={addButtonClick}
                         >
-                            + 보기 데이터 추가
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Plus size={16} />
+                                보기 데이터 추가
+                            </div>
                         </Button>
                     </div>
                 </div>
