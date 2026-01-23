@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight } from 'lucide-react';
 import './Inquiry.css';
+import { InquiryApi } from './InquiryApi';
+import { useEffect } from 'react';
 
 const InquiryList = () => {
     const navigate = useNavigate();
@@ -13,102 +15,58 @@ const InquiryList = () => {
 
     const categories = ['전체', '설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리'];
 
-    // 임시 데이터
-    const inquiryData = [
-        {
-            id: 1,
-            category: '설문제작',
-            title: '로그인이 안됩니다.',
-            writer: '홍*동',
-            date: '2025-01-08',
-            status: 'waiting', // waiting, answered
-            isSecret: true,
-            content: '로그인을 시도했는데 계속 오류가 발생합니다. 확인 부탁드립니다.',
-            depth: 0
-        },
-        {
-            id: 100,
-            category: '설문제작',
-            title: '[RE]: 로그인이 안됩니다.',
-            writer: '홍*동',
-            date: '2025-01-08',
-            status: 'waiting',
-            isSecret: true,
-            content: '추가로 확인해보니 비밀번호가 틀렸다고 나옵니다.',
-            depth: 1,
-            parentId: 1
-        },
-        {
-            id: 2,
-            category: '데이터현황',
-            title: '설문조사 결과 다운로드 문의',
-            writer: '김*수',
-            date: '2025-01-07',
-            status: 'answered',
-            isSecret: false,
-            content: '설문조사 결과를 엑셀로 다운로드 받고 싶은데 기능이 어디에 있나요?'
-        },
-        {
-            id: 3,
-            category: '데이터관리',
-            title: '서비스 이용료 관련 문의',
-            writer: '이*영',
-            date: '2025-01-06',
-            status: 'answered',
-            isSecret: true,
-            content: '서비스 이용료가 월 얼마인지 궁금합니다.'
-        },
-        {
-            id: 4,
-            category: '설문제작',
-            title: '로그인이 안됩니다.',
-            writer: '홍*동',
-            date: '2025-01-08',
-            status: 'waiting', // waiting, answered
-            isSecret: true,
-            content: '로그인을 시도했는데 계속 오류가 발생합니다. 확인 부탁드립니다.'
-        },
-        {
-            id: 5,
-            category: '데이터현황',
-            title: '설문조사 결과 다운로드 문의',
-            writer: '김*수',
-            date: '2025-01-07',
-            status: 'answered',
-            isSecret: false,
-            content: '설문조사 결과를 엑셀로 다운로드 받고 싶은데 기능이 어디에 있나요?'
-        },
-        {
-            id: 6,
-            category: '데이터관리',
-            title: '서비스 이용료 관련 문의',
-            writer: '이*영',
-            date: '2025-01-06',
-            status: 'answered',
-            isSecret: true,
-            content: '서비스 이용료가 월 얼마인지 궁금합니다.'
-        },
-        {
-            id: 7,
-            category: 'AI오픈분석',
-            title: 'AI 분석 결과가 이상합니다.',
-            writer: '박*민',
-            date: '2025-01-05',
-            status: 'waiting',
-            isSecret: true,
-            content: 'AI 분석 결과가 실제 데이터와 다르게 나오는 것 같습니다.'
-        },
-        {
-            id: 8,
-            category: '응답자관리',
-            title: '응답자 목록 엑셀 업로드 문의',
-            writer: '최*우',
-            date: '2025-01-04',
-            status: 'answered',
-            isSecret: false,
-            content: '응답자 목록을 엑셀로 일괄 업로드할 수 있나요?'
-        }
-    ];
+    const { inquiryList } = InquiryApi();
+    const [serverData, setServerData] = useState([]);
+
+    useEffect(() => {
+        fetchList();
+    }, [activeTab]);
+
+    const fetchList = () => {
+        const params = {
+            category: activeTab === '전체' ? '' : activeTab
+        };
+
+        inquiryList.mutate(params, {
+            onSuccess: (response) => {
+                // API 응답 구조 처리
+                // 사용자의 설명에 따라 응답이 배열이라고 가정
+                // 응답에 총 개수가 포함되어 있다면 업데이트, 현재는 배열을 직접 매핑
+                if (Array.isArray(response)) {
+                    const mappedData = response.map(item => ({
+                        id: item.id,
+                        category: item.category,
+                        title: item.title,
+                        writer: item.author,
+                        date: item.createdAt ? item.createdAt.split('T')[0] : '',
+                        status: item.status ? item.status.toLowerCase() : 'waiting',
+                        isSecret: item.isSecret,
+                        content: item.content,
+                        depth: item.depth || (item.parentId ? 1 : 0), // 답변글 들여쓰기 (API 응답에 depth가 없으므로 parentId로 판단)
+                        parentId: item.parentId
+                    }));
+                    setServerData(mappedData);
+                } else if (response && response.list) {
+                    // 응답이 { list: [], total: 10 } 형태로 감싸져 있는 경우
+                    const mappedData = response.list.map(item => ({
+                        id: item.id,
+                        category: item.category,
+                        title: item.title,
+                        writer: item.author,
+                        date: item.createdAt ? item.createdAt.split('T')[0] : '',
+                        status: item.status ? item.status.toLowerCase() : 'waiting',
+                        isSecret: item.isSecret,
+                        content: item.content,
+                        depth: item.depth || 0,
+                        parentId: item.parentId
+                    }));
+                    setServerData(mappedData);
+                }
+            }
+        });
+    };
+
+
 
     const toggleExpand = (id) => {
         const newExpandedIds = new Set(expandedIds);
@@ -130,13 +88,12 @@ const InquiryList = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const filteredData = inquiryData.filter(item => {
-        const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = activeTab === '전체' || item.category === activeTab;
-        return matchesSearch && matchesCategory;
-    });
+    // 클라이언트 사이드 필터링
+    const filteredData = serverData.filter(item =>
+        item.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-    // Pagination Logic
+    // 클라이언트 사이드 페이징
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
@@ -159,7 +116,7 @@ const InquiryList = () => {
             </div>
 
             <div className="inquiry-content">
-                {/* Category Tabs */}
+                {/* 카테고리 탭 */}
                 <div className="inquiry-tabs">
                     {categories.map((category) => (
                         <button
