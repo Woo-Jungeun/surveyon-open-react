@@ -80,6 +80,7 @@ export function LoginApi() {
         {
             onSuccess: (res, v) => {
                 sessionStorage.removeItem("X-Auth-Token");
+                sessionStorage.removeItem("openai_balance");
                 v?.options?.onSuccess?.();
             },
             onError: (_, v) => {

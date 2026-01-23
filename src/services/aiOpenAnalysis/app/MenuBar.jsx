@@ -6,6 +6,9 @@ import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
+import { MenuBarApi } from "./MenuBarApi";
+import { Sparkles, RefreshCw } from "lucide-react";
+import "@/assets/css/aiCharge.css";
 
 /**
  * 프로젝트 목록 클릭 시 → 탭: ["/ai_open_analysis"]
@@ -50,6 +53,88 @@ const MenuBar = () => {
   const projectname = sessionStorage.getItem("projectname");
 
   const { logoutMutation } = LoginApi();
+  const { getTokenUsage, getChargeCost, updateChargeCost } = MenuBarApi();
+  const [balance, setBalance] = useState(null);
+  const [chargeInput, setChargeInput] = useState(""); // 충전 금액 입력값
+  const isAiSolutionTeam = userGroup === "AI솔루션팀"; // AI솔루션팀 권한 체크
+
+  // OpenAI 잔액 조회
+  // OpenAI 잔액 조회
+  useEffect(() => {
+    const fetchBalance = async () => {
+      // 세션 스토리지 캐시 확인
+      const cachedBalance = sessionStorage.getItem("openai_balance");
+      if (cachedBalance !== null && cachedBalance !== undefined) {
+        setBalance(cachedBalance);
+        return;
+      }
+
+      try {
+        const res = await getTokenUsage.mutateAsync({ apigubun: "openai" });
+        if (res?.success === "777") {
+          const bal = res.resultjson?.balancecost;
+          setBalance(bal);
+          sessionStorage.setItem("openai_balance", bal);
+        }
+      } catch (e) {
+        console.error("Failed to fetch OpenAI balance", e);
+      }
+    };
+
+    if (auth?.isLogin) {
+      fetchBalance();
+    }
+  }, [auth?.isLogin]);
+
+  // AI솔루션팀일 때 충전 금액 조회
+  useEffect(() => {
+    const fetchChargeCost = async () => {
+      try {
+        const res = await getChargeCost.mutateAsync({ apigubun: "openai" });
+        if (res?.success === "777") {
+          setChargeInput(res.resultjson?.chargecost || "");
+        }
+      } catch (e) {
+        console.error("Failed to fetch charge cost", e);
+      }
+    };
+
+    if (auth?.isLogin && isAiSolutionTeam) {
+      fetchChargeCost();
+    }
+  }, [auth?.isLogin, isAiSolutionTeam]);
+
+  // 충전 금액 업데이트 핸들러
+  const handleUpdateCharge = async () => {
+    if (!chargeInput) {
+      modal.showAlert("알림", "충전 금액을 입력해주세요.");
+      return;
+    }
+
+    try {
+      const res = await updateChargeCost.mutateAsync({
+        chargecostInput: Number(chargeInput),
+        apigubun: "openai"
+      });
+
+      if (res?.success === "777") {
+        modal.showAlert("알림", "충전 금액이 업데이트되었습니다.");
+        // 잔액 갱신
+        getTokenUsage.mutateAsync({ apigubun: "openai" }).then((res) => {
+          if (res?.success === "777") {
+            const bal = res.resultjson?.balancecost;
+            setBalance(bal);
+            sessionStorage.setItem("openai_balance", bal);
+          }
+        });
+      } else {
+        modal.showAlert("알림", "업데이트에 실패했습니다.");
+      }
+    } catch (e) {
+      console.error("Failed to update charge cost", e);
+      modal.showAlert("알림", "업데이트 중 오류가 발생했습니다.");
+    }
+  };
 
   // 드롭다운 상태
   const [appsOpen, setAppsOpen] = useState(false);
@@ -238,6 +323,34 @@ const MenuBar = () => {
         </div>
 
         <div className="userWrap" style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          {/* OpenAI 잔액 표출 */}
+          {/* AI솔루션팀 전용 충전 관리 UI */}
+          {isAiSolutionTeam && (
+            <div className="ai-charge-manage">
+              <div className="ai-charge-input-wrapper">
+                <span className="ai-charge-currency">누적액 $</span>
+                <input
+                  type="number"
+                  className="ai-charge-input"
+                  value={chargeInput}
+                  onChange={(e) => setChargeInput(e.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+              <button type="button" className="ai-charge-btn" onClick={handleUpdateCharge}>
+                업데이트
+              </button>
+            </div>
+          )}
+
+          {/* {balance !== null && ( */}
+          <div className="ai-balance-chip">
+            <Sparkles size={14} className="ai-balance-icon" />
+            <span className="ai-balance-label">OPEN AI 잔액</span>
+            <span className="ai-balance-value">약 ${Number(balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+          </div>
+          {/* )} */}
+
           {/* 고객/일반 권한은 앱 메뉴 숨김 */}
           {(!roleSource.includes("고객") && !roleSource.includes("일반")) && (
             <div ref={appsRef} className="menu-dd">

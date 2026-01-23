@@ -6089,7 +6089,449 @@ footer {
     display: inline-block !important;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+/* ProEnter New Registration Tab Alignment */
+.pro-enter-new-container {
+    position: absolute;
+    left: 50vw;
+    transform: translateX(-50%);
+    padding-top: 40px;
+    width: auto;
+}
+
+.pro-enter-new-form {
+    width: 600px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+@media (max-width: 1024px) {
+    .pro-enter-new-container {
+        position: static !important;
+        transform: none !important;
+        left: auto !important;
+        padding: 20px !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+    }
+
+    .pro-enter-new-form {
+        width: 100% !important;
+        max-width: 600px !important;
+        margin: 0 auto !important;
+    }
+}
+
+@media (min-width: 770px) and (max-width: 1023px) {
+    .pro-enter-new-container {
+        padding: 15px !important;
+    }
+}
+
+
+/* ProEnter Form Height Fix */
+@media (max-width: 1024px) {
+    .subContWrap .subCont {
+        height: auto !important;
+        overflow: visible !important;
+    }
+}
+
+/* Project Permission Management Form Alignment */
+.pro-permission-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.pro-permission-form {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (max-width: 1024px) {
+    .pro-permission-container {
+        display: block !important;
+        padding-top: 0 !important;
+    }
+
+    .pro-permission-form {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+}
+
+/* ProKey Form Alignment */
+.pro-key-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.pro-key-form {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+@media (max-width: 1024px) {
+    .subContWrap {
+        min-width: auto !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .pro-key-container {
+        display: flex !important;
+        justify-content: flex-start !important;
+        padding-bottom: 20px !important;
+    }
+
+    .pro-key-form {
+        width: 100% !important;
+        max-width: 500px !important;
+        margin: 0 !important;
+    }
+}
+
+/* DatePicker Input Height Fix - Responsive */
+.custom-datepicker .k-input-inner {
+    width: 100% !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+@media (max-width: 1440px) {
+    .custom-datepicker .k-input-inner {
+        height: 32px !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .custom-datepicker .k-input-inner {
+        height: 28px !important;
+    }
+}
+
+@media (max-width: 769px) {
+    .custom-datepicker .k-input-inner {
+        height: 18px !important;
+    }
+}
+
+@media (min-width: 770px) and (max-width: 1023px) {
+    .custom-datepicker .k-input-inner {
+        height: 11px !important;
+        margin: -5px;
+    }
+}
+
+/* ProEnter New Registration Form Responsive - Fit to screen */
+
+/* Pro List Header - Project Name Responsive */
+@media (max-width: 1024px) {
+    .pro-list-header .projectName {
+        font-size: 13px !important;
+        margin-left: 8px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .pro-list-header .projectName {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .pro-list-header .projectName {
+        display: none !important;
+    }
+}
+
+/* Info Icon - Single Line Display */
+.info-icon {
+    white-space: nowrap !important;
+    display: inline-block !important;
+}
+
 .subCont.scrollable {
     overflow-y: auto !important;
     padding-bottom: 50px !important;
+}
+
+/* OpenAI Balance Chip in MenuBar - Premium Design */
+.ai-balance-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 16px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 128, 36, 0.2);
+    border-radius: 100px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(255, 128, 36, 0.05);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    user-select: none;
+    margin-right: 8px;
+}
+
+.ai-balance-icon {
+    color: #ff8024;
+    filter: drop-shadow(0 2px 4px rgba(255, 128, 36, 0.2));
+    animation: ai-sparkle 3s infinite ease-in-out;
+}
+
+@keyframes ai-sparkle {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+.ai-balance-label {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* ProEnter Form Height Fix */
+@media (max-width: 1024px) {
+    .subContWrap .subCont {
+        height: auto !important;
+        overflow: visible !important;
+    }
+}
+
+/* Project Permission Management Form Alignment */
+.pro-permission-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.pro-permission-form {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+@media (max-width: 1024px) {
+    .pro-permission-container {
+        display: block !important;
+        padding-top: 0 !important;
+    }
+
+    .pro-permission-form {
+        width: 100% !important;
+        margin: 0 !important;
+    }
+}
+
+/* ProKey Form Alignment */
+.pro-key-container {
+    display: flex;
+    justify-content: center;
+    padding-bottom: 20px;
+}
+
+.pro-key-form {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+@media (max-width: 1024px) {
+    .subContWrap {
+        min-width: auto !important;
+        width: 100% !important;
+        display: block !important;
+    }
+
+    .pro-key-container {
+        display: flex !important;
+        justify-content: flex-start !important;
+        padding-bottom: 20px !important;
+    }
+
+    .pro-key-form {
+        width: 100% !important;
+        max-width: 500px !important;
+        margin: 0 !important;
+    }
+}
+
+/* DatePicker Input Height Fix - Responsive */
+.custom-datepicker .k-input-inner {
+    width: 100% !important;
+    height: 32px !important;
+    padding: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+@media (max-width: 1440px) {
+    .custom-datepicker .k-input-inner {
+        height: 32px !important;
+    }
+}
+
+@media (max-width: 1024px) {
+    .custom-datepicker .k-input-inner {
+        height: 28px !important;
+    }
+}
+
+@media (max-width: 769px) {
+    .custom-datepicker .k-input-inner {
+        height: 18px !important;
+    }
+}
+
+@media (min-width: 770px) and (max-width: 1023px) {
+    .custom-datepicker .k-input-inner {
+        height: 11px !important;
+        margin: -5px;
+    }
+}
+
+/* ProEnter New Registration Form Responsive - Fit to screen */
+
+/* Pro List Header - Project Name Responsive */
+@media (max-width: 1024px) {
+    .pro-list-header .projectName {
+        font-size: 13px !important;
+        margin-left: 8px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .pro-list-header .projectName {
+        display: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .pro-list-header .projectName {
+        display: none !important;
+    }
+}
+
+/* Info Icon - Single Line Display */
+.info-icon {
+    white-space: nowrap !important;
+    display: inline-block !important;
+}
+
+.subCont.scrollable {
+    overflow-y: auto !important;
+    padding-bottom: 50px !important;
+}
+
+/* OpenAI Balance Chip in MenuBar - Premium Design */
+.ai-balance-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 16px;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 128, 36, 0.2);
+    border-radius: 100px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(255, 128, 36, 0.05);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    user-select: none;
+    margin-right: 8px;
+}
+
+.ai-balance-icon {
+    color: #ff8024;
+    filter: drop-shadow(0 2px 4px rgba(255, 128, 36, 0.2));
+    animation: ai-sparkle 3s infinite ease-in-out;
+}
+
+@keyframes ai-sparkle {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.1);
+    }
+}
+
+.ai-balance-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #777;
+    letter-spacing: -0.2px;
+    text-transform: uppercase;
+}
+
+.ai-balance-value {
+    font-size: 15px;
+    font-weight: 800;
+    color: #ff8024;
+    font-family: 'Outfit', 'Inter', sans-serif;
+    letter-spacing: -0.5px;
+}
+
+/* Responsive: Hide Balance Chip on small screens */
+@media (max-width: 1024px) {
+    .ai-balance-chip {
+        display: none !important;
+    }
 }

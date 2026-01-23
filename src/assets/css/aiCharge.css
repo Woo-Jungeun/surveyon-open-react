@@ -1,0 +1,95 @@
+/* AI Charge Management UI - Premium Design */
+.ai-charge-manage {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 12px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 128, 36, 0.15);
+    border-radius: 100px;
+    transition: all 0.3s ease;
+}
+
+.ai-charge-manage:hover {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: rgba(255, 128, 36, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 128, 36, 0.08);
+}
+
+.ai-charge-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.ai-charge-currency {
+    position: absolute;
+    left: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #ff8024;
+    pointer-events: none;
+}
+
+.ai-charge-input {
+    width: 120px;
+    padding: 6px 10px 6px 20px;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    color: #333;
+    background: transparent;
+    transition: all 0.2s;
+    outline: none;
+    text-align: right;
+    font-family: 'Outfit', 'Inter', sans-serif;
+}
+
+.ai-charge-input::placeholder {
+    color: #aaa;
+    font-weight: 400;
+}
+
+/* Hide spin buttons for number input */
+.ai-charge-input::-webkit-outer-spin-button,
+.ai-charge-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.ai-charge-btn {
+    padding: 6px 16px;
+    background: #ff8024 !important;
+    color: #fff !important;
+    border: none;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 2px 5px rgba(255, 128, 36, 0.4);
+    white-space: nowrap;
+    opacity: 1 !important;
+}
+
+.ai-charge-btn:hover {
+    background: #e66a10 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 128, 36, 0.3);
+}
+
+.ai-charge-btn:active {
+    transform: translateY(0);
+}
+
+/* Responsive: Hide Balance Chip & Charge UI on small screens */
+@media (max-width: 1024px) {
+
+    .ai-balance-chip,
+    .ai-charge-manage {
+        display: none !important;
+    }
+}
