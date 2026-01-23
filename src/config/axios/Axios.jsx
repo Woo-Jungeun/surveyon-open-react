@@ -28,6 +28,12 @@ apiAxios.interceptors.request.use(
             config.headers = config.headers || {};
             config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // X-Auth-Token 헤더 추가
+        const xAuthToken = sessionStorage.getItem("X-Auth-Token");
+        if (xAuthToken) {
+            config.headers["X-Auth-Token"] = xAuthToken;
+        }
         // FormData면 JSON 헤더 제거 → 브라우저가 boundary 포함해서 자동 세팅
         if (config.data instanceof FormData) {
             const h = (config.headers ||= {});

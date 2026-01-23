@@ -55,6 +55,10 @@ export function LoginApi() {
                     if (loginkey) {
                         setCookie("TOKEN", loginkey, { path: "/", sameSite: "Lax" }); // 필요시 secure:true
                     }
+                    // 3) 세션 스토리지 저장 (X-Auth-Token)
+                    if (res?.Token) {
+                        sessionStorage.setItem("X-Auth-Token", res.Token);
+                    }
                 }
             },
             onError: (err, v) => {
@@ -75,6 +79,7 @@ export function LoginApi() {
         async (payload) => await api.post(payload, "/Login/logout", "API_BASE_URL_OPENAI"),
         {
             onSuccess: (res, v) => {
+                sessionStorage.removeItem("X-Auth-Token");
                 v?.options?.onSuccess?.();
             },
             onError: (_, v) => {
