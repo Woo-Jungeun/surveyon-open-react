@@ -598,6 +598,98 @@
     line-height: 1.6;
 }
 
+/* Select Styles */
+.iw-select-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+}
+
+.iw-select-trigger {
+    width: 100%;
+    padding: 14px 16px;
+    padding-right: 40px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 15px;
+    color: #334155;
+    background: #f8fafc;
+    transition: all 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+}
+
+.iw-select-trigger:hover {
+    background: white;
+    border-color: #94a3b8;
+}
+
+.iw-select-trigger.active {
+    border-color: var(--primary-border, #6b7fbf);
+    background: white;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary-color), transparent 90%);
+}
+
+.iw-select-icon {
+    color: #64748b;
+    transition: transform 0.2s ease;
+}
+
+.iw-select-icon.rotate {
+    transform: rotate(180deg);
+}
+
+.iw-select-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    width: 100%;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    padding: 6px;
+    list-style: none;
+    margin: 0;
+    animation: dropdownFadeIn 0.2s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.iw-select-option {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #334155;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.iw-select-option:hover {
+    background: #f1f5f9;
+    color: var(--primary-color, #6b7fbf);
+}
+
+.iw-select-option.selected {
+    background: color-mix(in srgb, var(--primary-color), transparent 90%);
+    color: var(--primary-color, #6b7fbf);
+    font-weight: 600;
+}
+
 /* File Upload */
 .iw-file-upload {
     display: flex;
@@ -1245,4 +1337,25 @@
 /* Child Expanded (Self): If NOT attached (fallback or standalone), theme top border */
 .inquiry-item.is-reply.expanded:not(.attached-expanded) {
     border-top: 1px solid var(--primary-border, #6b7fbf) !important;
+}
+
+.id-meta-divider {
+    color: #cbd5e1;
+    font-size: 12px;
+    margin: 0 2px;
+    width: auto;
+    height: auto;
+    background: transparent;
+}
+
+.id-category-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    background: #f1f5f9;
+    color: #475569;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    margin-right: 8px;
 }

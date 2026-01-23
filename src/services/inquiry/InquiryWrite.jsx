@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { ArrowLeft, Save, Lock, Unlock, Upload, X, FileText, CornerDownRight } from 'lucide-react';
+import { ArrowLeft, Save, Lock, Unlock, Upload, X, FileText, CornerDownRight, ChevronDown } from 'lucide-react';
 import './Inquiry.css';
 
 const InquiryWrite = () => {
@@ -12,7 +12,12 @@ const InquiryWrite = () => {
     // 답글(추가 질문) 모드 확인
     const parentId = location.state?.parentId;
     const parentTitle = location.state?.parentTitle;
+
     const isReply = !!parentId;
+
+    const categories = ['설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
+    const [category, setCategory] = useState(categories[0]);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     const [title, setTitle] = useState(
         isEdit ? '[임시] 수정할 제목' :
@@ -36,6 +41,18 @@ const InquiryWrite = () => {
             alert('제목과 내용을 모두 입력해주세요.');
             return;
         }
+
+        // TODO: API Call here
+        // const payload = {
+        //     gb: "insert",
+        //     category,
+        //     title,
+        //     content,
+        //     isSecret,
+        //     author: "작성자", // This should come from auth context
+        //     attachments: files
+        // };
+
         alert(isEdit ? '문의가 수정되었습니다.' : '문의가 등록되었습니다.');
         navigate(isEdit ? `/inquiry/view/${id}` : '/inquiry');
     };
@@ -64,6 +81,36 @@ const InquiryWrite = () => {
                 </div>
 
                 <div className="iw-form">
+                    <div className="iw-form-group">
+                        <label>카테고리</label>
+                        <div className="iw-select-wrapper">
+                            <div
+                                className={`iw-select-trigger ${isDropdownOpen ? 'active' : ''}`}
+                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            >
+                                <span>{category}</span>
+                                <ChevronDown className={`iw-select-icon ${isDropdownOpen ? 'rotate' : ''}`} size={16} />
+                            </div>
+
+                            {isDropdownOpen && (
+                                <ul className="iw-select-dropdown">
+                                    {categories.map((cat) => (
+                                        <li
+                                            key={cat}
+                                            className={`iw-select-option ${category === cat ? 'selected' : ''}`}
+                                            onClick={() => {
+                                                setCategory(cat);
+                                                setIsDropdownOpen(false);
+                                            }}
+                                        >
+                                            {cat}
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+
                     <div className="iw-form-group">
                         <label>제목</label>
                         <input
@@ -142,6 +189,9 @@ const InquiryWrite = () => {
                             </span>
                         </div>
                     </div>
+
+
+
 
                     <div className="iw-footer">
                         <button className="iw-btn iw-btn-cancel" onClick={() => navigate(isEdit ? `/inquiry/view/${id}` : '/inquiry')}>

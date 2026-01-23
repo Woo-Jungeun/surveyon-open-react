@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Calendar, MessageCircle, Lock, MessageCirclePlus } from 'lucide-react';
 import './Inquiry.css';
+import { InquiryApi } from './InquiryApi';
+import moment from 'moment';
 
 const InquiryDetail = () => {
     const { id } = useParams();
@@ -10,31 +12,44 @@ const InquiryDetail = () => {
     const [isAnswering, setIsAnswering] = useState(false);
     const [answerContent, setAnswerContent] = useState('');
 
-    // 임시 데이터
-    const inquiryData = {
-        id: id,
-        title: '로그인이 안됩니다.',
-        writer: '홍*동',
-        date: '2025-01-08',
-        status: 'answered',
-        isSecret: true,
-        question: `
-            <p>로그인을 시도했는데 계속 오류가 발생합니다.</p>
-            <p>아이디는 testuser123 입니다.</p>
-            <p>확인 부탁드립니다.</p>
-        `,
-        //// todo 
-        // answer: null,
-        answer: {
-            writer: '관리자',
-            date: '2025-01-09',
-            content: '<p>안녕하세요, 고객님. 비밀번호 초기화 도와드렸습니다.</p>'
-        },
-        attachments: [
-            { name: 'error_screenshot.png', size: '1.2MB' },
-            { name: 'log_file.txt', size: '4KB' }
-        ]
-    };
+    const { inquiryDetail } = InquiryApi();
+    const [inquiryData, setInquiryData] = useState(null);
+
+    useEffect(() => {
+        if (id) {
+            inquiryDetail.mutate({ id: id }, {
+                onSuccess: (data) => {
+                    // Map API response to UI structure
+                    const mappedData = {
+                        id: data.id,
+                        category: data.category,
+                        title: data.title,
+                        writer: data.author,
+                        createdAt: data.createdAt,
+                        status: data.answer ? 'answered' : 'waiting',
+                        isSecret: data.isSecret,
+                        question: data.content,
+                        answer: data.answer ? {
+                            writer: data.answerer || '관리자',
+                            date: data.answeredAt,
+                            content: data.answer
+                        } : null,
+                        attachments: data.attachments || []
+                    };
+                    setInquiryData(mappedData);
+                }
+            });
+        }
+    }, [id]);
+
+    if (!inquiryData) {
+        return <div className="id-container" data-theme="board-inquiry">Loading...</div>;
+    }
+
+    // 날짜 데이터 가공
+    const date = inquiryData.createdAt
+        ? moment(inquiryData.createdAt).format('YYYY-MM-DD HH:mm:ss')
+        : '';
 
     return (
         <div className="id-container" data-theme="board-inquiry">
@@ -66,7 +81,12 @@ const InquiryDetail = () => {
                 {/* 질문 영역 (Q) */}
                 <div className="id-section question-section">
                     <div className="id-header">
-                        <div className="id-status-badge answered">답변완료</div>
+                        <div className="id-category-badge">
+                            {inquiryData.category}
+                        </div>
+                        <div className={`id-status-badge ${inquiryData.status}`}>
+                            {inquiryData.status === 'answered' ? '답변완료' : '답변대기'}
+                        </div>
                         <h1 className="id-title">
                             {inquiryData.isSecret && <Lock size={20} className="id-secret-icon" />}
                             {inquiryData.title}
@@ -76,10 +96,10 @@ const InquiryDetail = () => {
                                 <User size={14} />
                                 <span>{inquiryData.writer}</span>
                             </div>
-                            <div className="id-meta-divider"></div>
+                            <div className="id-meta-divider">|</div>
                             <div className="id-meta-item">
                                 <Calendar size={14} />
-                                <span>{inquiryData.date}</span>
+                                <span>{date}</span>
                             </div>
                         </div>
                     </div>
@@ -97,8 +117,8 @@ const InquiryDetail = () => {
                                     <li key={index}>
                                         <a href="#" onClick={(e) => e.preventDefault()}>
                                             <span className="id-file-icon">📎</span>
-                                            <span className="id-file-name">{file.name}</span>
-                                            <span className="id-file-size">({file.size})</span>
+                                            <span className="id-file-name">{file.originalName}</span>
+                                            <span className="id-file-size">({(file.fileSize / 1024).toFixed(1)}KB)</span>
                                         </a>
                                     </li>
                                 ))}
@@ -145,7 +165,7 @@ const InquiryDetail = () => {
                                     <div className="id-meta">
                                         <span>{inquiryData.answer.writer}</span>
                                         <span className="id-meta-divider">|</span>
-                                        <span>{inquiryData.answer.date}</span>
+                                        <span>{moment(inquiryData.answer.date).format('YYYY-MM-DD HH:mm:ss')}</span>
                                     </div>
                                 </div>
                                 <div className="id-body">
@@ -181,7 +201,7 @@ const InquiryDetail = () => {
                                                 parentTitle: inquiryData.title
                                             }
                                         })}
-                                        style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 16px', border: '1px solid #ddd', borderRadius: '4px', background: 'white', cursor: 'pointer' }}
+                                        style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px', padding: '8px 16px', border: '1px solid #ddd', borderRadius: '8px', background: 'white', cursor: 'pointer' }}
                                     >
                                         <MessageCirclePlus size={16} />
                                         추가 질문하기

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight, Eye } from 'lucide-react';
 import './Inquiry.css';
 import { InquiryApi } from './InquiryApi';
 import { useEffect } from 'react';
@@ -11,9 +11,10 @@ const InquiryList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('전체');
     const [currentPage, setCurrentPage] = useState(1);
+
     const itemsPerPage = 5;
 
-    const categories = ['전체', '설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리'];
+    const categories = ['전체', '설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
 
     const { inquiryList } = InquiryApi();
     const [serverData, setServerData] = useState([]);
@@ -43,7 +44,8 @@ const InquiryList = () => {
                         isSecret: item.isSecret,
                         content: item.content,
                         depth: item.depth || (item.parentId ? 1 : 0), // 답변글 들여쓰기 (API 응답에 depth가 없으므로 parentId로 판단)
-                        parentId: item.parentId
+                        parentId: item.parentId,
+                        viewCount: item.viewCount || 0
                     }));
                     setServerData(mappedData);
                 } else if (response && response.list) {
@@ -58,7 +60,8 @@ const InquiryList = () => {
                         isSecret: item.isSecret,
                         content: item.content,
                         depth: item.depth || 0,
-                        parentId: item.parentId
+                        parentId: item.parentId,
+                        viewCount: item.viewCount || 0
                     }));
                     setServerData(mappedData);
                 }
@@ -188,6 +191,11 @@ const InquiryList = () => {
                                             <span>{item.writer}</span>
                                             <span className="divider">|</span>
                                             <span>{item.date}</span>
+                                            <span className="divider">|</span>
+                                            <span className="meta-view-count" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <Eye size={14} />
+                                                {item.viewCount}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="inquiry-toggle">
@@ -240,6 +248,8 @@ const InquiryList = () => {
                     </div>
                 )}
             </div>
+
+
         </div>
     );
 };
