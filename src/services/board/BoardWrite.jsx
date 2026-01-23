@@ -112,7 +112,9 @@ const BoardWrite = () => {
 
             if (result) {
                 modal.showAlert('알림', isEdit ? '수정되었습니다.' : '등록되었습니다.', null, () => {
-                    navigate(`/board/${type}`);
+                    // 등록 성공 시 새로 생성된 ID로 이동, 수정 시 기존 ID로 이동
+                    const targetId = isEdit ? id : result.id;
+                    navigate(`/board/${type}/${targetId}`);
                 });
             }
         } catch (error) {

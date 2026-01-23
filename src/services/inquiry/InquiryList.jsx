@@ -4,6 +4,7 @@ import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLe
 import './Inquiry.css';
 import { InquiryApi } from './InquiryApi';
 import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
 const InquiryList = () => {
     const navigate = useNavigate();
@@ -11,6 +12,10 @@ const InquiryList = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('전체');
     const [currentPage, setCurrentPage] = useState(1);
+    const auth = useSelector((store) => store.auth);
+    const userId = auth?.user?.userId || "";
+    const userGroup = auth?.user?.userGroup || "";
+    const isAdmin = userGroup.includes("솔루션") ? 1 : 0;
 
     const itemsPerPage = 5;
 
@@ -25,7 +30,9 @@ const InquiryList = () => {
 
     const fetchList = () => {
         const params = {
-            category: activeTab === '전체' ? '' : activeTab
+            category: activeTab === '전체' ? '' : activeTab,
+            userId: userId,
+            is_admin: isAdmin
         };
 
         inquiryList.mutate(params, {

@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, Save, Lock, Unlock, Upload, X, FileText, CornerDownRight, ChevronDown } from 'lucide-react';
+import { InquiryApi } from './InquiryApi';
 import './Inquiry.css';
+import { useSelector } from "react-redux";
+import { useContext } from 'react';
+import { modalContext } from "@/components/common/Modal";
 
 const InquiryWrite = () => {
     const navigate = useNavigate();
+    const modal = useContext(modalContext);
+    const auth = useSelector((store) => store.auth);
+    const userName = auth?.user?.userNm || "";
+    const userId = auth?.user?.userId || "";
+    const userGroup = auth?.user?.userGroup || "";
+    const isAdmin = userGroup.includes("솔루션") ? 1 : 0;
+
     const { id } = useParams(); // id가 있으면 수정 모드
     const location = useLocation();
     const isEdit = !!id;
@@ -15,17 +26,60 @@ const InquiryWrite = () => {
 
     const isReply = !!parentId;
 
+    // API 초기화
+    const { inquiryTransaction, inquiryDetail } = InquiryApi();
+
     const categories = ['설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
     const [category, setCategory] = useState(categories[0]);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const dropdownRef = useRef(null);
 
     const [title, setTitle] = useState(
-        isEdit ? '[임시] 수정할 제목' :
-            isReply ? `[RE]: ${parentTitle}` : ''
+        isReply ? `[RE]: ${parentTitle}` : ''
     );
-    const [content, setContent] = useState(isEdit ? '수정할 내용...' : '');
+    const [content, setContent] = useState('');
     const [isSecret, setIsSecret] = useState(true);
     const [files, setFiles] = useState([]);
+
+    // 수정 모드일 때 기존 데이터 불러오기
+    useEffect(() => {
+        if (isEdit && id) {
+            const fetchInquiryData = async () => {
+                try {
+                    const response = await inquiryDetail.mutateAsync({ id: parseInt(id), userId: userId, is_admin: isAdmin });
+                    console.log('수정 데이터:', response);
+
+                    if (response) {
+                        setCategory(response.category || categories[0]);
+                        setTitle(response.title || '');
+                        setContent(response.content || '');
+                        setIsSecret(response.isSecret ?? true);
+                        // attachments가 있다면 처리 (필요시)
+                        // setFiles(response.attachments || []);
+                    }
+                } catch (error) {
+                    console.error('문의 데이터 로드 실패:', error);
+                    modal.showErrorAlert('오류', '문의 데이터를 불러오는데 실패했습니다.');
+                    navigate('/inquiry');
+                }
+            };
+
+            fetchInquiryData();
+        }
+    }, [isEdit, id]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     const handleFileChange = (e) => {
         const selectedFiles = Array.from(e.target.files);
@@ -36,25 +90,52 @@ const InquiryWrite = () => {
         setFiles(prev => prev.filter((_, i) => i !== index));
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!title.trim() || !content.trim()) {
-            alert('제목과 내용을 모두 입력해주세요.');
+            modal.showAlert('알림', '제목과 내용을 모두 입력해주세요.');
             return;
         }
 
-        // TODO: API Call here
-        // const payload = {
-        //     gb: "insert",
-        //     category,
-        //     title,
-        //     content,
-        //     isSecret,
-        //     author: "작성자", // This should come from auth context
-        //     attachments: files
-        // };
 
-        alert(isEdit ? '문의가 수정되었습니다.' : '문의가 등록되었습니다.');
-        navigate(isEdit ? `/inquiry/view/${id}` : '/inquiry');
+        try {
+            const payload = {
+                gb: isEdit ? "update" : "insert",
+                category,
+                title,
+                content,
+                isSecret,
+                password: "",
+                author: userName,
+                userId: userId,
+                is_admin: isAdmin,
+                attachments: files.length > 0 ? files : []
+            };
+
+            // 수정 모드인 경우 id 추가
+            if (isEdit) {
+                payload.id = parseInt(id);
+            }
+
+            // 답글 모드인 경우 parentId 추가
+            if (isReply) {
+                payload.parentId = parentId;
+            }
+
+            const response = await inquiryTransaction.mutateAsync(payload);
+            console.log(response);
+
+            if (response?.id) {
+                modal.showAlert('알림', isEdit ? '문의가 수정되었습니다.' : '문의가 등록되었습니다.', null, () => {
+                    // 등록 성공 시 새로 생성된 ID로 이동, 수정 시 기존 ID로 이동
+                    navigate(isEdit ? `/inquiry/view/${id}` : `/inquiry/view/${response.id}`);
+                });
+            } else {
+                throw new Error('응답 데이터가 없습니다.');
+            }
+        } catch (error) {
+            console.error('문의 등록/수정 실패:', error);
+            modal.showErrorAlert('오류', `문의 ${isEdit ? '수정' : '등록'}에 실패했습니다. 다시 시도해주세요.`);
+        }
     };
 
     return (
@@ -81,45 +162,47 @@ const InquiryWrite = () => {
                 </div>
 
                 <div className="iw-form">
-                    <div className="iw-form-group">
-                        <label>카테고리</label>
-                        <div className="iw-select-wrapper">
-                            <div
-                                className={`iw-select-trigger ${isDropdownOpen ? 'active' : ''}`}
-                                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                            >
-                                <span>{category}</span>
-                                <ChevronDown className={`iw-select-icon ${isDropdownOpen ? 'rotate' : ''}`} size={16} />
+                    <div className="iw-form-row">
+                        <div className="iw-form-group category-group">
+                            <label>카테고리</label>
+                            <div className="iw-select-wrapper" ref={dropdownRef}>
+                                <div
+                                    className={`iw-select-trigger ${isDropdownOpen ? 'active' : ''}`}
+                                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                                >
+                                    <span>{category}</span>
+                                    <ChevronDown className={`iw-select-icon ${isDropdownOpen ? 'rotate' : ''}`} size={16} />
+                                </div>
+
+                                {isDropdownOpen && (
+                                    <ul className="iw-select-dropdown">
+                                        {categories.map((cat) => (
+                                            <li
+                                                key={cat}
+                                                className={`iw-select-option ${category === cat ? 'selected' : ''}`}
+                                                onClick={() => {
+                                                    setCategory(cat);
+                                                    setIsDropdownOpen(false);
+                                                }}
+                                            >
+                                                {cat}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
-
-                            {isDropdownOpen && (
-                                <ul className="iw-select-dropdown">
-                                    {categories.map((cat) => (
-                                        <li
-                                            key={cat}
-                                            className={`iw-select-option ${category === cat ? 'selected' : ''}`}
-                                            onClick={() => {
-                                                setCategory(cat);
-                                                setIsDropdownOpen(false);
-                                            }}
-                                        >
-                                            {cat}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
                         </div>
-                    </div>
 
-                    <div className="iw-form-group">
-                        <label>제목</label>
-                        <input
-                            type="text"
-                            className="iw-input"
-                            placeholder="제목을 입력하세요"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                        />
+                        <div className="iw-form-group title-group">
+                            <label>제목</label>
+                            <input
+                                type="text"
+                                className="iw-input"
+                                placeholder="제목을 입력하세요"
+                                value={title}
+                                onChange={(e) => setTitle(e.target.value)}
+                            />
+                        </div>
                     </div>
 
                     <div className="iw-form-group">

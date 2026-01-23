@@ -560,6 +560,20 @@
     padding: 24px 40px;
 }
 
+.iw-form-row {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.category-group {
+    flex: 0 0 240px;
+}
+
+.title-group {
+    flex: 1;
+}
+
 .iw-form-group {
     margin-bottom: 24px;
 }
@@ -823,7 +837,7 @@
     margin-top: 40px;
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
+    gap: 16px;
     padding-top: 20px;
     border-top: 1px solid #eee;
 }
@@ -1170,6 +1184,13 @@
     background: #dc2626;
 }
 
+.id-answer-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
 /* Answer Form */
 .id-answer-form {
     width: 100%;
@@ -1355,7 +1376,11 @@
     color: #475569;
     border-radius: 20px;
     font-size: 13px;
-    font-weight: 600;
     margin-bottom: 16px;
     margin-right: 8px;
+}
+
+/* Fix line breaks in detail view */
+.id-text {
+    white-space: pre-wrap !important;
 }
