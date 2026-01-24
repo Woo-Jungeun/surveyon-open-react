@@ -1011,3 +1011,10 @@
 .custom-padding-textarea .k-input-inner {
   padding: 4px !important;
 }
+
+/* Text Wrap for Grid Cells */
+.wrap-text {
+  white-space: normal !important;
+  word-break: break-all !important;
+  overflow-wrap: break-word !important;
+}

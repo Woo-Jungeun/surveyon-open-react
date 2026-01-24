@@ -57,9 +57,9 @@ const OptionSettingExload = () => {
         { field: "no", title: "순번", show: true, width: "90px", allowHide: false },
         { field: "pof", title: "프로젝트", show: true, width: "150px", allowHide: false },
         { field: "selprojectnum", title: "웹프로젝트", show: true, width: "140px", allowHide: false },
-        { field: "pofname", title: "프로젝트명", show: true, width: "240px", allowHide: false },
+        { field: "pofname", title: "프로젝트명", show: true, width: "240px", allowHide: false, className: "wrap-text" },
         { field: "servername", title: "오픈서버정보", show: true, width: "150px", allowHide: false },
-        { field: "project_qnum", title: "문항정보", show: true, width: "150px", allowHide: false },
+        { field: "project_qnum", title: "문항정보", show: true, width: "150px", allowHide: false, className: "wrap-text" },
         { field: "id", title: "id", show: false, allowHide: false },
 
     ]);
@@ -67,7 +67,7 @@ const OptionSettingExload = () => {
     // 우측 컬럼 (요청 매핑 반영)
     const [rightColumns] = useState(() => [
         { field: "no", title: "순번", width: "80px", show: true },
-        { field: "qnum", title: "문번호", width: "120px", show: true },
+        { field: "qnum", title: "문번호", width: "120px", show: true, className: "wrap-text" },
         { field: "lv1", title: "대분류(lv1)", show: true },
         { field: "lv2", title: "중분류(lv2)", show: true },
         { field: "lv3", title: "소분류(lv3)", show: true },
@@ -432,6 +432,7 @@ const OptionSettingExload = () => {
                                         width={c.width}
                                         editable={false}
                                         columnMenu={leftColumnMenu}
+                                        className={c.className}
                                     />
                                 ))}
                             </KendoGrid>
@@ -517,7 +518,7 @@ const OptionSettingExload = () => {
                             }}
                         >
                             {rightColumns.filter((c) => c.show !== false).map((c) => (
-                                <Column key={c.field} field={c.field} title={c.title} width={c.width} />
+                                <Column key={c.field} field={c.field} title={c.title} width={c.width} className={c.className} />
                             ))}
                         </KendoGrid>
                     </div>
@@ -573,4 +574,4 @@ const OptionSettingExload = () => {
     );
 };
 
-export default OptionSettingExload; 
+export default OptionSettingExload;
