@@ -1274,7 +1274,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             미확인 데이터 보기
                             <span
                                 className="info-icon"
-                                data-tooltip={`미확인 데이터 보기|순수 미확인 필터 기능입니다.\n미확인도 데이터 추출시 모두 추출됨`}
+                                data-tooltip={`미확인 데이터 보기|순수 미확인 필터 기능\n미확인도 데이터 추출시 모두 추출됨`}
                                 style={{ marginLeft: '4px' }}
                             ></span>
                         </button>
