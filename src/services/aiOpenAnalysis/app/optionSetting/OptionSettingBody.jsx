@@ -710,7 +710,7 @@ const OptionSettingBody = () => {
               <CommonActionButton label="엑셀 업로드" onClick={onClickExcelUpload}
                 tooltipText={`엑셀 업로드|응답 데이터, 보기데이터 시트의 수정된 데이터를 한번에 업데이트 실행\n(주의: 웹 수정과 엑셀 수정은 병행하지 마세요.)`} />
               <CommonActionButton label="보기 불러오기" onClick={openExloadWindow}
-                tooltipText={`보기 불러오기|기존 설문온 프로젝트/문항의 보기 데이터를 불러옵니다.`} />
+                tooltipText={`보기 불러오기|기존 설문온 프로젝트/문항의 보기 데이터를 불러옴.`} />
             </div>
           </div>
           <div className="gridWithPanel">
