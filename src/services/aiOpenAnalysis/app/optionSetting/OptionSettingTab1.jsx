@@ -137,9 +137,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
             // { field: "fixed_key", title: "키", show: false, editable: false },
-            { field: "answer_origin", title: "원본 응답", show: true, editable: false, width: "300px", allowHide: false },
+            { field: "answer_origin", title: "원본 응답", show: true, editable: false, width: "300px", allowHide: true },
             { field: "cid", title: "멀티", show: true, editable: false, width: "100px", allowHide: false },
-            { field: "answer", title: "클리닝 응답", show: true, editable: false, width: "300px", allowHide: false },
+            { field: "answer", title: "클리닝 응답", show: true, editable: false, width: "300px", allowHide: true },
             { field: "lv1code", title: "대분류 코드", show: true, editable: false, width: "150px" },
             { field: "lv1", title: "대분류", show: true, editable: false, width: "250px" },
             { field: "lv2code", title: "중분류 코드", show: true, editable: false, width: "150px" },
