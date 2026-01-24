@@ -107,7 +107,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const SELECTED_FIELD = "selected";
     const { optionEditData, optionSaveData } = OptionSettingApi();
     const [editField] = useState("inEdit");
-    // 검증 안 된 데이터만 보기 필터 상태 (GridRenderer가 리마운트되어도 유지되도록 상위로 이동)
+    // 미확인 데이터 보기 필터 상태 (GridRenderer가 리마운트되어도 유지되도록 상위로 이동)
     const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
 
     const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
@@ -290,10 +290,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         const filteredData = useMemo(() => {
             const raw = dataState?.data || [];
             if (!showUnverifiedOnly) return raw;
-            // 검증 안된 데이터 = 체크박스(selectedState)가 체크되지 않은 데이터
+            // 미확인 데이터 = 체크박스(selectedState)가 체크되지 않은 데이터
             return raw.filter(r => {
                 const k = getKey(r);
-                // selectedState에 키가 없거나 false이면 검증 안된 것
+                // selectedState에 키가 없거나 false이면 미확인 데이터
                 return !selectedState?.[k];
             });
         }, [dataState?.data, showUnverifiedOnly, selectedState]);
@@ -1172,7 +1172,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         }, [saveChanges]);
         const gridRootRef = useRef(null); // KendoGrid 감싸는 div에 ref 달아 위치 기준 계산
 
-        // 검증 체크박스 위치 고정시키기 위함 (임시)
+        // 확인/미확인 체크박스 위치 고정시키기 위함 (임시)
         const anchorField = useMemo(() => {
             const vis = effectiveColumns.filter(c => c.show !== false);
             return vis.length >= 3 ? vis[vis.length - 3].field : undefined; // 항상 추가 왼쪽에
@@ -1261,7 +1261,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     <div className="meta-header-left meta2">
                         <div className="row1" style={{ color: '#888', fontSize: '13px', textAlign: 'left', marginLeft: '0', paddingLeft: '0' }}>업데이트 날짜: {updatedAt}</div>
                         <div className="row2" style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '4px' }}>
-                            <span style={{ fontSize: '14px', color: '#333' }}>분석 <b>{analyzed}</b> / 검증 <b>{verified}</b> / 총 <b>{total}</b></span>
+                            <span style={{ fontSize: '14px', color: '#333' }}>분석 <b>{analyzed}</b> / 확인 <b>{verified}</b> / 총 <b>{total}</b></span>
                             <GridDataCount total={filteredCount} label="필터 결과" unit="건" />
                         </div>
                     </div>
@@ -1271,7 +1271,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             onClick={() => setShowUnverifiedOnly(!showUnverifiedOnly)}
                         >
                             <span className="check-icon">{showUnverifiedOnly ? '☑' : '☐'}</span>
-                            검증 안 된 데이터만 보기
+                            미확인 데이터 보기
+                            <span
+                                className="info-icon"
+                                data-tooltip={`미확인 데이터 보기|순수 미확인 필터 기능입니다.\n미확인도 데이터 추출시 모두 추출됨`}
+                                style={{ marginLeft: '4px' }}
+                            ></span>
                         </button>
                     </div>
                 </div>
@@ -1301,7 +1306,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                             selectAllMode: 'page',  // 헤더 체크박스는 현재 페이지만 선택
                             selectionColumnAfterField: anchorField, // 체크박스 선택 컬럼을 원하는 위치에 삽입 
                             linkRowClickToSelection: false, // 행 클릭과 체크박스 선택 연동X 
-                            selectionHeaderTitle: "검증",   // 체크박스 헤더에 컬럼명 표출할 경우
+                            selectionHeaderTitle: "확인/미확인",   // 체크박스 헤더에 컬럼명 표출할 경우
                             rowRender,
                             sortable: { mode: "multiple", allowUnsort: true },
                             filterable: true,
