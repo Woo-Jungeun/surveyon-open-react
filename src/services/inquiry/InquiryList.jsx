@@ -162,7 +162,10 @@ const InquiryList = () => {
                         <button
                             key={category}
                             className={`inquiry-tab ${activeTab === category ? 'active' : ''}`}
-                            onClick={() => setActiveTab(category)}
+                            onClick={() => {
+                                setActiveTab(category);
+                                setCurrentPage(1);
+                            }}
                         >
                             {category}
                         </button>
