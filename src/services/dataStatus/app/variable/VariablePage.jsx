@@ -11,12 +11,12 @@ import '../../../../assets/css/grid_vertical_borders.css';
 const VariablePage = () => {
     // todo api 연동 필요 
     const [variables, setVariables] = useState([
-        { id: 1, name: 'banner', label: 'Banner', category: '{1;Banner A}{2;Banner B}{3;Banner C}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 2, name: 'q1', label: 'Q1 Satisfaction', category: '{1;Very Low}{2;Low}{3;Neutral}{4;High}{5;Very High}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 3, name: 'q2', label: 'Q2 Usage', category: '{1;Never}{2;Sometimes}{3;Often}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 4, name: 'gender', label: 'Gender', category: '{1;Male}{2;Female}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 5, name: 'age', label: 'Age', category: '{18;18}{25;25}{35;35}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '연속형' },
-        { id: 6, name: 'region', label: '지역', category: '{1;서울}{2;부산}{3;광주}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
+        { id: 1, sysName: 'banner', name: 'banner', label: 'Banner', category: '{1;Banner A}{2;Banner B}{3;Banner C}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
+        { id: 2, sysName: 'q1', name: 'q1', label: 'Q1 Satisfaction', category: '{1;Very Low}{2;Low}{3;Neutral}{4;High}{5;Very High}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
+        { id: 3, sysName: 'q2', name: 'q2', label: 'Q2 Usage', category: '{1;Never}{2;Sometimes}{3;Often}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
+        { id: 4, sysName: 'gender', name: 'gender', label: 'Gender', category: '{1;Male}{2;Female}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
+        { id: 5, sysName: 'age', name: 'age', label: 'Age', category: '{18;18}{25;25}{35;35}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '연속형' },
+        { id: 6, sysName: 'region', name: 'region', label: '지역', category: '{1;서울}{2;부산}{3;광주}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
     ]);
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업 open
@@ -32,9 +32,6 @@ const VariablePage = () => {
         { field: 'count', title: '카운트 (값/로직/오류)', show: true, width: '180px' },
         { field: 'type', title: '타입', show: true, width: '150px' }
     ]);
-
-    // Map variables to include sysName (duplicate of name for display)
-    const gridData = variables.map(v => ({ ...v, sysName: v.name }));
 
     const handleCategorySave = (id, newCategoryStr) => {
         setVariables(variables.map(v => v.id === id ? { ...v, category: newCategoryStr } : v));
@@ -182,7 +179,6 @@ const VariablePage = () => {
     const getCell = (field) => {
         switch (field) {
             case 'sysName':
-                return ReadOnlyCell;
             case 'name':
             case 'label':
             case 'logic':
@@ -198,12 +194,29 @@ const VariablePage = () => {
         }
     };
 
+    const handleAddVariable = () => {
+        setVariables(prev => {
+            const newId = prev.length > 0 ? Math.max(...prev.map(v => v.id)) + 1 : 1;
+            const newName = `q${newId}`;
+            return [...prev, {
+                id: newId,
+                sysName: newName,
+                name: newName,
+                label: '',
+                category: '',
+                logic: '',
+                count: '0 / 0',
+                type: '범주형'
+            }];
+        });
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5', position: 'relative' }} data-theme="data-dashboard">
             <DataHeader
                 title="문항관리"
                 addButtonLabel="문항 추가"
-                onAdd={() => alert('문항 추가 클릭')}
+                onAdd={handleAddVariable}
                 saveButtonLabel="변경사항 저장"
                 onSave={() => alert('변경사항 저장 클릭')}
             />
@@ -222,7 +235,8 @@ const VariablePage = () => {
                     <div className="cmn_grid singlehead">
                         <KendoGrid
                             parentProps={{
-                                data: gridData,
+                                data: variables,
+                                dataItemKey: "id",
                                 sort,
                                 filter,
                                 sortChange: ({ sort }) => setSort(sort),

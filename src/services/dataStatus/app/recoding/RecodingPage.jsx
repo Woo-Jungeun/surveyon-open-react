@@ -169,13 +169,24 @@ const RecodingPage = () => {
 
 
 
+    const handleAddRow = () => {
+        const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 0;
+        setCategories([...categories, {
+            id: newId,
+            realVal: String(newId),
+            category: '',
+            val: '',
+            logic: ''
+        }]);
+    };
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5' }} data-theme="data-dashboard">
             {/* Header */}
             <DataHeader
                 title="문항 가공"
                 addButtonLabel="문항 추가"
-                onAdd={() => alert('문항 추가 클릭')}
+                onAdd={handleAddRow}
                 saveButtonLabel="변경사항 저장"
                 onSave={() => alert('변경사항 저장 클릭')}
             />
@@ -305,6 +316,7 @@ const RecodingPage = () => {
                                 <KendoGrid
                                     parentProps={{
                                         data: categories,
+                                        dataItemKey: "id",
                                         sort,
                                         filter,
                                         sortChange: ({ sort }) => setSort(sort),
