@@ -4,6 +4,7 @@ import MainWrapperView from "./views/MainWrapperView.jsx";
 import MainListWrapperView from "./views/MainList/MainListWrapperView.jsx";
 import RecodingWrapperView from "./views/setting/RecodingWrapperView.jsx";
 import VariableWrapperView from "./views/setting/VariableWrapperView.jsx";
+import DataViewerPage from "./app/dataViewer/DataViewerPage.jsx";
 
 export default function DataStatusRoutes() {
   return (
@@ -17,6 +18,7 @@ export default function DataStatusRoutes() {
       </Route>
 
       {/* 팝업 Wrapper */}
+      <Route path="setting/viewer" element={<DataViewerPage />} />
 
     </Routes>
   );
