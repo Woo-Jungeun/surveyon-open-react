@@ -42,6 +42,7 @@ const MainList = () => {
             { field: "project_use_name", title: "오픈\n작업자", show: true, editable: false, allowHide: false },
             { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, allowHide: false },
             { field: "project_status", title: "작업현황", show: true, editable: true, allowHide: false },
+            { field: "postgrecompletecount", title: "완료수", show: true, editable: true, allowHide: false },
             { field: "usergroup", title: "권한정보", show: true, editable: true, width: "200px", allowHide: false },
         ]);
 
