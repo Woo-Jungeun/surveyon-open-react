@@ -27,7 +27,7 @@ const MENU_ITEMS = [
     path: "/data_status/aggregation",
     children: [
       { label: "집계현황", path: "/data_status/aggregation/status", icon: BarChart2 },
-      { label: "교차집계", path: "/data_status/aggregation/cross", icon: Grid },
+      { label: "교차 테이블", path: "/data_status/aggregation/cross", icon: Grid },
       { label: "쿼터현황/관리", path: "/data_status/aggregation/quota", icon: ClipboardList },
     ]
   },

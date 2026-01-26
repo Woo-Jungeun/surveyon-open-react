@@ -213,7 +213,7 @@ const WeightPage = () => {
                                                 <Search size={14} className="search-icon" />
                                                 <input
                                                     type="text"
-                                                    placeholder="검색어를 입력하세요."
+                                                    placeholder="문항을 검색하세요."
                                                     value={questionSearchTerm}
                                                     onChange={(e) => setQuestionSearchTerm(e.target.value)}
                                                     className="search-input"
