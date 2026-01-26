@@ -258,14 +258,14 @@ const RecodingPage = () => {
                                                     <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.stdDev}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최대:</span>
-                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.max}</span>
+                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>평균:</span>
+                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.mean}</span>
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>평균:</span>
-                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.mean}</span>
+                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최대:</span>
+                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.max}</span>
                                                 </div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최소:</span>
