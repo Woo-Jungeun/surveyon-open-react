@@ -6,7 +6,7 @@ const ThemeContext = createContext();
 // Route to theme mapping
 const routeThemeMap = {
   '/survey_creation': 'survey-creation',
-  '/data_dashboard': 'data-dashboard',
+  '/data_status': 'data-dashboard',
   '/data_management': 'data-management',
   '/ai_open_analysis': 'ai-open-analysis',
   '/respondent_management': 'respondent-management',

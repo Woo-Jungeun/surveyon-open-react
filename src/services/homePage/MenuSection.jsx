@@ -20,7 +20,7 @@ const menuItems = [
   {
     id: "data-dashboard",
     title: "데이터현황",
-    path: "/data_dashboard",
+    path: "/data_status",
     description:
       "문항집계, 교차분석, AI 분석, AI 보고서를 통해 수집된 데이터를 종합적으로 분석합니다.",
     icon: BarChart3,
@@ -94,7 +94,7 @@ const MenuSection = () => {
             item.id === "survey-creation" ||
             item.id === "data-management" ||
             item.id === "respondent-management" || item.id === "data-dashboard";
-
+          // item.id === "respondent-management";
           const handleCardClick = () => {
             if (isDisabled) return;
 

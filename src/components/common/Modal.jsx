@@ -281,7 +281,7 @@ function ModalProvider(props) {
     const getThemeClass = (path) => {
         if (path === "/" || path === "/login") return "purple-theme";
         if (path.startsWith("/survey_creation")) return "survey-create-theme";
-        if (path.startsWith("/data_dashboard")) return "data-dashboard-theme";
+        if (path.startsWith("/data_status")) return "data-dashboard-theme";
         if (path.startsWith("/data_management")) return "data-management-theme";
         if (path.startsWith("/respondent_management")) return "respondent-theme";
         if (path.startsWith("/board/notice")) return "purple-theme";

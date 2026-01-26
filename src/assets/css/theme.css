@@ -72,33 +72,26 @@
 
 /* Theme: 데이터현황 (Blue) */
 [data-theme="data-dashboard"] {
-    /* More sophisticated Blue */
-    --primary-color: #3B82F6;
-    /* Blue 500 */
-    --primary-hover: #2563EB;
-    /* Blue 600 */
-    --primary-focus: #1D4ED8;
-    /* Blue 700 */
-    --primary-dark: #1E40AF;
-    /* Blue 800 */
+    /* Custom Blue #4EA3FF */
+    --primary-color: #4EA3FF;
+    --primary-hover: #3B82F6;
+    --primary-focus: #2563EB;
+    --primary-dark: #1D4ED8;
 
-    --primary-bg-light: rgba(59, 130, 246, 0.08);
-    --primary-bg-medium: rgba(59, 130, 246, 0.15);
-    --primary-bg-hover: #EFF6FF;
-    /* Blue 50 */
-    --primary-bg-selected: #DBEAFE;
-    /* Blue 100 */
+    --primary-bg-light: rgba(78, 163, 255, 0.12);
+    --primary-bg-medium: rgba(78, 163, 255, 0.2);
+    --primary-bg-hover: rgba(78, 163, 255, 0.08);
+    --primary-bg-selected: rgba(78, 163, 255, 0.15);
 
-    --primary-border: #3B82F6;
+    --primary-border: #4EA3FF;
     --primary-border-light: #93C5FD;
-    /* Blue 300 */
-    --primary-border-hover: #2563EB;
-    --primary-border-focus: #1D4ED8;
+    --primary-border-hover: #3B82F6;
+    --primary-border-focus: #2563EB;
 
-    --primary-text: #3B82F6;
-    --primary-text-dark: #1E40AF;
+    --primary-text: #4EA3FF;
+    --primary-text-dark: #1D4ED8;
 
-    --header-bg-gradient: linear-gradient(to right, #EFF6FF, #DBEAFE);
+    --header-bg-gradient: linear-gradient(to right, rgba(78, 163, 255, 0.08), rgba(78, 163, 255, 0.15));
 }
 
 /* Theme: 데이터관리 (Teal) */
@@ -297,4 +290,24 @@
     --board-notice-color: #7C9CBF;
     --board-patchnotes-color: #9B8FAA;
     --board-inquiry-color: #6b7fbf;
+}
+
+/* Global Theme Overrides */
+.dropdown-card .dd-item.only {
+    color: var(--primary-color) !important;
+    background-color: var(--primary-bg-light) !important;
+}
+
+.dropdown-card .dd-item.only:hover {
+    background-color: var(--primary-bg-medium) !important;
+}
+
+.dropdown-card .dd-item.only .dd-icon {
+    color: var(--primary-color) !important;
+}
+
+.ai-logo-text {
+    color: var(--primary-color) !important;
+    background: none !important;
+    -webkit-text-fill-color: var(--primary-color) !important;
 }
