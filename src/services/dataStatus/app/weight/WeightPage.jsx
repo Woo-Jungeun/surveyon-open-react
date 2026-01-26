@@ -1,10 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from '@progress/kendo-react-grid';
 import '@progress/kendo-theme-default/dist/all.css';
+import './WeightPage.css';
+
+// Move initial data outside component to prevent re-creation on every render
+const INITIAL_GRID_DATA = [
+    { category: '18-24', col1: { count: 10, pct: 6.7 }, col2: { count: 13, pct: 7.7 }, col3: { count: 16, pct: 8.6 } },
+    { category: '25-29', col1: { count: 16, pct: 10.7 }, col2: { count: 19, pct: 11.3 }, col3: { count: 22, pct: 11.8 } },
+    { category: '30-34', col1: { count: 22, pct: 14.7 }, col2: { count: 25, pct: 14.9 }, col3: { count: 28, pct: 15.1 } },
+    { category: '35-39', col1: { count: 28, pct: 18.7 }, col2: { count: 31, pct: 18.5 }, col3: { count: 34, pct: 18.3 } },
+    { category: '40-49', col1: { count: 34, pct: 22.7 }, col2: { count: 37, pct: 22.0 }, col3: { count: 40, pct: 21.5 } },
+    { category: '50+', col1: { count: 40, pct: 26.7 }, col2: { count: 43, pct: 25.6 }, col3: { count: 46, pct: 24.7 } },
+];
 
 const WeightPage = () => {
     // Mock Data for Weights (Sidebar)
@@ -107,29 +118,24 @@ const WeightPage = () => {
     const [isTargetDistOpen, setIsTargetDistOpen] = useState(true);
 
     // Kendo Grid Data & Handlers
-    const initialGridData = [
-        { category: '18-24', col1: { count: 10, pct: 6.7 }, col2: { count: 13, pct: 7.7 }, col3: { count: 16, pct: 8.6 } },
-        { category: '25-29', col1: { count: 16, pct: 10.7 }, col2: { count: 19, pct: 11.3 }, col3: { count: 22, pct: 11.8 } },
-        { category: '30-34', col1: { count: 22, pct: 14.7 }, col2: { count: 25, pct: 14.9 }, col3: { count: 28, pct: 15.1 } },
-        { category: '35-39', col1: { count: 28, pct: 18.7 }, col2: { count: 31, pct: 18.5 }, col3: { count: 34, pct: 18.3 } },
-        { category: '40-49', col1: { count: 34, pct: 22.7 }, col2: { count: 37, pct: 22.0 }, col3: { count: 40, pct: 21.5 } },
-        { category: '50+', col1: { count: 40, pct: 26.7 }, col2: { count: 43, pct: 25.6 }, col3: { count: 46, pct: 24.7 } },
-    ];
+    const [gridData, setGridData] = useState(INITIAL_GRID_DATA);
+    const [targetGridData, setTargetGridData] = useState(() =>
+        INITIAL_GRID_DATA.map(item => ({
+            ...item,
+            col1: '', col2: '', col3: '' // Empty initial targets
+        }))
+    );
 
-    const [gridData, setGridData] = useState(initialGridData);
-    const [targetGridData, setTargetGridData] = useState(initialGridData.map(item => ({
-        ...item,
-        col1: '', col2: '', col3: '' // Empty initial targets
-    })));
 
-    const handleTargetChange = (dataItem, field, value) => {
-        const newData = targetGridData.map(item =>
-            item.category === dataItem.category ? { ...item, [field]: value } : item
+    const handleTargetChange = useCallback((dataItem, field, value) => {
+        setTargetGridData(prevData =>
+            prevData.map(item =>
+                item.category === dataItem.category ? { ...item, [field]: value } : item
+            )
         );
-        setTargetGridData(newData);
-    };
+    }, []); // No dependencies needed with functional setState
 
-    const CurrentDistCell = (props) => {
+    const CurrentDistCell = useCallback((props) => {
         const { count, pct } = props.dataItem[props.field];
         return (
             <td style={{ textAlign: 'right', padding: '8px 12px' }}>
@@ -137,9 +143,9 @@ const WeightPage = () => {
                 <div style={{ fontSize: '11px', color: '#888' }}>{pct}%</div>
             </td>
         );
-    };
+    }, []);
 
-    const TargetEditCell = (props) => {
+    const TargetEditCell = useCallback((props) => {
         const value = props.dataItem[props.field];
         const handleChange = (e) => {
             handleTargetChange(props.dataItem, props.field, e.target.value);
@@ -162,13 +168,13 @@ const WeightPage = () => {
                 />
             </td>
         );
-    };
+    }, [handleTargetChange]);
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5' }} data-theme="data-dashboard">
+        <div className="weight-page" data-theme="data-dashboard">
             <DataHeader title="가중치 생성" />
 
-            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+            <div className="weight-layout">
                 {/* Sidebar - Weight List */}
                 <SideBar
                     title="가중치 목록"
@@ -180,60 +186,21 @@ const WeightPage = () => {
                 />
 
                 {/* Main Content Area */}
-                <div style={{ flex: 1, padding: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{
-                        flex: 1,
-                        background: '#fff',
-                        borderRadius: '8px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        overflow: 'hidden'
-                    }}>
+                <div className="weight-main-content">
+                    <div className="weight-content-card">
                         {/* Header for Calculation Setting */}
-                        <div style={{
-                            padding: '16px 24px',
-                            borderBottom: '1px solid #e0e0e0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between'
-                        }}>
-                            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: 0 }}>가중치 계산 설정</h3>
-                            {/* <ChevronDown size={20} color="#666" /> */}
+                        <div className="weight-header">
+                            <h3>가중치 계산 설정</h3>
                         </div>
 
-                        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                        <div className="weight-layout">
                             {/* Inner Left - Question List */}
-                            <div style={{
-                                width: isQuestionPanelOpen ? '300px' : '40px',
-                                borderRight: '1px solid #e0e0e0',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                background: '#fff',
-                                transition: 'width 0.3s ease',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}>
-                                <div style={{
-                                    padding: '10px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: isQuestionPanelOpen ? 'space-between' : 'center',
-                                    borderBottom: isQuestionPanelOpen ? 'none' : '1px solid #eee'
-                                }}>
-                                    {isQuestionPanelOpen && <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#333', margin: '0 0 0 10px' }}>문항 목록</h3>}
+                            <div className={`question-panel ${!isQuestionPanelOpen ? 'collapsed' : ''}`}>
+                                <div className="question-panel-header">
+                                    {isQuestionPanelOpen && <h3 className="question-panel-title">문항 목록</h3>}
                                     <button
                                         onClick={() => setIsQuestionPanelOpen(!isQuestionPanelOpen)}
-                                        style={{
-                                            background: 'transparent',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            padding: '4px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            color: '#666'
-                                        }}
+                                        className="toggle-button"
                                     >
                                         {isQuestionPanelOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                                     </button>
@@ -241,72 +208,35 @@ const WeightPage = () => {
                                 {isQuestionPanelOpen && (
                                     <>
                                         {/* Search Input */}
-                                        <div style={{ padding: '0 20px 12px 20px' }}>
-                                            <div style={{ position: 'relative', width: '100%' }}>
-                                                <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                                        <div className="search-container">
+                                            <div className="search-input-wrapper">
+                                                <Search size={14} className="search-icon" />
                                                 <input
                                                     type="text"
                                                     placeholder="검색어를 입력하세요."
                                                     value={questionSearchTerm}
                                                     onChange={(e) => setQuestionSearchTerm(e.target.value)}
-                                                    style={{
-                                                        width: '100%',
-                                                        padding: '8px 10px 8px 30px',
-                                                        borderRadius: '6px',
-                                                        border: '1px solid #ddd',
-                                                        fontSize: '13px',
-                                                        outline: 'none',
-                                                        background: '#f9f9f9',
-                                                        boxSizing: 'border-box'
-                                                    }}
+                                                    className="search-input"
                                                 />
                                             </div>
                                         </div>
                                         {/* Question List */}
-                                        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div className="question-list">
                                             {filteredQuestions.map(q => (
                                                 <div
                                                     key={q.id}
                                                     draggable
                                                     onDragStart={(e) => handleDragStart(e, q)}
-                                                    style={{
-                                                        padding: '16px',
-                                                        borderRadius: '12px',
-                                                        background: '#fff',
-                                                        border: '1px solid #eee',
-                                                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                                                        cursor: 'grab',
-                                                        position: 'relative',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                    onMouseEnter={(e) => {
-                                                        e.currentTarget.style.transform = 'translateY(-2px)';
-                                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)';
-                                                    }}
-                                                    onMouseLeave={(e) => {
-                                                        e.currentTarget.style.transform = 'translateY(0)';
-                                                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.04)';
-                                                    }}
+                                                    className="question-item"
                                                 >
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                                                        <span style={{ fontSize: '15px', fontWeight: '700', color: '#333' }}>{q.title}</span>
-                                                        <span style={{
-                                                            fontSize: '11px',
-                                                            fontWeight: '600',
-                                                            padding: '2px 8px',
-                                                            borderRadius: '4px',
-                                                            background: q.color === 'blue' ? '#e3f2fd' : '#e8f5e9',
-                                                            color: q.color === 'blue' ? '#1976d2' : '#2e7d32'
-                                                        }}>
+                                                    <div className="question-item-header">
+                                                        <span className="question-title">{q.title}</span>
+                                                        <span className={`question-type-badge ${q.color}`}>
                                                             {q.type}
                                                         </span>
                                                     </div>
-                                                    <p style={{ fontSize: '13px', color: '#666', margin: '0 0 12px 0', lineHeight: '1.4' }}>
-                                                        {q.desc}
-                                                    </p>
-                                                    <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '12px', color: '#999', fontWeight: '500' }}>
-                                                        {q.count}
-                                                    </div>
+                                                    <p className="question-desc">{q.desc}</p>
+                                                    <div className="question-count">{q.count}</div>
                                                 </div>
                                             ))}
                                         </div>
@@ -315,23 +245,11 @@ const WeightPage = () => {
                             </div>
 
                             {/* Inner Right - Drop Zones */}
-                            <div style={{ flex: 1, padding: '24px', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                            <div className="drop-zones-container">
                                 {/* Top Row: Axis Info & Column Drop Zone */}
-                                <div style={{ display: 'flex', height: '140px', marginBottom: '24px' }}>
+                                <div className="drop-zones-top">
                                     {/* Empty Top-Left Corner */}
-                                    <div style={{
-                                        width: '240px',
-                                        background: '#f0f2f5',
-                                        borderRadius: '12px 0 0 0',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        borderRight: '1px solid #e0e0e0',
-                                        borderBottom: '1px solid #e0e0e0',
-                                        color: '#888',
-                                        fontSize: '14px',
-                                        fontWeight: '500'
-                                    }}>
+                                    <div className="corner-label">
                                         세로 × 가로
                                     </div>
 
@@ -493,7 +411,7 @@ const WeightPage = () => {
                                                 {/* Scrollable Content Area */}
                                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px', overflowY: 'auto' }}>
                                                     {/* Current Distribution */}
-                                                    <div style={{ marginBottom: '24px' }}>
+                                                    <div>
                                                         <div
                                                             onClick={() => setIsCurrentDistOpen(!isCurrentDistOpen)}
                                                             style={{
@@ -530,7 +448,7 @@ const WeightPage = () => {
                                                     </div>
 
                                                     {/* Target Distribution */}
-                                                    <div style={{ marginBottom: '24px' }}>
+                                                    <div>
                                                         <div
                                                             onClick={() => setIsTargetDistOpen(!isTargetDistOpen)}
                                                             style={{
@@ -568,14 +486,10 @@ const WeightPage = () => {
                                                 </div>
 
                                                 {/* Fixed Save Section */}
-                                                <div style={{
-                                                    padding: '20px 24px',
-                                                    borderTop: '1px solid #eee',
-                                                    background: '#fff'
-                                                }}>
-                                                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>가중치 문항명</label>
-                                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', background: '#f9f9f9', border: '1px solid #ddd', borderRadius: '4px', padding: '0 12px', color: '#666', fontSize: '13px' }}>
+                                                <div className="save-section">
+                                                    <label className="save-label">가중치 문항명</label>
+                                                    <div className="save-input-group">
+                                                        <div className="save-prefix">
                                                             weight_
                                                         </div>
                                                         <input
@@ -583,21 +497,9 @@ const WeightPage = () => {
                                                             value={weightName}
                                                             onChange={(e) => setWeightName(e.target.value)}
                                                             placeholder="예: region_gender"
-                                                            style={{ flex: 1, padding: '10px', borderRadius: '4px', border: '1px solid #ddd', fontSize: '13px' }}
+                                                            className="save-input"
                                                         />
-                                                        <button style={{
-                                                            padding: '0 20px',
-                                                            background: '#666',
-                                                            color: '#fff',
-                                                            border: 'none',
-                                                            borderRadius: '4px',
-                                                            fontSize: '13px',
-                                                            fontWeight: '600',
-                                                            cursor: 'pointer',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '6px'
-                                                        }}>
+                                                        <button className="save-button">
                                                             가중치 문항 생성
                                                         </button>
                                                     </div>
