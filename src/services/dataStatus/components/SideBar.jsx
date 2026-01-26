@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 
-const SideBar = ({ items, selectedId, onItemClick, title = "변수 목록", onSearch }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, onSearch }) => {
     return (
         <div style={{
             width: '260px',
@@ -24,13 +24,13 @@ const SideBar = ({ items, selectedId, onItemClick, title = "변수 목록", onSe
                     fontWeight: '600',
                     color: '#666'
                 }}>
-                    {title}
+                    {title || "목록"}
                 </div>
                 <div style={{ position: 'relative', width: '100%' }}>
                     <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
                     <input
                         type="text"
-                        placeholder="변수 검색..."
+                        placeholder="검색어를 입력하세요."
                         onChange={(e) => onSearch && onSearch(e.target.value)}
                         style={{
                             width: '100%',
