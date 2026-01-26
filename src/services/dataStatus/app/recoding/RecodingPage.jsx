@@ -21,6 +21,12 @@ const RecodingPage = () => {
     ]);
 
     const [selectedVar, setSelectedVar] = useState(variables[0]);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredVariables = variables.filter(item =>
+        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.label || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     // Mock Categories for the selected variable
     const [categories, setCategories] = useState([
@@ -177,10 +183,10 @@ const RecodingPage = () => {
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {/* Sidebar */}
                 <SideBar
-                    items={variables}
+                    items={filteredVariables}
                     selectedId={selectedVar?.id}
                     onItemClick={setSelectedVar}
-                    onSearch={(val) => console.log(val)}
+                    onSearch={setSearchTerm}
                 />
 
                 {/* Content Area */}
