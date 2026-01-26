@@ -7,6 +7,88 @@ import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import '../../../../assets/css/grid_vertical_borders.css';
 
+const EditableCell = (props) => {
+    const { dataItem, field, columns, onUpdate } = props;
+    const isEditable = columns.find(c => c.field === field)?.editable;
+
+    if (!isEditable) {
+        return (
+            <td className={props.className} style={props.style}>
+                <div style={{ padding: '8px', fontSize: '13px', color: '#666' }}>
+                    {dataItem[field]}
+                </div>
+            </td>
+        );
+    }
+
+    return (
+        <td className={props.className} style={props.style}>
+            <input
+                type="text"
+                defaultValue={dataItem[field]}
+                placeholder={field === 'logic' ? "로직 (예: age >= 20 && age < 30)" : ""}
+                onBlur={(e) => {
+                    if (onUpdate && e.target.value !== dataItem[field]) {
+                        onUpdate(dataItem.id, field, e.target.value);
+                    }
+                }}
+                style={{
+                    width: '100%',
+                    padding: '6px 8px',
+                    borderRadius: '4px',
+                    border: '1px solid #eee',
+                    fontSize: '13px',
+                    boxSizing: 'border-box'
+                }}
+            />
+        </td>
+    );
+};
+
+const CheckCell = (props) => {
+    const { dataItem, checkedLogics } = props;
+    const result = checkedLogics[dataItem.id];
+    return (
+        <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
+            {result && (
+                <span style={{ fontSize: '12px', fontWeight: '600' }}>
+                    {result}
+                </span>
+            )}
+        </td>
+    );
+};
+
+const DeleteCell = (props) => {
+    const { dataItem, onDelete } = props;
+    return (
+        <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
+            <button
+                onClick={() => onDelete && onDelete(dataItem.id)}
+                style={{
+                    border: 'none',
+                    background: 'transparent',
+                    cursor: 'pointer',
+                    color: '#ccc',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%'
+                }}
+            >
+                <Trash2 size={16} />
+            </button>
+        </td>
+    );
+};
+
+const CustomCell = (props) => {
+    const { field, columns, checkedLogics, onUpdate, onDelete } = props;
+    if (field === 'check') return <CheckCell {...props} checkedLogics={checkedLogics} />;
+    if (field === 'delete') return <DeleteCell {...props} onDelete={onDelete} />;
+    return <EditableCell {...props} columns={columns} onUpdate={onUpdate} />;
+};
+
 const RecodingPage = () => {
     // Mock Data
     const [variables, setVariables] = useState([
@@ -83,125 +165,63 @@ const RecodingPage = () => {
         />
     );
 
-    const EditableCell = (props) => {
-        const { dataItem, field } = props;
-        const isEditable = columns.find(c => c.field === field)?.editable;
-
-        const handleChange = (e) => {
-            const newData = categories.map(item =>
-                item.id === dataItem.id ? { ...item, [field]: e.target.value } : item
-            );
-            setCategories(newData);
-        };
-
-        if (!isEditable) {
-            return (
-                <td className={props.className} style={props.style}>
-                    <div style={{ padding: '8px', fontSize: '13px', color: '#666' }}>
-                        {dataItem[field]}
-                    </div>
-                </td>
-            );
-        }
-
-        return (
-            <td className={props.className} style={props.style}>
-                <input
-                    type="text"
-                    value={dataItem[field]}
-                    onChange={handleChange}
-                    style={{
-                        width: '100%',
-                        padding: '6px 8px',
-                        borderRadius: '4px',
-                        border: '1px solid #eee',
-                        fontSize: '13px',
-                        boxSizing: 'border-box'
-                    }}
-                />
-            </td>
-        );
+    const handleUpdate = (id, field, value) => {
+        setCategories(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
     };
 
-    const CheckCell = (props) => {
-        const result = checkedLogics[props.dataItem.id];
-        return (
-            <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
-                {result && (
-                    <span style={{ fontSize: '12px', fontWeight: '600' }}>
-                        {result}
-                    </span>
-                )}
-            </td>
-        );
+    const handleDelete = (id) => {
+        setCategories(prev => prev.filter(item => item.id !== id));
     };
 
-    const DeleteCell = (props) => {
-        return (
-            <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
-                <button
-                    onClick={() => {
-                        const newData = categories.filter(item => item.id !== props.dataItem.id);
-                        setCategories(newData);
-                    }}
-                    style={{
-                        border: 'none',
-                        background: 'transparent',
-                        cursor: 'pointer',
-                        color: '#ccc',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '100%'
-                    }}
-                >
-                    <Trash2 size={16} />
-                </button>
-            </td>
-        );
+    const handleAddVariable = () => {
+        setSelectedVar({ id: null, name: '', label: '' });
+        setCategories([]);
+        setEvaluationResult(null);
+        setCheckedLogics({});
     };
 
-    const CustomCell = (props) => {
-        if (props.field === 'check') return <CheckCell {...props} />;
-        if (props.field === 'delete') return <DeleteCell {...props} />;
-        return <EditableCell {...props} />;
+    const handleSave = () => {
+        // In a real app, this would send 'categories' (and logic checks) to the server
+        console.log('Saving recoding rules:', categories);
+        alert('재코딩 규칙이 저장되었습니다.');
     };
-
-
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5' }} data-theme="data-dashboard">
             {/* Header */}
             <DataHeader
                 title="문항 가공"
-                addButtonLabel="문항 추가"
-                onAdd={() => alert('문항 추가 클릭')}
-                saveButtonLabel="변경사항 저장"
-                onSave={() => alert('변경사항 저장 클릭')}
+                addButtonLabel={selectedVar?.id === null ? null : "문항 추가"}
+                onAdd={selectedVar?.id === null ? null : handleAddVariable}
+                saveButtonLabel={selectedVar?.id === null ? "추가 문항 저장" : "변경사항 저장"}
+                onSave={handleSave}
             />
 
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {/* Sidebar */}
                 <SideBar
                     items={filteredVariables}
+                    title="문항 목록"
                     selectedId={selectedVar?.id}
                     onItemClick={setSelectedVar}
                     onSearch={setSearchTerm}
                 />
 
                 {/* Content Area */}
-                <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+                <div style={{ flex: 1, padding: '24px', overflow: 'hidden' }}>
                     <div style={{
                         background: '#fff',
                         borderRadius: '8px',
                         padding: '24px',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                        minHeight: '100%', // Fill height
+                        height: '100%', // Fill height
                         display: 'flex',
                         flexDirection: 'column',
                         boxSizing: 'border-box'
                     }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>문항 수정</h3>
+                        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>
+                            {selectedVar?.id === null ? "문항 추가" : "문항 수정"}
+                        </h3>
 
                         {/* Variable Info Inputs */}
                         <div style={{ marginBottom: '24px' }}>
@@ -209,8 +229,17 @@ const RecodingPage = () => {
                             <input
                                 type="text"
                                 value={selectedVar?.name || ''}
-                                readOnly
-                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', background: '#f9f9f9', marginBottom: '16px' }}
+                                readOnly={selectedVar?.id !== null}
+                                onChange={(e) => setSelectedVar({ ...selectedVar, name: e.target.value })}
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    borderRadius: '6px',
+                                    border: '1px solid #ddd',
+                                    background: selectedVar?.id !== null ? '#f9f9f9' : '#fff',
+                                    marginBottom: '16px'
+                                }}
+                                placeholder="예: AgeGroup"
                             />
 
                             <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>문항 라벨</label>
@@ -219,6 +248,7 @@ const RecodingPage = () => {
                                 value={selectedVar?.label || ''}
                                 onChange={(e) => setSelectedVar({ ...selectedVar, label: e.target.value })}
                                 style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
+                                placeholder="예: 연령대 (10대, 20대...)"
                             />
                         </div>
 
@@ -285,7 +315,7 @@ const RecodingPage = () => {
                         )}
 
                         {/* Categories Grid Section */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                 <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0, color: '#333' }}>보기</h4>
                                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -305,6 +335,7 @@ const RecodingPage = () => {
                                 <KendoGrid
                                     parentProps={{
                                         data: categories,
+                                        dataItemKey: "id",
                                         sort,
                                         filter,
                                         sortChange: ({ sort }) => setSort(sort),
@@ -313,6 +344,16 @@ const RecodingPage = () => {
                                     }}
                                 >
                                     {columns.filter(c => c.show).map((c) => {
+                                        const cellRender = (props) => (
+                                            <CustomCell
+                                                {...props}
+                                                columns={columns}
+                                                checkedLogics={checkedLogics}
+                                                onUpdate={handleUpdate}
+                                                onDelete={handleDelete}
+                                            />
+                                        );
+
                                         if (c.field === 'check') {
                                             return (
                                                 <Column
@@ -321,7 +362,7 @@ const RecodingPage = () => {
                                                     title={c.title}
                                                     width={c.width}
                                                     minWidth={c.minWidth}
-                                                    cell={CustomCell}
+                                                    cell={cellRender}
                                                     headerCell={() => (
                                                         <div className="k-header-center" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
                                                             <button
@@ -362,7 +403,7 @@ const RecodingPage = () => {
                                                     width={c.width}
                                                     minWidth={c.minWidth}
                                                     columnMenu={undefined}
-                                                    cell={CustomCell}
+                                                    cell={cellRender}
                                                     headerClassName="k-header-center"
                                                     headerStyle={{
                                                         textAlign: 'center',
@@ -380,7 +421,7 @@ const RecodingPage = () => {
                                                 width={c.width}
                                                 minWidth={c.minWidth}
                                                 columnMenu={columnMenu}
-                                                cell={CustomCell}
+                                                cell={cellRender}
                                                 headerClassName="k-header-center"
                                                 headerStyle={{
                                                     textAlign: 'center',
