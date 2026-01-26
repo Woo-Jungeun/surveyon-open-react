@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
-import { Play, Plus, Trash2 } from 'lucide-react';
+import { Play, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { GridColumn as Column } from "@progress/kendo-react-grid";
+import KendoGrid from '../../../../components/kendo/KendoGrid';
+import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
+import '../../../../assets/css/grid_vertical_borders.css';
 
 const RecodingPage = () => {
     // Mock Data
@@ -30,6 +34,19 @@ const RecodingPage = () => {
 
     const [checkedLogics, setCheckedLogics] = useState({});
     const [evaluationResult, setEvaluationResult] = useState(null);
+    const [isEvaluationOpen, setIsEvaluationOpen] = useState(true);
+
+    // Grid State
+    const [sort, setSort] = useState([]);
+    const [filter, setFilter] = useState(null);
+    const [columns, setColumns] = useState([
+        { field: 'realVal', title: '코드', show: true, width: '80px', editable: false },
+        { field: 'category', title: '보기', show: true, minWidth: 200, editable: true },
+        { field: 'val', title: '가공값', show: true, width: '120px', editable: true },
+        { field: 'logic', title: '로직', show: true, minWidth: 200, editable: true },
+        { field: 'check', title: '로직체크', show: true, width: '120px', editable: false },
+        { field: 'delete', title: '삭제', show: true, width: '100px', editable: false },
+    ]);
 
     const handleLogicCheck = () => {
         // Check all logics at once
@@ -48,6 +65,103 @@ const RecodingPage = () => {
             max: 1.6
         });
     };
+
+    const columnMenu = (props) => (
+        <ExcelColumnMenu
+            {...props}
+            columns={columns}
+            onColumnsChange={setColumns}
+            filter={filter}
+            onFilterChange={setFilter}
+            onSortChange={setSort}
+        />
+    );
+
+    const EditableCell = (props) => {
+        const { dataItem, field } = props;
+        const isEditable = columns.find(c => c.field === field)?.editable;
+
+        const handleChange = (e) => {
+            const newData = categories.map(item =>
+                item.id === dataItem.id ? { ...item, [field]: e.target.value } : item
+            );
+            setCategories(newData);
+        };
+
+        if (!isEditable) {
+            return (
+                <td className={props.className} style={props.style}>
+                    <div style={{ padding: '8px', fontSize: '13px', color: '#666' }}>
+                        {dataItem[field]}
+                    </div>
+                </td>
+            );
+        }
+
+        return (
+            <td className={props.className} style={props.style}>
+                <input
+                    type="text"
+                    value={dataItem[field]}
+                    onChange={handleChange}
+                    style={{
+                        width: '100%',
+                        padding: '6px 8px',
+                        borderRadius: '4px',
+                        border: '1px solid #eee',
+                        fontSize: '13px',
+                        boxSizing: 'border-box'
+                    }}
+                />
+            </td>
+        );
+    };
+
+    const CheckCell = (props) => {
+        const result = checkedLogics[props.dataItem.id];
+        return (
+            <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
+                {result && (
+                    <span style={{ fontSize: '12px', fontWeight: '600' }}>
+                        {result}
+                    </span>
+                )}
+            </td>
+        );
+    };
+
+    const DeleteCell = (props) => {
+        return (
+            <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
+                <button
+                    onClick={() => {
+                        const newData = categories.filter(item => item.id !== props.dataItem.id);
+                        setCategories(newData);
+                    }}
+                    style={{
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer',
+                        color: '#ccc',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '100%'
+                    }}
+                >
+                    <Trash2 size={16} />
+                </button>
+            </td>
+        );
+    };
+
+    const CustomCell = (props) => {
+        if (props.field === 'check') return <CheckCell {...props} />;
+        if (props.field === 'delete') return <DeleteCell {...props} />;
+        return <EditableCell {...props} />;
+    };
+
+
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5' }} data-theme="data-dashboard">
@@ -106,112 +220,172 @@ const RecodingPage = () => {
                         {evaluationResult && (
                             <div style={{
                                 marginBottom: '24px',
-                                padding: '20px',
                                 background: '#f8f9fa',
                                 borderRadius: '8px',
                                 border: '1px solid #eee',
-                                animation: 'fadeIn 0.3s ease-in-out'
+                                animation: 'fadeIn 0.3s ease-in-out',
+                                overflow: 'hidden'
                             }}>
-                                <h4 style={{ fontSize: '15px', fontWeight: '700', margin: '0 0 16px 0', color: '#333', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                    <span style={{ width: '4px', height: '16px', background: 'var(--primary-color)', borderRadius: '2px' }}></span>
-                                    평가 결과
-                                </h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>전체 N:</span>
-                                            <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.n}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>표준편차:</span>
-                                            <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.stdDev}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>평균:</span>
-                                            <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.mean}</span>
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최대:</span>
-                                            <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.max}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최소:</span>
-                                            <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.min}</span>
-                                        </div>
-                                    </div>
+                                <div
+                                    onClick={() => setIsEvaluationOpen(!isEvaluationOpen)}
+                                    style={{
+                                        padding: '16px 20px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        borderBottom: isEvaluationOpen ? '1px solid #eee' : 'none',
+                                        userSelect: 'none'
+                                    }}
+                                >
+                                    <h4 style={{ fontSize: '15px', fontWeight: '700', margin: 0, color: '#333', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ width: '4px', height: '16px', background: 'var(--primary-color)', borderRadius: '2px' }}></span>
+                                        평가 결과
+                                    </h4>
+                                    {isEvaluationOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                 </div>
+
+                                {isEvaluationOpen && (
+                                    <div style={{ padding: '20px' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>전체 N:</span>
+                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.n}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>표준편차:</span>
+                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.stdDev}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최대:</span>
+                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.max}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>평균:</span>
+                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.mean}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최소:</span>
+                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.min}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
-                        {/* Categories Table Section */}
-                        <div style={{ marginBottom: '24px' }}>
+                        {/* Categories Grid Section */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                 <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0, color: '#333' }}>보기</h4>
                                 <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd', background: '#fff', fontSize: '12px', cursor: 'pointer' }}>
-                                        <Plus size={12} /> 보기 추가
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* Table Header */}
-                            <div style={{ display: 'flex', gap: '10px', padding: '12px 0', borderBottom: '1px solid #eee', fontSize: '13px', color: '#555', fontWeight: '700', background: '#f9f9f9', alignItems: 'center' }}>
-                                <div style={{ width: '60px', textAlign: 'center' }}>코드</div>
-                                <div style={{ flex: 2, paddingLeft: '8px' }}>보기</div>
-                                <div style={{ width: '80px', textAlign: 'center' }}>가공값</div>
-                                <div style={{ flex: 3, paddingLeft: '8px' }}>로직</div>
-                                <div style={{ width: '120px', textAlign: 'center' }}>
                                     <button
-                                        onClick={handleLogicCheck}
-                                        style={{
-                                            padding: '4px 10px',
-                                            borderRadius: '4px',
-                                            border: '1px solid var(--primary-color)',
-                                            background: 'var(--primary-bg-light)',
-                                            color: 'var(--primary-color)',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
+                                        onClick={() => {
+                                            const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 0;
+                                            setCategories([...categories, { id: newId, realVal: String(newId), category: '', val: '', logic: '' }]);
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = 'var(--primary-bg-medium)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = 'var(--primary-bg-light)'}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '4px', border: '1px solid #ddd', background: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: '600', color: '#555' }}
                                     >
-                                        로직체크
+                                        <Plus size={14} /> 보기 추가
                                     </button>
                                 </div>
-                                <div style={{ width: '40px' }}></div>
                             </div>
 
-                            {/* Table Rows */}
-                            {categories.map((cat, idx) => (
-                                <div key={idx} style={{ display: 'flex', gap: '10px', padding: '10px 0', borderBottom: '1px solid #f5f5f5', alignItems: 'center' }}>
-                                    <div style={{ width: '60px', textAlign: 'center', fontSize: '13px', color: '#888' }}>{cat.realVal}</div>
-                                    <div style={{ flex: 2 }}>
-                                        <input type="text" defaultValue={cat.category} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #eee' }} />
-                                    </div>
-                                    <div style={{ width: '80px' }}>
-                                        <input type="text" defaultValue={cat.val} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #eee' }} />
-                                    </div>
-                                    <div style={{ flex: 3 }}>
-                                        <input type="text" defaultValue={cat.logic} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #eee' }} />
-                                    </div>
-                                    <div style={{ width: '120px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        {checkedLogics[cat.id] && (
-                                            <span style={{ fontSize: '13px', fontWeight: '600' }}>
-                                                {checkedLogics[cat.id]}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <div style={{ width: '40px', display: 'flex', justifyContent: 'center' }}>
-                                        <button style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#ccc' }}>
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
+                            <div className="cmn_grid singlehead" style={{ flex: 1 }}>
+                                <KendoGrid
+                                    parentProps={{
+                                        data: categories,
+                                        sort,
+                                        filter,
+                                        sortChange: ({ sort }) => setSort(sort),
+                                        filterChange: ({ filter }) => setFilter(filter),
+                                        height: "100%"
+                                    }}
+                                >
+                                    {columns.filter(c => c.show).map((c) => {
+                                        if (c.field === 'check') {
+                                            return (
+                                                <Column
+                                                    key={c.field}
+                                                    field={c.field}
+                                                    title={c.title}
+                                                    width={c.width}
+                                                    minWidth={c.minWidth}
+                                                    cell={CustomCell}
+                                                    headerCell={() => (
+                                                        <div className="k-header-center" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+                                                            <button
+                                                                onClick={handleLogicCheck}
+                                                                style={{
+                                                                    padding: '4px 8px',
+                                                                    borderRadius: '4px',
+                                                                    border: '1px solid var(--primary-color)',
+                                                                    background: '#fff',
+                                                                    color: 'var(--primary-color)',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '700',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px'
+                                                                }}
+                                                            >
+                                                                로직 체크
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    headerClassName="k-header-center"
+                                                    headerStyle={{
+                                                        textAlign: 'center',
+                                                        color: '#666',
+                                                        fontWeight: '600'
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        if (c.field === 'delete') {
+                                            return (
+                                                <Column
+                                                    key={c.field}
+                                                    field={c.field}
+                                                    title={c.title}
+                                                    width={c.width}
+                                                    minWidth={c.minWidth}
+                                                    columnMenu={undefined}
+                                                    cell={CustomCell}
+                                                    headerClassName="k-header-center"
+                                                    headerStyle={{
+                                                        textAlign: 'center',
+                                                        color: '#666',
+                                                        fontWeight: '600'
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        return (
+                                            <Column
+                                                key={c.field}
+                                                field={c.field}
+                                                title={c.title}
+                                                width={c.width}
+                                                minWidth={c.minWidth}
+                                                columnMenu={columnMenu}
+                                                cell={CustomCell}
+                                                headerClassName="k-header-center"
+                                                headerStyle={{
+                                                    textAlign: 'center',
+                                                    color: '#666',
+                                                    fontWeight: '600'
+                                                }}
+                                            />
+                                        );
+                                    })}
+                                </KendoGrid>
+                            </div>
                         </div>
                     </div>
                 </div>
