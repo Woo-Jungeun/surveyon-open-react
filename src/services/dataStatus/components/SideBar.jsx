@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search } from 'lucide-react';
 
-const VariableList = ({ items, selectedId, onItemClick, title = "변수 목록", onSearch }) => {
+const SideBar = ({ items, selectedId, onItemClick, title = "변수 목록", onSearch }) => {
     return (
         <div style={{
             width: '260px',
@@ -73,4 +73,4 @@ const VariableList = ({ items, selectedId, onItemClick, title = "변수 목록",
     );
 };
 
-export default VariableList;
+export default SideBar;

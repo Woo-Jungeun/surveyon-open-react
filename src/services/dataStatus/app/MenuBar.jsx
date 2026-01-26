@@ -15,9 +15,9 @@ const MENU_ITEMS = [
     label: "데이터설정",
     path: "/data_status/setting",
     children: [
-      { label: "변수관리", path: "/data_status/setting/variable", icon: Info },
+      { label: "문항관리", path: "/data_status/setting/variable", icon: Info },
       { label: "전체 데이터(뷰어)", path: "/data_status/setting/viewer", icon: Database },
-      { label: "변수리코딩", path: "/data_status/setting/recoding", icon: Wrench },
+      { label: "문항 가공", path: "/data_status/setting/recoding", icon: Wrench },
       { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
     ]
   },
@@ -145,10 +145,11 @@ const MenuBar = () => {
           <div style={{ width: "1px", height: "14px", background: "#dcdcdc" }}></div>
           <h1
             className="logo"
-            style={{ cursor: "pointer", fontSize: "20px", fontWeight: "700", display: "flex", alignItems: "center", letterSpacing: "-0.5px" }}
+            style={{ cursor: "pointer", fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px", letterSpacing: "-0.5px", whiteSpace: "nowrap" }}
             onClick={() => navigate("/data_status")}
           >
-            <span className="ai-logo-text">데이터 현황</span>
+            <span className="ai-logo-text" style={{ fontSize: "20px" }}>SRT</span>
+            <span style={{ fontSize: "18px" }}>데이터 현황</span>
           </h1>
         </div>
       </div>
@@ -157,7 +158,7 @@ const MenuBar = () => {
       <div style={{ padding: "0 20px 20px 20px", display: "flex", flexDirection: "column", gap: "8px" }}>
         <button
           type="button"
-          onClick={() => modal.showAlert("알림", "변수 불러오기 기능은 준비 중입니다.")}
+          onClick={() => modal.showAlert("알림", "데이터 신규등록 기능은 준비 중입니다.")}
           style={{
             width: "100%",
             display: "flex",
@@ -178,7 +179,7 @@ const MenuBar = () => {
           onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
         >
           <Upload size={16} />
-          <span>변수 불러오기</span>
+          <span>데이터 신규등록</span>
         </button>
         <button
           type="button"

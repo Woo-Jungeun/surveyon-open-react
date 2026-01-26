@@ -1,7 +1,7 @@
 import React from 'react';
-import { Plus, Save } from 'lucide-react';
+import { Plus, Save, Search } from 'lucide-react';
 
-const DataHeader = ({ title, onAdd, addButtonLabel = "추가", onSave, saveButtonLabel = "저장", onEdit, editButtonLabel = "수정" }) => {
+const DataHeader = ({ title, onAdd, addButtonLabel = "추가", onSave, saveButtonLabel = "저장", onEdit, editButtonLabel = "수정", onSearch }) => {
     return (
         <div style={{
             display: 'flex',
@@ -15,6 +15,25 @@ const DataHeader = ({ title, onAdd, addButtonLabel = "추가", onSave, saveButto
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                 <h2 style={{ fontSize: '18px', fontWeight: '700', margin: 0, color: '#333' }}>{title}</h2>
+                {onSearch && (
+                    <div style={{ position: 'relative', width: '240px' }}>
+                        <Search size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#999' }} />
+                        <input
+                            type="text"
+                            placeholder="Search variables..."
+                            onChange={(e) => onSearch(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '8px 10px 8px 34px',
+                                borderRadius: '6px',
+                                border: '1px solid #ddd',
+                                fontSize: '14px',
+                                outline: 'none',
+                                background: '#f9f9f9'
+                            }}
+                        />
+                    </div>
+                )}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
                 {onAdd && (

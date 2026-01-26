@@ -93,8 +93,8 @@ const MenuSection = () => {
           const isDisabled =
             item.id === "survey-creation" ||
             item.id === "data-management" ||
-            item.id === "respondent-management" || item.id === "data-dashboard";
-          // item.id === "respondent-management";
+            // item.id === "respondent-management" || item.id === "data-dashboard";
+            item.id === "respondent-management";
           const handleCardClick = () => {
             if (isDisabled) return;
 

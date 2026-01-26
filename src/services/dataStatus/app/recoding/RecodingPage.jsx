@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DataHeader from '../../components/DataHeader';
-import VariableList from '../../components/VariableList';
+import SideBar from '../../components/SideBar';
 import { Play, Plus, Trash2 } from 'lucide-react';
 
 const RecodingPage = () => {
@@ -32,18 +32,16 @@ const RecodingPage = () => {
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5' }} data-theme="data-dashboard">
             {/* Header */}
             <DataHeader
-                title="변수가공"
-                addButtonLabel="변수 추가"
-                onAdd={() => alert('변수 추가 클릭')}
-                editButtonLabel="변수 수정"
-                onEdit={() => alert('변수 수정 클릭')}
+                title="문항 가공"
+                addButtonLabel="문항 추가"
+                onAdd={() => alert('문항 추가 클릭')}
                 saveButtonLabel="변경사항 저장"
                 onSave={() => alert('변경사항 저장 클릭')}
             />
 
             <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
                 {/* Sidebar */}
-                <VariableList
+                <SideBar
                     items={variables}
                     selectedId={selectedVar?.id}
                     onItemClick={setSelectedVar}
@@ -57,12 +55,16 @@ const RecodingPage = () => {
                         borderRadius: '8px',
                         padding: '24px',
                         boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+                        minHeight: '100%', // Fill height
+                        display: 'flex',
+                        flexDirection: 'column',
+                        boxSizing: 'border-box'
                     }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>변수 수정</h3>
+                        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>문항 수정</h3>
 
                         {/* Variable Info Inputs */}
                         <div style={{ marginBottom: '24px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>변수명 (ID)</label>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>문항 ID</label>
                             <input
                                 type="text"
                                 value={selectedVar?.name || ''}
@@ -70,7 +72,7 @@ const RecodingPage = () => {
                                 style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd', background: '#f9f9f9', marginBottom: '16px' }}
                             />
 
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>라벨</label>
+                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>문항 라벨</label>
                             <input
                                 type="text"
                                 value={selectedVar?.label || ''}
@@ -82,22 +84,22 @@ const RecodingPage = () => {
                         {/* Categories Table Section */}
                         <div style={{ marginBottom: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0, color: '#333' }}>카테고리</h4>
+                                <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0, color: '#333' }}>보기</h4>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <button style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd', background: '#fff', fontSize: '12px', cursor: 'pointer' }}>
-                                        <Play size={12} /> 평가
+                                        <Play size={12} /> 로직 체크
                                     </button>
                                     <button style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderRadius: '4px', border: '1px solid #ddd', background: '#fff', fontSize: '12px', cursor: 'pointer' }}>
-                                        <Plus size={12} /> 카테고리 추가
+                                        <Plus size={12} /> 보기 추가
                                     </button>
                                 </div>
                             </div>
 
                             {/* Table Header */}
                             <div style={{ display: 'flex', gap: '10px', padding: '8px 0', borderBottom: '1px solid #eee', fontSize: '12px', color: '#888', fontWeight: '600' }}>
-                                <div style={{ width: '60px', textAlign: 'center' }}>실제값</div>
-                                <div style={{ flex: 2 }}>카테고리</div>
-                                <div style={{ width: '80px' }}>값</div>
+                                <div style={{ width: '60px', textAlign: 'center' }}>코드</div>
+                                <div style={{ flex: 2 }}>보기</div>
+                                <div style={{ width: '80px' }}>가공값</div>
                                 <div style={{ flex: 3 }}>로직</div>
                                 <div style={{ width: '40px' }}></div>
                             </div>
