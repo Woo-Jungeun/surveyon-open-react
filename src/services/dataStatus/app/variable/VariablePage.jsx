@@ -197,10 +197,10 @@ const VariablePage = () => {
     const handleAddVariable = () => {
         setVariables(prev => {
             const newId = prev.length > 0 ? Math.max(...prev.map(v => v.id)) + 1 : 1;
-            const newName = `q${newId}`;
+            const newName = `var_${newId}`;
             return [...prev, {
                 id: newId,
-                sysName: newName,
+                sysName: '',
                 name: newName,
                 label: '',
                 category: '',
