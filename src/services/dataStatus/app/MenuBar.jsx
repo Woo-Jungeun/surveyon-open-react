@@ -1,6 +1,7 @@
 import {
   Home, Upload, RefreshCw, X, Info, Database, Wrench, Target,
-  BarChart2, Grid, ClipboardList, Sparkles, FileText, Moon, User
+  BarChart2, Grid, ClipboardList, Sparkles, FileText, Moon, User, Clock,
+  ChevronDown, ChevronRight
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
@@ -51,6 +52,20 @@ const MenuBar = () => {
   // 드롭다운 상태
   const [userOpen, setUserOpen] = useState(false);
   const userRef = useRef(null);
+
+  // 메뉴 섹션 토글 상태
+  const [openSections, setOpenSections] = useState({
+    "데이터설정": true,
+    "집계현황": true,
+    "AI요약": false
+  });
+
+  const toggleSection = (label) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [label]: !prev[label]
+    }));
+  };
 
   // 외부 클릭 시 open 닫기
   useEffect(() => {
@@ -154,6 +169,24 @@ const MenuBar = () => {
         </div>
       </div>
 
+      {/* Project Name Display */}
+      <div style={{ padding: "0 20px 12px 20px" }}>
+        <div style={{
+          padding: "12px",
+          background: "var(--primary-bg-light)",
+          borderRadius: "8px",
+          border: "1px solid var(--primary-border-light)",
+          color: "var(--primary-dark)",
+          fontWeight: "700",
+          fontSize: "15px",
+          textAlign: "center",
+          wordBreak: "break-all",
+          lineHeight: "1.4"
+        }}>
+          {sessionStorage.getItem("projectname") || "조사명 없음"}
+        </div>
+      </div>
+
       {/* Action Buttons */}
       <div style={{ padding: "0 20px 20px 20px", display: "flex", flexDirection: "column", gap: "8px" }}>
         <button
@@ -206,50 +239,89 @@ const MenuBar = () => {
           <RefreshCw size={16} />
           <span>데이터 새로고침</span>
         </button>
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "4px",
+          fontSize: "11px !important",
+          color: "#999",
+          marginTop: "6px"
+        }}>
+          <Clock size={12} />
+          <span>마지막: 2026-01-26 14:30:00</span>
+        </div>
       </div>
 
       {/* Navigation Menu */}
       <div style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}>
         {MENU_ITEMS.map((section, idx) => (
           <div key={idx} style={{ marginBottom: "24px" }}>
-            <h3 style={{
-              fontSize: "13px",
-              fontWeight: "700",
-              color: "#888",
-              marginBottom: "12px",
-              paddingLeft: "8px"
-            }}>
-              {section.label}
-            </h3>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {section.children.map((item, cIdx) => {
-                const isActive = location.pathname === item.path;
-                const Icon = item.icon;
-                return (
-                  <li key={cIdx} style={{ marginBottom: "4px" }}>
-                    <NavLink
-                      to={item.path}
-                      style={({ isActive }) => ({
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        padding: "10px 12px",
-                        borderRadius: "8px",
-                        textDecoration: "none",
-                        fontSize: "15px",
-                        fontWeight: isActive ? "600" : "500",
-                        color: isActive ? "var(--primary-color)" : "#333",
-                        background: isActive ? "var(--primary-bg-light)" : "transparent",
-                        transition: "all 0.2s"
-                      })}
-                    >
-                      <Icon size={18} strokeWidth={2} />
-                      <span>{item.label}</span>
-                    </NavLink>
-                  </li>
-                );
-              })}
-            </ul>
+            <div
+              onClick={() => toggleSection(section.label)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+                marginBottom: "12px",
+                paddingLeft: "8px",
+                paddingRight: "8px"
+              }}
+            >
+              <h3 style={{
+                fontSize: "13px",
+                fontWeight: "700",
+                color: "#888",
+                margin: 0
+              }}>
+                {section.label}
+              </h3>
+              {openSections[section.label] ?
+                <ChevronDown size={14} color="#888" /> :
+                <ChevronRight size={14} color="#888" />
+              }
+            </div>
+
+            {openSections[section.label] && (
+              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                {section.children.map((item, cIdx) => {
+                  const isActive = location.pathname === item.path;
+                  const Icon = item.icon;
+                  return (
+                    <li key={cIdx} style={{ marginBottom: "4px" }}>
+                      <NavLink
+                        to={item.path}
+                        style={({ isActive }) => ({
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "10px 12px",
+                          borderRadius: "8px",
+                          textDecoration: "none",
+                          fontSize: "15px",
+                          fontWeight: isActive ? "600" : "500",
+                          color: isActive ? "var(--primary-color)" : "#333",
+                          background: isActive ? "var(--primary-bg-light)" : "transparent",
+                          transition: "all 0.2s"
+                        })}
+                        onClick={(e) => {
+                          if (item.label === "전체 데이터(뷰어)") {
+                            e.preventDefault();
+                            const width = window.screen.width;
+                            const height = window.screen.height;
+                            window.open(item.path, "_blank", `width=${width},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
+                          }
+                        }}
+                      >
+                        <Icon size={18} strokeWidth={2} />
+                        <span>{item.label}</span>
+                      </NavLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
           </div>
         ))}
       </div>
