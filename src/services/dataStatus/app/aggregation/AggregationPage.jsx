@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart2, LineChart, PieChart, Donut, AreaChart } from 'lucide-react';
+import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid } from 'lucide-react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
@@ -22,6 +22,7 @@ const AggregationCard = ({ q }) => {
                     <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
                     <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
                     <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
                 </div>
             </div>
             <div className="agg-card-body">
@@ -61,7 +62,8 @@ const AggregationCard = ({ q }) => {
                                 chartMode === 'line' ? ['line'] :
                                     chartMode === 'pie' ? ['pie'] :
                                         chartMode === 'donut' ? ['donut'] :
-                                            chartMode === 'area' ? ['area'] : []
+                                            chartMode === 'area' ? ['area'] :
+                                                chartMode === 'heatmap' ? ['heatmap'] : []
                         }
                     />
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid } from 'lucide-react';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -368,7 +368,7 @@ const CrossTabPage = () => {
                                 <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'donut' ? null : 'donut')} title="도넛형 차트"><Donut size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'area' ? null : 'area')} title="영역형 차트"><AreaChart size={18} /></button>
                                 <button className="view-option-btn" title="지도"><Map size={18} /></button>
-                                <button className="view-option-btn" title="그리드"><Grid size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'heatmap' ? null : 'heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
                             </div>
                         </div>
 
@@ -482,14 +482,16 @@ const CrossTabPage = () => {
                                                                             chartMode === 'line' ? ['line'] :
                                                                                 chartMode === 'pie' ? ['pie'] :
                                                                                     chartMode === 'donut' ? ['donut'] :
-                                                                                        chartMode === 'area' ? ['area'] : []
+                                                                                        chartMode === 'area' ? ['area'] :
+                                                                                            chartMode === 'heatmap' ? ['heatmap'] : []
                                                                     }
                                                                     initialType={
                                                                         chartMode === 'bar' ? 'column' :
                                                                             chartMode === 'line' ? 'line' :
                                                                                 chartMode === 'pie' ? 'pie' :
                                                                                     chartMode === 'donut' ? 'donut' :
-                                                                                        chartMode === 'area' ? 'area' : 'column'
+                                                                                        chartMode === 'area' ? 'area' :
+                                                                                            chartMode === 'heatmap' ? 'heatmap' : 'column'
                                                                     }
                                                                 />
                                                             </div>

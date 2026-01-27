@@ -32,6 +32,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         { text: "원형", value: "pie" },
         { text: "도넛", value: "donut" },
         { text: "영역", value: "area" },
+        { text: "트리맵", value: "heatmap" },
     ];
 
     const chartTypeOptions = allowedTypes
@@ -47,6 +48,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
     };
 
     const isPieOrDonut = chartType === 'pie' || chartType === 'donut';
+    const isHeatmap = chartType === 'heatmap';
 
     const renderSeries = () => {
         if (isPieOrDonut) {
@@ -63,6 +65,38 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                         position: "outsideEnd",
                         background: "none"
                     }}
+                />
+            );
+        }
+
+        if (isHeatmap) {
+            const heatmapData = [];
+            const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
+
+            // Transform data for heatmap: [ { x: 'Very Low', y: 'Banner A', value: 10 }, ... ]
+            targetSeries.forEach(seriesName => {
+                data.forEach(item => {
+                    heatmapData.push({
+                        x: item.name,
+                        y: seriesName,
+                        value: item[seriesName]
+                    });
+                });
+            });
+
+            return (
+                <ChartSeriesItem
+                    type="heatmap"
+                    data={heatmapData}
+                    xField="x"
+                    yField="y"
+                    field="value"
+                    labels={{
+                        visible: true,
+                        content: (e) => `${e.value}%`,
+                        color: '#fff'
+                    }}
+                    color="#5c9aff"
                 />
             );
         }
@@ -84,7 +118,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
     };
 
     const onLegendItemClick = (e) => {
-        if (!isPieOrDonut) {
+        if (!isPieOrDonut && !isHeatmap) {
             const seriesName = e.series.name;
             setVisibleSeries(prev => ({
                 ...prev,
@@ -122,20 +156,38 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 </div>
             )}
             <Chart style={{ flex: 1 }} key={`${chartType}-${JSON.stringify(visibleSeries)}`} onLegendItemClick={onLegendItemClick}>
-                <ChartLegend position="bottom" orientation="horizontal" />
-                {!isPieOrDonut && (
+                {!isHeatmap && <ChartLegend position="bottom" orientation="horizontal" />}
+
+                {/* Axes for Standard Charts */}
+                {!isPieOrDonut && !isHeatmap && (
                     <ChartCategoryAxis>
                         <ChartCategoryAxisItem categories={data.map(d => d.name)} />
                     </ChartCategoryAxis>
                 )}
-                {!isPieOrDonut && (
+                {!isPieOrDonut && !isHeatmap && (
                     <ChartValueAxis>
                         <ChartValueAxisItem labels={{ format: "{0}%" }} />
                     </ChartValueAxis>
                 )}
-                <ChartTooltip visible={!isPieOrDonut} render={(e) => {
+
+                {/* Axes for Heatmap */}
+                {isHeatmap && (
+                    <>
+                        <ChartCategoryAxis name="xAxis">
+                            <ChartCategoryAxisItem categories={data.map(d => d.name)} />
+                        </ChartCategoryAxis>
+                        <ChartValueAxis name="yAxis">
+                            <ChartValueAxisItem categories={seriesNames || ["Banner A", "Banner B", "Banner C"]} />
+                        </ChartValueAxis>
+                    </>
+                )}
+
+                <ChartTooltip visible={true} render={(e) => {
+                    if (isHeatmap) {
+                        return `${e.point.dataItem.y} - ${e.point.dataItem.x}: ${e.point.dataItem.value}%`;
+                    }
                     if (!isPieOrDonut) {
-                        return `${e.point.series.field}: ${e?.point?.value}%`;
+                        return `${e.point.series.field}: ${e.point ? e.point.value : e.value}%`;
                     }
                 }} />
                 <ChartSeries>
