@@ -172,6 +172,32 @@ const InfoSection = () => {
             하나의 플랫폼에서 모든 것을 경험하세요.
           </p>
 
+          <div style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            background: "rgba(255, 255, 255, 0.15)",
+            padding: "8px 16px",
+            borderRadius: "24px",
+            marginBottom: "10px",
+            border: "1px solid rgba(255, 255, 255, 0.2)",
+            backdropFilter: "blur(5px)",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+          }}>
+            <span style={{
+              width: "8px",
+              height: "8px",
+              background: "#FFD700",
+              borderRadius: "50%",
+              boxShadow: "0 0 10px #FFD700"
+            }}></span>
+            <span style={{
+              fontSize: "15px",
+              fontWeight: "700",
+              color: "#fff",
+              letterSpacing: "-0.5px"
+            }}>바로가기 서비스</span>
+          </div>
           <div className="hp-feature-list">
             <div className="hp-feature-item">
               <FileText className="hp-feature-icon" />
@@ -300,8 +326,8 @@ const InfoSection = () => {
           </motion.div>
 
         </div>
-      </div>
-    </section>
+      </div >
+    </section >
   );
 };
 

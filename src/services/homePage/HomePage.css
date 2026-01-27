@@ -205,7 +205,7 @@
   max-width: 540px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .homepage-container .hp-chip {
@@ -234,7 +234,6 @@
    기능 박스 4개 (중앙 배치)
 ========================================= */
 .homepage-container .hp-feature-list {
-  margin-top: 40px;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 14px 18px;
