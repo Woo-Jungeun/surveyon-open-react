@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Save, Search } from 'lucide-react';
 
-const DataHeader = ({ title, onAdd, addButtonLabel = "추가", onSave, saveButtonLabel = "저장", onEdit, editButtonLabel = "수정", onSearch }) => {
+const DataHeader = ({ title, children, onAdd, addButtonLabel = "추가", onSave, saveButtonLabel = "저장", onEdit, editButtonLabel = "수정", onSearch }) => {
     return (
         <div style={{
             display: 'flex',
@@ -36,6 +36,7 @@ const DataHeader = ({ title, onAdd, addButtonLabel = "추가", onSave, saveButto
                 )}
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
+                {children}
                 {onAdd && (
                     <button
                         onClick={onAdd}
