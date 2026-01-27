@@ -5,6 +5,7 @@ import MainListWrapperView from "./views/MainList/MainListWrapperView.jsx";
 import RecodingWrapperView from "./views/setting/RecodingWrapperView.jsx";
 import VariableWrapperView from "./views/setting/VariableWrapperView.jsx";
 import WeightWrapperView from "./views/setting/WeightWrapperView.jsx";
+import AggregationPage from "./app/aggregation/AggregationPage.jsx";
 import CrossTabPage from "./app/crossTab/CrossTabPage.jsx";
 import DataViewerPage from "./app/dataViewer/DataViewerPage.jsx";
 
@@ -19,6 +20,7 @@ export default function DataStatusRoutes() {
         <Route path="setting/variable" element={<VariableWrapperView />} />
         <Route path="setting/weight" element={<WeightWrapperView />} />
         <Route path="aggregation/cross" element={<CrossTabPage />} />
+        <Route path="aggregation/status" element={<AggregationPage />} />
       </Route>
 
       {/* 팝업 Wrapper */}
