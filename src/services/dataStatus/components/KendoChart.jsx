@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Chart,
     ChartSeries,
@@ -12,15 +12,20 @@ import {
 } from "@progress/kendo-react-charts";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 
-const KendoChart = ({ data }) => {
-    const [chartType, setChartType] = useState('column');
-    const [visibleSeries, setVisibleSeries] = useState({
-        "Banner A": true,
-        "Banner B": true,
-        "Banner C": true
+const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
+    const [chartType, setChartType] = useState(initialType || 'column');
+
+    useEffect(() => {
+        if (initialType) {
+            setChartType(initialType);
+        }
+    }, [initialType]);
+    const [visibleSeries, setVisibleSeries] = useState(() => {
+        const names = seriesNames || ["Banner A", "Banner B", "Banner C"];
+        return names.reduce((acc, name) => ({ ...acc, [name]: true }), {});
     });
 
-    const chartTypeOptions = [
+    const allChartTypeOptions = [
         { text: "세로 막대", value: "column" },
         { text: "가로 막대", value: "bar" },
         { text: "라인", value: "line" },
@@ -29,11 +34,52 @@ const KendoChart = ({ data }) => {
         { text: "영역", value: "area" },
     ];
 
+    const chartTypeOptions = allowedTypes
+        ? allChartTypeOptions.filter(opt => allowedTypes.includes(opt.value))
+        : allChartTypeOptions;
+
+    const showDropdown = chartTypeOptions.length > 1;
+
     const handleChartTypeChange = (e) => {
         setChartType(e.target.value.value);
     };
 
     const isPieOrDonut = chartType === 'pie' || chartType === 'donut';
+
+    const renderSeries = () => {
+        if (isPieOrDonut) {
+            return (
+                <ChartSeriesItem
+                    type={chartType}
+                    data={data}
+                    categoryField="name"
+                    field="total"
+                    name="Total"
+                    labels={{
+                        visible: true,
+                        content: (e) => `${e.category}: ${e.value}%`,
+                        position: "outsideEnd",
+                        background: "none"
+                    }}
+                />
+            );
+        }
+
+        const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
+        const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7c7c", "#6c757d", "#17a2b8"];
+
+        return targetSeries.map((name, index) => (
+            <ChartSeriesItem
+                key={name}
+                type={chartType}
+                data={data}
+                field={name}
+                name={name}
+                color={colors[index % colors.length]}
+                visible={visibleSeries[name]}
+            />
+        ));
+    };
 
     const onLegendItemClick = (e) => {
         if (!isPieOrDonut) {
@@ -47,16 +93,18 @@ const KendoChart = ({ data }) => {
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}>
-            <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-                <DropDownList
-                    data={chartTypeOptions}
-                    textField="text"
-                    dataItemKey="value"
-                    value={chartTypeOptions.find(opt => opt.value === chartType)}
-                    onChange={handleChartTypeChange}
-                    style={{ width: '150px' }}
-                />
-            </div>
+            {showDropdown && (
+                <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                    <DropDownList
+                        data={chartTypeOptions}
+                        textField="text"
+                        dataItemKey="value"
+                        value={chartTypeOptions.find(opt => opt.value === chartType)}
+                        onChange={handleChartTypeChange}
+                        style={{ width: '150px' }}
+                    />
+                </div>
+            )}
             <Chart style={{ flex: 1 }} key={`${chartType}-${JSON.stringify(visibleSeries)}`} onLegendItemClick={onLegendItemClick}>
                 <ChartLegend position="bottom" orientation="horizontal" />
                 {!isPieOrDonut && (
@@ -75,24 +123,7 @@ const KendoChart = ({ data }) => {
                     }
                 }} />
                 <ChartSeries>
-                    {isPieOrDonut ? (
-                        <ChartSeriesItem
-                            type={chartType}
-                            data={data}
-                            categoryField="name"
-                            field="total"
-                            name="Total"
-                            labels={{
-                                visible: true,
-                                content: (e) => `${e.category}: ${e.value}%`,
-                                position: "outsideEnd",
-                                background: "none"
-                            }}
-                        />
-                    ) : null}
-                    {!isPieOrDonut && <ChartSeriesItem type={chartType} data={data} field="Banner A" name="Banner A" color="#8884d8" visible={visibleSeries["Banner A"]} />}
-                    {!isPieOrDonut && <ChartSeriesItem type={chartType} data={data} field="Banner B" name="Banner B" color="#82ca9d" visible={visibleSeries["Banner B"]} />}
-                    {!isPieOrDonut && <ChartSeriesItem type={chartType} data={data} field="Banner C" name="Banner C" color="#ffc658" visible={visibleSeries["Banner C"]} />}
+                    {renderSeries()}
                 </ChartSeries>
             </Chart>
         </div>

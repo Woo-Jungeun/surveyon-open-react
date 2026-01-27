@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table } from 'lucide-react';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
+import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
@@ -20,6 +21,8 @@ const CrossTabPage = () => {
     const [tableSearchTerm, setTableSearchTerm] = useState('');
     const [variableSearchTerm, setVariableSearchTerm] = useState('');
     const [selectedWeight, setSelectedWeight] = useState("없음");
+    const [chartMode, setChartMode] = useState(null);
+    const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(true);
 
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([
@@ -114,6 +117,22 @@ const CrossTabPage = () => {
             n: [48, 57, 66, 75, 84]
         }
     };
+
+    const chartData = resultData.columns.map((colName, colIndex) => {
+        const dataPoint = { name: colName };
+        resultData.rows.forEach(row => {
+            if (row.label === '합계') {
+                dataPoint.total = row.values[colIndex];
+            } else {
+                dataPoint[row.label] = row.values[colIndex];
+            }
+        });
+        return dataPoint;
+    });
+
+    const seriesNames = resultData.rows
+        .filter(row => row.label !== '합계')
+        .map(row => row.label);
 
     const handleTableSelect = (item) => {
         setSelectedTableId(item.id);
@@ -343,8 +362,8 @@ const CrossTabPage = () => {
                             </div>
                             <div className="view-options">
                                 <button className="view-option-btn active"><Table size={18} /></button>
-                                <button className="view-option-btn"><BarChart2 size={18} /></button>
-                                <button className="view-option-btn"><LineChart size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'bar' ? null : 'bar')}><BarChart2 size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'line' ? null : 'line')}><LineChart size={18} /></button>
                                 <button className="view-option-btn"><Map size={18} /></button>
                                 <button className="view-option-btn"><Grid size={18} /></button>
                             </div>
@@ -353,62 +372,70 @@ const CrossTabPage = () => {
                         <div className="result-content">
                             {/* Stats Controls */}
                             <div className="stats-controls">
-                                <div className="stats-controls-row">
-                                    <div className="stats-section">
-                                        <div className="stats-section-title">배치 옵션 (드래그 및 선택)</div>
-                                        <div className="sortable-list">
-                                            {layoutOptions.map((item, index) => (
-                                                <div
-                                                    key={item.id}
-                                                    className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                    draggable
-                                                    onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
-                                                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                    onDrop={(e) => handleSortDrop(e, index, 'layout')}
-                                                    onClick={() => toggleLayoutOption(item.id)}
-                                                    style={{ cursor: item.fixed ? 'default' : 'pointer' }}
-                                                >
-                                                    <GripVertical size={14} className="drag-handle" style={{ cursor: 'grab' }} />
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={item.checked}
-                                                        readOnly
-                                                        disabled={item.fixed}
-                                                        style={{ pointerEvents: 'none' }}
-                                                    />
-                                                    <span>{item.label}</span>
+                                <div className="stats-controls-header" onClick={() => setIsStatsOptionsOpen(!isStatsOptionsOpen)} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: isStatsOptionsOpen ? '16px' : '0' }}>
+                                    <span style={{ fontWeight: 'bold', marginRight: '8px', fontSize: '14px' }}>옵션 설정</span>
+                                    {isStatsOptionsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                </div>
+                                {isStatsOptionsOpen && (
+                                    <>
+                                        <div className="stats-controls-row">
+                                            <div className="stats-section">
+                                                <div className="stats-section-title">배치 옵션 (드래그 및 선택)</div>
+                                                <div className="sortable-list">
+                                                    {layoutOptions.map((item, index) => (
+                                                        <div
+                                                            key={item.id}
+                                                            className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                            draggable
+                                                            onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
+                                                            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                            onDrop={(e) => handleSortDrop(e, index, 'layout')}
+                                                            onClick={() => toggleLayoutOption(item.id)}
+                                                            style={{ cursor: item.fixed ? 'default' : 'pointer' }}
+                                                        >
+                                                            <GripVertical size={14} className="drag-handle" style={{ cursor: 'grab' }} />
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={item.checked}
+                                                                readOnly
+                                                                disabled={item.fixed}
+                                                                style={{ pointerEvents: 'none' }}
+                                                            />
+                                                            <span>{item.label}</span>
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="stats-section">
-                                    <div className="stats-section-title">통계 옵션 (드래그 및 선택)</div>
-                                    <div className="sortable-list">
-                                        {statsOptions.map((item, index) => (
-                                            <div
-                                                key={item.id}
-                                                className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                draggable
-                                                onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
-                                                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                onDrop={(e) => handleSortDrop(e, index, 'stats')}
-                                                onClick={() => toggleStatOption(item.id)}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <GripVertical size={14} className="drag-handle" />
-                                                <input
-                                                    type="checkbox"
-                                                    checked={item.checked}
-                                                    readOnly
-                                                    style={{ pointerEvents: 'none' }}
-                                                />
-                                                <span>{item.label}</span>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
+                                        </div>
+
+                                        <div className="stats-section">
+                                            <div className="stats-section-title">통계 옵션 (드래그 및 선택)</div>
+                                            <div className="sortable-list">
+                                                {statsOptions.map((item, index) => (
+                                                    <div
+                                                        key={item.id}
+                                                        className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                        draggable
+                                                        onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
+                                                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                        onDrop={(e) => handleSortDrop(e, index, 'stats')}
+                                                        onClick={() => toggleStatOption(item.id)}
+                                                        style={{ cursor: 'pointer' }}
+                                                    >
+                                                        <GripVertical size={14} className="drag-handle" />
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={item.checked}
+                                                            readOnly
+                                                            style={{ pointerEvents: 'none' }}
+                                                        />
+                                                        <span>{item.label}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             {/* Dynamic Result Rendering */}
@@ -449,6 +476,16 @@ const CrossTabPage = () => {
                                                         ))}
                                                     </tbody>
                                                 </table>
+                                                {chartMode && (
+                                                    <div className="cross-tab-chart-container" style={{ marginTop: '24px', height: '400px', border: '1px solid #eee', borderRadius: '8px', padding: '16px', background: '#fff' }}>
+                                                        <KendoChart
+                                                            data={chartData}
+                                                            seriesNames={seriesNames}
+                                                            allowedTypes={chartMode === 'bar' ? ['column', 'bar'] : ['line']}
+                                                            initialType={chartMode === 'bar' ? 'column' : 'line'}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     }
@@ -502,7 +539,7 @@ const CrossTabPage = () => {
                 onClose={() => setIsModalOpen(false)}
                 onCreate={handleCreateTable}
             />
-        </div>
+        </div >
     );
 };
 
