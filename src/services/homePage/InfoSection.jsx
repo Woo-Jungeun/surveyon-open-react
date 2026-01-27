@@ -178,7 +178,17 @@ const InfoSection = () => {
               <span>설문제작</span>
             </div>
 
-            <div className="hp-feature-item">
+            <div
+              className="hp-feature-item"
+              onClick={() => {
+                if (!isLoggedIn) {
+                  navigate("/login", { state: { from: "/data_status" } });
+                } else {
+                  navigate("/data_status");
+                }
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <BarChart3 className="hp-feature-icon" />
               <span>데이터현황</span>
             </div>
