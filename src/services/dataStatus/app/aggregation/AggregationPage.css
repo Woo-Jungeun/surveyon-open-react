@@ -35,6 +35,11 @@
     border: 1px solid #eee;
 }
 
+/* 마지막 카드 여백 추가 */
+.agg-card:last-child {
+    margin-bottom: 20vh;
+}
+
 .agg-card-header {
     display: flex;
     justify-content: space-between;
@@ -72,7 +77,6 @@
     display: flex;
     gap: 32px;
     align-items: stretch;
-    /* Changed to stretch to match heights */
 }
 
 .agg-table-container {
@@ -80,7 +84,6 @@
     overflow-x: auto;
     border-radius: 8px;
     border: 1px solid #e0e0e0;
-    /* height: auto; */
 }
 
 .agg-chart-container {
