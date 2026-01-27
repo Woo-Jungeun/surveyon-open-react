@@ -11,6 +11,7 @@ import {
     ChartValueAxisItem
 } from "@progress/kendo-react-charts";
 import { ArrowLeftRight } from 'lucide-react';
+import ChoroplethMap from './ChoroplethMap';
 
 const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
     const [chartType, setChartType] = useState(initialType || 'column');
@@ -33,6 +34,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         { text: "도넛", value: "donut" },
         { text: "영역", value: "area" },
         { text: "히트맵", value: "heatmap" },
+        { text: "지도", value: "map" },
     ];
 
     const chartTypeOptions = allowedTypes
@@ -49,6 +51,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
 
     const isPieOrDonut = chartType === 'pie' || chartType === 'donut';
     const isHeatmap = chartType === 'heatmap';
+    const isMap = chartType === 'map';
 
     const renderSeries = () => {
         if (isPieOrDonut) {
@@ -126,6 +129,11 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
             }));
         }
     };
+
+    // 지도 모드일 때는 ChoroplethMap 렌더링
+    if (isMap) {
+        return <ChoroplethMap data={data} />;
+    }
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}>

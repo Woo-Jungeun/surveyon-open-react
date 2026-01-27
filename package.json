@@ -27,6 +27,7 @@
         "@progress/kendo-react-intl": "7.3.0",
         "@progress/kendo-react-labels": "7.3.0",
         "@progress/kendo-react-layout": "7.3.0",
+        "@progress/kendo-react-map": "^13.3.0",
         "@progress/kendo-react-notification": "7.3.0",
         "@progress/kendo-react-pdf": "7.3.0",
         "@progress/kendo-react-popup": "7.3.0",

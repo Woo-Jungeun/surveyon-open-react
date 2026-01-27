@@ -367,7 +367,7 @@ const CrossTabPage = () => {
                                 <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'pie' ? null : 'pie')} title="원형 차트"><PieChart size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'donut' ? null : 'donut')} title="도넛형 차트"><Donut size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'area' ? null : 'area')} title="영역형 차트"><AreaChart size={18} /></button>
-                                <button className="view-option-btn" title="지도"><Map size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'map' ? null : 'map')} title="지도"><Map size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'heatmap' ? null : 'heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
                             </div>
                         </div>
@@ -486,7 +486,8 @@ const CrossTabPage = () => {
                                                                                 chartMode === 'pie' ? ['pie'] :
                                                                                     chartMode === 'donut' ? ['donut'] :
                                                                                         chartMode === 'area' ? ['area'] :
-                                                                                            chartMode === 'heatmap' ? ['heatmap'] : []
+                                                                                            chartMode === 'heatmap' ? ['heatmap'] :
+                                                                                                chartMode === 'map' ? ['map'] : []
                                                                     }
                                                                     initialType={
                                                                         chartMode === 'bar' ? 'column' :
@@ -494,7 +495,8 @@ const CrossTabPage = () => {
                                                                                 chartMode === 'pie' ? 'pie' :
                                                                                     chartMode === 'donut' ? 'donut' :
                                                                                         chartMode === 'area' ? 'area' :
-                                                                                            chartMode === 'heatmap' ? 'heatmap' : 'column'
+                                                                                            chartMode === 'heatmap' ? 'heatmap' :
+                                                                                                chartMode === 'map' ? 'map' : 'column'
                                                                     }
                                                                 />
                                                             </div>
