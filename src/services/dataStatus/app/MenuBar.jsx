@@ -190,7 +190,7 @@ const MenuBar = () => {
           onClick={handleApiTest}
           style={{
             cursor: "pointer",
-            padding: "12px",
+            padding: "7px",
             // background: "var(--primary-bg-light)",
             borderRadius: "8px",
             border: "1px solid var(--primary-border-light)",
