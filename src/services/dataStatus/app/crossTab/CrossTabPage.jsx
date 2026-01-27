@@ -432,58 +432,70 @@ const CrossTabPage = () => {
                                     if (option.id === 'table') {
                                         return (
                                             <div key="table" className="result-block" style={{ marginBottom: '24px' }}>
-                                                <div className="section-header">
-                                                    <div className="blue-bar"></div>
-                                                    <span className="section-title">표</span>
-                                                </div>
-                                                <table className="cross-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px' }}>문항</th>
-                                                            {resultData.columns.map((col, i) => (
-                                                                <th key={i} style={{ textAlign: 'right', paddingRight: '16px' }}>
-                                                                    {col}
-                                                                    <div style={{ fontSize: '11px', fontWeight: 'normal', color: '#888', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
-                                                                </th>
-                                                            ))}
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {resultData.rows.map((row, i) => (
-                                                            <tr key={i}>
-                                                                <td className="label-cell" style={{ paddingLeft: '16px' }}>{row.label}</td>
-                                                                {row.values.map((val, j) => (
-                                                                    <td key={j} className="data-cell" style={{ textAlign: 'right', paddingRight: '16px' }}>
-                                                                        <div className="cell-value">{val}</div>
-                                                                        <div className="cell-pct">{(val / row.total * 100).toFixed(1)}%</div>
-                                                                    </td>
-                                                                ))}
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                                {chartMode && (
-                                                    <div className="cross-tab-chart-container" style={{ marginTop: '24px', height: '400px', border: '1px solid #eee', borderRadius: '8px', padding: '16px', background: '#fff' }}>
-                                                        <KendoChart
-                                                            data={chartData}
-                                                            seriesNames={seriesNames}
-                                                            allowedTypes={
-                                                                chartMode === 'bar' ? ['column', 'bar'] :
-                                                                    chartMode === 'line' ? ['line'] :
-                                                                        chartMode === 'pie' ? ['pie'] :
-                                                                            chartMode === 'donut' ? ['donut'] :
-                                                                                chartMode === 'area' ? ['area'] : []
-                                                            }
-                                                            initialType={
-                                                                chartMode === 'bar' ? 'column' :
-                                                                    chartMode === 'line' ? 'line' :
-                                                                        chartMode === 'pie' ? 'pie' :
-                                                                            chartMode === 'donut' ? 'donut' :
-                                                                                chartMode === 'area' ? 'area' : 'column'
-                                                            }
-                                                        />
+                                                <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch' }}>
+                                                    <div className="table-wrapper" style={{ flex: 1, transition: 'flex 0.3s ease', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                                                        <div className="section-header">
+                                                            <div className="blue-bar"></div>
+                                                            <span className="section-title">표</span>
+                                                        </div>
+                                                        <div style={{ overflow: 'auto', flex: 1, background: '#fff', borderRadius: '8px', paddingRight: '16px' }}>
+                                                            <table className="cross-table" style={{ width: '100%', height: '100%' }}>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px' }}>문항</th>
+                                                                        {resultData.columns.map((col, i) => (
+                                                                            <th key={i} style={{ textAlign: 'right', paddingRight: '16px' }}>
+                                                                                {col}
+                                                                                <div style={{ fontSize: '11px', fontWeight: 'normal', color: '#888', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
+                                                                            </th>
+                                                                        ))}
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {resultData.rows.map((row, i) => (
+                                                                        <tr key={i}>
+                                                                            <td className="label-cell" style={{ paddingLeft: '16px' }}>{row.label}</td>
+                                                                            {row.values.map((val, j) => (
+                                                                                <td key={j} className="data-cell" style={{ textAlign: 'right', paddingRight: '16px' }}>
+                                                                                    <div className="cell-value">{val}</div>
+                                                                                    <div className="cell-pct">{(val / row.total * 100).toFixed(1)}%</div>
+                                                                                </td>
+                                                                            ))}
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
-                                                )}
+                                                    {chartMode && (
+                                                        <div className="chart-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                                                            <div className="section-header">
+                                                                <div className="blue-bar"></div>
+                                                                <span className="section-title">차트</span>
+                                                            </div>
+                                                            <div className="cross-tab-chart-container" style={{ flex: 1, border: '1px solid #eee', borderRadius: '8px', padding: '16px', background: '#fff' }}>
+                                                                <KendoChart
+                                                                    data={chartData}
+                                                                    seriesNames={seriesNames}
+                                                                    allowedTypes={
+                                                                        chartMode === 'bar' ? ['column', 'bar'] :
+                                                                            chartMode === 'line' ? ['line'] :
+                                                                                chartMode === 'pie' ? ['pie'] :
+                                                                                    chartMode === 'donut' ? ['donut'] :
+                                                                                        chartMode === 'area' ? ['area'] : []
+                                                                    }
+                                                                    initialType={
+                                                                        chartMode === 'bar' ? 'column' :
+                                                                            chartMode === 'line' ? 'line' :
+                                                                                chartMode === 'pie' ? 'pie' :
+                                                                                    chartMode === 'donut' ? 'donut' :
+                                                                                        chartMode === 'area' ? 'area' : 'column'
+                                                                    }
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     }
@@ -495,32 +507,34 @@ const CrossTabPage = () => {
                                                     <div className="blue-bar"></div>
                                                     <span className="section-title">통계</span>
                                                 </div>
-                                                <table className="cross-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px', background: '#f5f5f5' }}>통계</th>
-                                                            {resultData.columns.map((col, i) => (
-                                                                <th key={i} style={{ textAlign: 'right', paddingRight: '16px', background: '#fff', borderBottom: '1px solid #eee' }}>{col}</th>
-                                                            ))}
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {statsOptions.filter(opt => opt.checked).map((stat) => {
-                                                            const statKey = stat.id.toLowerCase();
-                                                            const statValues = resultData.stats[statKey] || [];
-                                                            return (
-                                                                <tr key={stat.id} className="stats-row">
-                                                                    <td className="label-cell" style={{ paddingLeft: '16px' }}>Region Group_{stat.label}</td>
-                                                                    {statValues.map((v, i) => (
-                                                                        <td key={i} style={{ textAlign: 'right', paddingRight: '16px' }}>
-                                                                            {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(4)) : v}
-                                                                        </td>
-                                                                    ))}
-                                                                </tr>
-                                                            );
-                                                        })}
-                                                    </tbody>
-                                                </table>
+                                                <div style={{ overflow: 'auto', background: '#fff', borderRadius: '8px', paddingRight: '16px' }}>
+                                                    <table className="cross-table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px', background: '#f5f5f5' }}>통계</th>
+                                                                {resultData.columns.map((col, i) => (
+                                                                    <th key={i} style={{ textAlign: 'right', paddingRight: '16px', background: '#fff', borderBottom: '1px solid #eee' }}>{col}</th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {statsOptions.filter(opt => opt.checked).map((stat) => {
+                                                                const statKey = stat.id.toLowerCase();
+                                                                const statValues = resultData.stats[statKey] || [];
+                                                                return (
+                                                                    <tr key={stat.id} className="stats-row">
+                                                                        <td className="label-cell" style={{ paddingLeft: '16px' }}>Region Group_{stat.label}</td>
+                                                                        {statValues.map((v, i) => (
+                                                                            <td key={i} style={{ textAlign: 'right', paddingRight: '16px' }}>
+                                                                                {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(4)) : v}
+                                                                            </td>
+                                                                        ))}
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
                                             </div>
                                         );
                                     }
