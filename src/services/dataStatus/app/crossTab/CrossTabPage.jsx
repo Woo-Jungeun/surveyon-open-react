@@ -425,15 +425,16 @@ const CrossTabPage = () => {
                             </div>
 
                             {/* Dynamic Result Rendering */}
-                            <div className="cross-table-container">
+                            <div className="cross-table-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                 {layoutOptions.map(option => {
                                     if (!option.checked) return null;
 
                                     if (option.id === 'table') {
                                         return (
-                                            <div key="table" className="result-block" style={{ marginBottom: '24px' }}>
+                                            <div key="table" className="result-block">
                                                 <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch' }}>
-                                                    <div className="table-wrapper" style={{ flex: 1, transition: 'flex 0.3s ease', minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+                                                    {/* Table Section */}
+                                                    <div className="table-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                                                         <div className="section-header">
                                                             <div className="blue-bar"></div>
                                                             <span className="section-title">표</span>
@@ -467,6 +468,8 @@ const CrossTabPage = () => {
                                                             </table>
                                                         </div>
                                                     </div>
+
+                                                    {/* Chart Section (Only if active) */}
                                                     {chartMode && (
                                                         <div className="chart-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
                                                             <div className="section-header">
@@ -504,7 +507,7 @@ const CrossTabPage = () => {
 
                                     if (option.id === 'stats') {
                                         return (
-                                            <div key="stats" className="result-block">
+                                            <div key="stats" className="result-block" style={{ width: chartMode ? 'calc(50% - 12px)' : '100%' }}>
                                                 <div className="section-header">
                                                     <div className="blue-bar"></div>
                                                     <span className="section-title">통계</span>
