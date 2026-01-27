@@ -10,7 +10,7 @@ import {
     ChartValueAxis,
     ChartValueAxisItem
 } from "@progress/kendo-react-charts";
-import { DropDownList } from "@progress/kendo-react-dropdowns";
+import { ArrowLeftRight } from 'lucide-react';
 
 const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
     const [chartType, setChartType] = useState(initialType || 'column');
@@ -26,8 +26,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
     });
 
     const allChartTypeOptions = [
-        { text: "세로 막대", value: "column" },
-        { text: "가로 막대", value: "bar" },
+        { text: "세로형", value: "column" },
+        { text: "가로형", value: "bar" },
         { text: "라인", value: "line" },
         { text: "원형", value: "pie" },
         { text: "도넛", value: "donut" },
@@ -40,8 +40,10 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
 
     const showDropdown = chartTypeOptions.length > 1;
 
-    const handleChartTypeChange = (e) => {
-        setChartType(e.target.value.value);
+    const toggleChartType = () => {
+        const currentIndex = chartTypeOptions.findIndex(opt => opt.value === chartType);
+        const nextIndex = (currentIndex + 1) % chartTypeOptions.length;
+        setChartType(chartTypeOptions[nextIndex].value);
     };
 
     const isPieOrDonut = chartType === 'pie' || chartType === 'donut';
@@ -93,16 +95,30 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}>
-            {showDropdown && (
+            {showDropdown && (chartType === 'column' || chartType === 'bar') && (
                 <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-                    <DropDownList
-                        data={chartTypeOptions}
-                        textField="text"
-                        dataItemKey="value"
-                        value={chartTypeOptions.find(opt => opt.value === chartType)}
-                        onChange={handleChartTypeChange}
-                        style={{ width: '150px' }}
-                    />
+                    <button
+                        onClick={toggleChartType}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 12px',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            backgroundColor: 'white',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            color: '#475569',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    >
+                        <span>{chartTypeOptions.find(opt => opt.value === chartType)?.text}</span>
+                        <ArrowLeftRight size={14} />
+                    </button>
                 </div>
             )}
             <Chart style={{ flex: 1 }} key={`${chartType}-${JSON.stringify(visibleSeries)}`} onLegendItemClick={onLegendItemClick}>

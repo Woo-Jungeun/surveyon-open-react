@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart } from 'lucide-react';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -361,11 +361,14 @@ const CrossTabPage = () => {
                                 <div className="result-tab">결과</div>
                             </div>
                             <div className="view-options">
-                                <button className="view-option-btn active"><Table size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'bar' ? null : 'bar')}><BarChart2 size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'line' ? null : 'line')}><LineChart size={18} /></button>
-                                <button className="view-option-btn"><Map size={18} /></button>
-                                <button className="view-option-btn"><Grid size={18} /></button>
+                                <button className="view-option-btn active" title="표"><Table size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'bar' ? null : 'bar')} title="막대형 차트"><BarChart2 size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'line' ? null : 'line')} title="선형 차트"><LineChart size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'pie' ? null : 'pie')} title="원형 차트"><PieChart size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'donut' ? null : 'donut')} title="도넛형 차트"><Donut size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'area' ? null : 'area')} title="영역형 차트"><AreaChart size={18} /></button>
+                                <button className="view-option-btn" title="지도"><Map size={18} /></button>
+                                <button className="view-option-btn" title="그리드"><Grid size={18} /></button>
                             </div>
                         </div>
 
@@ -481,8 +484,20 @@ const CrossTabPage = () => {
                                                         <KendoChart
                                                             data={chartData}
                                                             seriesNames={seriesNames}
-                                                            allowedTypes={chartMode === 'bar' ? ['column', 'bar'] : ['line']}
-                                                            initialType={chartMode === 'bar' ? 'column' : 'line'}
+                                                            allowedTypes={
+                                                                chartMode === 'bar' ? ['column', 'bar'] :
+                                                                    chartMode === 'line' ? ['line'] :
+                                                                        chartMode === 'pie' ? ['pie'] :
+                                                                            chartMode === 'donut' ? ['donut'] :
+                                                                                chartMode === 'area' ? ['area'] : []
+                                                            }
+                                                            initialType={
+                                                                chartMode === 'bar' ? 'column' :
+                                                                    chartMode === 'line' ? 'line' :
+                                                                        chartMode === 'pie' ? 'pie' :
+                                                                            chartMode === 'donut' ? 'donut' :
+                                                                                chartMode === 'area' ? 'area' : 'column'
+                                                            }
                                                         />
                                                     </div>
                                                 )}

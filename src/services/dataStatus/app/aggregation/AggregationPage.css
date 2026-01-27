@@ -150,3 +150,37 @@
 .agg-table tr:last-child td {
     border-bottom: none;
 }
+
+/* View Options */
+.view-options {
+    display: flex;
+    gap: 4px;
+    background: #f5f5f5;
+    padding: 4px;
+    border-radius: 8px;
+}
+
+.view-option-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #666;
+    transition: all 0.2s;
+}
+
+.view-option-btn:hover {
+    background: #e0e0e0;
+    color: #333;
+}
+
+.view-option-btn.active {
+    background: #fff;
+    color: #333;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}

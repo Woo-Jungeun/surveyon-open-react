@@ -1,9 +1,74 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { BarChart2, LineChart, PieChart, Donut, AreaChart } from 'lucide-react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
 import './AggregationPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
+
+const AggregationCard = ({ q }) => {
+    const [chartMode, setChartMode] = useState('column');
+
+    return (
+        <div id={q.id} className="agg-card">
+            <div className="agg-card-header">
+                <div className="agg-card-title-group">
+                    <div className="agg-card-id">{q.id}</div>
+                    <div className="agg-card-label">{q.label}</div>
+                </div>
+                <div className="view-options">
+                    <button className={`view-option-btn ${chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형 차트"><BarChart2 size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
+                </div>
+            </div>
+            <div className="agg-card-body">
+                {/* Table */}
+                <div className="agg-table-container">
+                    <table className="agg-table">
+                        <thead>
+                            <tr>
+                                <th>항목</th>
+                                <th>Banner A</th>
+                                <th>Banner B</th>
+                                <th>Banner C</th>
+                                <th>합계</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {q.data.map((row, i) => (
+                                <tr key={i}>
+                                    <td>{row.name}</td>
+                                    <td>{row['Banner A']}</td>
+                                    <td>{row['Banner B']}</td>
+                                    <td>{row['Banner C']}</td>
+                                    <td>{row.total}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Chart */}
+                <div className="agg-chart-container">
+                    <KendoChart
+                        data={q.data}
+                        initialType={chartMode}
+                        allowedTypes={
+                            chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
+                                chartMode === 'line' ? ['line'] :
+                                    chartMode === 'pie' ? ['pie'] :
+                                        chartMode === 'donut' ? ['donut'] :
+                                            chartMode === 'area' ? ['area'] : []
+                        }
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const AggregationPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -132,47 +197,7 @@ const AggregationPage = () => {
 
                 <div className="agg-main" ref={mainRef}>
                     {filteredQuestions.map(q => (
-                        <div key={q.id} id={q.id} className="agg-card">
-                            <div className="agg-card-header">
-                                <div className="agg-card-title-group">
-                                    <div className="agg-card-id">{q.id}</div>
-                                    <div className="agg-card-label">{q.label}</div>
-                                </div>
-                                {/* <span className="agg-card-n">N {q.n}</span> */}
-                            </div>
-                            <div className="agg-card-body">
-                                {/* Table */}
-                                <div className="agg-table-container">
-                                    <table className="agg-table">
-                                        <thead>
-                                            <tr>
-                                                <th>항목</th>
-                                                <th>Banner A</th>
-                                                <th>Banner B</th>
-                                                <th>Banner C</th>
-                                                <th>합계</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {q.data.map((row, i) => (
-                                                <tr key={i}>
-                                                    <td>{row.name}</td>
-                                                    <td>{row['Banner A']}</td>
-                                                    <td>{row['Banner B']}</td>
-                                                    <td>{row['Banner C']}</td>
-                                                    <td>{row.total}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Chart */}
-                                <div className="agg-chart-container">
-                                    <KendoChart data={q.data} />
-                                </div>
-                            </div>
-                        </div>
+                        <AggregationCard key={q.id} q={q} />
                     ))}
                 </div>
             </div>
