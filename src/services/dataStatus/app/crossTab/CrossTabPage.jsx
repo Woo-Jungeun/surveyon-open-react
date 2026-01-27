@@ -374,71 +374,54 @@ const CrossTabPage = () => {
 
                         <div className="result-content">
                             {/* Stats Controls */}
-                            <div className="stats-controls">
-                                <div className="stats-controls-header" onClick={() => setIsStatsOptionsOpen(!isStatsOptionsOpen)} style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', marginBottom: isStatsOptionsOpen ? '16px' : '0' }}>
-                                    <span style={{ fontWeight: 'bold', marginRight: '8px', fontSize: '14px' }}>옵션 설정</span>
-                                    {isStatsOptionsOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            <div className="stats-controls" style={{ flexDirection: 'row', alignItems: 'center', gap: '24px', padding: '16px 24px', background: '#f8f9fa', borderBottom: '1px solid #eee' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
+                                    <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#333' }}>옵션 설정</span>
                                 </div>
-                                {isStatsOptionsOpen && (
-                                    <>
-                                        <div className="stats-controls-row">
-                                            <div className="stats-section">
-                                                <div className="stats-section-title">배치 옵션 (드래그 및 선택)</div>
-                                                <div className="sortable-list">
-                                                    {layoutOptions.map((item, index) => (
-                                                        <div
-                                                            key={item.id}
-                                                            className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                            draggable
-                                                            onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
-                                                            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                            onDrop={(e) => handleSortDrop(e, index, 'layout')}
-                                                            onClick={() => toggleLayoutOption(item.id)}
-                                                            style={{ cursor: item.fixed ? 'default' : 'pointer' }}
-                                                        >
-                                                            <GripVertical size={14} className="drag-handle" style={{ cursor: 'grab' }} />
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={item.checked}
-                                                                readOnly
-                                                                disabled={item.fixed}
-                                                                style={{ pointerEvents: 'none' }}
-                                                            />
-                                                            <span>{item.label}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
 
-                                        <div className="stats-section">
-                                            <div className="stats-section-title">통계 옵션 (드래그 및 선택)</div>
-                                            <div className="sortable-list">
-                                                {statsOptions.map((item, index) => (
-                                                    <div
-                                                        key={item.id}
-                                                        className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                        draggable
-                                                        onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
-                                                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                        onDrop={(e) => handleSortDrop(e, index, 'stats')}
-                                                        onClick={() => toggleStatOption(item.id)}
-                                                        style={{ cursor: 'pointer' }}
-                                                    >
-                                                        <GripVertical size={14} className="drag-handle" />
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={item.checked}
-                                                            readOnly
-                                                            style={{ pointerEvents: 'none' }}
-                                                        />
-                                                        <span>{item.label}</span>
-                                                    </div>
-                                                ))}
+                                <div style={{ width: '1px', height: '20px', background: '#e0e0e0' }}></div>
+
+                                <div className="stats-section" style={{ flexDirection: 'row', alignItems: 'center', gap: '16px', margin: 0 }}>
+                                    <div className="stats-section-title" style={{ marginBottom: 0, marginRight: '0', whiteSpace: 'nowrap', fontSize: '13px', color: '#666', fontWeight: '600' }}>배치 옵션 (드래그 및 선택)</div>
+                                    <div className="sortable-list">
+                                        {layoutOptions.map((item, index) => (
+                                            <div
+                                                key={item.id}
+                                                className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                draggable
+                                                onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
+                                                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                onDrop={(e) => handleSortDrop(e, index, 'layout')}
+                                                onClick={() => toggleLayoutOption(item.id)}
+                                                style={{ cursor: item.fixed ? 'default' : 'pointer' }}
+                                            >
+                                                <GripVertical size={14} className="drag-handle" style={{ color: '#ccc' }} />
+                                                <span>{item.label}</span>
                                             </div>
-                                        </div>
-                                    </>
-                                )}
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="stats-section" style={{ flexDirection: 'row', alignItems: 'center', gap: '16px', margin: 0 }}>
+                                    <div className="stats-section-title" style={{ marginBottom: 0, marginRight: '0', whiteSpace: 'nowrap', fontSize: '13px', color: '#666', fontWeight: '600' }}>통계 옵션 (드래그 및 선택)</div>
+                                    <div className="sortable-list">
+                                        {statsOptions.map((item, index) => (
+                                            <div
+                                                key={item.id}
+                                                className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                draggable
+                                                onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
+                                                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                onDrop={(e) => handleSortDrop(e, index, 'stats')}
+                                                onClick={() => toggleStatOption(item.id)}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <GripVertical size={14} className="drag-handle" style={{ color: '#ccc' }} />
+                                                <span>{item.label}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
 
                             {/* Dynamic Result Rendering */}
@@ -456,7 +439,7 @@ const CrossTabPage = () => {
                                                 <table className="cross-table">
                                                     <thead>
                                                         <tr>
-                                                            <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px' }}>변수</th>
+                                                            <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px' }}>문항</th>
                                                             {resultData.columns.map((col, i) => (
                                                                 <th key={i} style={{ textAlign: 'right', paddingRight: '16px' }}>
                                                                     {col}
