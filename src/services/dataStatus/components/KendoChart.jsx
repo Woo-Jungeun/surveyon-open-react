@@ -32,7 +32,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         { text: "원형", value: "pie" },
         { text: "도넛", value: "donut" },
         { text: "영역", value: "area" },
-        { text: "트리맵", value: "heatmap" },
+        { text: "히트맵", value: "heatmap" },
     ];
 
     const chartTypeOptions = allowedTypes
