@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import DataHeader from '../../components/DataHeader';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Monitor, Smartphone, Tablet, Phone, Users, FileText, Send } from 'lucide-react';
 import './QuotaPage.css';
 
 const QuotaPage = () => {
@@ -8,6 +8,7 @@ const QuotaPage = () => {
     const [viewMode, setViewMode] = useState('table');
     const [expandedGroups, setExpandedGroups] = useState(['g0', 'g1', 'g3']);
     const [isEditing, setIsEditing] = useState(false);
+    const [selectedTab, setSelectedTab] = useState('g0'); // Default to first tab
 
     const toggleGroup = (id) => {
         if (expandedGroups.includes(id)) {
@@ -22,6 +23,7 @@ const QuotaPage = () => {
         {
             title: '참여현황',
             color: 'blue',
+            icon: <Users size={20} />,
             items: [
                 { label: '조사완료', value: '33명' },
                 { label: '설문완료자', value: '182,154명' },
@@ -33,6 +35,7 @@ const QuotaPage = () => {
         {
             title: '응답현황',
             color: 'green',
+            icon: <FileText size={20} />,
             items: [
                 { label: '조사완료율', value: '11%' },
                 { label: '성공응답률(분모)', value: '20분' },
@@ -44,6 +47,7 @@ const QuotaPage = () => {
         {
             title: '발송현황',
             color: 'purple',
+            icon: <Send size={20} />,
             items: [
                 { label: '채팅 발송수', value: '551,450 / 77,652건' },
                 { label: '문자 발송수', value: '0 / 0건' },
@@ -54,10 +58,10 @@ const QuotaPage = () => {
     ];
 
     const deviceStats = [
-        { label: 'PC', value: '24' },
-        { label: 'Mobile', value: '9' },
-        { label: 'Mobile+PC', value: '0' },
-        { label: '전화조사', value: '0' }
+        { label: 'PC', value: '24', icon: <Monitor size={24} />, color: '#3b82f6', bg: '#eff6ff' },
+        { label: 'Mobile', value: '9', icon: <Smartphone size={24} />, color: '#10b981', bg: '#ecfdf5' },
+        { label: 'Mobile+PC', value: '0', icon: <Tablet size={24} />, color: '#8b5cf6', bg: '#f5f3ff' },
+        { label: '전화조사', value: '0', icon: <Phone size={24} />, color: '#f59e0b', bg: '#fffbeb' }
     ];
 
     // Data for Table View (Existing Data)
@@ -186,7 +190,7 @@ const QuotaPage = () => {
                             {summaryCards.map((card, idx) => (
                                 <div key={idx} className={`status-card ${card.color}`}>
                                     <div className="status-card-header">
-                                        <div className="status-dot"></div>
+                                        {card.icon}
                                         {card.title}
                                     </div>
                                     <div className="status-card-content">
@@ -202,12 +206,20 @@ const QuotaPage = () => {
                         </div>
 
                         <div className="section-container">
-                            <div className="section-title">기기별 조사완료</div>
+                            <div className="quota-groups-title" style={{ marginBottom: '16px' }}>
+                                <div className="blue-dot"></div>
+                                기기별 조사완료
+                            </div>
                             <div className="device-stats-row">
                                 {deviceStats.map((stat, idx) => (
                                     <div key={idx} className="device-card">
-                                        <span className="device-label">{stat.label}</span>
-                                        <span className="device-value">{stat.value}</span>
+                                        <div className="device-icon-wrapper" style={{ backgroundColor: stat.bg, color: stat.color }}>
+                                            {stat.icon}
+                                        </div>
+                                        <div className="device-info">
+                                            <span className="device-label">{stat.label}</span>
+                                            <span className="device-value">{stat.value}</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -218,53 +230,57 @@ const QuotaPage = () => {
                 {/* Main Content */}
                 {viewMode === 'table' ? (
                     <div className="quota-table-view-container">
-                        <div className="quota-groups">
-                            {quotaGroups.map(group => (
-                                <div key={group.id} className="quota-group">
-                                    <div className="quota-group-header" onClick={() => toggleGroup(group.id)}>
-                                        <div className="group-info">
-                                            <span className="group-name">{group.name}</span>
-                                            <span className="group-counts">{group.current}/{group.target}</span>
-                                        </div>
-                                        <div className="group-toggle">
-                                            {expandedGroups.includes(group.id) ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                        </div>
-                                    </div>
-
-                                    {expandedGroups.includes(group.id) && group.type === 'demographics' && (
-                                        <div className="quota-group-body">
-                                            <div className="quota-table-wrapper">
-                                                <table className="quota-table">
-                                                    <thead>
-                                                        <tr>
-                                                            <th style={{ width: '25%' }}>연령대</th>
-                                                            <th style={{ width: '25%' }}>성별</th>
-                                                            <th style={{ textAlign: 'center' }}>목표</th>
-                                                            <th style={{ textAlign: 'center' }}>응답</th>
-                                                            <th style={{ textAlign: 'center' }}>달성률</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {group.data.map((row, idx) => (
-                                                            <tr key={idx} className={row.isHighlight ? 'highlight-row' : ''}>
-                                                                <td>{row.age}</td>
-                                                                <td>{row.gender}</td>
-                                                                <td style={{ textAlign: 'center' }}>{row.target}</td>
-                                                                <td style={{ textAlign: 'center' }}>{row.current}</td>
-                                                                <td style={{ textAlign: 'center' }}>
-                                                                    <span className={`rate-badge ${row.rate >= 100 ? 'success' : 'warning'}`}>
-                                                                        {row.rate}%
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                    )}
+                        <div className="quota-groups-container">
+                            <div className="quota-groups-header">
+                                <div className="quota-groups-title">
+                                    <div className="blue-dot"></div>
+                                    업체별 쿼터 현황
                                 </div>
-                            ))}
+                                <div className="quota-tabs">
+                                    {quotaGroups.map(group => (
+                                        <button
+                                            key={group.id}
+                                            className={`quota-tab-btn ${selectedTab === group.id ? 'active' : ''}`}
+                                            onClick={() => setSelectedTab(group.id)}
+                                        >
+                                            {group.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="quota-tab-content">
+                                {quotaGroups.filter(g => g.id === selectedTab).map(group => (
+                                    <div key={group.id} className="quota-table-wrapper">
+                                        <table className="quota-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ width: '25%' }}>연령대</th>
+                                                    <th style={{ width: '25%' }}>성별</th>
+                                                    <th style={{ textAlign: 'center' }}>목표</th>
+                                                    <th style={{ textAlign: 'center' }}>응답</th>
+                                                    <th style={{ textAlign: 'center' }}>달성률</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {group.data.map((row, idx) => (
+                                                    <tr key={idx} className={row.isHighlight ? 'highlight-row' : ''}>
+                                                        <td>{row.age}</td>
+                                                        <td>{row.gender}</td>
+                                                        <td style={{ textAlign: 'center' }}>{row.target}</td>
+                                                        <td style={{ textAlign: 'center' }}>{row.current}</td>
+                                                        <td style={{ textAlign: 'center' }}>
+                                                            <span className={`rate-badge ${row.rate >= 100 ? 'success' : 'warning'}`}>
+                                                                {row.rate}%
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         <div className="variable-stats-container">
@@ -272,13 +288,7 @@ const QuotaPage = () => {
                                 <div key={variable.id} className="variable-section">
                                     <div className="variable-name">{variable.name}</div>
                                     <div className="quota-table-wrapper">
-                                        <table className="quota-table">
-                                            <thead>
-                                                <tr>
-                                                    <th>항목</th>
-                                                    <th style={{ width: '100px', textAlign: 'right' }}>응답/목표</th>
-                                                </tr>
-                                            </thead>
+                                        <table className="quota-table variable-table">
                                             <tbody>
                                                 {variable.items.map((item, idx) => (
                                                     <tr key={idx} className={item.isHighlight ? 'highlight-row' : ''}>

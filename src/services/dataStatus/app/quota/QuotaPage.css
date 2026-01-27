@@ -30,84 +30,83 @@
 .status-card {
     flex: 1;
     background: #fff;
-    border-radius: 8px;
     border: 1px solid #eee;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.2s;
 }
 
-.status-card.blue {
-    border-top: none;
-}
-
-.status-card.green {
-    border-top: none;
-}
-
-.status-card.purple {
-    border-top: none;
+.status-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .status-card-header {
-    padding: 12px 16px;
-    border-bottom: 1px solid #f5f5f5;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-weight: 700;
-    font-size: 14px;
-}
-
-.status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-.status-card.blue .status-dot {
-    background: #1e40af;
-}
-
-.status-card.green .status-dot {
-    background: #047857;
-}
-
-.status-card.purple .status-dot {
-    background: #5b21b6;
+    font-size: 15px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .status-card.blue .status-card-header {
-    background: #eff6ff;
+    background: linear-gradient(to right, #eff6ff, #fff);
     color: #1e40af;
 }
 
 .status-card.green .status-card-header {
-    background: #ecfdf5;
+    background: linear-gradient(to right, #ecfdf5, #fff);
     color: #047857;
 }
 
 .status-card.purple .status-card-header {
-    background: #f5f3ff;
+    background: linear-gradient(to right, #f5f3ff, #fff);
     color: #5b21b6;
 }
 
 .status-card-content {
-    padding: 16px;
+    padding: 12px 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
 }
 
 .status-row {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
     font-size: 13px;
     color: #666;
+    transition: background 0.1s;
+}
+
+.status-row:hover {
+    background: #f8f9fa;
+}
+
+.status-row .label {
+    font-weight: 500;
 }
 
 .status-row .val {
-    font-weight: 600;
+    font-weight: 700;
     color: #333;
+    font-size: 14px;
+}
+
+.status-card.blue .status-row .val {
+    color: #2563eb;
+}
+
+.status-card.green .status-row .val {
+    color: #059669;
+}
+
+.status-card.purple .status-row .val {
+    color: #7c3aed;
 }
 
 /* Section Container (Device Stats) */
@@ -133,23 +132,48 @@
 
 .device-card {
     flex: 1;
+    background: #fff;
     border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 16px;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.device-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #e0e0e0;
+}
+
+.device-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.device-info {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 8px;
+    gap: 4px;
 }
 
 .device-label {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
     color: #888;
 }
 
 .device-value {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 20px;
+    font-weight: 800;
     color: #333;
 }
 
@@ -158,15 +182,19 @@
     background-color: #5c9aff;
     color: white;
     border: none;
-    padding: 6px 16px;
+    padding: 8px 20px;
     border-radius: 6px;
-    font-weight: 600;
-    font-size: 13px;
+    font-weight: 700;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
     white-space: nowrap;
-    min-width: 100px;
+    min-width: 120px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .view-toggle-btn:hover {
@@ -181,62 +209,70 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* Quota Groups (Table View) */
-.quota-groups {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.quota-group {
+/* Quota Groups Container (Tabbed View) */
+.quota-groups-container {
     background: #fff;
     border: 1px solid #eee;
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
 }
 
-.quota-group-header {
+.quota-groups-header {
     padding: 16px 24px;
+    border-bottom: 1px solid #eee;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    cursor: pointer;
-    background: #fff;
-    transition: background 0.2s;
 }
 
-.quota-group-header:hover {
-    background: #f9f9f9;
-}
-
-.group-info {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.group-name {
-    font-size: 15px;
+.quota-groups-title {
+    font-size: 16px;
     font-weight: 700;
     color: #333;
-}
-
-.group-counts {
-    font-size: 13px;
-    color: #666;
-}
-
-.group-toggle {
-    color: #888;
-}
-
-.quota-group-body {
-    padding: 24px;
-    border-top: 1px solid #eee;
     display: flex;
-    flex-direction: column;
-    gap: 24px;
+    align-items: center;
+    gap: 8px;
+}
+
+.blue-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2979ff;
+}
+
+.quota-tabs {
+    display: flex;
+    gap: 8px;
+}
+
+.quota-tab-btn {
+    padding: 6px 16px;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quota-tab-btn:hover {
+    background: #f9f9f9;
+    border-color: #ccc;
+}
+
+.quota-tab-btn.active {
+    background: #2979ff;
+    color: #fff;
+    border-color: #2979ff;
+    font-weight: 600;
+}
+
+.quota-tab-content {
+    padding: 0;
 }
 
 /* Variable Section */
@@ -252,17 +288,17 @@
     flex-direction: column;
     background: #fff;
     border: 1px solid #eee;
-    border-radius: 8px;
+    border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    padding: 24px;
 }
 
 .variable-name {
-    padding: 16px 24px;
-    font-size: 15px;
-    font-weight: 700;
-    color: #333;
-    border-bottom: 1px solid #ddd;
+    padding: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #5c9aff;
     background: #fff;
 }
 
@@ -290,7 +326,7 @@
 
 .quota-table td {
     padding: 12px 16px;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid #f0f0f0;
     color: #333;
 }
 
@@ -298,12 +334,23 @@
     border-bottom: none;
 }
 
-.quota-table tr.highlight-row td {
-    background: #f0fff4;
+/* Variable Table Specific Styles */
+.variable-table tr:nth-child(odd) td {
+    background: #f8f9fa;
 }
 
-.quota-table tr.total-row td {
-    background: #f8f9fa;
+.variable-table tr:nth-child(even) td {
+    background: #fff;
+}
+
+.variable-table tr.highlight-row td {
+    background: #e6fffa !important;
+    color: #047857;
+    font-weight: 600;
+}
+
+.variable-table tr.total-row td {
+    background: #f1f3f5 !important;
     font-weight: 700;
     border-top: 1px solid #ddd;
 }
