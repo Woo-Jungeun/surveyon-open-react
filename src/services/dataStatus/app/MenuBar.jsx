@@ -10,6 +10,7 @@ import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
+import { MenuBarApi } from "./MenuBarApi";
 
 const MENU_ITEMS = [
   {
@@ -42,6 +43,7 @@ const MENU_ITEMS = [
 ];
 
 const MenuBar = () => {
+  const { getTest } = MenuBarApi();
   const [, , removeCookie] = useCookies();
   const auth = useSelector((store) => store.auth);
   const modal = useContext(modalContext);
@@ -75,6 +77,19 @@ const MenuBar = () => {
     window.addEventListener("click", onClickOutside);
     return () => window.removeEventListener("click", onClickOutside);
   }, []);
+
+  const handleApiTest = () => {
+    getTest.mutate({}, {
+      onSuccess: (res) => {
+        console.log("API Test Success:", res);
+        alert("API 연결 성공: " + JSON.stringify(res));
+      },
+      onError: (err) => {
+        console.error("API Test Error:", err);
+        alert("API 연결 실패");
+      }
+    });
+  };
 
   // 로그아웃
   const doLogout = async () => {
@@ -170,6 +185,26 @@ const MenuBar = () => {
       </div>
 
       {/* Project Name Display */}
+      <div style={{ padding: "0 20px 12px 20px" }}>
+        <div
+          onClick={handleApiTest}
+          style={{
+            cursor: "pointer",
+            padding: "12px",
+            // background: "var(--primary-bg-light)",
+            borderRadius: "8px",
+            border: "1px solid var(--primary-border-light)",
+            color: "var(--primary-dark)",
+            fontWeight: "700",
+            fontSize: "15px",
+            textAlign: "center",
+            wordBreak: "break-all",
+            lineHeight: "1.4"
+          }}>
+          API 연결 테스트 (임시)
+        </div>
+      </div>
+
       <div style={{ padding: "0 20px 12px 20px" }}>
         <div style={{
           padding: "12px",

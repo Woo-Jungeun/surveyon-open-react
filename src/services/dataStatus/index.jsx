@@ -1,7 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import MainWrapperView from "./views/MainWrapperView.jsx";
-import MainListWrapperView from "./views/MainList/MainListWrapperView.jsx";
 import RecodingWrapperView from "./views/setting/RecodingWrapperView.jsx";
 import VariableWrapperView from "./views/setting/VariableWrapperView.jsx";
 import WeightWrapperView from "./views/setting/WeightWrapperView.jsx";
@@ -15,7 +14,7 @@ export default function DataStatusRoutes() {
 
       {/* 기본 Wrapper */}
       <Route element={<MainWrapperView />}>
-        <Route path="" element={<MainListWrapperView />} />
+        <Route path="" element={<Navigate to="setting/variable" replace />} />
         <Route path="setting/recoding" element={<RecodingWrapperView />} />
         <Route path="setting/variable" element={<VariableWrapperView />} />
         <Route path="setting/weight" element={<WeightWrapperView />} />
