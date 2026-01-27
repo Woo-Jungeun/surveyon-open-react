@@ -1,0 +1,149 @@
+.aggregation-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #f5f5f5;
+}
+
+.aggregation-layout {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+    gap: 0;
+}
+
+/* Main Content */
+.agg-main {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    padding: 24px;
+    scroll-behavior: smooth;
+}
+
+.agg-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    border: 1px solid #eee;
+}
+
+.agg-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.agg-card-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.agg-card-id {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+}
+
+.agg-card-label {
+    font-size: 14px;
+    color: #555;
+    line-height: 1.4;
+}
+
+.agg-card-n {
+    font-size: 13px;
+    color: #888;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.agg-card-body {
+    display: flex;
+    gap: 32px;
+    align-items: stretch;
+    /* Changed to stretch to match heights */
+}
+
+.agg-table-container {
+    flex: 1;
+    overflow-x: auto;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    /* height: auto; */
+}
+
+.agg-chart-container {
+    flex: 1;
+    padding: 16px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Table Styles */
+.agg-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+.agg-table th {
+    text-align: center;
+    padding: 14px 16px;
+    background: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    border-bottom: 1px solid #e0e0e0;
+    white-space: nowrap;
+    border-right: 1px solid #f0f0f0;
+}
+
+.agg-table th:last-child {
+    border-right: none;
+}
+
+.agg-table td {
+    text-align: center;
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    border-right: 1px solid #f0f0f0;
+    transition: background 0.2s;
+}
+
+.agg-table td:last-child {
+    border-right: none;
+}
+
+.agg-table td:first-child {
+    text-align: left;
+    font-weight: 600;
+    color: #343a40;
+    background: #fff;
+}
+
+.agg-table tbody tr:nth-child(even) {
+    background-color: #fcfcfc;
+}
+
+.agg-table tbody tr:hover {
+    background-color: #f1f3f5;
+}
+
+.agg-table tr:last-child td {
+    border-bottom: none;
+}
