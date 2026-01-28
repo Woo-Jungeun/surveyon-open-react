@@ -224,6 +224,53 @@ const QuotaPage = () => {
                                 ))}
                             </div>
                         </div>
+
+                        {/* Photo Quota Progress Section */}
+                        <div className="section-container" style={{ marginBottom: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                <div style={{ display: 'flex', gap: '16px', fontSize: '14px', fontWeight: '600' }}>
+                                    <div style={{ color: '#64748b' }}>목표인원 <span style={{ color: '#3b82f6', marginLeft: '4px' }}>33 명</span></div>
+                                    <div style={{ color: '#64748b' }}>완료 <span style={{ color: '#0ea5e9', marginLeft: '4px' }}>11 명</span></div>
+                                    <div style={{ color: '#64748b' }}>완료비율 <span style={{ color: '#3b82f6', marginLeft: '4px' }}>33 %</span></div>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '13px' }}>
+                                    <div style={{ color: '#64748b' }}>목표인원 <span style={{ color: '#3b82f6', fontWeight: '600' }}>33 명</span> 조사</div>
+                                    <span style={{ background: '#22c55e', color: '#fff', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: '600' }}>진행중</span>
+                                </div>
+                            </div>
+
+                            <div style={{ position: 'relative', height: '32px', background: '#f1f5f9', borderRadius: '16px', marginBottom: '12px' }}>
+                                <div style={{
+                                    width: '33%',
+                                    height: '100%',
+                                    background: '#1e293b',
+                                    borderRadius: '16px 0 0 16px',
+                                    position: 'relative'
+                                }}></div>
+                                <div style={{
+                                    position: 'absolute',
+                                    left: '33%',
+                                    top: '50%',
+                                    transform: 'translate(-50%, -50%)',
+                                    background: '#0ea5e9',
+                                    color: '#fff',
+                                    padding: '4px 12px',
+                                    borderRadius: '12px',
+                                    fontSize: '12px',
+                                    fontWeight: '700',
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                }}>
+                                    11명
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94a3b8', padding: '0 4px' }}>
+                                <span>0%</span>
+                                <span>50%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -378,7 +425,7 @@ const QuotaPage = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
