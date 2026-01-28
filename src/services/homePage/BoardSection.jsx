@@ -68,23 +68,29 @@ const BoardSection = () => {
     // 공통 리스트 컴포넌트
     const BoardList = ({ items, path, iconColor, isPatchNote = false }) => (
         <div className="board-card-list">
-            {items.map((item) => (
-                <div
-                    key={item.id}
-                    className="board-list-item"
-                    onClick={(e) => handleItemClick(e, path, item.id)}
-                >
-                    <div className="board-list-content">
-                        <span className="board-list-icon">
-                            <FileText size={14} color={iconColor} />
-                        </span>
-                        <span className="board-list-title">
-                            {isPatchNote && item.version ? `[${item.version}] ` : ''}{item.title}
-                        </span>
-                    </div>
-                    <span className="board-list-date">{item.date}</span>
+            {items.length !== 0 ? (
+                <div className="board-list-empty">
+                    데이터가 없습니다.
                 </div>
-            ))}
+            ) : (
+                items.map((item) => (
+                    <div
+                        key={item.id}
+                        className="board-list-item"
+                        onClick={(e) => handleItemClick(e, path, item.id)}
+                    >
+                        <div className="board-list-content">
+                            <span className="board-list-icon">
+                                <FileText size={14} color={iconColor} />
+                            </span>
+                            <span className="board-list-title">
+                                {isPatchNote && item.version ? `[${item.version}] ` : ''}{item.title}
+                            </span>
+                        </div>
+                        <span className="board-list-date">{item.date}</span>
+                    </div>
+                ))
+            )}
         </div>
     );
 
