@@ -211,7 +211,7 @@
 .category-delete-btn {
     border: 1px solid #fee2e2;
     background: #fff;
-    color: #ef4444;
+    color: #64748b;
     cursor: pointer;
     padding: 8px;
     display: flex;
@@ -222,7 +222,7 @@
 
 .category-delete-btn:hover {
     background: #fee2e2;
-    border-color: #ef4444;
+    border-color: #64748b;
 }
 
 .category-add-btn {
@@ -286,6 +286,6 @@
 .category-delete-btn svg,
 .variable-modal-body .lucide-trash2,
 .variable-modal-body .lucide-trash-2 {
-    stroke: #ef4444 !important;
-    color: #ef4444 !important;
+    stroke: #64748b !important;
+    color: #64748b !important;
 }
