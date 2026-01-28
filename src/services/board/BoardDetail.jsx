@@ -170,14 +170,17 @@ const BoardDetail = () => {
                         </ul>
                     </div>
                 )}
+                {isAdmin === 1 && (
+                    <div className="bd-footer">
+                        {/* 관리자 권한 체크 후 표시 (현재는 항상 표시) */}
 
-                <div className="bd-footer">
-                    {/* 관리자 권한 체크 후 표시 (현재는 항상 표시) */}
-                    <div className="bd-admin-btns">
-                        <button className="bd-btn bd-btn-edit" onClick={() => navigate(`/board/${type}/write/${id}`)}>수정</button>
-                        <button className="bd-btn bd-btn-delete" onClick={handleDelete}>삭제</button>
+                        <div className="bd-admin-btns">
+                            <button className="bd-btn bd-btn-edit" onClick={() => navigate(`/board/${type}/write/${id}`)}>수정</button>
+                            <button className="bd-btn bd-btn-delete" onClick={handleDelete}>삭제</button>
+                        </div>
+
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );
