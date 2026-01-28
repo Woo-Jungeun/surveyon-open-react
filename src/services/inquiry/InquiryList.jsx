@@ -60,15 +60,23 @@ const InquiryList = () => {
                     }));
 
                     const organizedData = [];
-                    const parents = mappedData.filter(item => !item.parentId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                    const roots = mappedData.filter(item => !item.parentId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-                    parents.forEach(parent => {
-                        organizedData.push(parent);
-                        const children = mappedData.filter(item => item.parentId === parent.id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-                        organizedData.push(...children);
+                    const findChildren = (parentId, depth) => {
+                        const children = mappedData.filter(item => item.parentId === parentId).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                        children.forEach(child => {
+                            organizedData.push({ ...child, depth: depth });
+                            findChildren(child.id, depth + 1);
+                        });
+                    };
+
+                    roots.forEach(root => {
+                        organizedData.push({ ...root, depth: 0 });
+                        findChildren(root.id, 1);
                     });
 
-                    const orphans = mappedData.filter(item => item.parentId && !parents.find(p => p.id === item.parentId));
+                    // 고아 노드 처리 (부모가 없는 데이터)
+                    const orphans = mappedData.filter(item => item.parentId && !mappedData.find(p => p.id === item.parentId));
                     organizedData.push(...orphans);
 
                     setServerData(organizedData);

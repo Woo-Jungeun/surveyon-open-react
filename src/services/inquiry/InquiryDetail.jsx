@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Calendar, MessageCircle, Lock, MessageCirclePlus } from 'lucide-react';
 import './Inquiry.css';
 import { InquiryApi } from './InquiryApi';
 import moment from 'moment';
 import { useSelector } from 'react-redux';
-import { useContext } from 'react';
 import { modalContext } from "@/components/common/Modal";
 
 const InquiryDetail = () => {
@@ -17,9 +16,7 @@ const InquiryDetail = () => {
     const userId = auth?.user?.userId || "";
     const userGroup = auth?.user?.userGroup || "";
 
-    // 테스트용 역할 상태 (기본값은 실제 권한에 따름)
-    const [testRole, setTestRole] = useState(userGroup.includes("솔루션") ? 'ADMIN' : 'USER');
-    const isAdmin = testRole === 'ADMIN' ? 1 : 0;
+    const isAdmin = userGroup.includes("솔루션") ? 1 : 0;
 
     const [isAnswering, setIsAnswering] = useState(false);
     const [answerContent, setAnswerContent] = useState('');
@@ -30,25 +27,32 @@ const InquiryDetail = () => {
     useEffect(() => {
         if (id) {
             inquiryDetail.mutate({ id: id, userId: userId, is_admin: isAdmin }, {
-                onSuccess: (data) => {
-                    // Map API response to UI structure
-                    const mappedData = {
-                        id: data.id,
-                        category: data.category,
-                        title: data.title,
-                        writer: data.author,
-                        createdAt: data.createdAt,
-                        status: data.answer ? 'answered' : 'waiting',
-                        isSecret: data.isSecret,
-                        question: data.content,
-                        answer: data.answer ? {
-                            writer: data.answerer || '관리자',
-                            date: data.answeredAt,
-                            content: data.answer
-                        } : null,
-                        attachments: data.attachments || []
-                    };
-                    setInquiryData(mappedData);
+                onSuccess: (res) => {
+                    if (res?.success === "777") {
+                        const data = res.resultjson || res.data || res;
+                        const mappedData = {
+                            id: data.id,
+                            parentId: data.parentId || null,
+                            category: data.category,
+                            title: data.title,
+                            writer: data.author,
+                            writerId: data.userId || '',
+                            createdAt: data.createdAt,
+                            status: data.answer ? 'answered' : 'waiting',
+                            isSecret: data.isSecret,
+                            question: data.content,
+                            answer: data.answer ? {
+                                writer: data.answerer || '관리자',
+                                date: data.answeredAt,
+                                content: data.answer
+                            } : null,
+                            attachments: data.attachments || []
+                        };
+                        setInquiryData(mappedData);
+                    } else {
+                        modal.showErrorAlert('오류', '데이터를 불러오는데 실패했습니다.');
+                        navigate('/inquiry');
+                    }
                 }
             });
         }
@@ -70,26 +74,7 @@ const InquiryDetail = () => {
                 목록으로
             </button>
 
-            {/* 개발용 역할 전환 버튼 (테스트용) */}
-            <button
-                onClick={() => setTestRole(prev => prev === 'USER' ? 'ADMIN' : 'USER')}
-                style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    padding: '8px 16px',
-                    background: testRole === 'ADMIN' ? '#ff7a30' : '#333',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    zIndex: 1000,
-                    fontWeight: 'bold',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-            >
-                테스트 모드: {testRole}
-            </button>
+
 
             <div className="id-content-wrapper">
                 {/* 질문 영역 (Q) */}
@@ -177,36 +162,40 @@ const InquiryDetail = () => {
                                             };
 
                                             const response = await inquiryTransaction.mutateAsync(payload);
-                                            console.log('답변 저장 응답:', response);
 
-                                            if (response?.id) {
+                                            if (response?.success === "777") {
                                                 modal.showAlert('알림', inquiryData.answer ? '답변이 수정되었습니다.' : '답변이 등록되었습니다.');
                                                 setIsAnswering(false);
 
                                                 // 데이터 새로고침
                                                 inquiryDetail.mutate({ id: id, userId: userId, is_admin: isAdmin }, {
-                                                    onSuccess: (data) => {
-                                                        const mappedData = {
-                                                            id: data.id,
-                                                            category: data.category,
-                                                            title: data.title,
-                                                            writer: data.author,
-                                                            createdAt: data.createdAt,
-                                                            status: data.answer ? 'answered' : 'waiting',
-                                                            isSecret: data.isSecret,
-                                                            question: data.content,
-                                                            answer: data.answer ? {
-                                                                writer: data.answerer || '관리자',
-                                                                date: data.answeredAt,
-                                                                content: data.answer
-                                                            } : null,
-                                                            attachments: data.attachments || []
-                                                        };
-                                                        setInquiryData(mappedData);
+                                                    onSuccess: (res) => {
+                                                        if (res?.success === "777") {
+                                                            const data = res.resultjson || res.data || res;
+                                                            const mappedData = {
+                                                                id: data.id,
+                                                                parentId: data.parentId || null,
+                                                                category: data.category,
+                                                                title: data.title,
+                                                                writer: data.author,
+                                                                writerId: data.userId || '',
+                                                                createdAt: data.createdAt,
+                                                                status: data.answer ? 'answered' : 'waiting',
+                                                                isSecret: data.isSecret,
+                                                                question: data.content,
+                                                                answer: data.answer ? {
+                                                                    writer: data.answerer || '관리자',
+                                                                    date: data.answeredAt,
+                                                                    content: data.answer
+                                                                } : null,
+                                                                attachments: data.attachments || []
+                                                            };
+                                                            setInquiryData(mappedData);
+                                                        }
                                                     }
                                                 });
                                             } else {
-                                                throw new Error('응답 데이터가 없습니다.');
+                                                modal.showErrorAlert('오류', '답변 저장에 실패했습니다.');
                                             }
                                         } catch (error) {
                                             console.error('답변 저장 실패:', error);
@@ -248,7 +237,7 @@ const InquiryDetail = () => {
                 <div className="id-footer">
                     {/* 작성자 본인일 경우에만 표시 */}
                     <div className="id-user-btns">
-                        {isAdmin === 0 && (
+                        {inquiryData.writerId === userId && (
                             <>
                                 {inquiryData.status !== 'answered' && (
                                     <>
@@ -269,11 +258,14 @@ const InquiryDetail = () => {
                                                                 };
 
                                                                 const response = await inquiryTransaction.mutateAsync(payload);
-                                                                console.log('문의 삭제 응답:', response);
 
-                                                                modal.showAlert('알림', '문의가 삭제되었습니다.', null, () => {
-                                                                    navigate('/inquiry');
-                                                                });
+                                                                if (response?.success === "777") {
+                                                                    modal.showAlert('알림', '문의가 삭제되었습니다.', null, () => {
+                                                                        navigate('/inquiry');
+                                                                    });
+                                                                } else {
+                                                                    modal.showErrorAlert('오류', '문의 삭제에 실패했습니다.');
+                                                                }
                                                             } catch (error) {
                                                                 console.error('문의 삭제 실패:', error);
                                                                 modal.showErrorAlert('오류', '문의 삭제에 실패했습니다. 다시 시도해주세요.');
@@ -292,7 +284,7 @@ const InquiryDetail = () => {
                                         className="id-btn id-btn-reply"
                                         onClick={() => navigate('/inquiry/write', {
                                             state: {
-                                                parentId: id,
+                                                parentId: inquiryData.parentId || id,
                                                 parentTitle: inquiryData.title,
                                                 parentCategory: inquiryData.category,
                                                 isSecret: inquiryData.isSecret
@@ -333,32 +325,40 @@ const InquiryDetail = () => {
                                                                 };
 
                                                                 const response = await inquiryTransaction.mutateAsync(payload);
-                                                                console.log('답변 삭제 응답:', response);
 
-                                                                modal.showAlert('알림', '답변이 삭제되었습니다.');
+                                                                if (response?.success === "777") {
+                                                                    modal.showAlert('알림', '답변이 삭제되었습니다.');
 
-                                                                // 데이터 새로고침
-                                                                inquiryDetail.mutate({ id: id, userId: userId, is_admin: isAdmin }, {
-                                                                    onSuccess: (data) => {
-                                                                        const mappedData = {
-                                                                            id: data.id,
-                                                                            category: data.category,
-                                                                            title: data.title,
-                                                                            writer: data.author,
-                                                                            createdAt: data.createdAt,
-                                                                            status: data.answer ? 'answered' : 'waiting',
-                                                                            isSecret: data.isSecret,
-                                                                            question: data.content,
-                                                                            answer: data.answer ? {
-                                                                                writer: data.answerer || '관리자',
-                                                                                date: data.answeredAt,
-                                                                                content: data.answer
-                                                                            } : null,
-                                                                            attachments: data.attachments || []
-                                                                        };
-                                                                        setInquiryData(mappedData);
-                                                                    }
-                                                                });
+                                                                    // 데이터 새로고침
+                                                                    inquiryDetail.mutate({ id: id, userId: userId, is_admin: isAdmin }, {
+                                                                        onSuccess: (res) => {
+                                                                            if (res?.success === "777") {
+                                                                                const data = res.resultjson || res.data || res;
+                                                                                const mappedData = {
+                                                                                    id: data.id,
+                                                                                    parentId: data.parentId || null,
+                                                                                    category: data.category,
+                                                                                    title: data.title,
+                                                                                    writer: data.author,
+                                                                                    writerId: data.userId || '',
+                                                                                    createdAt: data.createdAt,
+                                                                                    status: data.answer ? 'answered' : 'waiting',
+                                                                                    isSecret: data.isSecret,
+                                                                                    question: data.content,
+                                                                                    answer: data.answer ? {
+                                                                                        writer: data.answerer || '관리자',
+                                                                                        date: data.answeredAt,
+                                                                                        content: data.answer
+                                                                                    } : null,
+                                                                                    attachments: data.attachments || []
+                                                                                };
+                                                                                setInquiryData(mappedData);
+                                                                            }
+                                                                        }
+                                                                    });
+                                                                } else {
+                                                                    modal.showErrorAlert('오류', '답변 삭제에 실패했습니다.');
+                                                                }
                                                             } catch (error) {
                                                                 console.error('답변 삭제 실패:', error);
                                                                 modal.showErrorAlert('오류', '답변 삭제에 실패했습니다. 다시 시도해주세요.');

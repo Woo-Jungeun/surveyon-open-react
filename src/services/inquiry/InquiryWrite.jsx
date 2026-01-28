@@ -49,16 +49,18 @@ const InquiryWrite = () => {
             const fetchInquiryData = async () => {
                 try {
                     const response = await inquiryDetail.mutateAsync({ id: parseInt(id), userId: userId, is_admin: isAdmin });
-                    console.log('수정 데이터:', response);
 
-                    if (response) {
-                        setCategory(response.category || categories[0]);
-                        setTitle(response.title || '');
-                        setContent(response.content || '');
-                        setIsSecret(response.isSecret ?? true);
-                        if (response.attachments) {
-                            setFiles(response.attachments);
+                    if (response?.success === "777") {
+                        const data = response.resultjson || response.data || response;
+                        setCategory(data.category || categories[0]);
+                        setTitle(data.title || '');
+                        setContent(data.content || '');
+                        setIsSecret(data.isSecret ?? true);
+                        if (data.attachments) {
+                            setFiles(data.attachments);
                         }
+                    } else {
+                        modal.showErrorAlert('오류', '문의 데이터를 불러오는데 실패했습니다.');
                     }
                 } catch (error) {
                     console.error('문의 데이터 로드 실패:', error);
@@ -110,7 +112,6 @@ const InquiryWrite = () => {
                 password: "",
                 author: userName,
                 userId: userId,
-                is_admin: isAdmin,
                 attachments: files.map(file => {
                     if (file instanceof File) {
                         return {
@@ -139,15 +140,19 @@ const InquiryWrite = () => {
             }
 
             const response = await inquiryTransaction.mutateAsync(payload);
-            console.log(response);
 
-            if (response?.id) {
+            if (response?.success === "777") {
+                const result = response.resultjson || response.data || response;
                 modal.showAlert('알림', isEdit ? '문의가 수정되었습니다.' : '문의가 등록되었습니다.', null, () => {
-                    // 등록 성공 시 새로 생성된 ID로 이동, 수정 시 기존 ID로 이동
-                    navigate(isEdit ? `/inquiry/view/${id}` : `/inquiry/view/${response.id}`);
+                    const targetId = isEdit ? id : (result.id || result.result?.id);
+                    if (targetId) {
+                        navigate(`/inquiry/view/${targetId}`);
+                    } else {
+                        navigate('/inquiry');
+                    }
                 });
             } else {
-                throw new Error('응답 데이터가 없습니다.');
+                modal.showErrorAlert('오류', `문의 ${isEdit ? '수정' : '등록'}에 실패했습니다. 다시 시도해주세요.`);
             }
         } catch (error) {
             console.error('문의 등록/수정 실패:', error);
