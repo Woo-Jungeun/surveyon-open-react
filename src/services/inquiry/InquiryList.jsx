@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { modalContext } from "@/components/common/Modal";
 import { useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight, Eye } from 'lucide-react';
 import './Inquiry.css';
@@ -8,6 +9,7 @@ import { useSelector } from 'react-redux';
 
 const InquiryList = () => {
     const navigate = useNavigate();
+    const { showAlert } = useContext(modalContext);
     const [expandedIds, setExpandedIds] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState('전체');
@@ -28,20 +30,21 @@ const InquiryList = () => {
         fetchList();
     }, [activeTab]);
 
-    const fetchList = () => {
+    const fetchList = async () => {
         const params = {
             category: activeTab === '전체' ? '' : activeTab,
             userId: userId,
             is_admin: isAdmin
         };
 
-        inquiryList.mutate(params, {
-            onSuccess: (response) => {
-                // API 응답 구조 처리
-                // 사용자의 설명에 따라 응답이 배열이라고 가정
-                // 응답에 총 개수가 포함되어 있다면 업데이트, 현재는 배열을 직접 매핑
-                if (Array.isArray(response)) {
-                    const mappedData = response.map(item => ({
+        try {
+            const res = await inquiryList.mutateAsync(params);
+
+            if (res?.success === "777") {
+                const dataList = res.resultjson || [];
+
+                if (dataList.length > 0) {
+                    const mappedData = dataList.map(item => ({
                         id: item.id,
                         category: item.category,
                         title: item.title,
@@ -56,38 +59,6 @@ const InquiryList = () => {
                         createdAt: item.createdAt
                     }));
 
-                    // 부모-자식 관계로 데이터 재정렬
-                    const organizedData = [];
-                    const parents = mappedData.filter(item => !item.parentId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-                    parents.forEach(parent => {
-                        organizedData.push(parent);
-                        // 해당 부모의 자식들을 찾아 시간순으로 추가
-                        const children = mappedData.filter(item => item.parentId === parent.id).sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-                        organizedData.push(...children);
-                    });
-
-                    // 부모가 없는(데이터 오류 등) 자식들도 마지막에 추가
-                    const orphans = mappedData.filter(item => item.parentId && !parents.find(p => p.id === item.parentId));
-                    organizedData.push(...orphans);
-
-                    setServerData(organizedData);
-                } else if (response && response.list) {
-                    const mappedData = response.list.map(item => ({
-                        id: item.id,
-                        category: item.category,
-                        title: item.title,
-                        writer: item.author,
-                        date: item.createdAt ? item.createdAt.split('T')[0] : '',
-                        status: item.status ? item.status.toLowerCase() : 'waiting',
-                        isSecret: item.isSecret,
-                        content: item.content,
-                        depth: item.depth || 0,
-                        parentId: item.parentId,
-                        viewCount: item.viewCount || 0,
-                        createdAt: item.createdAt
-                    }));
-
                     const organizedData = [];
                     const parents = mappedData.filter(item => !item.parentId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -101,9 +72,18 @@ const InquiryList = () => {
                     organizedData.push(...orphans);
 
                     setServerData(organizedData);
+                } else {
+                    setServerData([]);
                 }
+            } else {
+                setServerData([]);
+                showAlert("에러", "오류가 발생했습니다.");
             }
-        });
+        } catch (err) {
+            console.error(err);
+            setServerData([]);
+            showAlert("에러", "오류가 발생했습니다.");
+        }
     };
 
 

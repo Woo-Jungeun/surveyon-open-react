@@ -5,6 +5,7 @@ import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import moment from 'moment';
 import { modalContext } from "@/components/common/Modal";
+import { useSelector } from 'react-redux';
 
 const BoardDetail = () => {
     const { type, id } = useParams();
@@ -12,6 +13,9 @@ const BoardDetail = () => {
     const location = useLocation();
     const isFromHome = location.state?.from === 'home';
     const modal = useContext(modalContext);
+    const auth = useSelector((store) => store.auth);
+    const userGroup = auth?.user?.userGroup || "";
+    const isAdmin = userGroup.includes("AI솔루션") ? 1 : 0;
 
     // API 연동
     const { noticeDetail, patchNotesDetail, noticeTransaction, patchNotesTransaction } = BoardApi();
@@ -57,7 +61,8 @@ const BoardDetail = () => {
                             let result;
                             const payload = {
                                 gb: 'delete',
-                                id: id
+                                id: id,
+                                is_admin: isAdmin
                             };
 
                             if (type === 'notice') {

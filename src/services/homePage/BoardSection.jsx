@@ -31,10 +31,12 @@ const BoardSection = () => {
                 setNoticeData(processData(res?.resultjson || []));
             } else {
                 setNoticeData([]);
+                showAlert("에러", "오류가 발생했습니다.");
             }
         } catch (err) {
             console.error(err);
             setNoticeData([]);
+            showAlert("에러", "오류가 발생했습니다.");
         }
     };
 
@@ -45,10 +47,12 @@ const BoardSection = () => {
                 setPatchNotesData(processData(res?.resultjson || []));
             } else {
                 setPatchNotesData([]);
+                showAlert("에러", "오류가 발생했습니다.");
             }
         } catch (err) {
             console.error(err);
             setPatchNotesData([]);
+            showAlert("에러", "오류가 발생했습니다.");
         }
     };
 

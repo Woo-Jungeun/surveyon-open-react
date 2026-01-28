@@ -1,28 +1,53 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search, Paperclip, Lock } from 'lucide-react';
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
+import { modalContext } from "@/components/common/Modal";
 import moment from 'moment';
+import { useSelector } from 'react-redux';
 
 const BoardList = ({ type = 'notice' }) => {
     const navigate = useNavigate();
+    const { showAlert } = useContext(modalContext);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
-
+    const auth = useSelector((store) => store.auth);
+    const userGroup = auth?.user?.userGroup || "";
+    const isAdmin = userGroup.includes("AI솔루션") ? 1 : 0;
     // API 연동
     const { noticeList, patchNotesList } = BoardApi();
-    const { data: noticeResult } = noticeList;
-    const { data: patchResult } = patchNotesList;
+    const [apiData, setApiData] = useState([]);
 
     useEffect(() => {
-        if (type === 'notice') {
-            noticeList.mutate();
-        } else if (type === 'patchnotes') {
-            patchNotesList.mutate();
-        }
+        fetchData();
     }, [type]);
+
+    const fetchData = async () => {
+        try {
+            let res;
+            const payload = {
+                is_admin: isAdmin
+            };
+            if (type === 'notice') {
+                res = await noticeList.mutateAsync(payload);
+            } else if (type === 'patchnotes') {
+                res = await patchNotesList.mutateAsync(payload);
+            }
+
+            if (res?.success === "777") {
+                setApiData(processData(res?.resultjson || []));
+            } else {
+                setApiData([]);
+                showAlert("에러", "오류가 발생했습니다.");
+            }
+        } catch (err) {
+            console.error(err);
+            setApiData([]);
+            showAlert("에러", "오류가 발생했습니다.");
+        }
+    };
 
     // 게시판 설정
     const boardConfig = {
@@ -43,11 +68,7 @@ const BoardList = ({ type = 'notice' }) => {
     const config = boardConfig[type];
 
     // 데이터 가공
-    const processData = (result) => {
-        const list = Array.isArray(result)
-            ? result
-            : (result?.resultjson || result?.data || result?.result || []);
-
+    const processData = (list) => {
         return Array.isArray(list) ? list.map(item => ({
             id: item.id,
             title: item.title,
@@ -60,9 +81,6 @@ const BoardList = ({ type = 'notice' }) => {
             isVisible: item.isVisible
         })) : [];
     };
-
-    // API 데이터 사용
-    const apiData = type === 'notice' ? processData(noticeResult) : processData(patchResult);
 
     // 검색 필터링 (화면단 처리)
     const filteredData = apiData.filter(item =>

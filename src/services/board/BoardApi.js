@@ -9,7 +9,7 @@ export function BoardApi() {
 
     // 공지사항 Top5 조회 API
     const top5Notices = useMutation(
-        async () => await api.post({}, "/notice/top5", "API_BASE_URL_BOARD"),
+        async (d) => await api.post({}, "/notice/top5", "API_BASE_URL_BOARD"),
         {
             onMutate: () => {
                 // loadingSpinner.show();
@@ -35,7 +35,7 @@ export function BoardApi() {
 
     // 공지사항 목록 조회 API
     const noticeList = useMutation(
-        async () => await api.post({}, "/notice/list", "API_BASE_URL_BOARD"),
+        async (data) => await api.post(data, "/notice/list", "API_BASE_URL_BOARD"),
         {
             onMutate: () => {
                 loadingSpinner.show();
@@ -48,7 +48,7 @@ export function BoardApi() {
 
     // 패치노트 목록 조회 API
     const patchNotesList = useMutation(
-        async () => await api.post({}, "/patchnotes/list", "API_BASE_URL_BOARD"),
+        async (data) => await api.post(data, "/patchnotes/list", "API_BASE_URL_BOARD"),
         {
             onMutate: () => {
                 loadingSpinner.show();

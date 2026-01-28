@@ -4,12 +4,16 @@ import { ArrowLeft, Save, Upload, X, Type, FileText, Lock, LockOpen, Tag } from 
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import { modalContext } from "@/components/common/Modal";
+import { useSelector } from 'react-redux';
 
 const BoardWrite = () => {
     const { type, id } = useParams(); // id가 있으면 수정 모드
     const navigate = useNavigate();
     const isEdit = !!id;
     const modal = useContext(modalContext);
+    const auth = useSelector((store) => store.auth);
+    const userGroup = auth?.user?.userGroup || "";
+    const isAdmin = userGroup.includes("AI솔루션") ? 1 : 0;
 
     // API 연동
     const { noticeTransaction, patchNotesTransaction, noticeDetail, patchNotesDetail } = BoardApi();
@@ -92,6 +96,7 @@ const BoardWrite = () => {
             content: content,
             isVisible: !isSecret,
             author: "관리자",
+            is_admin: isAdmin,
             hasAttachment: files.length > 0,
             attachments: files.map(file => {
                 if (file instanceof File) {
