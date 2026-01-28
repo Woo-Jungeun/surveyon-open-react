@@ -113,7 +113,7 @@ const BoardDetail = () => {
             {isFromHome ? (
                 <button className="bw-back-btn" onClick={() => navigate('/')}>
                     <Home size={16} />
-                    메인으로
+                    홈으로
                 </button>
             ) : (
                 <button className="bw-back-btn" onClick={() => navigate(`/board/${type}`)}>

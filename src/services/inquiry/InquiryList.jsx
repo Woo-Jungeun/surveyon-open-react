@@ -142,7 +142,7 @@ const InquiryList = () => {
         <div className="inquiry-container" data-theme="board-inquiry">
             <button className="inquiry-home-btn" onClick={() => navigate('/')}>
                 <ArrowLeft size={16} />
-                메인으로
+                홈으로
             </button>
 
             <div className="inquiry-header">

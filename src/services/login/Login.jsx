@@ -62,7 +62,7 @@ const Login = () => {
             <div className="login-back-area">
                 <button className="login-back-button" onClick={() => navigate('/')}>
                     <ArrowLeft size={16} />
-                    메인으로
+                    홈으로
                 </button>
             </div>
 

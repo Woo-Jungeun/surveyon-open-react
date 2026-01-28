@@ -87,7 +87,7 @@ const BoardList = ({ type = 'notice' }) => {
         <div className="bl-container" data-theme={`board-${type}`}>
             <button className="bl-home-btn" onClick={() => navigate('/')}>
                 <ArrowLeft size={16} />
-                메인으로
+                홈으로
             </button>
 
             <div className="bl-header">
