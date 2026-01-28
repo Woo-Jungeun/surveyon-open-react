@@ -176,14 +176,14 @@
     border-radius: 4px;
 }
 
-.question-type-badge.blue {
-    background: #e3f2fd;
-    color: #1976d2;
+.question-type-badge.purple {
+    background: #f3e8ff;
+    color: #7e22ce;
 }
 
-.question-type-badge.green {
-    background: #e8f5e9;
-    color: #2e7d32;
+.question-type-badge.orange {
+    background: #ffedd5;
+    color: #c2410c;
 }
 
 .question-desc {

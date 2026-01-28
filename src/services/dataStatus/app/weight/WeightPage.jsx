@@ -32,10 +32,10 @@ const WeightPage = () => {
 
     // Mock Data for Questions (Inner List)
     const [questions, setQuestions] = useState([
-        { id: 'q1', title: '문항1', desc: '서비스 전반적인 만족도는?', type: '단일', count: '1000/1000', color: 'blue' },
-        { id: 'q2', title: '문항2', desc: '선호하는 기능을 모두 선택하세요', type: '복수', count: '980/1000', color: 'green' },
-        { id: 'age', title: '연령대', desc: '귀하의 연령대는?', type: '단일', count: '1000/1000', color: 'blue' },
-        { id: 'gender', title: '성별', desc: '귀하의 성별은?', type: '단일', count: '1000/1000', color: 'blue' },
+        { id: 'q1', title: '문항1', desc: '서비스 전반적인 만족도는?', type: '단일', count: '1000/1000', color: 'purple' },
+        { id: 'q2', title: '문항2', desc: '선호하는 기능을 모두 선택하세요', type: '복수', count: '980/1000', color: 'orange' },
+        { id: 'age', title: '연령대', desc: '귀하의 연령대는?', type: '단일', count: '1000/1000', color: 'purple' },
+        { id: 'gender', title: '성별', desc: '귀하의 성별은?', type: '단일', count: '1000/1000', color: 'purple' },
     ]);
 
     // Drag and Drop State
