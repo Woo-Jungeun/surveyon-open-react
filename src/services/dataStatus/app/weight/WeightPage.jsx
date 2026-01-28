@@ -145,17 +145,60 @@ const WeightPage = () => {
         );
     }, []);
 
+    // Handle Paste from Excel
+    const handlePaste = useCallback((e, dataItem, field) => {
+        e.preventDefault();
+        const clipboardData = e.clipboardData.getData('text');
+
+        // Parse Excel data (rows by newline, cols by tab)
+        const rows = clipboardData.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
+        if (rows.length === 0) return;
+
+        // Find start position
+        const startRowIndex = targetGridData.findIndex(item => item.category === dataItem.category);
+        if (startRowIndex === -1) return;
+
+        const columns = ['col1', 'col2', 'col3'];
+        const startColIndex = columns.indexOf(field);
+        if (startColIndex === -1) return;
+
+        setTargetGridData(prevData => {
+            const newData = [...prevData];
+
+            rows.forEach((row, rIdx) => {
+                const currentRowIndex = startRowIndex + rIdx;
+                if (currentRowIndex >= newData.length) return;
+
+                const cells = row.split('\t');
+                cells.forEach((cellValue, cIdx) => {
+                    const currentColIndex = startColIndex + cIdx;
+                    if (currentColIndex < columns.length) {
+                        const fieldName = columns[currentColIndex];
+                        newData[currentRowIndex] = {
+                            ...newData[currentRowIndex],
+                            [fieldName]: cellValue.trim()
+                        };
+                    }
+                });
+            });
+
+            return newData;
+        });
+    }, [targetGridData]);
+
     const TargetEditCell = useCallback((props) => {
         const value = props.dataItem[props.field];
         const handleChange = (e) => {
             handleTargetChange(props.dataItem, props.field, e.target.value);
         };
+
         return (
             <td style={{ padding: '4px' }}>
                 <input
                     type="text"
                     value={value}
                     onChange={handleChange}
+                    onPaste={(e) => handlePaste(e, props.dataItem, props.field)}
                     placeholder="N"
                     style={{
                         width: '100%',
@@ -168,7 +211,7 @@ const WeightPage = () => {
                 />
             </td>
         );
-    }, [handleTargetChange]);
+    }, [handleTargetChange, handlePaste]);
 
     return (
         <div className="weight-page" data-theme="data-dashboard">
