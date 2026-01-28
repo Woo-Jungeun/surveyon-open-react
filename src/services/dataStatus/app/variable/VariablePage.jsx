@@ -7,6 +7,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import '../../../../assets/css/grid_vertical_borders.css';
+import './VariablePage.css';
 
 const VariablePage = () => {
     // todo api 연동 필요 
@@ -55,18 +56,7 @@ const VariablePage = () => {
                 <input
                     type="text"
                     defaultValue={props.dataItem[props.field]}
-                    style={{
-                        width: '100%',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        border: '1px solid var(--grid-border)',
-                        color: 'var(--color-dark-gray)',
-                        fontSize: '13px',
-                        outline: 'none',
-                        transition: 'border-color 0.2s'
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-                    onBlur={(e) => e.target.style.borderColor = 'var(--grid-border)'}
+                    className="variable-input"
                 />
             </td>
         );
@@ -75,49 +65,13 @@ const VariablePage = () => {
     const CategoryCell = (props) => {
         return (
             <td style={props.style} className={props.className}>
-                <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
-                    <div
-                        style={{
-                            width: '100%',
-                            padding: '8px 50px 8px 8px',
-                            borderRadius: '4px',
-                            border: '1px solid var(--grid-border)',
-                            background: 'var(--color-bg-gray)',
-                            color: 'var(--color-medium-gray)',
-                            fontSize: '13px',
-                            minHeight: '36px',
-                            whiteSpace: 'normal',
-                            wordBreak: 'break-all',
-                            lineHeight: '1.4'
-                        }}
-                    >
+                <div className="category-cell-container">
+                    <div className="category-cell-content">
                         {props.dataItem.category}
                     </div>
                     <button
                         onClick={() => SetEditingCategoryPopupOpen(props.dataItem)}
-                        style={{
-                            position: 'absolute',
-                            right: '4px',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            border: '1px solid var(--primary-border-light)',
-                            background: '#fff',
-                            fontSize: '11px',
-                            fontWeight: '600',
-                            color: 'var(--primary-color)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'var(--primary-bg-light)';
-                            e.currentTarget.style.borderColor = 'var(--primary-color)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = '#fff';
-                            e.currentTarget.style.borderColor = 'var(--primary-border-light)';
-                        }}
+                        className="category-edit-btn"
                     >
                         변경
                     </button>
@@ -147,7 +101,7 @@ const VariablePage = () => {
     const CountCell = (props) => {
         return (
             <td style={props.style} className={props.className}>
-                <div style={{ color: 'var(--color-medium-gray)', fontSize: '13px' }}>
+                <div className="count-cell">
                     {props.dataItem.count}
                 </div>
             </td>
@@ -161,16 +115,7 @@ const VariablePage = () => {
                     type="text"
                     value={props.dataItem[props.field]}
                     readOnly
-                    style={{
-                        width: '100%',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        border: '1px solid var(--grid-border)',
-                        background: 'var(--color-disabled-bg)',
-                        color: 'var(--color-medium-gray)',
-                        fontSize: '13px',
-                        outline: 'none'
-                    }}
+                    className="variable-input-readonly"
                 />
             </td>
         );
@@ -212,7 +157,7 @@ const VariablePage = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5', position: 'relative' }} data-theme="data-dashboard">
+        <div className="variable-page" data-theme="data-dashboard">
             <DataHeader
                 title="문항관리"
                 addButtonLabel="문항 추가"
@@ -221,17 +166,8 @@ const VariablePage = () => {
                 onSave={() => alert('변경사항 저장 클릭')}
             />
 
-            <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
-                <div style={{
-                    background: '#fff',
-                    borderRadius: '8px',
-                    padding: '24px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                    minHeight: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    boxSizing: 'border-box'
-                }}>
+            <div className="variable-page-content">
+                <div className="variable-page-card">
                     <div className="cmn_grid singlehead">
                         <KendoGrid
                             parentProps={{
@@ -253,12 +189,7 @@ const VariablePage = () => {
                                     minWidth={c.minWidth}
                                     columnMenu={columnMenu}
                                     cell={getCell(c.field)}
-                                    headerClassName="k-header-center"
-                                    headerStyle={{
-                                        textAlign: 'center',
-                                        color: '#666',
-                                        fontWeight: '600'
-                                    }}
+                                    headerClassName="k-header-center variable-column-header"
                                 />
                             ))}
                         </KendoGrid>

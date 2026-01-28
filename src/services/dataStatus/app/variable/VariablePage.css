@@ -1,0 +1,110 @@
+/* Variable Page Container */
+.variable-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #f5f5f5;
+    position: relative;
+}
+
+/* Content Area */
+.variable-page-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.variable-page-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* Input Cell */
+.variable-input {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--grid-border);
+    color: var(--color-dark-gray);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.variable-input:focus {
+    border-color: var(--primary-color);
+}
+
+/* Category Cell */
+.category-cell-container {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.category-cell-content {
+    width: 100%;
+    padding: 8px 50px 8px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--grid-border);
+    background: var(--color-bg-gray);
+    color: var(--color-medium-gray);
+    font-size: 13px;
+    min-height: 36px;
+    white-space: normal;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.category-edit-btn {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--primary-border-light);
+    background: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--primary-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.category-edit-btn:hover {
+    background: var(--primary-bg-light);
+    border-color: var(--primary-color);
+}
+
+/* Count Cell */
+.count-cell {
+    color: var(--color-medium-gray);
+    font-size: 13px;
+}
+
+/* Read Only Cell */
+.variable-input-readonly {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid var(--grid-border);
+    background: var(--color-disabled-bg);
+    color: var(--color-medium-gray);
+    font-size: 13px;
+    outline: none;
+}
+
+/* Column Header */
+.variable-column-header {
+    text-align: center;
+    color: #666;
+    font-weight: 600;
+}
