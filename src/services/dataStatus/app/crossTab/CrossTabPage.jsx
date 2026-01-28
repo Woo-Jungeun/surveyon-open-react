@@ -247,7 +247,7 @@ const CrossTabPage = () => {
                                 </div>
                             </div>
                             <div className="action-buttons">
-                                <button className="btn-save"><Save size={14} /> 교차 테이블 저장</button>
+                                <button className="btn-save-table"><Save size={14} /> 교차 테이블 저장</button>
                                 <button className="btn-run"><ChevronRight size={16} /> 실행</button>
                             </div>
                         </div>
@@ -389,7 +389,7 @@ const CrossTabPage = () => {
 
                         <div className="result-content">
                             {/* Stats Controls */}
-                            <div className="stats-controls" style={{ flexDirection: 'row', alignItems: 'center', gap: '24px', padding: '16px 24px', background: '#f8f9fa', borderBottom: '1px solid #eee' }}>
+                            <div className="stats-controls" style={{ flexDirection: 'row', alignItems: 'center', gap: '24px', padding: '16px 24px', background: '#eff6ff', borderBottom: '1px solid #dbeafe' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
                                     <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#333' }}>옵션 설정</span>
                                 </div>

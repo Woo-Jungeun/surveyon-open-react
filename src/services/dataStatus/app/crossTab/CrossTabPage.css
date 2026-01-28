@@ -148,17 +148,23 @@
     gap: 8px;
 }
 
-.btn-save {
+.btn-save-table {
     padding: 8px 16px;
-    border: 1px solid #ddd;
+    border: 1px solid #3b82f6;
     background: #fff;
-    border-radius: 4px;
+    color: #3b82f6;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     display: flex;
     align-items: center;
     gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-save-table:hover {
+    background: #eff6ff;
 }
 
 .btn-run {
@@ -623,9 +629,9 @@
     flex-direction: column;
     gap: 16px;
     padding: 16px;
-    background: #f8f9fa;
+    background: #eff6ff;
     border-radius: 8px;
-    border: 1px solid #eee;
+    border: 1px solid #dbeafe;
     margin-bottom: 24px;
 }
 
@@ -662,27 +668,29 @@
     gap: 8px;
     padding: 8px 16px;
     background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    font-size: 14px;
-    color: #333;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    color: #64748b;
     cursor: grab;
     transition: all 0.2s;
     user-select: none;
-    font-weight: 500;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .sortable-item:hover {
-    border-color: #b0b0b0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+    background: #f8fafc;
+    color: #334155;
 }
 
 .sortable-item.checked {
-    border-color: #5c9aff;
+    border-color: #2563eb;
     background: #fff;
-    color: #5c9aff;
+    color: #2563eb;
     font-weight: 700;
-    box-shadow: 0 1px 3px rgba(92, 154, 255, 0.2);
+    box-shadow: 0 2px 4px rgba(37, 99, 235, 0.15);
 }
 
 .drag-handle {
@@ -691,7 +699,7 @@
 }
 
 .sortable-item.checked .drag-handle {
-    color: #a5c8ff;
+    color: #93c5fd;
 }
 
 .sortable-item:hover .drag-handle {
