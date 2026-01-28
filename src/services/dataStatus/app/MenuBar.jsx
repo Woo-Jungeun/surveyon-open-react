@@ -346,6 +346,9 @@ const MenuBar = () => {
                             const width = window.screen.width;
                             const height = window.screen.height;
                             window.open(item.path, "_blank", `width=${width},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
+                          } else if (item.label === "AI분석" || item.label === "AI리포트") {
+                            e.preventDefault();
+                            modal.showAlert("알림", `${item.label} 기능은 준비 중입니다.`);
                           }
                         }}
                       >
