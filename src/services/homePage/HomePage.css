@@ -1189,55 +1189,6 @@
   }
 }
 
-/* 다크모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .board-section {
-    background: linear-gradient(180deg, #1a1a1a 0%, #0f0f0f 100%);
-  }
-
-  .board-card {
-    background: rgba(30, 30, 30, 0.8);
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  .board-card-header {
-    background: #1f1f1f;
-    border-bottom-color: rgba(255, 255, 255, 0.05);
-  }
-
-  .board-card-list {
-    background: #1a1a1a;
-  }
-
-  .board-list-item {
-    background: #1f1f1f;
-  }
-
-  .board-list-item:hover {
-    background: #252525;
-  }
-
-  .board-list-title {
-    color: #e5e7eb;
-  }
-
-  .board-card-header h3 {
-    color: #f9fafb;
-  }
-
-  .board-card-header p {
-    color: #9ca3af;
-  }
-
-  .board-section-header h2 {
-    color: #f9fafb;
-  }
-
-  .board-section-header p {
-    color: #9ca3af;
-  }
-}
-
 /* Override for 5 items in feature list */
 .homepage-container .hp-feature-list {
   grid-template-columns: repeat(2, 1fr) !important;
@@ -1247,7 +1198,22 @@
 .homepage-container .hp-feature-item:last-child {
   grid-column: span 2;
   justify-content: center;
-}  
-/* Board Section List */  
-.homepage-container .board-card-list { display: flex; flex-direction: column; flex: 1; min-height: 200px; }  
-.homepage-container .board-list-empty { flex: 1; display: flex; justify-content: center; align-items: center; color: #999; font-size: 14px; padding: 40px 0; } 
+}
+
+/* Board Section List */
+.homepage-container .board-card-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 200px;
+}
+
+.homepage-container .board-list-empty {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #999;
+  font-size: 14px;
+  padding: 40px 0;
+}
