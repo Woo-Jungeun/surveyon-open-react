@@ -1,4 +1,4 @@
-﻿import React, { useContext, useEffect } from 'react';
+﻿import React, { useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Megaphone, FileText, MessageCircle, Bot, History } from 'lucide-react';
 import { modalContext } from "@/components/common/Modal";
@@ -16,20 +16,44 @@ const BoardSection = () => {
 
     // API 연동
     const { top5Notices, top5PatchNotes } = BoardApi();
-    const { data: noticeResult } = top5Notices;
-    const { data: patchResult } = top5PatchNotes;
+    const [noticeData, setNoticeData] = useState([]);
+    const [patchNotesData, setPatchNotesData] = useState([]);
 
     useEffect(() => {
-        top5Notices.mutate();
-        top5PatchNotes.mutate();
+        fetchNotices();
+        fetchPatchNotes();
     }, []);
 
-    // 데이터 가공 헬퍼
-    const processData = (result) => {
-        const list = Array.isArray(result)
-            ? result
-            : (result?.resultjson || result?.data || result?.result || []);
+    const fetchNotices = async () => {
+        try {
+            const res = await top5Notices.mutateAsync();
+            if (res?.success === "777") {
+                setNoticeData(processData(res?.resultjson || []));
+            } else {
+                setNoticeData([]);
+            }
+        } catch (err) {
+            console.error(err);
+            setNoticeData([]);
+        }
+    };
 
+    const fetchPatchNotes = async () => {
+        try {
+            const res = await top5PatchNotes.mutateAsync();
+            if (res?.success === "777") {
+                setPatchNotesData(processData(res?.resultjson || []));
+            } else {
+                setPatchNotesData([]);
+            }
+        } catch (err) {
+            console.error(err);
+            setPatchNotesData([]);
+        }
+    };
+
+    // 데이터 가공 헬퍼
+    const processData = (list) => {
         return Array.isArray(list) ? list.map(item => ({
             id: item.id,
             title: item.title,
@@ -37,9 +61,6 @@ const BoardSection = () => {
             date: item.createdAt ? moment(item.createdAt).format('YYYY-MM-DD') : ''
         })) : [];
     };
-
-    const noticeData = processData(noticeResult);
-    const patchNotesData = processData(patchResult);
 
     const handleItemClick = (e, path, itemId) => {
         e.stopPropagation();
@@ -68,7 +89,7 @@ const BoardSection = () => {
     // 공통 리스트 컴포넌트
     const BoardList = ({ items, path, iconColor, isPatchNote = false }) => (
         <div className="board-card-list">
-            {items.length !== 0 ? (
+            {items.length === 0 ? (
                 <div className="board-list-empty">
                     데이터가 없습니다.
                 </div>
