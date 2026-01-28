@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from "react";
 import { useLocation, Outlet } from "react-router-dom";
 
-import MenuBar from "@/services/dataStatus/app/MenuBar.jsx";
+import MenuBar from "@/services/dataStatus/app/menuBar/MenuBar.jsx";
 import { useSelector } from "react-redux";
 
 const MainWrapperView = (props) => {

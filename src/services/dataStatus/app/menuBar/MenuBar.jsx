@@ -11,6 +11,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
 import { MenuBarApi } from "./MenuBarApi";
+import "./MenuBar.css";
 
 const MENU_ITEMS = [
   {
@@ -122,23 +123,13 @@ const MenuBar = () => {
   };
 
   return (
-    <aside style={{
-      width: "250px",
-      height: "100%",
-      background: "#fff",
-      borderRight: "1px solid #d3d7d5", // Original border color
-      display: "flex",
-      flexDirection: "column",
-      flexShrink: 0,
-      zIndex: 100,
-      padding: "24px 0"
-    }} data-theme="data-dashboard">
-      {/* Header Section - Restoring Original Look */}
-      <div style={{ padding: "0 24px 24px 24px", display: "flex", flexDirection: "column", gap: "12px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <aside className="menu-bar" data-theme="data-dashboard">
+      {/* Header Section */}
+      <div className="menu-bar-header">
+        <div className="menu-bar-header-content">
           <button
             type="button"
-            className="home-btn"
+            className="menu-bar-home-btn"
             onClick={() => {
               sessionStorage.setItem("projectnum", "");
               sessionStorage.setItem("projectname", "");
@@ -146,170 +137,68 @@ const MenuBar = () => {
               sessionStorage.setItem("projectpof", "");
               navigate("/");
             }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              padding: "6px 10px",
-              borderRadius: "6px",
-              border: "none",
-              background: "transparent",
-              fontSize: "15px",
-              fontWeight: 600,
-              color: "#555",
-              cursor: "pointer",
-              transition: "all 0.2s",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "rgba(0,0,0,0.05)";
-              e.currentTarget.style.color = "#333";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#555";
-            }}
           >
             <Home size={18} />
             <span>홈</span>
           </button>
-          <div style={{ width: "1px", height: "14px", background: "#dcdcdc" }}></div>
+          <div className="menu-bar-divider"></div>
           <h1
-            className="logo"
-            style={{ cursor: "pointer", fontSize: "18px", fontWeight: "700", display: "flex", alignItems: "center", gap: "4px", letterSpacing: "-0.5px", whiteSpace: "nowrap" }}
+            className="menu-bar-logo"
             onClick={() => navigate("/data_status")}
           >
-            <span className="ai-logo-text" style={{ fontSize: "20px" }}>SRT</span>
-            <span style={{ fontSize: "18px" }}>데이터 현황</span>
+            <span className="ai-logo-text">SRT</span>
+            <span>데이터 현황</span>
           </h1>
         </div>
       </div>
 
-      {/* Project Name Display */}
-      <div style={{ padding: "0 20px 12px 20px" }}>
-        <div
-          onClick={handleApiTest}
-          style={{
-            cursor: "pointer",
-            padding: "7px",
-            // background: "var(--primary-bg-light)",
-            borderRadius: "8px",
-            border: "1px solid var(--primary-border-light)",
-            color: "var(--primary-dark)",
-            fontWeight: "700",
-            fontSize: "15px",
-            textAlign: "center",
-            wordBreak: "break-all",
-            lineHeight: "1.4"
-          }}>
+      {/* API Test (임시) */}
+      <div className="menu-bar-project">
+        <div className="menu-bar-api-test" onClick={handleApiTest}>
           API 연결 테스트 (임시)
         </div>
       </div>
 
-      <div style={{ padding: "0 20px 12px 20px" }}>
-        <div style={{
-          padding: "12px",
-          background: "var(--primary-bg-light)",
-          borderRadius: "8px",
-          border: "1px solid var(--primary-border-light)",
-          color: "var(--primary-dark)",
-          fontWeight: "700",
-          fontSize: "15px",
-          textAlign: "center",
-          wordBreak: "break-all",
-          lineHeight: "1.4"
-        }}>
+      {/* Project Name Display */}
+      <div className="menu-bar-project">
+        <div className="menu-bar-project-name">
           {sessionStorage.getItem("projectname") || "조사명 없음"}
         </div>
       </div>
 
       {/* Action Buttons */}
-      <div style={{ padding: "0 20px 20px 20px", display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div className="menu-bar-actions">
         <button
           type="button"
+          className="menu-bar-action-btn"
           onClick={() => modal.showAlert("알림", "데이터 신규등록 기능은 준비 중입니다.")}
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid #e0e0e0",
-            background: "#fff",
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "#333",
-            cursor: "pointer",
-            transition: "all 0.2s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = "#f9f9f9"}
-          onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
         >
           <Upload size={16} />
           <span>데이터 신규등록</span>
         </button>
         <button
           type="button"
+          className="menu-bar-action-btn"
           onClick={() => modal.showAlert("알림", "데이터 새로고침 기능은 준비 중입니다.")}
-          style={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "8px",
-            padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid #e0e0e0",
-            background: "#fff",
-            fontSize: "14px",
-            fontWeight: 600,
-            color: "#333",
-            cursor: "pointer",
-            transition: "all 0.2s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = "#f9f9f9"}
-          onMouseLeave={(e) => e.currentTarget.style.background = "#fff"}
         >
           <RefreshCw size={16} />
           <span>데이터 새로고침</span>
         </button>
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "4px",
-          fontSize: "11px !important",
-          color: "#999",
-          marginTop: "6px"
-        }}>
+        <div className="menu-bar-last-update">
           <Clock size={12} />
           <span>마지막: 2026-01-26 14:30:00</span>
         </div>
       </div>
 
       {/* Navigation Menu */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "0 20px" }}>
+      <div className="menu-bar-nav">
         {MENU_ITEMS.map((section, idx) => (
-          <div key={idx} style={{ marginBottom: "24px" }}>
+          <div key={idx} className="menu-bar-section">
             <div
+              className="menu-bar-section-header"
               onClick={() => toggleSection(section.label)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                cursor: "pointer",
-                marginBottom: "12px",
-                paddingLeft: "8px",
-                paddingRight: "8px"
-              }}
             >
-              <h3 style={{
-                fontSize: "13px",
-                fontWeight: "700",
-                color: "#888",
-                margin: 0
-              }}>
+              <h3 className="menu-bar-section-title">
                 {section.label}
               </h3>
               {openSections[section.label] ?
@@ -319,27 +208,17 @@ const MenuBar = () => {
             </div>
 
             {openSections[section.label] && (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              <ul className="menu-bar-section-list">
                 {section.children.map((item, cIdx) => {
                   const isActive = location.pathname === item.path;
                   const Icon = item.icon;
                   return (
-                    <li key={cIdx} style={{ marginBottom: "4px" }}>
+                    <li key={cIdx} className="menu-bar-section-item">
                       <NavLink
                         to={item.path}
-                        style={({ isActive }) => ({
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "10px",
-                          padding: "10px 12px",
-                          borderRadius: "8px",
-                          textDecoration: "none",
-                          fontSize: "15px",
-                          fontWeight: isActive ? "600" : "500",
-                          color: isActive ? "var(--primary-color)" : "#333",
-                          background: isActive ? "var(--primary-bg-light)" : "transparent",
-                          transition: "all 0.2s"
-                        })}
+                        className={({ isActive }) =>
+                          `menu-bar-nav-link ${isActive ? 'active' : ''}`
+                        }
                         onClick={(e) => {
                           if (item.label === "전체 데이터(뷰어)") {
                             e.preventDefault();
@@ -365,73 +244,27 @@ const MenuBar = () => {
       </div>
 
       {/* User / Logout Section */}
-      <div style={{
-        padding: "20px",
-        borderTop: "1px solid #eee",
-        marginTop: "auto",
-        position: "relative" // For absolute positioning of dropdown
-      }} ref={userRef}>
+      <div className="menu-bar-user" ref={userRef}>
         <button
           type="button"
+          className="menu-bar-user-btn"
           onClick={() => setUserOpen(!userOpen)}
-          style={{
-            width: "100%",
-            background: "#f5f5f5", // Neutral light gray
-            padding: "8px 12px",
-            borderRadius: "8px",
-            border: "none",
-            display: "flex",
-            alignItems: "center",
-            cursor: "pointer",
-            transition: "background 0.2s"
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.background = "#e5e5e5"}
-          onMouseLeave={(e) => e.currentTarget.style.background = "#f5f5f5"}
         >
-          <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", marginRight: "10px", border: "1px solid #e0e0e0", color: "#555" }}>
+          <div className="menu-bar-user-avatar">
             <User size={16} />
           </div>
-          <span style={{ fontSize: "14px", fontWeight: "600", color: "#333", flex: 1, textAlign: "left" }}>
+          <span className="menu-bar-user-name">
             {auth?.user?.userNm || "사용자"}님
           </span>
         </button>
 
         {userOpen && (
-          <div style={{
-            position: "absolute",
-            bottom: "100%", // Open upwards
-            left: "20px",
-            right: "20px",
-            marginBottom: "10px",
-            background: "#fff",
-            borderRadius: "12px",
-            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-            padding: "8px",
-            border: "1px solid #eee",
-            zIndex: 1000
-          }}>
+          <div className="menu-bar-user-dropdown">
             <button
               type="button"
+              className="menu-bar-logout-btn"
               onClick={doLogout}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "10px 12px",
-                borderRadius: "8px",
-                border: "none",
-                background: "var(--primary-bg-light)", // Theme light bg
-                color: "var(--primary-color)", // Theme color
-                fontSize: "14px",
-                fontWeight: "500",
-                cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.background = "var(--primary-bg-medium)"}
-              onMouseLeave={(e) => e.currentTarget.style.background = "var(--primary-bg-light)"}
             >
-              {/* Using a simple logout icon if not imported, or reuse existing icon logic */}
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                 <polyline points="16 17 21 12 16 7"></polyline>
