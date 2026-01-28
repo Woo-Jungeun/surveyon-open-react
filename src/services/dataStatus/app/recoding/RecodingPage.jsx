@@ -6,6 +6,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import '../../../../assets/css/grid_vertical_borders.css';
+import './RecodingPage.css';
 
 const EditableCell = (props) => {
     const { dataItem, field, columns, onUpdate } = props;
@@ -14,7 +15,7 @@ const EditableCell = (props) => {
     if (!isEditable) {
         return (
             <td className={props.className} style={props.style}>
-                <div style={{ padding: '8px', fontSize: '13px', color: '#666' }}>
+                <div className="recoding-cell-readonly">
                     {dataItem[field]}
                 </div>
             </td>
@@ -32,14 +33,7 @@ const EditableCell = (props) => {
                         onUpdate(dataItem.id, field, e.target.value);
                     }
                 }}
-                style={{
-                    width: '100%',
-                    padding: '6px 8px',
-                    borderRadius: '4px',
-                    border: '1px solid #eee',
-                    fontSize: '13px',
-                    boxSizing: 'border-box'
-                }}
+                className="recoding-cell-input"
             />
         </td>
     );
@@ -49,9 +43,9 @@ const CheckCell = (props) => {
     const { dataItem, checkedLogics } = props;
     const result = checkedLogics[dataItem.id];
     return (
-        <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
+        <td className={`${props.className} recoding-check-cell`} style={props.style}>
             {result && (
-                <span style={{ fontSize: '12px', fontWeight: '600' }}>
+                <span className="recoding-check-result">
                     {result}
                 </span>
             )}
@@ -62,19 +56,10 @@ const CheckCell = (props) => {
 const DeleteCell = (props) => {
     const { dataItem, onDelete } = props;
     return (
-        <td className={props.className} style={{ ...props.style, textAlign: 'center' }}>
+        <td className={`${props.className} recoding-delete-cell`} style={props.style}>
             <button
                 onClick={() => onDelete && onDelete(dataItem.id)}
-                style={{
-                    border: 'none',
-                    background: 'transparent',
-                    cursor: 'pointer',
-                    color: '#ccc',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '100%'
-                }}
+                className="recoding-delete-btn"
             >
                 <Trash2 size={16} />
             </button>
@@ -187,7 +172,7 @@ const RecodingPage = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#f5f5f5' }} data-theme="data-dashboard">
+        <div className="recoding-page" data-theme="data-dashboard">
             {/* Header */}
             <DataHeader
                 title="문항 가공"
@@ -197,7 +182,7 @@ const RecodingPage = () => {
                 onSave={handleSave}
             />
 
-            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+            <div className="recoding-layout">
                 {/* Sidebar */}
                 <SideBar
                     items={filteredVariables}
@@ -208,104 +193,73 @@ const RecodingPage = () => {
                 />
 
                 {/* Content Area */}
-                <div style={{ flex: 1, padding: '24px', overflow: 'hidden' }}>
-                    <div style={{
-                        background: '#fff',
-                        borderRadius: '8px',
-                        padding: '24px',
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                        height: '100%', // Fill height
-                        display: 'flex',
-                        flexDirection: 'column',
-                        boxSizing: 'border-box'
-                    }}>
-                        <h3 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '20px', color: '#333' }}>
+                <div className="recoding-content">
+                    <div className="recoding-card">
+                        <h3 className="recoding-title">
                             {selectedVar?.id === null ? "문항 추가" : "문항 수정"}
                         </h3>
 
                         {/* Variable Info Inputs */}
-                        <div style={{ marginBottom: '24px' }}>
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>문항 ID</label>
+                        <div className="recoding-variable-info">
+                            <label className="recoding-label">문항 ID</label>
                             <input
                                 type="text"
                                 value={selectedVar?.name || ''}
                                 readOnly={selectedVar?.id !== null}
                                 onChange={(e) => setSelectedVar({ ...selectedVar, name: e.target.value })}
-                                style={{
-                                    width: '100%',
-                                    padding: '10px',
-                                    borderRadius: '6px',
-                                    border: '1px solid #ddd',
-                                    background: selectedVar?.id !== null ? '#f9f9f9' : '#fff',
-                                    marginBottom: '16px'
-                                }}
+                                className={`recoding-input ${selectedVar?.id !== null ? 'recoding-input-readonly' : ''}`}
                                 placeholder="예: AgeGroup"
                             />
 
-                            <label style={{ display: 'block', fontSize: '13px', fontWeight: '600', marginBottom: '8px', color: '#555' }}>문항 라벨</label>
+                            <label className="recoding-label">문항 라벨</label>
                             <input
                                 type="text"
                                 value={selectedVar?.label || ''}
                                 onChange={(e) => setSelectedVar({ ...selectedVar, label: e.target.value })}
-                                style={{ width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
+                                className="recoding-input"
                                 placeholder="예: 연령대 (10대, 20대...)"
                             />
                         </div>
 
                         {/* Evaluation Result Section */}
                         {evaluationResult && (
-                            <div style={{
-                                marginBottom: '24px',
-                                background: '#f8f9fa',
-                                borderRadius: '8px',
-                                border: '1px solid #eee',
-                                animation: 'fadeIn 0.3s ease-in-out',
-                                overflow: 'hidden'
-                            }}>
+                            <div className="recoding-evaluation">
                                 <div
                                     onClick={() => setIsEvaluationOpen(!isEvaluationOpen)}
-                                    style={{
-                                        padding: '16px 20px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        borderBottom: isEvaluationOpen ? '1px solid #eee' : 'none',
-                                        userSelect: 'none'
-                                    }}
+                                    className={`recoding-evaluation-header ${isEvaluationOpen ? 'open' : ''}`}
                                 >
-                                    <h4 style={{ fontSize: '15px', fontWeight: '700', margin: 0, color: '#333', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ width: '4px', height: '16px', background: 'var(--primary-color)', borderRadius: '2px' }}></span>
+                                    <h4 className="recoding-evaluation-title">
+                                        <span className="recoding-evaluation-indicator"></span>
                                         평가 결과
                                     </h4>
                                     {isEvaluationOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                 </div>
 
                                 {isEvaluationOpen && (
-                                    <div style={{ padding: '20px' }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>전체 N:</span>
-                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.n}</span>
+                                    <div className="recoding-evaluation-content">
+                                        <div className="recoding-evaluation-grid">
+                                            <div className="recoding-evaluation-column">
+                                                <div className="recoding-evaluation-row">
+                                                    <span className="recoding-evaluation-label">전체 N:</span>
+                                                    <span className="recoding-evaluation-value">{evaluationResult.n}</span>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>표준편차:</span>
-                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.stdDev}</span>
+                                                <div className="recoding-evaluation-row">
+                                                    <span className="recoding-evaluation-label">표준편차:</span>
+                                                    <span className="recoding-evaluation-value">{evaluationResult.stdDev}</span>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>평균:</span>
-                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.mean}</span>
+                                                <div className="recoding-evaluation-row">
+                                                    <span className="recoding-evaluation-label">평균:</span>
+                                                    <span className="recoding-evaluation-value">{evaluationResult.mean}</span>
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최대:</span>
-                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.max}</span>
+                                            <div className="recoding-evaluation-column">
+                                                <div className="recoding-evaluation-row">
+                                                    <span className="recoding-evaluation-label">최대:</span>
+                                                    <span className="recoding-evaluation-value">{evaluationResult.max}</span>
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ fontSize: '13px', color: '#666', fontWeight: '600', width: '80px' }}>최소:</span>
-                                                    <span style={{ fontSize: '14px', color: '#111', fontWeight: '700' }}>{evaluationResult.min}</span>
+                                                <div className="recoding-evaluation-row">
+                                                    <span className="recoding-evaluation-label">최소:</span>
+                                                    <span className="recoding-evaluation-value">{evaluationResult.min}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -315,23 +269,23 @@ const RecodingPage = () => {
                         )}
 
                         {/* Categories Grid Section */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                <h4 style={{ fontSize: '14px', fontWeight: '700', margin: 0, color: '#333' }}>보기</h4>
-                                <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="recoding-categories">
+                            <div className="recoding-categories-header">
+                                <h4 className="recoding-categories-title">보기</h4>
+                                <div className="recoding-categories-actions">
                                     <button
                                         onClick={() => {
                                             const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 0;
                                             setCategories([...categories, { id: newId, realVal: String(newId), category: '', val: '', logic: '' }]);
                                         }}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '4px', border: '1px solid #ddd', background: '#fff', fontSize: '12px', cursor: 'pointer', fontWeight: '600', color: '#555' }}
+                                        className="recoding-add-category-btn"
                                     >
                                         <Plus size={14} /> 보기 추가
                                     </button>
                                 </div>
                             </div>
 
-                            <div className="cmn_grid singlehead" style={{ flex: 1 }}>
+                            <div className="cmn_grid singlehead recoding-grid-container">
                                 <KendoGrid
                                     parentProps={{
                                         data: categories,
@@ -364,33 +318,16 @@ const RecodingPage = () => {
                                                     minWidth={c.minWidth}
                                                     cell={cellRender}
                                                     headerCell={() => (
-                                                        <div className="k-header-center" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+                                                        <div className="k-header-center recoding-logic-check-header">
                                                             <button
                                                                 onClick={handleLogicCheck}
-                                                                style={{
-                                                                    padding: '4px 8px',
-                                                                    borderRadius: '4px',
-                                                                    border: '1px solid var(--primary-color)',
-                                                                    background: '#fff',
-                                                                    color: 'var(--primary-color)',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '700',
-                                                                    cursor: 'pointer',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '4px'
-                                                                }}
+                                                                className="recoding-logic-check-btn"
                                                             >
                                                                 로직 체크
                                                             </button>
                                                         </div>
                                                     )}
-                                                    headerClassName="k-header-center"
-                                                    headerStyle={{
-                                                        textAlign: 'center',
-                                                        color: '#666',
-                                                        fontWeight: '600'
-                                                    }}
+                                                    headerClassName="k-header-center recoding-column-header"
                                                 />
                                             );
                                         }
@@ -404,12 +341,7 @@ const RecodingPage = () => {
                                                     minWidth={c.minWidth}
                                                     columnMenu={undefined}
                                                     cell={cellRender}
-                                                    headerClassName="k-header-center"
-                                                    headerStyle={{
-                                                        textAlign: 'center',
-                                                        color: '#666',
-                                                        fontWeight: '600'
-                                                    }}
+                                                    headerClassName="k-header-center recoding-column-header"
                                                 />
                                             );
                                         }
@@ -422,12 +354,7 @@ const RecodingPage = () => {
                                                 minWidth={c.minWidth}
                                                 columnMenu={columnMenu}
                                                 cell={cellRender}
-                                                headerClassName="k-header-center"
-                                                headerStyle={{
-                                                    textAlign: 'center',
-                                                    color: '#666',
-                                                    fontWeight: '600'
-                                                }}
+                                                headerClassName="k-header-center recoding-column-header"
                                             />
                                         );
                                     })}
