@@ -141,10 +141,12 @@ const BoardList = ({ type = 'notice' }) => {
                     </div>
 
                     <div className="bl-actions">
-                        <button className="bl-write-btn" onClick={() => navigate(`/board/${type}/write`)}>
-                            <PenSquare size={16} />
-                            글쓰기
-                        </button>
+                        {isAdmin === 1 && (
+                            <button className="bl-write-btn" onClick={() => navigate(`/board/${type}/write`)}>
+                                <PenSquare size={16} />
+                                글쓰기
+                            </button>
+                        )}
                     </div>
                 </div>
 
