@@ -12,6 +12,7 @@ import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
 import { MenuBarApi } from "./MenuBarApi";
 import "./MenuBar.css";
+import NewDataModal from "./NewDataModal";
 
 const MENU_ITEMS = [
   {
@@ -62,6 +63,8 @@ const MenuBar = () => {
     "집계현황": true,
     "AI요약": false
   });
+
+  const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
 
   const toggleSection = (label) => {
     setOpenSections(prev => ({
@@ -164,7 +167,7 @@ const MenuBar = () => {
         <button
           type="button"
           className="menu-bar-action-btn"
-          onClick={() => modal.showAlert("알림", "데이터 신규등록 기능은 준비 중입니다.")}
+          onClick={() => setIsNewDataModalOpen(true)}
         >
           <Upload size={16} />
           <span>데이터 신규등록</span>
@@ -268,6 +271,17 @@ const MenuBar = () => {
           </div>
         )}
       </div>
+
+      {isNewDataModalOpen && (
+        <NewDataModal
+          onClose={() => setIsNewDataModalOpen(false)}
+          onConfirm={(data) => {
+            console.log("New Data:", data);
+            setIsNewDataModalOpen(false);
+            // modal.showAlert("알림", "데이터가 등록되었습니다.");
+          }}
+        />
+      )}
     </aside>
   );
 };
