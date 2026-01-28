@@ -1,0 +1,86 @@
+/* Data Viewer Page Container */
+.data-viewer-page {
+    padding: 24px;
+    background: #fff;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header Section */
+.data-viewer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #eee;
+}
+
+.data-viewer-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #111;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.data-viewer-title-indicator {
+    width: 4px;
+    height: 20px;
+    background: var(--primary-color);
+    border-radius: 2px;
+    display: block;
+}
+
+.data-viewer-count {
+    font-size: 14px;
+    font-weight: 500;
+    color: #888;
+    margin-left: 4px;
+}
+
+/* Actions */
+.data-viewer-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.data-viewer-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: var(--primary-color);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.data-viewer-btn:hover {
+    background: var(--primary-hover);
+}
+
+/* Grid Section */
+.data-viewer-grid-container {
+    flex: 1;
+}
+
+.data-viewer-cell {
+    padding: 8px;
+    font-size: 13px;
+    color: #333;
+}
+
+.data-viewer-column-header {
+    text-align: center;
+    color: #666;
+    font-weight: 600;
+}

@@ -3,6 +3,7 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import '../../../../assets/css/grid_vertical_borders.css';
+import './DataViewerPage.css';
 
 const DataViewerPage = () => {
     // Mock Data based on the user's image
@@ -57,7 +58,7 @@ const DataViewerPage = () => {
     const ReadOnlyCell = (props) => {
         return (
             <td style={props.style} className={props.className}>
-                <div style={{ padding: '8px', fontSize: '13px', color: '#333' }}>
+                <div className="data-viewer-cell">
                     {props.dataItem[props.field]}
                 </div>
             </td>
@@ -67,60 +68,25 @@ const DataViewerPage = () => {
     const [isLabelView, setIsLabelView] = useState(false);
 
     return (
-        <div style={{ padding: '24px', background: '#fff', height: '100vh', display: 'flex', flexDirection: 'column' }} data-theme="data-dashboard">
-            <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '20px',
-                paddingBottom: '16px',
-                borderBottom: '1px solid #eee'
-            }}>
-                <h2 style={{
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: '#111',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                }}>
-                    <span style={{ width: '4px', height: '20px', background: 'var(--primary-color)', borderRadius: '2px', display: 'block' }}></span>
+        <div className="data-viewer-page" data-theme="data-dashboard">
+            <div className="data-viewer-header">
+                <h2 className="data-viewer-title">
+                    <span className="data-viewer-title-indicator"></span>
                     전체 데이터
-                    <span style={{ fontSize: '14px', fontWeight: '500', color: '#888', marginLeft: '4px' }}>
+                    <span className="data-viewer-count">
                         (총 {data.length}건)
                     </span>
                 </h2>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="data-viewer-actions">
                     <button
                         onClick={() => setIsLabelView(!isLabelView)}
-                        style={{
-                            padding: '8px 16px',
-                            border: 'none',
-                            borderRadius: '6px',
-                            background: 'var(--primary-color)',
-                            color: '#fff',
-                            border: 'none',
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'var(--primary-hover)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'var(--primary-color)';
-                        }}
+                        className="data-viewer-btn"
                     >
                         {isLabelView ? '값 보기' : '라벨 보기'}
                     </button>
                 </div>
             </div>
-            <div className="cmn_grid singlehead" style={{ flex: 1 }}>
+            <div className="cmn_grid singlehead data-viewer-grid-container">
                 <KendoGrid
                     parentProps={{
                         data: data,
@@ -139,12 +105,7 @@ const DataViewerPage = () => {
                             width={c.width}
                             columnMenu={columnMenu}
                             cell={ReadOnlyCell}
-                            headerClassName="k-header-center"
-                            headerStyle={{
-                                textAlign: 'center',
-                                color: '#666',
-                                fontWeight: '600'
-                            }}
+                            headerClassName="k-header-center data-viewer-column-header"
                         />
                     ))}
                 </KendoGrid>
