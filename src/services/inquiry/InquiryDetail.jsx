@@ -108,7 +108,7 @@ const InquiryDetail = () => {
                     </div>
 
                     {/* 첨부파일 영역 */}
-                    {inquiryData.attachments && inquiryData.attachments.length > 0 && (
+                    {/* {inquiryData.attachments && inquiryData.attachments.length > 0 && (
                         <div className="id-attachments">
                             <div className="id-attachments-title">첨부파일 <span>{inquiryData.attachments.length}</span></div>
                             <ul className="id-attachments-list">
@@ -123,7 +123,7 @@ const InquiryDetail = () => {
                                 ))}
                             </ul>
                         </div>
-                    )}
+                    )} */}
                 </div>
 
                 {/* 답변 영역 (A) */}

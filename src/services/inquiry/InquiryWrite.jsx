@@ -41,7 +41,7 @@ const InquiryWrite = () => {
     );
     const [content, setContent] = useState('');
     const [isSecret, setIsSecret] = useState(isReply ? initialIsSecret : true);
-    const [files, setFiles] = useState([]);
+    // const [files, setFiles] = useState([]);
 
     // 수정 모드일 때 기존 데이터 불러오기
     useEffect(() => {
@@ -56,9 +56,9 @@ const InquiryWrite = () => {
                         setTitle(data.title || '');
                         setContent(data.content || '');
                         setIsSecret(data.isSecret ?? true);
-                        if (data.attachments) {
-                            setFiles(data.attachments);
-                        }
+                        // if (data.attachments) {
+                        //     setFiles(data.attachments);
+                        // }
                     } else {
                         modal.showErrorAlert('오류', '문의 데이터를 불러오는데 실패했습니다.');
                     }
@@ -86,14 +86,14 @@ const InquiryWrite = () => {
         };
     }, []);
 
-    const handleFileChange = (e) => {
-        const selectedFiles = Array.from(e.target.files);
-        setFiles(prev => [...prev, ...selectedFiles]);
-    };
+    // const handleFileChange = (e) => {
+    //     const selectedFiles = Array.from(e.target.files);
+    //     setFiles(prev => [...prev, ...selectedFiles]);
+    // };
 
-    const removeFile = (index) => {
-        setFiles(prev => prev.filter((_, i) => i !== index));
-    };
+    // const removeFile = (index) => {
+    //     setFiles(prev => prev.filter((_, i) => i !== index));
+    // };
 
     const handleSubmit = async () => {
         if (!title.trim() || !content.trim()) {
@@ -112,21 +112,21 @@ const InquiryWrite = () => {
                 password: "",
                 author: userName,
                 userId: userId,
-                attachments: files.map(file => {
-                    if (file instanceof File) {
-                        return {
-                            id: 0,
-                            boardType: "QNA",
-                            referenceId: isEdit ? parseInt(id) : 0,
-                            fileGuid: "",
-                            originalName: file.name,
-                            saveName: "",
-                            fileSize: file.size,
-                            createdAt: new Date().toISOString()
-                        };
-                    }
-                    return file;
-                })
+                // attachments: files.map(file => {
+                //     if (file instanceof File) {
+                //         return {
+                //             id: 0,
+                //             boardType: "QNA",
+                //             referenceId: isEdit ? parseInt(id) : 0,
+                //             fileGuid: "",
+                //             originalName: file.name,
+                //             saveName: "",
+                //             fileSize: file.size,
+                //             createdAt: new Date().toISOString()
+                //         };
+                //     }
+                //     return file;
+                // })
             };
 
             // 수정 모드인 경우 id 추가
@@ -237,7 +237,7 @@ const InquiryWrite = () => {
                         />
                     </div>
 
-                    <div className="iw-form-group">
+                    {/* <div className="iw-form-group">
                         <label>첨부파일</label>
                         <div className="iw-file-upload">
                             <input
@@ -270,7 +270,7 @@ const InquiryWrite = () => {
                                 ))}
                             </ul>
                         )}
-                    </div>
+                    </div> */}
 
                     <div className="iw-form-group">
                         <label>공개 설정</label>

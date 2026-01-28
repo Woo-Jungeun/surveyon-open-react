@@ -22,7 +22,7 @@ const BoardWrite = () => {
     const [content, setContent] = useState('');
     const [version, setVersion] = useState(''); // 패치노트용
     const [isSecret, setIsSecret] = useState(false);
-    const [files, setFiles] = useState([]);
+    // const [files, setFiles] = useState([]);
 
     // 수정 모드일 경우 데이터 불러오기
     useEffect(() => {
@@ -44,9 +44,9 @@ const BoardWrite = () => {
                         if (type === 'patchnotes') {
                             setVersion(data.version || '');
                         }
-                        if (data.attachments) {
-                            setFiles(data.attachments);
-                        }
+                        // if (data.attachments) {
+                        //     setFiles(data.attachments);
+                        // }
                     }
                 } catch (error) {
                     console.error("Failed to fetch detail:", error);
@@ -57,14 +57,14 @@ const BoardWrite = () => {
         }
     }, [isEdit, type, id]);
 
-    const handleFileChange = (e) => {
-        const selectedFiles = Array.from(e.target.files);
-        setFiles(prev => [...prev, ...selectedFiles]);
-    };
+    // const handleFileChange = (e) => {
+    //     const selectedFiles = Array.from(e.target.files);
+    //     setFiles(prev => [...prev, ...selectedFiles]);
+    // };
 
-    const removeFile = (index) => {
-        setFiles(prev => prev.filter((_, i) => i !== index));
-    };
+    // const removeFile = (index) => {
+    //     setFiles(prev => prev.filter((_, i) => i !== index));
+    // };
 
     const boardConfig = {
         notice: {
@@ -97,22 +97,22 @@ const BoardWrite = () => {
             isVisible: !isSecret,
             author: "관리자",
             is_admin: isAdmin,
-            hasAttachment: files.length > 0,
-            attachments: files.map(file => {
-                if (file instanceof File) {
-                    return {
-                        id: 0,
-                        boardType: type === 'notice' ? 'NOTICE' : 'PATCH',
-                        referenceId: isEdit ? parseInt(id) : 0,
-                        fileGuid: "",
-                        originalName: file.name,
-                        saveName: "",
-                        fileSize: file.size,
-                        createdAt: new Date().toISOString()
-                    };
-                }
-                return file;
-            })
+            // hasAttachment: files.length > 0,
+            // attachments: files.map(file => {
+            //     if (file instanceof File) {
+            //         return {
+            //             id: 0,
+            //             boardType: type === 'notice' ? 'NOTICE' : 'PATCH',
+            //             referenceId: isEdit ? parseInt(id) : 0,
+            //             fileGuid: "",
+            //             originalName: file.name,
+            //             saveName: "",
+            //             fileSize: file.size,
+            //             createdAt: new Date().toISOString()
+            //         };
+            //     }
+            //     return file;
+            // })
         };
 
         if (isEdit) {
@@ -211,7 +211,7 @@ const BoardWrite = () => {
                         />
                     </div>
 
-                    <div className="bw-form-group">
+                    {/* <div className="bw-form-group">
                         <label>첨부파일</label>
                         <div className="bw-file-upload">
                             <input
@@ -244,7 +244,7 @@ const BoardWrite = () => {
                                 ))}
                             </ul>
                         )}
-                    </div>
+                    </div> */}
 
                     <div className="bw-form-group">
                         <label>공개 설정</label>

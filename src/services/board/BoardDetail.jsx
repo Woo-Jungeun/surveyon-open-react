@@ -154,13 +154,13 @@ const BoardDetail = () => {
                 </div>
 
                 {/* 첨부파일 영역 (데이터가 있을 경우에만 표시) */}
-                {detailData.attachments && detailData.attachments.length > 0 && (
+                {/* {detailData.attachments && detailData.attachments.length > 0 && (
                     <div className="bd-attachments">
                         <div className="bd-attachments-title">첨부파일 <span>{detailData.attachments.length}</span></div>
                         <ul className="bd-attachments-list">
                             {detailData.attachments.map((file, index) => (
                                 <li key={index}>
-                                    <a href="#" onClick={(e) => { e.preventDefault(); /* 파일 다운로드 로직 추가 필요 */ }}>
+                                    <a href="#" onClick={(e) => { e.preventDefault(); }}>
                                         <span className="bd-file-icon">📎</span>
                                         <span className="bd-file-name">{file.originalName}</span>
                                         <span className="bd-file-size">({(file.fileSize / 1024).toFixed(1)}KB)</span>
@@ -169,7 +169,7 @@ const BoardDetail = () => {
                             ))}
                         </ul>
                     </div>
-                )}
+                )} */}
                 {isAdmin === 1 && (
                     <div className="bd-footer">
                         {/* 관리자 권한 체크 후 표시 (현재는 항상 표시) */}
