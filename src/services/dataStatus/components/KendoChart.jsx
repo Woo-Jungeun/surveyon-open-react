@@ -190,7 +190,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                     </>
                 )}
 
-                <ChartTooltip visible={true} render={(e) => {
+                <ChartTooltip visible={!isPieOrDonut} render={(e) => {
                     if (isHeatmap) {
                         return `${e.point.dataItem.y} - ${e.point.dataItem.x}: ${e.point.dataItem.value}%`;
                     }
