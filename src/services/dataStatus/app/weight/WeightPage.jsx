@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
-import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Search, Copy } from 'lucide-react';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from '@progress/kendo-react-grid';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -134,6 +134,35 @@ const WeightPage = () => {
             )
         );
     }, []); // No dependencies needed with functional setState
+
+    // Toast State
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    // Toast Timer
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast({ ...toast, show: false });
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast.show]);
+
+    // Copy to Clipboard (Excel format)
+    const handleCopyToClipboard = async () => {
+        try {
+            const rows = targetGridData.map(item => {
+                return [item.category, item.col1, item.col2, item.col3].join('\t');
+            }).join('\n');
+
+            await navigator.clipboard.writeText(rows);
+
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)' });
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            setToast({ show: true, message: '복사 실패' });
+        }
+    };
 
     const CurrentDistCell = useCallback((props) => {
         const { count, pct } = props.dataItem[props.field];
@@ -489,7 +518,53 @@ const WeightPage = () => {
                                                             onClick={() => setIsTargetDistOpen(!isTargetDistOpen)}
                                                             className="weight-section-header"
                                                         >
-                                                            <h4 className="weight-section-title">목표 분포</h4>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
+                                                                <h4 className="weight-section-title">목표 분포</h4>
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleCopyToClipboard(); }}
+                                                                    style={{
+                                                                        border: 'none',
+                                                                        background: '#f1f5f9',
+                                                                        cursor: 'pointer',
+                                                                        padding: '4px 8px',
+                                                                        borderRadius: '4px',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '4px',
+                                                                        color: '#64748b',
+                                                                        fontSize: '11px',
+                                                                        fontWeight: '600'
+                                                                    }}
+                                                                    title="데이터 복사"
+                                                                >
+                                                                    <Copy size={12} />
+                                                                    복사
+                                                                </button>
+                                                                {toast.show && (
+                                                                    <div style={{
+                                                                        position: 'absolute',
+                                                                        left: '100%',
+                                                                        top: '50%',
+                                                                        transform: 'translateY(-50%)',
+                                                                        marginLeft: '8px',
+                                                                        background: '#1e293b',
+                                                                        color: '#fff',
+                                                                        padding: '4px 8px',
+                                                                        borderRadius: '4px',
+                                                                        fontSize: '11px',
+                                                                        fontWeight: '500',
+                                                                        whiteSpace: 'nowrap',
+                                                                        zIndex: 10,
+                                                                        animation: 'fadeIn 0.2s ease-out',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '4px'
+                                                                    }}>
+                                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80' }}></div>
+                                                                        {toast.message}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                             {isTargetDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isTargetDistOpen && (
@@ -542,6 +617,13 @@ const WeightPage = () => {
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+            `}</style>
         </div>
     );
 };
