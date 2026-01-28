@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 
 const ChoroplethMap = ({ data }) => {
     const [hoveredRegion, setHoveredRegion] = useState(null);
     const [geoData, setGeoData] = useState(null);
+    const [zoom, setZoom] = useState(1);
+    const [pan, setPan] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const containerRef = useRef(null);
 
     useEffect(() => {
         // 실제 한국 GeoJSON 데이터 로드
@@ -70,6 +76,48 @@ const ChoroplethMap = ({ data }) => {
         return '';
     };
 
+    // 줌 인/아웃 핸들러
+    const handleZoomIn = () => {
+        setZoom(prev => Math.min(prev + 0.3, 3));
+    };
+
+    const handleZoomOut = () => {
+        setZoom(prev => Math.max(prev - 0.3, 1));
+    };
+
+    const handleReset = () => {
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+    };
+
+
+
+    // 드래그 시작
+    const handleMouseDown = (e) => {
+        // 줌이 1이 아닐 때만 드래그 가능
+        if (zoom !== 1) {
+            setIsDragging(true);
+            setDragStart({
+                x: e.clientX - pan.x,
+                y: e.clientY - pan.y
+            });
+        }
+    };
+
+    // 드래그 중
+    const handleMouseMove = (e) => {
+        if (!isDragging) return;
+        setPan({
+            x: e.clientX - dragStart.x,
+            y: e.clientY - dragStart.y
+        });
+    };
+
+    // 드래그 종료
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
     if (!geoData) {
         return (
             <div style={{
@@ -98,26 +146,115 @@ const ChoroplethMap = ({ data }) => {
             padding: '12px',
             position: 'relative'
         }}>
+            {/* 줌 컨트롤 버튼 */}
+            <div style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                zIndex: 100,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '6px',
+                backgroundColor: 'white',
+                borderRadius: '6px',
+                padding: '6px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                border: '1px solid #e2e8f0'
+            }}>
+                <button
+                    onClick={handleZoomIn}
+                    style={{
+                        width: '28px',
+                        height: '28px',
+                        border: 'none',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    title="확대"
+                >
+                    <ZoomIn size={16} color="#334155" />
+                </button>
+                <button
+                    onClick={handleZoomOut}
+                    style={{
+                        width: '28px',
+                        height: '28px',
+                        border: 'none',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    title="축소"
+                >
+                    <ZoomOut size={16} color="#334155" />
+                </button>
+                <button
+                    onClick={handleReset}
+                    style={{
+                        width: '28px',
+                        height: '28px',
+                        border: 'none',
+                        backgroundColor: 'white',
+                        cursor: 'pointer',
+                        borderRadius: '4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'background-color 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                    title="초기화"
+                >
+                    <Maximize2 size={16} color="#334155" />
+                </button>
+            </div>
+
+
 
             {/* 지도 영역 */}
-            <div style={{
-                flex: 1,
-                position: 'relative',
-                border: '1px solid #e2e8f0',
-                borderRadius: '6px',
-                backgroundColor: '#ffffff',
-                minHeight: '250px',
-                maxHeight: '350px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden'
-            }}>
+            <div
+                ref={containerRef}
+                style={{
+                    flex: 1,
+                    position: 'relative',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    backgroundColor: '#ffffff',
+                    minHeight: '250px',
+                    maxHeight: '350px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden',
+                    cursor: isDragging ? 'grabbing' : (zoom !== 1 ? 'grab' : 'default')
+                }}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+            >
                 <svg
                     viewBox="50 0 600 500"
                     style={{
                         width: '100%',
-                        height: '100%'
+                        height: '100%',
+                        transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
+                        transformOrigin: 'center center'
                     }}
                     preserveAspectRatio="xMidYMid meet"
                 >
@@ -201,20 +338,20 @@ const ChoroplethMap = ({ data }) => {
                         }} />
                         <span style={{ fontSize: '11px', color: '#64748b' }}>최대 (100%)</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{
-                            width: '20px',
-                            height: '20px',
+                            width: '16px',
+                            height: '16px',
                             backgroundColor: '#6666ff',
                             borderRadius: '3px',
                             border: '1px solid #cbd5e1'
                         }} />
                         <span style={{ fontSize: '11px', color: '#64748b' }}>중간</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <div style={{
-                            width: '20px',
-                            height: '20px',
+                            width: '16px',
+                            height: '16px',
                             backgroundColor: '#ccccff',
                             borderRadius: '3px',
                             border: '1px solid #cbd5e1'
