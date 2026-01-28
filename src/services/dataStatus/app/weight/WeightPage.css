@@ -496,3 +496,32 @@
 .save-button:active {
     background: var(--primary-focus);
 }
+
+/* Distribution Section Headers */
+.weight-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    margin-bottom: 12px;
+    padding: 8px 0;
+}
+
+.weight-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.weight-section-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 16px;
+    background-color: var(--ds-primary, #3b82f6);
+    border-radius: 2px;
+    margin-right: 8px;
+}

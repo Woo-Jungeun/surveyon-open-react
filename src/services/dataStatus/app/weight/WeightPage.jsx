@@ -383,7 +383,7 @@ const WeightPage = () => {
                                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
                                                 <div style={{ textAlign: 'center', color: '#999', marginBottom: '24px' }}>
                                                     <p style={{ fontSize: '16px', marginBottom: '8px' }}>세로축과 가로축에 문항을 추가 후</p>
-                                                    <p style={{ fontSize: '16px' }}>실행 버튼을 누르면 교차분석 결과가 여기에 표시됩니다</p>
+                                                    <p style={{ fontSize: '16px' }}>실행 버튼을 누르면 교차분석 결과가 이 영역에 표시됩니다</p>
                                                 </div>
                                                 <button
                                                     onClick={handleRunAnalysis}
@@ -414,16 +414,9 @@ const WeightPage = () => {
                                                     <div>
                                                         <div
                                                             onClick={() => setIsCurrentDistOpen(!isCurrentDistOpen)}
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'space-between',
-                                                                cursor: 'pointer',
-                                                                marginBottom: '12px',
-                                                                padding: '8px 0'
-                                                            }}
+                                                            className="weight-section-header"
                                                         >
-                                                            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#333', margin: 0 }}>현재 분포</h4>
+                                                            <h4 className="weight-section-title">현재 분포</h4>
                                                             {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isCurrentDistOpen && (
@@ -448,19 +441,12 @@ const WeightPage = () => {
                                                     </div>
 
                                                     {/* Target Distribution */}
-                                                    <div>
+                                                    <div style={{ marginTop: '32px' }}>
                                                         <div
                                                             onClick={() => setIsTargetDistOpen(!isTargetDistOpen)}
-                                                            style={{
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'space-between',
-                                                                cursor: 'pointer',
-                                                                marginBottom: '12px',
-                                                                padding: '8px 0'
-                                                            }}
+                                                            className="weight-section-header"
                                                         >
-                                                            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#333', margin: 0 }}>목표 분포</h4>
+                                                            <h4 className="weight-section-title">목표 분포</h4>
                                                             {isTargetDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isTargetDistOpen && (
