@@ -88,20 +88,6 @@
     line-height: 1.4;
 }
 
-/* API Test Button (임시) */
-.menu-bar-api-test {
-    cursor: pointer;
-    padding: 7px;
-    border-radius: 8px;
-    border: 1px solid var(--primary-border-light);
-    color: var(--primary-dark);
-    font-weight: 700;
-    font-size: 15px;
-    text-align: center;
-    word-break: break-all;
-    line-height: 1.4;
-}
-
 /* Action Buttons */
 .menu-bar-actions {
     padding: 0 20px 20px 20px;

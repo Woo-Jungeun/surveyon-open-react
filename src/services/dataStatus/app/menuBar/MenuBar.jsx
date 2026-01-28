@@ -152,13 +152,6 @@ const MenuBar = () => {
         </div>
       </div>
 
-      {/* API Test (임시) */}
-      <div className="menu-bar-project">
-        <div className="menu-bar-api-test" onClick={handleApiTest}>
-          API 연결 테스트 (임시)
-        </div>
-      </div>
-
       {/* Project Name Display */}
       <div className="menu-bar-project">
         <div className="menu-bar-project-name">
