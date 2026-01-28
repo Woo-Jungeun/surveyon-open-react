@@ -62,7 +62,16 @@ const VariablePageModal = ({ variable, onClose, onSave }) => {
         <div className="variable-modal-overlay">
             <div className="variable-modal-content">
                 <div className="variable-modal-header">
-                    <h3 className="variable-modal-title">보기 수정</h3>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                        <div style={{
+                            width: '4px',
+                            height: '18px',
+                            backgroundColor: '#3b82f6',
+                            borderRadius: '4px',
+                            marginRight: '8px'
+                        }}></div>
+                        <h3 className="variable-modal-title">보기 수정</h3>
+                    </div>
                     <button onClick={onClose} className="variable-modal-close">&times;</button>
                 </div>
 
