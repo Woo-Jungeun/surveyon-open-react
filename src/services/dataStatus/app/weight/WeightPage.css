@@ -104,25 +104,30 @@
 .search-input-wrapper {
     position: relative;
     width: 100%;
+    display: flex;
+    align-items: center;
 }
 
 .search-input {
     width: 100%;
-    padding: 8px 10px 8px 30px;
+    padding: 8px 10px 8px 48px !important;
     border-radius: 6px;
     border: 1px solid #ddd;
     font-size: 13px;
     outline: none;
     background: #f9f9f9;
     box-sizing: border-box;
+    transition: all 0.2s;
 }
 
 .search-icon {
     position: absolute;
-    left: 10px;
+    left: 12px;
     top: 50%;
     transform: translateY(-50%);
     color: #999;
+    pointer-events: none;
+    z-index: 1;
 }
 
 /* Question List */

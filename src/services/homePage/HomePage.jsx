@@ -9,7 +9,7 @@ const HomePage = () => {
   return (
     <div className="homepage-container">
       <InfoSection />
-      {/* <BoardSection /> */}
+      <BoardSection />
       <MenuSection />
       <FooterSection />
     </div>

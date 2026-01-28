@@ -1,0 +1,116 @@
+/* Data Header Container */
+.data-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #fff;
+    border-bottom: 1px solid var(--ds-border);
+    height: 64px;
+    box-sizing: border-box;
+    box-shadow: var(--ds-shadow-sm);
+    z-index: 10;
+    position: relative;
+}
+
+/* Title Section */
+.data-header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.data-header-title {
+    font-size: 20px;
+    font-weight: 800;
+    margin: 0;
+    color: var(--ds-text-main);
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.data-header-title::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 20px;
+    background: var(--ds-primary);
+    border-radius: 2px;
+}
+
+/* Search Box */
+.data-header-search {
+    position: relative;
+    width: 240px;
+}
+
+.data-header-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ds-text-sub);
+}
+
+.data-header-search-input {
+    width: 100%;
+    padding: 8px 10px 8px 34px;
+    border-radius: 6px;
+    border: 1px solid var(--ds-border);
+    font-size: 14px;
+    outline: none;
+    background: var(--ds-bg);
+    transition: all 0.2s;
+}
+
+.data-header-search-input:focus {
+    background: #fff;
+    border-color: var(--ds-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Actions Section */
+.data-header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Buttons */
+.data-header-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid var(--ds-border);
+    background: #fff;
+    color: var(--ds-text-main);
+}
+
+.data-header-btn:hover {
+    background: var(--ds-bg);
+    border-color: #cbd5e1;
+}
+
+.data-header-btn-primary {
+    border: none;
+    background: var(--ds-primary);
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.data-header-btn-primary:hover {
+    background: var(--ds-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+.data-header-btn-primary:active {
+    transform: translateY(0);
+}

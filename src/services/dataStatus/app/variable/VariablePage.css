@@ -44,9 +44,10 @@
 /* Category Cell */
 .category-cell-container {
     position: relative;
-    height: 100%;
+    width: 100%;
     display: flex;
     align-items: center;
+    padding: 4px 0;
 }
 
 .category-cell-content {
@@ -68,6 +69,7 @@
     right: 4px;
     top: 50%;
     transform: translateY(-50%);
+
     padding: 4px 8px;
     border-radius: 4px;
     border: 1px solid var(--primary-border-light);
@@ -107,4 +109,183 @@
     text-align: center;
     color: #666;
     font-weight: 600;
+}
+
+/* Variable Page Modal */
+.variable-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.variable-modal-content {
+    background: #fff;
+    border-radius: 8px;
+    width: 500px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    max-height: 80%;
+}
+
+.variable-modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.variable-modal-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.variable-modal-close {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 20px;
+    color: #999;
+}
+
+.variable-modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.variable-info {
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #666;
+}
+
+.empty-message {
+    color: #999;
+    text-align: center;
+    padding: 40px 0;
+    background: #f9f9f9;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.category-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.category-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.category-code-input {
+    width: 60px;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+    text-align: center;
+}
+
+.category-label-input {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 13px;
+}
+
+.category-delete-btn {
+    border: 1px solid #fee2e2;
+    background: #fff;
+    color: #ef4444;
+    cursor: pointer;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.category-delete-btn:hover {
+    background: #fee2e2;
+    border-color: #ef4444;
+}
+
+.category-add-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px dashed #90caf9;
+    background: #e3f2fd;
+    color: #1976d2;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.category-add-btn:hover {
+    background: #bbdefb;
+    border-color: #64b5f6;
+}
+
+.variable-modal-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.btn-cancel {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #555;
+}
+
+.btn-save {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: #3b82f6 !important;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    transition: background 0.2s;
+}
+
+.btn-save:hover {
+    background: #2563eb;
+}
+
+/* Force Trash Icon Red in Modal */
+.category-delete-btn svg,
+.variable-modal-body .lucide-trash2,
+.variable-modal-body .lucide-trash-2 {
+    stroke: #ef4444 !important;
+    color: #ef4444 !important;
 }

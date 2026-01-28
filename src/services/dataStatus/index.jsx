@@ -8,6 +8,7 @@ import AggregationWrapperView from "./views/aggregation/AggregationWrapperView.j
 import CrossTabWrapperView from "./views/aggregation/CrossTabWrapperView.jsx";
 import QuotaWrapperView from "./views/aggregation/QuotaWrapperView.jsx";
 import DataViewerPage from "./app/dataViewer/DataViewerPage.jsx";
+import "./app/DataStatusTheme.css"; // Global Theme Import
 
 export default function DataStatusRoutes() {
   return (

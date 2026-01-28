@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft } from 'lucide-react';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -23,6 +23,7 @@ const CrossTabPage = () => {
     const [selectedWeight, setSelectedWeight] = useState("없음");
     const [chartMode, setChartMode] = useState(null);
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(true);
+    const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
 
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([
@@ -254,32 +255,46 @@ const CrossTabPage = () => {
                         {isConfigOpen && (
                             <div className="config-body">
                                 {/* Variable Panel */}
-                                <div className="variable-panel">
-                                    <div className="variable-search">
-                                        <div className="search-input-wrapper">
-                                            <Search size={14} className="search-icon" />
-                                            <input
-                                                type="text"
-                                                placeholder="문항을 검색하세요."
-                                                className="search-input"
-                                                value={variableSearchTerm}
-                                                onChange={(e) => setVariableSearchTerm(e.target.value)}
-                                            />
-                                        </div>
+                                <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
+                                    <div className="variable-panel-header">
+                                        {isVariablePanelOpen && <span className="variable-panel-title">문항 목록</span>}
+                                        <button
+                                            className="toggle-button"
+                                            onClick={() => setIsVariablePanelOpen(!isVariablePanelOpen)}
+                                        >
+                                            {isVariablePanelOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                                        </button>
                                     </div>
-                                    <div className="variable-list">
-                                        {filteredVariables.map(v => (
-                                            <div
-                                                key={v.id}
-                                                className="variable-item"
-                                                draggable
-                                                onDragStart={(e) => handleDragStart(e, v)}
-                                            >
-                                                <div className="variable-item__name">{v.name}</div>
-                                                <div className="variable-item__label">{v.label}</div>
+
+                                    {isVariablePanelOpen && (
+                                        <>
+                                            <div className="variable-search">
+                                                <div className="search-input-wrapper">
+                                                    <Search size={14} className="search-icon" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="문항을 검색하세요."
+                                                        className="search-input"
+                                                        value={variableSearchTerm}
+                                                        onChange={(e) => setVariableSearchTerm(e.target.value)}
+                                                    />
+                                                </div>
                                             </div>
-                                        ))}
-                                    </div>
+                                            <div className="variable-list">
+                                                {filteredVariables.map(v => (
+                                                    <div
+                                                        key={v.id}
+                                                        className="variable-item"
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, v)}
+                                                    >
+                                                        <div className="variable-item__name">{v.name}</div>
+                                                        <div className="variable-item__label">{v.label}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Drop Zones Container */}

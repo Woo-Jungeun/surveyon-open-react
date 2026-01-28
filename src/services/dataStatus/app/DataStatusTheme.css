@@ -1,0 +1,157 @@
+/* Data Status Project Global Theme */
+
+:root {
+    /* Primary Colors - 세련된 블루 계열 */
+    --ds-primary: #3b82f6;
+    --ds-primary-hover: #2563eb;
+    --ds-primary-light: #eff6ff;
+    --ds-primary-border: #bfdbfe;
+
+    /* Neutral Colors */
+    --ds-bg: #f8fafc;
+    --ds-surface: #ffffff;
+    --ds-text-main: #1e293b;
+    --ds-text-sub: #64748b;
+    --ds-border: #e2e8f0;
+
+    /* Shadows */
+    --ds-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --ds-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --ds-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Global Layout Background */
+[data-theme="data-dashboard"] {
+    background-color: var(--ds-bg);
+    color: var(--ds-text-main);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+/* Card Style Enhancement */
+[data-theme="data-dashboard"] .recoding-card,
+[data-theme="data-dashboard"] .variable-page-card,
+[data-theme="data-dashboard"] .data-viewer-page,
+[data-theme="data-dashboard"] .quota-page-card,
+/* Assuming QuotaPage uses this */
+[data-theme="data-dashboard"] .aggregation-card
+
+/* Assuming AggregationPage uses this */
+    {
+    background: var(--ds-surface);
+    border-radius: 12px;
+    box-shadow: var(--ds-shadow);
+    border: 1px solid var(--ds-border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Kendo Grid Customization for Data Status */
+[data-theme="data-dashboard"] .k-grid {
+    border: none;
+    font-size: 13px;
+    color: var(--ds-text-main);
+}
+
+/* Grid Header */
+[data-theme="data-dashboard"] .k-grid-header {
+    background-color: var(--ds-primary-light);
+    border-bottom: 2px solid var(--ds-primary-border);
+}
+
+[data-theme="data-dashboard"] .k-grid-header .k-header {
+    background-color: transparent;
+    color: var(--ds-text-main);
+    font-weight: 700;
+    border-color: var(--ds-border);
+    padding: 12px 8px;
+    text-align: center;
+}
+
+/* Grid Body */
+[data-theme="data-dashboard"] .k-grid-content tr:not(.k-grouping-row):hover {
+    background-color: #f1f5f9 !important;
+}
+
+[data-theme="data-dashboard"] .k-grid-content td {
+    border-color: var(--ds-border);
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+[data-theme="data-dashboard"] .k-grid-content tr.k-alt {
+    background-color: #fcfcfc;
+}
+
+/* Grid Selection */
+[data-theme="data-dashboard"] .k-grid td.k-state-selected,
+[data-theme="data-dashboard"] .k-grid tr.k-state-selected>td {
+    background-color: var(--ds-primary-light) !important;
+    color: var(--ds-text-main);
+}
+
+/* Input Fields Enhancement */
+[data-theme="data-dashboard"] input[type="text"],
+[data-theme="data-dashboard"] select,
+[data-theme="data-dashboard"] .k-dropdown {
+    border: 1px solid var(--ds-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: all 0.2s;
+    background-color: #fff;
+}
+
+[data-theme="data-dashboard"] input[type="text"]:focus,
+[data-theme="data-dashboard"] select:focus,
+[data-theme="data-dashboard"] .k-dropdown:focus-within {
+    border-color: var(--ds-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    outline: none;
+}
+
+/* Buttons Enhancement */
+[data-theme="data-dashboard"] button {
+    transition: all 0.2s;
+}
+
+[data-theme="data-dashboard"] button:active {
+    transform: translateY(1px);
+}
+
+/* Data Header Enhancement */
+[data-theme="data-dashboard"] .data-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--ds-border);
+}
+
+[data-theme="data-dashboard"] .data-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--ds-text-main);
+    letter-spacing: -0.5px;
+}
+
+/* Scrollbar Styling */
+[data-theme="data-dashboard"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="data-dashboard"] ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+[data-theme="data-dashboard"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+[data-theme="data-dashboard"] ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Global Trash Icon Style */
+[data-theme="data-dashboard"] .lucide-trash2,
+[data-theme="data-dashboard"] .lucide-trash-2 {
+    stroke: #ef4444 !important;
+    color: #ef4444 !important;
+}
