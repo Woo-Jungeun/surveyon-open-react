@@ -358,7 +358,7 @@ const QuotaPage = () => {
                     <div className="quota-list-view-container">
                         <div className="section-container" style={{ padding: 0, overflow: 'hidden' }}>
                             <div style={{ padding: '20px 24px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '700' }}>쿼터 조합 리스트</h3>
+                                <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>쿼터 조합 리스트</h3>
                                 <button
                                     style={{
                                         padding: '6px 16px',
