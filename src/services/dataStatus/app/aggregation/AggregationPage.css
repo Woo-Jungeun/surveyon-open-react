@@ -159,36 +159,39 @@
     border-bottom: none;
 }
 
-/* View Options */
+/* View Options - Segmented Control Style */
 .view-options {
     display: flex;
     gap: 4px;
-    background: #f5f5f5;
+    background: #f1f5f9;
     padding: 4px;
-    border-radius: 8px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
 }
 
 .view-option-btn {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     display: flex;
     align-items: center;
     justify-content: center;
     border: none;
     background: transparent;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    color: #666;
-    transition: all 0.2s;
+    color: #64748b;
+    transition: all 0.2s ease;
 }
 
 .view-option-btn:hover {
-    background: #e0e0e0;
-    color: #333;
+    background: rgba(255, 255, 255, 0.6);
+    color: #334155;
 }
 
 .view-option-btn.active {
-    background: #fff;
-    color: #333;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    color: #2563eb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    transform: scale(1.02);
+    font-weight: bold;
 }
