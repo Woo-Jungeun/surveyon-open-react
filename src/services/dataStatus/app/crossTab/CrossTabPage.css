@@ -69,13 +69,23 @@
     padding: 24px;
     overflow: hidden;
     gap: 16px;
+    /* Floating Style Matching Sidebar */
+    height: calc(100% - 32px);
+    margin: 16px;
+    background: #f8fafc;
+    /* Light Gray Background for Separation */
+    border: 1px solid var(--ds-border);
+    border-radius: 16px;
+    box-shadow: var(--ds-shadow);
+    box-sizing: border-box;
 }
 
 /* Config Section */
 .config-section {
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -86,7 +96,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f1f5f9;
 }
 
 .config-header__left-group {
@@ -461,8 +471,9 @@
 .result-section {
     flex: 1;
     background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -470,7 +481,7 @@
 
 .result-header {
     padding: 12px 24px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #f1f5f9;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -629,9 +640,9 @@
     flex-direction: column;
     gap: 16px;
     padding: 16px;
-    background: #eff6ff;
+    background: #fff;
     border-radius: 8px;
-    border: 1px solid #dbeafe;
+    border: 1px solid #e2e8f0;
     margin-bottom: 24px;
 }
 
