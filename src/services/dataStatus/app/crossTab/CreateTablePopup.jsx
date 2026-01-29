@@ -38,12 +38,8 @@ const CreateTablePopup = ({ isOpen, onClose, onCreate }) => {
                 </div>
                 <div className="modal-footer">
                     <button
-                        className="modal-btn-create"
+                        className="btn-primary"
                         onClick={handleSubmit}
-                        style={{
-                            backgroundColor: tableName.trim() ? 'var(--primary-color)' : '#888',
-                            cursor: tableName.trim() ? 'pointer' : 'default'
-                        }}
                     >
                         생성
                     </button>
