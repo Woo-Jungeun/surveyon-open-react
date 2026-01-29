@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Copy } from 'lucide-react';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
@@ -32,6 +33,36 @@ const DataViewerPage = () => {
 
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    // Toast Timer
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast({ ...toast, show: false });
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast.show]);
+
+    const handleCopyToClipboard = async () => {
+        try {
+            // Header
+            const headers = columns.filter(c => c.show).map(c => c.title).join('\t');
+            // Rows
+            const rows = data.map(item => {
+                return columns.filter(c => c.show).map(c => item[c.field]).join('\t');
+            }).join('\n');
+
+            const text = `${headers}\n${rows}`;
+            await navigator.clipboard.writeText(text);
+
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)' });
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            setToast({ show: true, message: '복사 실패' });
+        }
+    };
 
     const [columns, setColumns] = useState([
         { field: 'id', title: 'id', show: true, width: '80px' },
@@ -78,6 +109,7 @@ const DataViewerPage = () => {
                     </span>
                 </h2>
                 <div className="data-viewer-actions">
+
                     <button
                         onClick={() => setIsLabelView(!isLabelView)}
                         className="data-viewer-btn"
@@ -85,6 +117,55 @@ const DataViewerPage = () => {
                         {isLabelView ? '값 보기' : '라벨 보기'}
                     </button>
                 </div>
+                {/* Toast Message */}
+                {toast.show && (
+                    <div style={{
+                        position: 'fixed',
+                        top: '20px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: '#1e293b',
+                        color: '#fff',
+                        padding: '8px 16px',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        zIndex: 2000,
+                        animation: 'fadeIn 0.2s ease-out',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                    }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80' }}></div>
+                        {toast.message}
+                    </div>
+                )}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+                <button
+                    onClick={handleCopyToClipboard}
+                    title="데이터 복사"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        border: 'none',
+                        background: '#f3f4f6',
+                        cursor: 'pointer',
+                        padding: '6px 12px',
+                        borderRadius: '6px',
+                        color: '#4b5563',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                >
+                    <Copy size={14} />
+                    복사
+                </button>
             </div>
             <div className="cmn_grid singlehead data-viewer-grid-container">
                 <KendoGrid

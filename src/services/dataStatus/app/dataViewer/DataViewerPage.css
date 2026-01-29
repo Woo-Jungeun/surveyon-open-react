@@ -68,6 +68,17 @@
     background: var(--primary-hover);
 }
 
+.data-viewer-btn-secondary {
+    background: #f1f5f9;
+    color: #64748b;
+    box-shadow: none;
+}
+
+.data-viewer-btn-secondary:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
 /* Grid Section */
 .data-viewer-grid-container {
     flex: 1;

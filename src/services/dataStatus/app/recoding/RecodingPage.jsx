@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
-import { Play, Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Play, Plus, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
@@ -9,7 +9,7 @@ import '../../../../assets/css/grid_vertical_borders.css';
 import './RecodingPage.css';
 
 const EditableCell = (props) => {
-    const { dataItem, field, columns, onUpdate } = props;
+    const { dataItem, field, columns, onUpdate, onPaste } = props;
     const isEditable = columns.find(c => c.field === field)?.editable;
 
     if (!isEditable) {
@@ -33,6 +33,7 @@ const EditableCell = (props) => {
                         onUpdate(dataItem.id, field, e.target.value);
                     }
                 }}
+                onPaste={(e) => onPaste && onPaste(e, dataItem, field)}
                 className="recoding-cell-input"
             />
         </td>
@@ -68,10 +69,10 @@ const DeleteCell = (props) => {
 };
 
 const CustomCell = (props) => {
-    const { field, columns, checkedLogics, onUpdate, onDelete } = props;
+    const { field, columns, checkedLogics, onUpdate, onDelete, onPaste } = props;
     if (field === 'check') return <CheckCell {...props} checkedLogics={checkedLogics} />;
     if (field === 'delete') return <DeleteCell {...props} onDelete={onDelete} />;
-    return <EditableCell {...props} columns={columns} onUpdate={onUpdate} />;
+    return <EditableCell {...props} columns={columns} onUpdate={onUpdate} onPaste={onPaste} />;
 };
 
 const RecodingPage = () => {
@@ -108,6 +109,36 @@ const RecodingPage = () => {
     const [checkedLogics, setCheckedLogics] = useState({});
     const [evaluationResult, setEvaluationResult] = useState(null);
     const [isEvaluationOpen, setIsEvaluationOpen] = useState(true);
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    // Toast Timer
+    useEffect(() => {
+        if (toast.show) {
+            const timer = setTimeout(() => {
+                setToast({ ...toast, show: false });
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [toast.show]);
+
+    const handleCopyToClipboard = async () => {
+        try {
+            // Header
+            const headers = columns.filter(c => c.show && c.field !== 'delete' && c.field !== 'check').map(c => c.title).join('\t');
+            // Rows
+            const rows = categories.map(item => {
+                return columns.filter(c => c.show && c.field !== 'delete' && c.field !== 'check').map(c => item[c.field]).join('\t');
+            }).join('\n');
+
+            const text = `${headers}\n${rows}`;
+            await navigator.clipboard.writeText(text);
+
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)' });
+        } catch (err) {
+            console.error('Failed to copy:', err);
+            setToast({ show: true, message: '복사 실패' });
+        }
+    };
 
     // Grid State
     const [sort, setSort] = useState([]);
@@ -136,6 +167,52 @@ const RecodingPage = () => {
             stdDev: 0.334075474032776,
             min: 0.8,
             max: 1.6
+        });
+    };
+
+    // Handle Paste from Excel
+    const handlePaste = (e, dataItem, field) => {
+        e.preventDefault();
+        const clipboardData = e.clipboardData.getData('text');
+
+        // Parse Excel data (rows by newline, cols by tab)
+        const rows = clipboardData.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
+        if (rows.length === 0) return;
+
+        // Find start position
+        const startRowIndex = categories.findIndex(item => item.id === dataItem.id);
+        if (startRowIndex === -1) return;
+
+        // Editable columns in order
+        const editableColumns = columns.filter(c => c.editable).map(c => c.field);
+        const startColIndex = editableColumns.indexOf(field);
+        if (startColIndex === -1) return;
+
+        setCategories(prevData => {
+            const newData = [...prevData];
+
+            rows.forEach((row, rIdx) => {
+                const currentRowIndex = startRowIndex + rIdx;
+
+                // If row exists, update it. If not, create new row? 
+                // For now, let's only update existing rows to be safe, or maybe add new rows if needed.
+                // WeightPage logic only updates existing rows. Let's stick to that for now.
+                if (currentRowIndex >= newData.length) return;
+
+                const cells = row.split('\t');
+                cells.forEach((cellValue, cIdx) => {
+                    const currentColIndex = startColIndex + cIdx;
+                    if (currentColIndex < editableColumns.length) {
+                        const fieldName = editableColumns[currentColIndex];
+                        newData[currentRowIndex] = {
+                            ...newData[currentRowIndex],
+                            [fieldName]: cellValue.trim()
+                        };
+                    }
+                });
+            });
+
+            return newData;
         });
     };
 
@@ -181,6 +258,31 @@ const RecodingPage = () => {
                 saveButtonLabel={selectedVar?.id === null ? "추가 문항 저장" : "변경사항 저장"}
                 onSave={handleSave}
             />
+
+            {/* Toast Message */}
+            {toast.show && (
+                <div style={{
+                    position: 'fixed',
+                    top: '20px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    background: '#1e293b',
+                    color: '#fff',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    zIndex: 2000,
+                    animation: 'fadeIn 0.2s ease-out',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                }}>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80' }}></div>
+                    {toast.message}
+                </div>
+            )}
 
             <div className="recoding-layout">
                 {/* Sidebar */}
@@ -274,6 +376,30 @@ const RecodingPage = () => {
                                 <h4 className="recoding-categories-title">보기</h4>
                                 <div className="recoding-categories-actions">
                                     <button
+                                        onClick={handleCopyToClipboard}
+                                        title="데이터 복사"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            border: 'none',
+                                            background: '#f3f4f6',
+                                            cursor: 'pointer',
+                                            padding: '6px 12px',
+                                            borderRadius: '6px',
+                                            color: '#4b5563',
+                                            fontSize: '13px',
+                                            fontWeight: '600',
+                                            transition: 'all 0.2s',
+                                            marginRight: '8px'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                                    >
+                                        <Copy size={14} />
+                                        복사
+                                    </button>
+                                    <button
                                         onClick={() => {
                                             const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 0;
                                             setCategories([...categories, { id: newId, realVal: String(newId), category: '', val: '', logic: '' }]);
@@ -305,6 +431,7 @@ const RecodingPage = () => {
                                                 checkedLogics={checkedLogics}
                                                 onUpdate={handleUpdate}
                                                 onDelete={handleDelete}
+                                                onPaste={handlePaste}
                                             />
                                         );
 
