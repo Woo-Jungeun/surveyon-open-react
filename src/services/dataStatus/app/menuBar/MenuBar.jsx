@@ -10,7 +10,6 @@ import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
-import { MenuBarApi } from "./MenuBarApi";
 import "./MenuBar.css";
 import NewDataModal from "./NewDataModal";
 
@@ -45,7 +44,6 @@ const MENU_ITEMS = [
 ];
 
 const MenuBar = () => {
-  const { getTest } = MenuBarApi();
   const [, , removeCookie] = useCookies();
   const auth = useSelector((store) => store.auth);
   const modal = useContext(modalContext);
@@ -81,19 +79,6 @@ const MenuBar = () => {
     window.addEventListener("click", onClickOutside);
     return () => window.removeEventListener("click", onClickOutside);
   }, []);
-
-  const handleApiTest = () => {
-    getTest.mutate({}, {
-      onSuccess: (res) => {
-        console.log("API Test Success:", res);
-        alert("API 연결 성공: " + JSON.stringify(res));
-      },
-      onError: (err) => {
-        console.error("API Test Error:", err);
-        alert("API 연결 실패");
-      }
-    });
-  };
 
   // 로그아웃
   const doLogout = async () => {
