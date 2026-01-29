@@ -83,11 +83,11 @@ const AggregationPage = () => {
             label: '서비스 전반적인 만족도는?',
             n: 240,
             data: [
-                { name: 'Very Low', 'Banner A': 16, 'Banner B': 16, 'Banner C': 16, total: 48 },
-                { name: 'Low', 'Banner A': 16, 'Banner B': 16, 'Banner C': 16, total: 48 },
-                { name: 'Neutral', 'Banner A': 16, 'Banner B': 16, 'Banner C': 16, total: 48 },
-                { name: 'High', 'Banner A': 16, 'Banner B': 16, 'Banner C': 16, total: 48 },
-                { name: 'Very High', 'Banner A': 16, 'Banner B': 16, 'Banner C': 16, total: 48 },
+                { name: 'Very Low', 'Banner A': 20, 'Banner B': 16, 'Banner C': 8, total: 44 },
+                { name: 'Low', 'Banner A': 5, 'Banner B': 16, 'Banner C': 50, total: 48 },
+                { name: 'Neutral', 'Banner A': 11, 'Banner B': 16, 'Banner C': 30, total: 57 },
+                { name: 'High', 'Banner A': 16, 'Banner B': 16, 'Banner C': 40, total: 72 },
+                { name: 'Very High', 'Banner A': 10, 'Banner B': 10, 'Banner C': 20, total: 40 },
             ]
         },
         {

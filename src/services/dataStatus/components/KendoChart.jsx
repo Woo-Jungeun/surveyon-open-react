@@ -105,7 +105,19 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         }
 
         const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
-        const colors = ["#8884d8", "#82ca9d", "#ffc658", "#ff7c7c", "#6c757d", "#17a2b8"];
+        // Sophisticated, modern palette matching the theme (Blue/Slate/Teal based with accents)
+        const colors = [
+            "#0ea5e9", // Sky 500
+            "#f59e0b", // Amber 500
+            "#10b981", // Emerald 500
+            "#2563eb", // Blue 600 (Primary)
+            "#8b5cf6", // Violet 500
+            "#14b8a6", // Teal 500
+            "#f43f5e", // Rose 500
+            "#64748b", // Slate 500
+            "#050505ff", // Indigo 500
+            "#ec4899", // Pink 500
+        ];
 
         return targetSeries.map((name, index) => (
             <ChartSeriesItem
@@ -135,6 +147,20 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         return <ChoroplethMap data={data} />;
     }
 
+    // Define colors for Chart component to use globally (especially for Pie/Donut)
+    const chartColors = [
+        "#0ea5e9", // Sky 500
+        "#f59e0b", // Amber 500
+        "#10b981", // Emerald 500
+        "#2563eb", // Blue 600 (Primary)
+        "#8b5cf6", // Violet 500
+        "#14b8a6", // Teal 500
+        "#f43f5e", // Rose 500
+        "#64748b", // Slate 500
+        "#050505ff", // Indigo 500
+        "#ec4899", // Pink 500
+    ];
+
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}>
             {showDropdown && (chartType === 'column' || chartType === 'bar') && (
@@ -163,7 +189,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                     </button>
                 </div>
             )}
-            <Chart style={{ flex: 1 }} key={`${chartType}-${JSON.stringify(visibleSeries)}`} onLegendItemClick={onLegendItemClick}>
+            <Chart
+                style={{ flex: 1 }}
+                key={`${chartType}-${JSON.stringify(visibleSeries)}`}
+                onLegendItemClick={onLegendItemClick}
+                seriesColors={chartColors}
+            >
                 {!isHeatmap && <ChartLegend position="bottom" orientation="horizontal" />}
 
                 {/* Axes for Standard Charts */}
