@@ -241,7 +241,7 @@
 /* Column Drop Zone */
 .col-drop-zone {
     flex: 1;
-    background: #f8faff;
+    background: #dbeafe;
     border-radius: 0 12px 0 0;
     border-bottom: 1px solid #e0e0e0;
     padding: 16px;
@@ -259,7 +259,7 @@
 
 .drop-zone-area {
     flex: 1;
-    border: 2px dashed #d0d7de;
+    border: 2px dashed #9ca3af;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -288,7 +288,7 @@
 /* Row Drop Zone */
 .row-drop-zone {
     width: 240px;
-    background: #f9fff9;
+    background: #dcfce7;
     border-radius: 0 0 0 12px;
     border-right: 1px solid #e0e0e0;
     padding: 16px;

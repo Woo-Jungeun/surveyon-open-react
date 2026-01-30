@@ -331,7 +331,7 @@ const WeightPage = () => {
                                         onDrop={(e) => handleDrop(e, 'col')}
                                         style={{
                                             flex: 1,
-                                            background: '#f8faff',
+                                            background: '#eff6ff',
                                             borderRadius: '0 12px 0 0',
                                             borderBottom: '1px solid #e0e0e0',
                                             padding: '16px',
@@ -391,7 +391,7 @@ const WeightPage = () => {
                                         onDrop={(e) => handleDrop(e, 'row')}
                                         style={{
                                             width: '240px',
-                                            background: '#f9fff9',
+                                            background: '#f0fdf4',
                                             borderRadius: '0 0 0 12px',
                                             borderRight: '1px solid #e0e0e0',
                                             padding: '16px',

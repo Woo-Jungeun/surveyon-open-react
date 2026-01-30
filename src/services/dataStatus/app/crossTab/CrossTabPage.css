@@ -345,7 +345,7 @@
 
 .col-drop-zone {
     flex: 1;
-    background: #f8faff;
+    background: #eff6ff;
     padding: 16px;
     display: flex;
     flex-direction: column;
@@ -400,7 +400,7 @@
 
 .row-drop-zone {
     width: 240px;
-    background: #f9fff9;
+    background: #f0fdf4;
     padding: 16px;
     display: flex;
     flex-direction: column;
