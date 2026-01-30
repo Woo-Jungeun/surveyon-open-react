@@ -35,6 +35,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         { text: "영역", value: "area" },
         { text: "히트맵", value: "heatmap" },
         { text: "지도", value: "map" },
+        { text: "방사형", value: "radarLine" },
+        { text: "누적형", value: "stackedColumn" },
+        { text: "100% 누적", value: "stacked100Column" },
+        { text: "깔때기", value: "funnel" },
+        { text: "점 도표", value: "scatterPoint" },
+        { text: "방사형 영역", value: "radarArea" },
     ];
 
     const chartTypeOptions = allowedTypes
@@ -49,9 +55,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         setChartType(chartTypeOptions[nextIndex].value);
     };
 
-    const isPieOrDonut = chartType === 'pie' || chartType === 'donut';
+    const isPieOrDonut = chartType === 'pie' || chartType === 'donut' || chartType === 'funnel';
     const isHeatmap = chartType === 'heatmap';
     const isMap = chartType === 'map';
+    const isRadar = chartType === 'radarLine' || chartType === 'radarArea';
+    const isStacked = chartType === 'stackedColumn' || chartType === 'stacked100Column';
+    const isScatterPoint = chartType === 'scatterPoint';
 
     const renderSeries = () => {
         if (isPieOrDonut) {
@@ -76,7 +85,6 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
             const heatmapData = [];
             const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
 
-            // Transform data for heatmap: [ { x: 'Very Low', y: 'Banner A', value: 10 }, ... ]
             targetSeries.forEach(seriesName => {
                 data.forEach(item => {
                     heatmapData.push({
@@ -104,7 +112,27 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
             );
         }
 
+        if (chartType === 'funnel') {
+            return (
+                <ChartSeriesItem
+                    type="funnel"
+                    data={data}
+                    categoryField="name"
+                    field="total"
+                    name="Total"
+                    labels={{
+                        visible: true,
+                        content: (e) => `${e.category}: ${e.value}`,
+                        position: "center",
+                        background: "none",
+                        color: "#fff"
+                    }}
+                />
+            );
+        }
+
         const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
+
         // Sophisticated, modern palette matching the theme (Blue/Slate/Teal based with accents)
         const colors = [
             "#0ea5e9", // Sky 500
@@ -122,12 +150,18 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         return targetSeries.map((name, index) => (
             <ChartSeriesItem
                 key={name}
-                type={chartType}
+                type={isRadar ? (chartType === 'radarArea' ? 'radarArea' : 'radarLine') : (isStacked ? "column" : (isScatterPoint ? "line" : chartType))}
+                stack={chartType === 'stacked100Column' ? { type: '100%' } : (chartType === 'stackedColumn' ? true : undefined)}
                 data={data}
                 field={name}
                 name={name}
                 color={colors[index % colors.length]}
                 visible={visibleSeries[name]}
+                style={isRadar ? "smooth" : "normal"}
+                opacity={chartType === 'radarArea' ? 0.3 : undefined}
+                width={isScatterPoint ? 0 : undefined}
+                markers={isScatterPoint ? { visible: true, size: 10, type: "circle" } : undefined}
+                labels={isStacked ? { visible: true, content: (e) => chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : e.value, position: "center", background: "none", color: "#fff" } : undefined}
             />
         ));
     };
@@ -163,7 +197,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}>
-            {showDropdown && (chartType === 'column' || chartType === 'bar') && (
+            {showDropdown && (
                 <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
                     <button
                         onClick={toggleChartType}
@@ -198,12 +232,22 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 {!isHeatmap && <ChartLegend position="bottom" orientation="horizontal" />}
 
                 {/* Axes for Standard Charts */}
-                {!isPieOrDonut && !isHeatmap && (
+                {!isPieOrDonut && !isHeatmap && !isRadar && (
                     <ChartCategoryAxis>
                         <ChartCategoryAxisItem categories={data.map(d => d.name)} />
                     </ChartCategoryAxis>
                 )}
-                {!isPieOrDonut && !isHeatmap && (
+                {isRadar && (
+                    <ChartCategoryAxis>
+                        <ChartCategoryAxisItem categories={data.map(d => d.name)} />
+                    </ChartCategoryAxis>
+                )}
+                {!isPieOrDonut && !isHeatmap && !isRadar && (
+                    <ChartValueAxis>
+                        <ChartValueAxisItem labels={{ format: chartType === 'stacked100Column' ? "P0" : "{0}%" }} max={chartType === 'stacked100Column' ? 1 : undefined} />
+                    </ChartValueAxis>
+                )}
+                {isRadar && (
                     <ChartValueAxis>
                         <ChartValueAxisItem labels={{ format: "{0}%" }} />
                     </ChartValueAxis>
@@ -229,6 +273,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                         return `${e.point.series.field}: ${e.point ? e.point.value : e.value}%`;
                     }
                 }} />
+
                 <ChartSeries>
                     {renderSeries()}
                 </ChartSeries>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal } from 'lucide-react';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -377,10 +377,14 @@ const CrossTabPage = () => {
                             </div>
                             <div className="view-options">
                                 <button className="view-option-btn active" title="표"><Table size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'bar' ? null : 'bar')} title="막대형 차트"><BarChart2 size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'column' ? null : 'column')} title="막대형 차트"><BarChart2 size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'stackedColumn' ? null : 'stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'line' ? null : 'line')} title="선형 차트"><LineChart size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'pie' ? null : 'pie')} title="원형 차트"><PieChart size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'donut' ? null : 'donut')} title="도넛형 차트"><Donut size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'radarArea' ? null : 'radarArea')} title="방사형 차트"><Aperture size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'funnel' ? null : 'funnel')} title="깔때기 차트"><Filter size={18} /></button>
+                                <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'scatterPoint' ? null : 'scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'area' ? null : 'area')} title="영역형 차트"><AreaChart size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'map' ? null : 'map')} title="지도"><Map size={18} /></button>
                                 <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'heatmap' ? null : 'heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
@@ -496,22 +500,30 @@ const CrossTabPage = () => {
                                                                     data={chartData}
                                                                     seriesNames={seriesNames}
                                                                     allowedTypes={
-                                                                        chartMode === 'bar' ? ['column', 'bar'] :
-                                                                            chartMode === 'line' ? ['line'] :
-                                                                                chartMode === 'pie' ? ['pie'] :
-                                                                                    chartMode === 'donut' ? ['donut'] :
-                                                                                        chartMode === 'area' ? ['area'] :
-                                                                                            chartMode === 'heatmap' ? ['heatmap'] :
-                                                                                                chartMode === 'map' ? ['map'] : []
+                                                                        chartMode === 'column' ? ['column', 'bar'] :
+                                                                            chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
+                                                                                chartMode === 'line' ? ['line'] :
+                                                                                    chartMode === 'pie' ? ['pie'] :
+                                                                                        chartMode === 'donut' ? ['donut'] :
+                                                                                            chartMode === 'radarArea' ? ['radarArea'] :
+                                                                                                chartMode === 'funnel' ? ['funnel'] :
+                                                                                                    chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                                        chartMode === 'area' ? ['area'] :
+                                                                                                            chartMode === 'map' ? ['map'] :
+                                                                                                                chartMode === 'heatmap' ? ['heatmap'] : []
                                                                     }
                                                                     initialType={
-                                                                        chartMode === 'bar' ? 'column' :
-                                                                            chartMode === 'line' ? 'line' :
-                                                                                chartMode === 'pie' ? 'pie' :
-                                                                                    chartMode === 'donut' ? 'donut' :
-                                                                                        chartMode === 'area' ? 'area' :
-                                                                                            chartMode === 'heatmap' ? 'heatmap' :
-                                                                                                chartMode === 'map' ? 'map' : 'column'
+                                                                        chartMode === 'column' ? 'column' :
+                                                                            chartMode === 'stackedColumn' ? 'stackedColumn' :
+                                                                                chartMode === 'line' ? 'line' :
+                                                                                    chartMode === 'pie' ? 'pie' :
+                                                                                        chartMode === 'donut' ? 'donut' :
+                                                                                            chartMode === 'radarArea' ? 'radarArea' :
+                                                                                                chartMode === 'funnel' ? 'funnel' :
+                                                                                                    chartMode === 'scatterPoint' ? 'scatterPoint' :
+                                                                                                        chartMode === 'area' ? 'area' :
+                                                                                                            chartMode === 'map' ? 'map' :
+                                                                                                                chartMode === 'heatmap' ? 'heatmap' : 'column'
                                                                     }
                                                                 />
                                                             </div>

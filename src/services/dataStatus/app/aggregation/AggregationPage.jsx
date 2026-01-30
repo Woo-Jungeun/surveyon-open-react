@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid } from 'lucide-react';
+import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target } from 'lucide-react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
@@ -18,9 +18,13 @@ const AggregationCard = ({ q }) => {
                 </div>
                 <div className="view-options">
                     <button className={`view-option-btn ${chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형 차트"><BarChart2 size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
                     <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
                     <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
                     <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
+                    <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
                     <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
                     <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="히트맵"><LayoutGrid size={18} /></button>
                 </div>
@@ -59,11 +63,16 @@ const AggregationCard = ({ q }) => {
                         initialType={chartMode}
                         allowedTypes={
                             chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
-                                chartMode === 'line' ? ['line'] :
-                                    chartMode === 'pie' ? ['pie'] :
-                                        chartMode === 'donut' ? ['donut'] :
-                                            chartMode === 'area' ? ['area'] :
-                                                chartMode === 'heatmap' ? ['heatmap'] : []
+                                chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
+                                    chartMode === 'line' ? ['line'] :
+                                        chartMode === 'pie' ? ['pie'] :
+                                            chartMode === 'donut' ? ['donut'] :
+                                                chartMode === 'area' ? ['area'] :
+                                                    chartMode === 'heatmap' ? ['heatmap'] :
+                                                        chartMode === 'radarLine' ? ['radarLine'] :
+                                                            chartMode === 'funnel' ? ['funnel'] :
+                                                                chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                    chartMode === 'radarArea' ? ['radarArea'] : []
                         }
                     />
                 </div>
