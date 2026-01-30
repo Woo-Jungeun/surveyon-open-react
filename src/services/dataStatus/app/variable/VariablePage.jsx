@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DataHeader from '../../components/DataHeader';
 import { ChevronDown, Plus } from 'lucide-react';
 import VariablePageModal from './VariablePageModal';
@@ -8,17 +8,24 @@ import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu'
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import '../../../../assets/css/grid_vertical_borders.css';
 import './VariablePage.css';
+import { VariablePageApi } from './VariablePageApi';
 
 const VariablePage = () => {
-    // todo api 연동 필요 
-    const [variables, setVariables] = useState([
-        { id: 1, sysName: 'banner', name: 'banner', label: 'Banner', category: '{1;Banner A}{2;Banner B}{3;Banner C}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 2, sysName: 'q1', name: 'q1', label: 'Q1 Satisfaction', category: '{1;Very Low}{2;Low}{3;Neutral}{4;High}{5;Very High}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 3, sysName: 'q2', name: 'q2', label: 'Q2 Usage', category: '{1;Never}{2;Sometimes}{3;Often}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 4, sysName: 'gender', name: 'gender', label: 'Gender', category: '{1;Male}{2;Female}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-        { id: 5, sysName: 'age', name: 'age', label: 'Age', category: '{18;18}{25;25}{35;35}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '연속형' },
-        { id: 6, sysName: 'region', name: 'region', label: '지역', category: '{1;서울}{2;부산}{3;광주}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-    ]);
+    const { getVariableList } = VariablePageApi();
+    const [variables, setVariables] = useState([]);
+
+    useEffect(() => {
+        getVariableList.mutate({}, {
+            onSuccess: (res) => {
+                if (res && res.data) {
+                    setVariables(res.data);
+                }
+            },
+            onError: (err) => {
+                console.error("문항 목록 조회 실패", err);
+            }
+        });
+    }, []);
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업 open
     const [sort, setSort] = useState([]);
