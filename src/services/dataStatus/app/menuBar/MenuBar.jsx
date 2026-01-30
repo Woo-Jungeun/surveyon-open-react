@@ -194,7 +194,7 @@ const MenuBar = () => {
             fontWeight: '600'
           }}
         >
-          API Test
+          API Test (임시)
         </button>
       </div>
 
