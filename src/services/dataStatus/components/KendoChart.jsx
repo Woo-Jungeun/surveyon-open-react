@@ -244,12 +244,16 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 )}
                 {!isPieOrDonut && !isHeatmap && !isRadar && (
                     <ChartValueAxis>
-                        <ChartValueAxisItem labels={{ format: chartType === 'stacked100Column' ? "P0" : "{0}%" }} max={chartType === 'stacked100Column' ? 1 : undefined} />
+                        <ChartValueAxisItem
+                            labels={{ format: chartType === 'stacked100Column' ? "P0" : "{0}%" }}
+                            max={chartType === 'stacked100Column' ? 1 : undefined}
+                            majorUnit={chartType === 'stacked100Column' ? 0.2 : (chartType === 'stackedColumn' ? 50 : 20)}
+                        />
                     </ChartValueAxis>
                 )}
                 {isRadar && (
                     <ChartValueAxis>
-                        <ChartValueAxisItem labels={{ format: "{0}%" }} />
+                        <ChartValueAxisItem labels={{ format: "{0}%" }} majorUnit={20} />
                     </ChartValueAxis>
                 )}
 
