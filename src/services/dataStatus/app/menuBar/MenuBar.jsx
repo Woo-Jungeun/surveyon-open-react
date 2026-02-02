@@ -1,7 +1,7 @@
 import {
   Home, Upload, RefreshCw, X, Info, Database, Wrench, Target,
   BarChart2, Grid, ClipboardList, Sparkles, FileText, Moon, User, Clock,
-  ChevronDown, ChevronRight, ChevronLeft
+  ChevronDown, ChevronRight, ChevronLeft, Table
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
@@ -22,15 +22,17 @@ const MENU_ITEMS = [
       { label: "문항관리", path: "/data_status/setting/variable", icon: Info },
       { label: "전체 데이터(뷰어)", path: "/data_status/setting/viewer", icon: Database },
       { label: "문항 가공", path: "/data_status/setting/recoding", icon: Wrench },
+      { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
       { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
     ]
   },
   {
-    label: "집계현황",
+    label: "집계 현황",
     path: "/data_status/aggregation",
     children: [
-      { label: "집계현황", path: "/data_status/aggregation/status", icon: BarChart2 },
+      { label: "문항 집계 현황", path: "/data_status/aggregation/status", icon: BarChart2 },
       { label: "교차 테이블", path: "/data_status/aggregation/cross", icon: Grid },
+      { label: "DP 테이블", path: "/data_status/aggregation/dp_table", icon: Table, isPending: true },
       { label: "쿼터현황/관리", path: "/data_status/aggregation/quota", icon: ClipboardList },
     ]
   },
@@ -59,7 +61,7 @@ const MenuBar = () => {
   // 메뉴 섹션 토글 상태
   const [openSections, setOpenSections] = useState({
     "데이터설정": true,
-    "집계현황": true,
+    "집계 현황": true,
     "AI요약": false
   });
 
@@ -236,7 +238,7 @@ const MenuBar = () => {
                             const width = window.screen.width;
                             const height = window.screen.height;
                             window.open(item.path, "_blank", `width=${width},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
-                          } else if (item.label === "AI분석" || item.label === "AI리포트") {
+                          } else if (item.isPending || item.label === "AI분석" || item.label === "AI리포트") {
                             e.preventDefault();
                             modal.showAlert("알림", `${item.label} 기능은 준비 중입니다.`);
                           }

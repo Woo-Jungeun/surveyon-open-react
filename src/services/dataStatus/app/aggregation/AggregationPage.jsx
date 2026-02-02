@@ -196,7 +196,7 @@ const AggregationPage = () => {
 
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
-            <DataHeader title="집계현황" />
+            <DataHeader title="문항 집계 현황" />
             <div className="aggregation-layout">
                 <SideBar
                     title="문항 목록"
