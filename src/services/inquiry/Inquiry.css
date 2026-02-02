@@ -138,6 +138,7 @@
     gap: 12px;
     align-items: center;
     justify-content: flex-end;
+    flex-shrink: 0;
 }
 
 .inquiry-search-container {
@@ -151,8 +152,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    width: 600px;
-    max-width: 600px;
+    width: 400px;
+    max-width: 100%;
 }
 
 .inquiry-search input {
