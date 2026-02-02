@@ -1333,11 +1333,16 @@
 
 .inquiry-item.is-reply.parent-expanded {
     margin-top: 0 !important;
-
     border-top: none !important;
     border-top-left-radius: 0 !important;
     border-top-right-radius: 0 !important;
 
+    /* 활성화된 부모와 시각적으로 연결되도록 테두리 색상 및 그림자 적용 */
+    border-left-color: var(--primary-border, #6b7fbf) !important;
+    border-right-color: var(--primary-border, #6b7fbf) !important;
+    border-bottom-color: var(--primary-border, #6b7fbf);
+    /* 기본적으로 파란색 */
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 90%);
 }
 
 /* Child Expanded: Attach to parent with theme border */
