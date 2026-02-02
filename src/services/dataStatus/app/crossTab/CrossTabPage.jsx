@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import KendoChart from '../../components/KendoChart';
@@ -43,8 +43,10 @@ const CrossTabPage = () => {
 
     // Layout Options (Order & Visibility)
     const [layoutOptions, setLayoutOptions] = useState([
-        { id: 'table', label: '표', checked: true, fixed: true },
-        { id: 'stats', label: '통계', checked: true, fixed: false }
+        { id: 'table', label: '표', checked: true },
+        { id: 'stats', label: '통계', checked: true },
+        { id: 'chart', label: '차트', checked: false },
+        { id: 'ai', label: 'AI 분석', checked: false }
     ]);
     const [statsOptions, setStatsOptions] = useState([
         { id: 'Mean', label: 'Mean', checked: true },
@@ -82,7 +84,7 @@ const CrossTabPage = () => {
 
     const toggleLayoutOption = (id) => {
         setLayoutOptions(layoutOptions.map(opt =>
-            opt.fixed ? opt : (opt.id === id ? { ...opt, checked: !opt.checked } : opt)
+            opt.id === id ? { ...opt, checked: !opt.checked } : opt
         ));
     };
 
@@ -414,18 +416,21 @@ const CrossTabPage = () => {
                                 <div className="result-tab">결과</div>
                             </div>
                             <div className="view-options">
-                                <button className="view-option-btn active" title="표"><Table size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'column' ? null : 'column')} title="막대형 차트"><BarChart2 size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'stackedColumn' ? null : 'stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'line' ? null : 'line')} title="선형 차트"><LineChart size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'pie' ? null : 'pie')} title="원형 차트"><PieChart size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'donut' ? null : 'donut')} title="도넛형 차트"><Donut size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'radarArea' ? null : 'radarArea')} title="방사형 차트"><Aperture size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'funnel' ? null : 'funnel')} title="깔때기 차트"><Filter size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'scatterPoint' ? null : 'scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'area' ? null : 'area')} title="영역형 차트"><AreaChart size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'map' ? null : 'map')} title="지도"><Map size={18} /></button>
-                                <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode(chartMode === 'heatmap' ? null : 'heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
+                                {layoutOptions.find(opt => opt.id === 'chart')?.checked && (
+                                    <>
+                                        <button className={`view-option-btn ${!chartMode || chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형 차트"><BarChart2 size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><Map size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
+                                    </>
+                                )}
                             </div>
                         </div>
 
@@ -450,27 +455,6 @@ const CrossTabPage = () => {
                                                 onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
                                                 onDrop={(e) => handleSortDrop(e, index, 'layout')}
                                                 onClick={() => toggleLayoutOption(item.id)}
-                                                style={{ cursor: item.fixed ? 'default' : 'pointer' }}
-                                            >
-                                                <GripVertical size={14} className="drag-handle" style={{ color: '#ccc' }} />
-                                                <span>{item.label}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="stats-section" style={{ flexDirection: 'row', alignItems: 'center', gap: '16px', margin: 0 }}>
-                                    <div className="stats-section-title" style={{ marginBottom: 0, marginRight: '0', whiteSpace: 'nowrap', fontSize: '13px', color: '#666', fontWeight: '600' }}>통계 옵션 (드래그 및 선택)</div>
-                                    <div className="sortable-list">
-                                        {statsOptions.map((item, index) => (
-                                            <div
-                                                key={item.id}
-                                                className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                draggable
-                                                onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
-                                                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                onDrop={(e) => handleSortDrop(e, index, 'stats')}
-                                                onClick={() => toggleStatOption(item.id)}
                                                 style={{ cursor: 'pointer' }}
                                             >
                                                 <GripVertical size={14} className="drag-handle" style={{ color: '#ccc' }} />
@@ -479,38 +463,69 @@ const CrossTabPage = () => {
                                         ))}
                                     </div>
                                 </div>
+
+                                {layoutOptions.find(opt => opt.id === 'stats')?.checked && (
+                                    <>
+                                        <div style={{ width: '1px', height: '20px', background: '#e0e0e0' }}></div>
+                                        <div className="stats-section" style={{ flexDirection: 'row', alignItems: 'center', gap: '16px', margin: 0 }}>
+                                            <div className="stats-section-title" style={{ marginBottom: 0, marginRight: '0', whiteSpace: 'nowrap', fontSize: '13px', color: '#666', fontWeight: '600' }}>통계 옵션 (드래그 및 선택)</div>
+                                            <div className="sortable-list">
+                                                {statsOptions.map((item, index) => (
+                                                    <div
+                                                        key={item.id}
+                                                        className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                        draggable
+                                                        onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
+                                                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                        onDrop={(e) => handleSortDrop(e, index, 'stats')}
+                                                        onClick={() => toggleStatOption(item.id)}
+                                                        style={{ cursor: 'pointer' }}
+                                                    >
+                                                        <GripVertical size={14} className="drag-handle" style={{ color: '#ccc' }} />
+                                                        <span>{item.label}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             {/* Dynamic Result Rendering */}
-                            <div className="cross-table-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <div className="cross-table-container" style={{
+                                display: 'grid',
+                                gridTemplateColumns: layoutOptions.filter(o => o.checked).length >= 3 ? 'repeat(2, 1fr)' : '1fr',
+                                gap: '24px',
+                                alignItems: 'stretch',
+                                gridAutoRows: '360px'
+                            }}>
                                 {layoutOptions.map(option => {
                                     if (!option.checked) return null;
 
                                     if (option.id === 'table') {
                                         return (
                                             <div key="table" className="result-block">
-                                                <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch' }}>
-                                                    {/* Table Section */}
+                                                <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div className="blue-bar"></div>
+                                                        <span className="section-title">표</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={handleCopyTable}
+                                                        style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                            padding: '6px 12px', background: '#f8f9fa',
+                                                            border: '1px solid #e9ecef', borderRadius: '6px',
+                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                            cursor: 'pointer', marginRight: '16px', flexShrink: 0
+                                                        }}
+                                                    >
+                                                        <Copy size={14} /> 복사
+                                                    </button>
+                                                </div>
+                                                <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
                                                     <div className="table-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                                                        <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                <div className="blue-bar"></div>
-                                                                <span className="section-title">표</span>
-                                                            </div>
-                                                            <button
-                                                                onClick={handleCopyTable}
-                                                                style={{
-                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                    padding: '6px 12px', background: '#f8f9fa',
-                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                    cursor: 'pointer', marginRight: '16px', flexShrink: 0
-                                                                }}
-                                                            >
-                                                                <Copy size={14} /> 복사
-                                                            </button>
-                                                        </div>
-                                                        <div style={{ overflow: 'auto', flex: 1, background: '#fff', borderRadius: '8px', paddingRight: '16px' }}>
+                                                        <div style={{ overflow: 'auto', flex: 1, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
                                                             <table className="cross-table" style={{ width: '100%', height: '100%' }}>
                                                                 <thead>
                                                                     <tr>
@@ -539,48 +554,6 @@ const CrossTabPage = () => {
                                                             </table>
                                                         </div>
                                                     </div>
-
-                                                    {/* Chart Section (Only if active) */}
-                                                    {chartMode && (
-                                                        <div className="chart-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                                                            <div className="section-header">
-                                                                <div className="blue-bar"></div>
-                                                                <span className="section-title">차트</span>
-                                                            </div>
-                                                            <div className="cross-tab-chart-container" style={{ flex: 1, border: '1px solid #eee', borderRadius: '8px', padding: '16px', background: '#fff' }}>
-                                                                <KendoChart
-                                                                    data={chartData}
-                                                                    seriesNames={seriesNames}
-                                                                    allowedTypes={
-                                                                        chartMode === 'column' ? ['column', 'bar'] :
-                                                                            chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
-                                                                                chartMode === 'line' ? ['line'] :
-                                                                                    chartMode === 'pie' ? ['pie'] :
-                                                                                        chartMode === 'donut' ? ['donut'] :
-                                                                                            chartMode === 'radarArea' ? ['radarArea'] :
-                                                                                                chartMode === 'funnel' ? ['funnel'] :
-                                                                                                    chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                                                        chartMode === 'area' ? ['area'] :
-                                                                                                            chartMode === 'map' ? ['map'] :
-                                                                                                                chartMode === 'heatmap' ? ['heatmap'] : []
-                                                                    }
-                                                                    initialType={
-                                                                        chartMode === 'column' ? 'column' :
-                                                                            chartMode === 'stackedColumn' ? 'stackedColumn' :
-                                                                                chartMode === 'line' ? 'line' :
-                                                                                    chartMode === 'pie' ? 'pie' :
-                                                                                        chartMode === 'donut' ? 'donut' :
-                                                                                            chartMode === 'radarArea' ? 'radarArea' :
-                                                                                                chartMode === 'funnel' ? 'funnel' :
-                                                                                                    chartMode === 'scatterPoint' ? 'scatterPoint' :
-                                                                                                        chartMode === 'area' ? 'area' :
-                                                                                                            chartMode === 'map' ? 'map' :
-                                                                                                                chartMode === 'heatmap' ? 'heatmap' : 'column'
-                                                                    }
-                                                                />
-                                                            </div>
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </div>
                                         );
@@ -588,7 +561,7 @@ const CrossTabPage = () => {
 
                                     if (option.id === 'stats') {
                                         return (
-                                            <div key="stats" className="result-block" style={{ width: chartMode ? 'calc(50% - 12px)' : '100%' }}>
+                                            <div key="stats" className="result-block">
                                                 <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <div className="blue-bar"></div>
@@ -607,8 +580,8 @@ const CrossTabPage = () => {
                                                         <Copy size={14} /> 복사
                                                     </button>
                                                 </div>
-                                                <div style={{ overflow: 'auto', background: '#fff', borderRadius: '8px', paddingRight: '16px' }}>
-                                                    <table className="cross-table">
+                                                <div style={{ overflow: 'auto', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1 }}>
+                                                    <table className="cross-table" style={{ width: '100%' }}>
                                                         <thead>
                                                             <tr>
                                                                 <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px', background: '#f5f5f5' }}>통계</th>
@@ -638,13 +611,86 @@ const CrossTabPage = () => {
                                             </div>
                                         );
                                     }
+
+                                    if (option.id === 'chart') {
+                                        return (
+                                            <div key="chart" className="result-block">
+                                                <div className="section-header">
+                                                    <div className="blue-bar"></div>
+                                                    <span className="section-title">차트</span>
+                                                </div>
+                                                <div className="cross-tab-chart-container" style={{
+                                                    flex: 1,
+                                                    width: '100%',
+                                                    minHeight: '300px',
+                                                    background: '#fff',
+                                                    borderRadius: '8px',
+                                                    border: '1px solid #e2e8f0',
+                                                    padding: '24px',
+                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}>
+                                                    <KendoChart
+                                                        data={chartData}
+                                                        seriesNames={seriesNames}
+                                                        allowedTypes={
+                                                            chartMode === 'column' ? ['column', 'bar'] :
+                                                                chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
+                                                                    chartMode === 'line' ? ['line'] :
+                                                                        chartMode === 'pie' ? ['pie'] :
+                                                                            chartMode === 'donut' ? ['donut'] :
+                                                                                chartMode === 'radarArea' ? ['radarArea'] :
+                                                                                    chartMode === 'funnel' ? ['funnel'] :
+                                                                                        chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                            chartMode === 'area' ? ['area'] :
+                                                                                                chartMode === 'map' ? ['map'] :
+                                                                                                    chartMode === 'heatmap' ? ['heatmap'] : []
+                                                        }
+                                                        initialType={
+                                                            chartMode === 'column' ? 'column' :
+                                                                chartMode === 'stackedColumn' ? 'stackedColumn' :
+                                                                    chartMode === 'line' ? 'line' :
+                                                                        chartMode === 'pie' ? 'pie' :
+                                                                            chartMode === 'donut' ? 'donut' :
+                                                                                chartMode === 'radarArea' ? 'radarArea' :
+                                                                                    chartMode === 'funnel' ? 'funnel' :
+                                                                                        chartMode === 'scatterPoint' ? 'scatterPoint' :
+                                                                                            chartMode === 'area' ? 'area' :
+                                                                                                chartMode === 'map' ? 'map' :
+                                                                                                    chartMode === 'heatmap' ? 'heatmap' : 'column'
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (option.id === 'ai') {
+                                        return (
+                                            <div key="ai" className="result-block">
+                                                <div className="section-header">
+                                                    <div className="blue-bar"></div>
+                                                    <span className="section-title">AI 분석</span>
+                                                </div>
+                                                <div className="ai-analysis-container" style={{ flex: 1, minHeight: 0 }}>
+                                                    <button className="btn-ai-analysis">
+                                                        <Bot size={18} />
+                                                        <span>AI 분석 실행</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
                                     return null;
                                 })}
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
             <CreateTablePopup
                 isOpen={isModalOpen}
