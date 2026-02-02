@@ -73,7 +73,7 @@ const BoardList = ({ type = 'notice' }) => {
             id: item.id,
             title: item.title,
             version: item.version,
-            date: item.createdAt ? moment(item.createdAt).format('YYYY-MM-DD') : '',
+            date: item.publishedAt ? moment(item.publishedAt).format('YYYY-MM-DD') : (item.createdAt ? moment(item.createdAt).format('YYYY-MM-DD') : ''),
             writer: item.author || '관리자',
             views: item.viewCount || 0,
             isNew: item.isNew || false,
