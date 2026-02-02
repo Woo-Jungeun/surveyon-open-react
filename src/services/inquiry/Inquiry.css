@@ -1389,7 +1389,256 @@
     margin-right: 8px;
 }
 
+.id-btn-reply:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1 !important;
+    color: #1e293b;
+}
+
+.id-answer-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+}
+
+/* Answer Form */
+.id-answer-form {
+    width: 100%;
+}
+
+.answer-body {
+    flex-direction: column;
+    gap: 16px;
+}
+
+.id-answer-input {
+    width: 100%;
+    min-height: 150px;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    resize: vertical;
+    font-size: 15px;
+    line-height: 1.6;
+    color: #334155;
+}
+
+.id-btn-register {
+    background: var(--primary-color, #6b7fbf);
+    color: white;
+}
+
+.id-btn-register:hover {
+    background: var(--primary-hover, #5a6ea8);
+}
+
+.id-btn-submit {
+    background: var(--primary-color, #6b7fbf);
+    color: white;
+}
+
+.id-btn-submit:hover {
+    background: var(--primary-hover, #5a6ea8);
+}
+
+.id-btn-cancel {
+    background: white;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+.id-btn-cancel:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+/* Responsive */
+@media (max-width: 1440px) {
+    .id-container {
+        padding: 80px 20px 40px;
+        max-width: 100vw;
+        overflow-x: hidden;
+        box-sizing: border-box;
+    }
+
+    .id-container * {
+        box-sizing: border-box;
+    }
+
+    .id-header,
+    .id-body {
+        padding: 24px;
+    }
+
+    .id-body {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .answer-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+}
+
+/* ==========================================================================
+   Consolidated Grouping Styles for Follow-up Questions
+   ========================================================================== */
+
+/* Remove gap between grouped items */
+.inquiry-list {
+    gap: 0 !important;
+}
+
+.inquiry-item {
+    margin-bottom: 12px;
+}
+
+/* Default State: Attached but visually separated by dashed line */
+.inquiry-item.has-reply {
+    margin-bottom: 0;
+    border-bottom: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: none;
+}
+
+.inquiry-item.is-reply {
+    margin-top: 0;
+    border-top: 1px dashed #e2e8f0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    background: #fbfcfd;
+}
+
+.inquiry-item.is-reply:hover {
+    background: #f8fafc;
+}
+
+/* Parent Expanded: Attach to child with theme border */
+.inquiry-item.has-reply.expanded {
+    margin-bottom: 0 !important;
+    border-bottom: none !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    box-shadow: none !important;
+}
+
+.inquiry-item.is-reply.parent-expanded {
+    margin-top: 0 !important;
+    border-top: none !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+
+    /* 활성화된 부모와 시각적으로 연결되도록 테두리 색상 및 그림자 적용 */
+    border-left-color: var(--primary-border, #6b7fbf) !important;
+    border-right-color: var(--primary-border, #6b7fbf) !important;
+    border-bottom-color: var(--primary-border, #6b7fbf);
+    /* 기본적으로 파란색 */
+    box-shadow: 0 4px 12px color-mix(in srgb, var(--primary-color), transparent 90%);
+}
+
+/* Child Expanded: Attach to parent with theme border */
+.inquiry-item.has-reply.child-expanded {
+    margin-bottom: 0 !important;
+
+    border-bottom: none !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+
+}
+
+/* Child Expanded (Self): Ensure top border is removed when attached to parent */
+.inquiry-item.is-reply.attached-expanded {
+    margin-top: 0 !important;
+    border-top: none !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+/* Child Expanded (Self): If NOT attached (fallback or standalone), theme top border */
+.inquiry-item.is-reply.expanded:not(.attached-expanded) {
+    border-top: 1px solid var(--primary-border, #6b7fbf) !important;
+}
+
+.id-meta-divider {
+    color: #cbd5e1;
+    font-size: 12px;
+    margin: 0 2px;
+    width: auto;
+    height: auto;
+    background: transparent;
+}
+
+.id-category-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 16px;
+    margin-right: 8px;
+}
+
 /* Fix line breaks in detail view */
 .id-text {
     white-space: pre-wrap !important;
+}
+
+/* Filter Checkbox */
+.inquiry-filter-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    user-select: none;
+    transition: all 0.2s ease;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: transparent;
+}
+
+.inquiry-filter-checkbox:hover {
+    background: #f8fafc;
+}
+
+.checkbox-frame {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    background: white;
+    margin-top: 2px;
+    /* 시각적 정렬 보정 (체크박스 내림) */
+}
+
+.inquiry-filter-checkbox:hover .checkbox-frame {
+    border-color: #94a3b8;
+}
+
+.inquiry-filter-checkbox.checked .checkbox-frame {
+    background: var(--primary-color, #6b7fbf);
+    border-color: var(--primary-color, #6b7fbf);
+}
+
+.inquiry-filter-checkbox.checked span {
+    color: var(--primary-color, #6b7fbf);
+    font-weight: 600;
+}
+
+.inquiry-filter-checkbox span {
+    line-height: 1;
+    /* 텍스트 높이 보정 */
+    margin-top: 0;
 }

@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { modalContext } from "@/components/common/Modal";
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight, Eye } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight, Eye, CheckSquare, Square, User, Check } from 'lucide-react';
 import './Inquiry.css';
 import { InquiryApi } from './InquiryApi';
 import { useEffect } from 'react';
@@ -12,6 +12,7 @@ const InquiryList = () => {
     const { showAlert } = useContext(modalContext);
     const [expandedIds, setExpandedIds] = useState(new Set());
     const [searchTerm, setSearchTerm] = useState('');
+    const [showMyPosts, setShowMyPosts] = useState(false);
     const [activeTab, setActiveTab] = useState('전체');
     const [currentPage, setCurrentPage] = useState(1);
     const auth = useSelector((store) => store.auth);
@@ -28,13 +29,14 @@ const InquiryList = () => {
 
     useEffect(() => {
         fetchList();
-    }, [activeTab]);
+    }, [activeTab, showMyPosts]);
 
     const fetchList = async () => {
         const params = {
             category: activeTab === '전체' ? '' : activeTab,
             userId: userId,
-            is_admin: isAdmin
+            is_admin: isAdmin,
+            isMine: showMyPosts
         };
 
         try {
@@ -116,7 +118,7 @@ const InquiryList = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // 클라이언트 사이드 필터링
+    // 클라이언트 사이드 필터링 (검색어만)
     const filteredData = serverData.filter(item =>
         item.title.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -180,6 +182,18 @@ const InquiryList = () => {
                     </div>
 
                     <div className="inquiry-actions">
+                        <div
+                            className={`inquiry-filter-checkbox ${showMyPosts ? 'checked' : ''}`}
+                            onClick={() => {
+                                setShowMyPosts(!showMyPosts);
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <div className="checkbox-frame">
+                                {showMyPosts && <Check size={12} strokeWidth={4} color="white" />}
+                            </div>
+                            <span>내 문의 보기</span>
+                        </div>
                         <button className="inquiry-write-btn" onClick={() => navigate('/inquiry/write')}>
                             <PenSquare size={16} />
                             문의하기
