@@ -274,25 +274,28 @@ const RecodingPage = () => {
                         </h3>
 
                         {/* Variable Info Inputs */}
-                        <div className="recoding-variable-info">
-                            <label className="recoding-label">문항 ID</label>
-                            <input
-                                type="text"
-                                value={selectedVar?.name || ''}
-                                readOnly={selectedVar?.id !== null}
-                                onChange={(e) => setSelectedVar({ ...selectedVar, name: e.target.value })}
-                                className={`recoding-input ${selectedVar?.id !== null ? 'recoding-input-readonly' : ''}`}
-                                placeholder="예: AgeGroup"
-                            />
-
-                            <label className="recoding-label">문항 라벨</label>
-                            <input
-                                type="text"
-                                value={selectedVar?.label || ''}
-                                onChange={(e) => setSelectedVar({ ...selectedVar, label: e.target.value })}
-                                className="recoding-input"
-                                placeholder="예: 연령대 (10대, 20대...)"
-                            />
+                        <div className="recoding-variable-info" style={{ display: 'flex', gap: '24px' }}>
+                            <div style={{ flex: 1 }}>
+                                <label className="recoding-label">문항 ID</label>
+                                <input
+                                    type="text"
+                                    value={selectedVar?.name || ''}
+                                    readOnly={selectedVar?.id !== null}
+                                    onChange={(e) => setSelectedVar({ ...selectedVar, name: e.target.value })}
+                                    className={`recoding-input ${selectedVar?.id !== null ? 'recoding-input-readonly' : ''}`}
+                                    placeholder="예: AgeGroup"
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <label className="recoding-label">문항 라벨</label>
+                                <input
+                                    type="text"
+                                    value={selectedVar?.label || ''}
+                                    onChange={(e) => setSelectedVar({ ...selectedVar, label: e.target.value })}
+                                    className="recoding-input"
+                                    placeholder="예: 연령대 (10대, 20대...)"
+                                />
+                            </div>
                         </div>
 
                         {/* Evaluation Result Section */}
