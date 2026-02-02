@@ -9,6 +9,77 @@
     flex-shrink: 0;
     z-index: 100;
     padding: 24px 0;
+    transition: width 0.3s ease;
+}
+
+.menu-bar.collapsed {
+    width: 70px;
+}
+
+/* Collapsed States */
+.menu-bar.collapsed .menu-bar-logo span:not(.ai-logo-text),
+.menu-bar.collapsed .menu-bar-home-btn span,
+.menu-bar.collapsed .menu-bar-project,
+.menu-bar.collapsed .menu-bar-action-btn span,
+.menu-bar.collapsed .menu-bar-last-update span,
+.menu-bar.collapsed .menu-bar-section-title,
+.menu-bar.collapsed .menu-bar-section-header svg,
+.menu-bar.collapsed .menu-bar-nav-link span,
+.menu-bar.collapsed .menu-bar-user-name,
+.menu-bar.collapsed .menu-bar-user-dropdown,
+.menu-bar.collapsed .menu-bar-divider {
+    display: none;
+}
+
+.menu-bar.collapsed .menu-bar-logo {
+    justify-content: center;
+}
+
+.menu-bar.collapsed .menu-bar-header-content {
+    flex-direction: column;
+    gap: 12px;
+}
+
+.menu-bar.collapsed .menu-bar-section {
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.menu-bar.collapsed .menu-bar-section-header {
+    justify-content: center;
+    padding: 0;
+    margin-bottom: 8px;
+}
+
+.menu-bar.collapsed .menu-bar-nav-link {
+    justify-content: center;
+    padding: 10px;
+    margin-right: 0;
+    border-radius: 8px;
+}
+
+.menu-bar.collapsed .menu-bar-actions {
+    padding: 0 10px 20px 10px;
+    align-items: center;
+}
+
+.menu-bar.collapsed .menu-bar-action-btn {
+    padding: 10px;
+}
+
+.menu-bar.collapsed .menu-bar-user {
+    padding: 20px 10px;
+}
+
+.menu-bar.collapsed .menu-bar-user-avatar {
+    margin-right: 0;
+}
+
+.menu-bar.collapsed .menu-bar-home-btn {
+    justify-content: center;
+    padding: 6px;
 }
 
 /* Header Section */
@@ -138,6 +209,7 @@
 .menu-bar-section {
     margin-bottom: 24px;
     padding: 0 20px;
+    transition: all 0.2s;
 }
 
 .menu-bar-section-header {

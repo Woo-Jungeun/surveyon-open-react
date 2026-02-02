@@ -1,7 +1,7 @@
 import {
   Home, Upload, RefreshCw, X, Info, Database, Wrench, Target,
   BarChart2, Grid, ClipboardList, Sparkles, FileText, Moon, User, Clock,
-  ChevronDown, ChevronRight
+  ChevronDown, ChevronRight, ChevronLeft
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
@@ -63,11 +63,12 @@ const MenuBar = () => {
     "AI요약": false
   });
 
-
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
 
   const toggleSection = (label) => {
+    if (isCollapsed) return; // 접혀있을 땐 토글 동작 막음 (원한다면)
     setOpenSections(prev => ({
       ...prev,
       [label]: !prev[label]
@@ -114,11 +115,10 @@ const MenuBar = () => {
   };
 
 
-
   return (
-    <aside className="menu-bar" data-theme="data-dashboard">
+    <aside className={`menu-bar ${isCollapsed ? 'collapsed' : ''}`} data-theme="data-dashboard">
       {/* Header Section */}
-      <div className="menu-bar-header">
+      <div className="menu-bar-header" style={{ position: 'relative' }}>
         <div className="menu-bar-header-content">
           <button
             type="button"
@@ -143,6 +143,29 @@ const MenuBar = () => {
             <span>데이터 현황</span>
           </h1>
         </div>
+
+        {/* Toggle Button */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          style={{
+            position: 'absolute',
+            top: '0px',
+            right: '-12px',
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: '#fff',
+            border: '1px solid #ddd',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+            zIndex: 10
+          }}
+        >
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+        </button>
       </div>
 
 

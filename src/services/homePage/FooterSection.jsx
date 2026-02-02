@@ -1,8 +1,8 @@
 import React from "react";
 
-const FooterSection = () => {
+const FooterSection = ({ style }) => {
   return (
-    <footer className="hp-footer">
+    <footer className="hp-footer" style={{ boxSizing: 'border-box', ...style }}>
       <div className="hp-footer-inner">
         <p>© 2026 설문온 SurveyOn. All rights reserved.</p>
 
