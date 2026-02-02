@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Copy } from 'lucide-react';
+import Toast from '../../../../components/common/Toast';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
@@ -34,16 +35,6 @@ const DataViewerPage = () => {
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '' });
-
-    // Toast Timer
-    useEffect(() => {
-        if (toast.show) {
-            const timer = setTimeout(() => {
-                setToast({ ...toast, show: false });
-            }, 3000);
-            return () => clearTimeout(timer);
-        }
-    }, [toast.show]);
 
     const handleCopyToClipboard = async () => {
         try {
@@ -117,30 +108,12 @@ const DataViewerPage = () => {
                         {isLabelView ? '값 보기' : '라벨 보기'}
                     </button>
                 </div>
-                {/* Toast Message */}
-                {toast.show && (
-                    <div style={{
-                        position: 'fixed',
-                        top: '20px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: '#1e293b',
-                        color: '#fff',
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        zIndex: 2000,
-                        animation: 'fadeIn 0.2s ease-out',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                    }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80' }}></div>
-                        {toast.message}
-                    </div>
-                )}
+
+                <Toast
+                    show={toast.show}
+                    message={toast.message}
+                    onClose={() => setToast({ ...toast, show: false })}
+                />
             </div>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
                 <button

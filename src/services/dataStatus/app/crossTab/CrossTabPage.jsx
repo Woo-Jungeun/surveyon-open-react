@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy } from 'lucide-react';
+import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -24,6 +25,7 @@ const CrossTabPage = () => {
     const [chartMode, setChartMode] = useState(null);
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(true);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
+    const [toast, setToast] = useState({ show: false, message: '' });
 
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([
@@ -135,6 +137,36 @@ const CrossTabPage = () => {
         .filter(row => row.label !== '합계')
         .map(row => row.label);
 
+    const handleCopyTable = async () => {
+        try {
+            const headers = ['문항', ...resultData.columns].join('\t');
+            const rows = resultData.rows.map(row =>
+                [row.label, ...row.values].join('\t')
+            ).join('\n');
+            await navigator.clipboard.writeText(`${headers}\n${rows}`);
+            setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
+        } catch (e) {
+            console.error(e);
+            setToast({ show: true, message: "복사 실패" });
+        }
+    };
+
+    const handleCopyStats = async () => {
+        try {
+            const headers = ['통계', ...resultData.columns].join('\t');
+            const rows = statsOptions.filter(opt => opt.checked).map(stat => {
+                const statKey = stat.id.toLowerCase();
+                const statValues = resultData.stats[statKey] || [];
+                return [`Region Group_${stat.label}`, ...statValues].join('\t');
+            }).join('\n');
+            await navigator.clipboard.writeText(`${headers}\n${rows}`);
+            setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
+        } catch (e) {
+            console.error(e);
+            setToast({ show: true, message: "복사 실패" });
+        }
+    };
+
     const handleTableSelect = (item) => {
         setSelectedTableId(item.id);
         setIsConfigOpen(false);
@@ -204,6 +236,12 @@ const CrossTabPage = () => {
                 title="교차 테이블"
                 onAdd={() => setIsModalOpen(true)}
                 addButtonLabel="교차 테이블 추가"
+            />
+
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                onClose={() => setToast({ ...toast, show: false })}
             />
 
             <div className="cross-tab-layout">
@@ -454,9 +492,23 @@ const CrossTabPage = () => {
                                                 <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch' }}>
                                                     {/* Table Section */}
                                                     <div className="table-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                                                        <div className="section-header">
-                                                            <div className="blue-bar"></div>
-                                                            <span className="section-title">표</span>
+                                                        <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <div className="blue-bar"></div>
+                                                                <span className="section-title">표</span>
+                                                            </div>
+                                                            <button
+                                                                onClick={handleCopyTable}
+                                                                style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                    padding: '6px 12px', background: '#f8f9fa',
+                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                    cursor: 'pointer', marginRight: '16px', flexShrink: 0
+                                                                }}
+                                                            >
+                                                                <Copy size={14} /> 복사
+                                                            </button>
                                                         </div>
                                                         <div style={{ overflow: 'auto', flex: 1, background: '#fff', borderRadius: '8px', paddingRight: '16px' }}>
                                                             <table className="cross-table" style={{ width: '100%', height: '100%' }}>
@@ -537,9 +589,23 @@ const CrossTabPage = () => {
                                     if (option.id === 'stats') {
                                         return (
                                             <div key="stats" className="result-block" style={{ width: chartMode ? 'calc(50% - 12px)' : '100%' }}>
-                                                <div className="section-header">
-                                                    <div className="blue-bar"></div>
-                                                    <span className="section-title">통계</span>
+                                                <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div className="blue-bar"></div>
+                                                        <span className="section-title">통계</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={handleCopyStats}
+                                                        style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                            padding: '6px 12px', background: '#f8f9fa',
+                                                            border: '1px solid #e9ecef', borderRadius: '6px',
+                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                            cursor: 'pointer', marginRight: '16px', flexShrink: 0
+                                                        }}
+                                                    >
+                                                        <Copy size={14} /> 복사
+                                                    </button>
                                                 </div>
                                                 <div style={{ overflow: 'auto', background: '#fff', borderRadius: '8px', paddingRight: '16px' }}>
                                                     <table className="cross-table">
