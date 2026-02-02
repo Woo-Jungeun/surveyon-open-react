@@ -12,7 +12,7 @@ import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
 import "./MenuBar.css";
 import NewDataModal from "./NewDataModal";
-import { VariablePageApi } from "../variable/VariablePageApi";
+
 
 const MENU_ITEMS = [
   {
@@ -63,8 +63,7 @@ const MenuBar = () => {
     "AI요약": false
   });
 
-  /* API Payload State */
-  const [apiPayload, setApiPayload] = useState('{\n  "project_id": "9fda39fb-2d97-42d3-ae17-926e0fd168a2"\n}');
+
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
 
@@ -114,7 +113,7 @@ const MenuBar = () => {
     });
   };
 
-  const { getVariableList } = VariablePageApi();
+
 
   return (
     <aside className="menu-bar" data-theme="data-dashboard">
@@ -146,57 +145,7 @@ const MenuBar = () => {
         </div>
       </div>
 
-      {/* API Test Button */}
-      <div style={{ padding: '0 24px', marginBottom: '8px' }}>
-        <textarea
-          value={apiPayload}
-          onChange={(e) => setApiPayload(e.target.value)}
-          placeholder="JSON Payload 입력"
-          style={{
-            width: '100%',
-            height: '80px',
-            marginBottom: '4px',
-            padding: '8px',
-            borderRadius: '6px',
-            border: '1px solid #ccc',
-            fontSize: '12px',
-            fontFamily: 'monospace',
-            resize: 'vertical'
-          }}
-        />
-        <button
-          onClick={() => {
-            try {
-              const payload = JSON.parse(apiPayload);
-              getVariableList.mutate(payload, {
-                onSuccess: (res) => {
-                  console.log("API Test Success:", res);
-                  alert("Console 확인");
-                },
-                onError: (err) => {
-                  console.error("API Test Error:", err);
-                  alert("API 호출 실패");
-                }
-              });
-            } catch (e) {
-              alert("JSON 형식이 올바르지 않습니다.");
-            }
-          }}
-          style={{
-            width: '100%',
-            padding: '6px 12px',
-            backgroundColor: '#ef4444',
-            color: 'white',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '12px',
-            cursor: 'pointer',
-            fontWeight: '600'
-          }}
-        >
-          API Test (임시)
-        </button>
-      </div>
+
 
       {/* Project Name Display */}
       <div className="menu-bar-project">
