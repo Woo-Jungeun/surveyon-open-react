@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target } from 'lucide-react';
+import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X } from 'lucide-react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
@@ -8,6 +8,7 @@ import '@progress/kendo-theme-default/dist/all.css';
 
 const AggregationCard = ({ q }) => {
     const [chartMode, setChartMode] = useState('column');
+    const [showChart, setShowChart] = useState(true);
 
     return (
         <div id={q.id} className="agg-card">
@@ -17,16 +18,23 @@ const AggregationCard = ({ q }) => {
                     <div className="agg-card-label">{q.label}</div>
                 </div>
                 <div className="view-options">
-                    <button className={`view-option-btn ${chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형 차트"><BarChart2 size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
-                    <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="히트맵"><LayoutGrid size={18} /></button>
+                    <button
+                        className={`view-option-btn close-chart-btn ${!showChart ? 'active' : ''}`}
+                        onClick={() => setShowChart(false)}
+                        title="차트 숨기기"
+                    >
+                        <X size={18} />
+                    </button>
+                    <button className={`view-option-btn ${showChart && (chartMode === 'column' || chartMode === 'bar') ? 'active' : ''}`} onClick={() => { setChartMode('column'); setShowChart(true); }} title="막대형 차트"><BarChart2 size={18} /></button>
+                    <button className={`view-option-btn ${showChart && (chartMode === 'stackedColumn' || chartMode === 'stacked100Column') ? 'active' : ''}`} onClick={() => { setChartMode('stackedColumn'); setShowChart(true); }} title="누적형 차트"><Layers size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'line' ? 'active' : ''}`} onClick={() => { setChartMode('line'); setShowChart(true); }} title="선형 차트"><LineChart size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'pie' ? 'active' : ''}`} onClick={() => { setChartMode('pie'); setShowChart(true); }} title="원형 차트"><PieChart size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'donut' ? 'active' : ''}`} onClick={() => { setChartMode('donut'); setShowChart(true); }} title="도넛형 차트"><Donut size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => { setChartMode('radarArea'); setShowChart(true); }} title="방사형 차트"><Aperture size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'funnel' ? 'active' : ''}`} onClick={() => { setChartMode('funnel'); setShowChart(true); }} title="깔때기 차트"><Filter size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => { setChartMode('scatterPoint'); setShowChart(true); }} title="점 도표"><MoreHorizontal size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'area' ? 'active' : ''}`} onClick={() => { setChartMode('area'); setShowChart(true); }} title="영역형 차트"><AreaChart size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => { setChartMode('heatmap'); setShowChart(true); }} title="히트맵"><LayoutGrid size={18} /></button>
                 </div>
             </div>
             <div className="agg-card-body">
@@ -57,25 +65,27 @@ const AggregationCard = ({ q }) => {
                 </div>
 
                 {/* Chart */}
-                <div className="agg-chart-container">
-                    <KendoChart
-                        data={q.data}
-                        initialType={chartMode}
-                        allowedTypes={
-                            chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
-                                chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
-                                    chartMode === 'line' ? ['line'] :
-                                        chartMode === 'pie' ? ['pie'] :
-                                            chartMode === 'donut' ? ['donut'] :
-                                                chartMode === 'area' ? ['area'] :
-                                                    chartMode === 'heatmap' ? ['heatmap'] :
-                                                        chartMode === 'radarLine' ? ['radarLine'] :
-                                                            chartMode === 'funnel' ? ['funnel'] :
-                                                                chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                    chartMode === 'radarArea' ? ['radarArea'] : []
-                        }
-                    />
-                </div>
+                {showChart && (
+                    <div className="agg-chart-container">
+                        <KendoChart
+                            data={q.data}
+                            initialType={chartMode}
+                            allowedTypes={
+                                chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
+                                    chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
+                                        chartMode === 'line' ? ['line'] :
+                                            chartMode === 'pie' ? ['pie'] :
+                                                chartMode === 'donut' ? ['donut'] :
+                                                    chartMode === 'area' ? ['area'] :
+                                                        chartMode === 'heatmap' ? ['heatmap'] :
+                                                            chartMode === 'radarLine' ? ['radarLine'] :
+                                                                chartMode === 'funnel' ? ['funnel'] :
+                                                                    chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                        chartMode === 'radarArea' ? ['radarArea'] : []
+                            }
+                        />
+                    </div>
+                )}
             </div>
         </div>
     );
