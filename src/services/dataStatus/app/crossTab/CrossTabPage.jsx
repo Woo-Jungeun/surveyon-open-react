@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import KendoChart from '../../components/KendoChart';
@@ -55,6 +55,23 @@ const CrossTabPage = () => {
         { id: 'Max', label: 'Max', checked: true },
         { id: 'N', label: 'N', checked: true },
     ]);
+
+    // AI Analysis State
+    const [aiResult, setAiResult] = useState(null);
+    const [isAiLoading, setIsAiLoading] = useState(false);
+
+    const handleRunAiAnalysis = () => {
+        setIsAiLoading(true);
+        // Simulate analyzing process
+        setTimeout(() => {
+            setAiResult([
+                "전체 응답은 High 이상 구간이 높아 전반적으로 긍정적인 반응을 보였습니다.",
+                "배너 중 Banner C가 모든 구간에서 가장 높은 반응도를 기록했습니다.",
+                "데이터 분산이 낮아 결과의 안정성과 신뢰도가 확보되었습니다."
+            ]);
+            setIsAiLoading(false);
+        }, 1500);
+    };
 
     const handleSortDragStart = (e, index, type) => {
         e.dataTransfer.setData('dragIndex', index);
@@ -675,10 +692,39 @@ const CrossTabPage = () => {
                                                     <span className="section-title">AI 분석</span>
                                                 </div>
                                                 <div className="ai-analysis-container" style={{ flex: 1, minHeight: 0 }}>
-                                                    <button className="btn-ai-analysis">
-                                                        <Bot size={18} />
-                                                        <span>AI 분석 실행</span>
-                                                    </button>
+                                                    {!aiResult && !isAiLoading && (
+                                                        <button className="btn-ai-analysis" onClick={handleRunAiAnalysis}>
+                                                            <Bot size={18} />
+                                                            <span>AI 분석 실행</span>
+                                                        </button>
+                                                    )}
+
+                                                    {isAiLoading && (
+                                                        <div className="ai-loading">
+                                                            <Loader2 size={32} className="spin-icon" />
+                                                            <span>AI가 데이터를 분석하고 있습니다...</span>
+                                                        </div>
+                                                    )}
+
+                                                    {aiResult && (
+                                                        <div className="ai-result-box">
+                                                            <div className="ai-result-header">
+                                                                <Bot size={18} className="sparkle-icon" />
+                                                                <span>분석 결과 요약</span>
+                                                            </div>
+                                                            <div className="ai-result-content">
+                                                                {aiResult.map((text, idx) => (
+                                                                    <div key={idx} className="ai-result-item" style={{ animationDelay: `${idx * 0.1}s` }}>
+                                                                        <CheckCircle2 size={16} className="check-icon" />
+                                                                        <p>{text}</p>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            <button className="btn-ai-reset" onClick={() => setAiResult(null)}>
+                                                                다시 분석하기
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );

@@ -837,7 +837,7 @@
     border-radius: 8px;
     border: 1px solid #fde68a;
     /* 연한 노랑 테두리 */
-    padding: 32px;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -848,12 +848,11 @@
 
 .btn-ai-analysis {
     background: #fbbf24;
-    /* Amber 400 - 부드러운 노랑/오렌지 */
+    /* Amber 400 */
     color: #fff;
     border: none;
     padding: 12px 24px;
     border-radius: 9999px;
-    /* Pill shape */
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -910,4 +909,150 @@
     height: 100%;
     min-width: 0;
     /* Ensure content fills height */
+}
+
+/* AI Loading & Result Styles */
+.ai-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    height: 100%;
+    color: #d97706;
+    /* amber-600 */
+    font-weight: 600;
+    font-size: 15px;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+    color: #f59e0b;
+    /* amber-500 */
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ai-result-box {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.ai-result-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #b45309;
+    /* amber-700 */
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.sparkle-icon {
+    color: #f59e0b;
+    /* amber-500 */
+}
+
+.ai-result-content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.ai-result-content::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari */
+}
+
+.ai-result-item {
+    display: flex;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #4b5563;
+    /* gray-600 */
+    background: transparent;
+    /* Changed from white to transparent */
+    padding: 6px 0;
+    /* Reduced padding since no border */
+    border: none;
+    /* Removed border */
+    box-shadow: none;
+    /* Removed shadow */
+    animation: slideUp 0.5s ease-out backwards;
+    border-bottom: 1px dashed rgba(245, 158, 11, 0.2);
+    /* Optional: subtle separator */
+}
+
+.ai-result-item:last-child {
+    border-bottom: none;
+}
+
+.check-icon {
+    color: #059669;
+    /* emerald-600 */
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.btn-ai-reset {
+    margin-top: 10px;
+    align-self: flex-end;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid #fcd34d;
+    /* amber-300 */
+    border-radius: 6px;
+    color: #b45309;
+    /* amber-700 */
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-ai-reset:hover {
+    background: #fff;
+    border-color: #f59e0b;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
