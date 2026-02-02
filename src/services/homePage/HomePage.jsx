@@ -3,7 +3,6 @@ import "@/services/homePage/HomePage.css";
 import InfoSection from "@/services/homePage/InfoSection";
 import BoardSection from "@/services/homePage/BoardSection";
 import MenuSection from "@/services/homePage/MenuSection";
-import FooterSection from "@/services/homePage/FooterSection";
 
 const HomePage = () => {
   return (
@@ -11,7 +10,6 @@ const HomePage = () => {
       <InfoSection />
       <BoardSection />
       <MenuSection />
-      <FooterSection />
     </div>
   );
 };

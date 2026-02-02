@@ -34,7 +34,7 @@ const MainWrapperView = (props) => {
                     alignItems: 'center',
                     color: '#777'
                 }}>
-                    <p style={{ margin: 0 }}>© 2025 설문온 SurveyOn. All rights reserved.</p>
+                    <p style={{ margin: 0 }}>© 2026 설문온 SurveyOn. All rights reserved.</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
                         <span style={{
                             width: '9px',

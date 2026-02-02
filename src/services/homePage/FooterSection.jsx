@@ -4,7 +4,7 @@ const FooterSection = () => {
   return (
     <footer className="hp-footer">
       <div className="hp-footer-inner">
-        <p>© 2025 설문온 SurveyOn. All rights reserved.</p>
+        <p>© 2026 설문온 SurveyOn. All rights reserved.</p>
 
         <div className="hp-footer-status">
           <span className="hp-status-dot"></span>
