@@ -40,7 +40,7 @@ const InquiryWrite = () => {
         isReply ? `[RE]: ${parentTitle}` : ''
     );
     const [content, setContent] = useState('');
-    const [isSecret, setIsSecret] = useState(isReply ? initialIsSecret : true);
+    const [isSecret, setIsSecret] = useState(isReply ? initialIsSecret : false);
     // const [files, setFiles] = useState([]);
 
     // 수정 모드일 때 기존 데이터 불러오기
