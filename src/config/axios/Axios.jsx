@@ -30,7 +30,7 @@ apiAxios.interceptors.request.use(
         }
 
         // X-Auth-Token 헤더 추가
-        const xAuthToken = sessionStorage.getItem("X-Auth-Token");
+        const xAuthToken = getCookie("X-Auth-Token");
         if (xAuthToken) {
             config.headers["X-Auth-Token"] = xAuthToken;
         }

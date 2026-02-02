@@ -10,7 +10,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 export function LoginApi() {
     const dispatch = useDispatch();
-    const [, setCookie] = useCookies();
+    const [, setCookie, removeCookie] = useCookies();
     const modal = useContext(modalContext);
     const navigate = useNavigate();
     const location = useLocation();
@@ -51,13 +51,13 @@ export function LoginApi() {
                             userGroup: groupposition,
                         })
                     );
-                    // 2) 쿠키 저장 (로그인키)
+                    // 2) 쿠키 저장 (로그인키 & X-Auth-Token)
+                    const cookieOptions = { path: "/", sameSite: "Lax" }; // 필요시 secure:true
                     if (loginkey) {
-                        setCookie("TOKEN", loginkey, { path: "/", sameSite: "Lax" }); // 필요시 secure:true
+                        setCookie("TOKEN", loginkey, cookieOptions);
                     }
-                    // 3) 세션 스토리지 저장 (X-Auth-Token)
                     if (res?.Token) {
-                        sessionStorage.setItem("X-Auth-Token", res.Token);
+                        setCookie("X-Auth-Token", res.Token, cookieOptions);
                     }
                 }
             },
@@ -79,7 +79,8 @@ export function LoginApi() {
         async (payload) => await api.post(payload, "/Login/logout", "API_BASE_URL_OPENAI"),
         {
             onSuccess: (res, v) => {
-                sessionStorage.removeItem("X-Auth-Token");
+                removeCookie("X-Auth-Token", { path: "/" });
+                localStorage.removeItem("X-Auth-Token"); // 혹시 모르니 로컬스토리지도 삭제
                 sessionStorage.removeItem("openai_balance");
                 v?.options?.onSuccess?.();
             },
