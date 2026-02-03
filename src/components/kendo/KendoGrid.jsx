@@ -44,6 +44,8 @@ const KendoGrid = ({ parentProps, children }) => {
     const linkRowClickToSelection = parentProps?.linkRowClickToSelection ?? true; // 기본값: true (행 클릭 시 체크박스도 선택/해제됨)
     const selectionHeaderTitle = parentProps?.selectionHeaderTitle ?? "";   //체크박스 헤더 라벨 
     const onProcessedDataUpdate = parentProps?.onProcessedDataUpdate;
+    const scrollable = parentProps?.scrollable ?? "scrollable";
+    const rowHeight = parentProps?.rowHeight;
 
     /** ---------- key resolver ---------- */
     const idGetter = useCallback(
@@ -417,24 +419,34 @@ const KendoGrid = ({ parentProps, children }) => {
         childColsTree = roots;
     }
 
+    const currentSkip = parentProps?.skip ?? page?.skip;
+    const currentTake = parentProps?.pageSize ?? page?.take;
+    const currentTotal = parentProps?.total ?? viewTotal;
+
+    // Virtual Scrolling일 때 Local Data slicing 처리
+    let gridData = dataWithSelection;
+    if (scrollable === 'virtual' && Array.isArray(parentProps?.data) && currentTake > 0) {
+        if (gridData.length > currentTake) {
+            gridData = gridData.slice(currentSkip, currentSkip + currentTake);
+        }
+    }
+
     return (
         <Grid
-            scrollable="scrollable"
+            scrollable={scrollable}
             style={{ height: height || "625px" }}
-            data={dataWithSelection}
+            data={gridData}
             sortable={parentProps?.sortable ?? { mode: 'multiple', allowUnsort: true }}
             filterable={parentProps?.filterable ?? true}
             sort={sort}
             filter={filter}
             onSortChange={sortChange}          // setSort와 연결됨
             onFilterChange={filterChange}      // setFilter와 연결됨
-
-
-
             pageable={parentProps?.pageable ?? (isPage ? { info: false } : false)}
-            skip={parentProps?.skip ?? page?.skip}
-            take={parentProps?.pageSize ?? page?.take}
-            total={parentProps?.total ?? viewTotal}
+            skip={currentSkip}
+            take={currentTake}
+            total={currentTotal}
+            rowHeight={rowHeight}
             onPageChange={(e) => {
                 if (parentProps?.onPageChange) {
                     parentProps.onPageChange(e);
@@ -442,7 +454,6 @@ const KendoGrid = ({ parentProps, children }) => {
                     pageChange(e);
                 } else { }
             }}
-
             rowRender={rowRender}
             dataItemKey={dataItemKey}
             selectedField={selectedField}
