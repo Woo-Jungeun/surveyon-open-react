@@ -307,7 +307,9 @@ const RecodingPage = () => {
             const payload = {
                 pageid: pageId,
                 user: userId,
-                table: { x_info: [variableKey] },
+                filter_expression: "",
+                weight_col: null,
+                table: { x_info: [variableKey], y_info: [] },
                 variables: variablesPayload
             };
 
