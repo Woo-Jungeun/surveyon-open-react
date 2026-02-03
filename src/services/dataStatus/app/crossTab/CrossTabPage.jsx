@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSelector } from 'react-redux';
 import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
@@ -9,15 +10,19 @@ import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import CreateTablePopup from './CreateTablePopup';
 import './CrossTabPage.css';
+import { CrossTabPageApi } from './CrossTabPageApi';
+import { RecodingPageApi } from '../recoding/RecodingPageApi';
 
 const CrossTabPage = () => {
-    // Mock Data
-    const [tables, setTables] = useState([
-        { id: 1, name: 'Banner by Q1', row: ['q1'], col: ['banner'] },
-        { id: 2, name: 'Region by Q2', row: ['q2'], col: ['region'] },
-        { id: 3, name: 'Gender by Q1', row: ['q1'], col: ['gender'] },
-    ]);
-    const [selectedTableId, setSelectedTableId] = useState(1);
+    // Auth & API
+    const auth = useSelector((store) => store.auth);
+    const { getCrossTabList, getCrossTabData } = CrossTabPageApi();
+    const { getRecodedVariables } = RecodingPageApi();
+    const PAGE_ID = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+
+    // Data State
+    const [tables, setTables] = useState([]);
+    const [selectedTableId, setSelectedTableId] = useState(null);
     const [isConfigOpen, setIsConfigOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tableSearchTerm, setTableSearchTerm] = useState('');
@@ -33,17 +38,10 @@ const CrossTabPage = () => {
     const downloadMenuRef = useRef(null);
 
     // Variables for Drag & Drop
-    const [variables, setVariables] = useState([
-        { id: 'banner', name: 'banner', label: 'Banner' },
-        { id: 'q1', name: 'q1', label: 'Q1 Satisfaction' },
-        { id: 'q2', name: 'q2', label: 'Q2 Usage' },
-        { id: 'gender', name: 'gender', label: 'Gender' },
-        { id: 'age', name: 'age', label: 'Age' },
-        { id: 'region', name: 'region', label: 'Region' },
-    ]);
+    const [variables, setVariables] = useState([]);
 
-    const [rowVars, setRowVars] = useState([{ id: 'q1', name: 'q1' }]);
-    const [colVars, setColVars] = useState([{ id: 'banner', name: 'banner' }]);
+    const [rowVars, setRowVars] = useState([]);
+    const [colVars, setColVars] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
 
     // Layout Options (Order & Visibility)
@@ -64,6 +62,61 @@ const CrossTabPage = () => {
     // AI Analysis State
     const [aiResult, setAiResult] = useState(null);
     const [isAiLoading, setIsAiLoading] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!auth?.user?.userId) return;
+
+            // Fetch Variables
+            try {
+                const varResult = await getRecodedVariables.mutateAsync({
+                    user: auth.user.userId,
+                    pageid: PAGE_ID
+                });
+
+                if (varResult?.success === "777" && varResult.resultjson) {
+                    const varData = Object.values(varResult.resultjson).map(item => ({
+                        id: item.name, // Use name as ID
+                        name: item.name,
+                        label: item.label
+                    }));
+                    setVariables(varData);
+                }
+            } catch (error) {
+                console.error("Failed to fetch variables:", error);
+            }
+
+            // Fetch Tables
+            try {
+                const result = await getCrossTabList.mutateAsync({
+                    user: auth.user.userId,
+                    pageid: PAGE_ID
+                });
+
+                if (result?.success === "777") {
+                    const data = Array.isArray(result.resultjson)
+                        ? result.resultjson
+                        : Object.values(result.resultjson || {});
+
+                    const mappedTables = data.map(item => ({
+                        id: item.id,
+                        name: item.TABLE_TITLE || item.name || `Table ${item.id}`,
+                        row: item.row || item.rows || [],
+                        col: item.col || item.cols || []
+                    }));
+
+                    if (mappedTables.length > 0) {
+                        setTables(mappedTables);
+                        // setSelectedTableId(mappedTables[0].id);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch cross tab list:", error);
+            }
+        };
+
+        fetchData();
+    }, [auth?.user?.userId]);
 
     const handleRunAiAnalysis = () => {
         setIsAiLoading(true);
@@ -268,8 +321,8 @@ const CrossTabPage = () => {
         variable.label.toLowerCase().includes(variableSearchTerm.toLowerCase())
     );
 
-    // Result Data (Mock)
-    const resultData = {
+    // Result Data State
+    const [resultData, setResultData] = useState({
         columns: ['Very Low', 'Low', 'Neutral', 'High', 'Very High'],
         rows: [
             { label: '합계', values: [48, 57, 66, 75, 84], total: 330 },
@@ -284,7 +337,7 @@ const CrossTabPage = () => {
             max: [3, 3, 3, 3, 3],
             n: [48, 57, 66, 75, 84]
         }
-    };
+    });
 
     const chartData = resultData.columns.map((colName, colIndex) => {
         const dataPoint = { name: colName };
@@ -332,15 +385,64 @@ const CrossTabPage = () => {
         }
     };
 
-    const handleTableSelect = (item) => {
+    const handleTableSelect = async (item) => {
         setSelectedTableId(item.id);
         setIsConfigOpen(false);
 
         // Load table configuration
-        const newRowVars = item.row.map(id => variables.find(v => v.id === id) || { id, name: id });
-        const newColVars = item.col.map(id => variables.find(v => v.id === id) || { id, name: id });
+        const newRowVars = (item.row || []).map(id => variables.find(v => v.id === id) || { id, name: id });
+        const newColVars = (item.col || []).map(id => variables.find(v => v.id === id) || { id, name: id });
         setRowVars(newRowVars);
         setColVars(newColVars);
+
+        // Fetch Table Data
+        if (auth?.user?.userId) {
+            try {
+                const result = await getCrossTabData.mutateAsync({
+                    user: auth.user.userId,
+                    tableid: item.id
+                });
+
+                if (result?.success === "777" && result.resultjson) {
+                    const data = result.resultjson;
+                    const columnsList = data.columns || [];
+                    const rowsList = data.rows || [];
+
+                    const columnLabels = columnsList.map(c => c.label);
+                    const columnKeys = columnsList.map(c => c.key);
+
+                    const parsedRows = rowsList.map(r => {
+                        const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
+                        const total = values.reduce((a, b) => a + Number(b), 0);
+                        return {
+                            label: r.label,
+                            values: values,
+                            total: total
+                        };
+                    });
+
+                    const parsedStats = {
+                        mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                        std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
+                        min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
+                        max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
+                        n: columnsList.map(c => c.n || 0)
+                    };
+
+                    setResultData({
+                        columns: columnLabels,
+                        rows: parsedRows,
+                        stats: parsedStats
+                    });
+                } else {
+                    // Fallback or error handling
+                    console.log("Failed to load table details or empty result");
+                }
+            } catch (error) {
+                console.error("Error fetching table data:", error);
+                setToast({ show: true, message: "테이블 데이터 조회 실패" });
+            }
+        }
     };
 
     const handleCreateTable = (name) => {
