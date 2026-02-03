@@ -141,16 +141,17 @@ const ChoroplethMap = ({ data }) => {
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            width: '100%',
             backgroundColor: '#fff',
             borderRadius: '8px',
-            padding: '12px',
+            padding: '0',
             position: 'relative'
         }}>
             {/* 줌 컨트롤 버튼 */}
             <div style={{
                 position: 'absolute',
-                top: '20px',
-                right: '20px',
+                top: '12px',
+                right: '12px',
                 zIndex: 100,
                 display: 'flex',
                 flexDirection: 'column',
@@ -231,11 +232,11 @@ const ChoroplethMap = ({ data }) => {
                 style={{
                     flex: 1,
                     position: 'relative',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '6px',
+                    border: 'none',
+                    borderRadius: '0',
                     backgroundColor: '#ffffff',
-                    minHeight: '250px',
-                    maxHeight: '350px',
+                    minHeight: '220px',
+                    maxHeight: '280px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -318,11 +319,12 @@ const ChoroplethMap = ({ data }) => {
 
             {/* 하단 범례 */}
             <div style={{
-                marginTop: '10px',
-                padding: '10px 12px',
+                marginTop: '0',
+                padding: '8px 12px',
                 backgroundColor: '#f8fafc',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0'
+                borderRadius: '0',
+                border: 'none',
+                borderTop: '1px solid #e2e8f0'
             }}>
                 <div style={{ fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#334155' }}>
                     범례
