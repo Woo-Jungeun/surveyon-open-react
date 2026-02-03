@@ -151,7 +151,7 @@ const AggregationCard = ({ q }) => {
                     {showChart && (
                         <div className="download-menu-container" ref={downloadMenuRef}>
                             <button
-                                className="view-option-btn download-btn"
+                                className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
                                 onClick={() => setShowDownloadMenu(!showDownloadMenu)}
                                 title="차트 다운로드"
                             >
