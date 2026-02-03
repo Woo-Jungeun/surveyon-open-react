@@ -12,7 +12,7 @@ import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
 import "./MenuBar.css";
 import NewDataModal from "./NewDataModal";
-import { VariablePageApi } from "../variable/VariablePageApi";
+
 
 
 const MENU_ITEMS = [
@@ -54,55 +54,7 @@ const MenuBar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logoutMutation } = LoginApi();
-  const { getVariableList, getVariableList1 } = VariablePageApi();
 
-  // API Test State 1
-  const [apiTestPayload, setApiTestPayload] = useState(JSON.stringify({
-    "title": "새 페이지",
-    "projectnum": "PJT-2026-001",
-    "content": ""
-  }, null, 2));
-
-  const handleApiTest = () => {
-    try {
-      const payload = JSON.parse(apiTestPayload);
-      getVariableList.mutate(payload, {
-        onSuccess: (res) => {
-          console.log("API 1 Success:", res);
-          alert("API 1 호출 성공 (콘솔 확인)");
-        },
-        onError: (err) => {
-          console.error("API 1 Error:", err);
-          alert("API 1 호출 실패 (콘솔 확인)");
-        }
-      });
-    } catch (e) {
-      alert("JSON 형식이 올바르지 않습니다.");
-    }
-  };
-
-  // API Test State 2 (getVariableList1)
-  const [apiTestPayload1, setApiTestPayload1] = useState(JSON.stringify({
-    "user": "jewoo"
-  }, null, 2));
-
-  const handleApiTest1 = () => {
-    try {
-      const payload = JSON.parse(apiTestPayload1);
-      getVariableList1.mutate(payload, {
-        onSuccess: (res) => {
-          console.log("API 2 Success:", res);
-          alert("API 2 호출 성공 (콘솔 확인)");
-        },
-        onError: (err) => {
-          console.error("API 2 Error:", err);
-          alert("API 2 호출 실패 (콘솔 확인)");
-        }
-      });
-    } catch (e) {
-      alert("JSON 형식이 올바르지 않습니다.");
-    }
-  };
 
 
   // 드롭다운 상태
@@ -223,92 +175,7 @@ const MenuBar = () => {
 
 
 
-      {/* API Test UI */}
-      {!isCollapsed && (
-        <div style={{ padding: '0 16px 16px 16px' }}>
-          <textarea
-            value={apiTestPayload}
-            onChange={(e) => setApiTestPayload(e.target.value)}
-            style={{
-              width: '100%',
-              height: '80px',
-              fontFamily: 'monospace',
-              padding: '8px',
-              border: '1px solid #000',
-              borderRadius: '4px',
-              display: 'block',
-              marginBottom: '8px',
-              fontSize: '11px',
-              resize: 'vertical',
-              backgroundColor: '#fff',
-              color: '#000'
-            }}
-          />
-          <button
-            onClick={handleApiTest}
-            style={{
-              width: '100%',
-              padding: '8px',
-              background: '#6366f1', // Indigo-500
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(99, 102, 241, 0.3)',
-              transition: 'background 0.2s'
-            }}
-            onMouseOver={(e) => e.target.style.background = '#4f46e5'}
-            onMouseOut={(e) => e.target.style.background = '#6366f1'}
-          >
-            API TEST (/page)
-          </button>
 
-          {/* Spacer */}
-          <div style={{ height: '16px' }} />
-
-          {/* API 2 UI */}
-          <textarea
-            value={apiTestPayload1}
-            onChange={(e) => setApiTestPayload1(e.target.value)}
-            style={{
-              width: '100%',
-              height: '80px',
-              fontFamily: 'monospace',
-              padding: '8px',
-              border: '1px solid #000',
-              borderRadius: '4px',
-              display: 'block',
-              marginBottom: '8px',
-              fontSize: '11px',
-              resize: 'vertical',
-              backgroundColor: '#fff',
-              color: '#000'
-            }}
-          />
-          <button
-            onClick={handleApiTest1}
-            style={{
-              width: '100%',
-              padding: '8px',
-              background: '#14b8a6', // Teal-500
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: '600',
-              boxShadow: '0 2px 4px rgba(20, 184, 166, 0.3)',
-              transition: 'background 0.2s'
-            }}
-            onMouseOver={(e) => e.target.style.background = '#0d9488'}
-            onMouseOut={(e) => e.target.style.background = '#14b8a6'}
-          >
-            API TEST (/pages/list)
-          </button>
-        </div>
-      )}
 
       {/* Project Name Display */}
       <div className="menu-bar-project">
