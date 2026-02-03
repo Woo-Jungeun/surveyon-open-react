@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
+import { saveAs } from '@progress/kendo-file-saver';
 import KendoChart from '../../components/KendoChart';
 import '@progress/kendo-theme-default/dist/all.css';
 import DataHeader from '../../components/DataHeader';
@@ -26,6 +27,9 @@ const CrossTabPage = () => {
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(true);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const chartContainerRef = useRef(null);
+    const downloadMenuRef = useRef(null);
 
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([
@@ -72,6 +76,147 @@ const CrossTabPage = () => {
             setIsAiLoading(false);
         }, 1500);
     };
+
+    // Chart type name mapping
+    const getChartTypeName = (mode) => {
+        const typeMap = {
+            'column': 'column',
+            'bar': 'bar',
+            'stackedColumn': 'stacked_column',
+            'stacked100Column': 'stacked_100_column',
+            'line': 'line',
+            'pie': 'pie',
+            'donut': 'donut',
+            'radarArea': 'radar',
+            'funnel': 'funnel',
+            'scatterPoint': 'scatter',
+            'area': 'area',
+            'map': 'map',
+            'heatmap': 'heatmap'
+        };
+        return typeMap[mode] || 'chart';
+    };
+
+    const handleDownload = async (format) => {
+        if (!chartContainerRef.current) {
+            alert('차트를 찾을 수 없습니다.');
+            return;
+        }
+
+        try {
+            // Find the chart element first (for regular charts)
+            let chartElement = chartContainerRef.current.querySelector('.k-chart');
+            let svgElement;
+
+            if (chartElement) {
+                // Regular Kendo chart
+                svgElement = chartElement.querySelector('svg');
+            } else {
+                // Map chart - find SVG but exclude zoom controls
+                // Look for SVG that's not inside the zoom control buttons
+                const allSvgs = chartContainerRef.current.querySelectorAll('svg');
+                // Filter out small SVGs (likely icons) and get the main map SVG
+                svgElement = Array.from(allSvgs).find(svg => {
+                    const bbox = svg.getBBox();
+                    return bbox.width > 100 && bbox.height > 100; // Main map will be larger
+                });
+
+                if (!svgElement && allSvgs.length > 0) {
+                    // Fallback to the largest SVG
+                    svgElement = Array.from(allSvgs).reduce((largest, current) => {
+                        const currentBox = current.getBBox();
+                        const largestBox = largest.getBBox();
+                        return (currentBox.width * currentBox.height) > (largestBox.width * largestBox.height) ? current : largest;
+                    });
+                }
+            }
+
+            if (!svgElement) {
+                alert('차트 SVG를 찾을 수 없습니다.');
+                return;
+            }
+
+            // Get SVG dimensions
+            const bbox = svgElement.getBBox();
+            const viewBox = svgElement.getAttribute('viewBox');
+            let width, height;
+
+            if (viewBox) {
+                const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+                width = vbWidth;
+                height = vbHeight;
+            } else {
+                width = bbox.width || svgElement.width.baseVal.value || 800;
+                height = bbox.height || svgElement.height.baseVal.value || 600;
+            }
+
+            // Clone and prepare SVG
+            const clonedSvg = svgElement.cloneNode(true);
+            clonedSvg.setAttribute('width', width);
+            clonedSvg.setAttribute('height', height);
+            if (!viewBox) {
+                clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            }
+
+            const svgString = new XMLSerializer().serializeToString(clonedSvg);
+
+            if (format === 'svg') {
+                // Direct SVG download
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const chartTypeName = getChartTypeName(chartMode);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `crosstab_${chartTypeName}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else if (format === 'png') {
+                // Convert SVG to PNG with proper dimensions
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+
+                img.onload = () => {
+                    // Use SVG dimensions for canvas
+                    canvas.width = width * 2; // 2x for better quality
+                    canvas.height = height * 2;
+
+                    // Fill white background
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Draw image scaled
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob((blob) => {
+                        const chartTypeName = getChartTypeName(chartMode);
+                        saveAs(blob, `crosstab_${chartTypeName}.png`);
+                    });
+                };
+
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+            }
+
+            setShowDownloadMenu(false);
+        } catch (error) {
+            console.error('Chart export error:', error);
+            alert('차트 다운로드 중 오류가 발생했습니다.');
+        }
+    };
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
+                setShowDownloadMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleSortDragStart = (e, index, type) => {
         e.dataTransfer.setData('dragIndex', index);
@@ -435,6 +580,27 @@ const CrossTabPage = () => {
                             <div className="view-options">
                                 {layoutOptions.find(opt => opt.id === 'chart')?.checked && (
                                     <>
+                                        {/* Download Button */}
+                                        <div className="download-menu-container" ref={downloadMenuRef}>
+                                            <button
+                                                className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
+                                                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                                                title="차트 다운로드"
+                                            >
+                                                <Download size={18} />
+                                            </button>
+                                            {showDownloadMenu && (
+                                                <div className="download-dropdown">
+                                                    <button onClick={() => handleDownload('png')}>
+                                                        PNG 이미지
+                                                    </button>
+                                                    <button onClick={() => handleDownload('svg')}>
+                                                        SVG 벡터
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
                                         <button className={`view-option-btn ${!chartMode || chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형 차트"><BarChart2 size={18} /></button>
                                         <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
                                         <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
@@ -636,7 +802,7 @@ const CrossTabPage = () => {
                                                     <div className="blue-bar"></div>
                                                     <span className="section-title">차트</span>
                                                 </div>
-                                                <div className="cross-tab-chart-container" style={{
+                                                <div ref={chartContainerRef} className="cross-tab-chart-container" style={{
                                                     flex: 1,
                                                     width: '100%',
                                                     minHeight: '300px',
