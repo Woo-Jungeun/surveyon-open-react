@@ -10,6 +10,7 @@ import '../../../../assets/css/grid_vertical_borders.css';
 import './VariablePage.css';
 import { VariablePageApi } from './VariablePageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 import { useSelector } from 'react-redux';
 
@@ -18,6 +19,7 @@ const VariablePage = () => {
     const auth = useSelector((store) => store.auth);
     const [variables, setVariables] = useState([]);
     const modal = useContext(modalContext);
+    const loadingSpinner = useContext(loadingSpinnerContext);
     // todo 가라데이터 
     // const [variables, setVariables] = useState([
     //     { id: 1, sysName: 'banner', name: 'banner', label: 'Banner', category: '{1;Banner A}{2;Banner B}{3;Banner C}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
@@ -63,6 +65,8 @@ const VariablePage = () => {
                 } catch (error) {
                     console.error("API Error:", error);
                     modal.showErrorAlert("에러", "문항 목록 조회 중 오류가 발생했습니다.");
+                } finally {
+                    loadingSpinner.hide();
                 }
             }
         };

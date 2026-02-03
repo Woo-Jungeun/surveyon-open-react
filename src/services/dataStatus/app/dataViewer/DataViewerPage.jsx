@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useContext } from 'react';
 import { Copy } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -8,6 +8,7 @@ import '../../../../assets/css/grid_vertical_borders.css';
 import './DataViewerPage.css';
 import { DataViewerPageApi } from './DataViewerPageApi';
 import { useSelector } from 'react-redux';
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 // Performance Optimization: Define Cell outside component and use React.memo
 const ReadOnlyCell = React.memo((props) => {
@@ -28,6 +29,8 @@ const DataViewerPage = () => {
     const auth = useSelector((store) => store.auth);
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
+    const loadingSpinner = useContext(loadingSpinnerContext);
+
     // Mock Data based on the user's image
     // const [data, setData] = useState([
     //     { id: 2, banner: 2, q1: 2, q2: 2, gender: 2, age: 21, region: 2, weight_demo: '1.00000000' },
@@ -49,6 +52,7 @@ const DataViewerPage = () => {
     //     { id: 18, banner: 3, q1: 3, q2: 3, gender: 2, age: 33, region: 3, weight_demo: '1.20000000' },
     //     { id: 19, banner: 1, q1: 4, q2: 1, gender: 1, age: 36, region: 1, weight_demo: '1.40000000' },
     //     { id: 20, banner: 2, q1: 5, q2: 2, gender: 2, age: 39, region: 2, weight_demo: '1.60000000' },
+    //     { id: 21, banner: 3, q1: 1, q2: 3, gender: 1, age: 42, region: 3, weight_demo: '0.80000000' },
     //     { id: 21, banner: 3, q1: 1, q2: 3, gender: 1, age: 42, region: 3, weight_demo: '0.80000000' },
     // ]);
     const [sort, setSort] = useState([]);
@@ -86,6 +90,8 @@ const DataViewerPage = () => {
                 } catch (error) {
                     console.error("API Error:", error);
                     setToast({ show: true, message: '데이터 조회 중 오류 발생' });
+                } finally {
+                    loadingSpinner.hide();
                 }
             }
         };

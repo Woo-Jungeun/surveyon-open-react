@@ -13,9 +13,6 @@ export function DataViewerPageApi() {
         {
             onMutate: (vars) => {
                 loadingSpinner.show();
-            },
-            onSettled: () => {
-                loadingSpinner.hide();
             }
         }
     );

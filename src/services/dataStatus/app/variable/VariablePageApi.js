@@ -13,9 +13,6 @@ export function VariablePageApi() {
         {
             onMutate: (vars) => {
                 loadingSpinner.show();
-            },
-            onSettled: () => {
-                loadingSpinner.hide();
             }
         }
     );
