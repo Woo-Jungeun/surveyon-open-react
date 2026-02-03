@@ -198,9 +198,9 @@ const AggregationCard = ({ q }) => {
                         <thead>
                             <tr>
                                 <th>항목</th>
-                                <th>Banner A</th>
-                                <th>Banner B</th>
-                                <th>Banner C</th>
+                                <th>완료</th>
+                                <th>선정탈락</th>
+                                <th>쿼터오버</th>
                                 <th>합계</th>
                             </tr>
                         </thead>
@@ -208,9 +208,9 @@ const AggregationCard = ({ q }) => {
                             {q.data.map((row, i) => (
                                 <tr key={i}>
                                     <td>{row.name}</td>
-                                    <td>{row['Banner A']}</td>
-                                    <td>{row['Banner B']}</td>
-                                    <td>{row['Banner C']}</td>
+                                    <td>{row['완료']}</td>
+                                    <td>{row['선정탈락']}</td>
+                                    <td>{row['쿼터오버']}</td>
                                     <td>{row.total}</td>
                                 </tr>
                             ))}
@@ -306,21 +306,15 @@ const AggregationPage = () => {
     const questions = [
         {
             id: 'q1',
-            label: '가장 만족한 서비스 종류는?',
+            label: '서비스 전반적인 만족도는?',
             n: 240,
             data: [
-                { name: '서비스', 'Banner A': 50, 'Banner B': 40, 'Banner C': 30, total: 120 },
-                { name: '품질', 'Banner A': 60, 'Banner B': 50, 'Banner C': 40, total: 150 },
-                { name: '디자인', 'Banner A': 20, 'Banner B': 30, 'Banner C': 40, total: 90 },
-                { name: '가격', 'Banner A': 10, 'Banner B': 20, 'Banner C': 30, total: 60 },
-                { name: '친절', 'Banner A': 40, 'Banner B': 50, 'Banner C': 60, total: 150 },
-                { name: '속도', 'Banner A': 30, 'Banner B': 40, 'Banner C': 50, total: 120 },
-                { name: '만족', 'Banner A': 80, 'Banner B': 70, 'Banner C': 110, total: 250 },
-                { name: '불편', 'Banner A': 10, 'Banner B': 10, 'Banner C': 10, total: 30 },
-                { name: '개선', 'Banner A': 20, 'Banner B': 20, 'Banner C': 20, total: 60 },
-                { name: '추천', 'Banner A': 50, 'Banner B': 50, 'Banner C': 50, total: 150 },
-                { name: '기능', 'Banner A': 40, 'Banner B': 40, 'Banner C': 40, total: 120 },
-                { name: '사용성', 'Banner A': 30, 'Banner B': 30, 'Banner C': 30, total: 90 }
+                { name: 'Very Low', '완료': 100, '선정탈락': 16, '쿼터오버': 8, total: 124 },
+                { name: 'Low', '완료': 5, '선정탈락': 16, '쿼터오버': 50, total: 48 },
+                { name: 'Neutral', '완료': 11, '선정탈락': 16, '쿼터오버': 30, total: 57 },
+                { name: 'High', '완료': 16, '선정탈락': 16, '쿼터오버': 40, total: 72 },
+                { name: 'Very High', '완료': 10, '선정탈락': 10, '쿼터오버': 20, total: 40 },
+
             ]
         },
         {
@@ -328,10 +322,10 @@ const AggregationPage = () => {
             label: '선호하는 기능을 모두 선택하세요',
             n: 240,
             data: [
-                { name: 'Option A', 'Banner A': 20, 'Banner B': 15, 'Banner C': 25, total: 60 },
-                { name: 'Option B', 'Banner A': 10, 'Banner B': 30, 'Banner C': 10, total: 50 },
-                { name: 'Option C', 'Banner A': 25, 'Banner B': 15, 'Banner C': 20, total: 60 },
-                { name: 'Option D', 'Banner A': 15, 'Banner B': 20, 'Banner C': 35, total: 70 },
+                { name: 'Option A', '완료': 20, '선정탈락': 15, '쿼터오버': 25, total: 60 },
+                { name: 'Option B', '완료': 10, '선정탈락': 30, '쿼터오버': 10, total: 50 },
+                { name: 'Option C', '완료': 25, '선정탈락': 15, '쿼터오버': 20, total: 60 },
+                { name: 'Option D', '완료': 15, '선정탈락': 20, '쿼터오버': 35, total: 70 },
             ]
         },
         {
@@ -339,8 +333,8 @@ const AggregationPage = () => {
             label: '귀하의 성별은?',
             n: 240,
             data: [
-                { name: 'Male', 'Banner A': 40, 'Banner B': 35, 'Banner C': 45, total: 120 },
-                { name: 'Female', 'Banner A': 40, 'Banner B': 45, 'Banner C': 35, total: 120 },
+                { name: 'Male', '완료': 40, '선정탈락': 35, '쿼터오버': 45, total: 120 },
+                { name: 'Female', '완료': 40, '선정탈락': 45, '쿼터오버': 35, total: 120 },
             ]
         },
         {
@@ -348,10 +342,10 @@ const AggregationPage = () => {
             label: '귀하의 연령대는?',
             n: 240,
             data: [
-                { name: '20s', 'Banner A': 20, 'Banner B': 20, 'Banner C': 20, total: 60 },
-                { name: '30s', 'Banner A': 20, 'Banner B': 20, 'Banner C': 20, total: 60 },
-                { name: '40s', 'Banner A': 20, 'Banner B': 20, 'Banner C': 20, total: 60 },
-                { name: '50s', 'Banner A': 20, 'Banner B': 20, 'Banner C': 20, total: 60 },
+                { name: '20s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
+                { name: '30s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
+                { name: '40s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
+                { name: '50s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
             ]
         },
         {
@@ -359,10 +353,10 @@ const AggregationPage = () => {
             label: '거주 지역은?',
             n: 240,
             data: [
-                { name: 'Seoul', 'Banner A': 30, 'Banner B': 30, 'Banner C': 30, total: 90 },
-                { name: 'Busan', 'Banner A': 20, 'Banner B': 20, 'Banner C': 20, total: 60 },
-                { name: 'Incheon', 'Banner A': 15, 'Banner B': 15, 'Banner C': 15, total: 45 },
-                { name: 'Others', 'Banner A': 15, 'Banner B': 15, 'Banner C': 15, total: 45 },
+                { name: 'Seoul', '완료': 30, '선정탈락': 30, '쿼터오버': 30, total: 90 },
+                { name: 'Busan', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
+                { name: 'Incheon', '완료': 15, '선정탈락': 15, '쿼터오버': 15, total: 45 },
+                { name: 'Others', '완료': 15, '선정탈락': 15, '쿼터오버': 15, total: 45 },
             ]
         },
         {
@@ -370,7 +364,7 @@ const AggregationPage = () => {
             label: '가중치 적용',
             n: 240,
             data: [
-                { name: 'Applied', 'Banner A': 80, 'Banner B': 80, 'Banner C': 80, total: 240 },
+                { name: 'Applied', '완료': 80, '선정탈락': 80, '쿼터오버': 80, total: 240 },
             ]
         }
     ];

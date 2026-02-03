@@ -47,7 +47,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         return () => resizeObserver.disconnect();
     }, [isWordCloud]);
     const [visibleSeries, setVisibleSeries] = useState(() => {
-        const names = seriesNames || ["Banner A", "Banner B", "Banner C"];
+        const names = seriesNames || ["쿼터오버", "선정탈락", "쿼터오버"];
         return names.reduce((acc, name) => ({ ...acc, [name]: true }), {});
     });
 
@@ -110,7 +110,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
 
         if (isHeatmap) {
             const heatmapData = [];
-            const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
+            const targetSeries = seriesNames || ["쿼터오버", "선정탈락", "쿼터오버"];
 
             targetSeries.forEach(seriesName => {
                 data.forEach(item => {
@@ -161,7 +161,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
             );
         }
 
-        const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
+        const targetSeries = seriesNames || ["쿼터오버", "선정탈락", "쿼터오버"];
 
         // Sophisticated, modern palette matching the theme (Blue/Slate/Teal based with accents)
         const colors = CHART_COLORS;
@@ -338,7 +338,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                                 <ChartCategoryAxisItem categories={data.map(d => d.name)} />
                             </ChartCategoryAxis>
                             <ChartValueAxis name="yAxis">
-                                <ChartValueAxisItem categories={seriesNames || ["Banner A", "Banner B", "Banner C"]} />
+                                <ChartValueAxisItem categories={seriesNames || ["쿼터오버", "선정탈락", "쿼터오버"]} />
                             </ChartValueAxis>
                         </>
                     )
