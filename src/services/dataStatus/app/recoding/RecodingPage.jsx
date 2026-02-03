@@ -346,7 +346,6 @@ const RecodingPage = () => {
                 });
                 setCheckedLogics(newChecks);
 
-                console.log("Logic Check Result:", result);
             } else {
                 modal.showErrorAlert("오류", "로직 체크 중 오류가 발생했습니다.");
             }
