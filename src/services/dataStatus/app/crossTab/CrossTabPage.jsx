@@ -24,6 +24,7 @@ const CrossTabPage = () => {
     const [variableSearchTerm, setVariableSearchTerm] = useState('');
     const [selectedWeight, setSelectedWeight] = useState("없음");
     const [chartMode, setChartMode] = useState(null);
+    const [tableMode, setTableMode] = useState('separated'); // 'merged' | 'separated'
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(true);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
@@ -448,6 +449,23 @@ const CrossTabPage = () => {
                                     />
                                 </div>
                             </div>
+
+                            {/* Table Mode Switch */}
+                            <div className="table-mode-switch">
+                                <button
+                                    className={`mode-option-btn ${tableMode === 'separated' ? 'active' : ''}`}
+                                    onClick={() => setTableMode('separated')}
+                                >
+                                    표 분리
+                                </button>
+                                <button
+                                    className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
+                                    onClick={() => setTableMode('merged')}
+                                >
+                                    표 병합
+                                </button>
+                            </div>
+
                             <div className="action-buttons">
                                 <button className="btn-save-table"><Save size={14} /> 교차 테이블 저장</button>
                                 <button className="btn-run"><ChevronRight size={16} /> 실행</button>
