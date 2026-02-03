@@ -7,7 +7,13 @@ export function DataViewerPageApi() {
         async () => await api.post({}, "/pages/be30866e-b079-44b3-a26c-ad75f89c5134/variables/recoded", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 전체 데이터 행 조회 */
+    const getPageRows = useMutation(
+        async (data) => await api.post(data, "/pages/rows", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getVariableList,
+        getPageRows
     };
 }

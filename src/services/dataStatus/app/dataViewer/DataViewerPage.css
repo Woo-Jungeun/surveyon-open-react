@@ -88,6 +88,13 @@
     padding: 8px;
     font-size: 13px;
     color: #333;
+    height: 40px;
+    box-sizing: border-box;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
 }
 
 .data-viewer-column-header {
