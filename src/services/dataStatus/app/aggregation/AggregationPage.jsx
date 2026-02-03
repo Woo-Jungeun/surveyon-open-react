@@ -247,8 +247,45 @@ const AggregationCard = ({ q }) => {
 const AggregationPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
-    const [selectedFilter, setSelectedFilter] = useState('전체');
+    const [selectedFilters, setSelectedFilters] = useState(['전체']);
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const filterRef = useRef(null);
     const mainRef = useRef(null);
+
+    // Close filter dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (filterRef.current && !filterRef.current.contains(event.target)) {
+                setIsFilterOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleFilterToggle = (filter) => {
+        if (filter === '전체') {
+            setSelectedFilters(['전체']);
+            return;
+        }
+
+        setSelectedFilters(prev => {
+            // Remove '전체' if selecting specific item
+            let newFilters = prev.filter(f => f !== '전체');
+
+            if (newFilters.includes(filter)) {
+                newFilters = newFilters.filter(f => f !== filter);
+            } else {
+                newFilters = [...newFilters, filter];
+            }
+
+            // If nothing selected, revert to '전체'
+            if (newFilters.length === 0) {
+                return ['전체'];
+            }
+            return newFilters;
+        });
+    };
 
     // 응답필터 목록
     const filterList = [
@@ -376,21 +413,46 @@ const AggregationPage = () => {
         <div className="aggregation-page" data-theme="data-dashboard">
             <DataHeader title="문항 집계 현황">
                 {/* 응답필터 드롭다운 */}
-                <div className="response-filter-container">
+                <div className="response-filter-container" ref={filterRef}>
                     <span className="response-filter-label">
                         응답필터
                     </span>
-                    <select
-                        className="response-filter-select"
-                        value={selectedFilter}
-                        onChange={(e) => setSelectedFilter(e.target.value)}
-                    >
-                        {filterList.map((filter, index) => (
-                            <option key={index} value={filter}>
-                                {filter}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="custom-filter-wrapper">
+                        <div
+                            className={`custom-filter-trigger ${isFilterOpen ? 'open' : ''}`}
+                            onClick={() => setIsFilterOpen(!isFilterOpen)}
+                        >
+                            <span className="trigger-text">
+                                {selectedFilters.includes('전체')
+                                    ? '전체'
+                                    : `${selectedFilters.length}개 선택됨`}
+                            </span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </div>
+
+                        {isFilterOpen && (
+                            <div className="custom-filter-menu">
+                                {filterList.map((filter, index) => (
+                                    <div
+                                        key={index}
+                                        className={`custom-filter-item ${selectedFilters.includes(filter) ? 'selected' : ''}`}
+                                        onClick={() => handleFilterToggle(filter)}
+                                    >
+                                        <div className={`checkbox-custom ${selectedFilters.includes(filter) ? 'checked' : ''}`}>
+                                            {selectedFilters.includes(filter) && (
+                                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                            )}
+                                        </div>
+                                        <span className="filter-text">{filter}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </DataHeader>
             <div className="aggregation-layout">
