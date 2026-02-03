@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
+import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -188,6 +188,7 @@ const AggregationCard = ({ q }) => {
                     <button className={`view-option-btn ${showChart && chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => { setChartMode('scatterPoint'); setShowChart(true); }} title="점 도표"><MoreHorizontal size={18} /></button>
                     <button className={`view-option-btn ${showChart && chartMode === 'area' ? 'active' : ''}`} onClick={() => { setChartMode('area'); setShowChart(true); }} title="영역형 차트"><AreaChart size={18} /></button>
                     <button className={`view-option-btn ${showChart && chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => { setChartMode('heatmap'); setShowChart(true); }} title="히트맵"><LayoutGrid size={18} /></button>
+                    <button className={`view-option-btn ${showChart && chartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => { setChartMode('wordCloud'); setShowChart(true); }} title="워드클라우드"><Cloud size={18} /></button>
                 </div>
             </div>
             <div className="agg-card-body">
@@ -225,16 +226,17 @@ const AggregationCard = ({ q }) => {
                             initialType={chartMode}
                             allowedTypes={
                                 chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
-                                    chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
-                                        chartMode === 'line' ? ['line'] :
-                                            chartMode === 'pie' ? ['pie'] :
-                                                chartMode === 'donut' ? ['donut'] :
-                                                    chartMode === 'area' ? ['area'] :
-                                                        chartMode === 'heatmap' ? ['heatmap'] :
-                                                            chartMode === 'radarLine' ? ['radarLine'] :
-                                                                chartMode === 'funnel' ? ['funnel'] :
-                                                                    chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                        chartMode === 'radarArea' ? ['radarArea'] : []
+                                    chartMode === 'wordCloud' ? ['wordCloud'] :
+                                        chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
+                                            chartMode === 'line' ? ['line'] :
+                                                chartMode === 'pie' ? ['pie'] :
+                                                    chartMode === 'donut' ? ['donut'] :
+                                                        chartMode === 'area' ? ['area'] :
+                                                            chartMode === 'heatmap' ? ['heatmap'] :
+                                                                chartMode === 'radarLine' ? ['radarLine'] :
+                                                                    chartMode === 'funnel' ? ['funnel'] :
+                                                                        chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                            chartMode === 'radarArea' ? ['radarArea'] : []
                             }
                         />
                     </div>
@@ -304,14 +306,21 @@ const AggregationPage = () => {
     const questions = [
         {
             id: 'q1',
-            label: '서비스 전반적인 만족도는?',
+            label: '가장 만족한 서비스 종류는?',
             n: 240,
             data: [
-                { name: 'Very Low', 'Banner A': 20, 'Banner B': 16, 'Banner C': 8, total: 44 },
-                { name: 'Low', 'Banner A': 5, 'Banner B': 16, 'Banner C': 50, total: 48 },
-                { name: 'Neutral', 'Banner A': 11, 'Banner B': 16, 'Banner C': 30, total: 57 },
-                { name: 'High', 'Banner A': 16, 'Banner B': 16, 'Banner C': 40, total: 72 },
-                { name: 'Very High', 'Banner A': 10, 'Banner B': 10, 'Banner C': 20, total: 40 },
+                { name: '서비스', 'Banner A': 50, 'Banner B': 40, 'Banner C': 30, total: 120 },
+                { name: '품질', 'Banner A': 60, 'Banner B': 50, 'Banner C': 40, total: 150 },
+                { name: '디자인', 'Banner A': 20, 'Banner B': 30, 'Banner C': 40, total: 90 },
+                { name: '가격', 'Banner A': 10, 'Banner B': 20, 'Banner C': 30, total: 60 },
+                { name: '친절', 'Banner A': 40, 'Banner B': 50, 'Banner C': 60, total: 150 },
+                { name: '속도', 'Banner A': 30, 'Banner B': 40, 'Banner C': 50, total: 120 },
+                { name: '만족', 'Banner A': 80, 'Banner B': 70, 'Banner C': 110, total: 250 },
+                { name: '불편', 'Banner A': 10, 'Banner B': 10, 'Banner C': 10, total: 30 },
+                { name: '개선', 'Banner A': 20, 'Banner B': 20, 'Banner C': 20, total: 60 },
+                { name: '추천', 'Banner A': 50, 'Banner B': 50, 'Banner C': 50, total: 150 },
+                { name: '기능', 'Banner A': 40, 'Banner B': 40, 'Banner C': 40, total: 120 },
+                { name: '사용성', 'Banner A': 30, 'Banner B': 30, 'Banner C': 30, total: 90 }
             ]
         },
         {

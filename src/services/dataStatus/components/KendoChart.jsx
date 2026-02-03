@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Chart,
     ChartSeries,
@@ -8,19 +8,44 @@ import {
     ChartLegend,
     ChartTooltip,
     ChartValueAxis,
-    ChartValueAxisItem
+    ChartValueAxisItem,
+    ChartArea
 } from "@progress/kendo-react-charts";
 import { ArrowLeftRight } from 'lucide-react';
+import WordCloud from 'react-d3-cloud';
 import ChoroplethMap from './ChoroplethMap';
+
+const CHART_COLORS = [
+    "#60a5fa", "#fb923c", "#34d399", "#a78bfa", "#fb7185", "#22d3ee",
+    "#facc15", "#f472b6", "#818cf8", "#a3e635", "#2dd4bf", "#f87171"
+];
 
 const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
     const [chartType, setChartType] = useState(initialType || 'column');
+    const containerRef = useRef(null);
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
     useEffect(() => {
         if (initialType) {
             setChartType(initialType);
         }
     }, [initialType]);
+
+    const isWordCloud = chartType === 'wordCloud';
+
+    useEffect(() => {
+        if (!isWordCloud || !containerRef.current) return;
+
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                const { width, height } = entry.contentRect;
+                setDimensions({ width, height });
+            }
+        });
+
+        resizeObserver.observe(containerRef.current);
+        return () => resizeObserver.disconnect();
+    }, [isWordCloud]);
     const [visibleSeries, setVisibleSeries] = useState(() => {
         const names = seriesNames || ["Banner A", "Banner B", "Banner C"];
         return names.reduce((acc, name) => ({ ...acc, [name]: true }), {});
@@ -41,6 +66,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         { text: "깔때기", value: "funnel" },
         { text: "점 도표", value: "scatterPoint" },
         { text: "방사형 영역", value: "radarArea" },
+        { text: "워드클라우드", value: "wordCloud" },
     ];
 
     const chartTypeOptions = allowedTypes
@@ -55,12 +81,13 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         setChartType(chartTypeOptions[nextIndex].value);
     };
 
-    const isPieOrDonut = chartType === 'pie' || chartType === 'donut' || chartType === 'funnel';
+    const isPieOrDonut = chartType === 'pie' || chartType === 'donut';
     const isHeatmap = chartType === 'heatmap';
     const isMap = chartType === 'map';
     const isRadar = chartType === 'radarLine' || chartType === 'radarArea';
     const isStacked = chartType === 'stackedColumn' || chartType === 'stacked100Column';
     const isScatterPoint = chartType === 'scatterPoint';
+
 
     const renderSeries = () => {
         if (isPieOrDonut) {
@@ -113,19 +140,22 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         }
 
         if (chartType === 'funnel') {
+            const coloredData = data.map((item, index) => ({
+                ...item,
+                color: CHART_COLORS[index % CHART_COLORS.length]
+            }));
+
             return (
                 <ChartSeriesItem
                     type="funnel"
-                    data={data}
+                    data={coloredData}
                     categoryField="name"
                     field="total"
+                    colorField="color"
                     name="Total"
                     labels={{
-                        visible: true,
-                        content: (e) => `${e.category}: ${e.value}`,
-                        position: "center",
-                        background: "none",
-                        color: "#fff"
+                        visible: false,
+                        content: () => "",
                     }}
                 />
             );
@@ -134,18 +164,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         const targetSeries = seriesNames || ["Banner A", "Banner B", "Banner C"];
 
         // Sophisticated, modern palette matching the theme (Blue/Slate/Teal based with accents)
-        const colors = [
-            "#0ea5e9", // Sky 500
-            "#f59e0b", // Amber 500
-            "#10b981", // Emerald 500
-            "#2563eb", // Blue 600 (Primary)
-            "#8b5cf6", // Violet 500
-            "#14b8a6", // Teal 500
-            "#f43f5e", // Rose 500
-            "#64748b", // Slate 500
-            "#050505ff", // Indigo 500
-            "#ec4899", // Pink 500
-        ];
+        const colors = CHART_COLORS;
 
         return targetSeries.map((name, index) => (
             <ChartSeriesItem
@@ -167,7 +186,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
     };
 
     const onLegendItemClick = (e) => {
-        if (!isPieOrDonut && !isHeatmap) {
+        if (!isPieOrDonut && !isHeatmap && !isWordCloud) {
             const seriesName = e.series.name;
             setVisibleSeries(prev => ({
                 ...prev,
@@ -181,19 +200,62 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         return <ChoroplethMap data={data} />;
     }
 
-    // Define colors for Chart component to use globally (especially for Pie/Donut)
-    const chartColors = [
-        "#0ea5e9", // Sky 500
-        "#f59e0b", // Amber 500
-        "#10b981", // Emerald 500
-        "#2563eb", // Blue 600 (Primary)
-        "#8b5cf6", // Violet 500
-        "#14b8a6", // Teal 500
-        "#f43f5e", // Rose 500
-        "#64748b", // Slate 500
-        "#050505ff", // Indigo 500
-        "#ec4899", // Pink 500
-    ];
+    // 워드 클라우드 렌더링
+    if (isWordCloud) {
+        // Transform data for WordCloud: { text: string, value: number }
+        const wordData = data.map(item => ({
+            text: item.name,
+            value: item.total ? item.total : (item.count || 10) // fallback value
+        }));
+
+        return (
+            <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', position: 'relative' }}>
+                {showDropdown && (
+                    <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                        <button
+                            onClick={toggleChartType}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '6px 12px',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '6px',
+                                backgroundColor: 'white',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                color: '#475569',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                        >
+                            <span>워드클라우드</span>
+                            <ArrowLeftRight size={14} />
+                        </button>
+                    </div>
+                )}
+                <div ref={containerRef} style={{ flex: 1, width: '100%', height: '100%', overflow: 'hidden' }}>
+                    {dimensions.width > 0 && dimensions.height > 0 && (
+                        <WordCloud
+                            data={wordData}
+                            width={dimensions.width}
+                            height={dimensions.height}
+                            font="Pretendard, sans-serif"
+                            fontStyle="normal"
+                            fontWeight="bold"
+                            fontSize={(word) => word.value / 5 + 12}
+                            spiral="archimedean"
+                            rotate={(word) => (word.value % 2 === 0 ? 0 : 90)}
+                            padding={2}
+                            fill={(d, i) => CHART_COLORS[i % CHART_COLORS.length]}
+                        />
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%' }}>
@@ -227,63 +289,80 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 style={{ flex: 1, width: '100%', height: '100%' }}
                 key={`${chartType}-${JSON.stringify(visibleSeries)}`}
                 onLegendItemClick={onLegendItemClick}
-                seriesColors={chartColors}
+                seriesColors={CHART_COLORS}
                 transitions={false}
             >
-                {!isHeatmap && <ChartLegend position="bottom" orientation="horizontal" />}
+                <ChartArea background="none" margin={{ top: 35, bottom: 10, left: 10, right: 10 }} />
+                {!isHeatmap && <ChartLegend position="bottom" orientation="horizontal" />
+                }
 
                 {/* Axes for Standard Charts */}
-                {!isPieOrDonut && !isHeatmap && !isRadar && (
-                    <ChartCategoryAxis>
-                        <ChartCategoryAxisItem categories={data.map(d => d.name)} />
-                    </ChartCategoryAxis>
-                )}
-                {isRadar && (
-                    <ChartCategoryAxis>
-                        <ChartCategoryAxisItem categories={data.map(d => d.name)} />
-                    </ChartCategoryAxis>
-                )}
-                {!isPieOrDonut && !isHeatmap && !isRadar && (
-                    <ChartValueAxis>
-                        <ChartValueAxisItem
-                            labels={{ format: chartType === 'stacked100Column' ? "P0" : "{0}%" }}
-                            max={chartType === 'stacked100Column' ? 1 : undefined}
-                            majorUnit={chartType === 'stacked100Column' ? 0.2 : (chartType === 'stackedColumn' ? 50 : 20)}
-                        />
-                    </ChartValueAxis>
-                )}
-                {isRadar && (
-                    <ChartValueAxis>
-                        <ChartValueAxisItem labels={{ format: "{0}%" }} majorUnit={20} />
-                    </ChartValueAxis>
-                )}
-
-                {/* Axes for Heatmap */}
-                {isHeatmap && (
-                    <>
-                        <ChartCategoryAxis name="xAxis">
+                {
+                    !isPieOrDonut && !isHeatmap && !isRadar && (
+                        <ChartCategoryAxis>
                             <ChartCategoryAxisItem categories={data.map(d => d.name)} />
                         </ChartCategoryAxis>
-                        <ChartValueAxis name="yAxis">
-                            <ChartValueAxisItem categories={seriesNames || ["Banner A", "Banner B", "Banner C"]} />
+                    )
+                }
+                {
+                    isRadar && (
+                        <ChartCategoryAxis>
+                            <ChartCategoryAxisItem categories={data.map(d => d.name)} />
+                        </ChartCategoryAxis>
+                    )
+                }
+                {
+                    !isPieOrDonut && !isHeatmap && !isRadar && (
+                        <ChartValueAxis>
+                            <ChartValueAxisItem
+                                labels={{ format: chartType === 'stacked100Column' ? "P0" : "{0}%" }}
+                                max={chartType === 'stacked100Column' ? 1 : undefined}
+                                majorUnit={chartType === 'stacked100Column' ? 0.2 : (chartType === 'stackedColumn' ? 50 : 20)}
+                            />
                         </ChartValueAxis>
-                    </>
-                )}
+                    )
+                }
+                {
+                    isRadar && (
+                        <ChartValueAxis>
+                            <ChartValueAxisItem labels={{ format: "{0}%" }} majorUnit={20} />
+                        </ChartValueAxis>
+                    )
+                }
 
-                <ChartTooltip visible={!isPieOrDonut} render={(e) => {
+                {/* Axes for Heatmap */}
+                {
+                    isHeatmap && (
+                        <>
+                            <ChartCategoryAxis name="xAxis">
+                                <ChartCategoryAxisItem categories={data.map(d => d.name)} />
+                            </ChartCategoryAxis>
+                            <ChartValueAxis name="yAxis">
+                                <ChartValueAxisItem categories={seriesNames || ["Banner A", "Banner B", "Banner C"]} />
+                            </ChartValueAxis>
+                        </>
+                    )
+                }
+
+                <ChartTooltip visible={!isPieOrDonut || chartType === 'funnel'} render={(e) => {
                     if (isHeatmap) {
-                        return `${e.point.dataItem.y} - ${e.point.dataItem.x}: ${e.point.dataItem.value}%`;
+                        return `${e.point?.dataItem?.y} - ${e.point?.dataItem?.x}: ${e.point?.dataItem?.value}%`;
+                    }
+                    if (chartType === 'funnel') {
+                        const category = e.point ? e.point.category : e.category;
+                        const value = e.point ? e.point.value : e.value;
+                        return `${category}: ${value}`;
                     }
                     if (!isPieOrDonut) {
-                        return `${e.point.series.field}: ${e.point ? e.point.value : e.value}%`;
+                        return `${e.point?.series?.field}: ${e.point ? e.point.value : e.value}%`;
                     }
                 }} />
 
                 <ChartSeries>
                     {renderSeries()}
                 </ChartSeries>
-            </Chart>
-        </div>
+            </Chart >
+        </div >
     );
 };
 

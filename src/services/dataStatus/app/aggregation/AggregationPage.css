@@ -94,10 +94,12 @@
 
 .agg-table-container {
     flex: 1;
-    overflow-x: auto;
+    overflow: auto;
+    /* Handle both x and y scroll */
+    max-height: 300px;
+    /* Limit height for scrolling */
     border-radius: 8px;
     border: 1px solid #e2e8f0;
-    overflow: hidden;
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
@@ -322,10 +324,16 @@
     border: 1px solid #e2e8f0;
     border-radius: 6px;
     cursor: pointer;
+    user-select: none;
     transition: all 0.2s;
     height: 38px;
-    /* Fixed height match input */
     box-sizing: border-box;
+}
+
+/* Force pointer cursor on all children inside the trigger */
+.custom-filter-trigger * {
+    cursor: pointer !important;
+    user-select: none !important;
 }
 
 .custom-filter-trigger:hover,
