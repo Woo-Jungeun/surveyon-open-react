@@ -224,7 +224,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 </div>
             )}
             <Chart
-                style={{ flex: 1 }}
+                style={{ flex: 1, width: '100%', height: '100%' }}
                 key={`${chartType}-${JSON.stringify(visibleSeries)}`}
                 onLegendItemClick={onLegendItemClick}
                 seriesColors={chartColors}

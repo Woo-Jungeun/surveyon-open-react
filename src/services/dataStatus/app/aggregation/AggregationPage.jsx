@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X } from 'lucide-react';
+import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
+import { exportImage, exportSVG } from '@progress/kendo-drawing';
+import { saveAs } from '@progress/kendo-file-saver';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
@@ -9,6 +11,126 @@ import '@progress/kendo-theme-default/dist/all.css';
 const AggregationCard = ({ q }) => {
     const [chartMode, setChartMode] = useState('column');
     const [showChart, setShowChart] = useState(true);
+    const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const chartContainerRef = useRef(null);
+    const downloadMenuRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
+                setShowDownloadMenu(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Chart type name mapping
+    const getChartTypeName = (mode) => {
+        const typeMap = {
+            'column': 'column',
+            'bar': 'bar',
+            'stackedColumn': 'stacked_column',
+            'stacked100Column': 'stacked_100_column',
+            'line': 'line',
+            'pie': 'pie',
+            'donut': 'donut',
+            'radarArea': 'radar',
+            'funnel': 'funnel',
+            'scatterPoint': 'scatter',
+            'area': 'area',
+            'heatmap': 'heatmap'
+        };
+        return typeMap[mode] || 'chart';
+    };
+
+    const handleDownload = async (format) => {
+        if (!chartContainerRef.current) {
+            alert('차트를 찾을 수 없습니다.');
+            return;
+        }
+
+        try {
+            // Find the chart element first
+            const chartElement = chartContainerRef.current.querySelector('.k-chart');
+
+            if (!chartElement) {
+                alert('차트를 찾을 수 없습니다.');
+                return;
+            }
+
+            // Find the SVG element within the chart
+            const svgElement = chartElement.querySelector('svg');
+
+            if (!svgElement) {
+                alert('차트 SVG를 찾을 수 없습니다.');
+                return;
+            }
+
+            // Get SVG dimensions
+            const bbox = svgElement.getBBox();
+            const viewBox = svgElement.getAttribute('viewBox');
+            let width, height;
+
+            if (viewBox) {
+                const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+                width = vbWidth;
+                height = vbHeight;
+            } else {
+                width = bbox.width || svgElement.width.baseVal.value || 800;
+                height = bbox.height || svgElement.height.baseVal.value || 600;
+            }
+
+            // Clone and prepare SVG
+            const clonedSvg = svgElement.cloneNode(true);
+            clonedSvg.setAttribute('width', width);
+            clonedSvg.setAttribute('height', height);
+            if (!viewBox) {
+                clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            }
+
+            const svgString = new XMLSerializer().serializeToString(clonedSvg);
+
+            if (format === 'svg') {
+                // Direct SVG download
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const chartTypeName = getChartTypeName(chartMode);
+                saveAs(blob, `${q.id}_${chartTypeName}.svg`);
+            } else if (format === 'png') {
+                // Convert SVG to PNG with proper dimensions
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+
+                img.onload = () => {
+                    // Use SVG dimensions for canvas
+                    canvas.width = width * 2; // 2x for better quality
+                    canvas.height = height * 2;
+
+                    // Fill white background
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                    // Draw image scaled
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob((blob) => {
+                        const chartTypeName = getChartTypeName(chartMode);
+                        saveAs(blob, `${q.id}_${chartTypeName}.png`);
+                    });
+                };
+
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+            }
+
+            setShowDownloadMenu(false);
+        } catch (error) {
+            console.error('Chart export error:', error);
+            alert('차트 다운로드 중 오류가 발생했습니다.');
+        }
+    };
 
     return (
         <div id={q.id} className="agg-card">
@@ -18,6 +140,29 @@ const AggregationCard = ({ q }) => {
                     <div className="agg-card-label">{q.label}</div>
                 </div>
                 <div className="view-options">
+                    {/* Download Button */}
+                    {showChart && (
+                        <div className="download-menu-container" ref={downloadMenuRef}>
+                            <button
+                                className="view-option-btn download-btn"
+                                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                                title="차트 다운로드"
+                            >
+                                <Download size={18} />
+                            </button>
+                            {showDownloadMenu && (
+                                <div className="download-dropdown">
+                                    <button onClick={() => handleDownload('png')}>
+                                        PNG 이미지
+                                    </button>
+                                    <button onClick={() => handleDownload('svg')}>
+                                        SVG 벡터
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     <button
                         className={`view-option-btn close-chart-btn ${!showChart ? 'active' : ''}`}
                         onClick={() => setShowChart(false)}
@@ -66,7 +211,7 @@ const AggregationCard = ({ q }) => {
 
                 {/* Chart */}
                 {showChart && (
-                    <div className="agg-chart-container">
+                    <div className="agg-chart-container" ref={chartContainerRef}>
                         <KendoChart
                             data={q.data}
                             initialType={chartMode}
