@@ -228,6 +228,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 key={`${chartType}-${JSON.stringify(visibleSeries)}`}
                 onLegendItemClick={onLegendItemClick}
                 seriesColors={chartColors}
+                transitions={false}
             >
                 {!isHeatmap && <ChartLegend position="bottom" orientation="horizontal" />}
 
