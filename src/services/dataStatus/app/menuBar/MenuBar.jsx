@@ -11,9 +11,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
 import "./MenuBar.css";
+import { MenuBarApi } from "./MenuBarApi";
 import NewDataModal from "./NewDataModal";
-
-
 
 const MENU_ITEMS = [
   {
@@ -47,7 +46,7 @@ const MENU_ITEMS = [
   },
 ];
 
-const MenuBar = () => {
+const MenuBar = ({ projectName: propProjectName, lastUpdated: propLastUpdated }) => {
   const [, , removeCookie] = useCookies();
   const auth = useSelector((store) => store.auth);
   const modal = useContext(modalContext);
@@ -55,7 +54,58 @@ const MenuBar = () => {
   const location = useLocation();
   const { logoutMutation } = LoginApi();
 
+  const { getPageMetadata } = MenuBarApi();
 
+  const [pageInfo, setPageInfo] = useState({
+    title: propProjectName || sessionStorage.getItem("projectname") || "조사명 없음",
+    processedAt: propLastUpdated || "-"
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (auth?.user?.userId) {
+        const userId = auth.user.userId;
+        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+
+        try {
+          // 1. 페이지 메타데이터 조회
+          const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
+
+          if (metadataResult?.success === "777") {
+            const { resultjson } = metadataResult;
+            if (resultjson) {
+              // Format processedAt date to YYYY-MM-DD HH:mm:ss
+              const rawDate = resultjson?.dataset?.processedAt;
+              let formattedDate = "-";
+              if (rawDate) {
+                const d = new Date(rawDate);
+                if (!isNaN(d.getTime())) {
+                  const pad = (n) => String(n).padStart(2, '0');
+                  formattedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+                } else {
+                  formattedDate = rawDate;
+                }
+              }
+
+              setPageInfo(prev => ({
+                ...prev,
+                title: resultjson?.title,
+                processedAt: formattedDate
+              }));
+              // // 세션 스토리지 업데이트
+              // if (resultjson.title) {
+              //   sessionStorage.setItem("projectname", resultjson.title);
+              // }
+            }
+          }
+        } catch (error) {
+          console.error("API Error:", error);
+        }
+      }
+    };
+
+    fetchData();
+  }, [auth?.user?.userId]);
 
   // 드롭다운 상태
   const [userOpen, setUserOpen] = useState(false);
@@ -180,7 +230,7 @@ const MenuBar = () => {
       {/* Project Name Display */}
       <div className="menu-bar-project">
         <div className="menu-bar-project-name">
-          {sessionStorage.getItem("projectname") || "조사명 없음"}
+          {pageInfo.title}
         </div>
       </div>
 
@@ -204,7 +254,7 @@ const MenuBar = () => {
         </button>
         <div className="menu-bar-last-update">
           <Clock size={12} />
-          <span>마지막: 2026-01-26 14:30:00</span>
+          <span>마지막: {pageInfo.processedAt || "-"}</span>
         </div>
       </div>
 
