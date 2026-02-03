@@ -18,9 +18,15 @@ export function RecodingPageApi() {
         async (data) => await api.post(data, "/pages/variables/recoded/delete", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 로직 체크 */
+    const verifyRecodeLogic = useMutation(
+        async (data) => await api.post(data, "/analysis/evaluate-table", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getRecodedVariables,
         setRecodedVariable,
-        deleteRecodedVariable
+        deleteRecodedVariable,
+        verifyRecodeLogic
     };
 }

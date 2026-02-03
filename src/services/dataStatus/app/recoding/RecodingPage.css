@@ -183,14 +183,10 @@
 
 .recoding-evaluation-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.recoding-evaluation-column {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 12px;
+    column-gap: 40px;
+    padding: 0 10px;
 }
 
 .recoding-evaluation-row {

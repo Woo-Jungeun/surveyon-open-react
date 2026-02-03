@@ -93,7 +93,7 @@ const RecodingPage = () => {
     // ]);
 
     const auth = useSelector((store) => store.auth);
-    const { getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
+    const { getRecodedVariables, setRecodedVariable, deleteRecodedVariable, verifyRecodeLogic } = RecodingPageApi();
     const modal = useContext(modalContext);
 
     const [variables, setVariables] = useState([]);
@@ -280,22 +280,80 @@ const RecodingPage = () => {
         { field: 'delete', title: '삭제', show: true, width: '100px', editable: false },
     ]);
 
-    const handleLogicCheck = () => {
-        // Check all logics at once
-        const newChecks = {};
-        categories.forEach(cat => {
-            newChecks[cat.id] = `${Math.floor(Math.random() * 50) + 10} / ${(Math.random() * 30 + 10).toFixed(1)}%`;
-        });
-        setCheckedLogics(newChecks);
+    const handleLogicCheck = async () => {
+        if (!auth?.user?.userId || !selectedVar.name) return;
 
-        // Set mock evaluation result
-        setEvaluationResult({
-            n: 165,
-            mean: 0.8484848484848485,
-            stdDev: 0.334075474032776,
-            min: 0.8,
-            max: 1.6
-        });
+        const userId = auth.user.userId;
+        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+        const variableKey = selectedVar.name;
+
+        const variablesPayload = {
+            [variableKey]: {
+                id: variableKey,
+                name: selectedVar.name,
+                label: selectedVar.label,
+                type: selectedVar.type || "categorical",
+                info: categories.map(c => ({
+                    index: Number(c.realVal) || 0,
+                    label: c.category,
+                    logic: c.logic,
+                    type: "categorical",
+                    value: Number(c.val) || 0
+                }))
+            }
+        };
+
+        try {
+            const payload = {
+                pageid: pageId,
+                user: userId,
+                table: { x_info: [variableKey] },
+                variables: variablesPayload
+            };
+
+            const result = await verifyRecodeLogic.mutateAsync(payload);
+
+            if (result?.success === "777") {
+
+                const data = result.resultjson || {};
+                const stats = data.columns?.[0] || {};
+                const rows = data.rows || [];
+
+                // Update Evaluation Result
+                setEvaluationResult({
+                    n: stats.n || 0,
+                    mean: stats.mean !== undefined ? stats.mean : '-',
+                    stdDev: stats.std !== undefined ? stats.std : '-',
+                    min: stats.min !== undefined ? stats.min : '-',
+                    max: stats.max !== undefined ? stats.max : '-',
+                    mode: stats.mod !== undefined ? stats.mod : '-',
+                    median: stats.med !== undefined ? stats.med : '-'
+                });
+                setIsEvaluationOpen(true);
+
+                // Update Grid Checks
+                const newChecks = {};
+                categories.forEach(cat => {
+                    // Match category value with row value
+                    const matchedRow = rows.find(r => String(r.value) === String(cat.val));
+
+                    if (matchedRow && matchedRow.cells?.total_auto) {
+                        const cell = matchedRow.cells.total_auto;
+                        newChecks[cat.id] = `${cell.count} / ${cell.percent}%`;
+                    } else {
+                        newChecks[cat.id] = "- / -%";
+                    }
+                });
+                setCheckedLogics(newChecks);
+
+                console.log("Logic Check Result:", result);
+            } else {
+                modal.showErrorAlert("오류", "로직 체크 중 오류가 발생했습니다.");
+            }
+        } catch (error) {
+            console.error("Logic Check Error:", error);
+            modal.showErrorAlert("오류", "로직 체크 중 오류가 발생했습니다.");
+        }
     };
 
     // Handle Paste from Excel
@@ -586,29 +644,33 @@ const RecodingPage = () => {
                                 {isEvaluationOpen && (
                                     <div className="recoding-evaluation-content">
                                         <div className="recoding-evaluation-grid">
-                                            <div className="recoding-evaluation-column">
-                                                <div className="recoding-evaluation-row">
-                                                    <span className="recoding-evaluation-label">전체 N:</span>
-                                                    <span className="recoding-evaluation-value">{evaluationResult.n}</span>
-                                                </div>
-                                                <div className="recoding-evaluation-row">
-                                                    <span className="recoding-evaluation-label">표준편차:</span>
-                                                    <span className="recoding-evaluation-value">{evaluationResult.stdDev}</span>
-                                                </div>
-                                                <div className="recoding-evaluation-row">
-                                                    <span className="recoding-evaluation-label">평균:</span>
-                                                    <span className="recoding-evaluation-value">{evaluationResult.mean}</span>
-                                                </div>
+                                            <div className="recoding-evaluation-row">
+                                                <span className="recoding-evaluation-label">전체 N:</span>
+                                                <span className="recoding-evaluation-value">{evaluationResult.n}</span>
                                             </div>
-                                            <div className="recoding-evaluation-column">
-                                                <div className="recoding-evaluation-row">
-                                                    <span className="recoding-evaluation-label">최대:</span>
-                                                    <span className="recoding-evaluation-value">{evaluationResult.max}</span>
-                                                </div>
-                                                <div className="recoding-evaluation-row">
-                                                    <span className="recoding-evaluation-label">최소:</span>
-                                                    <span className="recoding-evaluation-value">{evaluationResult.min}</span>
-                                                </div>
+                                            <div className="recoding-evaluation-row">
+                                                <span className="recoding-evaluation-label">최대:</span>
+                                                <span className="recoding-evaluation-value">{evaluationResult.max}</span>
+                                            </div>
+                                            <div className="recoding-evaluation-row">
+                                                <span className="recoding-evaluation-label">중앙값:</span>
+                                                <span className="recoding-evaluation-value">{evaluationResult.median || '-'}</span>
+                                            </div>
+                                            <div className="recoding-evaluation-row">
+                                                <span className="recoding-evaluation-label">표준편차:</span>
+                                                <span className="recoding-evaluation-value">{evaluationResult.stdDev}</span>
+                                            </div>
+                                            <div className="recoding-evaluation-row">
+                                                <span className="recoding-evaluation-label">최소:</span>
+                                                <span className="recoding-evaluation-value">{evaluationResult.min}</span>
+                                            </div>
+                                            <div className="recoding-evaluation-row">
+                                                <span className="recoding-evaluation-label">최빈값:</span>
+                                                <span className="recoding-evaluation-value">{evaluationResult.mode || '-'}</span>
+                                            </div>
+                                            <div className="recoding-evaluation-row">
+                                                <span className="recoding-evaluation-label">평균:</span>
+                                                <span className="recoding-evaluation-value">{evaluationResult.mean}</span>
                                             </div>
                                         </div>
                                     </div>
