@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
@@ -246,7 +247,22 @@ const AggregationCard = ({ q }) => {
 const AggregationPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
+    const [selectedFilter, setSelectedFilter] = useState('전체');
     const mainRef = useRef(null);
+
+    // 응답필터 목록
+    const filterList = [
+        '전체',
+        'LIFE_STYLE_AGE_라이프스타일 나이',
+        '라이프스타일_나이',
+        'GENDER_성별',
+        'JOB_GROUP_직업군',
+        '지오그룹',
+        'AREA_GROUP_지역그룹',
+        '지역그룹',
+        'AREA_CAPITAL_수도권/비수도권',
+        '수도권/비수도권'
+    ];
 
     const questions = [
         {
@@ -358,7 +374,25 @@ const AggregationPage = () => {
 
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
-            <DataHeader title="문항 집계 현황" />
+            <DataHeader title="문항 집계 현황">
+                {/* 응답필터 드롭다운 */}
+                <div className="response-filter-container">
+                    <span className="response-filter-label">
+                        응답필터
+                    </span>
+                    <select
+                        className="response-filter-select"
+                        value={selectedFilter}
+                        onChange={(e) => setSelectedFilter(e.target.value)}
+                    >
+                        {filterList.map((filter, index) => (
+                            <option key={index} value={filter}>
+                                {filter}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </DataHeader>
             <div className="aggregation-layout">
                 <SideBar
                     title="문항 목록"
