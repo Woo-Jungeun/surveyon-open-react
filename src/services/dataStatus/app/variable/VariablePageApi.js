@@ -7,8 +7,12 @@ export function VariablePageApi() {
         async (data) => await api.post(data, "/page", "API_BASE_URL_DATASTATUS")
     );
 
+    const getVariableList1 = useMutation(
+        async (data) => await api.post(data, "/pages/list", "API_BASE_URL_DATASTATUS")
+    );
 
     return {
         getVariableList,
+        getVariableList1
     };
 }
