@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
+import { useSelector } from 'react-redux';
+import { RecodingPageApi } from './RecodingPageApi';
 import DataHeader from '../../components/DataHeader';
 import Toast from '../../../../components/common/Toast';
 import SideBar from '../../components/SideBar';
@@ -8,6 +10,7 @@ import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import '../../../../assets/css/grid_vertical_borders.css';
 import './RecodingPage.css';
+import { modalContext } from '../../../../components/common/Modal';
 
 const EditableCell = (props) => {
     const { dataItem, field, columns, onUpdate, onPaste } = props;
@@ -78,39 +81,173 @@ const CustomCell = (props) => {
 
 const RecodingPage = () => {
     // Mock Data
-    const [variables, setVariables] = useState([
-        { id: 'weight_demo', name: 'weight_demo', label: 'Weight Demo' },
-        { id: 'gender_grp', name: 'gender_grp', label: 'Gender Group' },
-        { id: 'age_band', name: 'age_band', label: 'Age Band' },
-        { id: 'region_group', name: 'region_group', label: 'Region Group' },
-        { id: 'q1_positive', name: 'q1_positive', label: 'Q1 Positive' },
-        { id: 'heavy_user', name: 'heavy_user', label: 'Usage Segment' },
-        { id: 'age_group_6', name: 'age_group_6', label: 'Age Group 6' },
-        { id: 'banner_group', name: 'banner_group', label: 'Banner Group' },
-    ]);
+    // const [variables, setVariables] = useState([
+    //     { id: 'weight_demo', name: 'weight_demo', label: 'Weight Demo' },
+    //     { id: 'gender_grp', name: 'gender_grp', label: 'Gender Group' },
+    //     { id: 'age_band', name: 'age_band', label: 'Age Band' },
+    //     { id: 'region_group', name: 'region_group', label: 'Region Group' },
+    //     { id: 'q1_positive', name: 'q1_positive', label: 'Q1 Positive' },
+    //     { id: 'heavy_user', name: 'heavy_user', label: 'Usage Segment' },
+    //     { id: 'age_group_6', name: 'age_group_6', label: 'Age Group 6' },
+    //     { id: 'banner_group', name: 'banner_group', label: 'Banner Group' },
+    // ]);
 
-    const [selectedVar, setSelectedVar] = useState(variables[0]);
+    const auth = useSelector((store) => store.auth);
+    const { getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
+    const modal = useContext(modalContext);
+
+    const [variables, setVariables] = useState([]);
+    const [selectedVar, setSelectedVar] = useState({ id: null, name: '', label: '', info: [] });
     const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        const fetchVariables = async () => {
+            // ... existing logic ...
+            if (auth?.user?.userId) {
+                const userId = auth.user.userId;
+                const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+
+                try {
+                    const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
+                    if (result?.success === "777" && result.resultjson) {
+                        const transformedData = Object.values(result.resultjson).map(item => ({
+                            id: item.id,
+                            name: item.name,
+                            label: item.label,
+                            type: item.type,
+                            info: item.info || [] // Include info array
+                        }));
+                        setVariables(transformedData);
+                        // If we are currently editing a variable, update it from fresh data if found, else keep current or reset?
+                        // For now, if no selection, select first.
+                        if (selectedVar.id === null && transformedData.length > 0) {
+                            setSelectedVar(transformedData[0]);
+                        } else if (selectedVar.id) {
+                            const found = transformedData.find(v => v.id === selectedVar.id);
+                            if (found) setSelectedVar(found);
+                        }
+                    }
+                } catch (error) {
+                    console.error("API Error:", error);
+                }
+            }
+        };
+
+        fetchVariables();
+    }, [auth?.user?.userId]);
+
+    // ... (useEffect for selectedVar logic - unchanged)
+
+    // ... (filteredVariables, categories state - unchanged)
+
+    // ... (helper functions - unchanged)
+
+
+
+    // ... (handleSave - unchanged)
+
+    const [categories, setCategories] = useState([]);
+    const [checkedLogics, setCheckedLogics] = useState({});
+    const [evaluationResult, setEvaluationResult] = useState(null);
+    const [isEvaluationOpen, setIsEvaluationOpen] = useState(true);
+    const [toast, setToast] = useState({ show: false, message: '' });
+
+    // Dirty Check State
+    const [isDirty, setIsDirty] = useState(false);
+    const [initialState, setInitialState] = useState(null);
+    const lastSelectedIdRef = useRef(null);
+
+    // Update categories when selected variable changes (only if ID changes)
+    useEffect(() => {
+        // Function to extract state for comparison
+        const getCurrentState = (v, c) => ({
+            name: v?.name || '',
+            label: v?.label || '',
+            categories: c || []
+        });
+
+        if (selectedVar?.id !== lastSelectedIdRef.current) {
+            lastSelectedIdRef.current = selectedVar?.id;
+
+            if (selectedVar?.id && selectedVar.info) {
+                const newCategories = selectedVar.info.map(item => ({
+                    id: item.index,
+                    realVal: item.index,
+                    category: item.label,
+                    val: item.value,
+                    logic: item.logic
+                }));
+                setCategories(newCategories);
+                setInitialState({
+                    name: selectedVar.name,
+                    label: selectedVar.label,
+                    categories: newCategories // Deep copy not strictly needed if we don't mutate this array directly in place without copy
+                });
+            } else if (selectedVar?.id === null) {
+                // New variable
+                // But only if we are truly resetting (handled by handleAddVariable usually, but here for safety)
+                // If switching from existing to New, handleAddVariable is called.
+                // If just mounting, selectedVar is empty.
+                if (selectedVar.name === '') {
+                    setCategories([]);
+                    setInitialState({ name: '', label: '', categories: [] });
+                }
+            }
+            setIsDirty(false);
+        }
+    }, [selectedVar]);
+
+    // Check for dirty state
+    useEffect(() => {
+        if (!initialState) return;
+
+        const currentName = selectedVar.name || '';
+        const currentLabel = selectedVar.label || '';
+
+        // Simple comparison for strings
+        const nameChanged = currentName !== initialState.name;
+        const labelChanged = currentLabel !== initialState.label;
+
+        // Deep comparison for categories
+        // We compare key fields: realVal, category, val, logic
+        // ID is internal key, might not matter for content, but order matters.
+        const categoriesChanged = JSON.stringify(categories.map(c => ({
+            realVal: c.realVal, category: c.category, val: c.val, logic: c.logic
+        }))) !== JSON.stringify(initialState.categories.map(c => ({
+            realVal: c.realVal, category: c.category, val: c.val, logic: c.logic
+        })));
+
+        setIsDirty(nameChanged || labelChanged || categoriesChanged);
+    }, [selectedVar.name, selectedVar.label, categories, initialState]);
+
+    const handleVariableSelect = (item) => {
+        // Prevent selection if same ID
+        if (item.id === selectedVar.id) return;
+
+        if (isDirty) {
+            modal.showConfirm("알림", "변경사항이 저장되지 않았습니다. 이동하시겠습니까?", {
+                btns: [
+                    { title: "취소" },
+                    {
+                        title: "확인",
+                        click: () => {
+                            setSelectedVar(item);
+                        }
+                    }
+                ]
+            });
+        } else {
+            setSelectedVar(item);
+        }
+    }
 
     const filteredVariables = variables.filter(item =>
         (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.label || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // Mock Categories for the selected variable
-    const [categories, setCategories] = useState([
-        { id: 0, realVal: '0', category: '__CONFIG__{"rowVars":["q1"],"colVars":["banr', val: '', logic: '1==0' },
-        { id: 1, realVal: '1', category: 'Low Weight', val: '0.8', logic: 'q1 == 1' },
-        { id: 2, realVal: '2', category: 'Mid Weight', val: '1', logic: 'q1 == 2' },
-        { id: 3, realVal: '3', category: 'High Weight', val: '1.2', logic: 'q1 == 3' },
-        { id: 4, realVal: '4', category: 'Very High Weight', val: '1.4', logic: 'q1 == 4' },
-        { id: 5, realVal: '5', category: 'Extreme Weight', val: '1.6', logic: 'q1 == 5' },
-    ]);
-
-    const [checkedLogics, setCheckedLogics] = useState({});
-    const [evaluationResult, setEvaluationResult] = useState(null);
-    const [isEvaluationOpen, setIsEvaluationOpen] = useState(true);
-    const [toast, setToast] = useState({ show: false, message: '' });
+    // Remove old Categories state definition as it is moved up
+    // const [categories, setCategories] = useState([]);
 
     const handleCopyToClipboard = async () => {
         try {
@@ -222,21 +359,152 @@ const RecodingPage = () => {
         setCategories(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
     };
 
-    const handleDelete = (id) => {
-        setCategories(prev => prev.filter(item => item.id !== id));
-    };
-
     const handleAddVariable = () => {
-        setSelectedVar({ id: null, name: '', label: '' });
+        // Clear selection to start fresh
+        setSelectedVar({ id: null, name: '', label: '', info: [] });
         setCategories([]);
         setEvaluationResult(null);
         setCheckedLogics({});
     };
 
+    const saveVariableData = async (categoriesToSave) => {
+        if (!auth?.user?.userId) return;
+        if (!selectedVar.name) {
+            setToast({ show: true, message: '문항 ID를 입력해주세요.' });
+            return;
+        }
+
+        const userId = auth.user.userId;
+        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+        const variableKey = selectedVar.name;
+
+        const targetCategories = categoriesToSave || categories;
+
+        const variablesPayload = {
+            [variableKey]: {
+                id: variableKey,
+                name: selectedVar.name,
+                label: selectedVar.label,
+                type: selectedVar.type || "categorical",
+                info: targetCategories.map(c => ({
+                    index: Number(c.realVal) || 0,
+                    label: c.category,
+                    logic: c.logic,
+                    type: "categorical", // Defaulting type as per request example
+                    value: Number(c.val) || 0
+                }))
+            }
+        };
+
+        try {
+            const result = await setRecodedVariable.mutateAsync({
+                user: userId,
+                pageid: pageId,
+                variables: variablesPayload
+            });
+
+            if (result?.success === "777") {
+                modal.showAlert("알림", "저장되었습니다.");
+                // Refresh list
+                const getResult = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
+                if (getResult?.success === "777" && getResult.resultjson) {
+                    const transformedData = Object.values(getResult.resultjson).map(item => ({
+                        id: item.id,
+                        name: item.name,
+                        label: item.label,
+                        type: item.type,
+                        info: item.info || []
+                    }));
+                    setVariables(transformedData);
+                    // Reselect the saved variable to ensure we have latest state
+                    const savedVar = transformedData.find(v => v.name === variableKey);
+                    if (savedVar) {
+                        setSelectedVar(savedVar);
+
+                        // Update state to match server and reset dirty status
+                        const savedCategories = (savedVar.info || []).map(item => ({
+                            id: item.index,
+                            realVal: item.index,
+                            category: item.label,
+                            val: item.value,
+                            logic: item.logic
+                        }));
+                        setCategories(savedCategories);
+                        setInitialState({
+                            name: savedVar.name,
+                            label: savedVar.label,
+                            categories: savedCategories
+                        });
+                    }
+                }
+            } else {
+                modal.showErrorAlert("알림", result?.message || '저장 실패');
+            }
+        } catch (error) {
+            console.error("Save Error:", error);
+            modal.showErrorAlert("오류", "저장 중 오류 발생");
+        }
+    };
+
     const handleSave = () => {
-        // In a real app, this would send 'categories' (and logic checks) to the server
-        console.log('Saving recoding rules:', categories);
-        alert('재코딩 규칙이 저장되었습니다.');
+        saveVariableData();
+    };
+
+    const handleDelete = (id) => {
+        setCategories(prev => prev.filter(item => item.id !== id));
+    };
+
+
+
+    const handleDeleteVariable = () => {
+        if (!auth?.user?.userId || !selectedVar.name) return;
+
+        modal.showConfirm("알림", "선택한 문항을 삭제하시겠습니까?", {
+            btns: [
+                { title: "취소" },
+                {
+                    title: "삭제",
+                    click: async () => {
+                        const userId = auth.user.userId;
+                        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+
+                        try {
+                            const result = await deleteRecodedVariable.mutateAsync({
+                                user: userId,
+                                pageid: pageId,
+                                variables: [selectedVar.name]
+                            });
+
+                            if (result?.success === "777") {
+                                modal.showAlert("알림", "삭제되었습니다.");
+
+                                // Refresh list
+                                const getResult = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
+                                if (getResult?.success === "777" && getResult.resultjson) {
+                                    const transformedData = Object.values(getResult.resultjson).map(item => ({
+                                        id: item.id,
+                                        name: item.name,
+                                        label: item.label,
+                                        type: item.type,
+                                        info: item.info || []
+                                    }));
+                                    setVariables(transformedData);
+                                    handleAddVariable(); // Reset to Add mode
+                                } else {
+                                    setVariables([]);
+                                    handleAddVariable();
+                                }
+                            } else {
+                                modal.showErrorAlert("알림", result?.message || "삭제 실패");
+                            }
+                        } catch (error) {
+                            console.error("Delete Variable Error:", error);
+                            modal.showErrorAlert("오류", "삭제 중 오류가 발생했습니다.");
+                        }
+                    }
+                }
+            ]
+        });
     };
 
     return (
@@ -246,8 +514,11 @@ const RecodingPage = () => {
                 title="문항 가공"
                 addButtonLabel={selectedVar?.id === null ? null : "문항 추가"}
                 onAdd={selectedVar?.id === null ? null : handleAddVariable}
+                onDelete={selectedVar?.id === null ? null : handleDeleteVariable}
+                deleteButtonLabel="문항 삭제"
                 saveButtonLabel={selectedVar?.id === null ? "추가 문항 저장" : "변경사항 저장"}
                 onSave={handleSave}
+                saveButtonDisabled={!isDirty}
             />
 
             <Toast
@@ -262,7 +533,7 @@ const RecodingPage = () => {
                     items={filteredVariables}
                     title="문항 목록"
                     selectedId={selectedVar?.id}
-                    onItemClick={setSelectedVar}
+                    onItemClick={handleVariableSelect}
                     onSearch={setSearchTerm}
                 />
 
