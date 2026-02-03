@@ -8,10 +8,12 @@
 }
 
 /* Content Area */
+/* Content Area */
 .variable-page-content {
     flex: 1;
     padding: 24px;
-    overflow-y: auto;
+    /* overflow-y: auto;  <-- Removed to support internal grid scrolling */
+    overflow: hidden;
     /* Floating Style Matching Sidebar */
     height: calc(100% - 32px);
     margin: 16px;
@@ -20,6 +22,8 @@
     border-radius: 16px;
     box-shadow: var(--ds-shadow);
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .variable-page-card {
@@ -27,10 +31,19 @@
     border-radius: 0;
     padding: 0;
     box-shadow: none;
-    min-height: 100%;
+    height: 100%;
+    /* Changed from min-height to height for grid scrolling */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Ensure the grid container fills the card */
+.variable-page-card .cmn_grid {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
 }
 
 /* Input Cell */
@@ -43,6 +56,14 @@
     font-size: 13px;
     outline: none;
     transition: border-color 0.2s;
+    resize: none;
+    min-height: 36px;
+    font-family: inherit;
+    white-space: pre-wrap;
+    overflow: hidden;
+    /* Hide scrollbar if relying on auto-grow, but here just wrap is enough */
+    box-sizing: border-box;
+    display: block;
 }
 
 .variable-input:focus {
@@ -100,7 +121,7 @@
 }
 
 /* Read Only Cell */
-.variable-input-readonly {
+.variable-text-readonly {
     width: 100%;
     padding: 8px;
     border-radius: 4px;
@@ -108,7 +129,11 @@
     background: var(--color-disabled-bg);
     color: var(--color-medium-gray);
     font-size: 13px;
-    outline: none;
+    min-height: 36px;
+    white-space: normal;
+    word-break: break-all;
+    line-height: 1.4;
+    box-sizing: border-box;
 }
 
 /* Column Header */
