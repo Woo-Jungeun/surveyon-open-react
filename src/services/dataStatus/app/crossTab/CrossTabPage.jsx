@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
@@ -13,6 +13,7 @@ import './CrossTabPage.css';
 import { CrossTabPageApi } from './CrossTabPageApi';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
+import FullscreenModal from './FullscreenModal';
 
 const CrossTabPage = () => {
     // Auth & API
@@ -40,6 +41,7 @@ const CrossTabPage = () => {
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
+    const [fullscreenModal, setFullscreenModal] = useState({ open: false, type: null }); // 'table', 'stats', 'chart'
 
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([]);
@@ -280,6 +282,8 @@ const CrossTabPage = () => {
 
                                         const newParsedStats = {
                                             mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                                            med: newColumnsList.map(c => c.med !== undefined ? c.med : '-'),
+                                            mod: newColumnsList.map(c => c.mod !== undefined ? c.mod : '-'),
                                             std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
                                             min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
                                             max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
@@ -1684,18 +1688,32 @@ const CrossTabPage = () => {
                                                         <div className="blue-bar"></div>
                                                         <span className="section-title">표</span>
                                                     </div>
-                                                    <button
-                                                        onClick={handleCopyTable}
-                                                        style={{
-                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                            padding: '6px 12px', background: '#f8f9fa',
-                                                            border: '1px solid #e9ecef', borderRadius: '6px',
-                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                            cursor: 'pointer', marginRight: '16px', flexShrink: 0
-                                                        }}
-                                                    >
-                                                        <Copy size={14} /> 복사
-                                                    </button>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <button
+                                                            onClick={handleCopyTable}
+                                                            style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                padding: '6px 12px', background: '#f8f9fa',
+                                                                border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                cursor: 'pointer', flexShrink: 0
+                                                            }}
+                                                        >
+                                                            <Copy size={14} /> 복사
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setFullscreenModal({ open: true, type: 'table' })}
+                                                            style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                padding: '6px 12px', background: '#f8f9fa',
+                                                                border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                cursor: 'pointer', flexShrink: 0
+                                                            }}
+                                                        >
+                                                            <Maximize size={14} /> 전체화면
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
                                                     <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
@@ -1773,18 +1791,32 @@ const CrossTabPage = () => {
                                                         <div className="blue-bar"></div>
                                                         <span className="section-title">통계</span>
                                                     </div>
-                                                    <button
-                                                        onClick={handleCopyStats}
-                                                        style={{
-                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                            padding: '6px 12px', background: '#f8f9fa',
-                                                            border: '1px solid #e9ecef', borderRadius: '6px',
-                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                            cursor: 'pointer', marginRight: '16px', flexShrink: 0
-                                                        }}
-                                                    >
-                                                        <Copy size={14} /> 복사
-                                                    </button>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <button
+                                                            onClick={handleCopyStats}
+                                                            style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                padding: '6px 12px', background: '#f8f9fa',
+                                                                border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                cursor: 'pointer', flexShrink: 0
+                                                            }}
+                                                        >
+                                                            <Copy size={14} /> 복사
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setFullscreenModal({ open: true, type: 'stats' })}
+                                                            style={{
+                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                padding: '6px 12px', background: '#f8f9fa',
+                                                                border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                cursor: 'pointer', flexShrink: 0
+                                                            }}
+                                                        >
+                                                            <Maximize size={14} /> 전체화면
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, overflow: 'auto' }}>
                                                     <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
@@ -1846,7 +1878,7 @@ const CrossTabPage = () => {
                                                                                 height: '52px', boxSizing: 'border-box', verticalAlign: 'middle',
                                                                                 fontSize: '13px', color: '#333'
                                                                             }}>
-                                                                                {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v}
+                                                                                {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
                                                                             </td>
                                                                         ))}
                                                                     </tr>
@@ -1862,9 +1894,23 @@ const CrossTabPage = () => {
                                     if (option.id === 'chart') {
                                         return (
                                             <div key="chart" className="result-block">
-                                                <div className="section-header">
-                                                    <div className="blue-bar"></div>
-                                                    <span className="section-title">차트</span>
+                                                <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div className="blue-bar"></div>
+                                                        <span className="section-title">차트</span>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => setFullscreenModal({ open: true, type: 'chart' })}
+                                                        style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                            padding: '6px 12px', background: '#f8f9fa',
+                                                            border: '1px solid #e9ecef', borderRadius: '6px',
+                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                            cursor: 'pointer', flexShrink: 0
+                                                        }}
+                                                    >
+                                                        <Maximize size={14} /> 전체화면
+                                                    </button>
                                                 </div>
                                                 <div ref={chartContainerRef} className="cross-tab-chart-container" style={{
                                                     flex: 1,
@@ -1971,6 +2017,18 @@ const CrossTabPage = () => {
                     </div>
                 </div>
             </div >
+
+            {/* Fullscreen Modal */}
+            <FullscreenModal
+                isOpen={fullscreenModal.open}
+                type={fullscreenModal.type}
+                onClose={() => setFullscreenModal({ open: false, type: null })}
+                resultData={resultData}
+                statsOptions={statsOptions}
+                chartData={chartData}
+                seriesNames={seriesNames}
+                chartMode={chartMode}
+            />
 
             <CreateTablePopup
                 isOpen={isModalOpen}

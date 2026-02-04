@@ -1,0 +1,121 @@
+/* Common Utility Classes */
+.btn-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+
+.btn-action:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.section-header-with-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.section-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.blue-bar {
+    width: 4px;
+    height: 20px;
+    background: #3b82f6;
+    border-radius: 2px;
+}
+
+.section-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.result-block {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+}
+
+.table-wrapper {
+    flex: 1;
+    min-width: 0;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    overflow: auto;
+}
+
+.table-chart-wrapper {
+    display: flex;
+    gap: 24px;
+    align-items: stretch;
+    flex: 1;
+    min-height: 0;
+}
+
+.cross-table-container {
+    display: grid;
+    gap: 24px;
+    align-items: stretch;
+}
+
+.cross-table-container.single-column {
+    grid-template-columns: 1fr;
+}
+
+.cross-table-container.double-column {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.toggle-chip {
+    padding: 6px 16px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.toggle-chip:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.toggle-chip.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: #fff;
+}
+
+.toggle-chip-group {
+    display: flex;
+    gap: 8px;
+}
