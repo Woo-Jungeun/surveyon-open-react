@@ -13,8 +13,14 @@ export function CrossTabPageApi() {
         async (data) => await api.post(data, "/tables/get", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 교차테이블 저장 */
+    const saveCrossTable = useMutation(
+        async (data) => await api.post(data, "/tables/set", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getCrossTabList,
         getCrossTabData,
+        saveCrossTable,
     };
 }

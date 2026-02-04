@@ -410,7 +410,7 @@
 /* Center Content */
 .center-content {
     flex: 1;
-    padding: 40px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;

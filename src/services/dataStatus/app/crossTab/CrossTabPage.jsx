@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
@@ -12,12 +12,14 @@ import CreateTablePopup from './CreateTablePopup';
 import './CrossTabPage.css';
 import { CrossTabPageApi } from './CrossTabPageApi';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
+import { modalContext } from "@/components/common/Modal.jsx";
 
 const CrossTabPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getCrossTabList, getCrossTabData } = CrossTabPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable } = CrossTabPageApi();
     const { getRecodedVariables } = RecodingPageApi();
+    const modal = React.useContext(modalContext);
     const PAGE_ID = "0c1de699-0270-49bf-bfac-7e6513a3f525";
 
     // Data State
@@ -28,6 +30,8 @@ const CrossTabPage = () => {
     const [tableSearchTerm, setTableSearchTerm] = useState('');
     const [variableSearchTerm, setVariableSearchTerm] = useState('');
     const [selectedWeight, setSelectedWeight] = useState("없음");
+    const [tableName, setTableName] = useState('Banner by Q1'); // Added table name state
+    const [filterExpression, setFilterExpression] = useState(''); // Added filter expression state
     const [chartMode, setChartMode] = useState(null);
     const [tableMode, setTableMode] = useState('separated'); // 'merged' | 'separated'
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(true);
@@ -43,6 +47,14 @@ const CrossTabPage = () => {
     const [rowVars, setRowVars] = useState([]);
     const [colVars, setColVars] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
+
+    // Filter weight variables from API response
+    const weightVariableOptions = useMemo(() => {
+        const weights = variables
+            .filter(v => v.name.startsWith('weight_'))
+            .map(v => v.name);
+        return ["없음", ...weights];
+    }, [variables]);
 
     // Layout Options (Order & Visibility)
     const [layoutOptions, setLayoutOptions] = useState([
@@ -78,7 +90,8 @@ const CrossTabPage = () => {
                     const varData = Object.values(varResult.resultjson).map(item => ({
                         id: item.name, // Use name as ID
                         name: item.name,
-                        label: item.label
+                        label: item.label,
+                        info: item.info || []
                     }));
                     setVariables(varData);
                 }
@@ -117,6 +130,66 @@ const CrossTabPage = () => {
 
         fetchData();
     }, [auth?.user?.userId]);
+
+    // Preview Data Calculation
+    const previewData = useMemo(() => {
+        if (rowVars.length === 0 && colVars.length === 0) return null;
+
+        const getGroupedLabels = (vars) => {
+            return vars.map(v => {
+                const variable = variables.find(existing => existing.id === v.id);
+                let labels = [];
+                if (!variable || !variable.info) {
+                    labels = [v.name];
+                } else {
+                    labels = variable.info
+                        .filter(i => i.type !== 'config')
+                        .map(i => i.label);
+                    // If labels empty but info exists (edge case), use name
+                    if (labels.length === 0) labels = [v.name];
+                }
+                return { name: v.name, labels };
+            });
+        };
+
+        let rowGroups = getGroupedLabels(rowVars);
+        let colGroups = getGroupedLabels(colVars);
+
+        // Default handling
+        if (rowGroups.length === 0) rowGroups = [{ name: '', labels: [''] }];
+        if (colGroups.length === 0) colGroups = [{ name: '', labels: [''] }];
+
+        return {
+            rowGroups,
+            colGroups,
+            rows: rowGroups.flatMap(g => g.labels),
+            cols: colGroups.flatMap(g => g.labels)
+        };
+    }, [rowVars, colVars, variables]);
+
+    // Update Result Data from Preview
+    useEffect(() => {
+        if (!previewData) return;
+
+        const { rows, cols } = previewData;
+
+        setResultData(prev => ({
+            ...prev,
+            columns: cols,
+            rows: rows.map(label => ({
+                label,
+                values: new Array(cols.length).fill(0),
+                total: 0
+            })),
+            stats: {
+                mean: new Array(cols.length).fill('-'),
+                std: new Array(cols.length).fill('-'),
+                min: new Array(cols.length).fill('-'),
+                max: new Array(cols.length).fill('-'),
+                n: new Array(cols.length).fill(0)
+            }
+        }));
+    }, [previewData]);
 
     const handleRunAiAnalysis = () => {
         setIsAiLoading(true);
@@ -387,6 +460,7 @@ const CrossTabPage = () => {
 
     const handleTableSelect = async (item) => {
         setSelectedTableId(item.id);
+        setTableName(item.name || "");
         setIsConfigOpen(false);
 
         // Load table configuration
@@ -497,6 +571,42 @@ const CrossTabPage = () => {
         }
     };
 
+    const handleSaveTable = async () => {
+        if (!auth?.user?.userId) {
+            modal.showAlert("알림", "로그인이 필요합니다.");
+            return;
+        }
+
+        if (rowVars.length === 0) {
+            modal.showAlert('알림', '세로축(행) 변수를 최소 하나 이상 선택해주세요.');
+            return;
+        }
+
+        try {
+            const payload = {
+                user: auth.user.userId,
+                tableid: selectedTableId,
+                name: tableName || "Untitled Table",
+                config: {
+                    x_info: rowVars.map(v => v.name),
+                    y_info: colVars.map(v => v.name),
+                    filter_expression: filterExpression,
+                    weight_col: selectedWeight === "없음" ? "" : selectedWeight
+                }
+            };
+
+            const result = await saveCrossTable.mutateAsync(payload);
+            if (result?.success === "777") {
+                modal.showAlert('성공', '저장되었습니다.');
+            } else {
+                modal.showAlert('실패', '저장 실패');
+            }
+        } catch (error) {
+            console.error("Save error:", error);
+            modal.showAlert('오류', '저장 중 오류가 발생했습니다.');
+        }
+    };
+
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
             <DataHeader
@@ -547,7 +657,9 @@ const CrossTabPage = () => {
                                     <input
                                         type="text"
                                         className="config-title-input"
-                                        defaultValue="Banner by Q1"
+                                        value={tableName}
+                                        onChange={(e) => setTableName(e.target.value)}
+                                        placeholder="테이블 명을 입력하세요"
                                     />
                                 </div>
                             </div>
@@ -569,7 +681,7 @@ const CrossTabPage = () => {
                             </div>
 
                             <div className="action-buttons">
-                                <button className="btn-save-table"><Save size={14} /> 교차 테이블 저장</button>
+                                <button className="btn-save-table" onClick={handleSaveTable}><Save size={14} /> 교차 테이블 저장</button>
                                 <button className="btn-run"><ChevronRight size={16} /> 실행</button>
                             </div>
                         </div>
@@ -670,19 +782,82 @@ const CrossTabPage = () => {
                                         </div>
 
                                         {/* Center Content: Filter & Weight */}
-                                        <div className="center-content">
-                                            <div>
-                                                <div className="center-content__label">필터식</div>
-                                                <input type="text" className="center-content__input" placeholder="예: age >= 20" />
-                                            </div>
-                                            <div>
-                                                <div className="center-content__label">가중치 문항</div>
-                                                <DropDownList
-                                                    data={["없음", "weight_demo"]}
-                                                    value={selectedWeight}
-                                                    onChange={(e) => setSelectedWeight(e.target.value)}
-                                                    style={{ width: '100%', height: '42px' }}
-                                                />
+                                        <div className="center-content" style={{ display: 'flex', flexDirection: 'column', height: '100%', minWidth: 0, overflow: 'hidden' }}>
+                                            {/* Preview Table */}
+                                            {previewData && (
+                                                <div className="preview-table-wrapper" style={{ flex: 1, overflow: 'auto', border: '1px solid #e0e0e0', borderRadius: '4px', minHeight: '250px', marginTop: '45px', maxHeight: 'calc(100vh - 350px)', width: '100%', marginBottom: '5px' }}>
+                                                    <table style={{ minWidth: '100%', width: 'max-content', borderCollapse: 'collapse', fontSize: '12px' }}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th rowSpan={2} colSpan={2} style={{ background: '#f8f9fa', padding: '4px', borderBottom: '1px solid #ddd', borderRight: '1px solid #ddd', position: 'sticky', top: 0, left: 0, zIndex: 3, minWidth: '120px' }}></th>
+                                                                {previewData.colGroups.map((group, i) => (
+                                                                    <th key={i} colSpan={group.labels.length} style={{ background: '#f8f9fa', padding: '4px', borderBottom: '1px solid #ddd', borderLeft: '1px solid #ddd', textAlign: 'center', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1 }}>
+                                                                        {group.name}
+                                                                    </th>
+                                                                ))}
+                                                            </tr>
+                                                            <tr>
+                                                                {previewData.colGroups.flatMap((group, i) =>
+                                                                    group.labels.map((label, j) => (
+                                                                        <th key={`${i}-${j}`} style={{ background: '#f9f9f9', padding: '4px', borderBottom: '1px solid #ddd', borderLeft: '1px solid #ddd', minWidth: '60px', textAlign: 'center', whiteSpace: 'nowrap', position: 'sticky', top: '25px', zIndex: 1 }}>
+                                                                            {label}
+                                                                        </th>
+                                                                    ))
+                                                                )}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {previewData.rowGroups.map((group, groupIdx) => (
+                                                                group.labels.map((label, labelIdx) => (
+                                                                    <tr key={`${groupIdx}-${labelIdx}`}>
+                                                                        {group.name === '' ? (
+                                                                            <td colSpan={2} style={{ background: '#f8f9fa', padding: '4px', borderRight: '1px solid #ddd', borderBottom: '1px solid #eee', fontWeight: 'bold', textAlign: 'center', position: 'sticky', left: 0, zIndex: 2 }}>
+                                                                                {label}
+                                                                            </td>
+                                                                        ) : (
+                                                                            <>
+                                                                                {labelIdx === 0 && (
+                                                                                    <td rowSpan={group.labels.length} style={{ background: '#f8f9fa', padding: '4px', borderRight: '1px solid #ddd', borderBottom: '1px solid #eee', fontWeight: 'bold', verticalAlign: 'middle', textAlign: 'center', position: 'sticky', left: 0, zIndex: 2 }}>
+                                                                                        {group.name}
+                                                                                    </td>
+                                                                                )}
+                                                                                <td style={{ background: '#f9f9f9', padding: '4px', borderRight: '1px solid #ddd', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: '500' }}>
+                                                                                    {label}
+                                                                                </td>
+                                                                            </>
+                                                                        )}
+                                                                        {previewData.cols.map((_, colIdx) => (
+                                                                            <td key={colIdx} style={{ borderBottom: '1px solid #eee', borderLeft: '1px solid #eee' }}></td>
+                                                                        ))}
+                                                                    </tr>
+                                                                ))
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+
+                                            <div className="filter-weight-row" style={{ display: 'flex', gap: '20px', position: 'sticky', bottom: 0, background: '#f8f9fa', zIndex: 10, padding: '8px 12px', borderTop: '1px solid #e0e0e0', alignItems: 'center', boxShadow: '0 -2px 5px rgba(0,0,0,0.05)' }}>
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터식</span>
+                                                    <input
+                                                        type="text"
+                                                        className="center-content__input"
+                                                        placeholder="예: age >= 20"
+                                                        style={{ flex: 1, height: '34px', fontSize: '13px' }}
+                                                        value={filterExpression}
+                                                        onChange={(e) => setFilterExpression(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>가중치 문항</span>
+                                                    <DropDownList
+                                                        data={weightVariableOptions}
+                                                        value={selectedWeight}
+                                                        onChange={(e) => setSelectedWeight(e.target.value)}
+                                                        style={{ flex: 1, height: '34px' }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

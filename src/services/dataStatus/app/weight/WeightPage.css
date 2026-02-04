@@ -212,7 +212,7 @@
 /* Drop Zones Container */
 .drop-zones-container {
     flex: 1;
-    padding: 24px;
+    padding: 12px;
     overflow: hidden;
     display: flex;
     flex-direction: column;
