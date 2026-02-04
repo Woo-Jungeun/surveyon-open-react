@@ -191,11 +191,18 @@ const CrossTabPage = () => {
                                 const columnKeys = columnsList.map(c => c.key);
 
                                 const parsedRows = rowsList.map(r => {
-                                    const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
-                                    const total = values.reduce((a, b) => a + Number(b), 0);
+                                    const processedValues = columnKeys.map(k => {
+                                        const cell = r.cells?.[k];
+                                        return {
+                                            count: cell?.count || 0,
+                                            percent: cell?.percent || "0.0"
+                                        };
+                                    });
+                                    // Total calculation might still be useful for reference but display uses Api values
+                                    const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
                                     return {
                                         label: r.label,
-                                        values: values,
+                                        values: processedValues, // Now detailed objects
                                         total: total
                                     };
                                 });
@@ -260,9 +267,15 @@ const CrossTabPage = () => {
                                         const newColumnKeys = newColumnsList.map(c => c.key);
 
                                         const newParsedRows = newRowsList.map(r => {
-                                            const values = newColumnKeys.map(k => r.cells?.[k]?.count || 0);
-                                            const total = values.reduce((a, b) => a + Number(b), 0);
-                                            return { label: r.label, values: values, total: total };
+                                            const processedValues = newColumnKeys.map(k => {
+                                                const cell = r.cells?.[k];
+                                                return {
+                                                    count: cell?.count || 0,
+                                                    percent: cell?.percent || "0.0"
+                                                };
+                                            });
+                                            const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
+                                            return { label: r.label, values: processedValues, total: total };
                                         });
 
                                         const newParsedStats = {
@@ -335,9 +348,9 @@ const CrossTabPage = () => {
     // Update Result Data from Preview
     // Update Result Data from Preview
     useEffect(() => {
-        // Clear result data when variables change (previewData changes) to avoid showing fake data
-        setResultData(null);
-        setIsStatsOptionsOpen(false);
+        // Clear result data resultData manually handled to avoid race conditions
+        // setResultData(null); 
+        // setIsStatsOptionsOpen(false);
     }, [previewData]);
 
     // Reset horizontal scroll position when colVars changes
@@ -557,24 +570,24 @@ const CrossTabPage = () => {
     const chartData = resultData ? resultData.columns.map((colName, colIndex) => {
         const dataPoint = { name: colName };
         resultData.rows.forEach(row => {
-            if (row.label === '합계') {
-                dataPoint.total = row.values[colIndex];
+            if (row.label === '합계' || row.label === '전체') {
+                dataPoint.total = row.values[colIndex]?.count || 0;
             } else {
-                dataPoint[row.label] = row.values[colIndex];
+                dataPoint[row.label] = row.values[colIndex]?.count || 0;
             }
         });
         return dataPoint;
     }) : [];
 
     const seriesNames = resultData ? resultData.rows
-        .filter(row => row.label !== '합계')
+        .filter(row => row.label !== '합계' && row.label !== '전체')
         .map(row => row.label) : [];
 
     const handleCopyTable = async () => {
         try {
             const headers = ['문항', ...resultData.columns].join('\t');
             const rows = resultData.rows.map(row =>
-                [row.label, ...row.values].join('\t')
+                [row.label, ...row.values.map(v => v.count)].join('\t')
             ).join('\n');
             await navigator.clipboard.writeText(`${headers}\n${rows}`);
             setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
@@ -660,11 +673,17 @@ const CrossTabPage = () => {
                     const columnKeys = columnsList.map(c => c.key);
 
                     const parsedRows = rowsList.map(r => {
-                        const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
-                        const total = values.reduce((a, b) => a + Number(b), 0);
+                        const processedValues = columnKeys.map(k => {
+                            const cell = r.cells?.[k];
+                            return {
+                                count: cell?.count || 0,
+                                percent: cell?.percent || "0.0"
+                            };
+                        });
+                        const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
                         return {
                             label: r.label,
-                            values: values,
+                            values: processedValues,
                             total: total
                         };
                     });
@@ -756,9 +775,15 @@ const CrossTabPage = () => {
                             const newColumnKeys = newColumnsList.map(c => c.key);
 
                             const newParsedRows = newRowsList.map(r => {
-                                const values = newColumnKeys.map(k => r.cells?.[k]?.count || 0);
-                                const total = values.reduce((a, b) => a + Number(b), 0);
-                                return { label: r.label, values: values, total: total };
+                                const processedValues = newColumnKeys.map(k => {
+                                    const cell = r.cells?.[k];
+                                    return {
+                                        count: cell?.count || 0,
+                                        percent: cell?.percent || "0.0"
+                                    };
+                                });
+                                const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
+                                return { label: r.label, values: processedValues, total: total };
                             });
 
                             const newParsedStats = {
@@ -1050,9 +1075,15 @@ const CrossTabPage = () => {
                     const newColumnKeys = newColumnsList.map(c => c.key);
 
                     const newParsedRows = newRowsList.map(r => {
-                        const values = newColumnKeys.map(k => r.cells?.[k]?.count || 0);
-                        const total = values.reduce((a, b) => a + Number(b), 0);
-                        return { label: r.label, values: values, total: total };
+                        const processedValues = newColumnKeys.map(k => {
+                            const cell = r.cells?.[k];
+                            return {
+                                count: cell?.count || 0,
+                                percent: cell?.percent || "0.0"
+                            };
+                        });
+                        const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
+                        return { label: r.label, values: processedValues, total: total };
                     });
 
                     const newParsedStats = {
@@ -1156,11 +1187,17 @@ const CrossTabPage = () => {
                 const columnKeys = columnsList.map(c => c.key);
 
                 const parsedRows = rowsList.map(r => {
-                    const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
-                    const total = values.reduce((a, b) => a + Number(b), 0);
+                    const processedValues = columnKeys.map(k => {
+                        const cell = r.cells?.[k];
+                        return {
+                            count: cell?.count || 0,
+                            percent: cell?.percent || "0.0"
+                        };
+                    });
+                    const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
                     return {
                         label: r.label,
-                        values: values,
+                        values: processedValues,
                         total: total
                     };
                 });
@@ -1661,81 +1698,67 @@ const CrossTabPage = () => {
                                                     </button>
                                                 </div>
                                                 <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
-                                                    <div className="table-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
-
-                                                        {/* LEFT PANEL: Fixed Column (Labels) */}
-                                                        <div className="left-fixed-panel" style={{ width: '180px', flex: 'none', borderRight: '1px solid #e2e8f0', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-                                                            {/* Header Cell */}
-                                                            <div style={{ height: '90px', background: '#eff6ff', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box' }}>
-                                                                문항
-                                                            </div>
-                                                            {/* Body Cells */}
-                                                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                                                {resultData.rows.map((row, i) => (
-                                                                    <div key={i} style={{
-                                                                        padding: '0 16px',
-                                                                        borderBottom: '1px solid #eee',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        fontSize: '13px',
-                                                                        fontWeight: '500',
-                                                                        color: '#333',
-                                                                        background: '#fff',
-                                                                        height: '52px',
-                                                                        boxSizing: 'border-box',
-                                                                        overflow: 'hidden',
-                                                                        textOverflow: 'ellipsis',
-                                                                        whiteSpace: 'nowrap'
+                                                    <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
+                                                        <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style={{
+                                                                        position: 'sticky', left: 0, top: 0, zIndex: 30,
+                                                                        width: '180px', height: '90px',
+                                                                        background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
+                                                                        fontSize: '13px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                        textAlign: 'center', verticalAlign: 'middle'
                                                                     }}>
-                                                                        {row.label}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* RIGHT PANEL: Scrollable Columns (Data) */}
-                                                        <div className="right-scrollable-panel" style={{ flex: 1, overflowX: 'auto', display: 'flex', flexDirection: 'column' }}>
-                                                            <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content' }}>
-                                                                <thead>
-                                                                    <tr>
-                                                                        {resultData.columns.map((col, i) => (
-                                                                            <th key={i} style={{
-                                                                                width: '120px', textAlign: 'center', padding: '8px',
-                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                                verticalAlign: 'middle', background: '#eff6ff',
-                                                                                fontSize: '13px', color: '#1e40af', fontWeight: '600',
-                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                                borderBottom: '1px solid #e2e8f0',
-                                                                                height: '90px', boxSizing: 'border-box'
+                                                                        문항
+                                                                    </th>
+                                                                    {resultData.columns.map((col, i) => (
+                                                                        <th key={i} style={{
+                                                                            position: 'sticky', top: 0, zIndex: 20,
+                                                                            width: '120px', height: '90px',
+                                                                            background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                            borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                            fontSize: '13px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                            textAlign: 'center', padding: '8px',
+                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                            verticalAlign: 'middle'
+                                                                        }}>
+                                                                            {col}
+                                                                            <div style={{ fontSize: '11px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
+                                                                        </th>
+                                                                    ))}
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {resultData.rows.map((row, i) => (
+                                                                    <tr key={i}>
+                                                                        <td style={{
+                                                                            position: 'sticky', left: 0, zIndex: 10,
+                                                                            width: '180px', height: '52px',
+                                                                            background: '#fff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                            padding: '0 16px', boxSizing: 'border-box',
+                                                                            fontSize: '13px', fontWeight: '500', color: '#333',
+                                                                            verticalAlign: 'middle',
+                                                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                                                                        }}>
+                                                                            {row.label}
+                                                                        </td>
+                                                                        {row.values.map((val, j) => (
+                                                                            <td key={j} className="data-cell" style={{
+                                                                                width: '120px', height: '52px',
+                                                                                background: '#fff', borderBottom: '1px solid #eee',
+                                                                                borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
+                                                                                padding: '0 16px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
                                                                             }}>
-                                                                                {col}
-                                                                                <div style={{ fontSize: '11px', fontWeight: '500', color: '#60a5fa', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
-                                                                            </th>
+                                                                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                                                                                    <div className="cell-value">{val.count}</div>
+                                                                                    <div className="cell-pct">{val.percent}%</div>
+                                                                                </div>
+                                                                            </td>
                                                                         ))}
                                                                     </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {resultData.rows.map((row, i) => (
-                                                                        <tr key={i}>
-                                                                            {row.values.map((val, j) => (
-                                                                                <td key={j} className="data-cell" style={{
-                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
-                                                                                    borderBottom: '1px solid #eee',
-                                                                                    borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
-                                                                                    height: '52px', boxSizing: 'border-box', padding: '0 16px', verticalAlign: 'middle'
-                                                                                }}>
-                                                                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-                                                                                        <div className="cell-value">{val}</div>
-                                                                                        <div className="cell-pct">{(val / row.total * 100).toFixed(1)}%</div>
-                                                                                    </div>
-                                                                                </td>
-                                                                            ))}
-                                                                        </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1763,95 +1786,74 @@ const CrossTabPage = () => {
                                                         <Copy size={14} /> 복사
                                                     </button>
                                                 </div>
-                                                <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, display: 'flex', overflow: 'hidden' }}>
-
-                                                    {/* LEFT PANEL: Fixed Column (Labels) */}
-                                                    <div className="left-fixed-panel" style={{ width: '180px', flex: 'none', borderRight: '1px solid #e2e8f0', background: '#fff', display: 'flex', flexDirection: 'column' }}>
-                                                        {/* Header Cell */}
-                                                        <div style={{ height: '90px', background: '#eff6ff', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box' }}>
-                                                            통계
-                                                        </div>
-                                                        {/* Body Cells */}
-                                                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                                            {statsOptions.filter(opt => opt.checked).map((stat, i) => (
-                                                                <div key={stat.id} style={{
-                                                                    padding: '0 16px',
-                                                                    borderBottom: '1px solid #eee',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    fontSize: '13px',
-                                                                    fontWeight: '500',
-                                                                    color: '#333',
-                                                                    background: '#fff',
-                                                                    height: '52px',
-                                                                    boxSizing: 'border-box',
-                                                                    overflow: 'hidden',
-                                                                    textOverflow: 'ellipsis',
-                                                                    whiteSpace: 'nowrap'
+                                                <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, overflow: 'auto' }}>
+                                                    <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th style={{
+                                                                    position: 'sticky', left: 0, top: 0, zIndex: 30,
+                                                                    width: '180px', height: '90px',
+                                                                    background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
+                                                                    fontSize: '13px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                    textAlign: 'center', verticalAlign: 'middle'
                                                                 }}>
-                                                                    {stat.label}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
+                                                                    통계
+                                                                </th>
+                                                                {resultData.columns.map((col, i) => (
+                                                                    <th key={i} style={{
+                                                                        position: 'sticky', top: 0, zIndex: 20,
+                                                                        width: '120px', height: '90px',
+                                                                        background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                        borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                        fontSize: '13px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                        textAlign: 'center', padding: '8px',
+                                                                        whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                        verticalAlign: 'middle'
+                                                                    }}>
+                                                                        {col}
+                                                                    </th>
+                                                                ))}
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {statsOptions.filter(opt => opt.checked).map((stat) => {
+                                                                const statKey = stat.id.toLowerCase();
+                                                                let actualKey = statKey;
+                                                                if (statKey.startsWith('med')) actualKey = 'median';
+                                                                if (statKey.startsWith('mod')) actualKey = 'mode';
+                                                                if (statKey.startsWith('std')) actualKey = 'stdDev';
+                                                                const statValues = (resultData.stats && (resultData.stats[actualKey] || resultData.stats[statKey])) ||
+                                                                    new Array(resultData.columns.length).fill('-');
 
-                                                    {/* RIGHT PANEL: Scrollable Columns (Data) */}
-                                                    <div className="right-scrollable-panel" style={{ flex: 1, overflowX: 'auto', display: 'flex', flexDirection: 'column' }}>
-                                                        <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content' }}>
-                                                            <thead>
-                                                                <tr>
-                                                                    {resultData.columns.map((col, i) => (
-                                                                        <th key={i} style={{
-                                                                            width: '120px', textAlign: 'center', padding: '8px',
-                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                            verticalAlign: 'middle', background: '#eff6ff',
-                                                                            fontSize: '13px', color: '#1e40af', fontWeight: '600',
-                                                                            borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                            borderBottom: '1px solid #e2e8f0',
-                                                                            height: '90px', boxSizing: 'border-box'
+                                                                return (
+                                                                    <tr key={stat.id} className="stats-row">
+                                                                        <td style={{
+                                                                            position: 'sticky', left: 0, zIndex: 10,
+                                                                            width: '180px', height: '52px',
+                                                                            background: '#fff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                            padding: '0 16px', boxSizing: 'border-box',
+                                                                            fontSize: '13px', fontWeight: '500', color: '#333',
+                                                                            verticalAlign: 'middle',
+                                                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                                                                         }}>
-                                                                            {col}
-                                                                        </th>
-                                                                    ))}
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                {statsOptions.filter(opt => opt.checked).map((stat) => {
-                                                                    const statKey = stat.id.toLowerCase();
-                                                                    // Map displaying labels to data keys if necessary, or use lowercase
-                                                                    // Mock data in this file uses keys: 'mean', 'median', 'mode', 'stdDev', 'min', 'max', 'n'
-                                                                    // But stat.id might be 'Mean', 'Median', etc.
-                                                                    // Let's try to find the key loosely or fallback to empty array of correct length
-
-                                                                    let actualKey = statKey;
-                                                                    if (statKey.startsWith('med')) actualKey = 'median'; // fuzzy match correction
-                                                                    if (statKey.startsWith('mod')) actualKey = 'mode';
-                                                                    if (statKey.startsWith('std')) actualKey = 'stdDev';
-
-                                                                    // If resultData.stats doesn't have the key, try to use a default filled array
-                                                                    const statValues = resultData.stats[actualKey] ||
-                                                                        resultData.stats[statKey] ||
-                                                                        new Array(resultData.columns.length).fill('-');
-
-                                                                    return (
-                                                                        <tr key={stat.id} className="stats-row">
-                                                                            {statValues.map((v, i) => (
-                                                                                <td key={i} style={{
-                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
-                                                                                    borderBottom: '1px solid #eee',
-                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
-                                                                                    height: '52px', boxSizing: 'border-box', verticalAlign: 'middle',
-                                                                                    fontSize: '13px', color: '#333'
-                                                                                }}>
-                                                                                    {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v}
-                                                                                </td>
-                                                                            ))}
-                                                                        </tr>
-                                                                    );
-                                                                })}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                                                            {stat.label}
+                                                                        </td>
+                                                                        {statValues.map((v, i) => (
+                                                                            <td key={i} style={{
+                                                                                width: '120px', textAlign: 'right', paddingRight: '16px',
+                                                                                borderBottom: '1px solid #eee',
+                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
+                                                                                height: '52px', boxSizing: 'border-box', verticalAlign: 'middle',
+                                                                                fontSize: '13px', color: '#333'
+                                                                            }}>
+                                                                                {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v}
+                                                                            </td>
+                                                                        ))}
+                                                                    </tr>
+                                                                );
+                                                            })}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         );
