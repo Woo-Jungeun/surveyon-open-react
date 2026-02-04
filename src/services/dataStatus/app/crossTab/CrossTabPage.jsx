@@ -1719,7 +1719,7 @@ const CrossTabPage = () => {
                                                         {resultData.rows && resultData.rows.length > 0 && (
                                                             <div
                                                                 className="result-table-body"
-                                                                style={{ overflow: 'auto', flex: 1 }}
+                                                                style={{ overflowX: 'auto', overflowY: 'visible', flex: 'none' }}
                                                                 onScroll={(e) => {
                                                                     const header = document.getElementById('cross-table-header');
                                                                     if (header) header.scrollLeft = e.target.scrollLeft;
@@ -1825,7 +1825,7 @@ const CrossTabPage = () => {
                                                     {/* Body Table (Main Scroll) */}
                                                     {resultData.columns && resultData.columns.length > 0 && (
                                                         <div
-                                                            style={{ overflow: 'auto', flex: 1 }}
+                                                            style={{ overflowX: 'auto', overflowY: 'visible', flex: 'none' }}
                                                             onScroll={(e) => {
                                                                 const header = document.getElementById('stats-table-header');
                                                                 if (header) header.scrollLeft = e.target.scrollLeft;
