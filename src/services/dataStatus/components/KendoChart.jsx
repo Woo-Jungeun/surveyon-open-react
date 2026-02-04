@@ -300,7 +300,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 {
                     !isPieOrDonut && !isHeatmap && !isRadar && (
                         <ChartCategoryAxis>
-                            <ChartCategoryAxisItem categories={data.map(d => d.name)} />
+                            <ChartCategoryAxisItem categories={data.map(d => d.name)} labels={{ rotation: 'auto' }} />
                         </ChartCategoryAxis>
                     )
                 }

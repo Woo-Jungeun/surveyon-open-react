@@ -464,11 +464,10 @@ const CrossTabPage = () => {
             if (format === 'svg') {
                 // Direct SVG download
                 const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-                const chartTypeName = getChartTypeName(chartMode);
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `crosstab_${chartTypeName}.svg`;
+                link.download = `crosstab_${chartMode}.svg`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -492,8 +491,7 @@ const CrossTabPage = () => {
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                     canvas.toBlob((blob) => {
-                        const chartTypeName = getChartTypeName(chartMode);
-                        saveAs(blob, `crosstab_${chartTypeName}.png`);
+                        saveAs(blob, `crosstab_${chartMode}.png`);
                     });
                 };
 
@@ -1942,41 +1940,46 @@ const CrossTabPage = () => {
                                                         border: '1px solid #e2e8f0',
                                                         padding: '24px',
                                                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center'
+                                                        overflowX: 'auto',
+                                                        overflowY: 'hidden'
                                                     }}>
                                                         {chartData && chartData.length > 0 ? (
-                                                            <KendoChart
-                                                                data={chartData}
-                                                                seriesNames={seriesNames}
-                                                                allowedTypes={
-                                                                    chartMode === 'column' ? ['column', 'bar'] :
-                                                                        chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
-                                                                            chartMode === 'line' ? ['line'] :
-                                                                                chartMode === 'pie' ? ['pie'] :
-                                                                                    chartMode === 'donut' ? ['donut'] :
-                                                                                        chartMode === 'radarArea' ? ['radarArea'] :
-                                                                                            chartMode === 'funnel' ? ['funnel'] :
-                                                                                                chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                                                    chartMode === 'area' ? ['area'] :
-                                                                                                        chartMode === 'map' ? ['map'] :
-                                                                                                            chartMode === 'heatmap' ? ['heatmap'] : []
-                                                                }
-                                                                initialType={
-                                                                    chartMode === 'column' ? 'column' :
-                                                                        chartMode === 'stackedColumn' ? 'stackedColumn' :
-                                                                            chartMode === 'line' ? 'line' :
-                                                                                chartMode === 'pie' ? 'pie' :
-                                                                                    chartMode === 'donut' ? 'donut' :
-                                                                                        chartMode === 'radarArea' ? 'radarArea' :
-                                                                                            chartMode === 'funnel' ? 'funnel' :
-                                                                                                chartMode === 'scatterPoint' ? 'scatterPoint' :
-                                                                                                    chartMode === 'area' ? 'area' :
-                                                                                                        chartMode === 'map' ? 'map' :
-                                                                                                            chartMode === 'heatmap' ? 'heatmap' : 'column'
-                                                                }
-                                                            />
+                                                            <div style={{
+                                                                width: `${Math.max(100, chartData.length * 120)}px`,
+                                                                minWidth: '100%',
+                                                                height: '450px'
+                                                            }}>
+                                                                <KendoChart
+                                                                    data={chartData}
+                                                                    seriesNames={seriesNames}
+                                                                    allowedTypes={
+                                                                        chartMode === 'column' ? ['column', 'bar'] :
+                                                                            chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
+                                                                                chartMode === 'line' ? ['line'] :
+                                                                                    chartMode === 'pie' ? ['pie'] :
+                                                                                        chartMode === 'donut' ? ['donut'] :
+                                                                                            chartMode === 'radarArea' ? ['radarArea'] :
+                                                                                                chartMode === 'funnel' ? ['funnel'] :
+                                                                                                    chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                                        chartMode === 'area' ? ['area'] :
+                                                                                                            chartMode === 'map' ? ['map'] :
+                                                                                                                chartMode === 'heatmap' ? ['heatmap'] : []
+                                                                    }
+                                                                    initialType={
+                                                                        chartMode === 'column' ? 'column' :
+                                                                            chartMode === 'stackedColumn' ? 'stackedColumn' :
+                                                                                chartMode === 'line' ? 'line' :
+                                                                                    chartMode === 'pie' ? 'pie' :
+                                                                                        chartMode === 'donut' ? 'donut' :
+                                                                                            chartMode === 'radarArea' ? 'radarArea' :
+                                                                                                chartMode === 'funnel' ? 'funnel' :
+                                                                                                    chartMode === 'scatterPoint' ? 'scatterPoint' :
+                                                                                                        chartMode === 'area' ? 'area' :
+                                                                                                            chartMode === 'map' ? 'map' :
+                                                                                                                chartMode === 'heatmap' ? 'heatmap' : 'column'
+                                                                    }
+                                                                />
+                                                            </div>
                                                         ) : (
                                                             <div style={{ color: '#aaa', fontSize: '14px' }}>차트를 표시할 데이터가 없습니다.</div>
                                                         )}

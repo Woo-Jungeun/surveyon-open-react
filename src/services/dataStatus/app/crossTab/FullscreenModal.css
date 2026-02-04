@@ -210,3 +210,69 @@
     padding: 0;
     margin: 0;
 }
+
+/* Chart Toolbar Buttons */
+.view-option-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    background: transparent;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.view-option-btn:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
+
+.view-option-btn.active {
+    background: #e0f2fe;
+    color: #0284c7;
+    border-color: #bae6fd;
+}
+
+/* Download Dropdown */
+.download-menu-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.download-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    z-index: 50;
+    min-width: 120px;
+    padding: 4px;
+}
+
+.download-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 13px;
+    color: #334155;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.download-dropdown button:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+}
