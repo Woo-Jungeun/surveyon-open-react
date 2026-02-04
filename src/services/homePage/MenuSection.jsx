@@ -93,8 +93,7 @@ const MenuSection = () => {
           const isDisabled =
             item.id === "survey-creation" ||
             item.id === "data-management" ||
-            item.id === "respondent-management" ||
-            item.id === "data-dashboard";
+            item.id === "respondent-management";
 
           const handleCardClick = () => {
             if (isDisabled) return;
@@ -119,9 +118,7 @@ const MenuSection = () => {
               style={{
                 "--menu-color": item.color,
                 "--menu-bg": item.bg,
-                cursor: isDisabled ? "default" : "pointer",
-                pointerEvents: isDisabled ? "none" : "auto",
-                opacity: isDisabled ? 0.6 : 1
+                cursor: isDisabled ? "not-allowed" : "pointer"
               }}
               onClick={handleCardClick}
             >
