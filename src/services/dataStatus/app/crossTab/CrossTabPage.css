@@ -67,7 +67,7 @@
     display: flex;
     flex-direction: column;
     padding: 24px;
-    overflow-y: auto;
+    overflow: hidden;
     gap: 16px;
     /* Floating Style Matching Sidebar */
     height: calc(100% - 32px);
@@ -489,7 +489,7 @@
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    overflow: visible;
+    overflow: hidden;
 }
 
 .result-header {
@@ -569,48 +569,67 @@
 
 .cross-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    /* Changed to separate for border-radius */
+    border-spacing: 0;
     font-size: 13px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 .cross-table th,
 .cross-table td {
-    border: 1px solid #e0e0e0;
-    padding: 8px 12px;
+    padding: 10px 12px;
     text-align: center;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
 }
 
 .cross-table th {
-    background: #f9f9f9;
+    background: #f1f5f9;
+    /* Slate-100 */
     font-weight: 600;
-    color: #333;
+    color: #475569;
+    /* Slate-600 */
+    text-transform: uppercase;
+    font-size: 12px;
+    letter-spacing: 0.02em;
 }
 
 .cross-table td.label-cell {
     text-align: left;
     background: #fff;
     font-weight: 500;
+    color: #1e293b;
+    /* Slate-800 */
 }
 
 .cross-table td.data-cell {
     background: #fff;
+    transition: background 0.1s;
+}
+
+.cross-table tr:hover td.data-cell {
+    background: #f8fafc;
+    /* Hover effect */
 }
 
 .cell-value {
     font-weight: 600;
-    color: #333;
+    color: #334155;
 }
 
 .cell-pct {
     font-size: 11px;
-    color: #888;
-    margin-top: 2px;
+    color: #94a3b8;
+    /* Slate-400 */
+    margin-top: 3px;
 }
 
 /* Stats Row in Table */
 .stats-row td {
-    background: #fcfcfc;
+    background: #f8fafc;
 }
+
 
 /* Modal Styles */
 .modal-overlay {
