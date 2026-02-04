@@ -302,13 +302,7 @@ const VariablePage = () => {
         return React.cloneElement(trElement, { ...trProps }, trElement.props.children);
     };
 
-    const [skip, setSkip] = useState(0);
-    const [take, setTake] = useState(100);
 
-    const handlePageChange = (event) => {
-        setSkip(event.page.skip);
-        setTake(event.page.take);
-    };
 
     return (
         <div className="variable-page" data-theme="data-dashboard">
@@ -334,10 +328,7 @@ const VariablePage = () => {
                                 filterChange: ({ filter }) => setFilter(filter),
                                 height: "100%",
                                 rowRender: rowRender,
-                                pageable: true,
-                                skip: skip,
-                                take: take,
-                                onPageChange: handlePageChange
+
                             }}
                         >
                             {columns.filter(c => c.show).map((c) => (
