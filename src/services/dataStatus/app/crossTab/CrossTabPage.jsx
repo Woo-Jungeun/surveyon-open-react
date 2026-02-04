@@ -914,6 +914,122 @@ const CrossTabPage = () => {
         }
     };
 
+    const handleSaveAndRun = async () => {
+        if (!auth?.user?.userId) {
+            modal.showAlert("알림", "로그인이 필요합니다.");
+            return;
+        }
+
+        if (rowVars.length === 0) {
+            modal.showAlert('알림', '세로축(행) 문항을 최소 하나 이상 선택해주세요.');
+            return;
+        }
+
+        try {
+            // Save Table
+            const currentTable = tables.find(t => t.id === selectedTableId);
+            const isNewTable = currentTable?.isNew;
+
+            const savePayload = {
+                user: auth.user.userId,
+                tableid: selectedTableId,
+                pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
+                name: tableName || "Untitled Table",
+                config: {
+                    x_info: rowVars.map(v => v.name),
+                    y_info: colVars.map(v => v.name),
+                    filter_expression: filterExpression,
+                    weight_col: selectedWeight === "없음" ? "" : selectedWeight
+                }
+            };
+
+            const saveResult = await saveCrossTable.mutateAsync(savePayload);
+
+            if (saveResult?.success === "777") {
+                // Update new table status
+                if (isNewTable) {
+                    setTables(tables.map(t =>
+                        t.id === selectedTableId ? { ...t, isNew: false } : t
+                    ));
+                }
+
+                // Run Analysis
+                const selectedVarNames = new Set();
+                rowVars.forEach(v => selectedVarNames.add(v.name));
+                colVars.forEach(v => selectedVarNames.add(v.name));
+                if (selectedWeight && selectedWeight !== "없음" && selectedWeight !== "") {
+                    selectedVarNames.add(selectedWeight);
+                }
+
+                const variablesMap = {};
+                variables.forEach(v => {
+                    if (selectedVarNames.has(v.name)) {
+                        variablesMap[v.name] = v;
+                    }
+                });
+
+                const runPayload = {
+                    user: auth.user.userId,
+                    pageid: PAGE_ID,
+                    variables: variablesMap,
+                    weight_col: selectedWeight === "없음" ? "" : selectedWeight,
+                    filter_expression: filterExpression,
+                    table: {
+                        id: selectedTableId,
+                        name: tableName || "Untitled Table",
+                        x_info: rowVars.map(v => v.name),
+                        y_info: colVars.map(v => v.name)
+                    }
+                };
+
+                const evalResult = await evaluateTable.mutateAsync(runPayload);
+
+                if (evalResult?.success === "777" && evalResult.resultjson) {
+                    const newData = evalResult.resultjson;
+                    const newColumnsList = newData.columns || [];
+                    const newRowsList = newData.rows || [];
+
+                    const newColumnLabels = newColumnsList.map(c => c.label);
+                    const newColumnKeys = newColumnsList.map(c => c.key);
+
+                    const newParsedRows = newRowsList.map(r => {
+                        const values = newColumnKeys.map(k => r.cells?.[k]?.count || 0);
+                        const total = values.reduce((a, b) => a + Number(b), 0);
+                        return { label: r.label, values: values, total: total };
+                    });
+
+                    const newParsedStats = {
+                        mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                        std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
+                        min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
+                        max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
+                        n: newColumnsList.map(c => c.n || 0)
+                    };
+
+                    setResultData({
+                        columns: newColumnLabels,
+                        rows: newParsedRows,
+                        stats: newParsedStats
+                    });
+
+                    // Success - Close config
+                    setIsConfigOpen(false);
+                    modal.showAlert("알림", "저장 및 실행이 완료되었습니다.");
+
+                } else {
+                    modal.showAlert('알림', '저장은 되었으나 분석에 실패했습니다.');
+                }
+
+            } else {
+                modal.showAlert('실패', '저장 실패');
+            }
+
+        } catch (error) {
+            console.error("Save & Run error:", error);
+            modal.showAlert('오류', '오류가 발생했습니다.');
+        }
+    };
+
     const handleRun = async () => {
         if (!auth?.user?.userId) {
             modal.showAlert("알림", "로그인이 필요합니다.");
@@ -1075,7 +1191,7 @@ const CrossTabPage = () => {
                 <div className="cross-tab-main">
                     {/* Config Section */}
                     <div className="config-section">
-                        <div className="config-header">
+                        <div className="config-header" style={{ padding: isConfigOpen ? '20px 24px' : '8px 24px', transition: 'all 0.2s' }}>
                             <div className="config-header__left-group">
                                 <div
                                     onClick={() => setIsConfigOpen(!isConfigOpen)}
@@ -1097,25 +1213,31 @@ const CrossTabPage = () => {
                             </div>
 
                             {/* Table Mode Switch */}
-                            <div className="table-mode-switch">
-                                <button
-                                    className={`mode-option-btn ${tableMode === 'separated' ? 'active' : ''}`}
-                                    onClick={() => setTableMode('separated')}
-                                >
-                                    표 분리
-                                </button>
-                                <button
-                                    className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
-                                    onClick={() => setTableMode('merged')}
-                                >
-                                    표 병합
-                                </button>
-                            </div>
+                            {isConfigOpen && (
+                                <>
+                                    {/* Table Mode Switch */}
+                                    <div className="table-mode-switch">
+                                        <button
+                                            className={`mode-option-btn ${tableMode === 'separated' ? 'active' : ''}`}
+                                            onClick={() => setTableMode('separated')}
+                                        >
+                                            표 분리
+                                        </button>
+                                        <button
+                                            className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
+                                            onClick={() => setTableMode('merged')}
+                                        >
+                                            표 병합
+                                        </button>
+                                    </div>
 
-                            <div className="action-buttons">
-                                <button className="btn-save-table" onClick={handleSaveTable}><Save size={14} /> 교차 테이블 저장</button>
-                                <button className="btn-run" onClick={handleRun}><ChevronRight size={16} /> 실행</button>
-                            </div>
+                                    <div className="action-buttons">
+                                        <button className="btn-run" onClick={handleSaveAndRun}>
+                                            <Play size={16} fill="white" /> 저장 후 실행
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {isConfigOpen && (
