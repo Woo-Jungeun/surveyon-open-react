@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Save, Play, Search, Grid, BarChart2, Download, Plus, X, Settings, List, ChevronRight, GripVertical, LineChart, Map, Table, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, LineChart, Map, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
@@ -575,7 +575,8 @@ const CrossTabPage = () => {
             if (row.label === '합계' || row.label === '전체') {
                 dataPoint.total = row.values[colIndex]?.count || 0;
             } else {
-                dataPoint[row.label] = row.values[colIndex]?.count || 0;
+                const pct = row.values[colIndex]?.percent;
+                dataPoint[row.label] = pct ? parseFloat(pct) : 0;
             }
         });
         return dataPoint;
@@ -1274,7 +1275,7 @@ const CrossTabPage = () => {
             ]
         });
     };
-
+    console.log("chartData", chartData)
 
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
@@ -1593,7 +1594,8 @@ const CrossTabPage = () => {
                                             )}
                                         </div>
 
-                                        <button className={`view-option-btn ${!chartMode || chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형 차트"><BarChart2 size={18} /></button>
+                                        <button className={`view-option-btn ${!chartMode || chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
+                                        {/* <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={18} /></button> */}
                                         <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
                                         <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
                                         <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
@@ -1911,7 +1913,7 @@ const CrossTabPage = () => {
                                                                     data={chartData}
                                                                     seriesNames={seriesNames}
                                                                     allowedTypes={
-                                                                        chartMode === 'column' ? ['column', 'bar'] :
+                                                                        (chartMode === 'column' || chartMode === 'bar') ? ['column', 'bar'] :
                                                                             chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
                                                                                 chartMode === 'line' ? ['line'] :
                                                                                     chartMode === 'pie' ? ['pie'] :

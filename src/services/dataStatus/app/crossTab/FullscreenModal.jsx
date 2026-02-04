@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { saveAs } from '@progress/kendo-file-saver';
-import { X, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map, LayoutGrid, Download } from 'lucide-react';
+import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map, LayoutGrid, Download } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
 
@@ -174,7 +174,8 @@ const FullscreenModal = ({
                                     </div>
                                 )}
                             </div>
-                            <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' || localChartMode === 'bar' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="막대형 차트"><BarChart2 size={18} /></button>
+                            <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
+                            {/* <button className={`view-option-btn ${localChartMode === 'bar' ? 'active' : ''}`} onClick={() => setLocalChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={18} /></button> */}
                             <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'line' ? 'active' : ''}`} onClick={() => setLocalChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'pie' ? 'active' : ''}`} onClick={() => setLocalChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>

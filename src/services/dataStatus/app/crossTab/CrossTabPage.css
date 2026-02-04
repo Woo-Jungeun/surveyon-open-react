@@ -1477,7 +1477,7 @@
 .cross-tab-chart-container {
     flex: 1;
     width: 100%;
-    min-height: 300px;
+    min-height: 500px;
     background: #fff;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
