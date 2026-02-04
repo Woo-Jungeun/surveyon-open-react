@@ -29,6 +29,7 @@ const DataViewerPage = () => {
     const auth = useSelector((store) => store.auth);
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
     const loadingSpinner = useContext(loadingSpinnerContext);
 
     // Mock Data based on the user's image
@@ -60,6 +61,16 @@ const DataViewerPage = () => {
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isLabelView, setIsLabelView] = useState(false);
 
+    // Hide loading spinner only after data is rendered
+    useEffect(() => {
+        if (isDataLoaded && data.length >= 0 && columns.length >= 0) {
+            // Use setTimeout to ensure DOM has updated
+            setTimeout(() => {
+                loadingSpinner.hide();
+            }, 100);
+        }
+    }, [isDataLoaded, data, columns]);
+
     useEffect(() => {
         const fetchData = async () => {
             if (auth?.user?.userId) {
@@ -83,14 +94,15 @@ const DataViewerPage = () => {
                             }));
                             setColumns(generatedColumns);
                         }
+                        setIsDataLoaded(true);
                     } else {
                         console.error('API Error:', result?.message);
                         setToast({ show: true, message: result?.message || '데이터 조회 실패' });
+                        loadingSpinner.hide();
                     }
                 } catch (error) {
                     console.error("API Error:", error);
                     setToast({ show: true, message: '데이터 조회 중 오류 발생' });
-                } finally {
                     loadingSpinner.hide();
                 }
             }

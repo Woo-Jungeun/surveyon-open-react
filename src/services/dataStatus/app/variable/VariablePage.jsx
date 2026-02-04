@@ -18,6 +18,7 @@ const VariablePage = () => {
     const { getOriginalVariables } = VariablePageApi();
     const auth = useSelector((store) => store.auth);
     const [variables, setVariables] = useState([]);
+    const [isDataLoaded, setIsDataLoaded] = useState(false);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
     // todo 가라데이터 
@@ -29,6 +30,17 @@ const VariablePage = () => {
     //     { id: 5, sysName: 'age', name: 'age', label: 'Age', category: '{18;18}{25;25}{35;35}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '연속형' },
     //     { id: 6, sysName: 'region', name: 'region', label: '지역', category: '{1;서울}{2;부산}{3;광주}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
     // ]);
+
+    // Hide loading spinner only after data is rendered
+    useEffect(() => {
+        if (isDataLoaded && variables.length >= 0) {
+            // Use setTimeout to ensure DOM has updated
+            setTimeout(() => {
+                loadingSpinner.hide();
+            }, 100);
+        }
+    }, [isDataLoaded, variables]);
+
     useEffect(() => {
         const fetchVariables = async () => {
             if (auth?.user?.userId) {
@@ -58,14 +70,15 @@ const VariablePage = () => {
                                 };
                             });
                             setVariables(transformedData);
+                            setIsDataLoaded(true);
                         }
                     } else {
                         modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
+                        loadingSpinner.hide();
                     }
                 } catch (error) {
                     console.error("API Error:", error);
                     modal.showErrorAlert("에러", "문항 목록 조회 중 오류가 발생했습니다.");
-                } finally {
                     loadingSpinner.hide();
                 }
             }
