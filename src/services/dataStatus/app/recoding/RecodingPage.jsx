@@ -285,7 +285,7 @@ const RecodingPage = () => {
 
         const userId = auth.user.userId;
         const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
-        const variableKey = selectedVar.name;
+        const variableKey = selectedVar.id;
 
         const variablesPayload = {
             [variableKey]: {
@@ -435,7 +435,7 @@ const RecodingPage = () => {
 
         const userId = auth.user.userId;
         const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
-        const variableKey = selectedVar.name;
+        const variableKey = selectedVar.id;
 
         const targetCategories = categoriesToSave || categories;
 
