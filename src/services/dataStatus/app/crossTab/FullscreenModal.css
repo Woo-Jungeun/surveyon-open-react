@@ -10,7 +10,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 20px;
 }
 
 /* Fullscreen Modal Container */
@@ -19,8 +19,8 @@
     border-radius: 12px;
     width: 100%;
     height: 100%;
-    max-width: 1600px;
-    max-height: 900px;
+    max-width: 98vw;
+    max-height: 95vh;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -105,7 +105,7 @@
 }
 
 /* Table Headers */
-.fullscreen-table-header-sticky {
+.fullscreen-table .fullscreen-table-header-sticky {
     position: sticky;
     left: 0;
     top: 0;
@@ -113,29 +113,29 @@
     width: 150px;
     height: 50px;
     background: #eff6ff;
-    border-bottom: 1px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
-    font-size: 12px;
+    border-bottom: 1px solid #cbd5e1;
+    border-right: 1px solid #cbd5e1;
+    font-size: 11px;
     font-weight: bold;
-    color: #334155;
+    color: #1e293b;
     box-sizing: border-box;
     text-align: center;
     vertical-align: middle;
     padding: 4px;
 }
 
-.fullscreen-table-header {
+.fullscreen-table .fullscreen-table-header {
     position: sticky;
     top: 0;
     z-index: 20;
     min-width: 100px;
     height: 50px;
     background: #eff6ff;
-    border-bottom: 1px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
-    font-size: 11px;
+    border-bottom: 1px solid #cbd5e1;
+    border-right: 1px solid #cbd5e1;
+    font-size: 10px;
     font-weight: bold;
-    color: #334155;
+    color: #1e293b;
     box-sizing: border-box;
     text-align: center;
     vertical-align: middle;
@@ -149,15 +149,15 @@
 }
 
 /* Table Cells */
-.fullscreen-table-cell-sticky {
+.fullscreen-table .fullscreen-table-cell-sticky {
     position: sticky;
     left: 0;
     z-index: 10;
     width: 150px;
     min-height: 40px;
-    background: #fff;
+    background: #eff6ff;
     border-bottom: 1px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
+    border-right: 1px solid #cbd5e1;
     font-size: 12px;
     font-weight: 500;
     color: #1e293b;

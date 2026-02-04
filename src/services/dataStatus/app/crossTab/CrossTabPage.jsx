@@ -1752,7 +1752,7 @@ const CrossTabPage = () => {
                                                                         <td style={{
                                                                             position: 'sticky', left: 0, zIndex: 10,
                                                                             width: '180px', height: '52px',
-                                                                            background: '#fff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                            background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
                                                                             padding: '0 16px', boxSizing: 'border-box',
                                                                             fontSize: '13px', fontWeight: '500', color: '#333',
                                                                             verticalAlign: 'middle',
@@ -1862,7 +1862,7 @@ const CrossTabPage = () => {
                                                                         <td style={{
                                                                             position: 'sticky', left: 0, zIndex: 10,
                                                                             width: '180px', height: '52px',
-                                                                            background: '#fff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                            background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
                                                                             padding: '0 16px', boxSizing: 'border-box',
                                                                             fontSize: '13px', fontWeight: '500', color: '#333',
                                                                             verticalAlign: 'middle',
