@@ -166,9 +166,10 @@
     border-radius: 4px;
     transition: all 0.2s;
     margin-left: 8px;
+    flex-shrink: 0;
 }
 
 .sidebar-delete-btn:hover {
-    color: #64748b;
-    background: #f1f5f9;
+    color: #ef4444;
+    background: #fee2e2;
 }

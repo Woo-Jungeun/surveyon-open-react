@@ -25,11 +25,11 @@ const CreateTablePopup = ({ isOpen, onClose, onCreate }) => {
                     </button>
                 </div>
                 <div className="modal-body">
-                    <label className="modal-label">테이블 ID</label>
+                    <label className="modal-label">테이블 명</label>
                     <input
                         type="text"
                         className="modal-input"
-                        placeholder="표 이름"
+                        placeholder="테이블 명"
                         value={tableName}
                         onChange={(e) => setTableName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}

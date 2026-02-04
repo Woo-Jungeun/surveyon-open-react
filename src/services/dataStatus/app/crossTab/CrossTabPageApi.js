@@ -18,9 +18,15 @@ export function CrossTabPageApi() {
         async (data) => await api.post(data, "/tables/set", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 교차테이블 삭제 */
+    const deleteCrossTable = useMutation(
+        async (data) => await api.post(data, "/tables/delete", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getCrossTabList,
         getCrossTabData,
         saveCrossTable,
+        deleteCrossTable,
     };
 }

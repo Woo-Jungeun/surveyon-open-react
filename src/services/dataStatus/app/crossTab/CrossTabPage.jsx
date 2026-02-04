@@ -17,7 +17,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 const CrossTabPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getCrossTabList, getCrossTabData, saveCrossTable } = CrossTabPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable } = CrossTabPageApi();
     const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const PAGE_ID = "0c1de699-0270-49bf-bfac-7e6513a3f525";
@@ -79,6 +79,8 @@ const CrossTabPage = () => {
         const fetchData = async () => {
             if (!auth?.user?.userId) return;
 
+            let loadedVariables = [];
+
             // Fetch Variables
             try {
                 const varResult = await getRecodedVariables.mutateAsync({
@@ -87,13 +89,13 @@ const CrossTabPage = () => {
                 });
 
                 if (varResult?.success === "777" && varResult.resultjson) {
-                    const varData = Object.values(varResult.resultjson).map(item => ({
+                    loadedVariables = Object.values(varResult.resultjson).map(item => ({
                         id: item.name, // Use name as ID
                         name: item.name,
                         label: item.label,
                         info: item.info || []
                     }));
-                    setVariables(varData);
+                    setVariables(loadedVariables);
                 }
             } catch (error) {
                 console.error("Failed to fetch variables:", error);
@@ -120,7 +122,60 @@ const CrossTabPage = () => {
 
                     if (mappedTables.length > 0) {
                         setTables(mappedTables);
-                        // setSelectedTableId(mappedTables[0].id);
+
+                        // Select first table automatically
+                        const firstTable = mappedTables[0];
+                        setSelectedTableId(firstTable.id);
+                        setTableName(firstTable.name || "");
+
+                        // Set configuration using loaded variables
+                        const newRowVars = (firstTable.row || []).map(id => loadedVariables.find(v => v.id === id) || { id, name: id });
+                        const newColVars = (firstTable.col || []).map(id => loadedVariables.find(v => v.id === id) || { id, name: id });
+                        setRowVars(newRowVars);
+                        setColVars(newColVars);
+
+                        // Fetch data for the first table
+                        try {
+                            const tableDataResult = await getCrossTabData.mutateAsync({
+                                user: auth.user.userId,
+                                tableid: firstTable.id
+                            });
+
+                            if (tableDataResult?.success === "777" && tableDataResult.resultjson) {
+                                const tData = tableDataResult.resultjson;
+                                const columnsList = tData.columns || [];
+                                const rowsList = tData.rows || [];
+
+                                const columnLabels = columnsList.map(c => c.label);
+                                const columnKeys = columnsList.map(c => c.key);
+
+                                const parsedRows = rowsList.map(r => {
+                                    const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
+                                    const total = values.reduce((a, b) => a + Number(b), 0);
+                                    return {
+                                        label: r.label,
+                                        values: values,
+                                        total: total
+                                    };
+                                });
+
+                                const parsedStats = {
+                                    mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                                    std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
+                                    min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
+                                    max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
+                                    n: columnsList.map(c => c.n || 0)
+                                };
+
+                                setResultData({
+                                    columns: columnLabels,
+                                    rows: parsedRows,
+                                    stats: parsedStats
+                                });
+                            }
+                        } catch (err) {
+                            console.error("Failed to fetch initial table data:", err);
+                        }
                     }
                 }
             } catch (error) {
@@ -520,15 +575,23 @@ const CrossTabPage = () => {
     };
 
     const handleCreateTable = (name) => {
+        // Generate a random ID
+        const newId = `tbl_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+
         const newTable = {
-            id: tables.length + 1,
+            id: newId,
             name: name,
             row: [],
             col: []
         };
+        // Add checks for new table handling
+        newTable.isNew = true;
+
         setTables([...tables, newTable]);
         setSelectedTableId(newTable.id);
+        setTableName(name); // Set current table name
         setTableSearchTerm('');
+
         // Reset current config for new table and open config
         setRowVars([]);
         setColVars([]);
@@ -583,9 +646,13 @@ const CrossTabPage = () => {
         }
 
         try {
+            const currentTable = tables.find(t => t.id === selectedTableId);
+            const isNewTable = currentTable?.isNew;
+
             const payload = {
                 user: auth.user.userId,
                 tableid: selectedTableId,
+                pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
                     x_info: rowVars.map(v => v.name),
@@ -598,6 +665,13 @@ const CrossTabPage = () => {
             const result = await saveCrossTable.mutateAsync(payload);
             if (result?.success === "777") {
                 modal.showAlert('성공', '저장되었습니다.');
+
+                // If it was a new table, mark it as not new anymore
+                if (isNewTable) {
+                    setTables(tables.map(t =>
+                        t.id === selectedTableId ? { ...t, isNew: false } : t
+                    ));
+                }
             } else {
                 modal.showAlert('실패', '저장 실패');
             }
@@ -606,6 +680,52 @@ const CrossTabPage = () => {
             modal.showAlert('오류', '저장 중 오류가 발생했습니다.');
         }
     };
+
+    const handleDeleteTable = async (tableId) => {
+        if (!auth?.user?.userId) {
+            modal.showAlert("알림", "로그인이 필요합니다.");
+            return;
+        }
+
+        modal.showConfirm('삭제 확인', '정말로 이 테이블을 삭제하시겠습니까?', {
+            btns: [
+                { title: '취소' },
+                {
+                    title: '삭제',
+                    click: async () => {
+                        try {
+                            const payload = {
+                                user: auth.user.userId,
+                                tableid: tableId
+                            };
+
+                            const result = await deleteCrossTable.mutateAsync(payload);
+                            if (result?.success === "777") {
+                                // Remove from local state
+                                setTables(tables.filter(t => t.id !== tableId));
+
+                                // Clear selection if deleted table was selected
+                                if (selectedTableId === tableId) {
+                                    setSelectedTableId(null);
+                                    setRowVars([]);
+                                    setColVars([]);
+                                    setTableName('');
+                                }
+
+                                modal.showAlert('성공', '테이블이 삭제되었습니다.');
+                            } else {
+                                modal.showAlert('실패', '삭제 실패');
+                            }
+                        } catch (error) {
+                            console.error("Delete error:", error);
+                            modal.showAlert('오류', '삭제 중 오류가 발생했습니다.');
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
 
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
@@ -629,6 +749,7 @@ const CrossTabPage = () => {
                     selectedId={selectedTableId}
                     onItemClick={handleTableSelect}
                     onSearch={setTableSearchTerm}
+                    onDelete={handleDeleteTable}
                 />
 
                 {/* Main Content */}
@@ -643,14 +764,6 @@ const CrossTabPage = () => {
                                 >
                                     {isConfigOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                 </div>
-
-                                {rowVars.length > 0 && (
-                                    <div className="config-header__row-label">
-                                        {variables.find(v => v.id === rowVars[0].id)?.label}
-                                    </div>
-                                )}
-
-                                <div className="config-header__separator"></div>
 
                                 <div className="config-header__title-group">
                                     <span className="config-header__title-label">테이블 명</span>
