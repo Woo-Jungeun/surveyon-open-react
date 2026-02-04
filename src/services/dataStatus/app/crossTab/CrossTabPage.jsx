@@ -34,7 +34,7 @@ const CrossTabPage = () => {
     const [filterExpression, setFilterExpression] = useState(''); // Added filter expression state
     const [chartMode, setChartMode] = useState(null);
     const [tableMode, setTableMode] = useState('separated'); // 'merged' | 'separated'
-    const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(true);
+    const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(false);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -65,11 +65,17 @@ const CrossTabPage = () => {
     ]);
     const [statsOptions, setStatsOptions] = useState([
         { id: 'Mean', label: 'Mean', checked: true },
+        { id: 'Med', label: 'Med', checked: true },
+        { id: 'Mod', label: 'Mod', checked: true },
         { id: 'Std', label: 'Std', checked: true },
         { id: 'Min', label: 'Min', checked: true },
         { id: 'Max', label: 'Max', checked: true },
         { id: 'N', label: 'N', checked: true },
     ]);
+
+    // Column Layout Option (1-column or 2-column)
+    const [columnLayout, setColumnLayout] = useState('single'); // 'single' (1단) or 'double' (2단)
+
 
     // AI Analysis State
     const [aiResult, setAiResult] = useState(null);
@@ -319,27 +325,11 @@ const CrossTabPage = () => {
     }, [rowVars, colVars, variables]);
 
     // Update Result Data from Preview
+    // Update Result Data from Preview
     useEffect(() => {
-        if (!previewData) return;
-
-        const { rows, cols } = previewData;
-
-        setResultData(prev => ({
-            ...prev,
-            columns: cols,
-            rows: rows.map(label => ({
-                label,
-                values: new Array(cols.length).fill(0),
-                total: 0
-            })),
-            stats: {
-                mean: new Array(cols.length).fill('-'),
-                std: new Array(cols.length).fill('-'),
-                min: new Array(cols.length).fill('-'),
-                max: new Array(cols.length).fill('-'),
-                n: new Array(cols.length).fill(0)
-            }
-        }));
+        // Clear result data when variables change (previewData changes) to avoid showing fake data
+        setResultData(null);
+        setIsStatsOptionsOpen(false);
     }, [previewData]);
 
     const handleRunAiAnalysis = () => {
@@ -563,7 +553,7 @@ const CrossTabPage = () => {
         }
     });
 
-    const chartData = resultData.columns.map((colName, colIndex) => {
+    const chartData = resultData ? resultData.columns.map((colName, colIndex) => {
         const dataPoint = { name: colName };
         resultData.rows.forEach(row => {
             if (row.label === '합계') {
@@ -573,11 +563,11 @@ const CrossTabPage = () => {
             }
         });
         return dataPoint;
-    });
+    }) : [];
 
-    const seriesNames = resultData.rows
+    const seriesNames = resultData ? resultData.rows
         .filter(row => row.label !== '합계')
-        .map(row => row.label);
+        .map(row => row.label) : [];
 
     const handleCopyTable = async () => {
         try {
@@ -736,6 +726,8 @@ const CrossTabPage = () => {
 
                             const newParsedStats = {
                                 mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                                med: newColumnsList.map(c => c.med !== undefined ? c.med : '-'),
+                                mod: newColumnsList.map(c => c.mod !== undefined ? c.mod : '-'),
                                 std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
                                 min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
                                 max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
@@ -890,6 +882,8 @@ const CrossTabPage = () => {
 
                         const parsedStats = {
                             mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                            med: columnsList.map(c => c.med !== undefined ? c.med : '-'),
+                            mod: columnsList.map(c => c.mod !== undefined ? c.mod : '-'),
                             std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
                             min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
                             max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
@@ -1000,6 +994,8 @@ const CrossTabPage = () => {
 
                     const newParsedStats = {
                         mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                        med: newColumnsList.map(c => c.med !== undefined ? c.med : '-'),
+                        mod: newColumnsList.map(c => c.mod !== undefined ? c.mod : '-'),
                         std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
                         min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
                         max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
@@ -1094,6 +1090,8 @@ const CrossTabPage = () => {
 
                 const parsedStats = {
                     mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                    med: columnsList.map(c => c.med !== undefined ? c.med : '-'),
+                    mod: columnsList.map(c => c.mod !== undefined ? c.mod : '-'),
                     std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
                     min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
                     max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
@@ -1337,15 +1335,14 @@ const CrossTabPage = () => {
 
                                         {/* Center Content: Filter & Weight */}
                                         <div className="center-content" style={{ display: 'flex', flexDirection: 'column', height: '100%', minWidth: 0, overflow: 'hidden' }}>
-                                            {/* Preview Table */}
                                             {previewData && (
-                                                <div className="preview-table-wrapper" style={{ flex: 1, overflow: 'auto', border: '1px solid #e0e0e0', borderRadius: '4px', minHeight: '250px', marginTop: '45px', maxHeight: 'calc(100vh - 350px)', width: '100%', marginBottom: '5px' }}>
-                                                    <table style={{ minWidth: '100%', width: 'max-content', borderCollapse: 'collapse', fontSize: '12px' }}>
+                                                <div className="preview-table-wrapper">
+                                                    <table className="preview-table">
                                                         <thead>
                                                             <tr>
-                                                                <th rowSpan={2} colSpan={2} style={{ background: '#f8f9fa', padding: '4px', borderBottom: '1px solid #ddd', borderRight: '1px solid #ddd', position: 'sticky', top: 0, left: 0, zIndex: 3, minWidth: '120px' }}></th>
+                                                                <th rowSpan={2} colSpan={2} className="preview-th corner-header"></th>
                                                                 {previewData.colGroups.map((group, i) => (
-                                                                    <th key={i} colSpan={group.labels.length} style={{ background: '#f8f9fa', padding: '4px', borderBottom: '1px solid #ddd', borderLeft: '1px solid #ddd', textAlign: 'center', whiteSpace: 'nowrap', position: 'sticky', top: 0, zIndex: 1 }}>
+                                                                    <th key={i} colSpan={group.labels.length} className="preview-th group-header">
                                                                         {group.name}
                                                                     </th>
                                                                 ))}
@@ -1353,7 +1350,7 @@ const CrossTabPage = () => {
                                                             <tr>
                                                                 {previewData.colGroups.flatMap((group, i) =>
                                                                     group.labels.map((label, j) => (
-                                                                        <th key={`${i}-${j}`} style={{ background: '#f9f9f9', padding: '4px', borderBottom: '1px solid #ddd', borderLeft: '1px solid #ddd', minWidth: '60px', textAlign: 'center', whiteSpace: 'nowrap', position: 'sticky', top: '25px', zIndex: 1 }}>
+                                                                        <th key={`${i}-${j}`} className="preview-th col-header">
                                                                             {label}
                                                                         </th>
                                                                     ))
@@ -1365,23 +1362,25 @@ const CrossTabPage = () => {
                                                                 group.labels.map((label, labelIdx) => (
                                                                     <tr key={`${groupIdx}-${labelIdx}`}>
                                                                         {group.name === '' ? (
-                                                                            <td colSpan={2} style={{ background: '#f8f9fa', padding: '4px', borderRight: '1px solid #ddd', borderBottom: '1px solid #eee', fontWeight: 'bold', textAlign: 'center', position: 'sticky', left: 0, zIndex: 2 }}>
+                                                                            <td colSpan={2} className="preview-td row-head sticky-left">
                                                                                 {label}
                                                                             </td>
                                                                         ) : (
                                                                             <>
                                                                                 {labelIdx === 0 && (
-                                                                                    <td rowSpan={group.labels.length} style={{ background: '#f8f9fa', padding: '4px', borderRight: '1px solid #ddd', borderBottom: '1px solid #eee', fontWeight: 'bold', verticalAlign: 'middle', textAlign: 'center', position: 'sticky', left: 0, zIndex: 2 }}>
+                                                                                    <td rowSpan={group.labels.length} className="preview-td row-group-head sticky-left">
                                                                                         {group.name}
                                                                                     </td>
                                                                                 )}
-                                                                                <td style={{ background: '#f9f9f9', padding: '4px', borderRight: '1px solid #ddd', borderBottom: '1px solid #eee', whiteSpace: 'nowrap', fontWeight: '500' }}>
+                                                                                <td className="preview-td row-head sticky-left-indent">
                                                                                     {label}
                                                                                 </td>
                                                                             </>
                                                                         )}
                                                                         {previewData.cols.map((_, colIdx) => (
-                                                                            <td key={colIdx} style={{ borderBottom: '1px solid #eee', borderLeft: '1px solid #eee' }}></td>
+                                                                            <td key={colIdx} className="preview-td data-cell">
+                                                                                <span className="data-placeholder">-</span>
+                                                                            </td>
                                                                         ))}
                                                                     </tr>
                                                                 ))
@@ -1425,6 +1424,13 @@ const CrossTabPage = () => {
                         <div className="result-header">
                             <div className="result-tabs">
                                 <div className="result-tab">결과</div>
+                                <button
+                                    onClick={() => setIsStatsOptionsOpen(!isStatsOptionsOpen)}
+                                    className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}
+                                >
+                                    <Settings size={14} />
+                                    <span>옵션 설정</span>
+                                </button>
                             </div>
                             <div className="view-options">
                                 {layoutOptions.find(opt => opt.id === 'chart')?.checked && (
@@ -1466,17 +1472,17 @@ const CrossTabPage = () => {
                             </div>
                         </div>
 
-                        <div className="result-content">
-                            {/* Stats Controls */}
-                            <div className="stats-controls" style={{ flexDirection: 'row', alignItems: 'center', gap: '24px', padding: '16px 24px', background: '#eff6ff', borderBottom: '1px solid #dbeafe' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', whiteSpace: 'nowrap' }}>
-                                    <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#333' }}>옵션 설정</span>
+
+
+                        {isStatsOptionsOpen && (
+                            <div className="stats-controls">
+                                <div className="stats-controls__title-group">
+                                    <span className="stats-controls__title">옵션 설정</span>
+                                    <span className="stats-controls__subtitle">드래그 순서 변경 및 표출 선택</span>
                                 </div>
 
-                                <div style={{ width: '1px', height: '20px', background: '#e0e0e0' }}></div>
-
-                                <div className="stats-section" style={{ flexDirection: 'row', alignItems: 'center', gap: '16px', margin: 0 }}>
-                                    <div className="stats-section-title" style={{ marginBottom: 0, marginRight: '0', whiteSpace: 'nowrap', fontSize: '13px', color: '#666', fontWeight: '600' }}>배치 옵션 (드래그 및 선택)</div>
+                                <div className="stats-controls__section">
+                                    <span className="stats-controls__section-label">배치 옵션</span>
                                     <div className="sortable-list">
                                         {layoutOptions.map((item, index) => (
                                             <div
@@ -1487,9 +1493,8 @@ const CrossTabPage = () => {
                                                 onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
                                                 onDrop={(e) => handleSortDrop(e, index, 'layout')}
                                                 onClick={() => toggleLayoutOption(item.id)}
-                                                style={{ cursor: 'pointer' }}
                                             >
-                                                <GripVertical size={14} className="drag-handle" style={{ color: '#ccc' }} />
+                                                <GripVertical size={14} className="drag-handle" />
                                                 <span>{item.label}</span>
                                             </div>
                                         ))}
@@ -1498,9 +1503,9 @@ const CrossTabPage = () => {
 
                                 {layoutOptions.find(opt => opt.id === 'stats')?.checked && (
                                     <>
-                                        <div style={{ width: '1px', height: '20px', background: '#e0e0e0' }}></div>
-                                        <div className="stats-section" style={{ flexDirection: 'row', alignItems: 'center', gap: '16px', margin: 0 }}>
-                                            <div className="stats-section-title" style={{ marginBottom: 0, marginRight: '0', whiteSpace: 'nowrap', fontSize: '13px', color: '#666', fontWeight: '600' }}>통계 옵션 (드래그 및 선택)</div>
+                                        <div className="stats-controls__divider"></div>
+                                        <div className="stats-controls__section">
+                                            <span className="stats-controls__section-label">통계 옵션</span>
                                             <div className="sortable-list">
                                                 {statsOptions.map((item, index) => (
                                                     <div
@@ -1511,9 +1516,8 @@ const CrossTabPage = () => {
                                                         onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
                                                         onDrop={(e) => handleSortDrop(e, index, 'stats')}
                                                         onClick={() => toggleStatOption(item.id)}
-                                                        style={{ cursor: 'pointer' }}
                                                     >
-                                                        <GripVertical size={14} className="drag-handle" style={{ color: '#ccc' }} />
+                                                        <GripVertical size={14} className="drag-handle" />
                                                         <span>{item.label}</span>
                                                     </div>
                                                 ))}
@@ -1521,17 +1525,41 @@ const CrossTabPage = () => {
                                         </div>
                                     </>
                                 )}
+
+                                <div className="stats-controls__divider"></div>
+                                <div className="stats-controls__section">
+                                    <span className="stats-controls__section-label">단 설정</span>
+                                    <div className="options-list" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                        <div className="toggle-group" style={{ display: 'flex', gap: '4px' }}>
+                                            <button
+                                                className={`toggle-chip ${columnLayout === 'single' ? 'active' : ''}`}
+                                                onClick={() => setColumnLayout('single')}
+                                            >
+                                                1단
+                                            </button>
+                                            <button
+                                                className={`toggle-chip ${columnLayout === 'double' ? 'active' : ''}`}
+                                                onClick={() => setColumnLayout('double')}
+                                            >
+                                                2단
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+                        )}
+
+                        <div className="result-content" style={{ paddingTop: isStatsOptionsOpen ? 0 : 24 }}>
 
                             {/* Dynamic Result Rendering */}
                             <div className="cross-table-container" style={{
                                 display: 'grid',
-                                gridTemplateColumns: layoutOptions.filter(o => o.checked).length >= 3 ? 'repeat(2, 1fr)' : '1fr',
+                                gridTemplateColumns: columnLayout === 'single' ? '1fr' : 'repeat(2, 1fr)',
                                 gap: '24px',
                                 alignItems: 'stretch',
                                 gridAutoRows: '360px'
                             }}>
-                                {layoutOptions.map(option => {
+                                {resultData && layoutOptions.map(option => {
                                     if (!option.checked) return null;
 
                                     if (option.id === 'table') {
@@ -1556,26 +1584,72 @@ const CrossTabPage = () => {
                                                     </button>
                                                 </div>
                                                 <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
-                                                    <div className="table-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-                                                        <div style={{ overflow: 'auto', flex: 1, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
-                                                            <table className="cross-table" style={{ width: '100%', height: '100%' }}>
+                                                    <div className="table-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+                                                        {/* Header Table (Syncs Scroll) */}
+                                                        <div
+                                                            id="cross-table-header"
+                                                            style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
+                                                            className="hide-scrollbar"
+                                                        >
+                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                <colgroup>
+                                                                    <col style={{ width: '100px' }} />
+                                                                    {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                                </colgroup>
                                                                 <thead>
                                                                     <tr>
-                                                                        <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px' }}>문항</th>
+                                                                        <th style={{
+                                                                            width: '100px', textAlign: 'center', padding: '8px',
+                                                                            verticalAlign: 'middle', fontSize: '13px', fontWeight: 'bold',
+                                                                            position: 'sticky', left: 0, zIndex: 20, background: '#f8f9fa',
+                                                                            borderRight: '1px solid #e2e8f0'
+                                                                        }}>문항</th>
                                                                         {resultData.columns.map((col, i) => (
-                                                                            <th key={i} style={{ textAlign: 'right', paddingRight: '16px' }}>
+                                                                            <th key={i} style={{
+                                                                                width: '120px', textAlign: 'center', padding: '8px',
+                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                verticalAlign: 'middle', background: '#f8f9fa',
+                                                                                fontSize: '13px', color: '#444',
+                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0'
+                                                                            }}>
                                                                                 {col}
                                                                                 <div style={{ fontSize: '11px', fontWeight: 'normal', color: '#888', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
                                                                             </th>
                                                                         ))}
                                                                     </tr>
                                                                 </thead>
+                                                            </table>
+                                                        </div>
+
+                                                        {/* Body Table (Main Scroll) */}
+                                                        <div
+                                                            style={{ overflow: 'auto', flex: 1 }}
+                                                            onScroll={(e) => {
+                                                                const header = document.getElementById('cross-table-header');
+                                                                if (header) header.scrollLeft = e.target.scrollLeft;
+                                                            }}
+                                                        >
+                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                <colgroup>
+                                                                    <col style={{ width: '100px' }} />
+                                                                    {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                                </colgroup>
                                                                 <tbody>
                                                                     {resultData.rows.map((row, i) => (
                                                                         <tr key={i}>
-                                                                            <td className="label-cell" style={{ paddingLeft: '16px' }}>{row.label}</td>
+                                                                            <td className="label-cell" style={{
+                                                                                width: '100px', paddingLeft: '16px',
+                                                                                position: 'sticky', left: 0, background: '#fff', zIndex: 5,
+                                                                                borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
+                                                                            }}>
+                                                                                {row.label}
+                                                                            </td>
                                                                             {row.values.map((val, j) => (
-                                                                                <td key={j} className="data-cell" style={{ textAlign: 'right', paddingRight: '16px' }}>
+                                                                                <td key={j} className="data-cell" style={{
+                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
+                                                                                    borderBottom: '1px solid #eee',
+                                                                                    borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                                                }}>
                                                                                     <div className="cell-value">{val}</div>
                                                                                     <div className="cell-pct">{(val / row.total * 100).toFixed(1)}%</div>
                                                                                 </td>
@@ -1612,33 +1686,84 @@ const CrossTabPage = () => {
                                                         <Copy size={14} /> 복사
                                                     </button>
                                                 </div>
-                                                <div style={{ overflow: 'auto', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1 }}>
-                                                    <table className="cross-table" style={{ width: '100%' }}>
-                                                        <thead>
-                                                            <tr>
-                                                                <th style={{ width: '150px', textAlign: 'left', paddingLeft: '16px', background: '#f5f5f5' }}>통계</th>
-                                                                {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ textAlign: 'right', paddingRight: '16px', background: '#fff', borderBottom: '1px solid #eee' }}>{col}</th>
-                                                                ))}
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {statsOptions.filter(opt => opt.checked).map((stat) => {
-                                                                const statKey = stat.id.toLowerCase();
-                                                                const statValues = resultData.stats[statKey] || [];
-                                                                return (
-                                                                    <tr key={stat.id} className="stats-row">
-                                                                        <td className="label-cell" style={{ paddingLeft: '16px' }}>Region Group_{stat.label}</td>
-                                                                        {statValues.map((v, i) => (
-                                                                            <td key={i} style={{ textAlign: 'right', paddingRight: '16px' }}>
-                                                                                {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(4)) : v}
+                                                <div style={{ overflow: 'hidden', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                                                    {/* Header Table (Syncs Scroll) */}
+                                                    <div
+                                                        id="stats-table-header"
+                                                        style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
+                                                        className="hide-scrollbar"
+                                                    >
+                                                        <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                            <colgroup>
+                                                                <col style={{ width: '100px' }} />
+                                                                {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                            </colgroup>
+                                                            <thead>
+                                                                <tr>
+                                                                    <th style={{
+                                                                        width: '100px', textAlign: 'center', padding: '8px',
+                                                                        verticalAlign: 'middle', background: '#f5f5f5',
+                                                                        fontSize: '13px', fontWeight: 'bold',
+                                                                        position: 'sticky', left: 0, zIndex: 20,
+                                                                        borderRight: '1px solid #eee'
+                                                                    }}>통계</th>
+                                                                    {resultData.columns.map((col, i) => (
+                                                                        <th key={i} style={{
+                                                                            width: '120px', textAlign: 'center', padding: '8px',
+                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                            verticalAlign: 'middle', background: '#fff',
+                                                                            fontSize: '13px', color: '#444',
+                                                                            borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                                        }}>
+                                                                            {col}
+                                                                        </th>
+                                                                    ))}
+                                                                </tr>
+                                                            </thead>
+                                                        </table>
+                                                    </div>
+
+                                                    {/* Body Table (Main Scroll) */}
+                                                    <div
+                                                        style={{ overflow: 'auto', flex: 1 }}
+                                                        onScroll={(e) => {
+                                                            const header = document.getElementById('stats-table-header');
+                                                            if (header) header.scrollLeft = e.target.scrollLeft;
+                                                        }}
+                                                    >
+                                                        <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                            <colgroup>
+                                                                <col style={{ width: '100px' }} />
+                                                                {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                            </colgroup>
+                                                            <tbody>
+                                                                {statsOptions.filter(opt => opt.checked).map((stat) => {
+                                                                    const statKey = stat.id.toLowerCase();
+                                                                    const statValues = resultData.stats[statKey] || [];
+                                                                    return (
+                                                                        <tr key={stat.id} className="stats-row">
+                                                                            <td className="label-cell" style={{
+                                                                                width: '100px', paddingLeft: '16px',
+                                                                                position: 'sticky', left: 0, background: '#fff', zIndex: 5,
+                                                                                borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
+                                                                            }}>
+                                                                                Region Group_{stat.label}
                                                                             </td>
-                                                                        ))}
-                                                                    </tr>
-                                                                );
-                                                            })}
-                                                        </tbody>
-                                                    </table>
+                                                                            {statValues.map((v, i) => (
+                                                                                <td key={i} style={{
+                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
+                                                                                    borderBottom: '1px solid #eee',
+                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                                                }}>
+                                                                                    {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(4)) : v}
+                                                                                </td>
+                                                                            ))}
+                                                                        </tr>
+                                                                    );
+                                                                })}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
                                                 </div>
                                             </div>
                                         );
@@ -1664,36 +1789,40 @@ const CrossTabPage = () => {
                                                     alignItems: 'center',
                                                     justifyContent: 'center'
                                                 }}>
-                                                    <KendoChart
-                                                        data={chartData}
-                                                        seriesNames={seriesNames}
-                                                        allowedTypes={
-                                                            chartMode === 'column' ? ['column', 'bar'] :
-                                                                chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
-                                                                    chartMode === 'line' ? ['line'] :
-                                                                        chartMode === 'pie' ? ['pie'] :
-                                                                            chartMode === 'donut' ? ['donut'] :
-                                                                                chartMode === 'radarArea' ? ['radarArea'] :
-                                                                                    chartMode === 'funnel' ? ['funnel'] :
-                                                                                        chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                                            chartMode === 'area' ? ['area'] :
-                                                                                                chartMode === 'map' ? ['map'] :
-                                                                                                    chartMode === 'heatmap' ? ['heatmap'] : []
-                                                        }
-                                                        initialType={
-                                                            chartMode === 'column' ? 'column' :
-                                                                chartMode === 'stackedColumn' ? 'stackedColumn' :
-                                                                    chartMode === 'line' ? 'line' :
-                                                                        chartMode === 'pie' ? 'pie' :
-                                                                            chartMode === 'donut' ? 'donut' :
-                                                                                chartMode === 'radarArea' ? 'radarArea' :
-                                                                                    chartMode === 'funnel' ? 'funnel' :
-                                                                                        chartMode === 'scatterPoint' ? 'scatterPoint' :
-                                                                                            chartMode === 'area' ? 'area' :
-                                                                                                chartMode === 'map' ? 'map' :
-                                                                                                    chartMode === 'heatmap' ? 'heatmap' : 'column'
-                                                        }
-                                                    />
+                                                    {chartData && chartData.length > 0 ? (
+                                                        <KendoChart
+                                                            data={chartData}
+                                                            seriesNames={seriesNames}
+                                                            allowedTypes={
+                                                                chartMode === 'column' ? ['column', 'bar'] :
+                                                                    chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
+                                                                        chartMode === 'line' ? ['line'] :
+                                                                            chartMode === 'pie' ? ['pie'] :
+                                                                                chartMode === 'donut' ? ['donut'] :
+                                                                                    chartMode === 'radarArea' ? ['radarArea'] :
+                                                                                        chartMode === 'funnel' ? ['funnel'] :
+                                                                                            chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                                chartMode === 'area' ? ['area'] :
+                                                                                                    chartMode === 'map' ? ['map'] :
+                                                                                                        chartMode === 'heatmap' ? ['heatmap'] : []
+                                                            }
+                                                            initialType={
+                                                                chartMode === 'column' ? 'column' :
+                                                                    chartMode === 'stackedColumn' ? 'stackedColumn' :
+                                                                        chartMode === 'line' ? 'line' :
+                                                                            chartMode === 'pie' ? 'pie' :
+                                                                                chartMode === 'donut' ? 'donut' :
+                                                                                    chartMode === 'radarArea' ? 'radarArea' :
+                                                                                        chartMode === 'funnel' ? 'funnel' :
+                                                                                            chartMode === 'scatterPoint' ? 'scatterPoint' :
+                                                                                                chartMode === 'area' ? 'area' :
+                                                                                                    chartMode === 'map' ? 'map' :
+                                                                                                        chartMode === 'heatmap' ? 'heatmap' : 'column'
+                                                            }
+                                                        />
+                                                    ) : (
+                                                        <div style={{ color: '#aaa', fontSize: '14px' }}>차트를 표시할 데이터가 없습니다.</div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );
