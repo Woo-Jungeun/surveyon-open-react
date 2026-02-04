@@ -1693,7 +1693,7 @@ const CrossTabPage = () => {
                                 <div className="cross-table-container" style={{
                                     display: 'grid',
                                     gridTemplateColumns: columnLayout === 'single' ? '1fr' : 'repeat(2, 1fr)',
-                                    gap: '24px',
+                                    gap: '12px',
                                     alignItems: 'stretch'
                                 }}>
                                     {resultData && layoutOptions.map(option => {
@@ -1734,28 +1734,28 @@ const CrossTabPage = () => {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
+                                                    <div className="table-chart-wrapper" style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
                                                         <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
                                                             <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
                                                                 <thead>
                                                                     <tr>
                                                                         <th style={{
                                                                             position: 'sticky', left: 0, top: 0, zIndex: 30,
-                                                                            width: '180px', height: '90px',
+                                                                            width: '140px', height: '50px',
                                                                             background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
-                                                                            fontSize: '13px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                            textAlign: 'center', verticalAlign: 'middle'
+                                                                            fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                            textAlign: 'center', verticalAlign: 'middle', padding: '4px'
                                                                         }}>
                                                                             문항
                                                                         </th>
                                                                         {resultData.columns.map((col, i) => (
                                                                             <th key={i} style={{
                                                                                 position: 'sticky', top: 0, zIndex: 20,
-                                                                                width: '120px', height: '90px',
+                                                                                width: '100px', height: '50px',
                                                                                 background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
                                                                                 borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                                fontSize: '13px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
-                                                                                textAlign: 'center', padding: '8px',
+                                                                                fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                                textAlign: 'center', padding: '4px',
                                                                                 whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
                                                                                 verticalAlign: 'middle'
                                                                             }}>
@@ -1770,10 +1770,10 @@ const CrossTabPage = () => {
                                                                         <tr key={i}>
                                                                             <td style={{
                                                                                 position: 'sticky', left: 0, zIndex: 10,
-                                                                                width: '180px', height: '52px',
+                                                                                width: '140px', height: '36px',
                                                                                 background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
-                                                                                padding: '0 16px', boxSizing: 'border-box',
-                                                                                fontSize: '13px', fontWeight: '500', color: '#333',
+                                                                                padding: '0 8px', boxSizing: 'border-box',
+                                                                                fontSize: '12px', fontWeight: '500', color: '#333',
                                                                                 verticalAlign: 'middle',
                                                                                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                                                                             }}>
@@ -1781,10 +1781,10 @@ const CrossTabPage = () => {
                                                                             </td>
                                                                             {row.values.map((val, j) => (
                                                                                 <td key={j} className="data-cell" style={{
-                                                                                    width: '120px', height: '52px',
+                                                                                    width: '100px', height: '36px',
                                                                                     background: '#fff', borderBottom: '1px solid #eee',
                                                                                     borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
-                                                                                    padding: '0 16px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
+                                                                                    padding: '0 8px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
                                                                                 }}>
                                                                                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
                                                                                         <div className="cell-value">{val.count}</div>
@@ -1837,30 +1837,15 @@ const CrossTabPage = () => {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, overflow: 'auto' }}>
-                                                        <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                    <div className="stats-table-container">
+                                                        <table className="cross-table stats-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th style={{
-                                                                        position: 'sticky', left: 0, top: 0, zIndex: 30,
-                                                                        width: '180px', height: '90px',
-                                                                        background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
-                                                                        fontSize: '13px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                        textAlign: 'center', verticalAlign: 'middle'
-                                                                    }}>
+                                                                    <th className="stats-th-label">
                                                                         통계
                                                                     </th>
                                                                     {resultData.columns.map((col, i) => (
-                                                                        <th key={i} style={{
-                                                                            position: 'sticky', top: 0, zIndex: 20,
-                                                                            width: '120px', height: '90px',
-                                                                            background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
-                                                                            borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                            fontSize: '13px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
-                                                                            textAlign: 'center', padding: '8px',
-                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                            verticalAlign: 'middle'
-                                                                        }}>
+                                                                        <th key={i} className="stats-th-data">
                                                                             {col}
                                                                         </th>
                                                                     ))}
@@ -1878,25 +1863,11 @@ const CrossTabPage = () => {
 
                                                                     return (
                                                                         <tr key={stat.id} className="stats-row">
-                                                                            <td style={{
-                                                                                position: 'sticky', left: 0, zIndex: 10,
-                                                                                width: '180px', height: '52px',
-                                                                                background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
-                                                                                padding: '0 16px', boxSizing: 'border-box',
-                                                                                fontSize: '13px', fontWeight: '500', color: '#333',
-                                                                                verticalAlign: 'middle',
-                                                                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                                                                            }}>
+                                                                            <td className="stats-td-label">
                                                                                 {stat.label}
                                                                             </td>
                                                                             {statValues.map((v, i) => (
-                                                                                <td key={i} style={{
-                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
-                                                                                    borderBottom: '1px solid #eee',
-                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
-                                                                                    height: '52px', boxSizing: 'border-box', verticalAlign: 'middle',
-                                                                                    fontSize: '13px', color: '#333'
-                                                                                }}>
+                                                                                <td key={i} className="stats-td-data">
                                                                                     {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
                                                                                 </td>
                                                                             ))}
@@ -1931,23 +1902,10 @@ const CrossTabPage = () => {
                                                             <Maximize size={14} /> 전체화면
                                                         </button>
                                                     </div>
-                                                    <div ref={chartContainerRef} className="cross-tab-chart-container" style={{
-                                                        flex: 1,
-                                                        width: '100%',
-                                                        minHeight: '300px',
-                                                        background: '#fff',
-                                                        borderRadius: '8px',
-                                                        border: '1px solid #e2e8f0',
-                                                        padding: '24px',
-                                                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                                        overflowX: 'auto',
-                                                        overflowY: 'hidden'
-                                                    }}>
+                                                    <div ref={chartContainerRef} className="cross-tab-chart-container">
                                                         {chartData && chartData.length > 0 ? (
-                                                            <div style={{
-                                                                width: `${Math.max(100, chartData.length * 120)}px`,
-                                                                minWidth: '100%',
-                                                                height: '450px'
+                                                            <div className="chart-scroll-wrapper" style={{
+                                                                width: `${Math.max(100, chartData.length * 120)}px`
                                                             }}>
                                                                 <KendoChart
                                                                     data={chartData}
