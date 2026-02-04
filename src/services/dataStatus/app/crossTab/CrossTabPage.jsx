@@ -1649,8 +1649,7 @@ const CrossTabPage = () => {
                                 display: 'grid',
                                 gridTemplateColumns: columnLayout === 'single' ? '1fr' : 'repeat(2, 1fr)',
                                 gap: '24px',
-                                alignItems: 'stretch',
-                                gridAutoRows: '360px'
+                                alignItems: 'stretch'
                             }}>
                                 {resultData && layoutOptions.map(option => {
                                     if (!option.checked) return null;
@@ -1685,15 +1684,15 @@ const CrossTabPage = () => {
                                                                 style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
                                                                 className="hide-scrollbar"
                                                             >
-                                                                <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed' }}>
                                                                     <colgroup>
-                                                                        <col style={{ width: '100px' }} />
+                                                                        <col style={{ width: '180px' }} />
                                                                         {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
                                                                     </colgroup>
                                                                     <thead>
                                                                         <tr>
                                                                             <th style={{
-                                                                                width: '100px', textAlign: 'center', padding: '8px',
+                                                                                width: '180px', textAlign: 'center', padding: '8px',
                                                                                 verticalAlign: 'middle', fontSize: '13px', fontWeight: 'bold',
                                                                                 position: 'sticky', left: 0, zIndex: 20, background: '#f8f9fa',
                                                                                 borderRight: '1px solid #e2e8f0'
@@ -1726,16 +1725,16 @@ const CrossTabPage = () => {
                                                                     if (header) header.scrollLeft = e.target.scrollLeft;
                                                                 }}
                                                             >
-                                                                <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed' }}>
                                                                     <colgroup>
-                                                                        <col style={{ width: '100px' }} />
+                                                                        <col style={{ width: '180px' }} />
                                                                         {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
                                                                     </colgroup>
                                                                     <tbody>
                                                                         {resultData.rows.map((row, i) => (
                                                                             <tr key={i}>
                                                                                 <td className="label-cell" style={{
-                                                                                    width: '100px', paddingLeft: '16px',
+                                                                                    width: '180px', paddingLeft: '16px',
                                                                                     position: 'sticky', left: 0, background: '#fff', zIndex: 5,
                                                                                     borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
                                                                                 }}>
@@ -1792,15 +1791,15 @@ const CrossTabPage = () => {
                                                             style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
                                                             className="hide-scrollbar"
                                                         >
-                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                            <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed' }}>
                                                                 <colgroup>
-                                                                    <col style={{ width: '100px' }} />
+                                                                    <col style={{ width: '180px' }} />
                                                                     {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
                                                                 </colgroup>
                                                                 <thead>
                                                                     <tr>
                                                                         <th style={{
-                                                                            width: '100px', textAlign: 'center', padding: '8px',
+                                                                            width: '180px', textAlign: 'center', padding: '8px',
                                                                             verticalAlign: 'middle', background: '#f5f5f5',
                                                                             fontSize: '13px', fontWeight: 'bold',
                                                                             position: 'sticky', left: 0, zIndex: 20,
@@ -1832,9 +1831,9 @@ const CrossTabPage = () => {
                                                                 if (header) header.scrollLeft = e.target.scrollLeft;
                                                             }}
                                                         >
-                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                            <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed' }}>
                                                                 <colgroup>
-                                                                    <col style={{ width: '100px' }} />
+                                                                    <col style={{ width: '180px' }} />
                                                                     {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
                                                                 </colgroup>
                                                                 <tbody>
@@ -1844,7 +1843,7 @@ const CrossTabPage = () => {
                                                                         return (
                                                                             <tr key={stat.id} className="stats-row">
                                                                                 <td className="label-cell" style={{
-                                                                                    width: '100px', paddingLeft: '16px',
+                                                                                    width: '180px', paddingLeft: '16px',
                                                                                     position: 'sticky', left: 0, background: '#fff', zIndex: 5,
                                                                                     borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
                                                                                 }}>

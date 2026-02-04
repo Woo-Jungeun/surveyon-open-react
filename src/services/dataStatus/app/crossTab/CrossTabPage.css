@@ -1017,9 +1017,10 @@
 .result-block {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    min-height: 360px;
+    max-height: 600px;
     min-width: 0;
-    /* Ensure content fills height */
+    overflow: hidden;
 }
 
 /* AI Loading & Result Styles */
