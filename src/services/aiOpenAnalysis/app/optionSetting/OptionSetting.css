@@ -365,12 +365,6 @@
   background: #fafafa;
 }
 
-.lv3-panel-body {
-  padding: 6px;
-  overflow-y: auto;
-  max-height: calc(100% - 80px);
-}
-
 .lv3-search {
   flex: 1;
   border: 1px solid #ccc;
@@ -400,6 +394,25 @@
 .lv3-panel-item .code {
   color: #888;
   font-size: 12px;
+}
+
+/* 소분류 삭제 항목 특별 스타일 */
+.lv3-panel-item-delete {
+  background: #fff5f5;
+  border: 1px solid #fecaca;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.lv3-panel-item-delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.lv3-panel-item-delete .code {
+  color: #dc2626;
+  opacity: 0.7;
 }
 
 .lv3-empty {
@@ -538,7 +551,6 @@
   padding: 6px;
   overflow-y: auto;
   max-height: calc(100% - 80px);
-  /* 검색창 영역 제외 */
 }
 
 .lv3-search {

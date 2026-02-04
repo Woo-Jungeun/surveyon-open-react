@@ -908,7 +908,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     keySet.has(getKey(r))
                         ? {
                             ...r,
-                            lv3: opt?.codeName ?? "",
+                            // "소분류 삭제" 선택 시 빈 값으로 설정
+                            lv3: opt?.codeName === "소분류 삭제" ? "" : (opt?.codeName ?? ""),
                             lv1: opt?.lv1 ?? "",
                             lv2: opt?.lv2 ?? "",
                             lv1code: opt?.lv1code ?? "",

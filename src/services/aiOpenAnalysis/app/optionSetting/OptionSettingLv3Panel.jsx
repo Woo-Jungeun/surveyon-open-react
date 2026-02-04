@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useDeferredValue, memo, useRef, useEffect } from "react";
 
 // 리스트 아이템 컴포넌트 (렌더링 최적화를 위해 분리)
-const OptionItem = memo(({ opt, targets, onApply }) => {
+const OptionItem = memo(({ opt, targets, onApply, isDeleteOption }) => {
   return (
     <div
-      className="lv3-panel-item"
+      className={`lv3-panel-item ${isDeleteOption ? 'lv3-panel-item-delete' : ''}`}
       onClick={() => onApply(targets, opt)}
     >
       <span>{opt.codeName}</span>
@@ -77,7 +77,7 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
     // 정렬된 옵션 기준
     if (!sortedOptions) return [];
 
-    // 검색어 없으면 전체 반환
+    // 검색어가 없으면 전체 반환 (삭제 옵션 포함)
     if (!deferredSearchTerm) return sortedOptions;
 
     const lowerTerm = deferredSearchTerm.toLowerCase();
@@ -86,6 +86,16 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
       (opt.codeId && String(opt.codeId).toLowerCase().includes(lowerTerm))
     );
   }, [sortedOptions, deferredSearchTerm]);
+
+  // "소분류 삭제" 옵션을 맨 위에 추가
+  const optionsWithDelete = useMemo(() => {
+    const deleteOption = {
+      codeId: "",
+      codeName: "소분류 삭제",
+      lv123code: ""
+    };
+    return [deleteOption, ...filteredOptions];
+  }, [filteredOptions]);
 
   return (
     <div className="lv3-panel-wrap">
@@ -123,15 +133,16 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
         </div>
         <div className="lv3-panel-body">
           {/* 아이템 컴포넌트 렌더링 */}
-          {filteredOptions.map(opt => (
+          {optionsWithDelete.map(opt => (
             <OptionItem
               key={`${opt.lv123code}_${opt.codeName}`}
               opt={opt}
               targets={targets}
               onApply={onApply}
+              isDeleteOption={opt.codeName === "소분류 삭제"}
             />
           ))}
-          {filteredOptions.length === 0 && (
+          {optionsWithDelete.length === 1 && (
             <p className="lv3-empty">검색 결과가 없습니다.</p>
           )}
         </div>
