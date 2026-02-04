@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './SideBar.css';
 
-const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name' }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
@@ -43,7 +43,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete }) 
                         >
                             <div className="sidebar-item-content">
                                 <div className="sidebar-item-name">
-                                    {item.name}
+                                    {item[displayField]}
                                 </div>
                                 <div className="sidebar-item-label">
                                     {item.label}

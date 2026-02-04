@@ -96,7 +96,7 @@ const CrossTabPage = () => {
 
                 if (varResult?.success === "777" && varResult.resultjson) {
                     loadedVariables = Object.values(varResult.resultjson).map(item => ({
-                        id: item.name, // Use name as ID
+                        id: item.id, // Use name as ID
                         name: item.name,
                         label: item.label,
                         info: item.info || []
@@ -135,8 +135,14 @@ const CrossTabPage = () => {
                         setTableName(firstTable.name || "");
 
                         // Set configuration using loaded variables
-                        const newRowVars = (firstTable.row || []).map(id => loadedVariables.find(v => v.id === id) || { id, name: id });
-                        const newColVars = (firstTable.col || []).map(id => loadedVariables.find(v => v.id === id) || { id, name: id });
+                        const newRowVars = (firstTable.row || []).map(id => {
+                            const found = loadedVariables.find(v => v.id === id);
+                            return found || { id, name: id, label: id, info: [] };
+                        });
+                        const newColVars = (firstTable.col || []).map(id => {
+                            const found = loadedVariables.find(v => v.id === id);
+                            return found || { id, name: id, label: id, info: [] };
+                        });
                         setRowVars(newRowVars);
                         setColVars(newColVars);
 
@@ -331,6 +337,14 @@ const CrossTabPage = () => {
         setResultData(null);
         setIsStatsOptionsOpen(false);
     }, [previewData]);
+
+    // Reset horizontal scroll position when colVars changes
+    useEffect(() => {
+        const colDropZone = document.querySelector('.col-drop-zone');
+        if (colDropZone) {
+            colDropZone.scrollLeft = 0;
+        }
+    }, [colVars]);
 
     const handleRunAiAnalysis = () => {
         setIsAiLoading(true);
@@ -604,9 +618,16 @@ const CrossTabPage = () => {
         setTableName(item.name || "");
         setIsConfigOpen(false);
 
+
         // Load table configuration
-        const newRowVars = (item.row || []).map(id => variables.find(v => v.id === id) || { id, name: id });
-        const newColVars = (item.col || []).map(id => variables.find(v => v.id === id) || { id, name: id });
+        const newRowVars = (item.row || []).map(id => {
+            const found = variables.find(v => v.id === id);
+            return found || { id, name: id, label: id, info: [] };
+        });
+        const newColVars = (item.col || []).map(id => {
+            const found = variables.find(v => v.id === id);
+            return found || { id, name: id, label: id, info: [] };
+        });
         setRowVars(newRowVars);
         setColVars(newColVars);
 
@@ -683,29 +704,58 @@ const CrossTabPage = () => {
                         const weightCol = config.weight_col || "";
                         const filterExpr = config.filter_expression || "";
 
-                        const selectedVarNames = new Set([...xInfo, ...yInfo]);
-                        if (weightCol && weightCol !== "없음" && weightCol !== "") {
-                            selectedVarNames.add(weightCol);
-                        }
+                        // Re-derive mapped vars to be sure (since state is async)
+                        // Actually I can access mappedRows/mappedCols if I move their declaration up or just re-map here.
+                        // But mappedRows/mappedCols definitions are inside narrower scope above.
+                        // I will redefine them for clarity or use let outside.
+                        // Better to re-map to be safe and clean.
+                        const xIds = xInfo;
+                        const yIds = yInfo;
+
+                        // We need the full variable objects
+                        const mappedRowsRun = xIds.map(id => {
+                            const found = variables.find(v => v.id === id || v.name === id);
+                            return found || { id, name: id, label: id, info: [] };
+                        });
+                        const mappedColsRun = yIds.map(id => {
+                            const found = variables.find(v => v.id === id || v.name === id);
+                            return found || { id, name: id, label: id, info: [] };
+                        });
 
                         const variablesMap = {};
-                        variables.forEach(v => {
-                            if (selectedVarNames.has(v.name)) {
-                                variablesMap[v.name] = v;
+                        [...mappedRowsRun, ...mappedColsRun].forEach(v => {
+                            const varId = v.id || v.name;
+                            if (v && varId) {
+                                variablesMap[varId] = v;
                             }
                         });
+
+                        let weightId = "";
+                        if (weightCol && weightCol !== "없음") {
+                            // Try to find by ID first, then name
+                            const weightVar = variables.find(v => v.id === weightCol || v.name === weightCol);
+                            if (weightVar) {
+                                const wId = weightVar.id || weightVar.name;
+                                variablesMap[wId] = weightVar;
+                                weightId = wId;
+                            } else {
+                                // If not found in variables list, maybe weightCol IS the id/name?
+                                // We should try our best.
+                                weightId = weightCol;
+                            }
+                        }
 
                         const payload = {
                             user: auth.user.userId,
                             pageid: PAGE_ID,
                             variables: variablesMap,
-                            weight_col: weightCol === "없음" ? "" : weightCol,
+                            weight_col: weightId,
                             filter_expression: filterExpr,
                             table: {
                                 id: item.id,
                                 name: item.name || "Untitled Table",
-                                x_info: xInfo,
-                                y_info: yInfo
+                                x_info: mappedRowsRun.map(v => v.id || v.name),
+                                y_info: mappedColsRun.map(v => v.id || v.name)
                             }
                         };
 
@@ -793,7 +843,14 @@ const CrossTabPage = () => {
         e.preventDefault();
         if (!draggedItem) return;
 
-        const newItem = { id: draggedItem.id, name: draggedItem.name };
+        // Find the full variable object from the variables list
+        const fullVariable = variables.find(v => v.id === draggedItem.id);
+        const newItem = fullVariable || {
+            id: draggedItem.id,
+            name: draggedItem.name,
+            label: draggedItem.label || draggedItem.name,
+            info: draggedItem.info || []
+        };
 
         if (type === 'row') {
             if (!rowVars.find(v => v.id === newItem.id)) {
@@ -924,16 +981,32 @@ const CrossTabPage = () => {
             const currentTable = tables.find(t => t.id === selectedTableId);
             const isNewTable = currentTable?.isNew;
 
+            let weightId = "";
+            if (selectedWeight && selectedWeight !== "없음" && selectedWeight !== "") {
+                const weightVar = variables.find(v => v.name === selectedWeight);
+                if (weightVar) {
+                    weightId = weightVar.id;
+                }
+            }
+
             const savePayload = {
                 user: auth.user.userId,
-                tableid: selectedTableId,
+                tableid: selectedTableId, // Note: backend expects 'tableid' for update? Check API (saveCrossTable usually uses /tables/set which might expect table obj or flat fields? Checked Step 523 code view).
+                // Wait, previous code used `tableid` here?
+                // Step 632 view shows:
+                // user: auth.user.userId,
+                // tableid: selectedTableId,
+                // pageid: ...,
+                // name: ...,
+                // config: { ... }
+                // So I keep this structure but update values inside config.
                 pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: rowVars.map(v => v.name),
-                    y_info: colVars.map(v => v.name),
+                    x_info: rowVars.map(v => v.id),
+                    y_info: colVars.map(v => v.id),
                     filter_expression: filterExpression,
-                    weight_col: selectedWeight === "없음" ? "" : selectedWeight
+                    weight_col: weightId
                 }
             };
 
@@ -948,31 +1021,34 @@ const CrossTabPage = () => {
                 }
 
                 // Run Analysis
-                const selectedVarNames = new Set();
-                rowVars.forEach(v => selectedVarNames.add(v.name));
-                colVars.forEach(v => selectedVarNames.add(v.name));
-                if (selectedWeight && selectedWeight !== "없음" && selectedWeight !== "") {
-                    selectedVarNames.add(selectedWeight);
-                }
-
                 const variablesMap = {};
-                variables.forEach(v => {
-                    if (selectedVarNames.has(v.name)) {
-                        variablesMap[v.name] = v;
+
+                // Add Row and Column variables directly
+                [...rowVars, ...colVars].forEach(v => {
+                    const varId = v.id || v.name;
+                    if (v && varId) {
+                        variablesMap[varId] = v;
                     }
                 });
+
+                if (weightId) {
+                    const weightVar = variables.find(v => (v.id || v.name) === weightId);
+                    if (weightVar) {
+                        variablesMap[weightId] = weightVar;
+                    }
+                }
 
                 const runPayload = {
                     user: auth.user.userId,
                     pageid: PAGE_ID,
                     variables: variablesMap,
-                    weight_col: selectedWeight === "없음" ? "" : selectedWeight,
+                    weight_col: weightId,
                     filter_expression: filterExpression,
                     table: {
                         id: selectedTableId,
                         name: tableName || "Untitled Table",
-                        x_info: rowVars.map(v => v.name),
-                        y_info: colVars.map(v => v.name)
+                        x_info: rowVars.map(v => v.id || v.name),
+                        y_info: colVars.map(v => v.id || v.name)
                     }
                 };
 
@@ -1047,23 +1123,37 @@ const CrossTabPage = () => {
         }
 
         const variablesMap = {};
-        variables.forEach(v => {
-            if (selectedVarNames.has(v.name)) {
-                variablesMap[v.name] = v;
+
+        // Add Row and Column variables directly
+        [...rowVars, ...colVars].forEach(v => {
+            const varId = v.id || v.name;
+            if (v && varId) {
+                variablesMap[varId] = v;
             }
         });
+
+        let weightId = "";
+        // Add Weight variable if selected
+        if (selectedWeight && selectedWeight !== "없음") {
+            const weightVar = variables.find(v => v.name === selectedWeight);
+            if (weightVar) {
+                const wId = weightVar.id || weightVar.name;
+                variablesMap[wId] = weightVar;
+                weightId = wId;
+            }
+        }
 
         const payload = {
             user: auth.user.userId,
             pageid: PAGE_ID,
             variables: variablesMap,
-            weight_col: selectedWeight === "없음" ? "" : selectedWeight,
+            weight_col: weightId,
             filter_expression: filterExpression,
             table: {
                 id: selectedTableId,
                 name: tableName || "Untitled Table",
-                x_info: rowVars.map(v => v.name),
-                y_info: colVars.map(v => v.name)
+                x_info: rowVars.map(v => v.id || v.name),
+                y_info: colVars.map(v => v.id || v.name)
             }
         };
 
@@ -1089,12 +1179,12 @@ const CrossTabPage = () => {
                 });
 
                 const parsedStats = {
-                    mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                    med: columnsList.map(c => c.med !== undefined ? c.med : '-'),
-                    mod: columnsList.map(c => c.mod !== undefined ? c.mod : '-'),
-                    std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
-                    min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
-                    max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
+                    mean: columnsList.map(c => (c.mean !== undefined && c.mean !== null) ? c.mean : '-'),
+                    med: columnsList.map(c => (c.med !== undefined && c.med !== null) ? c.med : ((c.median !== undefined && c.median !== null) ? c.median : '-')),
+                    mod: columnsList.map(c => (c.mod !== undefined && c.mod !== null) ? c.mod : ((c.mode !== undefined && c.mode !== null) ? c.mode : '-')),
+                    std: columnsList.map(c => (c.std !== undefined && c.std !== null) ? c.std : '-'),
+                    min: columnsList.map(c => (c.min !== undefined && c.min !== null) ? c.min : '-'),
+                    max: columnsList.map(c => (c.max !== undefined && c.max !== null) ? c.max : '-'),
                     n: columnsList.map(c => c.n || 0)
                 };
 
@@ -1183,6 +1273,7 @@ const CrossTabPage = () => {
                     onItemClick={handleTableSelect}
                     onSearch={setTableSearchTerm}
                     onDelete={handleDeleteTable}
+                    displayField="name"
                 />
 
                 {/* Main Content */}
@@ -1274,7 +1365,7 @@ const CrossTabPage = () => {
                                                         draggable
                                                         onDragStart={(e) => handleDragStart(e, v)}
                                                     >
-                                                        <div className="variable-item__name">{v.name}</div>
+                                                        <div className="variable-item__name">{v.id}</div>
                                                         <div className="variable-item__label">{v.label}</div>
                                                     </div>
                                                 ))}
@@ -1302,7 +1393,7 @@ const CrossTabPage = () => {
                                                 ) : (
                                                     colVars.map(v => (
                                                         <div key={v.id} className="dropped-tag">
-                                                            {v.name}
+                                                            {v.id}
                                                             <X size={14} className="remove" onClick={() => removeVar(v.id, 'col')} />
                                                         </div>
                                                     ))
@@ -1325,7 +1416,7 @@ const CrossTabPage = () => {
                                                 ) : (
                                                     rowVars.map(v => (
                                                         <div key={v.id} className="dropped-tag row-tag">
-                                                            {v.name}
+                                                            {v.id}
                                                             <X size={14} className="remove" onClick={() => removeVar(v.id, 'row')} />
                                                         </div>
                                                     ))
@@ -1549,7 +1640,7 @@ const CrossTabPage = () => {
                             </div>
                         )}
 
-                        <div className="result-content" style={{ paddingTop: isStatsOptionsOpen ? 0 : 24 }}>
+                        <div className="result-content">
 
                             {/* Dynamic Result Rendering */}
                             <div className="cross-table-container" style={{
@@ -1586,79 +1677,84 @@ const CrossTabPage = () => {
                                                 <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
                                                     <div className="table-wrapper" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
                                                         {/* Header Table (Syncs Scroll) */}
-                                                        <div
-                                                            id="cross-table-header"
-                                                            style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
-                                                            className="hide-scrollbar"
-                                                        >
-                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
-                                                                <colgroup>
-                                                                    <col style={{ width: '100px' }} />
-                                                                    {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
-                                                                </colgroup>
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th style={{
-                                                                            width: '100px', textAlign: 'center', padding: '8px',
-                                                                            verticalAlign: 'middle', fontSize: '13px', fontWeight: 'bold',
-                                                                            position: 'sticky', left: 0, zIndex: 20, background: '#f8f9fa',
-                                                                            borderRight: '1px solid #e2e8f0'
-                                                                        }}>문항</th>
-                                                                        {resultData.columns.map((col, i) => (
-                                                                            <th key={i} style={{
-                                                                                width: '120px', textAlign: 'center', padding: '8px',
-                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                                verticalAlign: 'middle', background: '#f8f9fa',
-                                                                                fontSize: '13px', color: '#444',
-                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0'
-                                                                            }}>
-                                                                                {col}
-                                                                                <div style={{ fontSize: '11px', fontWeight: 'normal', color: '#888', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
-                                                                            </th>
-                                                                        ))}
-                                                                    </tr>
-                                                                </thead>
-                                                            </table>
-                                                        </div>
-
-                                                        {/* Body Table (Main Scroll) */}
-                                                        <div
-                                                            style={{ overflow: 'auto', flex: 1 }}
-                                                            onScroll={(e) => {
-                                                                const header = document.getElementById('cross-table-header');
-                                                                if (header) header.scrollLeft = e.target.scrollLeft;
-                                                            }}
-                                                        >
-                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
-                                                                <colgroup>
-                                                                    <col style={{ width: '100px' }} />
-                                                                    {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
-                                                                </colgroup>
-                                                                <tbody>
-                                                                    {resultData.rows.map((row, i) => (
-                                                                        <tr key={i}>
-                                                                            <td className="label-cell" style={{
-                                                                                width: '100px', paddingLeft: '16px',
-                                                                                position: 'sticky', left: 0, background: '#fff', zIndex: 5,
-                                                                                borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
-                                                                            }}>
-                                                                                {row.label}
-                                                                            </td>
-                                                                            {row.values.map((val, j) => (
-                                                                                <td key={j} className="data-cell" style={{
-                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
-                                                                                    borderBottom: '1px solid #eee',
-                                                                                    borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                        {resultData.columns && resultData.columns.length > 0 && (
+                                                            <div
+                                                                id="cross-table-header"
+                                                                style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
+                                                                className="hide-scrollbar"
+                                                            >
+                                                                <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                    <colgroup>
+                                                                        <col style={{ width: '100px' }} />
+                                                                        {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                                    </colgroup>
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th style={{
+                                                                                width: '100px', textAlign: 'center', padding: '8px',
+                                                                                verticalAlign: 'middle', fontSize: '13px', fontWeight: 'bold',
+                                                                                position: 'sticky', left: 0, zIndex: 20, background: '#f8f9fa',
+                                                                                borderRight: '1px solid #e2e8f0'
+                                                                            }}>문항</th>
+                                                                            {resultData.columns.map((col, i) => (
+                                                                                <th key={i} style={{
+                                                                                    width: '120px', textAlign: 'center', padding: '8px',
+                                                                                    whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                    verticalAlign: 'middle', background: '#f8f9fa',
+                                                                                    fontSize: '13px', color: '#444',
+                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0'
                                                                                 }}>
-                                                                                    <div className="cell-value">{val}</div>
-                                                                                    <div className="cell-pct">{(val / row.total * 100).toFixed(1)}%</div>
-                                                                                </td>
+                                                                                    {col}
+                                                                                    <div style={{ fontSize: '11px', fontWeight: 'normal', color: '#888', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
+                                                                                </th>
                                                                             ))}
                                                                         </tr>
-                                                                    ))}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
+                                                                    </thead>
+                                                                </table>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Body Table (Main Scroll) */}
+                                                        {resultData.rows && resultData.rows.length > 0 && (
+                                                            <div
+                                                                className="result-table-body"
+                                                                style={{ overflow: 'auto', flex: 1 }}
+                                                                onScroll={(e) => {
+                                                                    const header = document.getElementById('cross-table-header');
+                                                                    if (header) header.scrollLeft = e.target.scrollLeft;
+                                                                }}
+                                                            >
+                                                                <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                    <colgroup>
+                                                                        <col style={{ width: '100px' }} />
+                                                                        {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                                    </colgroup>
+                                                                    <tbody>
+                                                                        {resultData.rows.map((row, i) => (
+                                                                            <tr key={i}>
+                                                                                <td className="label-cell" style={{
+                                                                                    width: '100px', paddingLeft: '16px',
+                                                                                    position: 'sticky', left: 0, background: '#fff', zIndex: 5,
+                                                                                    borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
+                                                                                }}>
+                                                                                    {row.label}
+                                                                                </td>
+                                                                                {row.values.map((val, j) => (
+                                                                                    <td key={j} className="data-cell" style={{
+                                                                                        width: '120px', textAlign: 'right', paddingRight: '16px',
+                                                                                        borderBottom: '1px solid #eee',
+                                                                                        borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                                                    }}>
+                                                                                        <div className="cell-value">{val}</div>
+                                                                                        <div className="cell-pct">{(val / row.total * 100).toFixed(1)}%</div>
+                                                                                    </td>
+                                                                                ))}
+                                                                            </tr>
+                                                                        ))}
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -1688,82 +1784,86 @@ const CrossTabPage = () => {
                                                 </div>
                                                 <div style={{ overflow: 'hidden', background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, display: 'flex', flexDirection: 'column' }}>
                                                     {/* Header Table (Syncs Scroll) */}
-                                                    <div
-                                                        id="stats-table-header"
-                                                        style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
-                                                        className="hide-scrollbar"
-                                                    >
-                                                        <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
-                                                            <colgroup>
-                                                                <col style={{ width: '100px' }} />
-                                                                {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
-                                                            </colgroup>
-                                                            <thead>
-                                                                <tr>
-                                                                    <th style={{
-                                                                        width: '100px', textAlign: 'center', padding: '8px',
-                                                                        verticalAlign: 'middle', background: '#f5f5f5',
-                                                                        fontSize: '13px', fontWeight: 'bold',
-                                                                        position: 'sticky', left: 0, zIndex: 20,
-                                                                        borderRight: '1px solid #eee'
-                                                                    }}>통계</th>
-                                                                    {resultData.columns.map((col, i) => (
-                                                                        <th key={i} style={{
-                                                                            width: '120px', textAlign: 'center', padding: '8px',
-                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                            verticalAlign: 'middle', background: '#fff',
-                                                                            fontSize: '13px', color: '#444',
-                                                                            borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
-                                                                        }}>
-                                                                            {col}
-                                                                        </th>
-                                                                    ))}
-                                                                </tr>
-                                                            </thead>
-                                                        </table>
-                                                    </div>
+                                                    {resultData.columns && resultData.columns.length > 0 && (
+                                                        <div
+                                                            id="stats-table-header"
+                                                            style={{ overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none', borderBottom: '1px solid #e2e8f0' }}
+                                                            className="hide-scrollbar"
+                                                        >
+                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                <colgroup>
+                                                                    <col style={{ width: '100px' }} />
+                                                                    {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                                </colgroup>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style={{
+                                                                            width: '100px', textAlign: 'center', padding: '8px',
+                                                                            verticalAlign: 'middle', background: '#f5f5f5',
+                                                                            fontSize: '13px', fontWeight: 'bold',
+                                                                            position: 'sticky', left: 0, zIndex: 20,
+                                                                            borderRight: '1px solid #eee'
+                                                                        }}>통계</th>
+                                                                        {resultData.columns.map((col, i) => (
+                                                                            <th key={i} style={{
+                                                                                width: '120px', textAlign: 'center', padding: '8px',
+                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                verticalAlign: 'middle', background: '#fff',
+                                                                                fontSize: '13px', color: '#444',
+                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                                            }}>
+                                                                                {col}
+                                                                            </th>
+                                                                        ))}
+                                                                    </tr>
+                                                                </thead>
+                                                            </table>
+                                                        </div>
+                                                    )}
 
                                                     {/* Body Table (Main Scroll) */}
-                                                    <div
-                                                        style={{ overflow: 'auto', flex: 1 }}
-                                                        onScroll={(e) => {
-                                                            const header = document.getElementById('stats-table-header');
-                                                            if (header) header.scrollLeft = e.target.scrollLeft;
-                                                        }}
-                                                    >
-                                                        <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
-                                                            <colgroup>
-                                                                <col style={{ width: '100px' }} />
-                                                                {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
-                                                            </colgroup>
-                                                            <tbody>
-                                                                {statsOptions.filter(opt => opt.checked).map((stat) => {
-                                                                    const statKey = stat.id.toLowerCase();
-                                                                    const statValues = resultData.stats[statKey] || [];
-                                                                    return (
-                                                                        <tr key={stat.id} className="stats-row">
-                                                                            <td className="label-cell" style={{
-                                                                                width: '100px', paddingLeft: '16px',
-                                                                                position: 'sticky', left: 0, background: '#fff', zIndex: 5,
-                                                                                borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
-                                                                            }}>
-                                                                                Region Group_{stat.label}
-                                                                            </td>
-                                                                            {statValues.map((v, i) => (
-                                                                                <td key={i} style={{
-                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
-                                                                                    borderBottom: '1px solid #eee',
-                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                    {resultData.columns && resultData.columns.length > 0 && (
+                                                        <div
+                                                            style={{ overflow: 'auto', flex: 1 }}
+                                                            onScroll={(e) => {
+                                                                const header = document.getElementById('stats-table-header');
+                                                                if (header) header.scrollLeft = e.target.scrollLeft;
+                                                            }}
+                                                        >
+                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed' }}>
+                                                                <colgroup>
+                                                                    <col style={{ width: '100px' }} />
+                                                                    {resultData.columns.map((_, i) => <col key={i} style={{ width: '120px' }} />)}
+                                                                </colgroup>
+                                                                <tbody>
+                                                                    {statsOptions.filter(opt => opt.checked).map((stat) => {
+                                                                        const statKey = stat.id.toLowerCase();
+                                                                        const statValues = resultData.stats[statKey] || [];
+                                                                        return (
+                                                                            <tr key={stat.id} className="stats-row">
+                                                                                <td className="label-cell" style={{
+                                                                                    width: '100px', paddingLeft: '16px',
+                                                                                    position: 'sticky', left: 0, background: '#fff', zIndex: 5,
+                                                                                    borderRight: '1px solid #eee', borderBottom: '1px solid #eee'
                                                                                 }}>
-                                                                                    {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(4)) : v}
+                                                                                    {stat.label}
                                                                                 </td>
-                                                                            ))}
-                                                                        </tr>
-                                                                    );
-                                                                })}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
+                                                                                {statValues.map((v, i) => (
+                                                                                    <td key={i} style={{
+                                                                                        width: '120px', textAlign: 'right', paddingRight: '16px',
+                                                                                        borderBottom: '1px solid #eee',
+                                                                                        borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee'
+                                                                                    }}>
+                                                                                        {typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(4)) : v}
+                                                                                    </td>
+                                                                                ))}
+                                                                            </tr>
+                                                                        );
+                                                                    })}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         );

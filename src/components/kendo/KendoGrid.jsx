@@ -230,6 +230,11 @@ const KendoGrid = ({ parentProps, children }) => {
 
         const sortedUnpinned = [];
 
+        // 기준 없던 신규행도 맨 앞
+        for (const row of orphans) {
+            sortedUnpinned.push(row);
+        }
+
         // 기존 순서를 따라가면서, 각 행 뒤에 붙기로 한 신규행도 같이 밀어 넣기
         for (const baseKey of orderRef.current || []) {
             const baseRow = keyToRow.get(baseKey);
@@ -248,10 +253,6 @@ const KendoGrid = ({ parentProps, children }) => {
 
         // 혹시 orderRef에 없던 기존 행이 남아 있으면 그냥 뒤에
         for (const row of keyToRow.values()) {
-            sortedUnpinned.push(row);
-        }
-        // 기준 없던 신규행도 맨 뒤
-        for (const row of orphans) {
             sortedUnpinned.push(row);
         }
 
@@ -423,9 +424,11 @@ const KendoGrid = ({ parentProps, children }) => {
     const currentTake = parentProps?.pageSize ?? page?.take;
     const currentTotal = parentProps?.total ?? viewTotal;
 
-    // Virtual Scrolling일 때 Local Data slicing 처리
+    // Virtual Scrolling일 때 Local Data slicing 처리 OR Pagination일 때 Local Data slicing
     let gridData = dataWithSelection;
-    if (scrollable === 'virtual' && Array.isArray(parentProps?.data) && currentTake > 0) {
+    if (Array.isArray(parentProps?.data) && currentTake > 0) {
+        // 데이터가 페이지 사이즈보다 크면 슬라이싱 (Local Data Pagination)
+        // 이미 서버 등에서 잘려서 온 경우(server-side paging)에는 length <= take일 것이므로 영향 없음
         if (gridData.length > currentTake) {
             gridData = gridData.slice(currentSkip, currentSkip + currentTake);
         }

@@ -594,6 +594,7 @@ const RecodingPage = () => {
                     selectedId={selectedVar?.id}
                     onItemClick={handleVariableSelect}
                     onSearch={setSearchTerm}
+                    displayField="id"
                 />
 
                 {/* Content Area */}

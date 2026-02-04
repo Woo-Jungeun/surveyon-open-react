@@ -41,6 +41,37 @@ const VariablePage = () => {
         }
     }, [isDataLoaded, variables]);
 
+    const [originalVariables, setOriginalVariables] = useState([]); // Store original data for comparison
+    const [hasChanges, setHasChanges] = useState(false);
+
+    // Deep compare to check for changes
+    useEffect(() => {
+        if (!isDataLoaded) return;
+
+        const isDifferent = JSON.stringify(variables.map(v => {
+            const { isNew, ...rest } = v; // Exclude UI flags from comparison if needed, but new rows make list different
+            // Actually, if it's new, it defaults to different list length or content.
+            // We should compare significant fields.
+            return {
+                sysName: v.sysName,
+                name: v.name,
+                label: v.label,
+                category: v.category,
+                logic: v.logic,
+                type: v.type
+            };
+        })) !== JSON.stringify(originalVariables.map(v => ({
+            sysName: v.sysName,
+            name: v.name,
+            label: v.label,
+            category: v.category,
+            logic: v.logic,
+            type: v.type
+        })));
+
+        setHasChanges(isDifferent);
+    }, [variables, originalVariables, isDataLoaded]);
+
     useEffect(() => {
         const fetchVariables = async () => {
             if (auth?.user?.userId) {
@@ -70,6 +101,7 @@ const VariablePage = () => {
                                 };
                             });
                             setVariables(transformedData);
+                            setOriginalVariables(JSON.parse(JSON.stringify(transformedData))); // Deep copy
                             setIsDataLoaded(true);
                         }
                     } else {
@@ -133,6 +165,16 @@ const VariablePage = () => {
             adjustHeight();
         }, [props.dataItem[props.field]]);
 
+        const handleBlur = (e) => {
+            const newValue = e.target.value;
+            // Only update if value changed to avoid unnecessary re-renders
+            if (props.dataItem[props.field] !== newValue) {
+                setVariables(prev => prev.map(v =>
+                    v.id === props.dataItem.id ? { ...v, [props.field]: newValue } : v
+                ));
+            }
+        };
+
         return (
             <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
                 <textarea
@@ -141,6 +183,7 @@ const VariablePage = () => {
                     className="variable-input"
                     rows={1}
                     onInput={adjustHeight}
+                    onBlur={handleBlur}
                 />
             </td>
         );
@@ -233,7 +276,7 @@ const VariablePage = () => {
             }
             const newName = `var_${counter}`;
 
-            return [...prev, {
+            return [{
                 id: newId,
                 sysName: newName,
                 name: newName,
@@ -241,9 +284,30 @@ const VariablePage = () => {
                 category: '',
                 logic: '',
                 count: '0 / 0',
-                type: '범주형'
-            }];
+                type: '범주형',
+                isNew: true
+            }, ...prev];
         });
+    };
+
+    const rowRender = (trElement, props) => {
+        const isNew = props.dataItem.isNew;
+        const trProps = {
+            ...trElement.props,
+            style: {
+                ...trElement.props.style,
+                backgroundColor: isNew ? '#e6f4ff' : trElement.props.style?.backgroundColor,
+            }
+        };
+        return React.cloneElement(trElement, { ...trProps }, trElement.props.children);
+    };
+
+    const [skip, setSkip] = useState(0);
+    const [take, setTake] = useState(100);
+
+    const handlePageChange = (event) => {
+        setSkip(event.page.skip);
+        setTake(event.page.take);
     };
 
     return (
@@ -254,6 +318,7 @@ const VariablePage = () => {
                 onAdd={handleAddVariable}
                 saveButtonLabel="변경사항 저장"
                 onSave={() => alert('변경사항 저장 클릭')}
+                saveButtonDisabled={!hasChanges}
             />
 
             <div className="variable-page-content">
@@ -267,7 +332,12 @@ const VariablePage = () => {
                                 filter,
                                 sortChange: ({ sort }) => setSort(sort),
                                 filterChange: ({ filter }) => setFilter(filter),
-                                height: "100%"
+                                height: "100%",
+                                rowRender: rowRender,
+                                pageable: true,
+                                skip: skip,
+                                take: take,
+                                onPageChange: handlePageChange
                             }}
                         >
                             {columns.filter(c => c.show).map((c) => (
