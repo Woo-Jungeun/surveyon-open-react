@@ -1307,12 +1307,17 @@ const CrossTabPage = () => {
                 {/* Main Content */}
                 <div className="cross-tab-main">
                     {/* Config Section */}
-                    <div className="config-section">
+                    <div className="config-section" style={{
+                        flex: isConfigOpen ? 1 : '0 0 auto',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        minHeight: 0,
+                        transition: 'all 0.3s ease'
+                    }}>
                         <div className="config-header" style={{ padding: isConfigOpen ? '20px 24px' : '8px 24px', transition: 'all 0.2s' }}>
                             <div className="config-header__left-group">
                                 <div
                                     onClick={() => setIsConfigOpen(!isConfigOpen)}
-                                    className="config-header__toggle"
                                 >
                                     {isConfigOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                 </div>
@@ -1358,7 +1363,11 @@ const CrossTabPage = () => {
                         </div>
 
                         {isConfigOpen && (
-                            <div className="config-body">
+                            <div className="config-body" style={{
+                                flex: 1,
+                                height: 'auto',
+                                overflow: 'hidden'
+                            }}>
                                 {/* Variable Panel */}
                                 <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
                                     <div className="variable-panel-header">
@@ -1539,20 +1548,31 @@ const CrossTabPage = () => {
                     </div>
 
                     {/* Result Section */}
-                    <div className="result-section">
-                        <div className="result-header">
+                    <div className="result-section" style={{
+                        flex: isConfigOpen ? '0 0 auto' : 1,
+                        transition: 'all 0.3s ease',
+                        minHeight: 0,
+                        overflow: 'hidden'
+                    }}>
+                        <div
+                            className="result-header"
+                            onClick={() => isConfigOpen && setIsConfigOpen(false)}
+                            style={{ cursor: isConfigOpen ? 'pointer' : 'default' }}
+                        >
                             <div className="result-tabs">
                                 <div className="result-tab">결과</div>
-                                <button
-                                    onClick={() => setIsStatsOptionsOpen(!isStatsOptionsOpen)}
-                                    className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}
-                                >
-                                    <Settings size={14} />
-                                    <span>옵션 설정</span>
-                                </button>
+                                {!isConfigOpen && (
+                                    <button
+                                        onClick={() => setIsStatsOptionsOpen(!isStatsOptionsOpen)}
+                                        className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}
+                                    >
+                                        <Settings size={14} />
+                                        <span>옵션 설정</span>
+                                    </button>
+                                )}
                             </div>
                             <div className="view-options">
-                                {layoutOptions.find(opt => opt.id === 'chart')?.checked && (
+                                {!isConfigOpen && layoutOptions.find(opt => opt.id === 'chart')?.checked && (
                                     <>
                                         {/* Download Button */}
                                         <div className="download-menu-container" ref={downloadMenuRef}>
@@ -1668,55 +1688,158 @@ const CrossTabPage = () => {
                             </div>
                         )}
 
-                        <div className="result-content">
+                        {!isConfigOpen && (
+                            <div className="result-content">
 
-                            {/* Dynamic Result Rendering */}
-                            <div className="cross-table-container" style={{
-                                display: 'grid',
-                                gridTemplateColumns: columnLayout === 'single' ? '1fr' : 'repeat(2, 1fr)',
-                                gap: '24px',
-                                alignItems: 'stretch'
-                            }}>
-                                {resultData && layoutOptions.map(option => {
-                                    if (!option.checked) return null;
+                                {/* Dynamic Result Rendering */}
+                                <div className="cross-table-container" style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: columnLayout === 'single' ? '1fr' : 'repeat(2, 1fr)',
+                                    gap: '24px',
+                                    alignItems: 'stretch'
+                                }}>
+                                    {resultData && layoutOptions.map(option => {
+                                        if (!option.checked) return null;
 
-                                    if (option.id === 'table') {
-                                        return (
-                                            <div key="table" className="result-block">
-                                                <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div className="blue-bar"></div>
-                                                        <span className="section-title">표</span>
+                                        if (option.id === 'table') {
+                                            return (
+                                                <div key="table" className="result-block">
+                                                    <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div className="blue-bar"></div>
+                                                            <span className="section-title">표</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <button
+                                                                onClick={handleCopyTable}
+                                                                style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                    padding: '6px 12px', background: '#f8f9fa',
+                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                    cursor: 'pointer', flexShrink: 0
+                                                                }}
+                                                            >
+                                                                <Copy size={14} /> 복사
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setFullscreenModal({ open: true, type: 'table' })}
+                                                                style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                    padding: '6px 12px', background: '#f8f9fa',
+                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                    cursor: 'pointer', flexShrink: 0
+                                                                }}
+                                                            >
+                                                                <Maximize size={14} /> 전체화면
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <button
-                                                            onClick={handleCopyTable}
-                                                            style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                padding: '6px 12px', background: '#f8f9fa',
-                                                                border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                cursor: 'pointer', flexShrink: 0
-                                                            }}
-                                                        >
-                                                            <Copy size={14} /> 복사
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setFullscreenModal({ open: true, type: 'table' })}
-                                                            style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                padding: '6px 12px', background: '#f8f9fa',
-                                                                border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                cursor: 'pointer', flexShrink: 0
-                                                            }}
-                                                        >
-                                                            <Maximize size={14} /> 전체화면
-                                                        </button>
+                                                    <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
+                                                        <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
+                                                            <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th style={{
+                                                                            position: 'sticky', left: 0, top: 0, zIndex: 30,
+                                                                            width: '180px', height: '90px',
+                                                                            background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
+                                                                            fontSize: '13px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                            textAlign: 'center', verticalAlign: 'middle'
+                                                                        }}>
+                                                                            문항
+                                                                        </th>
+                                                                        {resultData.columns.map((col, i) => (
+                                                                            <th key={i} style={{
+                                                                                position: 'sticky', top: 0, zIndex: 20,
+                                                                                width: '120px', height: '90px',
+                                                                                background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                                fontSize: '13px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                                textAlign: 'center', padding: '8px',
+                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                verticalAlign: 'middle'
+                                                                            }}>
+                                                                                {col}
+                                                                                <div style={{ fontSize: '11px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
+                                                                            </th>
+                                                                        ))}
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    {resultData.rows.map((row, i) => (
+                                                                        <tr key={i}>
+                                                                            <td style={{
+                                                                                position: 'sticky', left: 0, zIndex: 10,
+                                                                                width: '180px', height: '52px',
+                                                                                background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                                padding: '0 16px', boxSizing: 'border-box',
+                                                                                fontSize: '13px', fontWeight: '500', color: '#333',
+                                                                                verticalAlign: 'middle',
+                                                                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                                                                            }}>
+                                                                                {row.label}
+                                                                            </td>
+                                                                            {row.values.map((val, j) => (
+                                                                                <td key={j} className="data-cell" style={{
+                                                                                    width: '120px', height: '52px',
+                                                                                    background: '#fff', borderBottom: '1px solid #eee',
+                                                                                    borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
+                                                                                    padding: '0 16px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
+                                                                                }}>
+                                                                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                                                                                        <div className="cell-value">{val.count}</div>
+                                                                                        <div className="cell-pct">{val.percent}%</div>
+                                                                                    </div>
+                                                                                </td>
+                                                                            ))}
+                                                                        </tr>
+                                                                    ))}
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="table-chart-wrapper" style={{ display: 'flex', gap: '24px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
-                                                    <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
+                                            );
+                                        }
+
+                                        if (option.id === 'stats') {
+                                            return (
+                                                <div key="stats" className="result-block">
+                                                    <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div className="blue-bar"></div>
+                                                            <span className="section-title">통계</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <button
+                                                                onClick={handleCopyStats}
+                                                                style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                    padding: '6px 12px', background: '#f8f9fa',
+                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                    cursor: 'pointer', flexShrink: 0
+                                                                }}
+                                                            >
+                                                                <Copy size={14} /> 복사
+                                                            </button>
+                                                            <button
+                                                                onClick={() => setFullscreenModal({ open: true, type: 'stats' })}
+                                                                style={{
+                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                    padding: '6px 12px', background: '#f8f9fa',
+                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                    cursor: 'pointer', flexShrink: 0
+                                                                }}
+                                                            >
+                                                                <Maximize size={14} /> 전체화면
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, overflow: 'auto' }}>
                                                         <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
                                                             <thead>
                                                                 <tr>
@@ -1727,7 +1850,7 @@ const CrossTabPage = () => {
                                                                         fontSize: '13px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
                                                                         textAlign: 'center', verticalAlign: 'middle'
                                                                     }}>
-                                                                        문항
+                                                                        통계
                                                                     </th>
                                                                     {resultData.columns.map((col, i) => (
                                                                         <th key={i} style={{
@@ -1741,71 +1864,64 @@ const CrossTabPage = () => {
                                                                             verticalAlign: 'middle'
                                                                         }}>
                                                                             {col}
-                                                                            <div style={{ fontSize: '11px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
                                                                         </th>
                                                                     ))}
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
-                                                                {resultData.rows.map((row, i) => (
-                                                                    <tr key={i}>
-                                                                        <td style={{
-                                                                            position: 'sticky', left: 0, zIndex: 10,
-                                                                            width: '180px', height: '52px',
-                                                                            background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
-                                                                            padding: '0 16px', boxSizing: 'border-box',
-                                                                            fontSize: '13px', fontWeight: '500', color: '#333',
-                                                                            verticalAlign: 'middle',
-                                                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                                                                        }}>
-                                                                            {row.label}
-                                                                        </td>
-                                                                        {row.values.map((val, j) => (
-                                                                            <td key={j} className="data-cell" style={{
-                                                                                width: '120px', height: '52px',
-                                                                                background: '#fff', borderBottom: '1px solid #eee',
-                                                                                borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
-                                                                                padding: '0 16px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
+                                                                {statsOptions.filter(opt => opt.checked).map((stat) => {
+                                                                    const statKey = stat.id.toLowerCase();
+                                                                    let actualKey = statKey;
+                                                                    if (statKey.startsWith('med')) actualKey = 'median';
+                                                                    if (statKey.startsWith('mod')) actualKey = 'mode';
+                                                                    if (statKey.startsWith('std')) actualKey = 'stdDev';
+                                                                    const statValues = (resultData.stats && (resultData.stats[actualKey] || resultData.stats[statKey])) ||
+                                                                        new Array(resultData.columns.length).fill('-');
+
+                                                                    return (
+                                                                        <tr key={stat.id} className="stats-row">
+                                                                            <td style={{
+                                                                                position: 'sticky', left: 0, zIndex: 10,
+                                                                                width: '180px', height: '52px',
+                                                                                background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                                padding: '0 16px', boxSizing: 'border-box',
+                                                                                fontSize: '13px', fontWeight: '500', color: '#333',
+                                                                                verticalAlign: 'middle',
+                                                                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
                                                                             }}>
-                                                                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-                                                                                    <div className="cell-value">{val.count}</div>
-                                                                                    <div className="cell-pct">{val.percent}%</div>
-                                                                                </div>
+                                                                                {stat.label}
                                                                             </td>
-                                                                        ))}
-                                                                    </tr>
-                                                                ))}
+                                                                            {statValues.map((v, i) => (
+                                                                                <td key={i} style={{
+                                                                                    width: '120px', textAlign: 'right', paddingRight: '16px',
+                                                                                    borderBottom: '1px solid #eee',
+                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
+                                                                                    height: '52px', boxSizing: 'border-box', verticalAlign: 'middle',
+                                                                                    fontSize: '13px', color: '#333'
+                                                                                }}>
+                                                                                    {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
+                                                                                </td>
+                                                                            ))}
+                                                                        </tr>
+                                                                    );
+                                                                })}
                                                             </tbody>
                                                         </table>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    }
+                                            );
+                                        }
 
-                                    if (option.id === 'stats') {
-                                        return (
-                                            <div key="stats" className="result-block">
-                                                <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div className="blue-bar"></div>
-                                                        <span className="section-title">통계</span>
-                                                    </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        if (option.id === 'chart') {
+                                            return (
+                                                <div key="chart" className="result-block">
+                                                    <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div className="blue-bar"></div>
+                                                            <span className="section-title">차트</span>
+                                                        </div>
                                                         <button
-                                                            onClick={handleCopyStats}
-                                                            style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                padding: '6px 12px', background: '#f8f9fa',
-                                                                border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                cursor: 'pointer', flexShrink: 0
-                                                            }}
-                                                        >
-                                                            <Copy size={14} /> 복사
-                                                        </button>
-                                                        <button
-                                                            onClick={() => setFullscreenModal({ open: true, type: 'stats' })}
+                                                            onClick={() => setFullscreenModal({ open: true, type: 'chart' })}
                                                             style={{
                                                                 display: 'inline-flex', alignItems: 'center', gap: '6px',
                                                                 padding: '6px 12px', background: '#f8f9fa',
@@ -1817,203 +1933,110 @@ const CrossTabPage = () => {
                                                             <Maximize size={14} /> 전체화면
                                                         </button>
                                                     </div>
-                                                </div>
-                                                <div style={{ background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', flex: 1, overflow: 'auto' }}>
-                                                    <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
-                                                        <thead>
-                                                            <tr>
-                                                                <th style={{
-                                                                    position: 'sticky', left: 0, top: 0, zIndex: 30,
-                                                                    width: '180px', height: '90px',
-                                                                    background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
-                                                                    fontSize: '13px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                    textAlign: 'center', verticalAlign: 'middle'
-                                                                }}>
-                                                                    통계
-                                                                </th>
-                                                                {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{
-                                                                        position: 'sticky', top: 0, zIndex: 20,
-                                                                        width: '120px', height: '90px',
-                                                                        background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
-                                                                        borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                        fontSize: '13px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
-                                                                        textAlign: 'center', padding: '8px',
-                                                                        whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                        verticalAlign: 'middle'
-                                                                    }}>
-                                                                        {col}
-                                                                    </th>
-                                                                ))}
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            {statsOptions.filter(opt => opt.checked).map((stat) => {
-                                                                const statKey = stat.id.toLowerCase();
-                                                                let actualKey = statKey;
-                                                                if (statKey.startsWith('med')) actualKey = 'median';
-                                                                if (statKey.startsWith('mod')) actualKey = 'mode';
-                                                                if (statKey.startsWith('std')) actualKey = 'stdDev';
-                                                                const statValues = (resultData.stats && (resultData.stats[actualKey] || resultData.stats[statKey])) ||
-                                                                    new Array(resultData.columns.length).fill('-');
-
-                                                                return (
-                                                                    <tr key={stat.id} className="stats-row">
-                                                                        <td style={{
-                                                                            position: 'sticky', left: 0, zIndex: 10,
-                                                                            width: '180px', height: '52px',
-                                                                            background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
-                                                                            padding: '0 16px', boxSizing: 'border-box',
-                                                                            fontSize: '13px', fontWeight: '500', color: '#333',
-                                                                            verticalAlign: 'middle',
-                                                                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
-                                                                        }}>
-                                                                            {stat.label}
-                                                                        </td>
-                                                                        {statValues.map((v, i) => (
-                                                                            <td key={i} style={{
-                                                                                width: '120px', textAlign: 'right', paddingRight: '16px',
-                                                                                borderBottom: '1px solid #eee',
-                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
-                                                                                height: '52px', boxSizing: 'border-box', verticalAlign: 'middle',
-                                                                                fontSize: '13px', color: '#333'
-                                                                            }}>
-                                                                                {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
-                                                                            </td>
-                                                                        ))}
-                                                                    </tr>
-                                                                );
-                                                            })}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        );
-                                    }
-
-                                    if (option.id === 'chart') {
-                                        return (
-                                            <div key="chart" className="result-block">
-                                                <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div className="blue-bar"></div>
-                                                        <span className="section-title">차트</span>
+                                                    <div ref={chartContainerRef} className="cross-tab-chart-container" style={{
+                                                        flex: 1,
+                                                        width: '100%',
+                                                        minHeight: '300px',
+                                                        background: '#fff',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid #e2e8f0',
+                                                        padding: '24px',
+                                                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}>
+                                                        {chartData && chartData.length > 0 ? (
+                                                            <KendoChart
+                                                                data={chartData}
+                                                                seriesNames={seriesNames}
+                                                                allowedTypes={
+                                                                    chartMode === 'column' ? ['column', 'bar'] :
+                                                                        chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
+                                                                            chartMode === 'line' ? ['line'] :
+                                                                                chartMode === 'pie' ? ['pie'] :
+                                                                                    chartMode === 'donut' ? ['donut'] :
+                                                                                        chartMode === 'radarArea' ? ['radarArea'] :
+                                                                                            chartMode === 'funnel' ? ['funnel'] :
+                                                                                                chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                                    chartMode === 'area' ? ['area'] :
+                                                                                                        chartMode === 'map' ? ['map'] :
+                                                                                                            chartMode === 'heatmap' ? ['heatmap'] : []
+                                                                }
+                                                                initialType={
+                                                                    chartMode === 'column' ? 'column' :
+                                                                        chartMode === 'stackedColumn' ? 'stackedColumn' :
+                                                                            chartMode === 'line' ? 'line' :
+                                                                                chartMode === 'pie' ? 'pie' :
+                                                                                    chartMode === 'donut' ? 'donut' :
+                                                                                        chartMode === 'radarArea' ? 'radarArea' :
+                                                                                            chartMode === 'funnel' ? 'funnel' :
+                                                                                                chartMode === 'scatterPoint' ? 'scatterPoint' :
+                                                                                                    chartMode === 'area' ? 'area' :
+                                                                                                        chartMode === 'map' ? 'map' :
+                                                                                                            chartMode === 'heatmap' ? 'heatmap' : 'column'
+                                                                }
+                                                            />
+                                                        ) : (
+                                                            <div style={{ color: '#aaa', fontSize: '14px' }}>차트를 표시할 데이터가 없습니다.</div>
+                                                        )}
                                                     </div>
-                                                    <button
-                                                        onClick={() => setFullscreenModal({ open: true, type: 'chart' })}
-                                                        style={{
-                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                            padding: '6px 12px', background: '#f8f9fa',
-                                                            border: '1px solid #e9ecef', borderRadius: '6px',
-                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                            cursor: 'pointer', flexShrink: 0
-                                                        }}
-                                                    >
-                                                        <Maximize size={14} /> 전체화면
-                                                    </button>
                                                 </div>
-                                                <div ref={chartContainerRef} className="cross-tab-chart-container" style={{
-                                                    flex: 1,
-                                                    width: '100%',
-                                                    minHeight: '300px',
-                                                    background: '#fff',
-                                                    borderRadius: '8px',
-                                                    border: '1px solid #e2e8f0',
-                                                    padding: '24px',
-                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center'
-                                                }}>
-                                                    {chartData && chartData.length > 0 ? (
-                                                        <KendoChart
-                                                            data={chartData}
-                                                            seriesNames={seriesNames}
-                                                            allowedTypes={
-                                                                chartMode === 'column' ? ['column', 'bar'] :
-                                                                    chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
-                                                                        chartMode === 'line' ? ['line'] :
-                                                                            chartMode === 'pie' ? ['pie'] :
-                                                                                chartMode === 'donut' ? ['donut'] :
-                                                                                    chartMode === 'radarArea' ? ['radarArea'] :
-                                                                                        chartMode === 'funnel' ? ['funnel'] :
-                                                                                            chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                                                chartMode === 'area' ? ['area'] :
-                                                                                                    chartMode === 'map' ? ['map'] :
-                                                                                                        chartMode === 'heatmap' ? ['heatmap'] : []
-                                                            }
-                                                            initialType={
-                                                                chartMode === 'column' ? 'column' :
-                                                                    chartMode === 'stackedColumn' ? 'stackedColumn' :
-                                                                        chartMode === 'line' ? 'line' :
-                                                                            chartMode === 'pie' ? 'pie' :
-                                                                                chartMode === 'donut' ? 'donut' :
-                                                                                    chartMode === 'radarArea' ? 'radarArea' :
-                                                                                        chartMode === 'funnel' ? 'funnel' :
-                                                                                            chartMode === 'scatterPoint' ? 'scatterPoint' :
-                                                                                                chartMode === 'area' ? 'area' :
-                                                                                                    chartMode === 'map' ? 'map' :
-                                                                                                        chartMode === 'heatmap' ? 'heatmap' : 'column'
-                                                            }
-                                                        />
-                                                    ) : (
-                                                        <div style={{ color: '#aaa', fontSize: '14px' }}>차트를 표시할 데이터가 없습니다.</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    }
+                                            )
+                                        }
 
-                                    if (option.id === 'ai') {
-                                        return (
-                                            <div key="ai" className="result-block">
-                                                <div className="section-header">
-                                                    <div className="blue-bar"></div>
-                                                    <span className="section-title">AI 분석</span>
-                                                </div>
-                                                <div className="ai-analysis-container" style={{ flex: 1, minHeight: 0 }}>
-                                                    {!aiResult && !isAiLoading && (
-                                                        <button className="btn-ai-analysis" onClick={handleRunAiAnalysis}>
-                                                            <Bot size={18} />
-                                                            <span>AI 분석 실행</span>
-                                                        </button>
-                                                    )}
 
-                                                    {isAiLoading && (
-                                                        <div className="ai-loading">
-                                                            <Loader2 size={32} className="spin-icon" />
-                                                            <span>AI가 데이터를 분석하고 있습니다...</span>
-                                                        </div>
-                                                    )}
-
-                                                    {aiResult && (
-                                                        <div className="ai-result-box">
-                                                            <div className="ai-result-header">
-                                                                <Bot size={18} className="sparkle-icon" />
-                                                                <span>분석 결과 요약</span>
-                                                            </div>
-                                                            <div className="ai-result-content">
-                                                                {aiResult.map((text, idx) => (
-                                                                    <div key={idx} className="ai-result-item" style={{ animationDelay: `${idx * 0.1}s` }}>
-                                                                        <CheckCircle2 size={16} className="check-icon" />
-                                                                        <p>{text}</p>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                            <button className="btn-ai-reset" onClick={() => setAiResult(null)}>
-                                                                다시 분석하기
+                                        if (option.id === 'ai') {
+                                            return (
+                                                <div key="ai" className="result-block">
+                                                    <div className="section-header">
+                                                        <div className="blue-bar"></div>
+                                                        <span className="section-title">AI 분석</span>
+                                                    </div>
+                                                    <div className="ai-analysis-container" style={{ flex: 1, minHeight: 0 }}>
+                                                        {!aiResult && !isAiLoading && (
+                                                            <button className="btn-ai-analysis" onClick={handleRunAiAnalysis}>
+                                                                <Bot size={18} />
+                                                                <span>AI 분석 실행</span>
                                                             </button>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        );
-                                    }
+                                                        )}
 
-                                    return null;
-                                })}
+                                                        {isAiLoading && (
+                                                            <div className="ai-loading">
+                                                                <Loader2 size={32} className="spin-icon" />
+                                                                <span>AI가 데이터를 분석하고 있습니다...</span>
+                                                            </div>
+                                                        )}
+
+                                                        {aiResult && (
+                                                            <div className="ai-result-box">
+                                                                <div className="ai-result-header">
+                                                                    <Bot size={18} className="sparkle-icon" />
+                                                                    <span>분석 결과 요약</span>
+                                                                </div>
+                                                                <div className="ai-result-content">
+                                                                    {aiResult.map((text, idx) => (
+                                                                        <div key={idx} className="ai-result-item" style={{ animationDelay: `${idx * 0.1}s` }}>
+                                                                            <CheckCircle2 size={16} className="check-icon" />
+                                                                            <p>{text}</p>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                                <button className="btn-ai-reset" onClick={() => setAiResult(null)}>
+                                                                    다시 분석하기
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+
+                                        return null;
+                                    })}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </div >
