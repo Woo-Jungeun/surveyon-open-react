@@ -573,8 +573,6 @@ const RecodingPage = () => {
                 title="문항 가공"
                 addButtonLabel={selectedVar?.id === null ? null : "문항 추가"}
                 onAdd={selectedVar?.id === null ? null : handleAddVariable}
-                onDelete={selectedVar?.id === null ? null : handleDeleteVariable}
-                deleteButtonLabel="문항 삭제"
                 saveButtonLabel={selectedVar?.id === null ? "추가 문항 저장" : "변경사항 저장"}
                 onSave={handleSave}
                 saveButtonDisabled={!isDirty}
@@ -594,6 +592,7 @@ const RecodingPage = () => {
                     selectedId={selectedVar?.id}
                     onItemClick={handleVariableSelect}
                     onSearch={setSearchTerm}
+                    onDelete={handleDeleteVariable}
                     displayField="id"
                 />
 

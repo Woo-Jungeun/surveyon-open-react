@@ -148,9 +148,8 @@
 .sidebar-item-label {
     font-size: 12px;
     color: var(--ds-text-sub);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    word-break: break-word;
+    line-height: 1.4;
 }
 
 /* Delete Button */
