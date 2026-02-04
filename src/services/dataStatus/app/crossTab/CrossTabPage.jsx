@@ -143,6 +143,35 @@ const CrossTabPage = () => {
 
                             if (tableDataResult?.success === "777" && tableDataResult.resultjson) {
                                 const tData = tableDataResult.resultjson;
+
+                                // Apply config from API result
+                                if (tData.config) {
+                                    // x_info -> 세로축 (Rows)
+                                    if (tData.config.x_info) {
+                                        const xIds = tData.config.x_info;
+                                        const mappedRows = xIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        setRowVars(mappedRows);
+                                    }
+                                    // y_info -> 가로축 (Cols)
+                                    if (tData.config.y_info) {
+                                        const yIds = tData.config.y_info;
+                                        const mappedCols = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        setColVars(mappedCols);
+                                    }
+                                    // Filter Expression
+                                    if (tData.config.filter_expression !== undefined) {
+                                        setFilterExpression(tData.config.filter_expression);
+                                    }
+                                    // Weight Column
+                                    if (tData.config.weight_col !== undefined) {
+                                        setSelectedWeight(tData.config.weight_col || "없음");
+                                    }
+                                    // Set Table Name from result if available
+                                    if (tData.name) {
+                                        setTableName(tData.name);
+                                    }
+                                }
+
                                 const columnsList = tData.columns || [];
                                 const rowsList = tData.rows || [];
 
@@ -534,6 +563,31 @@ const CrossTabPage = () => {
 
                 if (result?.success === "777" && result.resultjson) {
                     const data = result.resultjson;
+
+                    // Apply config from API result
+                    if (data.config) {
+                        // x_info -> 세로축 (Rows)
+                        if (data.config.x_info) {
+                            const xIds = data.config.x_info;
+                            const mappedRows = xIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                            setRowVars(mappedRows);
+                        }
+                        // y_info -> 가로축 (Cols)
+                        if (data.config.y_info) {
+                            const yIds = data.config.y_info;
+                            const mappedCols = yIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                            setColVars(mappedCols);
+                        }
+                        // Filter Expression
+                        if (data.config.filter_expression !== undefined) {
+                            setFilterExpression(data.config.filter_expression);
+                        }
+                        // Weight Column
+                        if (data.config.weight_col !== undefined) {
+                            setSelectedWeight(data.config.weight_col || "없음");
+                        }
+                    }
+
                     const columnsList = data.columns || [];
                     const rowsList = data.rows || [];
 
@@ -641,7 +695,7 @@ const CrossTabPage = () => {
         }
 
         if (rowVars.length === 0) {
-            modal.showAlert('알림', '세로축(행) 변수를 최소 하나 이상 선택해주세요.');
+            modal.showAlert('알림', '세로축(행) 문항을 최소 하나 이상 선택해주세요.');
             return;
         }
 
