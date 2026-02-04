@@ -4,7 +4,9 @@ import React, { useState, useMemo, useDeferredValue, memo, useRef, useEffect } f
 const OptionItem = memo(({ opt, targets, onApply, isDeleteOption }) => {
   return (
     <div
-      className={`lv3-panel-item ${isDeleteOption ? 'lv3-panel-item-delete' : ''}`}
+      // TODO: 소분류 삭제 기능 임시 주석 처리
+      // className={`lv3-panel-item ${isDeleteOption ? 'lv3-panel-item-delete' : ''}`}
+      className="lv3-panel-item"
       onClick={() => onApply(targets, opt)}
     >
       <span>{opt.codeName}</span>
@@ -87,6 +89,8 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
     );
   }, [sortedOptions, deferredSearchTerm]);
 
+  /* 
+  // TODO: 소분류 삭제 기능 임시 주석 처리
   // "소분류 삭제" 옵션을 맨 위에 추가
   const optionsWithDelete = useMemo(() => {
     const deleteOption = {
@@ -96,6 +100,7 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
     };
     return [deleteOption, ...filteredOptions];
   }, [filteredOptions]);
+  */
 
   return (
     <div className="lv3-panel-wrap">
@@ -133,16 +138,18 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
         </div>
         <div className="lv3-panel-body">
           {/* 아이템 컴포넌트 렌더링 */}
-          {optionsWithDelete.map(opt => (
+          {/* 아이템 컴포넌트 렌더링 */}
+          {/* {optionsWithDelete.map(opt => ( */}
+          {filteredOptions.map(opt => ( // TODO: 소분류 삭제 기능 임시 주석 처리 (원래는 optionsWithDelete)
             <OptionItem
               key={`${opt.lv123code}_${opt.codeName}`}
               opt={opt}
               targets={targets}
               onApply={onApply}
-              isDeleteOption={opt.codeName === "소분류 삭제"}
+            // isDeleteOption={opt.codeName === "소분류 삭제"}
             />
           ))}
-          {optionsWithDelete.length === 1 && (
+          {filteredOptions.length === 0 && ( // TODO: 임시 수정 (원래 optionsWithDelete.length === 1)
             <p className="lv3-empty">검색 결과가 없습니다.</p>
           )}
         </div>
