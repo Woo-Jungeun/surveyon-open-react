@@ -47,6 +47,7 @@
     transition: all 0.2s;
     font-size: 13px;
     color: #555;
+    user-select: none;
 }
 
 .table-list-item:hover {
@@ -96,7 +97,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    justify-content: space-between;
     border-bottom: 1px solid #f1f5f9;
+    user-select: none;
 }
 
 .config-header__left-group {
@@ -312,7 +315,9 @@
     background: #fff;
     border: 1px solid #eee;
     cursor: grab;
+    cursor: grab;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    user-select: none;
 }
 
 .variable-item:hover {
@@ -498,7 +503,9 @@
     border-bottom: 1px solid #f1f5f9;
     display: flex;
     align-items: center;
+    align-items: center;
     justify-content: space-between;
+    user-select: none;
 }
 
 .result-tabs {
@@ -511,7 +518,9 @@
     font-weight: 700;
     font-size: 18px;
     color: #1e293b;
+    color: #1e293b;
     margin: 0;
+    user-select: none;
 }
 
 .stats-toggle-btn {
@@ -845,7 +854,10 @@
 
 .drag-handle {
     color: #d1d5db;
+    border: 1px solid #eee;
+    background: #f9f9f9;
     cursor: grab;
+    user-select: none;
 }
 
 .sortable-item.checked .drag-handle {

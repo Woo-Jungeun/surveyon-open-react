@@ -37,7 +37,9 @@
     color: var(--ds-text-main);
     display: flex;
     align-items: center;
+    align-items: center;
     gap: 6px;
+    user-select: none;
 }
 
 .sidebar-toggle-btn {
@@ -114,7 +116,9 @@
     position: relative;
     display: flex;
     justify-content: space-between;
+    justify-content: space-between;
     align-items: center;
+    user-select: none;
 }
 
 .sidebar-item:hover {
