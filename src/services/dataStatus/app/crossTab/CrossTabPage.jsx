@@ -228,9 +228,11 @@ const CrossTabPage = () => {
                                     }
 
                                     const variablesMap = {};
-                                    loadedVariables.forEach(v => {
-                                        if (selectedVarNames.has(v.name)) {
-                                            variablesMap[v.name] = v;
+                                    selectedVarNames.forEach(varIdOrName => {
+                                        const found = loadedVariables.find(v => v.id === varIdOrName || v.name === varIdOrName);
+                                        if (found) {
+                                            const key = found.id || found.name;
+                                            variablesMap[key] = found;
                                         }
                                     });
 
