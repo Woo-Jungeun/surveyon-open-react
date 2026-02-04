@@ -17,7 +17,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 const CrossTabPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable } = CrossTabPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = CrossTabPageApi();
     const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const PAGE_ID = "0c1de699-0270-49bf-bfac-7e6513a3f525";
@@ -719,6 +719,7 @@ const CrossTabPage = () => {
             const result = await saveCrossTable.mutateAsync(payload);
             if (result?.success === "777") {
                 modal.showAlert('성공', '저장되었습니다.');
+                setIsConfigOpen(false); // Close config panel after save
 
                 // If it was a new table, mark it as not new anymore
                 if (isNewTable) {
@@ -726,12 +727,141 @@ const CrossTabPage = () => {
                         t.id === selectedTableId ? { ...t, isNew: false } : t
                     ));
                 }
+
+                // Refresh data after save
+                try {
+                    const refreshedData = await getCrossTabData.mutateAsync({
+                        user: auth.user.userId,
+                        tableid: selectedTableId
+                    });
+
+                    if (refreshedData?.success === "777" && refreshedData.resultjson) {
+                        const data = refreshedData.resultjson;
+                        const columnsList = data.columns || [];
+                        const rowsList = data.rows || [];
+
+                        const columnLabels = columnsList.map(c => c.label);
+                        const columnKeys = columnsList.map(c => c.key);
+
+                        const parsedRows = rowsList.map(r => {
+                            const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
+                            const total = values.reduce((a, b) => a + Number(b), 0);
+                            return {
+                                label: r.label,
+                                values: values,
+                                total: total
+                            };
+                        });
+
+                        const parsedStats = {
+                            mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                            std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
+                            min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
+                            max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
+                            n: columnsList.map(c => c.n || 0)
+                        };
+
+                        setResultData({
+                            columns: columnLabels,
+                            rows: parsedRows,
+                            stats: parsedStats
+                        });
+                    }
+                } catch (refreshError) {
+                    console.error("Data refresh error:", refreshError);
+                }
             } else {
                 modal.showAlert('실패', '저장 실패');
             }
         } catch (error) {
             console.error("Save error:", error);
             modal.showAlert('오류', '저장 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleRun = async () => {
+        if (!auth?.user?.userId) {
+            modal.showAlert("알림", "로그인이 필요합니다.");
+            return;
+        }
+
+        if (rowVars.length === 0) {
+            modal.showAlert('알림', '세로축(행) 문항을 최소 하나 이상 선택해주세요.');
+            return;
+        }
+
+        // 선택된 변수들만 필터링
+        const selectedVarNames = new Set();
+        rowVars.forEach(v => selectedVarNames.add(v.name));
+        colVars.forEach(v => selectedVarNames.add(v.name));
+
+        if (selectedWeight && selectedWeight !== "없음") {
+            selectedVarNames.add(selectedWeight);
+        }
+
+        const variablesMap = {};
+        variables.forEach(v => {
+            if (selectedVarNames.has(v.name)) {
+                variablesMap[v.name] = v;
+            }
+        });
+
+        const payload = {
+            user: auth.user.userId,
+            pageid: PAGE_ID,
+            variables: variablesMap,
+            weight_col: selectedWeight === "없음" ? "" : selectedWeight,
+            filter_expression: filterExpression,
+            table: {
+                id: selectedTableId,
+                name: tableName || "Untitled Table",
+                x_info: rowVars.map(v => v.name),
+                y_info: colVars.map(v => v.name)
+            }
+        };
+
+        try {
+            const result = await evaluateTable.mutateAsync(payload);
+
+            if (result?.success === "777" && result.resultjson) {
+                const data = result.resultjson;
+                const columnsList = data.columns || [];
+                const rowsList = data.rows || [];
+
+                const columnLabels = columnsList.map(c => c.label);
+                const columnKeys = columnsList.map(c => c.key);
+
+                const parsedRows = rowsList.map(r => {
+                    const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
+                    const total = values.reduce((a, b) => a + Number(b), 0);
+                    return {
+                        label: r.label,
+                        values: values,
+                        total: total
+                    };
+                });
+
+                const parsedStats = {
+                    mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                    std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
+                    min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
+                    max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
+                    n: columnsList.map(c => c.n || 0)
+                };
+
+                setResultData({
+                    columns: columnLabels,
+                    rows: parsedRows,
+                    stats: parsedStats
+                });
+
+                setIsConfigOpen(false);
+            } else {
+                modal.showAlert('실패', '분석 실행 실패');
+            }
+        } catch (error) {
+            console.error("Evaluate error:", error);
+            modal.showAlert('오류', '분석 실행 중 오류가 발생했습니다.');
         }
     };
 
@@ -849,7 +979,7 @@ const CrossTabPage = () => {
 
                             <div className="action-buttons">
                                 <button className="btn-save-table" onClick={handleSaveTable}><Save size={14} /> 교차 테이블 저장</button>
-                                <button className="btn-run"><ChevronRight size={16} /> 실행</button>
+                                <button className="btn-run" onClick={handleRun}><ChevronRight size={16} /> 실행</button>
                             </div>
                         </div>
 
