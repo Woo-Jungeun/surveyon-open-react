@@ -201,6 +201,73 @@ const CrossTabPage = () => {
                                     rows: parsedRows,
                                     stats: parsedStats
                                 });
+
+                                // Auto-run analysis for the first table
+                                try {
+                                    const config = tData.config || {};
+                                    const xInfo = config.x_info || [];
+                                    const yInfo = config.y_info || [];
+                                    const weightCol = config.weight_col || "";
+                                    const filterExpr = config.filter_expression || "";
+
+                                    const selectedVarNames = new Set([...xInfo, ...yInfo]);
+                                    if (weightCol && weightCol !== "없음" && weightCol !== "") {
+                                        selectedVarNames.add(weightCol);
+                                    }
+
+                                    const variablesMap = {};
+                                    loadedVariables.forEach(v => {
+                                        if (selectedVarNames.has(v.name)) {
+                                            variablesMap[v.name] = v;
+                                        }
+                                    });
+
+                                    const payload = {
+                                        user: auth.user.userId,
+                                        pageid: PAGE_ID,
+                                        variables: variablesMap,
+                                        weight_col: weightCol === "없음" ? "" : weightCol,
+                                        filter_expression: filterExpr,
+                                        table: {
+                                            id: firstTable.id,
+                                            name: firstTable.name || tData.name || "Untitled Table",
+                                            x_info: xInfo,
+                                            y_info: yInfo
+                                        }
+                                    };
+
+                                    const evalResult = await evaluateTable.mutateAsync(payload);
+
+                                    if (evalResult?.success === "777" && evalResult.resultjson) {
+                                        const newData = evalResult.resultjson;
+                                        const newColumnsList = newData.columns || [];
+                                        const newRowsList = newData.rows || [];
+                                        const newColumnLabels = newColumnsList.map(c => c.label);
+                                        const newColumnKeys = newColumnsList.map(c => c.key);
+
+                                        const newParsedRows = newRowsList.map(r => {
+                                            const values = newColumnKeys.map(k => r.cells?.[k]?.count || 0);
+                                            const total = values.reduce((a, b) => a + Number(b), 0);
+                                            return { label: r.label, values: values, total: total };
+                                        });
+
+                                        const newParsedStats = {
+                                            mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                                            std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
+                                            min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
+                                            max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
+                                            n: newColumnsList.map(c => c.n || 0)
+                                        };
+
+                                        setResultData({
+                                            columns: newColumnLabels,
+                                            rows: newParsedRows,
+                                            stats: newParsedStats
+                                        });
+                                    }
+                                } catch (autoEvalError) {
+                                    console.error("Initial auto evaluation failed:", autoEvalError);
+                                }
                             }
                         } catch (err) {
                             console.error("Failed to fetch initial table data:", err);
@@ -617,6 +684,74 @@ const CrossTabPage = () => {
                         rows: parsedRows,
                         stats: parsedStats
                     });
+
+                    // Auto-run analysis to get fresh data
+                    try {
+                        const config = data.config || {};
+                        const xInfo = config.x_info || [];
+                        const yInfo = config.y_info || [];
+                        const weightCol = config.weight_col || "";
+                        const filterExpr = config.filter_expression || "";
+
+                        const selectedVarNames = new Set([...xInfo, ...yInfo]);
+                        if (weightCol && weightCol !== "없음" && weightCol !== "") {
+                            selectedVarNames.add(weightCol);
+                        }
+
+                        const variablesMap = {};
+                        variables.forEach(v => {
+                            if (selectedVarNames.has(v.name)) {
+                                variablesMap[v.name] = v;
+                            }
+                        });
+
+                        const payload = {
+                            user: auth.user.userId,
+                            pageid: PAGE_ID,
+                            variables: variablesMap,
+                            weight_col: weightCol === "없음" ? "" : weightCol,
+                            filter_expression: filterExpr,
+                            table: {
+                                id: item.id,
+                                name: item.name || "Untitled Table",
+                                x_info: xInfo,
+                                y_info: yInfo
+                            }
+                        };
+
+                        const evalResult = await evaluateTable.mutateAsync(payload);
+
+                        if (evalResult?.success === "777" && evalResult.resultjson) {
+                            const newData = evalResult.resultjson;
+                            const newColumnsList = newData.columns || [];
+                            const newRowsList = newData.rows || [];
+                            const newColumnLabels = newColumnsList.map(c => c.label);
+                            const newColumnKeys = newColumnsList.map(c => c.key);
+
+                            const newParsedRows = newRowsList.map(r => {
+                                const values = newColumnKeys.map(k => r.cells?.[k]?.count || 0);
+                                const total = values.reduce((a, b) => a + Number(b), 0);
+                                return { label: r.label, values: values, total: total };
+                            });
+
+                            const newParsedStats = {
+                                mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
+                                std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
+                                min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
+                                max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
+                                n: newColumnsList.map(c => c.n || 0)
+                            };
+
+                            setResultData({
+                                columns: newColumnLabels,
+                                rows: newParsedRows,
+                                stats: newParsedStats
+                            });
+                        }
+
+                    } catch (evalError) {
+                        console.error("Auto evaluation failed:", evalError);
+                    }
                 } else {
                     // Fallback or error handling
                     console.log("Failed to load table details or empty result");
