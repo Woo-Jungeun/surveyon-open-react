@@ -1512,7 +1512,7 @@
     z-index: 30;
     width: 140px;
     height: 50px;
-    background: #eff6ff;
+    background: rgb(239, 246, 255) !important;
     border-bottom: 1px solid #e2e8f0;
     border-right: 1px solid #e2e8f0;
     font-size: 12px;
@@ -1530,7 +1530,7 @@
     z-index: 20;
     width: 100px;
     height: 50px;
-    background: #eff6ff;
+    background: rgb(239, 246, 255) !important;
     border-bottom: 1px solid #e2e8f0;
     border-right: 1px solid #e2e8f0;
     font-size: 12px;
@@ -1555,7 +1555,7 @@
     z-index: 10;
     width: 140px;
     height: 36px;
-    background: #eff6ff;
+    background: rgb(239, 246, 255) !important;
     border-bottom: 1px solid #eee;
     border-right: 1px solid #e2e8f0;
     padding: 0 8px;
