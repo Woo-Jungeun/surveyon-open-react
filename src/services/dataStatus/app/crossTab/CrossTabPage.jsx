@@ -1913,7 +1913,7 @@ const CrossTabPage = () => {
                                                                     data={chartData}
                                                                     seriesNames={seriesNames}
                                                                     allowedTypes={
-                                                                        (chartMode === 'column' || chartMode === 'bar') ? ['column', 'bar'] :
+                                                                        (!chartMode || chartMode === 'column' || chartMode === 'bar') ? ['column', 'bar'] :
                                                                             chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
                                                                                 chartMode === 'line' ? ['line'] :
                                                                                     chartMode === 'pie' ? ['pie'] :
@@ -1926,7 +1926,7 @@ const CrossTabPage = () => {
                                                                                                                 chartMode === 'heatmap' ? ['heatmap'] : []
                                                                     }
                                                                     initialType={
-                                                                        chartMode === 'column' ? 'column' :
+                                                                        (!chartMode || chartMode === 'column') ? 'column' :
                                                                             chartMode === 'stackedColumn' ? 'stackedColumn' :
                                                                                 chartMode === 'line' ? 'line' :
                                                                                     chartMode === 'pie' ? 'pie' :

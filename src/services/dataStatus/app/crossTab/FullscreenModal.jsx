@@ -120,12 +120,13 @@ const FullscreenModal = ({
             'map': ['map'],
             'heatmap': ['heatmap']
         };
-        return typeMap[localChartMode] || [];
+        return typeMap[localChartMode] || typeMap['column'];
     };
 
     const getChartInitialType = () => {
         const typeMap = {
             'column': 'column',
+            'bar': 'bar',
             'stackedColumn': 'stackedColumn',
             'line': 'line',
             'pie': 'pie',
