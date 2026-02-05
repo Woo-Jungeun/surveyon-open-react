@@ -25,7 +25,7 @@ const ReadOnlyCell = React.memo((props) => {
 });
 
 const DataViewerPage = () => {
-    const { getPageRows } = DataViewerPageApi();
+    const { getPageRows, getPageRows2 } = DataViewerPageApi();
     const auth = useSelector((store) => store.auth);
     const [data, setData] = useState([]);
     const [columns, setColumns] = useState([]);
@@ -78,7 +78,8 @@ const DataViewerPage = () => {
                 const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
 
                 try {
-                    const result = await getPageRows.mutateAsync({ user: userId, pageid: pageId, start: 0, limit: 2000 });
+                    const apiCall = isLabelView ? getPageRows2 : getPageRows;
+                    const result = await apiCall.mutateAsync({ user: userId, pageid: pageId, start: 0, limit: 2000 });
                     if (result.success === "777") {
                         const rows = result.resultjson?.rows || [];
                         setData(rows);
@@ -109,7 +110,7 @@ const DataViewerPage = () => {
         };
 
         fetchData();
-    }, [auth?.user?.userId]);
+    }, [auth?.user?.userId, isLabelView]);
 
     const handleCopyToClipboard = async () => {
         try {

@@ -16,8 +16,18 @@ export function DataViewerPageApi() {
             }
         }
     );
+    /** 전체 데이터 행 조회 - 라벨*/
+    const getPageRows2 = useMutation(
+        async (data) => await api.post(data, "/pages/rows2", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: (vars) => {
+                loadingSpinner.show();
+            }
+        }
+    );
 
     return {
-        getPageRows
+        getPageRows,
+        getPageRows2
     };
 }
