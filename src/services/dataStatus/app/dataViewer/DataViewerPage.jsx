@@ -93,7 +93,7 @@ const DataViewerPage = () => {
                                 field: key,
                                 title: key,
                                 show: true,
-                                width: isLabelView ? 180 : 100
+                                width: isLabelView ? 90 : 70
                             }));
                             setColumns(generatedColumns);
                         }
