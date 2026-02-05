@@ -1316,8 +1316,6 @@ const CrossTabPage = () => {
         <div className="cross-tab-page" data-theme="data-dashboard">
             <DataHeader
                 title="교차 테이블"
-                onAdd={() => setIsModalOpen(true)}
-                addButtonLabel="교차 테이블 추가"
             >
                 {/* 전체 필터 드롭다운 */}
                 <div className="response-filter-container" ref={totalFilterRef} style={{ marginRight: '16px' }}>
@@ -1358,6 +1356,29 @@ const CrossTabPage = () => {
                         )}
                     </div>
                 </div>
+
+                <button
+                    onClick={() => setIsModalOpen(true)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        background: '#fff',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#444',
+                        cursor: 'pointer',
+                        marginTop: '5px',
+                        marginLeft: '12px'
+                    }}
+                >
+                    <Plus size={16} />
+                    교차 테이블 추가
+                </button>
             </DataHeader>
 
             <Toast
