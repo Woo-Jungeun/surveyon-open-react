@@ -275,11 +275,6 @@ const AggregationPage = () => {
     }, []);
 
     const handleFilterToggle = (filter) => {
-        if (filter === '배너 초기화') {
-            setSelectedFilters([]);
-            return;
-        }
-
         if (filter === '전체') {
             setSelectedFilters(prev => prev.includes('전체') ? [] : ['전체']);
             return;
@@ -298,11 +293,6 @@ const AggregationPage = () => {
     };
 
     const handleTotalFilterToggle = (filter) => {
-        if (filter === '필터 초기화') {
-            setSelectedTotalFilters([]);
-            return;
-        }
-
         if (filter === '전체') {
             setSelectedTotalFilters(prev => prev.includes('전체') ? [] : ['전체']);
             return;
@@ -318,11 +308,10 @@ const AggregationPage = () => {
             return newFilters;
         });
     };
-    const totalFilterList = ['필터 초기화', '전체', 'reccoded_SQ1', 'reccoded_SQ2'];
+    const totalFilterList = ['전체', 'reccoded_SQ1', 'reccoded_SQ2'];
 
     // 전체 배너 목록
     const filterList = [
-        '배너 초기화',
         '전체',
         'LIFE_STYLE_AGE_라이프스타일 나이',
         '라이프스타일_나이',
@@ -456,7 +445,7 @@ const AggregationPage = () => {
                             onClick={() => setIsTotalFilterOpen(!isTotalFilterOpen)}
                         >
                             <span className="trigger-text">
-                                {selectedTotalFilters.includes('전체') ? '전체' : `${selectedTotalFilters.length}개 선택됨`}
+                                {selectedTotalFilters.includes('전체') ? '전체' : (selectedTotalFilters.length === 0 ? '선택항목 없음' : `${selectedTotalFilters.length}개 선택됨`)}
                             </span>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon">
                                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -465,24 +454,19 @@ const AggregationPage = () => {
                         {isTotalFilterOpen && (
                             <div className="custom-filter-menu">
                                 {totalFilterList.map((filter, index) => {
-                                    const isChecked = selectedTotalFilters.includes('전체')
-                                        ? filter !== '필터 초기화'
-                                        : selectedTotalFilters.includes(filter);
+                                    const isChecked = selectedTotalFilters.includes('전체') || selectedTotalFilters.includes(filter);
 
                                     return (
                                         <div
                                             key={index}
                                             className={`custom-filter-item ${isChecked ? 'selected' : ''}`}
-                                            style={filter === '필터 초기화' ? { borderBottom: '1px solid #eee', color: '#ff4d4f', fontWeight: 'bold' } : {}}
                                             onClick={() => handleTotalFilterToggle(filter)}
                                         >
-                                            {filter !== '필터 초기화' && (
-                                                <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
-                                                    {isChecked && (
-                                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
+                                                {isChecked && (
+                                                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                                )}
+                                            </div>
                                             <span className="filter-text">{filter}</span>
                                         </div>
                                     );
@@ -505,7 +489,7 @@ const AggregationPage = () => {
                             <span className="trigger-text">
                                 {selectedFilters.includes('전체')
                                     ? '전체'
-                                    : `${selectedFilters.length}개 선택됨`}
+                                    : (selectedFilters.length === 0 ? '선택항목 없음' : `${selectedFilters.length}개 선택됨`)}
                             </span>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon">
                                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -515,26 +499,21 @@ const AggregationPage = () => {
                         {isFilterOpen && (
                             <div className="custom-filter-menu">
                                 {filterList.map((filter, index) => {
-                                    const isChecked = selectedFilters.includes('전체')
-                                        ? filter !== '배너 초기화'
-                                        : selectedFilters.includes(filter);
+                                    const isChecked = selectedFilters.includes('전체') || selectedFilters.includes(filter);
 
                                     return (
                                         <div
                                             key={index}
                                             className={`custom-filter-item ${isChecked ? 'selected' : ''}`}
-                                            style={filter === '배너 초기화' ? { borderBottom: '1px solid #eee', color: '#ff4d4f', fontWeight: 'bold' } : {}}
                                             onClick={() => handleFilterToggle(filter)}
                                         >
-                                            {filter !== '배너 초기화' && (
-                                                <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
-                                                    {isChecked && (
-                                                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                                            <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
+                                                {isChecked && (
+                                                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                    </svg>
+                                                )}
+                                            </div>
                                             <span className="filter-text">{filter}</span>
                                         </div>
                                     );
