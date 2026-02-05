@@ -435,6 +435,9 @@ const CrossTabPage = () => {
     };
 
     const handleDownload = async (format) => {
+        const typeName = getChartTypeName(chartMode || 'column');
+        const fileName = `${tableName || 'CrossTab'}_${typeName}`;
+
         if (!chartContainerRef.current) {
             alert('차트를 찾을 수 없습니다.');
             return;
@@ -503,7 +506,7 @@ const CrossTabPage = () => {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `crosstab_${chartMode}.svg`;
+                link.download = `${fileName}.svg`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -527,7 +530,7 @@ const CrossTabPage = () => {
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                     canvas.toBlob((blob) => {
-                        saveAs(blob, `crosstab_${chartMode}.png`);
+                        saveAs(blob, `${fileName}.png`);
                     });
                 };
 
