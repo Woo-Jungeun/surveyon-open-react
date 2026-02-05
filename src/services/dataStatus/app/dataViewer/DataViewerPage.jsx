@@ -9,6 +9,7 @@ import './DataViewerPage.css';
 import { DataViewerPageApi } from './DataViewerPageApi';
 import { useSelector } from 'react-redux';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { modalContext } from "@/components/common/Modal.jsx";
 
 // Performance Optimization: Define Cell outside component and use React.memo
 const ReadOnlyCell = React.memo((props) => {
@@ -31,6 +32,7 @@ const DataViewerPage = () => {
     const [columns, setColumns] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
     const loadingSpinner = useContext(loadingSpinnerContext);
+    const modal = useContext(modalContext);
 
     // Mock Data based on the user's image
     // const [data, setData] = useState([
@@ -98,12 +100,12 @@ const DataViewerPage = () => {
                         setIsDataLoaded(true);
                     } else {
                         console.error('API Error:', result?.message);
-                        setToast({ show: true, message: result?.message || '데이터 조회 실패' });
+                        modal.showErrorAlert("오류", result?.message || '데이터 조회 실패');
                         loadingSpinner.hide();
                     }
                 } catch (error) {
                     console.error("API Error:", error);
-                    setToast({ show: true, message: '데이터 조회 중 오류 발생' });
+                    modal.showErrorAlert("오류", '데이터 조회 중 오류가 발생했습니다.');
                     loadingSpinner.hide();
                 }
             }
