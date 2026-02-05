@@ -1275,7 +1275,6 @@ const CrossTabPage = () => {
             ]
         });
     };
-    console.log("chartData", chartData)
 
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
