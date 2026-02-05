@@ -571,11 +571,6 @@
     padding: 15px;
 }
 
-/* Cross Table */
-.cross-table-container {
-    overflow-x: auto;
-}
-
 .cross-table {
     width: 100%;
     border-collapse: separate;
