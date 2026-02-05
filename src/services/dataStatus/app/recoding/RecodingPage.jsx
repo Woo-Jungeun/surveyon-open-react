@@ -570,7 +570,7 @@ const RecodingPage = () => {
         <div className="recoding-page" data-theme="data-dashboard">
             {/* Header */}
             <DataHeader
-                title="문항 가공"
+                title="변수 생성"
                 addButtonLabel={selectedVar?.id === null ? null : "문항 추가"}
                 onAdd={selectedVar?.id === null ? null : handleAddVariable}
                 saveButtonLabel={selectedVar?.id === null ? "추가 문항 저장" : "변경사항 저장"}

@@ -313,7 +313,7 @@ const VariablePage = () => {
     return (
         <div className="variable-page" data-theme="data-dashboard">
             <DataHeader
-                title="문항관리"
+                title="문항 관리"
                 addButtonLabel="문항 추가"
                 onAdd={handleAddVariable}
                 saveButtonLabel="변경사항 저장"

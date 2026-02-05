@@ -170,8 +170,8 @@ const FullscreenModal = ({
                                 </button>
                                 {showDownloadMenu && (
                                     <div className="download-dropdown">
-                                        <button onClick={() => handleDownload('png')}>PNG 이미지</button>
-                                        <button onClick={() => handleDownload('svg')}>SVG 벡터</button>
+                                        <button onClick={() => handleDownload('png')}>PNG (이미지)</button>
+                                        <button onClick={() => handleDownload('svg')}>SVG (PPT 용)</button>
                                     </div>
                                 )}
                             </div>

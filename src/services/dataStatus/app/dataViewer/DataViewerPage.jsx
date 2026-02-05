@@ -174,6 +174,30 @@ const DataViewerPage = () => {
                     </span>
                 </h2>
                 <div className="data-viewer-actions">
+                    <button
+                        onClick={handleCopyToClipboard}
+                        title="데이터 복사"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            border: 'none',
+                            background: '#f3f4f6',
+                            cursor: 'pointer',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            color: '#4b5563',
+                            fontSize: '13px',
+                            fontWeight: '600',
+                            transition: 'all 0.2s',
+                            marginRight: '8px'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
+                    >
+                        <Copy size={14} />
+                        복사
+                    </button>
 
                     <button
                         onClick={() => setIsLabelView(!isLabelView)}
@@ -189,31 +213,7 @@ const DataViewerPage = () => {
                     onClose={() => setToast({ ...toast, show: false })}
                 />
             </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
-                <button
-                    onClick={handleCopyToClipboard}
-                    title="데이터 복사"
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        border: 'none',
-                        background: '#f3f4f6',
-                        cursor: 'pointer',
-                        padding: '6px 12px',
-                        borderRadius: '6px',
-                        color: '#4b5563',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.background = '#e5e7eb'}
-                    onMouseLeave={(e) => e.currentTarget.style.background = '#f3f4f6'}
-                >
-                    <Copy size={14} />
-                    복사
-                </button>
-            </div>
+
             <div className="cmn_grid singlehead data-viewer-grid-container">
                 <KendoGrid
                     parentProps={{

@@ -388,6 +388,12 @@
     cursor: pointer;
     border-radius: 4px;
     transition: background 0.1s;
+    user-select: none;
+}
+
+.custom-filter-item * {
+    user-select: none;
+    cursor: pointer;
 }
 
 .custom-filter-item:hover {

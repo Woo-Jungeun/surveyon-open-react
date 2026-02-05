@@ -19,9 +19,9 @@ const MENU_ITEMS = [
     label: "데이터설정",
     path: "/data_status/setting",
     children: [
-      { label: "문항관리", path: "/data_status/setting/variable", icon: Info },
+      { label: "문항 관리", path: "/data_status/setting/variable", icon: Info },
       { label: "전체 데이터(뷰어)", path: "/data_status/setting/viewer", icon: Database },
-      { label: "문항 가공", path: "/data_status/setting/recoding", icon: Wrench },
+      { label: "변수 생성", path: "/data_status/setting/recoding", icon: Wrench },
       { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
       { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
     ]
