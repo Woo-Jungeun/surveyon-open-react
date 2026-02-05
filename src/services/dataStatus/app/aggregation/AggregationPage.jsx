@@ -522,6 +522,29 @@ const AggregationPage = () => {
                         )}
                     </div>
                 </div>
+
+                <button
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        height: '38px',
+                        padding: '0 12px',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '6px',
+                        background: '#fff',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        color: '#444',
+                        cursor: 'pointer',
+                        marginLeft: '12px',
+                        marginTop: '5px'
+                    }}
+                    onClick={() => { }}
+                >
+                    <Download size={16} />
+                    엑셀 다운로드
+                </button>
             </DataHeader>
             <div className="aggregation-layout">
                 <SideBar
