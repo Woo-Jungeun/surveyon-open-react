@@ -165,6 +165,8 @@
     text-align: left;
     vertical-align: middle;
     padding: 4px 10px;
+    white-space: normal;
+    word-break: keep-all;
 }
 
 .fullscreen-table-cell {

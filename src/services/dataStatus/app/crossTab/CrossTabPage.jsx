@@ -1777,7 +1777,7 @@ const CrossTabPage = () => {
                                                                                 padding: '0 8px', boxSizing: 'border-box',
                                                                                 fontSize: '12px', fontWeight: '500', color: '#333',
                                                                                 verticalAlign: 'middle',
-                                                                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
                                                                             }}>
                                                                                 {row.label}
                                                                             </td>
