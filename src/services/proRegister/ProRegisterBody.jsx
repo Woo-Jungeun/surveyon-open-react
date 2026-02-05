@@ -1,7 +1,7 @@
 import React, { Fragment, useRef, useState, useCallback, useContext, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
-import ProRegisterTab1 from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterTab1";
-import ProRegisterTab2 from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterTab2";
+import ProRegisterTab1 from "./ProRegisterTab1";
+import ProRegisterTab2 from "./ProRegisterTab2";
 import { modalContext } from "@/components/common/Modal.jsx";
 
 

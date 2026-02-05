@@ -4,8 +4,8 @@ import { useSelector } from "react-redux";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { Button } from "@progress/kendo-react-buttons";
 import { Input } from "@progress/kendo-react-inputs";
-import ProRegisterGrid from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterGrid.jsx";
-import { ProRegisterApi } from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterApi.js";
+import ProRegisterGrid from "./ProRegisterGrid.jsx";
+import { ProRegisterApi } from "./ProRegisterApi.js";
 
 /**
  * 문항 등록 > DB

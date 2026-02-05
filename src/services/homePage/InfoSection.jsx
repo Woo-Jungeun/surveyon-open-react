@@ -208,9 +208,9 @@ const InfoSection = () => {
               className="hp-feature-item"
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/data_status" } });
+                  navigate("/login", { state: { from: "/project" } });
                 } else {
-                  navigate("/data_status");
+                  navigate("/project");
                 }
               }}
               style={{ cursor: "pointer" }}
@@ -228,9 +228,9 @@ const InfoSection = () => {
               className="hp-feature-item"
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/ai_open_analysis" } });
+                  navigate("/login", { state: { from: "/project" } });
                 } else {
-                  navigate("/ai_open_analysis");
+                  navigate("/project");
                 }
               }}
               style={{ cursor: "pointer" }}

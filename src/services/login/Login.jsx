@@ -1,6 +1,6 @@
 import { useState, useCallback, useContext } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LogIn, Mail, Lock, ArrowLeft, Sparkles } from "lucide-react";
 import "@/services/login/Login.css";
 import { Input } from "@progress/kendo-react-inputs";
@@ -9,6 +9,7 @@ import { LoginApi } from "@/services/login/LoginApi.js";
 
 const Login = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [formData, setFormData] = useState({
         user: localStorage.getItem("savedId") || "",
         pass: ""
@@ -36,6 +37,9 @@ const Login = () => {
             if (isSavedId) {
                 localStorage.setItem("savedId", formData.user);
             }
+            // 로그인 성공 후 페이지 이동
+            const from = location.state?.from || "/project";
+            navigate(from, { replace: true });
         } else {
             modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
         }

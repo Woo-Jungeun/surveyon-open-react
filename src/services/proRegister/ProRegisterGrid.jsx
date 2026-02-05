@@ -3,10 +3,10 @@ import { Button } from "@progress/kendo-react-buttons";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
-import { MainListApi } from "@/services/aiOpenAnalysis/app/mainList/MainListApi.js";
+import { MainListApi } from "@/services/mainList/MainListApi.js";
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
-import { ProRegisterApi } from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterApi.js";
+import { ProRegisterApi } from "./ProRegisterApi.js";
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import { process } from "@progress/kendo-data-query";
 /**

@@ -11,7 +11,7 @@ import AiOpenAnalysisRoutes from "@/services/aiOpenAnalysis";
 import DataStatusRoutes from "@/services/dataStatus";
 import ManualPage from "@/services/aiOpenAnalysis/app/ManualPage";
 import ManualEditor from "@/services/aiOpenAnalysis/app/ManualEditor";
-import ExcelGuidePage from "@/services/aiOpenAnalysis/app/proRegister/ExcelGuidePage";
+import ExcelGuidePage from "@/services/proRegister/ExcelGuidePage";
 import MainLayout from "@/layouts/MainLayout";
 import BoardList from "@/services/board/BoardList";
 import BoardDetail from "@/services/board/BoardDetail";
@@ -52,13 +52,13 @@ function App() {
           ------------------------------------ */}
           {isLoggedIn ? (
             <>
-              <Route path="/ai_open_analysis/*" element={<AiOpenAnalysisRoutes />} />
+              <Route path="/project/*" element={<AiOpenAnalysisRoutes />} />
               <Route path="/data_status/*" element={<DataStatusRoutes />} />
             </>
           ) : (
             // 로그인 안 되어 있는데 내부 메뉴 접근 시 → /login 으로 이동
             <>
-              <Route path="/ai_open_analysis/*" element={<Navigate to="/login" replace />} />
+              <Route path="/project/*" element={<Navigate to="/login" replace />} />
               <Route path="/data_status/*" element={<Navigate to="/login" replace />} />
             </>
           )}

@@ -4,7 +4,7 @@ import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
-import { MainListApi } from "@/services/aiOpenAnalysis/app/mainList/MainListApi.js";
+import { MainListApi } from "./MainListApi.js";
 import { useSelector } from "react-redux";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import GridDataCount from "@/components/common/grid/GridDataCount";
@@ -53,7 +53,7 @@ const MainList = () => {
         const servername = e?.dataItem?.servername;
         const projectpof = e?.dataItem?.projectpof;
         if (!projectnum || !projectname) return;
-        navigate('/ai_open_analysis/pro_list', { state: { projectnum, projectname, servername, projectpof } });
+        navigate('/project/pro_list', { state: { projectnum, projectname, servername, projectpof } });
     }, [navigate]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
@@ -96,7 +96,7 @@ const MainList = () => {
                         </h2>
                         {(!userGroup.includes("고객") && !userGroup.includes("일반")) && (
                             <div className="btnWrap">
-                                <GridHeaderBtnPrimary onClick={() => navigate("/ai_open_analysis/pro_enter")}>
+                                <GridHeaderBtnPrimary onClick={() => navigate("/project/pro_enter")}>
                                     프로젝트 등록
                                     <span
                                         className="info-icon"

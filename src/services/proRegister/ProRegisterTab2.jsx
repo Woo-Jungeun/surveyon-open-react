@@ -5,9 +5,9 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import { Button } from "@progress/kendo-react-buttons";
 import { Input } from "@progress/kendo-react-inputs";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
-import ProRegisterPopup from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterPopup";
-import { ProRegisterApi } from "@/services/aiOpenAnalysis/app/proRegister/ProRegisterApi.js";
-import { getExcelGuideHTML } from "@/services/aiOpenAnalysis/app/proRegister/ExcelGuideHTML.js";
+import ProRegisterPopup from "./ProRegisterPopup";
+import { ProRegisterApi } from "./ProRegisterApi.js";
+import { getExcelGuideHTML } from "./ExcelGuideHTML.js";
 import moment from "moment";
 import * as XLSX from "xlsx";
 
