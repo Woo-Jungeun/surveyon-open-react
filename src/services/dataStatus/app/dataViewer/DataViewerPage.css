@@ -88,17 +88,30 @@
     padding: 8px;
     font-size: 13px;
     color: #333;
-    height: 40px;
+    min-height: 40px;
+    height: auto;
     box-sizing: border-box;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-all;
     display: flex;
     align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .data-viewer-column-header {
     text-align: center;
     color: #666;
     font-weight: 600;
+}
+
+/* Value View Mode - Compact Rows */
+.value-mode .data-viewer-cell {
+    min-height: 30px !important;
+    padding: 4px !important;
+}
+
+/* Label View Mode - Standard Rows */
+.label-mode .data-viewer-cell {
+    min-height: 40px;
 }

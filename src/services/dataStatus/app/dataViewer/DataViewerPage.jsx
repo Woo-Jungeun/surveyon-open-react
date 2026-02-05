@@ -93,7 +93,7 @@ const DataViewerPage = () => {
                                 field: key,
                                 title: key,
                                 show: true,
-                                width: 100
+                                width: isLabelView ? 180 : 100
                             }));
                             setColumns(generatedColumns);
                         }
@@ -164,7 +164,7 @@ const DataViewerPage = () => {
     };
 
     return (
-        <div className="data-viewer-page" data-theme="data-dashboard">
+        <div className={`data-viewer-page ${isLabelView ? 'label-mode' : 'value-mode'}`} data-theme="data-dashboard">
             <div className="data-viewer-header">
                 <h2 className="data-viewer-title">
                     <span className="data-viewer-title-indicator"></span>
@@ -225,12 +225,12 @@ const DataViewerPage = () => {
                         filterChange: ({ filter }) => setFilter(filter),
                         height: "100%",
                         columnVirtualization: false, // Temporarily disable due to rendering issues
-                        scrollable: "virtual",
-                        rowHeight: 40,
+                        scrollable: "scrollable",
                         skip: pageState.skip,
                         pageSize: pageState.take,
                         total: data.length,
-                        onPageChange: pageChange
+                        onPageChange: pageChange,
+                        resizable: true
                     }}
                 >
                     {columns.filter(c => c.show).map((c) => (
