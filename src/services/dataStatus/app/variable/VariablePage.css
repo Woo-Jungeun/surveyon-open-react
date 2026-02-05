@@ -321,3 +321,19 @@
     stroke: #64748b !important;
     color: #64748b !important;
 }
+
+/* Center Pagination */
+.variable-page .k-pager {
+    display: flex;
+    justify-content: center !important;
+    position: relative;
+}
+
+.variable-page .k-pager .k-spacer {
+    display: none;
+}
+
+.variable-page .k-pager-info {
+    position: absolute;
+    right: 16px;
+}

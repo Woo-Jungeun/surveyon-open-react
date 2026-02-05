@@ -124,6 +124,13 @@ const VariablePage = () => {
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업 open
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
+    const [skip, setSkip] = useState(0);
+    const [pageSize, setPageSize] = useState(100);
+
+    const pageChange = (event) => {
+        setSkip(event.page.skip);
+        setPageSize(event.page.take);
+    };
 
     const [columns, setColumns] = useState([
         { field: 'sysName', title: '시스템 문항', show: true, width: '150px' },
@@ -328,6 +335,11 @@ const VariablePage = () => {
                                 filterChange: ({ filter }) => setFilter(filter),
                                 height: "100%",
                                 rowRender: rowRender,
+                                pageable: true,
+                                total: variables.length,
+                                skip: skip,
+                                pageSize: pageSize,
+                                onPageChange: pageChange
 
                             }}
                         >
