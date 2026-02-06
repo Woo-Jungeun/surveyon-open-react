@@ -34,7 +34,7 @@ const InquiryList = () => {
     const fetchList = async () => {
         const params = {
             category: activeTab === '전체' ? '' : activeTab,
-            userId: userId,
+            user: userId,
             is_admin: isAdmin,
             isMine: showMyPosts
         };

@@ -15,6 +15,7 @@ const BoardList = ({ type = 'notice' }) => {
     const itemsPerPage = 10;
     const auth = useSelector((store) => store.auth);
     const userGroup = auth?.user?.userGroup || "";
+    const userId = auth?.user?.userId || "";
     const isAdmin = userGroup.includes("AI솔루션") ? 1 : 0;
     // API 연동
     const { noticeList, patchNotesList } = BoardApi();
@@ -28,7 +29,8 @@ const BoardList = ({ type = 'notice' }) => {
         try {
             let res;
             const payload = {
-                is_admin: isAdmin
+                is_admin: isAdmin,
+                user: userId
             };
             if (type === 'notice') {
                 res = await noticeList.mutateAsync(payload);

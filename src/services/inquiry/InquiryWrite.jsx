@@ -48,7 +48,7 @@ const InquiryWrite = () => {
         if (isEdit && id) {
             const fetchInquiryData = async () => {
                 try {
-                    const response = await inquiryDetail.mutateAsync({ id: parseInt(id), userId: userId, is_admin: isAdmin });
+                    const response = await inquiryDetail.mutateAsync({ id: parseInt(id), user: userId, is_admin: isAdmin });
 
                     if (response?.success === "777") {
                         const data = response.resultjson || response.data || response;
@@ -111,7 +111,7 @@ const InquiryWrite = () => {
                 isSecret,
                 password: "",
                 author: userName,
-                userId: userId,
+                user: userId,
                 // attachments: files.map(file => {
                 //     if (file instanceof File) {
                 //         return {

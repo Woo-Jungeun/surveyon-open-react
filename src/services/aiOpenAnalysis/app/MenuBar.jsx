@@ -1,4 +1,4 @@
-import { Home } from "lucide-react";
+import { Home, Menu, List, FileText, BarChart3, Database, BrainCircuit, Users, Sparkles, RefreshCw } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
@@ -7,7 +7,6 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import { useCookies } from "react-cookie";
 import { LoginApi } from "@/services/login/LoginApi.js";
 import { MenuBarApi } from "./MenuBarApi";
-import { Sparkles, RefreshCw } from "lucide-react";
 import "@/assets/css/aiCharge.css";
 
 /**
@@ -139,16 +138,19 @@ const MenuBar = () => {
   // 드롭다운 상태
   const [appsOpen, setAppsOpen] = useState(false);
   const [userOpen, setUserOpen] = useState(false);
+  const [moduleMenuOpen, setModuleMenuOpen] = useState(false);
 
   // 외부 클릭 닫기용 ref
   const appsRef = useRef(null);
   const userRef = useRef(null);
+  const moduleRef = useRef(null);
 
   // 외부 클릭 시 open 닫기
   useEffect(() => {
     const onClickOutside = (e) => {
       if (appsRef.current && !appsRef.current.contains(e.target)) setAppsOpen(false);
       if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false);
+      if (moduleRef.current && !moduleRef.current.contains(e.target)) setModuleMenuOpen(false);
     };
     window.addEventListener("click", onClickOutside);
     return () => window.removeEventListener("click", onClickOutside);
@@ -247,10 +249,11 @@ const MenuBar = () => {
   return (
     <Fragment>
       <header key={location.pathname}>
-        <div className="logoWrap" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <div className="logoWrap" style={{ display: "flex", alignItems: "center" }}>
           <button
             type="button"
             className="home-btn"
+            title="홈으로"
             onClick={() => {
               sessionStorage.setItem("projectnum", "");
               sessionStorage.setItem("projectname", "");
@@ -261,13 +264,12 @@ const MenuBar = () => {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "6px",
-              padding: "8px 10px",
+              justifyContent: "center",
+              width: "32px",
+              height: "32px",
               borderRadius: "6px",
               border: "none",
               background: "transparent",
-              fontSize: "15px",
-              fontWeight: 600,
               color: "#555",
               cursor: "pointer",
               transition: "all 0.2s",
@@ -282,19 +284,80 @@ const MenuBar = () => {
             }}
           >
             <Home size={18} />
-            <span>홈</span>
           </button>
 
-          <div style={{ width: "1px", height: "14px", background: "#dcdcdc", margin: "0 2px" }}></div>
+          <div style={{ width: "1px", height: "14px", background: "#ddd", margin: "0 10px" }}></div>
+
+          <div ref={moduleRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              className={`module-menu-btn ${moduleMenuOpen ? 'active' : ''}`}
+              onClick={() => setModuleMenuOpen(!moduleMenuOpen)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "32px",
+                height: "32px",
+                borderRadius: "6px",
+                border: "none",
+                background: moduleMenuOpen ? "rgba(0,0,0,0.05)" : "transparent",
+                color: moduleMenuOpen ? "#FF913A" : "#555",
+                cursor: "pointer",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                if (!moduleMenuOpen) {
+                  e.currentTarget.style.background = "rgba(0,0,0,0.05)";
+                  e.currentTarget.style.color = "#FF913A";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!moduleMenuOpen) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "#555";
+                }
+              }}
+            >
+              <Menu size={18} />
+            </button>
+            {moduleMenuOpen && (
+              <div className="module-dropdown-menu">
+                {[
+                  { label: "프로젝트 목록", icon: <List size={16} />, path: "/project", state: { from: 'ai_open' }, highlight: true },
+                  { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
+                  { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status" },
+                  { label: "데이터관리", icon: <Database size={16} />, path: "/data_status", isDisabled: true },
+                  { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/project" },
+                  { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
+                ].map((m, i) => (
+                  <button
+                    key={i}
+                    className={`nav-module-item ${m.highlight ? 'highlight' : ''} ${m.isDisabled ? 'disabled' : ''}`}
+                    onClick={() => {
+                      if (m.isDisabled) return;
+                      navigate(m.path, { state: m.state });
+                      setModuleMenuOpen(false);
+                    }}
+                  >
+                    {m.icon}
+                    <span>{m.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div style={{ width: "1px", height: "14px", background: "#ddd", margin: "0 10px" }}></div>
 
           <h1
             className="logo"
-            style={{ cursor: "pointer", fontSize: "22px", fontWeight: "700", display: "flex", alignItems: "center", letterSpacing: "-0.5px" }}
+            style={{ cursor: "pointer", fontSize: "19px", fontWeight: "700", display: "flex", alignItems: "center", letterSpacing: "-0.5px" }}
             onClick={() => {
               navigate("/ai_open_analysis");
             }}
           >
-            <span className="ai-logo-text">AI</span>오픈분석
+            <span className="ai-logo-text" style={{ fontSize: "22px", color: "#FF913A", marginRight: "2px" }}>AI</span>오픈분석
           </h1>
         </div>
 

@@ -1,0 +1,367 @@
+@import '../../dataStatus/app/DataStatusTheme.css';
+
+/* Project List Page Wrapper (Right side of Sidebar) */
+.project-list-page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--ds-bg, #f8fafc);
+    min-width: 0;
+    overflow: hidden;
+
+    /* Force Purple Theme Variables for Kendo components within this layout */
+    --primary-color: #7C3AED;
+    --primary-hover: #6D28D9;
+    --primary-bg-hover: #F9F8FF;
+    --primary-bg-selected: #F3F1FF;
+}
+
+/* Main Content White Box */
+.project-list-content {
+    flex: 1;
+    margin: 16px 16px 16px 16px;
+    background: var(--ds-surface, #ffffff);
+    border: 1px solid var(--ds-border, #e2e8f0);
+    border-radius: 16px;
+    box-shadow: var(--ds-shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Ensure Grid inside fills space */
+.project-list-content>div.grid-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* padding-bottom: 24px; */
+}
+
+/* Footer Styling matching the layout */
+.project-list-footer {
+    width: 100%;
+    background: transparent;
+    border-top: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 24px 16px 24px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    font-size: 12px;
+}
+
+.project-list-footer-inner {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #777;
+    font-size: 13px;
+}
+
+.project-system-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.project-status-dot {
+    width: 8px;
+    height: 8px;
+    background: #22c55e;
+    border-radius: 50%;
+}
+
+/* Purple Theme Override for Button */
+.project-list-page .data-header-btn-primary {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+.project-list-page .data-header-btn-primary:hover {
+    background-color: #4C3FE0 !important;
+    border-color: #4C3FE0 !important;
+}
+
+/* Purple Theme Override for Header Title Bar */
+.project-list-page .data-header-title::before {
+    background: #7C3AED !important;
+}
+
+/* Purple Theme Overrides for Tab Buttons */
+.project-list-page .tabMenu .btnTab:focus {
+    border-color: #7C3AED !important;
+}
+
+.project-list-page .tabMenu .btnTab.on {
+    border-color: #7C3AED !important;
+    background-color: #F3F1FF !important;
+    color: #7C3AED !important;
+}
+
+.project-list-page .tabMenu .btnTab:hover {
+    background-color: #EBE7FF !important;
+    border-color: #7C3AED !important;
+    color: #7C3AED !important;
+}
+
+/* Also the submit button in ProEnterTab3 if seen in screenshot (orange button) */
+.project-list-page .cmn_btn.btn_orange,
+.project-list-page .btn_orange {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+.project-list-page .cmn_btn.btn_orange:hover,
+.project-list-page .btn_orange:hover {
+    background-color: #4C3FE0 !important;
+    border-color: #4C3FE0 !important;
+}
+
+/* Purple Theme Overrides for Inputs */
+/* Update Input Focus Styles */
+/* Update Input Focus Styles */
+/* Update Input Focus Styles */
+/* Force Purple Border for Inputs in All States (Default, Hover, Focus) */
+.project-list-page .k-input,
+.project-list-page .k-picker,
+.project-list-page .k-dropdown,
+.project-list-page .k-input-solid,
+.project-list-page .k-textbox,
+.project-list-page .k-input:hover,
+.project-list-page .k-picker:hover,
+.project-list-page .k-dropdown:hover,
+.project-list-page .k-input-solid:hover,
+.project-list-page .k-textbox:hover {
+    border-color: #7C3AED !important;
+}
+
+/* Update Input Focus Styles (Keep shadow removal) */
+.project-list-page .k-input:focus,
+.project-list-page .k-input.k-focus,
+.project-list-page .k-input:focus-within,
+.project-list-page .k-picker:focus,
+.project-list-page .k-picker.k-focus,
+.project-list-page .k-picker:focus-within,
+.project-list-page .k-dropdown:focus-within,
+.project-list-page .k-input-solid:focus,
+.project-list-page .k-input-solid:focus-within,
+.project-list-page .k-textbox:focus,
+.project-list-page .k-textbox:focus-within {
+    border-color: #7C3AED !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+/* Prevent double border on inner input */
+.project-list-page .k-input-inner:focus,
+.project-list-page .k-input-inner:focus-within {
+    box-shadow: none !important;
+    outline: none !important;
+    border-color: transparent !important;
+}
+
+.project-list-page .k-input-inner:focus {
+    color: #333 !important;
+}
+
+/* Global overrides for Purple Theme Context (Tooltips, NProgress, Popups) */
+.purple-theme-context .floating-tooltip .tooltip-title {
+    color: #7C3AED !important;
+}
+
+.purple-theme-context #nprogress .bar {
+    background: #7C3AED !important;
+}
+
+.purple-theme-context #nprogress .spinner-icon {
+    border-top-color: #7C3AED !important;
+    border-left-color: #7C3AED !important;
+}
+
+/* Kendo & Common Loading Spinners */
+.purple-theme-context .k-loading-color {
+    color: #7C3AED !important;
+}
+
+.purple-theme-context .k-i-loading {
+    color: #7C3AED !important;
+}
+
+/* Survey Loading Spinner Overrides */
+.purple-theme-context .survey-loading-spinner::before {
+    border-color: #7C3AED !important;
+}
+
+.purple-theme-context .survey-loading-spinner::after {
+    background:
+        linear-gradient(#7C3AED 0 0) 10px 15px / 40px 3px,
+        linear-gradient(#7C3AED 0 0) 10px 28px / 40px 3px,
+        linear-gradient(#7C3AED 0 0) 10px 41px / 40px 3px,
+        linear-gradient(#7C3AED 0 0) 10px 54px / 28px 3px !important;
+    background-repeat: no-repeat !important;
+}
+
+.purple-theme-context .survey-loading-spinner .dot {
+    background: #7C3AED !important;
+}
+
+/* Handle responsive states for spinner-after if needed, but primary override above should cover it */
+@media (max-width: 768px) {
+    .purple-theme-context .survey-loading-spinner::after {
+        background:
+            linear-gradient(#7C3AED 0 0) 8px 12px / 32px 2px,
+            linear-gradient(#7C3AED 0 0) 8px 22px / 32px 2px,
+            linear-gradient(#7C3AED 0 0) 8px 32px / 32px 2px,
+            linear-gradient(#7C3AED 0 0) 8px 42px / 22px 2px !important;
+        background-repeat: no-repeat !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .purple-theme-context .survey-loading-spinner::after {
+        background:
+            linear-gradient(#7C3AED 0 0) 6px 10px / 24px 2px,
+            linear-gradient(#7C3AED 0 0) 6px 18px / 24px 2px,
+            linear-gradient(#7C3AED 0 0) 6px 26px / 24px 2px,
+            linear-gradient(#7C3AED 0 0) 6px 34px / 18px 2px !important;
+        background-repeat: no-repeat !important;
+    }
+}
+
+/* Kendo Popup/Dropdown Overrides in global context */
+.purple-theme-context .k-animation-container .k-popup {
+    border-color: #7C3AED !important;
+}
+
+.purple-theme-context .k-list .k-selected,
+.purple-theme-context .k-list .k-item.k-selected,
+.purple-theme-context .k-list-item.k-selected,
+.purple-theme-context .k-selected {
+    background-color: #F3F1FF !important;
+    color: #7C3AED !important;
+    box-shadow: none !important;
+}
+
+.purple-theme-context .k-list .k-item:hover,
+.purple-theme-context .k-list-item:hover,
+.purple-theme-context .k-list .k-item.k-hover,
+.purple-theme-context .k-list-item.k-hover {
+    background-color: #EBE7FF !important;
+    color: #7C3AED !important;
+}
+
+/* ComboBox/Dropdown Button (Arrow) Color */
+.project-list-page .k-combobox .k-button,
+.project-list-page .k-combobox .k-input-button,
+.project-list-page .k-dropdownlist .k-input-button,
+.project-list-page .k-picker .k-input-button {
+    background-color: #7C3AED !important;
+}
+
+/* No Data Found box border if applicable */
+.purple-theme-context .k-nodata {
+    color: #333;
+}
+
+/* Ensure the input inside the popup filtering also follows theme if needed */
+/* Kendo Popup / Filter Menu Theming */
+.purple-theme-context .k-popup {
+    border-color: #7C3AED !important;
+}
+
+.purple-theme-context .k-popup .k-button-solid-primary {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+    color: #fff !important;
+}
+
+.purple-theme-context .k-popup .k-button-solid-primary:hover {
+    background-color: #6D28D9 !important;
+    /* Slightly darker purple on hover */
+    border-color: #6D28D9 !important;
+}
+
+.purple-theme-context .k-popup .k-input:focus,
+.purple-theme-context .k-popup .k-input.k-focus,
+.purple-theme-context .k-popup .k-input:focus-within {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+.purple-theme-context .k-popup .k-checkbox:checked,
+.purple-theme-context .k-popup .k-checkbox.k-checked {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+/* Ensure filter menu icon in grid header also uses theme if active */
+.purple-theme-context .k-grid-header .k-grid-filter.k-selected,
+.purple-theme-context .k-grid-header .k-grid-filter.k-active {
+    color: #7C3AED !important;
+}
+
+/* Grid Row Highlight & Hover */
+.project-list-page .k-grid .k-table-row.k-selected,
+.project-list-page .k-grid .k-table-row.k-selected>td,
+.project-list-page .k-grid .k-table-row.k-selected>.k-table-td,
+.project-list-page .k-grid .k-table-td.k-selected,
+.project-list-page .k-grid td.k-selected,
+.project-list-page .k-grid tr.k-selected,
+.project-list-page .k-grid tr.k-selected:hover,
+.project-list-page .k-grid .k-selected,
+.project-list-page .k-grid .k-state-selected,
+.project-list-page .k-grid .k-table-row.k-selected:hover>.k-table-td,
+/* Specific override for #grid_01 which might be affected by OptionSetting.css */
+.project-list-page #grid_01 .k-table-tbody tr.row-active,
+.project-list-page #grid_01 .k-table-tbody tr.lv3-row-selected,
+.project-list-page #grid_01 .k-table-tbody tr.k-selected,
+.project-list-page #grid_01 .k-table-tbody tr.k-table-row.k-selected,
+.project-list-page #grid_01 .k-table-tbody tr[aria-selected="true"],
+.project-list-page #grid_01 .k-table-tbody tr.row-active>td,
+.project-list-page #grid_01 .k-table-tbody tr.lv3-row-selected>td,
+.project-list-page #grid_01 .k-table-tbody tr.k-selected>td,
+.project-list-page #grid_01 .k-table-tbody tr[aria-selected="true"]>td {
+    background-color: #F3F1FF !important;
+    background: #F3F1FF !important;
+    color: inherit !important;
+}
+
+.project-list-page .k-grid .k-table-row:hover:not(.k-selected),
+.project-list-page .k-grid tr:hover:not(.k-selected) {
+    background-color: #F9F8FF !important;
+    background: #F9F8FF !important;
+}
+
+/* Ensure filter input border is purple even in default state */
+.purple-theme-context .k-popup .k-input {
+    border-color: #7C3AED !important;
+}
+
+/* Ensure Grid cells can wrap text */
+.project-list-page .k-grid td {
+    white-space: normal !important;
+    word-break: break-all !important;
+    vertical-align: middle !important;
+    line-height: 1.4 !important;
+}
+
+.project-list-page .k-grid th {
+    vertical-align: middle !important;
+    white-space: pre-wrap !important;
+    text-align: center !important;
+}
+
+/* Force Grid Header Background to White (matching Project List) */
+.project-list-page .k-grid-header,
+.project-list-page .k-grid-header .k-table-th,
+.project-list-page .k-grid-header th.k-header {
+    background-color: #fff !important;
+    background: #fff !important;
+}

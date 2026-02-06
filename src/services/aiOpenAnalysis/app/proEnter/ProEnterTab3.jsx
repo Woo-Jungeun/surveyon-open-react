@@ -97,7 +97,7 @@ const ProEnterTab3 = () => {
                             sessionStorage.setItem("projectname", "");
                             sessionStorage.setItem("servername", "");
                             sessionStorage.setItem("projectpof", "");
-                            navigate("/ai_open_analysis"); //프로젝트 목록 페이지로 이동
+                            navigate("/project"); //프로젝트 목록 페이지로 이동
                         }
                     }],   ////문항 목록 페이지로 이동
                 });
@@ -168,7 +168,7 @@ const ProEnterTab3 = () => {
                             alignItems: 'center',
                             gap: '4px'
                         }}>
-                            <span style={{ color: '#ff8024' }}>※</span> POF가 없을 경우 2025-00-0000 포맷에 맞춰 부서 공용 POF를 입력
+                            <span style={{ color: '#7C3AED' }}>※</span> POF가 없을 경우 2025-00-0000 포맷에 맞춰 부서 공용 POF를 입력
                         </div>
                     </div>
                 </div>
@@ -197,7 +197,7 @@ const ProEnterTab3 = () => {
                             fontSize: '15px',
                             fontWeight: '600',
                             borderRadius: '6px',
-                            backgroundColor: '#ff8024',
+                            backgroundColor: '#7C3AED',
                             border: 'none'
                         }}
                     >

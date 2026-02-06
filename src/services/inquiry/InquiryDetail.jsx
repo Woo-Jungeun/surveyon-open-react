@@ -26,7 +26,7 @@ const InquiryDetail = () => {
 
     useEffect(() => {
         if (id) {
-            inquiryDetail.mutate({ id: id, userId: userId, is_admin: isAdmin }, {
+            inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
                 onSuccess: (res) => {
                     if (res?.success === "777") {
                         const data = res.resultjson || res.data || res;
@@ -157,7 +157,7 @@ const InquiryDetail = () => {
                                                 id: parseInt(id),
                                                 answer: answerContent,
                                                 answerer: userName,
-                                                userId: userId,
+                                                user: userId,
                                                 is_admin: isAdmin
                                             };
 
@@ -168,7 +168,7 @@ const InquiryDetail = () => {
                                                 setIsAnswering(false);
 
                                                 // 데이터 새로고침
-                                                inquiryDetail.mutate({ id: id, userId: userId, is_admin: isAdmin }, {
+                                                inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
                                                     onSuccess: (res) => {
                                                         if (res?.success === "777") {
                                                             const data = res.resultjson || res.data || res;
@@ -252,7 +252,7 @@ const InquiryDetail = () => {
                                                             try {
                                                                 const payload = {
                                                                     gb: "delete",
-                                                                    userId: userId,
+                                                                    user: userId,
                                                                     is_admin: isAdmin,
                                                                     id: parseInt(id)
                                                                 };
@@ -320,7 +320,7 @@ const InquiryDetail = () => {
                                                                     id: parseInt(id),
                                                                     answer: "",
                                                                     answerer: "",
-                                                                    userId: userId,
+                                                                    user: userId,
                                                                     is_admin: isAdmin
                                                                 };
 
@@ -330,7 +330,7 @@ const InquiryDetail = () => {
                                                                     modal.showAlert('알림', '답변이 삭제되었습니다.');
 
                                                                     // 데이터 새로고침
-                                                                    inquiryDetail.mutate({ id: id, userId: userId, is_admin: isAdmin }, {
+                                                                    inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
                                                                         onSuccess: (res) => {
                                                                             if (res?.success === "777") {
                                                                                 const data = res.resultjson || res.data || res;

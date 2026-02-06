@@ -15,6 +15,7 @@ const BoardDetail = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
     const userGroup = auth?.user?.userGroup || "";
+    const userId = auth?.user?.userId || "";
     const isAdmin = userGroup.includes("AI솔루션") ? 1 : 0;
 
     // API 연동
@@ -26,9 +27,9 @@ const BoardDetail = () => {
             try {
                 let result;
                 if (type === 'notice') {
-                    result = await noticeDetail.mutateAsync({ id: id });
+                    result = await noticeDetail.mutateAsync({ id: id, user: userId });
                 } else if (type === 'patchnotes') {
-                    result = await patchNotesDetail.mutateAsync({ id: id });
+                    result = await patchNotesDetail.mutateAsync({ id: id, user: userId });
                 }
 
                 if (result) {
@@ -62,7 +63,8 @@ const BoardDetail = () => {
                             const payload = {
                                 gb: 'delete',
                                 id: id,
-                                is_admin: isAdmin
+                                is_admin: isAdmin,
+                                user: userId
                             };
 
                             if (type === 'notice') {

@@ -103,7 +103,8 @@ const MenuSection = () => {
               return;
             }
 
-            navigate("/project");
+            const fromState = item.id === "data-dashboard" ? "data_status" : "ai_open";
+            navigate("/project", { state: { from: fromState } });
           };
 
           return (
@@ -113,7 +114,7 @@ const MenuSection = () => {
               style={{
                 "--menu-color": item.color,
                 "--menu-bg": item.bg,
-                cursor: isDisabled ? "not-allowed" : "pointer"
+                cursor: isDisabled ? "default" : "pointer"
               }}
               onClick={handleCardClick}
             >

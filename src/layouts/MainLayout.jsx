@@ -11,7 +11,7 @@ import FooterSection from "@/services/homePage/FooterSection";
 
 const MainLayout = () => {
     const location = useLocation();
-    const isCustomFooterPage = location.pathname.startsWith('/data_status') || location.pathname.startsWith('/ai_open_analysis') || location.pathname === '/login';
+    const isCustomFooterPage = location.pathname.startsWith('/data_status') || location.pathname.startsWith('/ai_open_analysis') || location.pathname.startsWith('/project') || location.pathname === '/login';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', overflowX: 'hidden' }}>

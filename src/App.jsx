@@ -53,12 +53,14 @@ function App() {
           {isLoggedIn ? (
             <>
               <Route path="/project/*" element={<AiOpenAnalysisRoutes />} />
+              <Route path="/ai_open_analysis/*" element={<AiOpenAnalysisRoutes />} />
               <Route path="/data_status/*" element={<DataStatusRoutes />} />
             </>
           ) : (
             // 로그인 안 되어 있는데 내부 메뉴 접근 시 → /login 으로 이동
             <>
               <Route path="/project/*" element={<Navigate to="/login" replace />} />
+              <Route path="/ai_open_analysis/*" element={<Navigate to="/login" replace />} />
               <Route path="/data_status/*" element={<Navigate to="/login" replace />} />
             </>
           )}

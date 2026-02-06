@@ -93,8 +93,16 @@ const GridData = ({
 
         try {
             const res = await searchMutation.mutateAsync({ params: { ...params, skipSpinner } });
-            const raw = res?.resultjson ?? [];
-
+            let raw = res?.resultjson ?? [];
+            if (typeof raw === 'string') {
+                try {
+                    raw = JSON.parse(raw);
+                } catch (e) {
+                    console.error("JSON parse error for resultjson:", e);
+                    raw = [];
+                }
+            }
+            console.log(raw)
             // 복합키 + 행번호
             const keyed = raw.map((item, idx) => {
                 const next = { ...item };
@@ -112,6 +120,7 @@ const GridData = ({
 
             setData({ totalSize: keyed.length, data: keyed });
         } catch (err) {
+            console.log(err)
             modal.showAlert("알림", message.searchFail);
         } finally {
             inFlightRef.current = false;

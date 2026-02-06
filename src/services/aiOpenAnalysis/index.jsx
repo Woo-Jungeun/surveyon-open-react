@@ -11,16 +11,24 @@ import ProRegisterWrapperView from "./views/proRegister/ProRegisterWrapperView.j
 import ProPermissionWrapperView from "./views/proPermission/ProPermissionWrapperView.jsx";
 import ProKeyWrapperView from "./views/proKey/ProKeyWrapperView.jsx";
 
+import ProjectListLayout from "@/services/mainList/layout/ProjectListLayout.jsx";
+
 export default function AiOpenAnalysisRoutes() {
   return (
     <Routes>
-
-      {/* 기본 Wrapper */}
-      <Route element={<MainWrapperView />}>
+// ...
+      {/* 0. 프로젝트 목록 (Purple Theme) */}
+      <Route element={<ProjectListLayout />}>
         <Route path="" element={<MainListWrapperView />} />
-        <Route path="option_setting/*" element={<OptionSettingWrapperView />} />
         <Route path="pro_enter/*" element={<ProEnterWrapperView />} />
+      </Route>
+
+      {/* 1. AI Open Analysis 기본 Wrapper (Orange Theme) */}
+      <Route element={<MainWrapperView />}>
+        {/* MainListWrapperView moved out */}
+        <Route path="option_setting/*" element={<OptionSettingWrapperView />} />
         <Route path="pro_list/*" element={<ProListWrapperView />} />
+// ...
         <Route path="pro_register/*" element={<ProRegisterWrapperView />} />
         <Route path="pro_permission/*" element={<ProPermissionWrapperView />} />
         <Route path="pro_key/*" element={<ProKeyWrapperView />} />

@@ -1,4 +1,5 @@
 import React, { Fragment, useState, useCallback, useContext } from "react";
+import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -21,23 +22,24 @@ const ProEnterTab1 = (props) => {
     const { persistedPrefs, onPrefsChange } = props;
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
+    const location = useLocation();
+    const from = location.state?.from || 'ai_open';
 
     const { proEnterData, proEnterSaveData } = ProEnterApi();
 
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "no", title: "no", show: true, editable: false, width: "100px", allowHide: false },
-            { field: "pof", title: "프로젝트 번호", show: true, editable: false, allowHide: false },
-            { field: "projectnum", title: "웹프로젝트 번호", show: true, editable: false, allowHide: false },
-            { field: "questionnaireName", title: "프로젝트명", show: true, editable: false, width: "300px", allowHide: false },
-            { field: "researcherName", title: "연구원명", show: true, editable: false, allowHide: false },
-            { field: "questionnairePersonName", title: "제작담당명", show: true, editable: false, allowHide: false },
-            { field: "project_register_date", title: "조사등록일", show: true, editable: false, allowHide: false },
-            { field: "servername", title: "서버구분", show: true, editable: false, allowHide: false },
-            { field: "postgreyn", title: "설문온DB완료수", show: true, editable: false, allowHide: false },
-            { field: "fieldWorkYN", title: "진행상황", show: true, editable: false, allowHide: false },
-            { field: "gubunYN", title: "설문온등록여부", show: true, editable: false, allowHide: false },
-
+            { field: "no", title: "no", show: true, editable: false, width: "60px", allowHide: false },
+            { field: "pof", title: "프로젝트\n번호", show: true, editable: false, width: "120px", allowHide: false },
+            { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
+            { field: "questionnaireName", title: "프로젝트명", show: true, editable: false, allowHide: false },
+            { field: "researcherName", title: "연구원명", show: true, editable: false, width: "100px", allowHide: false },
+            { field: "questionnairePersonName", title: "제작담당명", show: true, editable: false, width: "165px", allowHide: false },
+            { field: "project_register_date", title: "조사\n등록일", show: true, editable: false, width: "185px", allowHide: false },
+            { field: "servername", title: "서버구분", show: true, editable: false, width: "100px", allowHide: false },
+            { field: "postgreyn", title: "설문온\nDB완료수", show: true, editable: false, width: "120px", allowHide: false },
+            { field: "fieldWorkYN", title: "진행상황", show: true, editable: false, width: "100px", allowHide: false },
+            { field: "gubunYN", title: "설문온\n등록여부", show: true, editable: false, width: "110px", allowHide: false },
         ]
     );
 
@@ -92,19 +94,24 @@ const ProEnterTab1 = (props) => {
                     return;
                 }
                 if (res?.success === "777") {
-                    modal.showAlert("알림", "등록이 완료되었습니다.");
-                    sessionStorage.setItem("projectnum", "");
-                    sessionStorage.setItem("projectname", "");
-                    sessionStorage.setItem("servername", "");
-                    sessionStorage.setItem("projectpof", "");
-                    navigate("/ai_open_analysis"); //프로젝트 목록 페이지로 이동
+                    modal.showAlert("알림", "등록이 완료되었습니다.", {
+                        btns: [{
+                            title: "확인", click: () => {
+                                sessionStorage.setItem("projectnum", "");
+                                sessionStorage.setItem("projectname", "");
+                                sessionStorage.setItem("servername", "");
+                                sessionStorage.setItem("projectpof", "");
+                                navigate("/project", { state: { from } }); //프로젝트 목록 페이지로 이동 (진입 경로 유지)
+                            }
+                        }],
+                    });
                 } else {
                     modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다."); //오류 팝업 표출
                 }
             } catch {
 
             }
-        }, []);
+        }, [navigate, from]);
 
         return (
             <Fragment>
@@ -155,10 +162,10 @@ const ProEnterTab1 = (props) => {
                                                 const isNotRegistered = value !== "등록"; // 등록이 아닐 때만 강조
                                                 const cellStyle = isNotRegistered
                                                     ? {
-                                                        background: "#fff5f5",
-                                                        color: "#c62828",
+                                                        background: "#f8f9fa",
+                                                        color: "#555",
                                                         fontWeight: "600",
-                                                        border: "1px solid #ffcdd2",
+                                                        border: "1px solid #eee",
                                                         padding: "6px 12px",
                                                         textAlign: "center",
                                                         borderRadius: "6px",

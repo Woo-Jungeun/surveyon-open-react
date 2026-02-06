@@ -13,6 +13,7 @@ const BoardWrite = () => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
     const userGroup = auth?.user?.userGroup || "";
+    const userId = auth?.user?.userId || "";
     const isAdmin = userGroup.includes("AI솔루션") ? 1 : 0;
 
     // API 연동
@@ -31,9 +32,9 @@ const BoardWrite = () => {
                 try {
                     let result;
                     if (type === 'notice') {
-                        result = await noticeDetail.mutateAsync({ id: id });
+                        result = await noticeDetail.mutateAsync({ id: id, user: userId });
                     } else if (type === 'patchnotes') {
-                        result = await patchNotesDetail.mutateAsync({ id: id });
+                        result = await patchNotesDetail.mutateAsync({ id: id, user: userId });
                     }
 
                     if (result) {
@@ -97,6 +98,7 @@ const BoardWrite = () => {
             isVisible: !isSecret,
             author: "관리자",
             is_admin: isAdmin,
+            user: userId,
             // hasAttachment: files.length > 0,
             // attachments: files.map(file => {
             //     if (file instanceof File) {

@@ -3,6 +3,8 @@ import { Button } from "@progress/kendo-react-buttons";
 import ProEnterTab1 from "@/services/aiOpenAnalysis/app/proEnter/ProEnterTab1";
 import ProEnterTab2 from "@/services/aiOpenAnalysis/app/proEnter/ProEnterTab2";
 import ProEnterTab3 from "@/services/aiOpenAnalysis/app/proEnter/ProEnterTab3";
+import DataHeader from "@/services/dataStatus/components/DataHeader";
+
 /**
  * 프로젝트 등록 > Body
  *
@@ -37,57 +39,52 @@ const ProEnterBody = () => {
 
   return (
     <Fragment>
-      <article className="subTitWrap">
-        <div className="subTit">
-          <h2 className="titTxt">프로젝트 등록</h2>
-        </div>
-      </article>
+      <DataHeader title="프로젝트 등록" />
 
-      <article className={`subContWrap`}>
-        <div className="subCont">
-          <div className="btnBox tabMenu">
-            <Button
-              className={tabDivision === "1" ? "btnTab on" : "btnTab"}
-              onClick={() => setTabDivision("1")}
-            >
-              조사 (Qmaster)
-              <span
-                className="info-icon"
-                data-tooltip={`조사(Qmaster)|조사에 연동된 프로젝트 등록\n(원하는 프로젝트가 없을 경우 웹제작담당자에게 문의)\n설문온 등록 여부에 따라 등록 가능 여부 확인`}
-              ></span>
-            </Button>
-            {/* todo 임시주석 */}
-            {/* <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("2")}>
+      <div className="project-list-content">
+        <div className="btnBox tabMenu">
+          <Button
+            className={tabDivision === "1" ? "btnTab on" : "btnTab"}
+            onClick={() => setTabDivision("1")}
+          >
+            조사 (Qmaster)
+            <span
+              className="info-icon"
+              data-tooltip={`조사(Qmaster)|조사에 연동된 프로젝트 등록\n(원하는 프로젝트가 없을 경우 웹제작담당자에게 문의)\n설문온 등록 여부에 따라 등록 가능 여부 확인`}
+            ></span>
+          </Button>
+          {/* todo 임시주석 */}
+          {/* <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("2")}>
               조사 (Perl)
             </Button> */}
-            <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("3")}>
-              신규 등록
-              <span
-                className="info-icon"
-                data-tooltip={`신규 등록|조사(Qmaster)에 없는 프로젝트를 새롭게 등록`}
-              ></span>
-            </Button>
-          </div>
-
-          {tabDivision === "1" ? (
-            <ProEnterTab1
-              persistedPrefs={gridPrefs["1"]}
-              onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
-            />
-          ) : tabDivision === "2" ? (
-            <ProEnterTab2
-              persistedPrefs={gridPrefs["2"]}
-              onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
-            />
-          ) : <ProEnterTab3
-          // persistedPrefs={gridPrefs["3"]}
-          // onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
-          />
-          }
+          <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => setTabDivision("3")}>
+            신규 등록
+            <span
+              className="info-icon"
+              data-tooltip={`신규 등록|조사(Qmaster)에 없는 프로젝트를 새롭게 등록`}
+            ></span>
+          </Button>
         </div>
-      </article>
+
+        {tabDivision === "1" ? (
+          <ProEnterTab1
+            persistedPrefs={gridPrefs["1"]}
+            onPrefsChange={defer((patch) => updateGridPrefs("1", patch))}
+          />
+        ) : tabDivision === "2" ? (
+          <ProEnterTab2
+            persistedPrefs={gridPrefs["2"]}
+            onPrefsChange={defer((patch) => updateGridPrefs("2", patch))}
+          />
+        ) : <ProEnterTab3
+        // persistedPrefs={gridPrefs["3"]}
+        // onPrefsChange={defer((patch) => updateGridPrefs("3", patch))}
+        />
+        }
+      </div>
     </Fragment>
   );
 };
+
 
 export default ProEnterBody;

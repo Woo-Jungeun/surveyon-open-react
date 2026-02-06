@@ -1,0 +1,382 @@
+/* Font assume: Pretendard or S-Core Dream */
+
+/* Sidebar Container */
+.project-sidebar {
+    width: 250px;
+    height: 100vh;
+    background: #fff;
+    border-right: 1px solid #d3d7d5;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    z-index: 50;
+    padding: 16px 0;
+    transition: width 0.3s ease;
+    box-shadow: 1px 0 6px rgba(0, 0, 0, 0.02);
+}
+
+.project-sidebar.collapsed {
+    width: 70px;
+}
+
+/* Collapsed States - Hiding Elements */
+.project-sidebar.collapsed .project-header-divider,
+.project-sidebar.collapsed .project-home-btn span,
+.project-sidebar.collapsed .project-title-text,
+.project-sidebar.collapsed .project-menu-group span,
+.project-sidebar.collapsed .project-menu-item span,
+.project-sidebar.collapsed .project-user-name,
+/* .project-sidebar.collapsed .project-user-dropdown-menu, */
+.project-sidebar.collapsed .project-header-row span {
+    display: none;
+}
+
+.project-sidebar.collapsed .project-sidebar-header {
+    /* Header Section collapsed adjustment */
+    /* MenuBar has no specific padding change for header container itself in collapsed, but aligns items */
+    justify-content: center;
+}
+
+.project-sidebar.collapsed .project-header-content {
+    flex-direction: column;
+    gap: 12px;
+}
+
+.project-sidebar.collapsed .project-home-btn {
+    justify-content: center;
+    padding: 6px;
+}
+
+.project-sidebar.collapsed .project-sidebar-content {
+    /* MenuBar: padding: 0 10px; display: flex; flex-direction: column; align-items: center; */
+    align-items: center;
+}
+
+.project-sidebar.collapsed .project-menu-group {
+    padding: 0;
+    justify-content: center;
+    margin-bottom: 8px;
+    height: 18px;
+}
+
+.project-sidebar.collapsed .project-menu-group::after {
+    content: "···";
+    display: block;
+    text-align: center;
+    font-size: 16px;
+    line-height: 1;
+    color: #9ca3af;
+}
+
+.project-sidebar.collapsed .project-menu-item {
+    justify-content: center;
+    padding: 10px;
+    margin-right: 0;
+    /* Reset margin */
+    width: 100%;
+    /* Fill the container padding? MenuBar sets aligned items */
+    /* MenuBar collapsed .menu-bar-nav-link: justify-content: center; padding: 10px; margin-right: 0; border-radius: 8px; */
+    border-radius: 8px;
+    margin: 0 0 2px 0;
+    /* Clear margins */
+}
+
+/* But wait, MenuBar collapsed section has padding 0 10px. */
+.project-sidebar.collapsed .project-sidebar-content {
+    padding: 0 10px;
+}
+
+
+.project-sidebar.collapsed .project-sidebar-footer {
+    padding: 20px 10px;
+}
+
+.project-sidebar.collapsed .project-user-card {
+    justify-content: center;
+    padding: 10px;
+    /* Match action button padding? MenuBar collapsed user: padding: 20px 10px on container */
+}
+
+.project-sidebar.collapsed .project-user-dropdown-menu {
+    left: 100%;
+    bottom: 0;
+    margin-left: 10px;
+    min-width: 180px;
+}
+
+.project-sidebar.collapsed .project-user-avatar {
+    margin-right: 0;
+}
+
+
+/* Header Section */
+.project-sidebar-header {
+    padding: 0 24px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+    /* For toggle button */
+}
+
+.project-header-content {
+    display: flex;
+    align-items: center;
+}
+
+.project-home-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.project-home-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+.project-header-divider {
+    width: 1px;
+    height: 14px;
+    background: #dcdcdc;
+    margin: 0 4px;
+    /* MenuBar: margin: 0 4px? No it's implied or handled. MenuBar.css .menu-bar-divider has no margin but the parent flex gap handles it? No, MenuBar.css lines 96 gap: 4px. */
+    /* ProjectMenuBar.jsx has gap: 8px. Let's stick to gap. */
+}
+
+.project-header-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    cursor: pointer;
+    user-select: none;
+    /* Styles from previous turn for Logo Text */
+}
+
+.project-title-srt {
+    font-size: 20px;
+    font-weight: 800;
+    color: #5A4BFF;
+    /* Purple */
+    line-height: 1;
+}
+
+.project-title-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    letter-spacing: -0.5px;
+    line-height: 1;
+}
+
+/* Action Buttons */
+.project-sidebar-actions {
+    padding: 0 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.project-action-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.project-action-btn:hover {
+    background: #f9f9f9;
+    border-color: #5A4BFF;
+    color: #5A4BFF;
+}
+
+
+/* Content / Menu */
+.project-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: 8px;
+    /* MenuBar line 211 */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Group Label */
+.project-menu-group {
+    padding: 0 20px 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    color: #888;
+    user-select: none;
+    margin-bottom: 8px;
+}
+
+/* Menu Item */
+.project-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 2px;
+    margin-right: 16px;
+    border-radius: 0 8px 8px 0;
+    color: #4b5563;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 4px solid transparent;
+}
+
+.project-menu-item:hover:not(.active) {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.project-menu-item.active {
+    background: #F3F1FF;
+    color: #5A4BFF;
+    font-weight: 700;
+    border-radius: 0 8px 8px 0;
+    border-left: 4px solid #5A4BFF;
+}
+
+.project-menu-icon {
+    width: 18px;
+    height: 18px;
+    color: inherit;
+    stroke-width: 2;
+}
+
+/* Footer User Card */
+.project-sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid #eee;
+    margin-top: auto;
+    position: relative;
+}
+
+.project-user-wrap {
+    position: relative;
+}
+
+.project-user-card {
+    width: 100%;
+    background: #ffffff;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.project-user-card:hover {
+    background: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-color: #5A4BFF;
+}
+
+.project-user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #555;
+    margin-right: 0;
+    /* We use gap: 12px in user-card, so explicit margin on avatar not needed if gap is used. */
+}
+
+.project-user-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    flex: 1;
+    text-align: left;
+}
+
+/* User Dropdown */
+.project-user-dropdown-menu {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    margin-bottom: 10px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    border: 1px solid #eee;
+    z-index: 1000;
+    min-width: auto;
+    width: auto;
+    animation: none;
+}
+
+.project-dd-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    background: #F3F1FF;
+    color: #5A4BFF;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.project-dd-btn:hover {
+    background: #EBE7FF;
+}
+
+.project-sidebar.collapsed .project-sidebar-actions {
+    padding: 0 10px 20px 10px;
+    align-items: center;
+}
+
+.project-sidebar.collapsed .project-action-btn span {
+    display: none;
+}
+
+.project-sidebar.collapsed .project-action-btn {
+    padding: 10px;
+    justify-content: center;
+}

@@ -15,7 +15,7 @@ export function MainListApi() {
 
     // 데이터 조회 API
     const mainListData = useMutation(
-        async (data) => await api.post(data.params, "/main_list_api.aspx", "EX_API_BASE_URL"),
+        async (data) => await api.post(data.params, "/project", "API_BASE_URL_OPENAI"),
         {
             onMutate: (vars) => {
                 loadingSpinner.show();

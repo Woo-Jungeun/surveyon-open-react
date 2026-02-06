@@ -15,19 +15,18 @@ const ProEnterTab2 = (props) => {
     const auth = useSelector((store) => store.auth);
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { persistedPrefs, onPrefsChange } = props;
-    const DATA_ITEM_KEY =  "no";
-    const SELECTED_FIELD = "selected"; 
+    const DATA_ITEM_KEY = "no";
+    const SELECTED_FIELD = "selected";
 
     const [columns, setColumns] = useState(() =>
         persistedPrefs?.columns ?? [
-            { field: "no", title: "no", show: true, editable: false, width: "100px", allowHide: false },
-            { field: "projectnum", title: "웹프로젝트 번호", show: true, editable: false, allowHide: false },
-            { field: "questionnaireName", title: "프로젝트명", show: true, editable: false, width: "300px", allowHide: false },
-            { field: "questionnairePersonName", title: "제작담당명", show: true, editable: false, allowHide: false },
-            { field: "project_register_date", title: "조사등록일", show: true, editable: false, allowHide: false },
-            { field: "servername", title: "서버구분", show: true, editable: false, allowHide: false },
-            { field: "gubunYN", title: "설문온등록여부", show: true, editable: false, allowHide: false },
-        
+            { field: "no", title: "no", show: true, editable: false, width: "60px", allowHide: false },
+            { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
+            { field: "questionnaireName", title: "프로젝트명", show: true, editable: false, allowHide: false },
+            { field: "questionnairePersonName", title: "제작담당명", show: true, editable: false, width: "120px", allowHide: false },
+            { field: "project_register_date", title: "조사\n등록일", show: true, editable: false, width: "150px", allowHide: false },
+            { field: "servername", title: "서버구분", show: true, editable: false, width: "100px", allowHide: false },
+            { field: "gubunYN", title: "설문온\n등록여부", show: true, editable: false, width: "110px", allowHide: false },
         ]);
 
 

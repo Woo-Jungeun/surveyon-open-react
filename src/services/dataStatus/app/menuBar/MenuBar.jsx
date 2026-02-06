@@ -1,7 +1,7 @@
 import {
   Home, Upload, RefreshCw, X, Info, Database, Wrench, Target,
-  BarChart2, Grid, ClipboardList, Sparkles, FileText, Moon, User, Clock,
-  ChevronDown, ChevronRight, ChevronLeft, Table
+  BarChart3, Grid, ClipboardList, Sparkles, FileText, Moon, User, Clock,
+  ChevronDown, ChevronRight, ChevronLeft, Table, Menu, BrainCircuit, Users, List
 } from "lucide-react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { Fragment, useContext, useEffect, useRef, useMemo, useState } from "react";
@@ -30,7 +30,7 @@ const MENU_ITEMS = [
     label: "집계 현황",
     path: "/data_status/aggregation",
     children: [
-      { label: "문항 집계 현황", path: "/data_status/aggregation/status", icon: BarChart2 },
+      { label: "문항 집계 현황", path: "/data_status/aggregation/status", icon: BarChart3 },
       { label: "교차 테이블", path: "/data_status/aggregation/cross", icon: Grid },
       { label: "DP 테이블", path: "/data_status/aggregation/dp_table", icon: Table, isPending: true },
       { label: "쿼터현황/관리", path: "/data_status/aggregation/quota", icon: ClipboardList },
@@ -109,7 +109,9 @@ const MenuBar = ({ projectName: propProjectName, lastUpdated: propLastUpdated })
 
   // 드롭다운 상태
   const [userOpen, setUserOpen] = useState(false);
+  const [moduleMenuOpen, setModuleMenuOpen] = useState(false);
   const userRef = useRef(null);
+  const moduleRef = useRef(null);
 
   // 메뉴 섹션 토글 상태
   const [openSections, setOpenSections] = useState({
@@ -134,6 +136,7 @@ const MenuBar = ({ projectName: propProjectName, lastUpdated: propLastUpdated })
   useEffect(() => {
     const onClickOutside = (e) => {
       if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false);
+      if (moduleRef.current && !moduleRef.current.contains(e.target)) setModuleMenuOpen(false);
     };
     window.addEventListener("click", onClickOutside);
     return () => window.removeEventListener("click", onClickOutside);
@@ -178,6 +181,7 @@ const MenuBar = ({ projectName: propProjectName, lastUpdated: propLastUpdated })
           <button
             type="button"
             className="menu-bar-home-btn"
+            title="홈으로"
             onClick={() => {
               sessionStorage.setItem("projectnum", "");
               sessionStorage.setItem("projectname", "");
@@ -187,8 +191,42 @@ const MenuBar = ({ projectName: propProjectName, lastUpdated: propLastUpdated })
             }}
           >
             <Home size={18} />
-            <span>홈</span>
           </button>
+          <div className="menu-bar-divider"></div>
+          <div ref={moduleRef}>
+            <button
+              type="button"
+              className={`menu-bar-module-btn ${moduleMenuOpen ? 'active' : ''}`}
+              onClick={() => setModuleMenuOpen(!moduleMenuOpen)}
+            >
+              <Menu size={18} />
+            </button>
+            {moduleMenuOpen && (
+              <div className="menu-bar-module-dropdown">
+                {[
+                  { label: "프로젝트 목록", icon: <List size={16} />, path: "/project", state: { from: 'data_status' }, highlight: true },
+                  { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
+                  { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status" },
+                  { label: "데이터관리", icon: <Database size={16} />, path: "/data_status", isDisabled: true },
+                  { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/project" },
+                  { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
+                ].map((m, i) => (
+                  <button
+                    key={i}
+                    className={`module-dd-item ${m.highlight ? 'highlight' : ''} ${m.isDisabled ? 'disabled' : ''}`}
+                    onClick={() => {
+                      if (m.isDisabled) return;
+                      navigate(m.path, { state: m.state });
+                      setModuleMenuOpen(false);
+                    }}
+                  >
+                    {m.icon}
+                    <span>{m.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <div className="menu-bar-divider"></div>
           <h1
             className="menu-bar-logo"
@@ -228,7 +266,11 @@ const MenuBar = ({ projectName: propProjectName, lastUpdated: propLastUpdated })
 
 
       {/* Project Name Display */}
-      <div className="menu-bar-project">
+      <div
+        className="menu-bar-project clickable"
+        onClick={() => navigate("/project", { state: { from: 'data_status' } })}
+        style={{ cursor: 'pointer' }}
+      >
         <div className="menu-bar-project-name">
           {pageInfo.title}
         </div>
