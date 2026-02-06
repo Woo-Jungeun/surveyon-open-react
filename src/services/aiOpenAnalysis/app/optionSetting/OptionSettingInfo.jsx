@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, project_lock }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, project_lock, onAnalysisComplete }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -145,6 +145,9 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 onNavigateTab?.(nextTabRef.current);
                                 nextTabRef.current = null;
                             }
+
+                            // 분석 완료 후 저장 API 트리거
+                            onAnalysisComplete?.();
                         },
                     },
                 ],

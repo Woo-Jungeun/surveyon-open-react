@@ -647,6 +647,10 @@ const OptionSettingBody = () => {
             responseCount={responseCount}
             fetchLv3Options={fetchLv3Options}
             onQidLoaded={setQid}
+            onAnalysisComplete={() => {
+              // 분석이 다 완료되고서 분석이 완료되었습니다 팝업 확인 누르면 Tab1의 저장 API 실행
+              tab1Ref.current?.saveChanges?.();
+            }}
           />
         </div>
 
