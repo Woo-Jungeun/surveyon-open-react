@@ -102,7 +102,7 @@ const GridData = ({
                     raw = [];
                 }
             }
-            console.log(raw)
+
             // 복합키 + 행번호
             const keyed = raw.map((item, idx) => {
                 const next = { ...item };

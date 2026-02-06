@@ -94,7 +94,7 @@ const ProEnterTab1 = (props) => {
                     return;
                 }
                 if (res?.success === "777") {
-                    modal.showAlert("알림", "등록이 완료되었습니다.", {
+                    modal.showConfirm("알림", "등록이 완료되었습니다.", {
                         btns: [{
                             title: "확인", click: () => {
                                 sessionStorage.setItem("projectnum", "");

@@ -330,7 +330,11 @@ const MenuBar = () => {
                   { label: "데이터관리", icon: <Database size={16} />, path: "/data_status", isDisabled: true },
                   { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/project" },
                   { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
-                ].map((m, i) => (
+                ].filter(m => {
+                  // 현재 모듈(AI오픈분석)은 제외
+                  if (m.label === "AI오픈분석") return false;
+                  return true;
+                }).map((m, i) => (
                   <button
                     key={i}
                     className={`nav-module-item ${m.highlight ? 'highlight' : ''} ${m.isDisabled ? 'disabled' : ''}`}

@@ -204,19 +204,45 @@ const MenuBar = ({ projectName: propProjectName, lastUpdated: propLastUpdated })
             {moduleMenuOpen && (
               <div className="menu-bar-module-dropdown">
                 {[
-                  { label: "프로젝트 목록", icon: <List size={16} />, path: "/project", state: { from: 'data_status' }, highlight: true },
+                  { label: "프로젝트 목록", icon: <List size={16} />, path: "/project", state: { from: 'data_status' }, highlight: true, clearProject: true },
                   { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-                  { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status" },
+                  { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/setting/variable", module: 'data_status' },
                   { label: "데이터관리", icon: <Database size={16} />, path: "/data_status", isDisabled: true },
-                  { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/project" },
+                  { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/project/pro_list", module: 'ai_open' },
                   { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
-                ].map((m, i) => (
+                ].filter(m => {
+                  // 현재 모듈(데이터현황)은 제외
+                  if (m.label === "데이터현황") return false;
+                  return true;
+                }).map((m, i) => (
                   <button
                     key={i}
                     className={`module-dd-item ${m.highlight ? 'highlight' : ''} ${m.isDisabled ? 'disabled' : ''}`}
                     onClick={() => {
                       if (m.isDisabled) return;
-                      navigate(m.path, { state: m.state });
+
+                      const projectnum = sessionStorage.getItem("projectnum");
+
+                      if (m.clearProject) {
+                        sessionStorage.setItem("projectnum", "");
+                        sessionStorage.setItem("projectname", "");
+                        sessionStorage.setItem("servername", "");
+                        sessionStorage.setItem("projectpof", "");
+                        navigate(m.path, { state: m.state });
+                      } else if (projectnum) {
+                        // 프로젝트가 선택되어 있는 경우 해당 모듈로 바로 이동
+                        if (m.module === 'data_status') {
+                          navigate('/data_status/setting/variable');
+                        } else if (m.module === 'ai_open') {
+                          navigate('/project/pro_list');
+                        } else {
+                          navigate(m.path, { state: m.state });
+                        }
+                      } else {
+                        // 프로젝트가 없으면 프로젝트 목록으로
+                        navigate("/project", { state: { from: m.module || 'ai_open' } });
+                      }
+
                       setModuleMenuOpen(false);
                     }}
                   >

@@ -73,13 +73,25 @@ const ProjectMenuBar = () => {
                     <button
                         type="button"
                         className="project-home-btn"
-                        onClick={() => navigate("/")}
+                        onClick={() => {
+                            sessionStorage.setItem("projectnum", "");
+                            sessionStorage.setItem("projectname", "");
+                            sessionStorage.setItem("servername", "");
+                            sessionStorage.setItem("projectpof", "");
+                            navigate("/");
+                        }}
                     >
                         <Home size={18} strokeWidth={2} />
                         <span>홈</span>
                     </button>
                     <div className="project-header-divider"></div>
-                    <div className="project-header-title" onClick={() => navigate("/project", { state: { from } })}>
+                    <div className="project-header-title" onClick={() => {
+                        sessionStorage.setItem("projectnum", "");
+                        sessionStorage.setItem("projectname", "");
+                        sessionStorage.setItem("servername", "");
+                        sessionStorage.setItem("projectpof", "");
+                        navigate("/project", { state: { from } });
+                    }}>
                         <span className="project-title-srt">설문온</span>
                     </div>
                 </div>
@@ -117,7 +129,13 @@ const ProjectMenuBar = () => {
 
                 <div
                     className={`project-menu-item ${isActive("/project") && location.pathname === "/project" ? "active" : ""}`}
-                    onClick={() => navigate("/project", { state: { from } })}
+                    onClick={() => {
+                        sessionStorage.setItem("projectnum", "");
+                        sessionStorage.setItem("projectname", "");
+                        sessionStorage.setItem("servername", "");
+                        sessionStorage.setItem("projectpof", "");
+                        navigate("/project", { state: { from } });
+                    }}
                 >
                     <List className="project-menu-icon" strokeWidth={2} />
                     <span>프로젝트 목록</span>
