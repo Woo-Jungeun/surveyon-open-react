@@ -186,7 +186,7 @@ body {
 	-ms-text-size-adjust: 100%;
 	line-height: 1;
 	font-weight: 500;
-	min-width: 1680px;
+	min-width: auto;
 	/* min-height: 1080px; */
 	/* overflow:scroll; */
 }

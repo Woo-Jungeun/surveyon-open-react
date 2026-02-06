@@ -299,7 +299,7 @@ header {
     padding: 0 25px 0 20px;
     background: var(--header-bg-gradient);
     width: 100%;
-    max-width: 100vw;
+    max-width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
