@@ -207,10 +207,13 @@ const InfoSection = () => {
             <div
               className="hp-feature-item"
               onClick={() => {
+                const projectnum = sessionStorage.getItem("projectnum");
                 if (!isLoggedIn) {
                   navigate("/login", { state: { from: "/project" } });
+                } else if (projectnum) {
+                  navigate("/data_status/setting/variable");
                 } else {
-                  navigate("/project");
+                  navigate("/project", { state: { from: 'data_status' } });
                 }
               }}
               style={{ cursor: "pointer" }}
@@ -227,10 +230,13 @@ const InfoSection = () => {
             <div
               className="hp-feature-item"
               onClick={() => {
+                const projectnum = sessionStorage.getItem("projectnum");
                 if (!isLoggedIn) {
                   navigate("/login", { state: { from: "/project" } });
+                } else if (projectnum) {
+                  navigate("/project/pro_list");
                 } else {
-                  navigate("/project");
+                  navigate("/project", { state: { from: 'ai_open' } });
                 }
               }}
               style={{ cursor: "pointer" }}
