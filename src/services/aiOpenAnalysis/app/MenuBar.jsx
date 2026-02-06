@@ -483,6 +483,25 @@ const MenuBar = () => {
                     <span className="dd-icon"><ManualIcon /></span>
                     <span>매뉴얼</span>
                   </button>
+
+                  {/* 토큰 사용 내역 (AI솔루션 팀 전용) */}
+                  {/* {userGroup.includes("AI솔루션") && (
+                    <button
+                      type="button"
+                      className="dd-item"
+                      onClick={() => {
+                        setAppsOpen(false);
+                        navigate('/ai_open_analysis/token_usage');
+                      }}
+                    >
+                      <span className="dd-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                        </svg>
+                      </span>
+                      <span>토큰 사용 내역</span>
+                    </button>
+                  )} */}
                 </div>
               )}
             </div>

@@ -10,6 +10,7 @@ import ProListWrapperView from "./views/proList/ProListWrapperView.jsx";
 import ProRegisterWrapperView from "./views/proRegister/ProRegisterWrapperView.jsx";
 import ProPermissionWrapperView from "./views/proPermission/ProPermissionWrapperView.jsx";
 import ProKeyWrapperView from "./views/proKey/ProKeyWrapperView.jsx";
+import TokenUsageWrapperView from "./views/tokenUsage/TokenUsageWrapperView.jsx";
 
 import ProjectListLayout from "@/services/mainList/layout/ProjectListLayout.jsx";
 
@@ -32,6 +33,7 @@ export default function AiOpenAnalysisRoutes() {
         <Route path="pro_register/*" element={<ProRegisterWrapperView />} />
         <Route path="pro_permission/*" element={<ProPermissionWrapperView />} />
         <Route path="pro_key/*" element={<ProKeyWrapperView />} />
+        <Route path="token_usage/*" element={<TokenUsageWrapperView />} />
       </Route>
 
       {/* 팝업 Wrapper */}
