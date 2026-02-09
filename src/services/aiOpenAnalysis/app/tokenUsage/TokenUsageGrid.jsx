@@ -20,17 +20,17 @@ const TokenUsageGrid = ({ data }) => {
 
     // 컬럼 정의
     const [columns, setColumns] = useState([
-        { field: "no", title: "순번", show: true, width: "50px", allowHide: false },
-        { field: "projectpof", title: "프로젝트POF", show: true, width: "135px" },
-        { field: "projectnum", title: "프로젝트번호", show: true, width: "120px" },
-        { field: "projectname", title: "프로젝트명", show: true }, // 가변 너비 부여
-        { field: "register_userid", title: "등록자 ID", show: true, width: "100px" },
-        { field: "project_use_name", title: "사용자", show: true, width: "90px" },
-        { field: "usergroup", title: "사용자그룹", show: true, width: "140px" },
-        { field: "register_date", title: "등록일시", show: true, width: "155px" },
-        { field: "project_update_date", title: "최근업데이트", show: true, width: "155px" },
-        { field: "project_status", title: "진행상태", show: true, width: "85px" },
-        { field: "tokens_cost_sum", title: "토큰 비용($)", show: true, width: "110px" }
+        { field: "no", title: "순번", show: true, width: "60px", allowHide: false },
+        { field: "projectpof", title: "프로젝트POF", show: true, width: "150px" },
+        { field: "projectnum", title: "프로젝트번호", show: true, width: "150px" },
+        { field: "projectname", title: "프로젝트명", show: true }, // 가변 너비
+        { field: "register_userid", title: "등록자 ID", show: true, width: "115px" },
+        { field: "project_use_name", title: "사용자", show: true, width: "100px" },
+        { field: "usergroup", title: "사용자그룹", show: true, width: "160px" },
+        { field: "register_date", title: "등록일시", show: true, width: "165px" },
+        { field: "project_update_date", title: "최근업데이트", show: true, width: "165px" },
+        { field: "project_status", title: "진행상태", show: true, width: "110px" },
+        { field: "tokens_cost_sum", title: "토큰 비용($)", show: true, width: "135px" }
     ]);
 
     // 데이터에 No 추가
