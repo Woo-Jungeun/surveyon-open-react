@@ -829,7 +829,7 @@ const ProListGridRenderer = (props) => {
             <article className="subTitWrap pro-list-header">
                 <div className="subTit">
                     <h2 className="titTxt">문항 목록
-                        {(sessionStorage.getItem("projectname")) && (<span className="projectName"> {sessionStorage.getItem("projectname")}</span>)}
+                        {/* {(sessionStorage.getItem("projectname")) && (<span className="projectName"> {sessionStorage.getItem("projectname")}</span>)} */}
                         <span
                             className="info-icon"
                             data-tooltip={`문항 목록|조사(Qmaster): 등록 시 오픈응답문항 중 텍스트로 입력된 데이터 자동 등록\n신규(수동): "문항등록"을 통해 엑셀로 문항을 선택하여 등록`}

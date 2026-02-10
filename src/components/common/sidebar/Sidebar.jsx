@@ -19,6 +19,7 @@ import "./Sidebar.css";
  * @param {string} theme - "purple" (기본) | "blue" (데이터현황용)
  * @param {Array} moduleItems - 모듈 스위처 메뉴 아이템
  * @param {ReactNode} extraActions - 헤더와 메뉴 사이 추가 컨텐츠
+ * @param {ReactNode} bottomActions - 푸터 상단에 추가할 컨텐츠
  */
 const Sidebar = ({
     brand,
@@ -26,7 +27,8 @@ const Sidebar = ({
     projectInfo,
     theme = "purple",
     moduleItems = [],
-    extraActions
+    extraActions,
+    bottomActions
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -222,12 +224,39 @@ const Sidebar = ({
                             <ul className="group-list">
                                 {group.items.map((item, i) => {
                                     const Icon = item.icon;
+
+                                    if (!item.path) {
+                                        return (
+                                            <li key={i} className="nav-item">
+                                                <div
+                                                    className={`nav-link ${item.isPending ? "pending" : ""}`}
+                                                    onClick={(e) => {
+                                                        if (item.isPending) {
+                                                            e.preventDefault();
+                                                            modal.showAlert("알림", "서비스 준비 중입니다.");
+                                                            return;
+                                                        }
+                                                        if (item.onClick) {
+                                                            item.onClick(e);
+                                                        }
+                                                    }}
+                                                >
+                                                    {Icon && <Icon className="nav-icon" size={18} strokeWidth={2} />}
+                                                    <span>{item.label}</span>
+                                                </div>
+                                            </li>
+                                        );
+                                    }
+
                                     return (
                                         <li key={i} className="nav-item">
                                             <NavLink
                                                 to={item.path}
                                                 end={item.end}
-                                                className={({ isActive }) => `nav-link ${isActive ? "active" : ""} ${item.isPending ? "pending" : ""}`}
+                                                className={({ isActive }) => {
+                                                    const finalActive = item.isActive ? item.isActive(location.pathname) : isActive;
+                                                    return `nav-link ${finalActive ? "active" : ""} ${item.isPending ? "pending" : ""}`;
+                                                }}
                                                 onClick={(e) => {
                                                     if (item.isPending) {
                                                         e.preventDefault();
@@ -248,6 +277,11 @@ const Sidebar = ({
                         )}
                     </div>
                 ))}
+                {bottomActions && (
+                    <div className="sidebar-bottom-scroll-actions" style={{ marginTop: '16px' }}>
+                        {bottomActions}
+                    </div>
+                )}
             </nav>
 
             {/* Footer / User Area */}

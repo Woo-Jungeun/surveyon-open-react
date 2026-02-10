@@ -1,7 +1,7 @@
 /* src/components/common/sidebar/Sidebar.css */
 
 .common-sidebar {
-    width: 250px;
+    width: 280px;
     height: 100vh;
     background: #fff;
     border-right: 1px solid #d3d7d5;
@@ -189,7 +189,7 @@
     font-weight: 700;
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 3px;
 }
 
 .logo-accent {
@@ -633,6 +633,88 @@
     background: #EBE7FF;
 }
 
+
 .blue .logout-btn:hover {
     background: #dbeafe;
+}
+
+/* Orange Theme */
+.orange .home-btn:hover {
+    color: #f97316;
+    background: #fff7ed;
+}
+
+.orange .logo-accent {
+    color: #f97316;
+}
+
+.orange .module-toggle-btn:hover,
+.orange .module-toggle-btn.active {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+.orange .project-info-card {
+    background: #fffafa;
+    border: 1px solid #ffd8a8;
+}
+
+.orange .project-title {
+    color: #9a3412;
+}
+
+.orange .project-id-badge {
+    color: #ea580c;
+    background: #ffedd5;
+}
+
+.orange .project-settings-btn:hover {
+    color: #f97316;
+}
+
+.orange .sidebar-nav {
+    background: #fffaf5;
+    border-top: 1px solid #ffedd5;
+    padding-top: 16px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.orange .nav-group {
+    padding: 0 16px;
+}
+
+.orange .group-header {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.orange .nav-link.active {
+    background: #fff7ed;
+    color: #ea580c;
+    font-weight: 700;
+    border-left-color: #f97316;
+    border-radius: 0 8px 8px 0;
+    box-shadow: none;
+}
+
+.orange .nav-link.main-nav-link.active {
+    background: #ffedd5;
+    color: #9a3412;
+    font-weight: 700;
+    border-left-color: #ea580c;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 2px 2px 8px rgba(234, 88, 12, 0.15);
+}
+
+.orange .user-card:hover {
+    border-color: #f97316;
+}
+
+.orange .logout-btn {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+.orange .logout-btn:hover {
+    background: #ffedd5;
 }
