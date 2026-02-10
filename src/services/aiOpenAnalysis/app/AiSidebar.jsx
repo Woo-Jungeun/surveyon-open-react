@@ -103,7 +103,7 @@ const AiSidebar = ({ onOpenProjectModal }) => {
 
     // Extra Actions Component (Balance Display)
     const BalanceCard = () => (
-        <div style={{ padding: '0 16px 16px 16px' }}>
+        <div className="ai-balance-card-container" style={{ padding: '0 16px 16px 16px' }}>
             {isAiSolutionTeam && (
                 <div className="ai-charge-manage" style={{ marginBottom: '12px' }}>
                     <div className="ai-charge-input-wrapper">

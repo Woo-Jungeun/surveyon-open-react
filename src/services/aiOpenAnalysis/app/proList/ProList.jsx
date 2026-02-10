@@ -4,7 +4,7 @@ import { login } from "@/common/redux/action/AuthAction";
 import { useNavigate, useLocation } from "react-router-dom";
 import GridData from "@/components/common/grid/GridData.jsx";
 import { ProListApi } from "@/services/aiOpenAnalysis/app/proList/ProListApi.js";
-import "@/services/aiOpenAnalysis/app/optionSetting/OptionSetting.css";
+import "@/services/aiOpenAnalysis/app/AiCommonLayout.css";
 import { modalContext } from "@/components/common/Modal.jsx";
 import ProListGridRenderer from "./ProListGridRenderer";
 import { PERM, roleToPerm, hasPerm, GROUP_MIN_PERM, FIELD_MIN_PERM, natKey, NAT_FIELDS, addSortProxies } from "./ProListUtils";

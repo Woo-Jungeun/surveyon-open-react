@@ -1,4 +1,4 @@
-import React, { useRef, useMemo, useCallback, useEffect } from "react";
+﻿import React, { useRef, useMemo, useCallback, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -6,8 +6,10 @@ import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridHeaderBtnTxt from "@/components/style/button/GridHeaderBtnTxt.jsx";
+import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader.jsx";
 import { PERM, hasPerm, addSortProxies, GROUP_MIN_PERM, FIELD_MIN_PERM } from "./ProListUtils";
 import GridDataCount from "@/components/common/grid/GridDataCount";
+import "./ProList.css";
 import { process } from "@progress/kendo-data-query";
 
 const ProListGridRenderer = (props) => {
@@ -444,8 +446,8 @@ const ProListGridRenderer = (props) => {
     );
 
     // 컬럼에서 wrap이면 멀티라인 셀 사용 => 문항 최종 
-    const WrapCell = (field) => (cellProps) => (
-        <td className="cell-wrap">{cellProps.dataItem?.[field]}</td>
+    const WrapCell = (field, style) => (cellProps) => (
+        <td className="cell-wrap" style={style}>{cellProps.dataItem?.[field]}</td>
     );
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
@@ -656,7 +658,7 @@ const ProListGridRenderer = (props) => {
                     columnMenu={undefined}         // 컬럼 메뉴 끔
                     headerCell={() => <></>}       // 헤더 콘텐츠 자체 미렌더
                     headerClassName="no-leaf-header"
-                    cell={c.wrap ? WrapCell(c.field) : undefined}   // wrap이면 멀티라인 셀 사용
+                    cell={c.wrap ? WrapCell(c.field, c.field === 'question_fin' ? { padding: '0 10px' } : undefined) : undefined}   // wrap이면 멀티라인 셀 사용
                 />
             );
         }
@@ -715,7 +717,7 @@ const ProListGridRenderer = (props) => {
                     filterable={false}
                     columnMenu={undefined}
                     headerCell={() => <></>}
-                    cell={c.wrap ? WrapCell(c.field) : undefined}
+                    cell={c.wrap ? WrapCell(c.field, c.field === 'question_fin' ? { padding: '0 10px' } : undefined) : undefined}
                 />
             );
         }
@@ -825,56 +827,38 @@ const ProListGridRenderer = (props) => {
         .filter(g => g.inGroup.length > 0);
 
     return (
-        <>
-            <article className="subTitWrap pro-list-header">
-                <div className="subTit">
-                    <h2 className="titTxt">문항 목록
-                        {/* {(sessionStorage.getItem("projectname")) && (<span className="projectName"> {sessionStorage.getItem("projectname")}</span>)} */}
-                        <span
-                            className="info-icon"
-                            data-tooltip={`문항 목록|조사(Qmaster): 등록 시 오픈응답문항 중 텍스트로 입력된 데이터 자동 등록\n신규(수동): "문항등록"을 통해 엑셀로 문항을 선택하여 등록`}
-                        ></span>
-                    </h2>
+        <div className="pro-list-page">
+            <AiDataHeader title="문항 목록">
+                {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
+                    <GridHeaderBtnTxt onClick={handleExportExcelDev}>보기 추출 (개발자용)</GridHeaderBtnTxt>
+                )}
+                {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
+                    <GridHeaderBtnTxt onClick={handleExportExcelDP}>보기 추출 (DP용)</GridHeaderBtnTxt>
+                )}
+                {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
+                    <GridHeaderBtnPrimary onClick={() => navigate('/ai_open_analysis/pro_register')}>
+                        문항 등록
+                    </GridHeaderBtnPrimary>
+                )}
+            </AiDataHeader>
 
-                    <div className="btnWrap">
-                        {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                            <GridHeaderBtnTxt onClick={handleExportExcelDev}>보기 추출 (개발자용)
-                            </GridHeaderBtnTxt>
-                        )}
-                        {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                            <GridHeaderBtnTxt onClick={handleExportExcelDP}>보기 추출 (DP용)
-                            </GridHeaderBtnTxt>
-                        )}
+            <div className="pro-list-content">
+                <GridDataCount total={filteredCount} />
 
-                        {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
-                            <GridHeaderBtnPrimary onClick={() => navigate('/ai_open_analysis/pro_register')}>문항 등록
-                                <span
-                                    className="info-icon"
-                                    data-tooltip={`문항 등록|엑셀로 새로운 문항 추가`}
-                                ></span>
-                            </GridHeaderBtnPrimary>
-                        )}
-                    </div>
-                </div>
-            </article>
-
-            <article className="subContWrap">
-                <div className="subCont">
-                    <GridDataCount total={filteredCount} />
+                <div className="pro-list-card">
                     <div className="cmn_gird_wrap">
                         <div id="grid_01" className="cmn_grid multihead">
                             <KendoGrid
-                                // key={gridKey}
                                 parentProps={{
-                                    height: "calc(100vh - 170px)",
+                                    height: "100%",
                                     data: dataWithProxies,
-                                    dataItemKey: dataItemKey,    // 합성 키 또는 단일 키 
+                                    dataItemKey: dataItemKey,
                                     selectedState,
                                     setSelectedState,
-                                    selectedField,               //  선택 필드 전달
-                                    idGetter,                     // GridData가 만든 getter 그대로
-                                    sortable: { mode: "multiple", allowUnsort: true }, // 다중 정렬
-                                    filterable: true,              // 필터 허용
+                                    selectedField,
+                                    idGetter,
+                                    sortable: { mode: "multiple", allowUnsort: true },
+                                    filterable: true,
                                     sortChange: ({ sort: next }) => {
                                         const nextRaw = (next || []).map(d => {
                                             const orig = Object.keys(proxyField).find(k => proxyField[k] === d.field);
@@ -885,29 +869,24 @@ const ProListGridRenderer = (props) => {
                                     filterChange: ({ filter }) => { setFilter(filter ?? null); },
                                     sort: mappedSort,
                                     filter: filter,
-                                    // onRowClick,
-                                    columnVirtualization: false,    // 멀티 헤더에서 가상화는 끄는 걸 권장
+                                    columnVirtualization: false,
                                 }}
                             >
-                                {/* 단일 컬럼들: (no, 모델, 문번호) → 헤더가 2행을 세로로 차지 */}
                                 {roots.map(renderLeafColumn)}
 
-                                {/* 그룹 헤더 */}
                                 {groups.map(g => {
-                                    // 같은 그룹 안에서 subgroup 단위로 묶기
                                     const inGroup = visible.filter(c => c.group === g.name);
-                                    const bySub = new Map(); // subgroupName -> { cols, order }
+                                    const bySub = new Map();
 
                                     inGroup.forEach((c, idx) => {
                                         const key = c.subgroup || "__root__";
                                         const entry = bySub.get(key) || { cols: [], order: Number.POSITIVE_INFINITY, _idx: idx };
                                         entry.cols.push(c);
                                         const ord = Number.isFinite(c.order) ? c.order : 1e6;
-                                        entry.order = Math.min(entry.order, ord);   // 서브그룹의 정렬 기준 = 자식들의 최소 order
+                                        entry.order = Math.min(entry.order, ord);
                                         bySub.set(key, entry);
                                     });
 
-                                    // root 컬럼은 개별 아이템으로, 서브그룹은 묶음 아이템으로 합치기
                                     const items = [];
 
                                     const root = bySub.get("__root__");
@@ -919,14 +898,12 @@ const ProListGridRenderer = (props) => {
                                     }
 
                                     for (const [sub, entry] of bySub.entries()) {
-                                        // 서브그룹 내부 컬럼 순서도 원하면 c.leafOrder 등으로 정렬 가능
                                         const colsSorted = entry.cols.slice().sort((a, b) =>
                                             (a.leafOrder ?? 0) - (b.leafOrder ?? 0)
                                         );
                                         items.push({ type: "sub", order: entry.order, _idx: entry._idx, sub, cols: colsSorted });
                                     }
 
-                                    // order → 원래 인덱스 순으로 안정 정렬
                                     items.sort((a, b) => (a.order - b.order) || (a._idx - b._idx));
                                     return (
                                         <Column
@@ -956,7 +933,6 @@ const ProListGridRenderer = (props) => {
                                                     : (
                                                         <Column
                                                             key={`sub:${g.name}:${it.sub}`}
-                                                            // 문항최종은 기존처럼 텍스트 유지 + 아래줄 제거
                                                             title={it.sub === "문항최종" ? "문항최종" : ""}
                                                             headerClassName={[
                                                                 (it.sub === "문항최종" || it.sub === "문항통합저장")
@@ -995,15 +971,15 @@ const ProListGridRenderer = (props) => {
                         </div>
                     </div>
                 </div>
-            </article>
-            {/* 필터문항설정 팝업 */}
-            {popupShow &&
+            </div>
+
+            {popupShow && (
                 <ProListPopup
                     popupShow={popupShow}
                     setPopupShow={setPopupShow}
                 />
-            }
-        </>
+            )}
+        </div>
     );
 };
 

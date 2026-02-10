@@ -715,6 +715,8 @@
     color: #f97316;
 }
 
-.orange .logout-btn:hover {
-    background: #ffedd5;
+
+/* Hide AI balance card when sidebar is collapsed */
+.common-sidebar.collapsed .ai-balance-card-container {
+    display: none !important;
 }

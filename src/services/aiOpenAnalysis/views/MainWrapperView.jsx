@@ -3,6 +3,7 @@ import { useLocation, Outlet, useNavigate } from "react-router-dom";
 import AiSidebar from "@/services/aiOpenAnalysis/app/AiSidebar.jsx";
 import { useSelector } from "react-redux";
 import ProjectSelectionModal from "@/services/dataStatus/app/menuBar/ProjectSelectionModal.jsx";
+import FooterSection from "@/services/homePage/FooterSection";
 
 const MainWrapperView = (props) => {
     const auth = useSelector((store) => store.auth);
@@ -19,7 +20,7 @@ const MainWrapperView = (props) => {
     }, [location.pathname, navigate]);
 
     return (
-        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
+        <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f5f7fa' }}>
             {isProjectModalOpen && (
                 <ProjectSelectionModal
                     onSelect={(project) => {
@@ -50,41 +51,12 @@ const MainWrapperView = (props) => {
                 />
             )}
             <AiSidebar key={projectUpdated} onOpenProjectModal={() => setProjectModalOpen(true)} />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', backgroundColor: '#fff' }}>
-                <section style={{ flex: 1, padding: '0' }}>
+            <section style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <Outlet key={projectUpdated} />
-                </section>
-                <footer style={{
-                    width: '100%',
-                    background: '#ffffff',
-                    borderTop: '1px solid rgba(0, 0, 0, 0.08)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: '20px',
-                    marginTop: 'auto'
-                }}>
-                    <div style={{
-                        maxWidth: '1280px',
-                        width: '100%',
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        color: '#777'
-                    }}>
-                        <p style={{ margin: 0 }}>© 2026 설문온 SurveyOn. All rights reserved.</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                            <span style={{
-                                width: '9px',
-                                height: '9px',
-                                background: '#22c55e',
-                                borderRadius: '50%'
-                            }}></span>
-                            시스템 정상 운영중
-                        </div>
-                    </div>
-                </footer>
-            </div>
+                </div>
+                <FooterSection style={{ height: '40px', padding: '0 20px' }} />
+            </section>
         </div>
     );
 };

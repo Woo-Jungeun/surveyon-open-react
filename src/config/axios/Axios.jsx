@@ -107,7 +107,7 @@ apiAxios.interceptors.response.use(function (response) {
     }
     if (data.errorCode === "404") {
         // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
-        window.location.href = '/pageNotFound/PageNotFound'
+        //  window.location.href = '/pageNotFound/PageNotFound'
     }
     return response;
 
@@ -125,10 +125,10 @@ apiAxios.interceptors.response.use(function (response) {
             return Promise.reject(error);
         }
 
-        if (status === 404) {
-            window.location.href = '/pageNotFound/PageNotFound';
-            return Promise.reject(error);
-        }
+        // if (status === 404) {
+        //     window.location.href = '/pageNotFound/PageNotFound';
+        //     return Promise.reject(error);
+        // }
 
         if (status) {
             // const { status, data, headers, config } = error.response; // Removed redundancy
@@ -137,9 +137,9 @@ apiAxios.interceptors.response.use(function (response) {
         }
         if (data?.success !== "777") {
             if (data?.success === "710") {
-                deleteCookie("TOKEN")
-                persistor.purge();
-                //return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+                //    deleteCookie("TOKEN")
+                //     persistor.purge();
+                //return { data: { status: data?.su ccess, message: "로그인을 다시 해주세요." } };
             } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
                 // return {data: {status: data?.succes, message: data?.message}};
                 return { data: { status: "오류", message: data?.message } };
@@ -147,7 +147,7 @@ apiAxios.interceptors.response.use(function (response) {
         }
         if (data.success === "404") {
             // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
-            window.location.href = '/pageNotFound/PageNotFound'
+            //window.location.href = '/pageNotFound/PageNotFound'
         }
         return { data: { status: "NS_ER_SV_01", message: "요청한 서비스에 문제가 발생했습니다. 잠시 후에 다시 시도해 주세요." } };
 

@@ -15,7 +15,8 @@ import moment from "moment";
 import OptionSettingExcelUploadErrorPopup from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingExcelUploadErrorPopup.jsx";
 import * as XLSX from "xlsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
-import "@/assets/css/analysis-modern-view.css";
+import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader.jsx";
+import "@/services/aiOpenAnalysis/app/AiCommonLayout.css";
 
 /**
  * 분석 > Body
@@ -592,133 +593,130 @@ const OptionSettingBody = () => {
 
   };
 
+  const handleNavigateTab = useCallback((nextTab) => {
+    // 항상 최신 상태로 비교되도록 콜백화
+    setTabDivision((prev) => {
+      if (prev === nextTab) {
+        if (nextTab === "1") tab1Ref.current?.reload?.();
+        else if (nextTab === "2") tab2Ref.current?.reload?.();
+        return prev; // 유지
+      }
+      return nextTab;
+    });
+  }, []);
+
   return (
-    <div className="analysis-dashboard-v2">
-      <article className="subTitWrap">
-        <p className="subStep">
-          <span>{TITLE_LIST[0]}</span>
-          <span>{TITLE_LIST[1]}</span>
-          {TITLE_LIST[2] !== "" && <span>{TITLE_LIST[2]}</span>}
-        </p>
-
-        <div className="subTit">
-          <h2 className="titTxt">
-            {TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}
-            {sessionStorage.getItem("projectname") && (<span className="projectName" style={{ color: "#757575", fontSize: "16px", fontWeight: "400", marginLeft: "12px" }}> {sessionStorage.getItem("projectname")}</span>)}
-          </h2>
-
-
+    <div className="ai-page-container">
+      <AiDataHeader
+        title={
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span>{TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}</span>
+            {sessionStorage.getItem("projectname") && (
+              <span className="projectName" style={{ color: "#757575", fontSize: "16px", fontWeight: "400", marginLeft: "12px" }}>
+                {sessionStorage.getItem("projectname")}
+              </span>
+            )}
+          </div>
+        }
+      >
+        <div style={{ display: "flex", gap: "8px" }}>
           {tabDivision === "1" && (
-            <div className="btnWrap">
-              <GridHeaderBtnPrimary disabled={!canSave["1"]} onClick={onTab1SaveClick}>저장</GridHeaderBtnPrimary>
-            </div>
+            <GridHeaderBtnPrimary disabled={!canSave["1"]} onClick={onTab1SaveClick}>저장</GridHeaderBtnPrimary>
           )}
           {tabDivision === "2" && (
-            <div className="btnWrap">
-              <GridHeaderBtnPrimary disabled={!(canSave["2"] || stageChanged)} onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
-            </div>
+            <GridHeaderBtnPrimary disabled={!(canSave["2"] || stageChanged)} onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
           )}
         </div>
-      </article>
+      </AiDataHeader>
 
-      {/* 왼쪽 패널이 닫히면 부모에 left-closed 클래스 부여 */}
-      <article className={`subContWrap ${isLeftOpen ? "" : "left-closed"}`}>
-        <div className="subCont subContL">
-          <OptionSettingInfo
-            isOpen={isLeftOpen}
-            projectnum={projectnum}
-            qnum={qnum}
-            onToggle={() => setIsLeftOpen(v => !v)}
-            showEmptyEtcBtn={analysisCount !== 0}
-            onNavigateTab={useCallback((nextTab) => {
-              // 항상 최신 상태로 비교되도록 콜백화
-              setTabDivision((prev) => {
-                if (prev === nextTab) {
-                  if (nextTab === "1") tab1Ref.current?.reload?.();
-                  else if (nextTab === "2") tab2Ref.current?.reload?.();
-                  return prev; // 유지
-                }
-                return nextTab;
-              });
-            }, [])}
-            userPerm={state?.userPerm}  // 권한 체크 
-            project_lock={state?.project_lock}
-            lv3Options={lv3Options}
-            responseCount={responseCount}
-            fetchLv3Options={fetchLv3Options}
-            onQidLoaded={setQid}
-            onAnalysisComplete={() => {
-              // 분석이 다 완료되고서 분석이 완료되었습니다 팝업 확인 누르면 Tab1의 저장 API 실행
-              tab1Ref.current?.saveChanges?.();
-            }}
-          />
-        </div>
+      <div className="ai-content-area">
+        <div className={`ai-split-layout ${isLeftOpen ? "" : "left-closed"}`}>
+          <div className={`ai-split-left ${isLeftOpen ? "" : "closed"}`}>
+            <OptionSettingInfo
+              isOpen={isLeftOpen}
+              projectnum={projectnum}
+              qnum={qnum}
+              onToggle={() => setIsLeftOpen(v => !v)}
+              showEmptyEtcBtn={analysisCount !== 0}
+              onNavigateTab={handleNavigateTab}
+              userPerm={state?.userPerm}  // 권한 체크 
+              project_lock={state?.project_lock}
+              lv3Options={lv3Options}
+              responseCount={responseCount}
+              fetchLv3Options={fetchLv3Options}
+              onQidLoaded={setQid}
+              onAnalysisComplete={() => {
+                // 분석이 다 완료되고서 분석이 완료되었습니다 팝업 확인 누르면 Tab1의 저장 API 실행
+                tab1Ref.current?.saveChanges?.();
+              }}
+            />
+          </div>
 
-        <div className="subCont subContR">
-          <div className="tab-action-container">
-            <div className="btnBox tabMenu">
-              <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("1")}>
-                응답 데이터
-                <span
-                  className="info-icon"
-                  data-tooltip={`응답 데이터|보기 데이터 기준 "응답자분석" 결과 (중복 제거)`}
-                ></span>
-              </Button>
-              <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("2")}>
-                보기 데이터
-                <span
-                  className="info-icon"
-                  data-tooltip={`보기 데이터|"보기분석" 결과`}
-                ></span>
-              </Button>
-              <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("3")}>
-                rawdata
-                <span
-                  className="info-icon"
-                  data-tooltip={`rawdata|PID 별 응답자 데이터 기준으로 응답자 분석 결과 제시`}
-                ></span>
-              </Button>
-              <div style={{ display: "inline-flex", alignItems: "center", marginLeft: "8px" }}>
-                <DropDownList
-                  key={`lvcode-${tabDivision}`}
-                  style={{ width: 140 }}
-                  data={LVCODE_OPTION}
-                  dataItemKey="value"
-                  textField="text"
-                  value={lvCodeDraft}
-                  disabled={tabDivision !== "2"}           //탭2에서 활성화
-                  onChange={(e) => {
-                    if (tabDivision === "2") {
-                      const next = e.value;
-                      setLvCodeDraft(next);
-                      setUnsaved(prev => ({ ...prev, [tabDivision]: next?.value !== lvCodeCommitted?.value }));
-                      // 히스토리에 현재 선택을 push (중복 방지)
-                      const h = stageHistRef.current;
-                      const last = h.back[h.back.length - 1];
-                      if (!last || last.value !== next.value) {
-                        h.back.push(next);
-                        h.fwd.length = 0;
+          <div className="ai-split-right">
+            <div className="tab-action-container" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <div className="btnBox tabMenu" style={{ display: 'flex', gap: '8px' }}>
+                <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("1")}>
+                  응답 데이터
+                  <span
+                    className="info-icon"
+                    data-tooltip={`응답 데이터|보기 데이터 기준 "응답자분석" 결과 (중복 제거)`}
+                  ></span>
+                </Button>
+                <Button className={tabDivision === "2" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("2")}>
+                  보기 데이터
+                  <span
+                    className="info-icon"
+                    data-tooltip={`보기 데이터|"보기분석" 결과`}
+                  ></span>
+                </Button>
+                <Button className={tabDivision === "3" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("3")}>
+                  rawdata
+                  <span
+                    className="info-icon"
+                    data-tooltip={`rawdata|PID 별 응답자 데이터 기준으로 응답자 분석 결과 제시`}
+                  ></span>
+                </Button>
+                <div style={{ display: "inline-flex", alignItems: "center", marginLeft: "8px" }}>
+                  <DropDownList
+                    key={`lvcode-${tabDivision}`}
+                    style={{ width: 140 }}
+                    data={LVCODE_OPTION}
+                    dataItemKey="value"
+                    textField="text"
+                    value={lvCodeDraft}
+                    disabled={tabDivision !== "2"}           //탭2에서 활성화
+                    onChange={(e) => {
+                      if (tabDivision === "2") {
+                        const next = e.value;
+                        setLvCodeDraft(next);
+                        setUnsaved(prev => ({ ...prev, [tabDivision]: next?.value !== lvCodeCommitted?.value }));
+                        // 히스토리에 현재 선택을 push (중복 방지)
+                        const h = stageHistRef.current;
+                        const last = h.back[h.back.length - 1];
+                        if (!last || last.value !== next.value) {
+                          h.back.push(next);
+                          h.fwd.length = 0;
+                        }
                       }
-                    }
-                  }}
-                />
-                <span
-                  className="info-icon"
-                  data-tooltip={`단계설정|1단계(소분류), 2단계(중분류), 3단계(대분류) 선택하여 해당 분류까지 분석됨\n(단, 보기분석시 "분류 개수 설정"에 따라 분석 진행)`}
-                ></span>
+                    }}
+                  />
+                  <span
+                    className="info-icon"
+                    data-tooltip={`단계설정|1단계(소분류), 2단계(중분류), 3단계(대분류) 선택하여 해당 분류까지 분석됨\n(단, 보기분석시 "분류 개수 설정"에 따라 분석 진행)`}
+                  ></span>
+                </div>
+              </div>
+              <div className="action-buttons-group" style={{ display: 'flex', gap: '8px' }}>
+                <CommonActionButton label="엑셀 다운로드" onClick={onClickExcelDownload}
+                  tooltipText={`엑셀 다운로드|응답 데이터, 보기데이터, rawdata(세로), rawdata(가로) 엑셀포맷으로 추출(rawdata는 SAV 파일에 바로 붙여넣기 가능한 포맷)`} />
+                <CommonActionButton label="엑셀 업로드" onClick={onClickExcelUpload}
+                  tooltipText={`엑셀 업로드|응답 데이터, 보기데이터 시트의 수정된 데이터를 한번에 업데이트 실행\n(주의: 웹 수정과 엑셀 수정은 병행하지 마세요.)`} />
+                <CommonActionButton label="보기 불러오기" onClick={openExloadWindow}
+                  tooltipText={`보기 불러오기|기존 설문온 프로젝트/문항의 보기 데이터를 불러옴.`} />
               </div>
             </div>
-            <div className="action-buttons-group">
-              <CommonActionButton label="엑셀 다운로드" onClick={onClickExcelDownload}
-                tooltipText={`엑셀 다운로드|응답 데이터, 보기데이터, rawdata(세로), rawdata(가로) 엑셀포맷으로 추출(rawdata는 SAV 파일에 바로 붙여넣기 가능한 포맷)`} />
-              <CommonActionButton label="엑셀 업로드" onClick={onClickExcelUpload}
-                tooltipText={`엑셀 업로드|응답 데이터, 보기데이터 시트의 수정된 데이터를 한번에 업데이트 실행\n(주의: 웹 수정과 엑셀 수정은 병행하지 마세요.)`} />
-              <CommonActionButton label="보기 불러오기" onClick={openExloadWindow}
-                tooltipText={`보기 불러오기|기존 설문온 프로젝트/문항의 보기 데이터를 불러옴.`} />
-            </div>
-          </div>
-          <div className="gridWithPanel">
-            <div className="grid-area">
+
+            <div className="ai-card-container">
               {tabDivision === "1" ? (
                 <OptionSettingTab1
                   ref={tab1Ref}
@@ -772,30 +770,31 @@ const OptionSettingBody = () => {
                 isLeftOpen={isLeftOpen}
               />
               }
+              {tabDivision === "1" &&
+                <OptionSettingLv3Panel
+                  open={isLv3PanelOpen}
+                  onClose={(next) => setIsLv3PanelOpen(next)}
+                  projectnum={projectnum}
+                  qnum={qnum}
+                  targets={lv3Targets}
+                  currentCodeIds={currentCodeIds}
+                  onOptionsLoaded={(list) => setLv3Options(list)}
+                  onApply={async (targets, opt) => {
+                    tab1Ref.current?.applyLv3To?.(targets, opt);
+                    if (!isLv3PanelPinned) setIsLv3PanelOpen(false);
+                    // await fetchLv3Options();
+                  }}
+                  options={lv3Options}                      // 소분류 코드 
+                  onRequestLv3Refresh={fetchLv3Options}
+                  pinned={isLv3PanelPinned}
+                  onTogglePin={handleToggleLv3PanelPin}
+                />
+              }
             </div>
-            {tabDivision === "1" &&
-              <OptionSettingLv3Panel
-                open={isLv3PanelOpen}
-                onClose={(next) => setIsLv3PanelOpen(next)}
-                projectnum={projectnum}
-                qnum={qnum}
-                targets={lv3Targets}
-                currentCodeIds={currentCodeIds}
-                onOptionsLoaded={(list) => setLv3Options(list)}
-                onApply={async (targets, opt) => {
-                  tab1Ref.current?.applyLv3To?.(targets, opt);
-                  if (!isLv3PanelPinned) setIsLv3PanelOpen(false);
-                  // await fetchLv3Options();
-                }}
-                options={lv3Options}                      // 소분류 코드 
-                onRequestLv3Refresh={fetchLv3Options}
-                pinned={isLv3PanelPinned}
-                onTogglePin={handleToggleLv3PanelPin}
-              />
-            }
           </div>
         </div>
-      </article>
+      </div>
+
       {errorPopupShow && (
         <OptionSettingExcelUploadErrorPopup
           popupShow={errorPopupShow}

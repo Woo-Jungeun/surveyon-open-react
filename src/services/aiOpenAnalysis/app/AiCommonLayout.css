@@ -1,0 +1,87 @@
+/* AI Open Analysis Common Layout */
+
+/* Page Container */
+.ai-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #f5f7fa;
+    position: relative;
+}
+
+/* Content Area - Floating card style */
+.ai-content-area {
+    flex: 1;
+    overflow: hidden;
+    margin: 16px;
+    margin-bottom: 55px;
+    /* Footer spacing */
+    padding: 24px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Card Container for Grids (Inner Card) */
+.ai-card-container {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+    min-height: 0;
+    /* Important for heavy grids */
+}
+
+/* Grid Wrapper inside card */
+.ai-card-container .cmn_gird_wrap,
+.ai-card-container .cmn_grid {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Split Layout (Left/Right) for OptionSetting */
+.ai-split-layout {
+    display: flex;
+    flex: 1;
+    height: 100%;
+    gap: 24px;
+    overflow: hidden;
+}
+
+.ai-split-left {
+    width: 320px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: width 0.3s ease;
+}
+
+.ai-split-left.closed {
+    width: 0;
+    margin-right: 0;
+    gap: 0;
+}
+
+.ai-split-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    /* Prevent flex overflow */
+    gap: 16px;
+}
