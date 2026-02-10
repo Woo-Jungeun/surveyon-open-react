@@ -88,10 +88,13 @@ function deleteCookie(name, { path = "/", domain } = {}) {
 apiAxios.interceptors.response.use(function (response) {
     const { status, data, headers, config } = response;
     if (data?.success !== "777") {
-        if (data?.success === "710") {
-            deleteCookie("TOKEN")
+        if (data?.success === "704" || data?.success === "710") {
+            // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
             persistor.purge();
-            // return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+            deleteCookie("TOKEN", { path: "/" });
+            deleteCookie("X-Auth-Token", { path: "/" });
+            sessionStorage.clear();
+            window.location.href = "/login";
         } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
             // return {data: {status: data?.succes, message: data?.message}};
             return { data: { status: "오류", message: data?.message } };
@@ -107,10 +110,13 @@ apiAxios.interceptors.response.use(function (response) {
     try {
         const { status, data, headers, config } = error.response;
         if (data?.success !== "777") {
-            if (data?.success === "710") {
-                deleteCookie("TOKEN")
+            if (data?.success === "704" || data?.success === "710") {
+                // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
                 persistor.purge();
-                //return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
+                deleteCookie("TOKEN", { path: "/" });
+                deleteCookie("X-Auth-Token", { path: "/" });
+                sessionStorage.clear();
+                window.location.href = "/login";
             } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
                 // return {data: {status: data?.succes, message: data?.message}};
                 return { data: { status: "오류", message: data?.message } };
