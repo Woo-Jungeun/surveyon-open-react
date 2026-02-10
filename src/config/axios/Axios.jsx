@@ -87,7 +87,6 @@ function deleteCookie(name, { path = "/", domain } = {}) {
 
 apiAxios.interceptors.response.use(function (response) {
     const { status, data, headers, config } = response;
-    console.log(response)
     if (data?.success !== "777") {
         if (data?.success === "710") {
             deleteCookie("TOKEN")

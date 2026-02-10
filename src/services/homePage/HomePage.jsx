@@ -9,7 +9,6 @@ import { LoginApi } from "@/services/login/LoginApi";
 const HomePage = () => {
   const { validateToken } = LoginApi();
   const auth = useSelector((store) => store.auth);
-  console.log(auth?.user?.userId)
   useEffect(() => {
     if (auth?.user?.userId) {
       validateToken.mutate({ user: auth.user.userId });
