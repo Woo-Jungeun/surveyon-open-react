@@ -428,6 +428,10 @@
     margin-bottom: 16px;
 }
 
+.nav-group.module-group {
+    margin-bottom: 8px;
+}
+
 .blue .nav-group {
     padding: 0 16px;
 }
