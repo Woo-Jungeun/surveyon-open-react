@@ -2,6 +2,7 @@ import { useMutation } from "react-query";
 import api from "@/common/queries/Api.js";
 import { useContext } from "react";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { useSelector } from "react-redux";
 
 /**
  * 토큰 사용 내역 API
@@ -11,10 +12,12 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
  */
 export function TokenUsageApi() {
     const loadingSpinner = useContext(loadingSpinnerContext);
+    const auth = useSelector((store) => store.auth);
 
     // 토큰 내역 조회 API
     const tokenUsageListData = useMutation(
         async (data) => await api.post({
+            user: auth?.user?.userId,
             startDate: "",
             endDate: "",
             apigubun: "openai"

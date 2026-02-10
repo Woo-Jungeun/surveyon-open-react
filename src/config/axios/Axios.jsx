@@ -87,36 +87,60 @@ function deleteCookie(name, { path = "/", domain } = {}) {
 
 apiAxios.interceptors.response.use(function (response) {
     const { status, data, headers, config } = response;
+    console.log(response)
     if (data?.success !== "777") {
-        if (data?.success === "704" || data?.success === "710") {
-            // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+        if (data?.success === "710") {
+            deleteCookie("TOKEN")
             persistor.purge();
-            deleteCookie("TOKEN", { path: "/" });
-            deleteCookie("X-Auth-Token", { path: "/" });
-            sessionStorage.clear();
-            window.location.href = "/login";
+            // return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
         } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
             // return {data: {status: data?.succes, message: data?.message}};
             return { data: { status: "오류", message: data?.message } };
         }
     }
-    if (data.success === "404") {
+    if (data.errorCode === "704") {
+        // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+        persistor.purge();
+        deleteCookie("TOKEN", { path: "/" });
+        deleteCookie("X-Auth-Token", { path: "/" });
+        sessionStorage.clear();
+        window.location.href = "/login";
+    }
+    if (data.errorCode === "404") {
         // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
         window.location.href = '/pageNotFound/PageNotFound'
     }
     return response;
 
-}, function (error) {
+}, async function (error) {
     try {
-        const { status, data, headers, config } = error.response;
+        const { status, data, headers, config } = error.response || {};
+
+        if (status === 401) {
+            // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+            await persistor.purge();
+            deleteCookie("TOKEN", { path: "/" });
+            deleteCookie("X-Auth-Token", { path: "/" });
+            sessionStorage.clear();
+            window.location.href = "/login";
+            return Promise.reject(error);
+        }
+
+        if (status === 404) {
+            window.location.href = '/pageNotFound/PageNotFound';
+            return Promise.reject(error);
+        }
+
+        if (status) {
+            // const { status, data, headers, config } = error.response; // Removed redundancy
+        } else {
+            throw new Error("No response");
+        }
         if (data?.success !== "777") {
-            if (data?.success === "704" || data?.success === "710") {
-                // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+            if (data?.success === "710") {
+                deleteCookie("TOKEN")
                 persistor.purge();
-                deleteCookie("TOKEN", { path: "/" });
-                deleteCookie("X-Auth-Token", { path: "/" });
-                sessionStorage.clear();
-                window.location.href = "/login";
+                //return { data: { status: data?.success, message: "로그인을 다시 해주세요." } };
             } else if (["401", "402", "701", "702", "703"].includes(String(data?.success))) {
                 // return {data: {status: data?.succes, message: data?.message}};
                 return { data: { status: "오류", message: data?.message } };

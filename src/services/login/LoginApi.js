@@ -105,9 +105,7 @@ export function LoginApi() {
         {
             onSuccess: async (res) => {
                 try {
-                    if (res?.success === "777") {
-                        // 정상 접속 (아무 일도 안 일어남)
-                    } else if (res?.success === "704") {
+                    if (res?.errorCode === "704") {
                         // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
                         await persistor.purge();
                         removeCookie("TOKEN", { path: "/" });
