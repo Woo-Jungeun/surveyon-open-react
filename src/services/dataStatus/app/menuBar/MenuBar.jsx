@@ -49,7 +49,7 @@ const MENU_ITEMS = [
   },
 ];
 
-const MenuBar = ({ projectName, lastUpdated }) => {
+const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const modal = useContext(modalContext);
   const auth = useSelector((store) => store.auth);
   const navigate = useNavigate();
@@ -127,7 +127,13 @@ const MenuBar = ({ projectName, lastUpdated }) => {
   const projectInfoData = {
     title: pageInfo.title,
     subTitle: sessionStorage.getItem("projectpof") || "ID 미지정",
-    onSettingsClick: () => setIsProjectModalOpen(true)
+    onSettingsClick: () => {
+      if (onOpenProjectModal) {
+        onOpenProjectModal();
+      } else {
+        setIsProjectModalOpen(true);
+      }
+    }
   };
 
   // 추가 액션 영역 (데이터 등록, 새로고침 버튼)
@@ -171,7 +177,26 @@ const MenuBar = ({ projectName, lastUpdated }) => {
           }}
         />
       )}
-      {isProjectModalOpen && <ProjectSelectionModal onClose={() => setIsProjectModalOpen(false)} />}
+      {isProjectModalOpen && (
+        <ProjectSelectionModal
+          onSelect={(project) => {
+            sessionStorage.setItem("projectnum", project.projectnum || "");
+            sessionStorage.setItem("projectname", project.projectname || "");
+            sessionStorage.setItem("servername", project.servername || "");
+            sessionStorage.setItem("projectpof", project.projectpof || "");
+            setIsProjectModalOpen(false);
+            navigate(0); // Refresh to apply session changes
+          }}
+          onClose={() => {
+            setIsProjectModalOpen(false);
+            // Only go home if no project is selected
+            const projectnum = sessionStorage.getItem("projectnum");
+            if (!projectnum) {
+              navigate("/"); // Go home if no project selected
+            }
+          }}
+        />
+      )}
     </>
   );
 };
