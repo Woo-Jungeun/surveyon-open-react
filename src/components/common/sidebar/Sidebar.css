@@ -185,11 +185,11 @@
 }
 
 .menu-bar-logo {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     display: flex;
     align-items: baseline;
-    gap: 4px;
+    gap: 10px;
 }
 
 .logo-accent {
