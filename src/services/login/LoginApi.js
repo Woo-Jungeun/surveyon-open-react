@@ -7,6 +7,7 @@ import { useContext } from "react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { AES256 } from "@/common/utils/AES256"
 import { useNavigate, useLocation } from "react-router-dom";
+import { persistor } from "@/common/redux/store/StorePersist.jsx";
 
 export function LoginApi() {
     const dispatch = useDispatch();
@@ -91,5 +92,43 @@ export function LoginApi() {
     );
 
 
-    return { loginMutation, logoutMutation };
+    /**
+     * 토큰 유효성 검사 api
+     * */
+    const validateToken = useMutation(
+        async (data) => {
+            const payload = {
+                user: data?.user ?? "",
+            };
+            return await api.post(payload, "/Login/token/validate", "API_BASE_URL_OPENAI");
+        },
+        {
+            onSuccess: async (res) => {
+                try {
+                    if (res?.success === "777") {
+                        // 정상 접속 (아무 일도 안 일어남)
+                    } else if (res?.success === "704") {
+                        // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+                        await persistor.purge();
+                        removeCookie("TOKEN", { path: "/" });
+                        removeCookie("X-Auth-Token", { path: "/" });
+                        sessionStorage.clear();
+                        navigate("/login");
+                    }
+                } catch (e) {
+                    console.error("Token validation error", e);
+                }
+            },
+            onError: async () => {
+                // 에러 발생 시에도 로그아웃 처리 (보안상 안전)
+                await persistor.purge();
+                removeCookie("TOKEN", { path: "/" });
+                removeCookie("X-Auth-Token", { path: "/" });
+                sessionStorage.clear();
+                navigate("/login");
+            }
+        }
+    );
+
+    return { loginMutation, logoutMutation, validateToken };
 }
