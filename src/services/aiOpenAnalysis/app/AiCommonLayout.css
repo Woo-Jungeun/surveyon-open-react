@@ -5,43 +5,47 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    background: #f5f7fa;
+    background: #F5F6FA;
+    /* Soft gray background */
     position: relative;
 }
 
-/* Content Area - Floating card style */
+/* Content Area - Main Card */
 .ai-content-area {
     flex: 1;
     overflow: hidden;
     margin: 16px;
-    margin-bottom: 55px;
     /* Footer spacing */
-    padding: 24px;
+    padding: 0;
+    /* Remove padding to allow split layout to fill */
     background: #fff;
     border: 1px solid #e2e8f0;
     border-radius: 16px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    /* Softer shadow */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 16px;
 }
 
-/* Card Container for Grids (Inner Card) */
+/* Card Container for Grids (Remove duplicate card style) */
 .ai-card-container {
     flex: 1;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
+    background: transparent;
+    /* Transparent */
+    border: none;
+    /* Remove border */
+    border-radius: 0;
+    /* Remove radius */
     padding: 0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+    box-shadow: none;
+    /* Remove shadow */
     height: 100%;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
     overflow: hidden;
     min-height: 0;
-    /* Important for heavy grids */
 }
 
 /* Grid Wrapper inside card */
@@ -52,28 +56,39 @@
     overflow: hidden;
 }
 
-/* Split Layout (Left/Right) for OptionSetting */
+/* Split Layout (Left/Right) */
 .ai-split-layout {
     display: flex;
     flex: 1;
     height: 100%;
-    gap: 24px;
+    gap: 0;
+    /* Remove gap, use border */
     overflow: hidden;
 }
 
 .ai-split-left {
-    width: 320px;
+    width: 340px;
+    /* Slightly wider */
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    overflow-y: auto;
     transition: width 0.3s ease;
+    border-right: 1px solid #e2e8f0;
+    /* Divider */
+    padding: 20px;
+    /* Inner padding */
+    background: #fff;
 }
 
 .ai-split-left.closed {
-    width: 0;
+    width: 60px;
     margin-right: 0;
-    gap: 0;
+    border-right: 1px solid #e2e8f0;
+    padding: 20px 10px;
+    /* Reduced horizontal padding */
+    align-items: center;
+    /* Center content (button) */
 }
 
 .ai-split-right {
@@ -82,6 +97,7 @@
     flex-direction: column;
     overflow: hidden;
     min-width: 0;
-    /* Prevent flex overflow */
-    gap: 16px;
+    padding: 12px 20px 20px 20px;
+    /* Inner padding */
+    background: #fff;
 }

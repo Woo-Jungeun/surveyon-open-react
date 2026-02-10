@@ -105,7 +105,7 @@ const OptionSettingBody = () => {
     }
   }, [projectnumFromState]);
 
-  const TITLE_LIST = ["분석 대메뉴", "분석 메뉴", ""];
+  const TITLE_LIST = ["분석 대메뉴", "분석", ""];
   const [tabDivision, setTabDivision] = useState("1");
   const [isLeftOpen, setIsLeftOpen] = useState(true);     // 상태를 부모가 보유
   const [analysisCount, setAnalysisCount] = useState(null); // 최초 분석값 저장
@@ -608,23 +608,26 @@ const OptionSettingBody = () => {
   return (
     <div className="ai-page-container">
       <AiDataHeader
-        title={
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <span>{TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}</span>
-            {sessionStorage.getItem("projectname") && (
-              <span className="projectName" style={{ color: "#757575", fontSize: "16px", fontWeight: "400", marginLeft: "12px" }}>
-                {sessionStorage.getItem("projectname")}
-              </span>
-            )}
-          </div>
-        }
+        title={TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}
       >
         <div style={{ display: "flex", gap: "8px" }}>
           {tabDivision === "1" && (
-            <GridHeaderBtnPrimary disabled={!canSave["1"]} onClick={onTab1SaveClick}>저장</GridHeaderBtnPrimary>
+            <GridHeaderBtnPrimary
+              disabled={!canSave["1"]}
+              onClick={onTab1SaveClick}
+              style={{ height: "40px", fontSize: "14px", padding: "0 24px" }}
+            >
+              저장
+            </GridHeaderBtnPrimary>
           )}
           {tabDivision === "2" && (
-            <GridHeaderBtnPrimary disabled={!(canSave["2"] || stageChanged)} onClick={onTab2SaveClick}>저장</GridHeaderBtnPrimary>
+            <GridHeaderBtnPrimary
+              disabled={!(canSave["2"] || stageChanged)}
+              onClick={onTab2SaveClick}
+              style={{ height: "40px", fontSize: "14px", padding: "0 24px" }}
+            >
+              저장
+            </GridHeaderBtnPrimary>
           )}
         </div>
       </AiDataHeader>
@@ -653,7 +656,7 @@ const OptionSettingBody = () => {
           </div>
 
           <div className="ai-split-right">
-            <div className="tab-action-container" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <div className="tab-action-container" style={{ display: 'flex', justifyContent: 'space-between' }}>
               <div className="btnBox tabMenu" style={{ display: 'flex', gap: '8px' }}>
                 <Button className={tabDivision === "1" ? "btnTab on" : "btnTab"} onClick={() => trySwitchTab("1")}>
                   응답 데이터

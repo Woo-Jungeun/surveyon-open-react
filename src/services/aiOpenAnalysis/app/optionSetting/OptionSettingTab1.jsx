@@ -1262,7 +1262,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 <div className="meta-header-layout">
                     <div className="meta-header-left meta2">
                         <div className="row1" style={{ color: '#888', fontSize: '13px', textAlign: 'left', marginLeft: '0', paddingLeft: '0' }}>업데이트 날짜: {updatedAt}</div>
-                        <div className="row2" style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '4px' }}>
+                        <div className="row2" style={{ textAlign: "left", display: "flex", alignItems: "center", gap: "10px", marginTop: '0px' }}>
                             <span style={{ fontSize: '14px', color: '#333' }}>분석 <b>{analyzed}</b> / 확인 <b>{verified}</b> / 총 <b>{total}</b></span>
                             <GridDataCount total={filteredCount} label="필터 결과" unit="건" />
                         </div>

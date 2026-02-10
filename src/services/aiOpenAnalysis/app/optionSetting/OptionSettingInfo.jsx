@@ -812,7 +812,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                     buttons={false}                 // 좌우 +/− 버튼 숨김 (원하면 true)
                                     value={parseTemp(data?.temperature)}
                                     onChange={(e) => onChangeInputEvent(e, "temperature")}   // e.value 사용
-                                    style={{ flex: 1 }}
+                                    style={{ flex: 1, width: "140px" }}
                                 />
                                 <span className="tempValue">
                                     {parseTemp(data?.temperature).toFixed(1)}
@@ -827,7 +827,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         title={
                             <>
                                 분류 개수 설정
-                                <span className="titNote">(대/중분류를 "0" 설정시 분석안함)</span>
+                                <span className="titNote">(대/중분류 0 설정시 제외)</span>
                             </>
                         }
                         open={openCounts}

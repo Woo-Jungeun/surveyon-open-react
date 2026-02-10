@@ -2783,7 +2783,7 @@ footer {
 .btnWrap.type01 {
     display: flex;
     justify-content: end;
-    margin-top: 28px;
+    margin-top: 15px;
 }
 
 .btnWrap.type01 button {
@@ -4204,7 +4204,7 @@ footer {
 
 .infoTit .titNote {
     margin-left: 6px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: normal;
     color: #69706d;
     letter-spacing: -0.2px;
@@ -4215,7 +4215,7 @@ footer {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .collapseTitle {
@@ -4266,7 +4266,7 @@ footer {
     align-items: center;
     gap: 8px;
     padding: 0 20px;
-    height: 52px;
+    height: 40px;
     background: #fff;
     border-top: 1px solid #d3d4d7;
     border-bottom: 1px solid #d3d4d7;
@@ -5716,9 +5716,9 @@ footer {
 }
 
 /* Better spacing rhythm */
-.leftInfo .cmn_pop_ipt {
+/* .leftInfo .cmn_pop_ipt {
     margin-bottom: 10px !important;
-}
+} */
 
 .leftInfo .cmn_pop_ipt .iptTit {
     font-weight: 500 !important;
@@ -5727,7 +5727,7 @@ footer {
 
 /* Fix section header height - all same */
 .infoTitRow {
-    height: 52px !important;
+    height: 40px !important;
     padding: 0 20px !important;
 }
 
