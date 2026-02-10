@@ -2,11 +2,16 @@ import React from 'react';
 import { Plus, Save, Search, Trash2 } from 'lucide-react';
 import './AiDataHeader.css';
 
-const AiDataHeader = ({ title, children, onAdd, addButtonLabel = "추가", onSave, saveButtonLabel = "저장", saveButtonDisabled = false, onEdit, editButtonLabel = "수정", onDelete, deleteButtonLabel = "삭제", onSearch }) => {
+const AiDataHeader = ({ title, tooltip, children, onAdd, addButtonLabel = "추가", onSave, saveButtonLabel = "저장", saveButtonDisabled = false, onEdit, editButtonLabel = "수정", onDelete, deleteButtonLabel = "삭제", onSearch }) => {
     return (
         <div className="ai-data-header-container">
             <div className="ai-data-header-left">
-                <h2 className="ai-data-header-title">{title}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h2 className="ai-data-header-title">{title}</h2>
+                    {tooltip && (
+                        <span className="info-icon" data-tooltip={tooltip} style={{ marginTop: '2px' }}></span>
+                    )}
+                </div>
                 {onSearch && (
                     <div className="ai-data-header-search">
                         <Search size={16} className="ai-data-header-search-icon" />

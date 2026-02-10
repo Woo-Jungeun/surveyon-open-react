@@ -828,16 +828,48 @@ const ProListGridRenderer = (props) => {
 
     return (
         <div className="pro-list-page">
-            <AiDataHeader title="문항 목록">
+            <AiDataHeader
+                title="문항 목록"
+                tooltip={`문항 목록|조사(Qmaster): 등록 시 오픈응답문항 중 텍스트로 입력된 데이터 자동 등록\n신규(수동): "문항등록"을 통해 엑셀로 문항을 선택하여 등록`}
+            >
                 {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                    <GridHeaderBtnTxt onClick={handleExportExcelDev}>보기 추출 (개발자용)</GridHeaderBtnTxt>
+                    <GridHeaderBtnTxt
+                        onClick={handleExportExcelDev}
+                        style={{ height: '40px', fontSize: '14px', padding: '0 20px' }}
+                    >
+                        보기 추출 (개발자용)
+                    </GridHeaderBtnTxt>
                 )}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                    <GridHeaderBtnTxt onClick={handleExportExcelDP}>보기 추출 (DP용)</GridHeaderBtnTxt>
+                    <GridHeaderBtnTxt
+                        onClick={handleExportExcelDP}
+                        style={{ height: '40px', fontSize: '14px', padding: '0 20px' }}
+                    >
+                        보기 추출 (DP용)
+                    </GridHeaderBtnTxt>
                 )}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
-                    <GridHeaderBtnPrimary onClick={() => navigate('/ai_open_analysis/pro_register')}>
+                    <GridHeaderBtnPrimary
+                        onClick={() => navigate('/ai_open_analysis/pro_register')}
+                        style={{
+                            height: '40px',
+                            fontSize: '14px',
+                            padding: '0 20px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            backgroundColor: '#FFB74D', // 더 부드러운 주황색 (Material Orange 300)
+                            borderColor: '#FFB74D',
+                            color: '#fff'
+                        }}
+                    >
                         문항 등록
+                        <span
+                            className="info-icon"
+                            data-tooltip={`문항 등록|엑셀로 새로운 문항 추가`}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{ filter: 'opacity(0.6)' }}
+                        ></span>
                     </GridHeaderBtnPrimary>
                 )}
             </AiDataHeader>
