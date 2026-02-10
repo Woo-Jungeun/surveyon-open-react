@@ -45,6 +45,8 @@ const InfoSection = () => {
                 sessionStorage.setItem("projectname", "");
                 sessionStorage.setItem("servername", "");
                 sessionStorage.setItem("projectpof", "");
+                sessionStorage.setItem("merge_pn", "");
+                sessionStorage.setItem("merge_pn_text", "");
                 navigate("/");
               } else {
                 modal.showAlert("알림", "로그아웃을 하지 못했습니다.");

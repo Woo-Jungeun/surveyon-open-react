@@ -223,6 +223,8 @@ const ProPermission = () => {
                           sessionStorage.setItem("projectname", "");
                           sessionStorage.setItem("servername", "");
                           sessionStorage.setItem("projectpof", "");
+                          sessionStorage.setItem("merge_pn", "");
+                          sessionStorage.setItem("merge_pn_text", "");
                           navigate("/ai_open_analysis"); //프로젝트 목록 페이지로 이동
                         },
                       },

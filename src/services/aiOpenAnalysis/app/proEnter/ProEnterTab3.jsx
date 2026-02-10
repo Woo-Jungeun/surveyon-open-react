@@ -97,6 +97,8 @@ const ProEnterTab3 = () => {
                             sessionStorage.setItem("projectname", "");
                             sessionStorage.setItem("servername", "");
                             sessionStorage.setItem("projectpof", "");
+                            sessionStorage.setItem("merge_pn", "");
+                            sessionStorage.setItem("merge_pn_text", "");
                             navigate("/project"); //프로젝트 목록 페이지로 이동
                         }
                     }],   ////문항 목록 페이지로 이동

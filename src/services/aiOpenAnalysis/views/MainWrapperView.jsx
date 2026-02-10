@@ -2,14 +2,12 @@ import { Fragment, useEffect, useState } from "react";
 import { useLocation, Outlet, useNavigate } from "react-router-dom";
 import AiSidebar from "@/services/aiOpenAnalysis/app/AiSidebar.jsx";
 import { useSelector } from "react-redux";
-// import { modalContext } from "@/components/common/Modal.jsx";
 import ProjectSelectionModal from "@/services/dataStatus/app/menuBar/ProjectSelectionModal.jsx";
 
 const MainWrapperView = (props) => {
     const auth = useSelector((store) => store.auth);
     const location = useLocation();
     const navigate = useNavigate();
-    // const modal = useContext(modalContext);
     const [projectUpdated, setProjectUpdated] = useState(0);
     const [isProjectModalOpen, setProjectModalOpen] = useState(false);
 
@@ -29,25 +27,25 @@ const MainWrapperView = (props) => {
                         sessionStorage.setItem("projectname", project.projectname || "");
                         sessionStorage.setItem("servername", project.servername || "");
                         sessionStorage.setItem("projectpof", project.projectpof || "");
+                        sessionStorage.setItem("merge_pn", project.merge_pn || "");
+                        sessionStorage.setItem("merge_pn_text", project.merge_pn_text || "");
 
                         setProjectModalOpen(false);
                         setProjectUpdated((prev) => prev + 1);
 
-                        // If at root, go to pro_list, else refresh/stay
                         if (location.pathname === '/ai_open_analysis' || location.pathname === '/ai_open_analysis/') {
                             navigate('/ai_open_analysis/pro_list');
                         } else {
-                            navigate(0); // Refresh to apply session changes
+                            navigate(0);
                         }
                     }}
                     onClose={() => {
                         setProjectModalOpen(false);
-                        // Only go home if no project is selected
+
                         const projectnum = sessionStorage.getItem("projectnum");
                         if (!projectnum) {
-                            navigate("/"); // Go home if no project selected
+                            navigate("/");
                         }
-                        // Otherwise just close the modal
                     }}
                 />
             )}

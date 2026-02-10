@@ -65,7 +65,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             return;
         }
 
-        const { projectnum, projectname, servername, projectpof } = e.dataItem;
+        const { projectnum, projectname, servername, projectpof, merge_pn, merge_pn_text } = e.dataItem;
         if (!projectnum || !projectname) return;
 
         // 세션 스토리지 저장 (Data Status용)
@@ -73,6 +73,8 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
         sessionStorage.setItem("projectname", projectname || "");
         sessionStorage.setItem("servername", servername || "");
         sessionStorage.setItem("projectpof", projectpof || "");
+        sessionStorage.setItem("merge_pn", merge_pn || "");
+        sessionStorage.setItem("merge_pn_text", merge_pn_text || "");
 
         if (from === 'data_status') {
             navigate('/data_status/setting/variable');

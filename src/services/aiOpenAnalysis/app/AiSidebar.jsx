@@ -197,6 +197,8 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         sessionStorage.setItem("projectname", "");
         sessionStorage.setItem("servername", "");
         sessionStorage.setItem("projectpof", "");
+        sessionStorage.setItem("merge_pn", "");
+        sessionStorage.setItem("merge_pn_text", "");
         navigate("/ai_open_analysis");
     };
 

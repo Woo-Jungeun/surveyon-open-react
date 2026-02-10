@@ -184,6 +184,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             sessionStorage.setItem("projectname", project.projectname || "");
             sessionStorage.setItem("servername", project.servername || "");
             sessionStorage.setItem("projectpof", project.projectpof || "");
+            sessionStorage.setItem("merge_pn", project.merge_pn || "");
+            sessionStorage.setItem("merge_pn_text", project.merge_pn_text || "");
             setIsProjectModalOpen(false);
             navigate(0); // Refresh to apply session changes
           }}

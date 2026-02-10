@@ -26,6 +26,8 @@ const ProjectMenuBar = () => {
                         sessionStorage.setItem("projectname", "");
                         sessionStorage.setItem("servername", "");
                         sessionStorage.setItem("projectpof", "");
+                        sessionStorage.setItem("merge_pn", "");
+                        sessionStorage.setItem("merge_pn_text", "");
                         navigate("/project", { state: { from } });
                     }
                 },
@@ -49,6 +51,8 @@ const ProjectMenuBar = () => {
         sessionStorage.setItem("projectname", "");
         sessionStorage.setItem("servername", "");
         sessionStorage.setItem("projectpof", "");
+        sessionStorage.setItem("merge_pn", "");
+        sessionStorage.setItem("merge_pn_text", "");
         navigate("/project", { state: { from } });
     };
 

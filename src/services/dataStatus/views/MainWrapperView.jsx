@@ -33,6 +33,8 @@ const MainWrapperView = (props) => {
                         sessionStorage.setItem("projectname", project.projectname || "");
                         sessionStorage.setItem("servername", project.servername || "");
                         sessionStorage.setItem("projectpof", project.projectpof || "");
+                        sessionStorage.setItem("merge_pn", project.merge_pn || "");
+                        sessionStorage.setItem("merge_pn_text", project.merge_pn_text || "");
 
                         setProjectModalOpen(false);
                         setProjectUpdated((prev) => prev + 1);
