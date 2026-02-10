@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Megaphone, FileText, History, PenSquare, Search, Paperclip, Lock } from 'lucide-react';
+import { Megaphone, FileText, History, PenSquare, Search, Paperclip, Lock, Home } from 'lucide-react';
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import { modalContext } from "@/components/common/Modal";
@@ -106,7 +106,7 @@ const BoardList = ({ type = 'notice' }) => {
     return (
         <div className="bl-container" data-theme={`board-${type}`}>
             <button className="bl-home-btn" onClick={() => navigate('/')}>
-                <ArrowLeft size={16} />
+                <Home size={18} />
                 홈으로
             </button>
 

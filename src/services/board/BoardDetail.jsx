@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Calendar, Eye, User, Home } from 'lucide-react';
+import { ArrowLeft, Calendar, Eye, User, Home, List } from 'lucide-react';
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import moment from 'moment';
@@ -117,15 +117,10 @@ const BoardDetail = () => {
 
     return (
         <div className="bd-container" data-theme={`board-${type}`}>
-            {isFromHome ? (
-                <button className="bw-back-btn" onClick={() => navigate('/')}>
-                    <Home size={16} />
+            {isFromHome && (
+                <button className="bd-back-btn" onClick={() => navigate('/')}>
+                    <Home size={18} />
                     홈으로
-                </button>
-            ) : (
-                <button className="bw-back-btn" onClick={() => navigate(`/board/${type}`)}>
-                    <ArrowLeft size={16} />
-                    목록으로
                 </button>
             )}
 
@@ -155,34 +150,23 @@ const BoardDetail = () => {
                     <div dangerouslySetInnerHTML={{ __html: detailData.content }} />
                 </div>
 
-                {/* 첨부파일 영역 (데이터가 있을 경우에만 표시) */}
-                {/* {detailData.attachments && detailData.attachments.length > 0 && (
-                    <div className="bd-attachments">
-                        <div className="bd-attachments-title">첨부파일 <span>{detailData.attachments.length}</span></div>
-                        <ul className="bd-attachments-list">
-                            {detailData.attachments.map((file, index) => (
-                                <li key={index}>
-                                    <a href="#" onClick={(e) => { e.preventDefault(); }}>
-                                        <span className="bd-file-icon">📎</span>
-                                        <span className="bd-file-name">{file.originalName}</span>
-                                        <span className="bd-file-size">({(file.fileSize / 1024).toFixed(1)}KB)</span>
-                                    </a>
-                                </li>
-                            ))}
-                        </ul>
-                    </div>
-                )} */}
-                {isAdmin === 1 && (
-                    <div className="bd-footer">
-                        {/* 관리자 권한 체크 후 표시 (현재는 항상 표시) */}
+                <div className="bd-footer">
+                    <button
+                        className="bd-btn"
+                        onClick={() => navigate(`/board/${type}`)}
+                        style={{ background: 'white', border: '1px solid #ddd', color: '#555', display: 'flex', alignItems: 'center', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+                    >
+                        <List size={16} style={{ marginRight: '6px' }} />
+                        목록으로
+                    </button>
 
-                        <div className="bd-admin-btns">
+                    {isAdmin === 1 && (
+                        <div className="bd-admin-btns" style={{ display: 'flex', gap: '8px', marginLeft: '12px', paddingLeft: '12px', borderLeft: '1px solid #eee' }}>
                             <button className="bd-btn bd-btn-edit" onClick={() => navigate(`/board/${type}/write/${id}`)}>수정</button>
                             <button className="bd-btn bd-btn-delete" onClick={handleDelete}>삭제</button>
                         </div>
-
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
         </div>
     );

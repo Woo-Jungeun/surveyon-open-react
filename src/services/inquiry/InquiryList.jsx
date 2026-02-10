@@ -1,7 +1,7 @@
 import React, { useState, useContext } from 'react';
 import { modalContext } from "@/components/common/Modal";
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight, Eye, CheckSquare, Square, User, Check } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Lock, MessageCircle, PenSquare, ArrowLeft, CornerDownRight, Eye, CheckSquare, Square, User, Check, Home } from 'lucide-react';
 import './Inquiry.css';
 import { InquiryApi } from './InquiryApi';
 import { useEffect } from 'react';
@@ -131,7 +131,7 @@ const InquiryList = () => {
     return (
         <div className="inquiry-container" data-theme="board-inquiry">
             <button className="inquiry-home-btn" onClick={() => navigate('/')}>
-                <ArrowLeft size={16} />
+                <Home size={18} />
                 홈으로
             </button>
 
