@@ -2880,7 +2880,7 @@ footer {
 .modal.on {
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: 10000;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -6162,7 +6162,7 @@ footer {
     position: absolute;
     left: 50vw;
     transform: translateX(-50%);
-    padding-top: 40px;
+    padding-top: 10px;
     width: auto;
 }
 
@@ -6353,11 +6353,11 @@ footer {
 
 
 /* ProEnter New Registration Tab Alignment */
+/* ProEnter New Registration Tab Alignment */
 .pro-enter-new-container {
     position: absolute;
-    left: 50vw;
+    left: 50%;
     transform: translateX(-50%);
-    padding-top: 40px;
     width: auto;
 }
 
@@ -6366,10 +6366,12 @@ footer {
     background: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 40px;
+    padding: 38px;
+    /* Reduced padding */
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
+    /* Reduced gap */
 }
 
 @media (max-width: 1024px) {

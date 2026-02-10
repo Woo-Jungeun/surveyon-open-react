@@ -18,7 +18,7 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
  * @author jewoo
  * @since 2025-09-12<br />
  */
-const MainList = () => {
+const MainList = ({ showHeader = true }) => {
     const auth = useSelector((store) => store.auth);
     const userGroup = auth?.user?.userGroup || "";
     const navigate = useNavigate();
@@ -140,7 +140,7 @@ const MainList = () => {
 
     return (
         <Fragment>
-            <DataHeader title="프로젝트 목록" />
+            {showHeader && <DataHeader title="프로젝트 목록" />}
             <div className="project-list-content">
                 <GridData
                     dataItemKey={DATA_ITEM_KEY}

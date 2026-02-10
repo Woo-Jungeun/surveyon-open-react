@@ -1,0 +1,229 @@
+.ps-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.ps-modal-container {
+    width: 95%;
+    max-width: 1600px;
+    height: 90vh;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+.ps-modal-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.ps-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+}
+
+.ps-header-icon {
+    color: #5A4BFF;
+}
+
+.ps-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.ps-close-btn:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+/* Tabs */
+.ps-tabs-menu {
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    border-bottom: 1px solid #e0e0e0;
+    position: relative;
+    background: #fff;
+}
+
+.ps-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 24px;
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.ps-tab-btn.active {
+    color: #5A4BFF;
+    /* Theme Blue/Purple */
+}
+
+/* Tab Indicator Bar */
+.ps-tab-indicator {
+    position: absolute;
+    bottom: 0;
+    height: 3px;
+    background: #5A4BFF;
+    transition: left 0.3s ease, width 0.3s ease;
+    /* Basic positioning logic, can be refined with JS but CSS approximations work for fixed width tabs */
+    width: 150px;
+    /* Approximate width of tab */
+}
+
+.ps-tab-indicator.select {
+    left: 24px;
+    /* Padding left */
+    width: 145px;
+}
+
+.ps-tab-indicator.create {
+    left: 175px;
+    /* Padding + Tab1 Width */
+    width: 145px;
+}
+
+/* Content */
+.ps-modal-content {
+    flex: 1;
+    background: #fbfbfc;
+    padding: 24px;
+    overflow: hidden;
+    /* Let inner content handle scroll if needed */
+    display: flex;
+    flex-direction: column;
+}
+
+.ps-content-wrapper {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+}
+
+/* Override MainList/ProEnter internal paddings if needed */
+.ps-content-wrapper .grid-wrapper {
+    padding: 0 !important;
+}
+
+/* Sub Tabs for Project Registration */
+.ps-create-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.ps-sub-tabs {
+    display: flex;
+    gap: 8px;
+    padding-bottom: 12px;
+}
+
+.ps-sub-tab-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #e0e0e0;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ps-sub-tab-btn:hover {
+    background: #f9f9f9;
+}
+
+.ps-sub-tab-btn.active {
+    background: #F3F1FF;
+    color: #5A4BFF;
+    border-color: #5A4BFF;
+    font-weight: 700;
+}
+
+/* New Project Registration Form Styling */
+/* New Project Registration Form Styling */
+/* New Project Registration Form Styling */
+/* New Project Registration Form Styling */
+.pro-enter-new-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    /* Reduced top/left padding to move form up and left */
+    overflow-y: auto;
+    /* Scroll is handled here */
+    background: transparent;
+    box-sizing: border-box;
+}
+
+.ps-content-wrapper.sub-tab-content {
+    background: #F3F4F6;
+    /* Slightly darker gray to highlight the centered card */
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    /* Ensure full height */
+}
+
+.pro-enter-new-form {
+    width: 600px;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: #fff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    /* Card shadow */
+    border: 1px solid #eee;
+    margin: 0 0 40px 0;
+    /* Left align (no auto), top align (no top margin) */
+    flex-shrink: 0;
+}

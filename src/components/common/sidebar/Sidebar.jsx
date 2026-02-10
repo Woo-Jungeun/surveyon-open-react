@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
-    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown
+    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings
 } from "lucide-react";
 import { useNavigate, useLocation, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -37,17 +37,16 @@ const Sidebar = ({
 
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [userOpen, setUserOpen] = useState(false);
-    const [moduleOpen, setModuleOpen] = useState(false);
+    // 모듈 리스트 내 '메인 메뉴' 토글 상태 (기본값 true로 펼쳐둠)
+    const [moduleListOpen, setModuleListOpen] = useState(true);
     const [openSections, setOpenSections] = useState({});
 
     const userRef = useRef(null);
-    const moduleRef = useRef(null);
 
     // 외부 클릭 시 드롭다운 닫기
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false);
-            if (moduleRef.current && !moduleRef.current.contains(e.target)) setModuleOpen(false);
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -117,64 +116,20 @@ const Sidebar = ({
         <aside className={`common-sidebar ${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : ""}>
             {/* Header Area */}
             <div className="sidebar-header">
-                <div className="header-top">
-                    <button type="button" className="home-btn" title="홈으로" onClick={onHomeClick}>
+                <div className="header-top" style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
+                    {/* 홈 버튼 */}
+                    <button type="button" className="home-btn" title="홈으로" onClick={onHomeClick} style={{ padding: '6px' }}>
                         <Home size={18} />
-                        <span>홈</span>
                     </button>
                     <div className="header-divider"></div>
-
-                    {moduleItems.length > 0 ? (
-                        <React.Fragment>
-                            <div ref={moduleRef} style={{ position: 'relative' }}>
-                                <button
-                                    type="button"
-                                    className={`module-toggle-btn ${moduleOpen ? 'active' : ''}`}
-                                    onClick={() => setModuleOpen(!moduleOpen)}
-                                >
-                                    <Menu size={18} />
-                                </button>
-                                {moduleOpen && (
-                                    <div className="module-dropdown">
-                                        {moduleItems.map((m, i) => (
-                                            <button
-                                                key={i}
-                                                className={`module-item ${m.highlight ? 'highlight' : ''} ${m.isDisabled ? 'disabled' : ''}`}
-                                                onClick={() => {
-                                                    if (m.isDisabled) return;
-                                                    if (m.onClick) {
-                                                        m.onClick();
-                                                    } else {
-                                                        navigate(m.path, { state: m.state });
-                                                    }
-                                                    setModuleOpen(false);
-                                                }}
-                                            >
-                                                {m.icon}
-                                                <span>{m.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            {!isCollapsed && (
-                                <div className="brand-area" onClick={onBrandClick} style={{ marginLeft: '8px' }}>
-                                    <span className={brand?.logoClass || "brand-title"}>
-                                        {brand?.logoText && <span className="logo-accent">{brand.logoText}</span>}
-                                        {brand?.title}
-                                    </span>
-                                </div>
-                            )}
-                        </React.Fragment>
-                    ) : (
-                        <div className="brand-area" onClick={onBrandClick}>
-                            {brand?.icon}
-                            <span className={brand?.logoClass || "brand-title"}>
-                                {brand?.logoText && <span className="logo-accent">{brand.logoText}</span>}
-                                {brand?.title}
-                            </span>
-                        </div>
-                    )}
+                    {/* 상단: 브랜드 */}
+                    <div className="brand-area" onClick={onBrandClick}>
+                        {brand?.icon}
+                        <span className={brand?.logoClass || "brand-title"}>
+                            {brand?.logoText && <span className="logo-accent">{brand.logoText}</span>}
+                            {brand?.title}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Toggle Button */}
@@ -183,30 +138,78 @@ const Sidebar = ({
                 </button>
             </div>
 
-            {/* Project Info Section */}
+            {/* Project Info Section (맨 위) */}
             {projectInfo && !isCollapsed && (
                 <div className="project-info-box">
-                    <div className="project-title">{projectInfo.title}</div>
-                    {projectInfo.lastUpdated && (
-                        <div className="project-update">
-                            <Clock size={12} />
-                            <span>최근 업데이트: {projectInfo.lastUpdated}</span>
-                        </div>
+                    <div className="sidebar-project-label">현재 조사</div>
+                    <div className="project-info-card">
+                        <div className="project-title">{projectInfo.title}</div>
+                        {projectInfo.subTitle && (
+                            <span className="project-id-badge">{projectInfo.subTitle}</span>
+                        )}
+                        <button
+                            className="project-settings-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
+                            }}
+                        >
+                            <Settings size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* 1. Main Menu (Fixed) */}
+            {moduleItems.length > 0 && (
+                <div className="nav-group module-group fixed-menu">
+                    <div className="group-header" onClick={() => setModuleListOpen(!moduleListOpen)}>
+                        <span className="group-title">메인 메뉴</span>
+                        {!isCollapsed && (
+                            <ChevronDown
+                                size={14}
+                                className={`group-arrow ${moduleListOpen ? 'open' : ''}`}
+                            />
+                        )}
+                    </div>
+
+                    {(isCollapsed || moduleListOpen) && (
+                        <ul className="group-list">
+                            {moduleItems.map((m, i) => (
+                                <li key={i} className="nav-item">
+                                    <div
+                                        className={`nav-link main-nav-link ${m.highlight || m.module === theme.replace('blue', 'data_status') ? 'active' : ''} ${m.isDisabled ? 'disabled' : ''}`}
+                                        onClick={() => {
+                                            if (m.isDisabled) return;
+                                            if (m.onClick) {
+                                                m.onClick();
+                                            } else {
+                                                navigate(m.path, { state: m.state });
+                                            }
+                                        }}
+                                    >
+                                        {m.icon && React.cloneElement(m.icon, { size: 18, strokeWidth: 2, className: "nav-icon" })}
+                                        <span>{m.label}</span>
+                                    </div>
+                                </li>
+                            ))}
+                        </ul>
                     )}
                 </div>
             )}
 
-            {/* Extra Actions */}
-            {extraActions && <div className="extra-actions">{extraActions}</div>}
-
-            {/* Navigation Menu */}
+            {/* Navigation Menu (Scrollable) */}
             <nav className="sidebar-nav">
+                {/* Extra Actions (데이터 신규등록 등) - Scrollable */}
+                {extraActions && <div className="extra-actions-wrapper">{extraActions}</div>}
+
+                {/* 2. Sub Menus (Current Page Menus) */}
                 {menuGroups.map((group, idx) => (
                     <div key={idx} className="nav-group">
                         {group.label && (
                             <div className="group-header" onClick={() => toggleSection(group.label)}>
                                 <span className="group-title">{group.label}</span>
-                                {!isCollapsed && group.items.some(it => it.children) && (
+                                {!isCollapsed && (
                                     <ChevronDown
                                         size={14}
                                         className={`group-arrow ${openSections[group.label] ? 'open' : ''}`}

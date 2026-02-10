@@ -7,6 +7,7 @@ import {
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
 import { MenuBarApi } from "./MenuBarApi";
+import ProjectSelectionModal from "./ProjectSelectionModal";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -55,6 +56,7 @@ const MenuBar = ({ projectName, lastUpdated }) => {
   const { getPageMetadata } = MenuBarApi();
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
+  const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
   const [pageInfo, setPageInfo] = useState({
     title: projectName || sessionStorage.getItem("projectname") || "조사명 없음",
     processedAt: lastUpdated || "-"
@@ -106,22 +108,9 @@ const MenuBar = ({ projectName, lastUpdated }) => {
 
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
-    {
-      label: "프로젝트 목록",
-      icon: <List size={16} />,
-      path: "/project",
-      state: { from: 'data_status' },
-      // highlight: true, // 사용자가 원하지 않으면 제거
-      onClick: () => {
-        sessionStorage.setItem("projectnum", "");
-        sessionStorage.setItem("projectname", "");
-        sessionStorage.setItem("servername", "");
-        sessionStorage.setItem("projectpof", "");
-        navigate("/project", { state: { from: 'data_status' } });
-      }
-    },
+
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-    { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/setting/variable" },
+    { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/setting/variable", highlight: true },
     { label: "데이터관리", icon: <Database size={16} />, path: "/data_status", isDisabled: true },
     {
       label: "AI오픈분석",
@@ -137,7 +126,8 @@ const MenuBar = ({ projectName, lastUpdated }) => {
   // 사이드바에 전달할 프로젝트 정보
   const projectInfoData = {
     title: pageInfo.title,
-    lastUpdated: pageInfo.processedAt
+    subTitle: sessionStorage.getItem("projectpof") || "ID 미지정",
+    onSettingsClick: () => setIsProjectModalOpen(true)
   };
 
   // 추가 액션 영역 (데이터 등록, 새로고침 버튼)
@@ -181,6 +171,7 @@ const MenuBar = ({ projectName, lastUpdated }) => {
           }}
         />
       )}
+      {isProjectModalOpen && <ProjectSelectionModal onClose={() => setIsProjectModalOpen(false)} />}
     </>
   );
 };
