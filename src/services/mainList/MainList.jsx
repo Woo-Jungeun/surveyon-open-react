@@ -18,7 +18,7 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
  * @author jewoo
  * @since 2025-09-12<br />
  */
-const MainList = ({ showHeader = true }) => {
+const MainList = ({ showHeader = true, onProjectSelect }) => {
     const auth = useSelector((store) => store.auth);
     const userGroup = auth?.user?.userGroup || "";
     const navigate = useNavigate();
@@ -48,10 +48,23 @@ const MainList = ({ showHeader = true }) => {
         ]);
 
     const location = useLocation();
-    const from = location.state?.from || 'ai_open';
+
+    // Determine source based on state or current path
+    const getFromSource = () => {
+        if (location.state?.from) return location.state.from;
+        if (location.pathname.includes("data_status")) return "data_status";
+        return "ai_open";
+    };
+
+    const from = getFromSource();
 
     // 행 클릭
     const onRowClick = useCallback((e) => {
+        if (onProjectSelect) {
+            onProjectSelect(e.dataItem);
+            return;
+        }
+
         const { projectnum, projectname, servername, projectpof } = e.dataItem;
         if (!projectnum || !projectname) return;
 
@@ -66,7 +79,7 @@ const MainList = ({ showHeader = true }) => {
         } else {
             navigate('/project/pro_list', { state: { projectnum, projectname, servername, projectpof } });
         }
-    }, [navigate, from]);
+    }, [navigate, from, onProjectSelect]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (

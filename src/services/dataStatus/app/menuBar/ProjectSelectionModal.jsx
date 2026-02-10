@@ -6,7 +6,7 @@ import MainList from "@/services/mainList/MainList";
 import ProEnterTab1 from "@/services/aiOpenAnalysis/app/proEnter/ProEnterTab1";
 import ProEnterTab3 from "@/services/aiOpenAnalysis/app/proEnter/ProEnterTab3";
 
-const ProjectSelectionModal = ({ onClose }) => {
+const ProjectSelectionModal = ({ onClose, onSelect }) => {
     const [activeTab, setActiveTab] = useState('select'); // 'select' | 'create'
     const [createSubTab, setCreateSubTab] = useState('qmaster'); // 'qmaster' | 'new'
 
@@ -53,7 +53,7 @@ const ProjectSelectionModal = ({ onClose }) => {
                 <div className="ps-modal-content">
                     {activeTab === 'select' && (
                         <div className="ps-content-wrapper">
-                            <MainList showHeader={false} />
+                            <MainList showHeader={false} onProjectSelect={onSelect} />
                         </div>
                     )}
                     {activeTab === 'create' && (

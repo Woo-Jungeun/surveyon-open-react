@@ -8,7 +8,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import { MenuBarApi } from "./MenuBarApi";
 import "@/assets/css/aiCharge.css"; // Ensure styles are available
 
-const AiSidebar = () => {
+const AiSidebar = ({ onOpenProjectModal }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const auth = useSelector((store) => store.auth);
@@ -202,7 +202,8 @@ const AiSidebar = () => {
 
     const projectInfo = (projectnum && projectname) ? {
         title: projectname,
-        subTitle: projectnum
+        subTitle: projectnum,
+        onSettingsClick: onOpenProjectModal
     } : null;
 
     return (

@@ -227,3 +227,227 @@
     /* Left align (no auto), top align (no top margin) */
     flex-shrink: 0;
 }
+
+/* ============================================ */
+/* Purple Theme Override for Project Modal */
+/* ============================================ */
+
+/* CSS Variables Override */
+.ps-modal-container,
+.ps-modal-container .k-grid,
+.ps-modal-container .k-grid .k-table-row,
+.ps-modal-container .k-grid tr {
+    --kendo-color-primary: #7C3AED !important;
+    --kendo-color-primary-hover: #6D28D9 !important;
+    --kendo-color-primary-active: #5B21B6 !important;
+    --primary-bg-hover: #F9F8FF !important;
+    --primary-bg-selected: #F3F1FF !important;
+    --primary-color: #7C3AED !important;
+    --primary-hover: #6D28D9 !important;
+    --primary-focus: #5B21B6 !important;
+    --primary-border: #D8B4FE !important;
+}
+
+/* Grid Selection Styles */
+.ps-modal-container .k-grid td.k-selected,
+.ps-modal-container .k-grid .k-table-row.k-selected>td,
+.ps-modal-container .k-grid .k-table-td.k-selected,
+.ps-modal-container .k-grid .k-table-row.k-selected>.k-table-td,
+.ps-modal-container .k-grid .k-table-row.k-selected,
+.ps-modal-container .k-grid tr.k-selected,
+.ps-modal-container .k-grid tr.k-selected>td,
+.ps-modal-container .k-grid .k-table-row.k-state-focused,
+.ps-modal-container .k-grid .k-table-row.k-state-focused>td,
+.ps-modal-container .k-grid tr.k-state-focused,
+.ps-modal-container .k-grid tr.k-state-focused>td,
+.ps-modal-container .k-grid .k-table-row:active,
+.ps-modal-container .k-grid .k-table-row:active>td,
+.ps-modal-container .k-grid tr:active,
+.ps-modal-container .k-grid tr:active>td,
+.ps-modal-container .k-grid .k-table-row.k-selected.k-state-focused,
+.ps-modal-container .k-grid .k-table-row.k-selected.k-state-focused>td,
+.ps-modal-container .k-grid .k-table-row.k-selected:hover,
+.ps-modal-container .k-grid .k-table-row.k-selected:hover>td,
+.ps-modal-container .k-grid .k-table-row.k-selected:active,
+.ps-modal-container .k-grid .k-table-row.k-selected:active>td,
+.ps-modal-container .k-grid tr[aria-selected="true"],
+.ps-modal-container .k-grid tr[aria-selected="true"]>td {
+    background-color: #F3F1FF !important;
+    background: #F3F1FF !important;
+    color: inherit !important;
+}
+
+.ps-modal-container .k-grid .k-table-row:hover:not(.k-selected),
+.ps-modal-container .k-grid tr:hover:not(.k-selected),
+.ps-modal-container .k-grid .k-table-tbody>.k-table-row:not(.k-detail-row):hover:not(.k-selected) {
+    background-color: #F9F8FF !important;
+    background: #F9F8FF !important;
+}
+
+/* Input Fields */
+.ps-modal-container .k-input,
+.ps-modal-container .k-input-solid,
+.ps-modal-container .k-picker,
+.ps-modal-container .k-dropdown,
+.ps-modal-container .k-dropdownlist,
+.ps-modal-container .k-textbox,
+.ps-modal-container input[type="text"],
+.ps-modal-container textarea {
+    border-color: #7C3AED !important;
+}
+
+.ps-modal-container .k-input:hover,
+.ps-modal-container .k-input-solid:hover,
+.ps-modal-container .k-picker:hover,
+.ps-modal-container .k-dropdown:hover,
+.ps-modal-container .k-dropdownlist:hover,
+.ps-modal-container .k-textbox:hover,
+.ps-modal-container input[type="text"]:hover,
+.ps-modal-container textarea:hover {
+    border-color: #6D28D9 !important;
+}
+
+.ps-modal-container .k-input:focus,
+.ps-modal-container .k-input.k-focus,
+.ps-modal-container .k-input:focus-within,
+.ps-modal-container .k-input-solid:focus,
+.ps-modal-container .k-input-solid:focus-within,
+.ps-modal-container .k-picker:focus,
+.ps-modal-container .k-picker.k-focus,
+.ps-modal-container .k-picker:focus-within,
+.ps-modal-container .k-dropdown:focus-within,
+.ps-modal-container .k-dropdownlist:focus,
+.ps-modal-container .k-dropdownlist.k-focus,
+.ps-modal-container .k-textbox:focus,
+.ps-modal-container .k-textbox:focus-within,
+.ps-modal-container input[type="text"]:focus,
+.ps-modal-container textarea:focus {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+/* Buttons */
+.ps-modal-container .data-header-btn-primary,
+.ps-modal-container .k-button-solid-primary,
+.ps-modal-container .cmn_btn.btn_orange,
+.ps-modal-container .btn_orange {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+.ps-modal-container .data-header-btn-primary:hover,
+.ps-modal-container .k-button-solid-primary:hover,
+.ps-modal-container .cmn_btn.btn_orange:hover,
+.ps-modal-container .btn_orange:hover {
+    background-color: #6D28D9 !important;
+    border-color: #6D28D9 !important;
+}
+
+/* Tab Buttons */
+.ps-modal-container .tabMenu .btnTab.on,
+.ps-modal-container .tabMenu .btnTab:focus {
+    border-color: #7C3AED !important;
+    background-color: #F3F1FF !important;
+    color: #7C3AED !important;
+}
+
+.ps-modal-container .tabMenu .btnTab:hover {
+    background-color: #EBE7FF !important;
+    border-color: #7C3AED !important;
+    color: #7C3AED !important;
+}
+
+/* Dropdown Arrow Button */
+.ps-modal-container .k-dropdownlist.k-picker>button,
+.ps-modal-container .k-dropdown .k-input-button,
+.ps-modal-container .k-picker .k-input-button {
+    background-color: #7C3AED !important;
+}
+
+/* Loading Indicators */
+.ps-modal-container .k-loading-mask,
+.ps-modal-container .k-loading-image,
+.ps-modal-container .k-i-loading,
+.ps-modal-container .k-loading-color {
+    color: #7C3AED !important;
+}
+
+/* NProgress Loading Bar */
+body:has(.ps-modal-overlay) #nprogress .bar {
+    background: #7C3AED !important;
+}
+
+body:has(.ps-modal-overlay) #nprogress .peg {
+    box-shadow: 0 0 10px #7C3AED, 0 0 5px #7C3AED !important;
+}
+
+body:has(.ps-modal-overlay) #nprogress .spinner-icon {
+    border-top-color: #7C3AED !important;
+    border-left-color: #7C3AED !important;
+}
+
+/* Checkbox */
+.ps-modal-container .k-checkbox:checked,
+.ps-modal-container .k-checkbox.k-checked {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+/* Popup/Dropdown Lists */
+.ps-modal-container .k-animation-container .k-popup,
+.purple-theme-context .k-popup {
+    border-color: #7C3AED !important;
+}
+
+.ps-modal-container .k-list .k-selected,
+.ps-modal-container .k-list .k-item.k-selected,
+.ps-modal-container .k-list-item.k-selected {
+    background-color: #F3F1FF !important;
+    color: #7C3AED !important;
+}
+
+.ps-modal-container .k-list .k-item:hover,
+.ps-modal-container .k-list-item:hover {
+    background-color: #EBE7FF !important;
+    color: #7C3AED !important;
+}
+
+/* Additional Row Selection Override - Stronger Specificity */
+.ps-modal-container #grid_01 .k-table-tbody tr.k-selected,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-selected td,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected,
+.ps-modal-container #grid_01 .k-table-tbody tr.k-table-row.k-selected td,
+.ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"],
+.ps-modal-container #grid_01 .k-table-tbody tr[aria-selected="true"] td,
+.ps-modal-container .cmn_grid .k-table-tbody tr.k-selected,
+.ps-modal-container .cmn_grid .k-table-tbody tr.k-selected td {
+    background-color: #F3F1FF !important;
+    background: #F3F1FF !important;
+    color: inherit !important;
+}
+
+/* ComboBox Dropdown Popup Border */
+.ps-modal-container .k-animation-container,
+.ps-modal-container .k-popup,
+.ps-modal-container .k-list-container,
+.ps-modal-container .k-list-scroller {
+    border-color: #7C3AED !important;
+}
+
+/* ComboBox Dropdown Popup Border - Global (when modal is open) */
+body:has(.ps-modal-overlay) .k-animation-container,
+body:has(.ps-modal-overlay) .k-popup,
+body:has(.ps-modal-overlay) .k-list-container,
+body:has(.ps-modal-overlay) .k-list-scroller,
+body:has(.ps-modal-overlay) .k-list,
+body:has(.ps-modal-overlay) .k-popup.k-list-container {
+    border-color: #7C3AED !important;
+}
+
+/* Grid/Data Container Border */
+.ps-modal-container .ps-grid-wrapper,
+.ps-modal-container .ps-data-container,
+.ps-modal-container .cmn_gird_wrap,
+.ps-modal-container .data-grid-container {
+    border-color: #7C3AED !important;
+}

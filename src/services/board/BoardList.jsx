@@ -182,7 +182,6 @@ const BoardList = ({ type = 'notice' }) => {
                                         )}
                                         <td className="bl-col-title">
                                             <div className="bl-title-wrapper">
-                                                {/* <FileText size={16} color="var(--primary-color)" style={{ minWidth: '16px' }} /> */}
                                                 <span className="bl-title-text">{item.title}</span>
                                                 {!item.isVisible && <Lock size={14} color="#666" style={{ marginLeft: '4px' }} />}
                                                 {item.hasAttachment && <Paperclip size={14} color="#666" style={{ marginLeft: '4px' }} />}

@@ -1,18 +1,60 @@
 import { Fragment, useEffect, useState } from "react";
-import { useLocation, Outlet } from "react-router-dom";
+import { useLocation, Outlet, useNavigate } from "react-router-dom";
 import AiSidebar from "@/services/aiOpenAnalysis/app/AiSidebar.jsx";
 import { useSelector } from "react-redux";
+// import { modalContext } from "@/components/common/Modal.jsx";
+import ProjectSelectionModal from "@/services/dataStatus/app/menuBar/ProjectSelectionModal.jsx";
 
 const MainWrapperView = (props) => {
     const auth = useSelector((store) => store.auth);
     const location = useLocation();
+    const navigate = useNavigate();
+    // const modal = useContext(modalContext);
+    const [projectUpdated, setProjectUpdated] = useState(0);
+    const [isProjectModalOpen, setProjectModalOpen] = useState(false);
+
+    useEffect(() => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        if (!projectnum) {
+            setProjectModalOpen(true);
+        }
+    }, [location.pathname, navigate]);
 
     return (
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-            <AiSidebar />
+            {isProjectModalOpen && (
+                <ProjectSelectionModal
+                    onSelect={(project) => {
+                        sessionStorage.setItem("projectnum", project.projectnum || "");
+                        sessionStorage.setItem("projectname", project.projectname || "");
+                        sessionStorage.setItem("servername", project.servername || "");
+                        sessionStorage.setItem("projectpof", project.projectpof || "");
+
+                        setProjectModalOpen(false);
+                        setProjectUpdated((prev) => prev + 1);
+
+                        // If at root, go to pro_list, else refresh/stay
+                        if (location.pathname === '/ai_open_analysis' || location.pathname === '/ai_open_analysis/') {
+                            navigate('/ai_open_analysis/pro_list');
+                        } else {
+                            navigate(0); // Refresh to apply session changes
+                        }
+                    }}
+                    onClose={() => {
+                        setProjectModalOpen(false);
+                        // Only go home if no project is selected
+                        const projectnum = sessionStorage.getItem("projectnum");
+                        if (!projectnum) {
+                            navigate("/"); // Go home if no project selected
+                        }
+                        // Otherwise just close the modal
+                    }}
+                />
+            )}
+            <AiSidebar key={projectUpdated} onOpenProjectModal={() => setProjectModalOpen(true)} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', backgroundColor: '#fff' }}>
                 <section style={{ flex: 1, padding: '0' }}>
-                    <Outlet />
+                    <Outlet key={projectUpdated} />
                 </section>
                 <footer style={{
                     width: '100%',

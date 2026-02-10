@@ -103,20 +103,17 @@ const MenuSection = () => {
               return;
             }
 
-            const fromState = item.id === "data-dashboard" ? "data_status" : "ai_open";
-            const projectnum = sessionStorage.getItem("projectnum");
-
-            if (projectnum) {
-              if (item.id === "data-dashboard") {
-                navigate("/data_status/setting/variable");
-              } else if (item.id === "ai-open-analysis") {
-                navigate("/project/pro_list");
-              } else {
-                navigate("/project", { state: { from: fromState } });
-              }
-            } else {
-              navigate("/project", { state: { from: fromState } });
+            if (item.id === "data-dashboard") {
+              navigate("/data_status/setting/variable");
+              return;
             }
+
+            if (item.id === "ai-open-analysis") {
+              navigate("/ai_open_analysis");
+              return;
+            }
+
+            navigate("/project");
           };
 
           return (
