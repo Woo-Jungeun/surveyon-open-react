@@ -296,6 +296,16 @@
     border-color: #7C3AED !important;
 }
 
+/* Remove inner input border to prevent double border */
+.ps-modal-container .k-input-inner,
+.ps-modal-container .k-picker .k-input-inner,
+.ps-modal-container .k-dropdown .k-input-inner,
+.ps-modal-container .k-dropdownlist .k-input-inner,
+.ps-modal-container .k-input-solid .k-input-inner {
+    border: none !important;
+    box-shadow: none !important;
+}
+
 .ps-modal-container .k-input:hover,
 .ps-modal-container .k-input-solid:hover,
 .ps-modal-container .k-picker:hover,
