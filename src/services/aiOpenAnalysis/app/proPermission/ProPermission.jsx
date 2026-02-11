@@ -9,7 +9,9 @@ import { ProPermissionApi } from "@/services/aiOpenAnalysis/app/proPermission/Pr
 import { useNavigate } from "react-router-dom";
 import { DatePicker } from "@progress/kendo-react-dateinputs";
 import moment from "moment";
+import { Trash2 } from 'lucide-react';
 import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader";
+import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import "./ProPermission.css";
 
 
@@ -253,21 +255,19 @@ const ProPermission = () => {
 
 
       <AiDataHeader title="프로젝트 권한 관리">
-        <div className="btnWrap">
-          <Button
-            type="button"
-            className="btn-delete-project"
-            disabled={loading}
-            onClick={handleDeleteProject}
-          >
-            프로젝트 삭제
+        <GridHeaderBtnPrimary
+          onClick={handleDeleteProject}
+          className="btn-delete-project"
+        >
+          <div className="btn-delete-project-inner">
+            <Trash2 size={16} />
+            <span>프로젝트 삭제</span>
             <span
               className="info-icon"
               data-tooltip={`프로젝트 삭제|삭제된 데이터는 복구할 수 없습니다.`}
-              style={{ marginLeft: '6px' }}
             ></span>
-          </Button>
-        </div>
+          </div>
+        </GridHeaderBtnPrimary>
       </AiDataHeader>
 
       <div className="ai-content-area">
@@ -303,7 +303,7 @@ const ProPermission = () => {
                 </div>
 
                 <div className="form-field">
-                  <span className="form-label">POF <span>*</span></span>
+                  <span className="form-label">POF</span>
                   <Input
                     className="k-input k-input-solid"
                     value={formData.pof}
