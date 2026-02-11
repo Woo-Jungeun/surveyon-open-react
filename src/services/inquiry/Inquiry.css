@@ -949,10 +949,13 @@
 
 .id-content-wrapper {
     max-width: 1000px;
-    margin: 40px auto 0;
+    margin: 20px auto 30px;
     display: flex;
     flex-direction: column;
     gap: 20px;
+    height: calc(100vh - 140px);
+    /* 높이 더 축소하여 여유 확보 */
+    overflow: hidden;
 }
 
 /* Section Styles */
@@ -962,11 +965,20 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     overflow: hidden;
     border: 1px solid #e2e8f0;
+    display: flex;
+    /* 내부 요소 배치를 위해 flex */
+    flex-direction: column;
+    flex: 1;
+    /* 공간 나눠 갖기 */
+    min-height: 0;
+    /* 축소 허용 */
 }
 
 .id-header {
-    padding: 30px 40px;
+    padding: 15px 40px;
     border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
+    /* 헤더 고정 */
 }
 
 .id-status-badge {
@@ -1025,9 +1037,21 @@
 .id-body {
     padding: 40px;
     display: flex;
-    gap: 24px;
+    gap: 10px;
     flex-direction: column;
+    overflow-y: auto;
+    flex: 1;
 }
+
+/* ... */
+.id-body.answer-body {
+    max-height: none;
+    overflow-y: hidden;
+    /* 바깥 스크롤 제거 */
+}
+
+/* ... (중간 생략 불가하므로 multi_replace 권장되나 여기선 replace_file_content 두 번 사용 예정, 이번엔 body 먼저 말고 input 먼저 하거나 따로) */
+/* replace_file_content는 한 번에 한 블록만 가능하므로, 두 번 호출해야 함. */
 
 .id-label {
     font-size: 24px;
@@ -1108,10 +1132,25 @@
     color: #94a3b8;
 }
 
+/* Question Section */
+.question-section {
+    flex: 2;
+}
+
 /* Answer Section */
 .answer-section {
     background: #f8fafc;
     border-color: #cbd5e1;
+    flex: 1;
+}
+
+/* 답변 작성/수정 모드일 때 비율 조정 */
+.id-content-wrapper.answering-mode .question-section {
+    flex: 1;
+}
+
+.id-content-wrapper.answering-mode .answer-section {
+    flex: 1;
 }
 
 .answer-header {
@@ -1167,13 +1206,21 @@
 }
 
 .id-btn {
-    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 24px;
+    /* 높이 고정이므로 상하 패딩은 0 또는 조정 */
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
+    height: 44px;
+    /* 높이 고정 */
+    box-sizing: border-box;
 }
 
 .id-btn-edit {
@@ -1196,19 +1243,16 @@
 
 .id-btn-reply {
     background: white;
+    border: 1px solid #cbd5e1;
     color: #475569;
-    border: 1px solid #ddd !important;
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
 }
 
 .id-btn-reply:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1 !important;
-    color: #1e293b;
+    background: #f1f5f9;
+    color: #334155;
+    border-color: #94a3b8;
 }
+
 
 .id-answer-actions {
     display: flex;
@@ -1220,11 +1264,6 @@
 /* Answer Form */
 .id-answer-form {
     width: 100%;
-}
-
-.answer-body {
-    flex-direction: column;
-    gap: 16px;
 }
 
 .id-answer-input {
@@ -1651,4 +1690,32 @@
     line-height: 1;
     /* 텍스트 높이 보정 */
     margin-top: 0;
+}
+
+/* Answer Input */
+.id-answer-input {
+    width: 100%;
+    min-height: 120px;
+    padding: 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    flex: 1;
+    /* 남은 높이 채우기 */
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.id-answer-input:focus {
+    border-color: #6b7fbf;
+    box-shadow: 0 0 0 3px rgba(107, 127, 191, 0.1);
+}
+
+.id-answer-form {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    height: 100%;
 }

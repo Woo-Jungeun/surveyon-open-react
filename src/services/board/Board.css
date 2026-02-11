@@ -44,6 +44,15 @@
     text-align: center;
 }
 
+.bd-nav-group {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+}
+
 .bl-header-content {
     padding: 20px;
     background: white;
@@ -212,11 +221,18 @@
     font-size: 15px;
     color: #1a1a1a;
     text-align: center;
+    vertical-align: middle;
 }
 
 /* Column widths */
 .bl-col-no {
     width: 80px;
+    text-align: center;
+}
+
+.bl-pin-icon {
+    display: block;
+    margin: 0 auto;
 }
 
 .bl-col-version {
@@ -783,6 +799,10 @@
     padding: 20px 40px;
     position: relative;
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .bd-nav-group {
@@ -817,12 +837,18 @@
 }
 
 .bd-content-wrapper {
+    width: 100%;
     max-width: 1160px;
-    margin: 20px auto 0;
+    margin: 0 auto;
     background: white;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    max-height: 80vh;
+    /* 화면 높이 제한 */
+    display: flex;
+    /* 내부 요소 배치를 위해 flex 사용 */
+    flex-direction: column;
 }
 
 /* Header */
@@ -830,6 +856,8 @@
     padding: 40px;
     border-bottom: 1px solid #eee;
     background: #fff;
+    flex-shrink: 0;
+    /* 헤더 크기 줄어들지 않도록 */
 }
 
 .bd-category {
@@ -882,6 +910,8 @@
     /* 줄바꿈, 띄어쓰기 보존 */
     word-break: break-all;
     /* 긴 단어 줄바꿈 */
+    overflow-y: auto;
+    flex: 1;
 }
 
 .bd-body p {

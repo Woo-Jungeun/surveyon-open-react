@@ -78,7 +78,7 @@ const InquiryDetail = () => {
 
 
 
-            <div className="id-content-wrapper">
+            <div className={`id-content-wrapper ${isAnswering ? 'answering-mode' : ''}`}>
                 {/* 질문 영역 (Q) */}
                 <div className="id-section question-section">
                     <div className="id-header">
@@ -236,153 +236,155 @@ const InquiryDetail = () => {
                     )}
                 </div>
 
-                <div className="id-footer">
-                    {/* 작성자 본인일 경우에만 표시 */}
-                    <div className="id-user-btns">
-                        {inquiryData.writerId === userId && (
-                            <>
-                                {inquiryData.status !== 'answered' && (
-                                    <>
-                                        <button className="id-btn id-btn-edit" onClick={() => navigate(`/inquiry/write/${id}`)}>문의 수정</button>
-                                        <button className="id-btn id-btn-delete" onClick={() => {
-                                            modal.showConfirm('알림', '정말 이 문의를 삭제하시겠습니까?', {
-                                                btns: [
-                                                    { title: "취소", click: () => { } },
-                                                    {
-                                                        title: "확인",
-                                                        click: async () => {
-                                                            try {
-                                                                const payload = {
-                                                                    gb: "delete",
-                                                                    user: userId,
-                                                                    is_admin: isAdmin,
-                                                                    id: parseInt(id)
-                                                                };
+                {!isAnswering && (
+                    <div className="id-footer">
+                        {/* 작성자 본인일 경우에만 표시 */}
+                        <div className="id-user-btns">
+                            {inquiryData.writerId !== userId && (
+                                <>
+                                    {inquiryData.status !== 'answered' && (
+                                        <>
+                                            <button className="id-btn id-btn-edit" onClick={() => navigate(`/inquiry/write/${id}`)}>문의 수정</button>
+                                            <button className="id-btn id-btn-delete" onClick={() => {
+                                                modal.showConfirm('알림', '정말 이 문의를 삭제하시겠습니까?', {
+                                                    btns: [
+                                                        { title: "취소", click: () => { } },
+                                                        {
+                                                            title: "확인",
+                                                            click: async () => {
+                                                                try {
+                                                                    const payload = {
+                                                                        gb: "delete",
+                                                                        user: userId,
+                                                                        is_admin: isAdmin,
+                                                                        id: parseInt(id)
+                                                                    };
 
-                                                                const response = await inquiryTransaction.mutateAsync(payload);
+                                                                    const response = await inquiryTransaction.mutateAsync(payload);
 
-                                                                if (response?.success === "777") {
-                                                                    modal.showAlert('알림', '문의가 삭제되었습니다.', null, () => {
-                                                                        navigate('/inquiry');
-                                                                    });
-                                                                } else {
-                                                                    modal.showErrorAlert('오류', '문의 삭제에 실패했습니다.');
+                                                                    if (response?.success === "777") {
+                                                                        modal.showAlert('알림', '문의가 삭제되었습니다.', null, () => {
+                                                                            navigate('/inquiry');
+                                                                        });
+                                                                    } else {
+                                                                        modal.showErrorAlert('오류', '문의 삭제에 실패했습니다.');
+                                                                    }
+                                                                } catch (error) {
+                                                                    console.error('문의 삭제 실패:', error);
+                                                                    modal.showErrorAlert('오류', '문의 삭제에 실패했습니다. 다시 시도해주세요.');
                                                                 }
-                                                            } catch (error) {
-                                                                console.error('문의 삭제 실패:', error);
-                                                                modal.showErrorAlert('오류', '문의 삭제에 실패했습니다. 다시 시도해주세요.');
                                                             }
                                                         }
-                                                    }
-                                                ]
-                                            });
-                                        }}>문의 삭제</button>
-                                    </>
-                                )}
+                                                    ]
+                                                });
+                                            }}>문의 삭제</button>
+                                        </>
+                                    )}
 
-                                {/* 답변 완료 시 추가 질문하기 버튼 표시 */}
-                                {inquiryData.status === 'answered' && (
-                                    <button
-                                        className="id-btn id-btn-reply"
-                                        onClick={() => navigate('/inquiry/write', {
-                                            state: {
-                                                parentId: inquiryData.parentId || id,
-                                                parentTitle: inquiryData.title,
-                                                parentCategory: inquiryData.category,
-                                                isSecret: inquiryData.isSecret
-                                            }
-                                        })}
-                                    >
-                                        <MessageCirclePlus size={16} />
-                                        추가 질문하기
-                                    </button>
-                                )}
-                            </>
-                        )}
-                        {isAdmin === 1 && (
-                            inquiryData.answer ? (
-                                !isAnswering && (
-                                    <>
-                                        <button className="id-btn id-btn-edit" onClick={() => {
-                                            // HTML 태그 제거 후 텍스트만 추출 (간단한 예시)
-                                            const textContent = inquiryData.answer.content.replace(/<[^>]*>?/gm, '');
-                                            setAnswerContent(textContent);
-                                            setIsAnswering(true);
-                                        }}>답변 수정</button>
-                                        <button className="id-btn id-btn-delete" onClick={() => {
-                                            modal.showConfirm('알림', '정말 이 답변을 삭제하시겠습니까?', {
-                                                btns: [
-                                                    { title: "취소", click: () => { } },
-                                                    {
-                                                        title: "확인",
-                                                        click: async () => {
-                                                            try {
-                                                                const payload = {
-                                                                    gb: "update",
-                                                                    id: parseInt(id),
-                                                                    answer: "",
-                                                                    answerer: "",
-                                                                    user: userId,
-                                                                    is_admin: isAdmin
-                                                                };
+                                    {/* 답변 완료 시 추가 질문하기 버튼 표시 */}
+                                    {inquiryData.status === 'answered' && (
+                                        <button
+                                            className="id-btn id-btn-reply"
+                                            onClick={() => navigate('/inquiry/write', {
+                                                state: {
+                                                    parentId: inquiryData.parentId || id,
+                                                    parentTitle: inquiryData.title,
+                                                    parentCategory: inquiryData.category,
+                                                    isSecret: inquiryData.isSecret
+                                                }
+                                            })}
+                                        >
+                                            <MessageCirclePlus size={16} />
+                                            추가 질문하기
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                            {isAdmin == 1 && (
+                                inquiryData.answer ? (
+                                    !isAnswering && (
+                                        <>
+                                            <button className="id-btn id-btn-edit" onClick={() => {
+                                                // HTML 태그 제거 후 텍스트만 추출 (간단한 예시)
+                                                const textContent = inquiryData.answer.content.replace(/<[^>]*>?/gm, '');
+                                                setAnswerContent(textContent);
+                                                setIsAnswering(true);
+                                            }}>답변 수정</button>
+                                            <button className="id-btn id-btn-delete" onClick={() => {
+                                                modal.showConfirm('알림', '정말 이 답변을 삭제하시겠습니까?', {
+                                                    btns: [
+                                                        { title: "취소", click: () => { } },
+                                                        {
+                                                            title: "확인",
+                                                            click: async () => {
+                                                                try {
+                                                                    const payload = {
+                                                                        gb: "update",
+                                                                        id: parseInt(id),
+                                                                        answer: "",
+                                                                        answerer: "",
+                                                                        user: userId,
+                                                                        is_admin: isAdmin
+                                                                    };
 
-                                                                const response = await inquiryTransaction.mutateAsync(payload);
+                                                                    const response = await inquiryTransaction.mutateAsync(payload);
 
-                                                                if (response?.success === "777") {
-                                                                    modal.showAlert('알림', '답변이 삭제되었습니다.');
+                                                                    if (response?.success === "777") {
+                                                                        modal.showAlert('알림', '답변이 삭제되었습니다.');
 
-                                                                    // 데이터 새로고침
-                                                                    inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
-                                                                        onSuccess: (res) => {
-                                                                            if (res?.success === "777") {
-                                                                                const data = res.resultjson || res.data || res;
-                                                                                const mappedData = {
-                                                                                    id: data.id,
-                                                                                    parentId: data.parentId || null,
-                                                                                    category: data.category,
-                                                                                    title: data.title,
-                                                                                    writer: data.author,
-                                                                                    writerId: data.userId || '',
-                                                                                    createdAt: data.createdAt,
-                                                                                    status: data.answer ? 'answered' : 'waiting',
-                                                                                    isSecret: data.isSecret,
-                                                                                    question: data.content,
-                                                                                    answer: data.answer ? {
-                                                                                        writer: data.answerer || '관리자',
-                                                                                        date: data.answeredAt,
-                                                                                        content: data.answer
-                                                                                    } : null,
-                                                                                    attachments: data.attachments || []
-                                                                                };
-                                                                                setInquiryData(mappedData);
+                                                                        // 데이터 새로고침
+                                                                        inquiryDetail.mutate({ id: id, user: userId, is_admin: isAdmin }, {
+                                                                            onSuccess: (res) => {
+                                                                                if (res?.success === "777") {
+                                                                                    const data = res.resultjson || res.data || res;
+                                                                                    const mappedData = {
+                                                                                        id: data.id,
+                                                                                        parentId: data.parentId || null,
+                                                                                        category: data.category,
+                                                                                        title: data.title,
+                                                                                        writer: data.author,
+                                                                                        writerId: data.userId || '',
+                                                                                        createdAt: data.createdAt,
+                                                                                        status: data.answer ? 'answered' : 'waiting',
+                                                                                        isSecret: data.isSecret,
+                                                                                        question: data.content,
+                                                                                        answer: data.answer ? {
+                                                                                            writer: data.answerer || '관리자',
+                                                                                            date: data.answeredAt,
+                                                                                            content: data.answer
+                                                                                        } : null,
+                                                                                        attachments: data.attachments || []
+                                                                                    };
+                                                                                    setInquiryData(mappedData);
+                                                                                }
                                                                             }
-                                                                        }
-                                                                    });
-                                                                } else {
-                                                                    modal.showErrorAlert('오류', '답변 삭제에 실패했습니다.');
+                                                                        });
+                                                                    } else {
+                                                                        modal.showErrorAlert('오류', '답변 삭제에 실패했습니다.');
+                                                                    }
+                                                                } catch (error) {
+                                                                    console.error('답변 삭제 실패:', error);
+                                                                    modal.showErrorAlert('오류', '답변 삭제에 실패했습니다. 다시 시도해주세요.');
                                                                 }
-                                                            } catch (error) {
-                                                                console.error('답변 삭제 실패:', error);
-                                                                modal.showErrorAlert('오류', '답변 삭제에 실패했습니다. 다시 시도해주세요.');
                                                             }
                                                         }
-                                                    }
-                                                ]
-                                            });
-                                        }}>답변 삭제</button>
-                                    </>
+                                                    ]
+                                                });
+                                            }}>답변 삭제</button>
+                                        </>
+                                    )
+                                ) : (
+                                    !isAnswering && (
+                                        <button className="id-btn id-btn-register" onClick={() => {
+                                            setAnswerContent('');
+                                            setIsAnswering(true);
+                                        }}>답변 등록</button>
+                                    )
                                 )
-                            ) : (
-                                !isAnswering && (
-                                    <button className="id-btn id-btn-register" onClick={() => {
-                                        setAnswerContent('');
-                                        setIsAnswering(true);
-                                    }}>답변 등록</button>
-                                )
-                            )
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
     );

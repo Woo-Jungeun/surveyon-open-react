@@ -180,7 +180,7 @@ const BoardList = ({ type = 'notice' }) => {
                                     >
                                         <td className="bl-col-no">
                                             {item.isPinned ? (
-                                                <Pin size={16} color="var(--primary-color, #7C9CBF)" fill="var(--primary-color, #7C9CBF)" />
+                                                <Pin className="bl-pin-icon" size={16} color="var(--primary-color, #7C9CBF)" fill="var(--primary-color, #7C9CBF)" />
                                             ) : (
                                                 filteredData.length - (startIndex + index)
                                             )}

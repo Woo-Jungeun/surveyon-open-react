@@ -112,6 +112,7 @@ const InquiryWrite = () => {
                 password: "",
                 author: userName,
                 user: userId,
+                is_admin: isAdmin,
                 // attachments: files.map(file => {
                 //     if (file instanceof File) {
                 //         return {
