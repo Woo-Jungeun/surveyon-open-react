@@ -25,6 +25,7 @@ const BoardWrite = () => {
     const [isSecret, setIsSecret] = useState(false);
     const [isPinned, setIsPinned] = useState(false); // 상단 고정 여부
     // const [files, setFiles] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // 수정 모드일 경우 데이터 불러오기
     useEffect(() => {
@@ -83,6 +84,8 @@ const BoardWrite = () => {
     const config = boardConfig[type] || boardConfig.notice;
 
     const handleSubmit = async () => {
+        if (isSubmitting) return;
+
         if (!title.trim() || !content.trim()) {
             modal.showAlert('알림', '제목과 내용을 모두 입력해주세요.');
             return;
@@ -129,6 +132,7 @@ const BoardWrite = () => {
         }
 
         try {
+            setIsSubmitting(true);
             let result;
             if (type === 'notice') {
                 result = await noticeTransaction.mutateAsync(payload);
@@ -153,10 +157,14 @@ const BoardWrite = () => {
                         navigate(`/board/${type}`);
                     }
                 });
+            } else {
+                modal.showErrorAlert('오류', '처리 중 오류가 발생했습니다.');
+                setIsSubmitting(false);
             }
         } catch (error) {
             console.error("Transaction failed:", error);
             modal.showErrorAlert('오류', '처리 중 오류가 발생했습니다.');
+            setIsSubmitting(false);
         }
     };
 

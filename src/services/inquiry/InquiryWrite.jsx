@@ -42,6 +42,7 @@ const InquiryWrite = () => {
     const [content, setContent] = useState('');
     const [isSecret, setIsSecret] = useState(isReply ? initialIsSecret : false);
     // const [files, setFiles] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // 수정 모드일 때 기존 데이터 불러오기
     useEffect(() => {
@@ -96,6 +97,8 @@ const InquiryWrite = () => {
     // };
 
     const handleSubmit = async () => {
+        if (isSubmitting) return;
+
         if (!title.trim() || !content.trim()) {
             modal.showAlert('알림', '제목과 내용을 모두 입력해주세요.');
             return;
@@ -103,6 +106,7 @@ const InquiryWrite = () => {
 
 
         try {
+            setIsSubmitting(true);
             const payload = {
                 gb: isEdit ? "update" : "insert",
                 category,
@@ -154,10 +158,12 @@ const InquiryWrite = () => {
                 });
             } else {
                 modal.showErrorAlert('오류', `문의 ${isEdit ? '수정' : '등록'}에 실패했습니다. 다시 시도해주세요.`);
+                setIsSubmitting(false);
             }
         } catch (error) {
             console.error('문의 등록/수정 실패:', error);
             modal.showErrorAlert('오류', `문의 ${isEdit ? '수정' : '등록'}에 실패했습니다. 다시 시도해주세요.`);
+            setIsSubmitting(false);
         }
     };
 
