@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useDeferredValue, memo, useRef, useEffect } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // 리스트 아이템 컴포넌트 (렌더링 최적화를 위해 분리)
 const OptionItem = memo(({ opt, targets, onApply, isDeleteOption }) => {
@@ -159,7 +160,9 @@ const OptionSettingLv3Panel = memo(({ open, onClose, targets, options = [], onAp
       <div
         className={`lv3-panel-toggle ${open ? "open" : ""}`}
         onClick={() => onClose(!open)}
-      ></div>
+      >
+        {open ? <ChevronRight size={18} color="#666" /> : <ChevronLeft size={18} color="#666" />}
+      </div>
     </div>
   );
 });

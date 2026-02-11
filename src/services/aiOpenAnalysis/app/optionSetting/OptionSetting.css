@@ -18,7 +18,6 @@
 
 /* Ensure the main grid container shrinks to fit content */
 #grid_01 .k-grid {
-  height: auto !important;
   min-height: 0 !important;
   /* Allow shrinking */
 }
@@ -282,24 +281,32 @@
   position: relative;
   box-shadow: inset 0 0 0 2px #E74C3C;
   /* 빨간 테두리 */
-  padding-right: 42px;
-  /* 배지 자리 */
+  padding-right: 34px;
+  /* 배지 자리 축소 */
+}
+
+/* 텍스트 넘침 방지 */
+.lv3-display {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* 에러 배지 */
 #grid_01 td.cell-error .cell-error-badge {
   position: absolute;
-  right: 8px;
+  right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #E74C3C;
   background: rgba(231, 76, 60, .08);
   border: 1px solid #E74C3C;
   border-radius: 4px;
-  padding: 1px 6px;
-  line-height: 1.6;
+  padding: 0px 4px;
+  line-height: 1.5;
   pointer-events: none;
   /* 입력 방해 X */
   white-space: nowrap;
@@ -447,9 +454,9 @@
 
 .lv3-side-panel {
   position: fixed;
-  top: 100px;
+  top: 0px;
   right: 0;
-  height: calc(100% - 100px);
+  height: calc(100% - 50px);
   width: 280px;
   background: #fff;
   border-left: 1px solid #ddd;
@@ -468,12 +475,14 @@
 
 .lv3-panel-toggle {
   position: fixed;
-  top: 110px;
-  width: 24px;
-  height: 40px;
-  background: #eee;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
+  top: 12px;
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-right: none;
+  border-radius: 8px 0 0 8px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -482,6 +491,10 @@
   right: 0;
   transition: transform 0.25s ease-out;
   will-change: transform;
+}
+
+.lv3-panel-toggle:hover {
+  background: #f8fafc;
 }
 
 .lv3-side-panel.open+.lv3-panel-toggle {
@@ -613,59 +626,7 @@
   /* flex 안에서 overflow 잘 동작하도록 */
 }
 
-.lv3-panel-wrap {
-  position: relative;
-}
 
-.lv3-side-panel {
-  position: fixed;
-  top: 100px;
-  right: 0;
-  height: calc(100% - 100px);
-  width: 280px;
-  /* 고정폭으로 잡고 */
-  background: #fff;
-  border-left: 1px solid #ddd;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  z-index: 100;
-  border-radius: 8px 0 0 8px;
-  transform: translateX(100%);
-  /* 기본: 화면 밖으로 */
-  transition: transform 0.25s ease-out;
-  /* GPU 전용 transition */
-  will-change: transform;
-  /* 브라우저에 미리 힌트 주기 */
-}
-
-.lv3-side-panel.open {
-  transform: translateX(0);
-  /* 열릴 때 오른쪽에서 슬라이드 인 */
-}
-
-/* 토글 버튼도 패널에 맞춰 살짝 이동 */
-.lv3-panel-toggle {
-  position: fixed;
-  top: 110px;
-  width: 24px;
-  height: 40px;
-  background: #eee;
-  border: 1px solid #ccc;
-  border-radius: 4px 0 0 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 200;
-  right: 0;
-  transition: transform 0.25s ease-out;
-  will-change: transform;
-}
-
-.lv3-side-panel.open+.lv3-panel-toggle {
-  transform: translateX(-280px);
-  /* 패널 폭만큼 이동 */
-}
 
 /* 드래그 중 실시간 하이라이트 */
 #grid_01.is-dragging .k-grid-table tr.drag-highlight {
@@ -692,16 +653,12 @@
   gap: 12px !important;
 }
 
-#grid_01 .k-pager .k-pager-numbers {
-  display: flex !important;
-  gap: 8px !important;
-}
-
 #grid_01 .k-pager .k-button,
 #grid_01 .k-pager .k-link {
   min-width: 36px !important;
   height: 36px !important;
   padding: 8px 12px !important;
+  margin: 0 4px !important;
   border-radius: 6px !important;
   font-size: 14px !important;
   font-weight: 500 !important;
@@ -722,10 +679,12 @@
 }
 
 #grid_01 .k-pager .k-pager-info {
+  position: absolute !important;
+  right: 20px !important;
   font-size: 14px !important;
   color: #666 !important;
   font-weight: 500 !important;
-  margin: 0 16px !important;
+  margin: 0 !important;
 }
 
 #grid_01 .k-pager .k-button:disabled {
@@ -765,39 +724,7 @@
   border-color: #ffb380 !important;
 }
 
-#grid_01 .k-pager-wrap {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
 
-#grid_01 .k-pager .k-selected {
-  background: #ff8533 !important;
-  color: white !important;
-  font-weight: 600 !important;
-  border-color: #ff8533 !important;
-}
-
-#grid_01 .k-pager .k-button:not(.k-selected):hover,
-#grid_01 .k-pager .k-link:not(.k-selected):hover {
-  background: #ffa366 !important;
-  color: white !important;
-  border-color: #ffa366 !important;
-}
-
-#grid_01 .k-pager {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-#grid_01 .k-pager>* {
-  margin: 0 auto !important;
-}
-
-#grid_01 .k-pager {
-  text-align: center !important;
-}
 
 /* Button Wrap */
 .btnWrap.btnRowFit {
@@ -960,58 +887,7 @@
   padding: 4px 0 !important;
 }
 
-#grid_01 .k-pager>* {
-  margin: 0 auto !important;
-  display: inline-block !important;
-}
 
-#grid_01 .k-pager .k-pager-numbers-wrap {
-  display: inline-flex !important;
-  justify-content: center !important;
-}
-
-#grid_01 .k-pager-wrap,
-#grid_01 .k-pager {
-  width: 100% !important;
-  display: flex !important;
-  flex-direction: row !important;
-  justify-content: center !important;
-  align-items: center !important;
-}
-
-#grid_01 .k-pager .k-pager-info {
-  position: absolute !important;
-  right: 20px !important;
-  margin: 0 !important;
-}
-
-#grid_01 .k-pager .k-pager-numbers-wrap {
-  margin: 0 !important;
-}
-
-#grid_01 .k-pager .k-pager-numbers {
-  gap: 8px !important;
-}
-
-#grid_01 .k-pager .k-button,
-#grid_01 .k-pager .k-link {
-  margin: 0 4px !important;
-}
-
-#grid_01 .k-pager .k-button.k-selected,
-#grid_01 .k-pager .k-link.k-selected {
-  background: #ff8533 !important;
-  color: white !important;
-  font-weight: 600 !important;
-  border-color: #ff8533 !important;
-}
-
-#grid_01 .k-pager .k-button:not(.k-selected):not(:hover),
-#grid_01 .k-pager .k-link:not(.k-selected):not(:hover) {
-  background: white !important;
-  color: #333 !important;
-  border: 1px solid #ddd !important;
-}
 
 /* ===================================================
      OPTION SETTING RESPONSIVE
