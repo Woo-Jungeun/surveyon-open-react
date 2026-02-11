@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Calendar, MessageCircle, Lock, MessageCirclePlus } from 'lucide-react';
+import { ArrowLeft, User, Calendar, MessageCircle, Lock, MessageCirclePlus, List } from 'lucide-react';
 import './Inquiry.css';
 import { InquiryApi } from './InquiryApi';
 import moment from 'moment';
@@ -69,10 +69,12 @@ const InquiryDetail = () => {
 
     return (
         <div className="id-container" data-theme="board-inquiry">
-            <button className="bw-back-btn" onClick={() => navigate('/inquiry')}>
-                <ArrowLeft size={16} />
-                목록으로
-            </button>
+            <div className="id-nav-group">
+                <button className="id-nav-btn" onClick={() => navigate('/inquiry')}>
+                    <List size={18} />
+                    목록
+                </button>
+            </div>
 
 
 

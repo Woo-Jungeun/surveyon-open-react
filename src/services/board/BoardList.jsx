@@ -113,7 +113,7 @@ const BoardList = ({ type = 'notice' }) => {
         <div className="bl-container" data-theme={`board-${type}`}>
             <button className="bl-home-btn" onClick={() => navigate('/')}>
                 <Home size={18} />
-                홈으로
+                홈
             </button>
 
             <div className="bl-header">

@@ -117,12 +117,18 @@ const BoardDetail = () => {
 
     return (
         <div className="bd-container" data-theme={`board-${type}`}>
-            {isFromHome && (
-                <button className="bd-back-btn" onClick={() => navigate('/')}>
-                    <Home size={18} />
-                    홈으로
+            <div className="bd-nav-group">
+                {isFromHome && (
+                    <button className="bd-nav-btn" onClick={() => navigate('/')}>
+                        <Home size={18} />
+                        홈
+                    </button>
+                )}
+                <button className="bd-nav-btn" onClick={() => navigate(`/board/${type}`)}>
+                    <List size={18} />
+                    목록
                 </button>
-            )}
+            </div>
 
             <div className="bd-content-wrapper">
                 <div className="bd-header">
@@ -151,17 +157,8 @@ const BoardDetail = () => {
                 </div>
 
                 <div className="bd-footer">
-                    <button
-                        className="bd-btn"
-                        onClick={() => navigate(`/board/${type}`)}
-                        style={{ background: 'white', border: '1px solid #ddd', color: '#555', display: 'flex', alignItems: 'center', padding: '8px 16px', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
-                    >
-                        <List size={16} style={{ marginRight: '6px' }} />
-                        목록으로
-                    </button>
-
                     {isAdmin === 1 && (
-                        <div className="bd-admin-btns" style={{ display: 'flex', gap: '8px', marginLeft: '12px', paddingLeft: '12px', borderLeft: '1px solid #eee' }}>
+                        <div className="bd-admin-btns" style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                             <button className="bd-btn bd-btn-edit" onClick={() => navigate(`/board/${type}/write/${id}`)}>수정</button>
                             <button className="bd-btn bd-btn-delete" onClick={handleDelete}>삭제</button>
                         </div>

@@ -130,10 +130,12 @@ const InquiryList = () => {
 
     return (
         <div className="inquiry-container" data-theme="board-inquiry">
-            <button className="inquiry-home-btn" onClick={() => navigate('/')}>
-                <Home size={18} />
-                홈으로
-            </button>
+            <div className="id-nav-group">
+                <button className="id-nav-btn" onClick={() => navigate('/')}>
+                    <Home size={18} />
+                    홈
+                </button>
+            </div>
 
             <div className="inquiry-header">
                 <div className="inquiry-header-content">

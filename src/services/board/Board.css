@@ -785,10 +785,16 @@
     box-sizing: border-box;
 }
 
-.bd-back-btn {
+.bd-nav-group {
     position: absolute;
     top: 20px;
     left: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+}
+
+.bd-nav-btn {
     padding: 10px 20px;
     background: var(--primary-color, #7C9CBF);
     color: white;
@@ -801,14 +807,13 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    z-index: 100;
 }
 
-.bd-back-btn:hover {
+.bd-nav-btn:hover {
     background: var(--primary-hover, #6A8BAE);
     filter: brightness(0.9);
     transform: translateY(-1px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(124, 156, 191, 0.3);
 }
 
 .bd-content-wrapper {

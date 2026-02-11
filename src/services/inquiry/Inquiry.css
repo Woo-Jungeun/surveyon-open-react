@@ -10,10 +10,16 @@
     box-sizing: border-box;
 }
 
-.inquiry-home-btn {
+.id-nav-group {
     position: absolute;
     top: 20px;
     left: 20px;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+}
+
+.id-nav-btn {
     padding: 10px 20px;
     background: var(--primary-color, #6b7fbf);
     color: white;
@@ -26,10 +32,9 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    z-index: 100;
 }
 
-.inquiry-home-btn:hover {
+.id-nav-btn:hover {
     background: var(--primary-hover, #5a6ea8);
     filter: brightness(0.9);
     transform: translateY(-1px);
