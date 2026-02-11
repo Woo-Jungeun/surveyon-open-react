@@ -80,18 +80,6 @@ const CustomCell = (props) => {
 };
 
 const RecodingPage = () => {
-    // Mock Data
-    // const [variables, setVariables] = useState([
-    //     { id: 'weight_demo', name: 'weight_demo', label: 'Weight Demo' },
-    //     { id: 'gender_grp', name: 'gender_grp', label: 'Gender Group' },
-    //     { id: 'age_band', name: 'age_band', label: 'Age Band' },
-    //     { id: 'region_group', name: 'region_group', label: 'Region Group' },
-    //     { id: 'q1_positive', name: 'q1_positive', label: 'Q1 Positive' },
-    //     { id: 'heavy_user', name: 'heavy_user', label: 'Usage Segment' },
-    //     { id: 'age_group_6', name: 'age_group_6', label: 'Age Group 6' },
-    //     { id: 'banner_group', name: 'banner_group', label: 'Banner Group' },
-    // ]);
-
     const auth = useSelector((store) => store.auth);
     const { getRecodedVariables, setRecodedVariable, deleteRecodedVariable, verifyRecodeLogic } = RecodingPageApi();
     const modal = useContext(modalContext);

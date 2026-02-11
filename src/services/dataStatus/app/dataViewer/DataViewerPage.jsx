@@ -34,30 +34,6 @@ const DataViewerPage = () => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
-    // Mock Data based on the user's image
-    // const [data, setData] = useState([
-    //     { id: 2, banner: 2, q1: 2, q2: 2, gender: 2, age: 21, region: 2, weight_demo: '1.00000000' },
-    //     { id: 3, banner: 3, q1: 3, q2: 3, gender: 1, age: 24, region: 3, weight_demo: '1.20000000' },
-    //     { id: 4, banner: 1, q1: 4, q2: 1, gender: 2, age: 27, region: 1, weight_demo: '1.40000000' },
-    //     { id: 5, banner: 2, q1: 5, q2: 2, gender: 1, age: 30, region: 2, weight_demo: '1.60000000' },
-    //     { id: 6, banner: 3, q1: 1, q2: 3, gender: 2, age: 33, region: 3, weight_demo: '0.80000000' },
-    //     { id: 7, banner: 1, q1: 2, q2: 1, gender: 1, age: 36, region: 1, weight_demo: '1.00000000' },
-    //     { id: 8, banner: 2, q1: 3, q2: 2, gender: 2, age: 39, region: 2, weight_demo: '1.20000000' },
-    //     { id: 9, banner: 3, q1: 4, q2: 3, gender: 1, age: 42, region: 3, weight_demo: '1.40000000' },
-    //     { id: 10, banner: 1, q1: 5, q2: 1, gender: 2, age: 45, region: 1, weight_demo: '1.60000000' },
-    //     { id: 11, banner: 2, q1: 1, q2: 2, gender: 1, age: 50, region: 2, weight_demo: '0.80000000' },
-    //     { id: 12, banner: 3, q1: 2, q2: 3, gender: 2, age: 55, region: 3, weight_demo: '1.00000000' },
-    //     { id: 13, banner: 1, q1: 3, q2: 1, gender: 1, age: 18, region: 1, weight_demo: '1.20000000' },
-    //     { id: 14, banner: 2, q1: 4, q2: 2, gender: 2, age: 21, region: 2, weight_demo: '1.40000000' },
-    //     { id: 15, banner: 3, q1: 5, q2: 3, gender: 1, age: 24, region: 3, weight_demo: '1.60000000' },
-    //     { id: 16, banner: 1, q1: 1, q2: 1, gender: 2, age: 27, region: 1, weight_demo: '0.80000000' },
-    //     { id: 17, banner: 2, q1: 2, q2: 2, gender: 1, age: 30, region: 2, weight_demo: '1.00000000' },
-    //     { id: 18, banner: 3, q1: 3, q2: 3, gender: 2, age: 33, region: 3, weight_demo: '1.20000000' },
-    //     { id: 19, banner: 1, q1: 4, q2: 1, gender: 1, age: 36, region: 1, weight_demo: '1.40000000' },
-    //     { id: 20, banner: 2, q1: 5, q2: 2, gender: 2, age: 39, region: 2, weight_demo: '1.60000000' },
-    //     { id: 21, banner: 3, q1: 1, q2: 3, gender: 1, age: 42, region: 3, weight_demo: '0.80000000' },
-    //     { id: 21, banner: 3, q1: 1, q2: 3, gender: 1, age: 42, region: 3, weight_demo: '0.80000000' },
-    // ]);
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '' });
