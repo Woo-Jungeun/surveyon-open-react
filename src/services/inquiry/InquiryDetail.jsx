@@ -240,7 +240,7 @@ const InquiryDetail = () => {
                     <div className="id-footer">
                         {/* 작성자 본인일 경우에만 표시 */}
                         <div className="id-user-btns">
-                            {inquiryData.writerId !== userId && (
+                            {inquiryData.writerId === userId && (
                                 <>
                                     {inquiryData.status !== 'answered' && (
                                         <>
