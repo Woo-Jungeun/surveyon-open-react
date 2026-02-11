@@ -161,7 +161,12 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   return (
     <>
       <Sidebar
-        brand={{ title: "데이터 현황", logoText: "SRT", logoClass: "menu-bar-logo" }}
+        brand={{
+          title: "데이터 현황",
+          logoText: "SRT",
+          logoClass: "menu-bar-logo",
+          onClick: () => navigate("/data_status/setting/variable")
+        }}
         menuGroups={MENU_ITEMS}
         projectInfo={projectInfoData}
         theme="blue"

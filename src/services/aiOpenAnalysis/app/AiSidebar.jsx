@@ -206,16 +206,10 @@ const AiSidebar = ({ onOpenProjectModal }) => {
 
 
     const handleBrandClick = () => {
-        sessionStorage.setItem("projectnum", "");
-        sessionStorage.setItem("projectname", "");
-        sessionStorage.setItem("servername", "");
-        sessionStorage.setItem("projectpof", "");
-        sessionStorage.setItem("merge_pn", "");
-        sessionStorage.setItem("merge_pn_text", "");
+        // Only clear question-specific data, keep project selection
         sessionStorage.setItem("qnum", "");
         sessionStorage.setItem("project_lock", "");
-        sessionStorage.setItem("userPerm", "");
-        navigate("/ai_open_analysis");
+        navigate("/ai_open_analysis/pro_list");
     };
 
     const projectInfo = {
