@@ -17,7 +17,18 @@ export function VariablePageApi() {
         }
     );
 
+    /** 페이지 목록 조회 */
+    const pageList = useMutation(
+        async (data) => await api.post(data, "/pages/list", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => {
+                loadingSpinner.show();
+            }
+        }
+    );
+
     return {
-        getOriginalVariables
+        getOriginalVariables,
+        pageList
     };
 }

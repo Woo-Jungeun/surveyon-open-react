@@ -15,22 +15,12 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { useSelector } from 'react-redux';
 
 const VariablePage = () => {
-    const { getOriginalVariables } = VariablePageApi();
+    const { getOriginalVariables, pageList } = VariablePageApi();
     const auth = useSelector((store) => store.auth);
     const [variables, setVariables] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
-    // todo 가라데이터 
-    // const [variables, setVariables] = useState([
-    //     { id: 1, sysName: 'banner', name: 'banner', label: 'Banner', category: '{1;Banner A}{2;Banner B}{3;Banner C}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-    //     { id: 2, sysName: 'q1', name: 'q1', label: 'Q1 Satisfaction', category: '{1;Very Low}{2;Low}{3;Neutral}{4;High}{5;Very High}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-    //     { id: 3, sysName: 'q2', name: 'q2', label: 'Q2 Usage', category: '{1;Never}{2;Sometimes}{3;Often}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-    //     { id: 4, sysName: 'gender', name: 'gender', label: 'Gender', category: '{1;Male}{2;Female}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-    //     { id: 5, sysName: 'age', name: 'age', label: 'Age', category: '{18;18}{25;25}{35;35}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '연속형' },
-    //     { id: 6, sysName: 'region', name: 'region', label: '지역', category: '{1;서울}{2;부산}{3;광주}', logic: 'q1 > 3', count: '값 240 / 로직 240', type: '범주형' },
-    // ]);
-
     // Hide loading spinner only after data is rendered
     useEffect(() => {
         if (isDataLoaded && variables.length >= 0) {
@@ -119,7 +109,62 @@ const VariablePage = () => {
         fetchVariables();
     }, [auth?.user?.userId]);
 
+    //   useEffect(() => {
+    //         const fetchVariables = async () => {
+    //             if (auth?.user?.userId) {
+    //                 const userId = auth.user.userId;
+    //                 try {
+    //                     const mergePn = sessionStorage.getItem('merge_pn');
+    //                     // 1. 페이지 목록 조회
+    //                     const pageRes = await pageList.mutateAsync({ user: userId, merge_pn: mergePn });
 
+    //                     // 2. 페이지 목록이 있으면 첫 번째 페이지의 변수 목록 조회
+    //                     if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
+    //                         const targetPage = pageRes.resultjson[0];
+    //                         const pageId = targetPage.pageid || targetPage.id;
+
+    //                         const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
+
+    //                         if (result.success === "777") {
+    //                             if (result.resultjson) {
+    //                                 const transformedData = Object.values(result.resultjson).map(item => {
+    //                                     let typeLabel = item.type;
+    //                                     if (item.type === 'categorical') typeLabel = '범주형';
+    //                                     else if (item.type === 'continuous') typeLabel = '연속형';
+    //                                     else if (item.type === 'text') typeLabel = '텍스트';
+
+    //                                     return {
+    //                                         id: item.id,
+    //                                         sysName: item.id,
+    //                                         name: item.name,
+    //                                         label: item.label,
+    //                                         category: item.info ? item.info.map(i => `{${i.value};${i.label}}`).join('') : '',
+    //                                         logic: '',
+    //                                         count: '',
+    //                                         type: typeLabel
+    //                                     };
+    //                                 });
+    //                                 setVariables(transformedData);
+    //                                 setOriginalVariables(JSON.parse(JSON.stringify(transformedData))); // Deep copy
+    //                                 setIsDataLoaded(true);
+    //                             }
+    //                         } else {
+    //                             modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
+    //                             loadingSpinner.hide();
+    //                         }
+    //                     } else {
+    //                         loadingSpinner.hide();
+    //                     }
+    //                 } catch (error) {
+    //                     console.error("API Error:", error);
+    //                     modal.showErrorAlert("에러", "문항 목록 조회 중 오류가 발생했습니다.");
+    //                     loadingSpinner.hide();
+    //                 }
+    //             }
+    //         };
+
+    //         fetchVariables();
+    //     }, [auth?.user?.userId]);
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업 open
     const [sort, setSort] = useState([]);
