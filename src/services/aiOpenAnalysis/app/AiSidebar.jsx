@@ -202,11 +202,11 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         navigate("/ai_open_analysis");
     };
 
-    const projectInfo = (projectnum && projectname) ? {
-        title: projectname,
-        subTitle: projectnum,
+    const projectInfo = {
+        title: projectname || "조사명 없음",
+        subTitle: projectnum || "ID 미지정",
         onSettingsClick: onOpenProjectModal
-    } : null;
+    };
 
     return (
         <Sidebar
