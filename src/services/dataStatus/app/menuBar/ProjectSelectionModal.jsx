@@ -18,12 +18,12 @@ const ProjectSelectionModal = ({ onClose, onSelect }) => {
                         {activeTab === 'select' ? (
                             <>
                                 <Folder size={20} className="ps-header-icon" />
-                                <span>프로젝트 선택</span>
+                                <span style={{ "fontSize": "20px" }}>프로젝트 선택</span>
                             </>
                         ) : (
                             <>
                                 <Plus size={20} className="ps-header-icon" />
-                                <span>프로젝트 등록</span>
+                                <span style={{ "fontSize": "20px" }}>프로젝트 등록</span>
                             </>
                         )}
                     </div>
@@ -39,6 +39,10 @@ const ProjectSelectionModal = ({ onClose, onSelect }) => {
                     >
                         <Folder size={16} />
                         <span>프로젝트 선택</span>
+                        <span
+                            className="info-icon"
+                            data-tooltip={`프로젝트 선택|현사용자가 등록한 프로젝트, 다른 사용자가 권한을 부여한 프로젝트를 선택하여 작업할 수 있습니다.`}
+                        ></span>
                     </button>
                     <button
                         className={`ps-tab-btn ${activeTab === 'create' ? 'active' : ''}`}
@@ -46,6 +50,10 @@ const ProjectSelectionModal = ({ onClose, onSelect }) => {
                     >
                         <Plus size={16} />
                         <span>프로젝트 등록</span>
+                        <span
+                            className="info-icon"
+                            data-tooltip={`프로젝트 등록|새로운 프로젝트를 등록합니다.\n조사(Qmaster): 연동된 프로젝트 등록 / 신규 등록: 새로운 프로젝트를 직접 등록`}
+                        ></span>
                     </button>
                     <div className={`ps-tab-indicator ${activeTab}`}></div>
                 </div>
@@ -64,12 +72,20 @@ const ProjectSelectionModal = ({ onClose, onSelect }) => {
                                     onClick={() => setCreateSubTab('qmaster')}
                                 >
                                     조사 (Qmaster)
+                                    <span
+                                        className="info-icon"
+                                        data-tooltip={`조사(Qmaster)|조사에 연동된 프로젝트 등록\n(있는 프로젝트가 없을 경우 설문당당자에게 문의)\n설문은 등록 여부에 따라 등록 가능 여부가 달라 확인`}
+                                    ></span>
                                 </button>
                                 <button
                                     className={`ps-sub-tab-btn ${createSubTab === 'new' ? 'active' : ''}`}
                                     onClick={() => setCreateSubTab('new')}
                                 >
                                     신규 등록
+                                    <span
+                                        className="info-icon"
+                                        data-tooltip={`신규 등록|새로운 프로젝트를 직접 등록`}
+                                    ></span>
                                 </button>
                             </div>
                             <div className="ps-content-wrapper sub-tab-content">

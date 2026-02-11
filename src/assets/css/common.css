@@ -6157,48 +6157,6 @@ footer {
 }
 
 
-/* ProEnter New Registration Tab Alignment */
-.pro-enter-new-container {
-    position: absolute;
-    left: 50vw;
-    transform: translateX(-50%);
-    padding-top: 10px;
-    width: auto;
-}
-
-.pro-enter-new-form {
-    width: 600px;
-    background: #fff;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-}
-
-@media (max-width: 1024px) {
-    .pro-enter-new-container {
-        position: static !important;
-        transform: none !important;
-        left: auto !important;
-        padding: 20px !important;
-        width: 100% !important;
-        max-width: 100vw !important;
-    }
-
-    .pro-enter-new-form {
-        width: 100% !important;
-        max-width: 600px !important;
-        margin: 0 auto !important;
-    }
-}
-
-@media (min-width: 770px) and (max-width: 1023px) {
-    .pro-enter-new-container {
-        padding: 15px !important;
-    }
-}
 
 
 /* ProEnter Form Height Fix */
@@ -6341,18 +6299,6 @@ footer {
     display: inline-block !important;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-/* ProEnter New Registration Tab Alignment */
 /* ProEnter New Registration Tab Alignment */
 .pro-enter-new-container {
     position: absolute;
@@ -6366,11 +6312,11 @@ footer {
     background: #fff;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
-    padding: 38px;
+    padding: 32px;
     /* Reduced padding */
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
     /* Reduced gap */
 }
 

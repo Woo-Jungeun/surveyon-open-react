@@ -113,7 +113,7 @@
 }
 
 .ps-tab-indicator.create {
-    left: 175px;
+    left: 215px;
     /* Padding + Tab1 Width */
     width: 145px;
 }
@@ -209,23 +209,6 @@
     flex-direction: column;
     flex: 1;
     /* Ensure full height */
-}
-
-.pro-enter-new-form {
-    width: 600px;
-    max-width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    background: #fff;
-    padding: 40px;
-    border-radius: 16px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
-    /* Card shadow */
-    border: 1px solid #eee;
-    margin: 0 0 40px 0;
-    /* Left align (no auto), top align (no top margin) */
-    flex-shrink: 0;
 }
 
 /* ============================================ */
@@ -460,4 +443,21 @@ body:has(.ps-modal-overlay) .k-popup.k-list-container {
 .ps-modal-container .cmn_gird_wrap,
 .ps-modal-container .data-grid-container {
     border-color: #7C3AED !important;
+}
+
+/* ============================================ */
+/* Tooltip Purple Theme for Project Modal */
+/* ============================================ */
+
+/* Tooltip styling when project modal is open */
+body:has(.ps-modal-overlay) .floating-tooltip {
+    box-shadow: 0 6px 16px rgba(124, 58, 237, 0.15) !important;
+}
+
+body:has(.ps-modal-overlay) .tooltip-title {
+    color: #7C3AED !important;
+}
+
+body:has(.ps-modal-overlay) .tooltip-title::before {
+    background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' fill='%237C3AED' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%237C3AED' opacity='0.12'/><path fill='%237C3AED' d='M12 7a1.25 1.25 0 1 1 0 2.5A1.25 1.25 0 0 1 12 7zm.75 4v6h-1.5v-6h1.5z'/></svg>") no-repeat center !important;
 }
