@@ -154,7 +154,7 @@
     align-items: center;
     gap: 8px;
     width: 100%;
-    max-width: 400px;
+    min-width: 500px;
 }
 
 .inquiry-search input {
@@ -395,6 +395,7 @@
 
     .inquiry-search {
         width: 100%;
+        min-width: 0;
     }
 
     .inquiry-search input {
