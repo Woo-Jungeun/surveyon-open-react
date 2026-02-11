@@ -27,6 +27,10 @@ const AiSidebar = ({ onOpenProjectModal }) => {
     // Project Info from Session
     const projectnum = sessionStorage.getItem("projectnum");
     const projectname = sessionStorage.getItem("projectname");
+    const qnum = sessionStorage.getItem("qnum");
+
+    // 문항 목록 페이지에서는 분석 메뉴 숨김
+    const isOnProList = location.pathname.includes("/pro_list");
 
     // Fetch Balance
     useEffect(() => {
@@ -157,9 +161,18 @@ const AiSidebar = ({ onOpenProjectModal }) => {
                     label: "문항 목록",
                     path: "/ai_open_analysis/pro_list",
                     icon: FileText,
-                    isActive: (path) => path.includes("/pro_list")
+                    isActive: (path) => path.includes("/pro_list"),
+                    onClick: () => {
+                        sessionStorage.setItem("qnum", "");
+                        sessionStorage.setItem("project_lock", "");
+                    }
                 },
-                { label: "분석", path: "/ai_open_analysis/option_setting", icon: BrainCircuit },
+                ...(qnum && !isOnProList ? [{
+                    label: "분석",
+                    path: "/ai_open_analysis/option_setting",
+                    icon: BrainCircuit,
+                    isActive: (path) => path.includes("/option_setting")
+                }] : []),
             ]
         });
     }
@@ -199,6 +212,9 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         sessionStorage.setItem("projectpof", "");
         sessionStorage.setItem("merge_pn", "");
         sessionStorage.setItem("merge_pn_text", "");
+        sessionStorage.setItem("qnum", "");
+        sessionStorage.setItem("project_lock", "");
+        sessionStorage.setItem("userPerm", "");
         navigate("/ai_open_analysis");
     };
 

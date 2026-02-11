@@ -34,11 +34,8 @@ const MainWrapperView = (props) => {
                         setProjectModalOpen(false);
                         setProjectUpdated((prev) => prev + 1);
 
-                        if (location.pathname === '/ai_open_analysis' || location.pathname === '/ai_open_analysis/') {
-                            navigate('/ai_open_analysis/pro_list');
-                        } else {
-                            navigate(0);
-                        }
+                        // 프로젝트 선택 시 해당 프로젝트의 문항 목록으로 이동
+                        navigate('/ai_open_analysis/pro_list');
                     }}
                     onClose={() => {
                         setProjectModalOpen(false);

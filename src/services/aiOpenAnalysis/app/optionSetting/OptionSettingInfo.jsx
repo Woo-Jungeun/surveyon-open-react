@@ -418,7 +418,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     // 조회/재조회 공용
     const searchInfo = useCallback(async (over = {}) => {
         const res = await optionEditData.mutateAsync({
-            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "info" },
+            params: { user: auth?.user?.userId || "", projectnum: sessionStorage.getItem("projectnum") || "", qnum: sessionStorage.getItem("qnum") || "", gb: "info" },
         });
 
         const d = res?.resultjson?.[0] || {};
@@ -517,7 +517,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             apikeyid: String(data?.apikeyid || ""),
             apikey: String(data?.apikey || ""),
             data_type: "DB",
-            projectnum,
+            projectnum: sessionStorage.getItem("projectnum") || "",
             result_lang: String(data?.result_lang || "Korean"),
             select_rows: "",
             model_select: String(data?.model_select || ""),
@@ -527,7 +527,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             prompt_string: String(data?.prompt_string || ""),
             keyword_string: String(data?.keyword_string || ""),
             select_column_id: "pid",
-            select_column_title: qnum,
+            select_column_title: sessionStorage.getItem("qnum") || "",
             temperature: parseTemp(data?.temperature),
             prompt_string_ex_backup: data?.prompt_string_ex_backup ?? {},
             prompt_string_res_backup: data?.prompt_string_res_backup ?? {},
@@ -535,8 +535,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
         return {
             user: auth?.user?.userId || "",
-            projectnum,
-            qnum,
+            projectnum: sessionStorage.getItem("projectnum") || "",
+            qnum: sessionStorage.getItem("qnum") || "",
             gb: "info",
             data: [info],
             ev: typeToEv[type], //버튼 구분
@@ -548,7 +548,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         const base = {
             token: "",
             user: auth?.user?.userId || "",
-            projectnum,
+            projectnum: sessionStorage.getItem("projectnum") || "",
             qid,
             action: "start",
         };
@@ -672,7 +672,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                             const payload = {
                                 params: {
                                     gb: "del_qnum",
-                                    projectnum, qnum,
+                                    projectnum: sessionStorage.getItem("projectnum") || "",
+                                    qnum: sessionStorage.getItem("qnum") || "",
                                     user: auth?.user?.userId || "",
                                 }
                             };

@@ -37,6 +37,9 @@ const ProList = () => {
             sessionStorage.setItem("servername", state?.servername);
             sessionStorage.setItem("projectpof", state?.projectpof);
         }
+        // 문항 목록 진입 시, 이전 문항 선택 정보 초기화
+        sessionStorage.setItem("qnum", "");
+        sessionStorage.setItem("project_lock", "");
     }, [projectnumFromState]);
 
     // 정렬/필터를 controlled
@@ -138,10 +141,12 @@ const ProList = () => {
         { field: "project_lock", title: "수정", group: "EDIT", show: true, allowHide: false, order: 2 },
     ]);
 
-    // 행 클릭 → /option_setting 로 이동
     const goOpenSetting = useCallback((merge_qnum, project_lock) => {
-        navigate('/ai_open_analysis/option_setting', { state: { projectnum, qnum: merge_qnum, userPerm: userPerm, project_lock } });
-    }, [navigate, projectnum, userPerm]);
+        sessionStorage.setItem("qnum", merge_qnum || "");
+        sessionStorage.setItem("project_lock", project_lock || "");
+        sessionStorage.setItem("userPerm", userPerm);
+        navigate('/ai_open_analysis/option_setting');
+    }, [navigate, userPerm]);
 
     // 권한 반영 컬럼 배열
     const columnsForPerm = useMemo(() => {

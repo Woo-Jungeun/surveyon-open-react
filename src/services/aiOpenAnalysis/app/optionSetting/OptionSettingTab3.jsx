@@ -248,8 +248,8 @@ const OptionSettingTab3 = (props) => {
             }}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
-                projectnum: projectnum,
-                qnum: qnum,
+                projectnum: sessionStorage.getItem("projectnum") ?? "",
+                qnum: sessionStorage.getItem("qnum") ?? "",
                 gb: "list",
             }}
             renderItem={(props) => <GridRenderer {...props} isLeftOpen={isLeftOpen} />}

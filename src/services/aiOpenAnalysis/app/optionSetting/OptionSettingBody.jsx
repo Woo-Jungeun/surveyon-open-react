@@ -1,7 +1,7 @@
 import React, { Fragment, useRef, useState, useCallback, useContext, useEffect } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import OptionSettingInfo from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingInfo";
 import OptionSettingTab1 from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingTab1";
 import OptionSettingTab2 from "@/services/aiOpenAnalysis/app/optionSetting/OptionSettingTab2";
@@ -93,17 +93,21 @@ const OptionSettingBody = () => {
 
   const { optionEditData, excelDownloadData } = OptionSettingApi();
 
-  const { state } = useLocation();
-  const projectnumFromState = state?.projectnum ?? sessionStorage.getItem("projectnum") ?? "";
-  const qnum = state?.qnum;
-  const projectname = sessionStorage.getItem("projectname");
-  const projectnum = projectnumFromState;
+  const projectnum = sessionStorage.getItem("projectnum") ?? "";
+  const qnum = sessionStorage.getItem("qnum") ?? "";
+  const projectname = sessionStorage.getItem("projectname") ?? "";
+  const project_lock = sessionStorage.getItem("project_lock") ?? "";
+  const userPerm = Number(sessionStorage.getItem("userPerm") ?? 0);
 
+  const navigate = useNavigate();
+
+  // 문항 번호(qnum)가 없으면 문항 목록으로 튕겨냄
   useEffect(() => {
-    if (projectnumFromState) {
-      sessionStorage.setItem("projectnum", projectnumFromState); //진입 시 projectnum을 세션에 보관
+    if (!qnum) {
+      modal.showAlert("알림", "분석할 문항을 먼저 선택해 주세요.");
+      navigate("/ai_open_analysis/pro_list");
     }
-  }, [projectnumFromState]);
+  }, [qnum, navigate, modal]);
 
   const TITLE_LIST = ["분석 대메뉴", "분석", ""];
   const [tabDivision, setTabDivision] = useState("1");
@@ -204,8 +208,8 @@ const OptionSettingBody = () => {
       const res = await optionEditData.mutateAsync({
         params: {
           user: auth?.user?.userId || "",
-          projectnum,
-          qnum,
+          projectnum: sessionStorage.getItem("projectnum") ?? "",
+          qnum: sessionStorage.getItem("qnum") ?? "",
           gb: "lb",
           skipSpinner,
         },
@@ -420,8 +424,8 @@ const OptionSettingBody = () => {
   const onClickExcelDownload = async () => {
     const res = await excelDownloadData.mutateAsync({
       user: auth?.user?.userId || "",
-      projectnum,
-      qnum,
+      projectnum: sessionStorage.getItem("projectnum") ?? "",
+      qnum: sessionStorage.getItem("qnum") ?? "",
       gb: "export_excel",
     });
     const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
@@ -555,8 +559,8 @@ const OptionSettingBody = () => {
                 const res = await optionEditData.mutateAsync({
                   params: {
                     user: auth?.user?.userId || "",
-                    projectnum,
-                    qnum,
+                    projectnum: sessionStorage.getItem("projectnum") ?? "",
+                    qnum: sessionStorage.getItem("qnum") ?? "",
                     gb: "import_excel",
                     data_in,
                     data_lb,
@@ -642,8 +646,8 @@ const OptionSettingBody = () => {
               onToggle={() => setIsLeftOpen(v => !v)}
               showEmptyEtcBtn={analysisCount !== 0}
               onNavigateTab={handleNavigateTab}
-              userPerm={state?.userPerm}  // 권한 체크 
-              project_lock={state?.project_lock}
+              userPerm={userPerm}  // 권한 체크 
+              project_lock={project_lock}
               lv3Options={lv3Options}
               responseCount={responseCount}
               fetchLv3Options={fetchLv3Options}

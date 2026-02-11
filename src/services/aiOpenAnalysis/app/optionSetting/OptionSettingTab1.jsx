@@ -1673,8 +1673,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             editField={editField}
             initialParams={{             /*초기파라미터 설정*/
                 user: auth?.user?.userId || "",
-                projectnum: projectnum,
-                qnum: qnum,
+                projectnum: sessionStorage.getItem("projectnum") ?? "",
+                qnum: sessionStorage.getItem("qnum") ?? "",
                 gb: "in",
             }}
             renderItem={renderGridItem}   // useCallback 적용

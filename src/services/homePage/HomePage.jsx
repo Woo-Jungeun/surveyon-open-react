@@ -10,6 +10,13 @@ const HomePage = () => {
   const { validateToken } = LoginApi();
   const auth = useSelector((store) => store.auth);
   useEffect(() => {
+    // 홈 화면 진입 시 프로젝트 관련 세션 데이터 초기화
+    const keysToClear = [
+      "projectnum", "projectname", "servername", "projectpof",
+      "merge_pn", "merge_pn_text", "qnum", "project_lock", "userPerm"
+    ];
+    keysToClear.forEach(key => sessionStorage.removeItem(key));
+
     if (auth?.user?.userId) {
       validateToken.mutate({ user: auth.user.userId });
     }
