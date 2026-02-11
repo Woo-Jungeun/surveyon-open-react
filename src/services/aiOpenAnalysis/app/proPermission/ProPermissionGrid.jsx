@@ -107,13 +107,19 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
   };
 
   return (
-    <Fragment>
-      <div className="cmn_gird_wrap">
-        <GridDataCount total={processedData.total} />
-        <div id="grid" className="cmn_grid singlehead">
+    <div className="ai-card-container" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div className="cmn_gird_wrap" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className="meta-header-layout" style={{ marginBottom: '12px' }}>
+          <div className="meta-header-left meta2">
+            <div className="row2" style={{ display: 'flex', alignItems: 'center' }}>
+              <GridDataCount total={processedData.total} />
+            </div>
+          </div>
+        </div>
+
+        <div id="grid_01" className="cmn_grid singlehead" style={{ flex: 1 }}>
           <KendoGrid
             parentProps={{
-              height: "320px",
               data: processedData.data,
               total: processedData.total,
               dataItemKey: DATA_ITEM_KEY,
@@ -123,6 +129,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
               filterChange: ({ filter }) => setFilter(filter ?? undefined),
               sort,
               filter,
+              style: { height: '100%' }
             }}
           >
             {columns.filter((c) => c.show !== false).map((c) => {
@@ -132,7 +139,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
                     key={c.field}
                     field="delete"
                     title={c.title}
-                    width={c.width}
+                    width="120px"
                     columnMenu={undefined}
                     cell={(props) => {
                       if (props.dataItem.no === 1) {
@@ -142,8 +149,17 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
                         <td style={{ textAlign: "center" }}>
                           <Button
                             className="btnM"
-                            themeColor="primary"
                             onClick={() => handleDelete(props.dataItem.id)}
+                            style={{
+                              height: '24px',
+                              fontSize: '12px',
+                              padding: '0 12px',
+                              borderRadius: '4px',
+                              background: '#fff1f2',
+                              color: '#e11d48',
+                              border: '1px solid #ffe4e6',
+                              fontWeight: '600'
+                            }}
                           >
                             삭제
                           </Button>
@@ -169,7 +185,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
           </KendoGrid>
         </div>
       </div>
-    </Fragment>
+    </div>
   );
 };
 

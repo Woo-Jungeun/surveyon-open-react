@@ -1,0 +1,143 @@
+/* ProPermission.css */
+.ai-page-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.pro-permission-form-card {
+    background: #fff;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.form-section-title::before {
+    content: '';
+    display: block;
+    width: 3px;
+    height: 16px;
+    background: #ff8024;
+    border-radius: 2px;
+}
+
+.form-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 24px;
+}
+
+.custom-datepicker {
+    width: 100% !important;
+}
+
+.custom-datepicker .k-input-inner {
+    padding: 4px 12px !important;
+    height: 36px !important;
+    font-size: 13px !important;
+}
+
+/* Force orange color on datepicker icon */
+.custom-datepicker .k-input-button {
+    background: transparent !important;
+    border: none !important;
+    color: #ff8024 !important;
+    width: 32px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    cursor: pointer !important;
+}
+
+.custom-datepicker .k-input-button svg {
+    width: 18px !important;
+    height: 18px !important;
+    color: #ff8024 !important;
+    stroke: #ff8024 !important;
+    display: block !important;
+}
+
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.form-label span {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.k-input-solid,
+.k-dropdownlist {
+    border-radius: 8px !important;
+    border: 1px solid #cbd5e1 !important;
+    height: 36px !important;
+    transition: all 0.2s !important;
+}
+
+.k-input-solid:focus-within,
+.k-dropdownlist:focus {
+    border-color: #fdba74 !important;
+    box-shadow: 0 0 0 3px rgba(255, 128, 36, 0.1) !important;
+}
+
+.submit-btn-wrap {
+    margin-top: 12px;
+}
+
+.btn-submit-premium {
+    width: 100%;
+    height: 42px !important;
+    background-color: #ff8024 !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+    border: none !important;
+    transition: all 0.2s !important;
+    box-shadow: 0 4px 6px -1px rgba(255, 128, 36, 0.2) !important;
+}
+
+.btn-submit-premium:hover {
+    background-color: #e67320 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 10px -1px rgba(255, 128, 36, 0.3) !important;
+}
+
+.btn-delete-project {
+    height: 36px !important;
+    padding: 0 16px !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    background: #fff !important;
+    color: #ef4444 !important;
+    border: 1px solid #fecaca !important;
+}
+
+.btn-delete-project:hover {
+    background: #fef2f2 !important;
+    border-color: #ef4444 !important;
+}

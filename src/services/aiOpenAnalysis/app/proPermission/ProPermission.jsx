@@ -9,6 +9,9 @@ import { ProPermissionApi } from "@/services/aiOpenAnalysis/app/proPermission/Pr
 import { useNavigate } from "react-router-dom";
 import { DatePicker } from "@progress/kendo-react-dateinputs";
 import moment from "moment";
+import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader";
+import "./ProPermission.css";
+
 
 /**
  * 권한 관리
@@ -246,252 +249,218 @@ const ProPermission = () => {
   };
 
   return (
-    <Fragment>
-      <style>{`
-        .custom-datepicker {
-            width: 100% !important;
-            flex: 1;
-        }
-        .custom-datepicker .k-dateinput,
-        .custom-datepicker .k-input,
-        .custom-datepicker .k-input-inner {
-            width: 100% !important;
-        }
-        .custom-datepicker .k-input-button,
-        .custom-datepicker .k-select,
-        .custom-datepicker .k-button-icon,
-        .custom-datepicker .k-svg-icon,
-        .custom-datepicker .k-icon {
-            color: #ff8024 !important;
-        }
-        .custom-datepicker .k-input-button {
-            background: transparent !important;
-            border: none !important;
-        }
-        .custom-datepicker .k-input-button svg {
-            display: block !important;
-            width: 24px;
-            height: 24px;
-            color: #ff8024 !important;
-        }
-      `}</style>
-      <article className="subTitWrap pro-list-header">
-        <div className="subTit">
-          <h2 className="titTxt">
-            프로젝트 권한 관리
+    <div className="ai-page-container">
+
+
+      <AiDataHeader title="프로젝트 권한 관리">
+        <div className="btnWrap">
+          <Button
+            type="button"
+            className="btn-delete-project"
+            disabled={loading}
+            onClick={handleDeleteProject}
+          >
+            프로젝트 삭제
             <span
               className="info-icon"
-              data-tooltip={`프로젝트 권한 관리|등록된 프로젝트를 기준으로 다른 작업자에게 읽기, 쓰기, 권한을 부여합니다.`}
+              data-tooltip={`프로젝트 삭제|삭제된 데이터는 복구할 수 없습니다.`}
+              style={{ marginLeft: '6px' }}
             ></span>
-          </h2>
-          <div className="btnWrap">
-            <Button
-              type="button"
-              className="btnTxt"
-              themeColor="primary"
-              disabled={loading}
-              onClick={handleDeleteProject}
-            >
-              프로젝트 삭제
-              <span
-                className="info-icon"
-                data-tooltip={`프로젝트 삭제|프로젝트 삭제 시 모든 문항이 함께 삭제되므로 신중히 진행하세요.`}
-              ></span>
-            </Button>
-          </div >
-        </div >
-      </article >
+          </Button>
+        </div>
+      </AiDataHeader>
 
-      <article className="subContWrap">
-        <div className="subCont">
-          <div className="pro-permission-container">
-            <form onSubmit={handleSubmit} className="pro-permission-form">
-              {/* Header inside form */}
-              <div style={{ textAlign: 'center', paddingBottom: '5px', borderBottom: '1px solid #f0f0f0', marginBottom: '5px' }}>
-                <h3 style={{
-                  fontSize: '20px',
-                  fontWeight: '700',
-                  color: '#333',
-                  marginBottom: '2px',
-                }}>
-                  권한 등록
-                </h3>
-                <p style={{ fontSize: '13px', color: '#666', margin: 0 }}>
-                  프로젝트에 대한 접근 권한을 설정합니다.
-                </p>
+      <div className="ai-content-area">
+        <div className="ai-split-layout">
+
+          {/* Left: Registration Form */}
+          <div className="ai-split-left">
+            <div className="pro-permission-form-card">
+              <div>
+                <h3 className="form-section-title">권한 등록</h3>
+                <p className="form-desc">작업자별 접근 권한을 설정하고 관리합니다.</p>
               </div>
 
-              {/* Row 1: 프로젝트명 */}
-              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>프로젝트명</span>
-                <Input
-                  className="k-input k-input-solid"
-                  value={projectname || ""}
-                  disabled
-                  style={{ flex: 1, height: '28px', background: '#f5f5f5', border: '1px solid #ddd' }}
-                />
-              </div>
-
-              {/* Row 2: 웹프로젝트번호 */}
-              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>웹프로젝트번호</span>
-                <Input
-                  className="k-input k-input-solid"
-                  value={projectnum || ""}
-                  disabled
-                  style={{ flex: 1, height: '28px', background: '#f5f5f5', border: '1px solid #ddd' }}
-                />
-              </div>
-
-              {/* Row 3: POF */}
-              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>POF <span style={{ color: '#ff5252' }}>*</span></span>
-                <Input
-                  className="k-input k-input-solid"
-                  value={formData.pof}
-                  onChange={(e) => handleChange("pof", e.value)}
-                  disabled
-                  style={{ flex: 1, height: '28px', background: '#f5f5f5', border: '1px solid #ddd' }}
-                />
-              </div>
-
-              {/* Row 4: 권한 */}
-              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>권한 <span style={{ color: '#ff5252' }}>*</span></span>
-                <DropDownList
-                  data={[
-                    "오픈팀(관리,읽기,쓰기)",
-                    "제작자(관리,읽기,쓰기)",
-                    "연구원(읽기,쓰기)",
-                    // todo 임시 주석
-                    // "고객(읽기)",
-                    // "일반(읽기)",
-                  ]}
-                  value={formData.permission_gubun}
-                  onChange={(e) => handleChange("permission_gubun", e.value)}
-                  disabled={loading}
-                  style={{ flex: 1, height: '28px' }}
-                />
-              </div>
-
-              {/* Row 5: 작업자 or 고객명 */}
-              {["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun) ? (
-                <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                  <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>고객명 <span style={{ color: '#ff5252' }}>*</span></span>
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flex: 1, flexDirection: 'column', gap: '16px' }}>
+                <div className="form-field">
+                  <span className="form-label">프로젝트명</span>
                   <Input
                     className="k-input k-input-solid"
-                    value={formData.worker_name || ""}
-                    onChange={(e) => handleChange("worker_name", e.value)}
-                    disabled={loading}
-                    style={{ flex: 1, height: '28px' }}
+                    value={projectname || ""}
+                    disabled
+                    style={{ background: '#f8fafc', color: '#64748b' }}
                   />
                 </div>
-              ) : (
-                <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                  <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '13px' }}>작업자 <span style={{ color: '#ff5252' }}>*</span></span>
+
+                <div className="form-field">
+                  <span className="form-label">웹프로젝트번호</span>
+                  <Input
+                    className="k-input k-input-solid"
+                    value={projectnum || ""}
+                    disabled
+                    style={{ background: '#f8fafc', color: '#64748b' }}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <span className="form-label">POF <span>*</span></span>
+                  <Input
+                    className="k-input k-input-solid"
+                    value={formData.pof}
+                    onChange={(e) => handleChange("pof", e.value)}
+                    disabled
+                    style={{ background: '#f8fafc', color: '#64748b' }}
+                  />
+                </div>
+
+                <div className="form-field">
+                  <span className="form-label">작업 권한 <span>*</span></span>
                   <DropDownList
-                    data={filteredUsers}
-                    textField="text"
-                    dataItemKey="value"
-                    filterable
-                    onFilterChange={handleUserFilterChange}
-                    onChange={(e) => {
-                      const selected = e.value;
-                      if (selected) {
-                        handleChange("worker_name", selected.name);
-                        setFormData((prev) => ({
-                          ...prev,
-                          worker_id: selected.value,          // 사용자 ID
-                          worker_name: selected.name,         // 사용자 이름
-                          worker_position: selected.position, // 부서/직책
-                        }));
-                      } else {
-                        setFormData((prev) => ({
-                          ...prev,
-                          worker_id: "",
-                          worker_name: "",
-                          worker_position: "",
-                        }));
-                      }
-                    }}
-                    value={filteredUsers.find((u) => u.value === formData.worker_id) || null}
+                    data={[
+                      "오픈팀(관리,읽기,쓰기)",
+                      "제작자(관리,읽기,쓰기)",
+                      "연구원(읽기,쓰기)",
+                      "고객(읽기)",
+                      "일반(읽기)",
+                    ]}
+                    value={formData.permission_gubun}
+                    onChange={(e) => handleChange("permission_gubun", e.value)}
                     disabled={loading}
-                    style={{ flex: 1, height: '28px' }}
                   />
                 </div>
-              )}
 
-              {/* 고객/일반일 경우 추가 필드 */}
-              {["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun) && (
-                <>
-                  <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                    <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '12px' }}>고객 이메일 <span style={{ color: '#ff5252' }}>*</span></span>
+                {["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun) ? (
+                  <div className="form-field">
+                    <span className="form-label">고객명 <span>*</span></span>
                     <Input
                       className="k-input k-input-solid"
-                      value={formData.worker_id || ""}
-                      onChange={(e) => handleChange("worker_id", e.value)}
+                      value={formData.worker_name || ""}
+                      onChange={(e) => handleChange("worker_name", e.value)}
                       disabled={loading}
-                      style={{ flex: 1, height: '28px' }}
+                      placeholder="고객명을 입력해 주세요"
                     />
                   </div>
-                  <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                    <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '12px' }}>고객 비밀번호 <span style={{ color: '#ff5252' }}>*</span></span>
-                    <Input
-                      type="password"
-                      className="k-input k-input-solid"
-                      value={formData.worker_password || ""}
-                      onChange={(e) => handleChange("worker_password", e.value)}
+                ) : (
+                  <div className="form-field">
+                    <span className="form-label">작업자 선택 <span>*</span></span>
+                    <DropDownList
+                      data={filteredUsers}
+                      textField="text"
+                      dataItemKey="value"
+                      filterable
+                      onFilterChange={handleUserFilterChange}
+                      onChange={(e) => {
+                        const selected = e.value;
+                        if (selected) {
+                          handleChange("worker_name", selected.name);
+                          setFormData((prev) => ({
+                            ...prev,
+                            worker_id: selected.value,
+                            worker_name: selected.name,
+                            worker_position: selected.position,
+                          }));
+                        } else {
+                          setFormData((prev) => ({
+                            ...prev,
+                            worker_id: "",
+                            worker_name: "",
+                            worker_position: "",
+                          }));
+                        }
+                      }}
+                      value={filteredUsers.find((u) => u.value === formData.worker_id) || null}
                       disabled={loading}
-                      style={{ flex: 1, height: '28px' }}
+                      placeholder="작업자를 선택해 주세요"
                     />
                   </div>
-                </>
-              )}
+                )}
 
-              <div className="cmn_pop_ipt" style={{ flexDirection: 'row', alignItems: 'center', gap: '10px' }}>
-                <span className="iptTit" style={{ width: '100px', marginBottom: '0', color: '#333', fontWeight: '500', fontSize: '12px' }}>만료일자 <span style={{ color: '#ff5252' }}>*</span></span>
-                <DatePicker
-                  className="custom-datepicker"
-                  value={formData.worker_expired ? new Date(formData.worker_expired) : null}
-                  format={"yyyy-MM-dd"}
-                  min={new Date()} // 오늘 이후만 선택 가능
-                  max={new Date(2200, 12, 31)}
-                  required={false}
-                  disabled={loading}
-                  editable={false}
-                  onChange={(e) => handleChange("worker_expired", e.value)}
-                  style={{ flex: 1, width: '100%', height: '28px' }}
-                />
-              </div>
+                {["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun) && (
+                  <>
+                    <div className="form-field">
+                      <span className="form-label">고객 이메일 (ID) <span>*</span></span>
+                      <Input
+                        className="k-input k-input-solid"
+                        value={formData.worker_id || ""}
+                        onChange={(e) => handleChange("worker_id", e.value)}
+                        disabled={loading}
+                        placeholder="이메일을 입력해 주세요"
+                      />
+                    </div>
+                    <div className="form-field">
+                      <span className="form-label">고객 비밀번호 <span>*</span></span>
+                      <Input
+                        type="password"
+                        className="k-input k-input-solid"
+                        value={formData.worker_password || ""}
+                        onChange={(e) => handleChange("worker_password", e.value)}
+                        disabled={loading}
+                        placeholder="비밀번호를 입력해 주세요"
+                      />
+                    </div>
+                  </>
+                )}
 
-              <div style={{ marginTop: '15px', textAlign: 'center' }}>
-                <Button
-                  type="submit"
-                  themeColor="primary"
-                  disabled={loading}
-                  style={{
-                    width: '100%',
-                    maxWidth: '200px',
-                    height: '32px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    borderRadius: '6px',
-                    backgroundColor: '#ff8024',
-                    border: 'none'
-                  }}
-                >
-                  등록
-                </Button>
-              </div>
-            </form>
+                <div className="form-field">
+                  <span className="form-label">만료 일자 <span>*</span></span>
+                  <DatePicker
+                    className="custom-datepicker"
+                    value={formData.worker_expired ? new Date(formData.worker_expired) : null}
+                    format={"yyyy-MM-dd"}
+                    min={new Date()}
+                    max={new Date(2200, 12, 31)}
+                    disabled={loading}
+                    editable={false}
+                    onChange={(e) => handleChange("worker_expired", e.value)}
+                    button={(props) => (
+                      <button
+                        {...props}
+                        type="button"
+                        className="k-button k-input-button"
+                      >
+                        <svg
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="#ff8024"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                          <line x1="16" y1="2" x2="16" y2="6"></line>
+                          <line x1="8" y1="2" x2="8" y2="6"></line>
+                          <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                      </button>
+                    )}
+                  />
+                </div>
+
+                <div className="submit-btn-wrap">
+                  <Button
+                    type="submit"
+                    className="btn-submit-premium"
+                    disabled={loading}
+                  >
+                    권한 등록하기
+                  </Button>
+                </div>
+              </form>
+            </div>
           </div>
 
-          {/* 권한 관리 목록 */}
-          <ProPermissionGrid data={gridData} setData={setGridData} fetchData={fetchData} />
+          {/* Right: Grid Area */}
+          <div className="ai-split-right" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <ProPermissionGrid data={gridData} setData={setGridData} fetchData={fetchData} />
+          </div>
+
         </div>
-      </article>
-    </Fragment >
+      </div>
+    </div>
   );
 };
 
 export default ProPermission;
+
