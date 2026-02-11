@@ -1189,14 +1189,6 @@
   border-bottom: 1px solid #e2e8f0 !important;
 }
 
-#grid_01 .k-grid-header .k-header {
-  font-weight: 600 !important;
-  color: #475569 !important;
-  background-color: #f8fafc !important;
-  padding: 10px 12px !important;
-  vertical-align: middle !important;
-}
-
 /* Custom padding for TextArea in OptionSettingInfo */
 .custom-padding-textarea {
   height: 50px !important;
