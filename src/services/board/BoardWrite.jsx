@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Save, Upload, X, Type, FileText, Lock, LockOpen, Tag } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X, Type, FileText, Lock, LockOpen, Tag, Pin } from 'lucide-react';
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import { modalContext } from "@/components/common/Modal";
@@ -23,6 +23,7 @@ const BoardWrite = () => {
     const [content, setContent] = useState('');
     const [version, setVersion] = useState(''); // 패치노트용
     const [isSecret, setIsSecret] = useState(false);
+    const [isPinned, setIsPinned] = useState(false); // 상단 고정 여부
     // const [files, setFiles] = useState([]);
 
     // 수정 모드일 경우 데이터 불러오기
@@ -42,6 +43,7 @@ const BoardWrite = () => {
                         setTitle(data.title || '');
                         setContent(data.content || '');
                         setIsSecret(!data.isVisible); // isVisible이 true면 공개, false면 비공개(isSecret=true)
+                        setIsPinned(data.isPinned || false); // 상단 고정 여부
                         if (type === 'patchnotes') {
                             setVersion(data.version || '');
                         }
@@ -99,6 +101,7 @@ const BoardWrite = () => {
             author: "관리자",
             is_admin: isAdmin,
             user: userId,
+            ...(type === 'notice' && { isPinned: isPinned }), // 공지사항일 때만 isPinned 추가
             // hasAttachment: files.length > 0,
             // attachments: files.map(file => {
             //     if (file instanceof File) {
@@ -272,6 +275,20 @@ const BoardWrite = () => {
                             )}
                         </div>
                     </div>
+
+                    {type === 'notice' && (
+                        <div className="bw-form-group">
+                            <label className="bw-custom-checkbox">
+                                <input
+                                    type="checkbox"
+                                    checked={isPinned}
+                                    onChange={(e) => setIsPinned(e.target.checked)}
+                                />
+                                <span className="bw-checkbox-custom"></span>
+                                <span className="bw-checkbox-label">상단 고정</span>
+                            </label>
+                        </div>
+                    )}
                 </div>
 
                 <div className="bw-footer">

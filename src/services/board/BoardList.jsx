@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Megaphone, FileText, History, PenSquare, Search, Paperclip, Lock, Home } from 'lucide-react';
+import { Megaphone, FileText, History, PenSquare, Search, Paperclip, Lock, Home, Pin } from 'lucide-react';
 import './Board.css';
 import { BoardApi } from "@/services/board/BoardApi";
 import { modalContext } from "@/components/common/Modal";
@@ -80,14 +80,20 @@ const BoardList = ({ type = 'notice' }) => {
             views: item.viewCount || 0,
             isNew: item.isNew || false,
             hasAttachment: item.hasAttachment || false,
-            isVisible: item.isVisible
+            isVisible: item.isVisible,
+            isPinned: item.isPinned || false // 상단 고정 여부
         })) : [];
     };
 
-    // 검색 필터링 (화면단 처리)
-    const filteredData = apiData.filter(item =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // 검색 필터링 및 정렬 (화면단 처리)
+    const filteredData = apiData
+        .filter(item => item.title.toLowerCase().includes(searchTerm.toLowerCase()))
+        .sort((a, b) => {
+            // isPinned가 true인 항목을 먼저 표시
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return 0;
+        });
 
     // 페이지네이션 (화면단 처리)
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -170,9 +176,15 @@ const BoardList = ({ type = 'notice' }) => {
                                     <tr
                                         key={item.id}
                                         onClick={() => handleRowClick(item.id)}
-                                        className="bl-row"
+                                        className={`bl-row ${item.isPinned ? 'bl-row-pinned' : ''}`}
                                     >
-                                        <td className="bl-col-no">{filteredData.length - (startIndex + index)}</td>
+                                        <td className="bl-col-no">
+                                            {item.isPinned ? (
+                                                <Pin size={16} color="var(--primary-color, #7C9CBF)" fill="var(--primary-color, #7C9CBF)" />
+                                            ) : (
+                                                filteredData.length - (startIndex + index)
+                                            )}
+                                        </td>
                                         {type === 'patchnotes' && (
                                             <td className="bl-col-version">
                                                 <span className="bl-version-badge">
@@ -185,7 +197,7 @@ const BoardList = ({ type = 'notice' }) => {
                                                 <span className="bl-title-text">{item.title}</span>
                                                 {!item.isVisible && <Lock size={14} color="#666" style={{ marginLeft: '4px' }} />}
                                                 {item.hasAttachment && <Paperclip size={14} color="#666" style={{ marginLeft: '4px' }} />}
-                                                {item.isNew && <span className="bl-new-badge"> NEW </span>}
+                                                {item.isNew && <span className="bl-new-badge">NEW </span>}
                                             </div>
                                         </td>
                                         <td className="bl-col-date">{item.date}</td>
