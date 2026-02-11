@@ -329,7 +329,27 @@ function ModalProvider(props) {
 function Modal(props) {
     //window popup ref
     const windowRef = useRef();
-    if (!props.allowRender) return null; // 라우트가 안 맞으면 표시 자체를 안 함
+
+    useEffect(() => {
+        if (!props.show) return;
+
+        const handleKeyDown = (e) => {
+            if (props.type === "alert" || props.type === "error") {
+                if (e.key === "Enter" || e.key === " " || e.code === "Space") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    props.onConfirm(e);
+                }
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [props.show, props.type, props.onConfirm]);
+
+    if (!props.allowRender) return null;
     return (
         <div className={props.themeClass ? `${props.themeClass}-modal` : ""}>
             {
