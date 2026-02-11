@@ -1,9 +1,10 @@
-import React, { Fragment, useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useSelector } from "react-redux";
 import { TokenUsageApi } from "@/services/aiOpenAnalysis/app/tokenUsage/TokenUsageApi";
 import TokenUsageGrid from "@/services/aiOpenAnalysis/app/tokenUsage/TokenUsageGrid.jsx";
-
+import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader";
+import "@/services/aiOpenAnalysis/app/proList/ProList.css";
 /**
  * 토큰 사용 내역
  *
@@ -25,11 +26,6 @@ const TokenUsage = () => {
                 }
             };
             const res = await tokenUsageListData.mutateAsync(payload);
-
-            // 유저가 제공한 response structure: 
-            // res.success === "777" 
-            // res.resultjson.success === "777"
-            // res.resultjson.resultjson -> 실제 리스트
 
             if (res?.success === "777") {
                 const innerResult = res.resultjson;
@@ -53,25 +49,13 @@ const TokenUsage = () => {
     }, []);
 
     return (
-        <Fragment>
-            <article className="subTitWrap pro-list-header">
-                <div className="subTit">
-                    <h2 className="titTxt">
-                        토큰 사용 내역
-                        <span
-                            className="info-icon"
-                            data-tooltip={`토큰 사용 내역|이용 중인 전체 프로젝트의 토큰 사용 금액 내역입니다.`}
-                        ></span>
-                    </h2>
-                </div>
-            </article>
+        <div className="pro-list-page">
+            <AiDataHeader title="토큰 사용 내역"></AiDataHeader>
 
-            <article className="subContWrap">
-                <div className="subCont">
-                    <TokenUsageGrid data={gridData} />
-                </div>
-            </article>
-        </Fragment>
+            <div className="pro-list-content">
+                <TokenUsageGrid data={gridData} />
+            </div>
+        </div>
     );
 };
 
