@@ -65,47 +65,48 @@ const ProRegisterGrid = ({ onDataLength }) => {
     const filteredCount = processedData.total;
 
     return (
-      <Fragment>
+      <div className="cmn_gird_wrap" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
         <style>{`
           #grid_01 .k-grid-content {
-            max-height: 350px !important;
+            max-height: 293px !important;
           }
         `}</style>
-        <div className="cmn_gird_wrap">
+        <div style={{ flex: "0 0 auto" }}>
           <GridDataCount total={filteredCount} />
-          <div id="grid_01" className="cmn_grid singlehead">
-            <KendoGrid
-              parentProps={{
-                data: dataState?.data,
-                dataItemKey,
-                selectedState,
-                setSelectedState,
-                selectedField,
-                idGetter,
-                sortable: { mode: "multiple", allowUnsort: true },
-                filterable: true,
-                sortChange: ({ sort }) => setSort(sort ?? []),
-                filterChange: ({ filter }) => setFilter(filter ?? undefined),
-                sort,
-                filter,
-              }}
-            >
-              {columns.filter((c) => c.show !== false).map((c) => {
-                return (
-                  <Column
-                    key={c.field}
-                    field={c.field}
-                    title={c.title}
-                    width={c.width}
-                    editable={c.editable}
-                    columnMenu={columnMenu}
-                  />
-                );
-              })}
-            </KendoGrid>
-          </div>
         </div>
-      </Fragment>
+        <div id="grid_01" className="cmn_grid singlehead" style={{ flex: 1, minHeight: 0 }}>
+          <KendoGrid
+            parentProps={{
+              style: { height: "100%" },
+              data: dataState?.data,
+              dataItemKey,
+              selectedState,
+              setSelectedState,
+              selectedField,
+              idGetter,
+              sortable: { mode: "multiple", allowUnsort: true },
+              filterable: true,
+              sortChange: ({ sort }) => setSort(sort ?? []),
+              filterChange: ({ filter }) => setFilter(filter ?? undefined),
+              sort,
+              filter,
+            }}
+          >
+            {columns.filter((c) => c.show !== false).map((c) => {
+              return (
+                <Column
+                  key={c.field}
+                  field={c.field}
+                  title={c.title}
+                  width={c.width}
+                  editable={c.editable}
+                  columnMenu={columnMenu}
+                />
+              );
+            })}
+          </KendoGrid>
+        </div>
+      </div>
     );
   };
 

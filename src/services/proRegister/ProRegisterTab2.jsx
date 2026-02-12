@@ -8,6 +8,7 @@ import { DropDownList } from "@progress/kendo-react-dropdowns";
 import ProRegisterPopup from "./ProRegisterPopup";
 import { ProRegisterApi } from "./ProRegisterApi.js";
 import { getExcelGuideHTML } from "./ExcelGuideHTML.js";
+import "@/services/aiOpenAnalysis/app/proList/ProRegisterPopup.css";
 import moment from "moment";
 import * as XLSX from "xlsx";
 
@@ -266,130 +267,155 @@ const ProRegisterTab2 = () => {
   return (
     <>
       <div className="excel-upload-container">
-        <form onSubmit={handleSubmit} className="excel-upload-form">
-          {/* Header */}
-          <div className="excel-form-header">
-            <div>
-              <h3 className="excel-form-title">Excel 파일 업로드</h3>
-              <p className="excel-form-subtitle">엑셀 파일을 업로드하여 문항을 등록하세요.</p>
-            </div>
-            <button
-              type="button"
-              onClick={openGuideWindow}
-              className="excel-guide-btn-small"
-              title="작성 가이드 보기"
-            >
-              <span>?</span> 가이드
-            </button>
-          </div>
-
-          {/* 웹프로젝트명 */}
-          <div className="excel-form-field">
-            <label className="excel-form-label">웹프로젝트명</label>
-            <Input className="k-input k-input-solid" value={projectnum || ""} disabled />
-          </div>
-
-          {/* 조사명 */}
-          <div className="excel-form-field">
-            <label className="excel-form-label">조사명</label>
-            <Input className="k-input k-input-solid" value={projectname || ""} disabled />
-          </div>
-
-          {/* 분석모델선택 */}
-          <div className="excel-form-field">
-            <label className="excel-form-label">
-              분석모델선택 <span className="required">*</span>
-            </label>
-            <DropDownList
-              // data={["설문온", "댓글분석(예정)", "기사분석(예정)"]}
-              data={["설문온"]}
-              value={analysisModel}
-              onChange={(e) => setAnalysisModel(e.value)}
-              disabled={loading}
-            />
-          </div>
-
-          {/* 파일 업로드 */}
-          <div className="excel-form-field">
-            <label className="excel-form-label">
-              파일 업로드 <span className="required">*</span>
-            </label>
-            <div className="excel-file-upload-group">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept=".xlsx,.xls,.csv"
-                disabled={loading}
-                className="excel-file-input"
-              />
-              <Button
+        <div className="excel-upload-card">
+          <form onSubmit={handleSubmit}>
+            {/* Header */}
+            <div className="excel-upload-header">
+              <div className="excel-upload-title">
+                <h3>Excel 파일 업로드</h3>
+                <p>엑셀 파일을 업로드하여 문항을 등록하세요.</p>
+              </div>
+              <button
                 type="button"
+                onClick={openGuideWindow}
+                className="excel-guide-btn"
+              >
+                <span className="excel-guide-icon">?</span> 가이드
+              </button>
+            </div>
+
+            {/* Row 1: Project Info */}
+            <div style={{ display: "flex", gap: "16px", marginBottom: "16px" }}>
+              <div style={{ flex: 1 }}>
+                <label className="excel-form-label">웹프로젝트명</label>
+                <Input
+                  className="k-input k-input-solid"
+                  value={projectnum || ""}
+                  disabled
+                  style={{ width: "100%", height: "36px" }}
+                />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label className="excel-form-label">조사명</label>
+                <Input
+                  className="k-input k-input-solid"
+                  value={projectname || ""}
+                  disabled
+                  style={{ width: "100%", height: "36px" }}
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Analysis Model */}
+            <div className="excel-form-row">
+              <label className="excel-form-label">
+                분석모델선택 <span className="excel-form-required">*</span>
+              </label>
+              <DropDownList
+                data={["설문온"]}
+                value={analysisModel}
+                onChange={(e) => setAnalysisModel(e.value)}
+                disabled={loading}
+                style={{ width: "100%" }}
+              />
+            </div>
+
+            {/* Row 3: File Upload */}
+            <div className="excel-form-row">
+              <label className="excel-form-label">
+                파일 업로드 <span className="excel-form-required">*</span>
+              </label>
+              <div className="excel-file-group">
+                <div style={{ flex: 1 }}>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".xlsx,.xls,.csv"
+                    disabled={loading}
+                    className="excel-file-input"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  disabled={loading}
+                  onClick={handleSampleClick}
+                  className="excel-sample-btn"
+                >
+                  샘플 다운로드
+                </Button>
+              </div>
+            </div>
+
+            {/* Row 4: ID Column */}
+            <div className="excel-form-row">
+              <label className="excel-form-label">
+                아이디컬럼 <span className="excel-form-required">*</span>
+              </label>
+              {idList.length > 0 ? (
+                <DropDownList
+                  data={idList}
+                  value={idColumn}
+                  onChange={(e) => setIdColumn(e.value)}
+                  disabled={loading}
+                  style={{ width: "100%" }}
+                />
+              ) : (
+                <div className="excel-empty-id">
+                  파일 선택 시 자동 활성화
+                </div>
+              )}
+            </div>
+
+            {/* Row 5: Question Select & Summary */}
+            <div style={{ marginBottom: "20px" }}>
+              <label className="excel-form-label">
+                문항선택 <span className="excel-form-required">*</span>
+              </label>
+              <div className="excel-question-group">
+                <Button
+                  type="button"
+                  themeColor="base"
+                  fillMode="solid"
+                  disabled={loading || idList.length === 0}
+                  onClick={() => setPopupShow(true)}
+                  className="excel-select-btn"
+                >
+                  문항 선택하기
+                </Button>
+
+                {/* Selected Summary */}
+                <div
+                  title={selectData.map(d => d.question).join(", ")}
+                  className="excel-selected-summary"
+                >
+                  {selectData.length > 0 ? (
+                    <span>
+                      <span className="excel-selected-count">
+                        {selectData.length}개 선택됨:
+                      </span>
+                      {selectData.map(d => d.question).join(", ")}
+                    </span>
+                  ) : (
+                    <span className="excel-empty-text">선택된 문항이 없습니다.</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Submit */}
+            <div className="excel-submit-wrapper">
+              <Button
+                type="submit"
                 themeColor="primary"
                 disabled={loading}
-                onClick={handleSampleClick}
-                className="excel-sample-btn"
+                className="excel-submit-btn"
               >
-                샘플 다운로드
+                {loading ? "등록 중..." : "등록하기"}
               </Button>
             </div>
-          </div>
-
-          {/* 아이디컬럼 */}
-          <div className="excel-form-field">
-            <label className="excel-form-label">
-              아이디컬럼 <span className="required">*</span>
-            </label>
-            {idList.length > 0 ? (
-              <DropDownList
-                data={idList}
-                value={idColumn}
-                onChange={(e) => setIdColumn(e.value)}
-                disabled={loading}
-              />
-            ) : (
-              <div className="excel-id-placeholder">파일 선택 시 자동 인식됩니다.</div>
-            )}
-          </div>
-
-          {/* 문항선택 */}
-          <div className="excel-form-field">
-            <label className="excel-form-label">
-              문항선택 <span className="required">*</span>
-            </label>
-            <Button
-              type="button"
-              themeColor="primary"
-              disabled={loading || idList.length === 0}
-              onClick={() => setPopupShow(true)}
-              style={{ width: '100%' }}
-            >
-              문항 선택하기
-            </Button>
-            {selectData.length > 0 && (
-              <div className="excel-selected-items">
-                <div className="excel-selected-header">선택된 문항 ({selectData.length}개)</div>
-                <ul className="excel-selected-list">
-                  {selectData.map((item) => (
-                    <li key={item.column} className="excel-selected-item">
-                      {item.question} <span className="column-name">({item.column})</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* 등록 버튼 */}
-          <Button
-            type="submit"
-            themeColor="primary"
-            disabled={loading}
-            className="excel-submit-btn"
-          >
-            {loading ? "등록 중..." : "등록하기"}
-          </Button>
-        </form>
+          </form>
+        </div>
       </div>
 
       {/* 문항선택 팝업 */}
@@ -407,5 +433,4 @@ const ProRegisterTab2 = () => {
     </>
   );
 };
-
 export default ProRegisterTab2;

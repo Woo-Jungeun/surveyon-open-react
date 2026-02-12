@@ -5441,12 +5441,14 @@ footer {
 
 /* Excel Tab Styles */
 .excel-upload-container {
-    top: 10px;
+    top: 60px;
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
     padding-top: 10px;
-    width: auto;
+    width: 900px;
+    max-width: 95%;
+    /* Responsive safety */
     /* max-height: calc(100vh - 150px);
     overflow: hidden; */
     max-height: none !important;

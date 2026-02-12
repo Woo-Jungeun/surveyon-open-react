@@ -55,81 +55,90 @@ const ProRegisterTab1 = (props) => {
     };
 
     return (
-        <Fragment>
-            {/* 그리드 */}
-            <div style={{ marginBottom: "20px" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+            <div style={{ flex: 1, minHeight: 0, marginBottom: "20px", overflow: "hidden" }}>
                 <ProRegisterGrid data={gridData} setData={setGridData} onDataLength={(cnt) => setHasData(cnt > 0)} />
             </div>
 
-            {/* 정보 */}
-            <form onSubmit={handleSubmit}>
-                <div className="pro-register-form-wrap">
-                    <div style={{ marginBottom: "16px" }}>
-                        <label style={{
-                            display: "block",
-                            marginBottom: "6px",
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: "#333"
-                        }}>
-                            웹프로젝트명
-                        </label>
-                        <Input
-                            className="k-input k-input-solid"
-                            value={projectnum || ""}
-                            disabled
-                            style={{ width: "100%" }}
-                        />
-                    </div>
+            {/* 폼 영역: 고정 높이 (내용만큼) */}
+            <div style={{ flex: "0 0 auto" }}>
+                <form onSubmit={handleSubmit}>
+                    <div className="pro-register-form-wrap" style={{
+                        maxWidth: "800px",
+                        margin: "0 auto", // 중앙 정렬
+                        border: "1px solid #bbb",
+                        borderRadius: "8px",
+                        padding: "24px",
+                        boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                        backgroundColor: "#fff"
+                    }}>
+                        <div style={{ marginBottom: "16px" }}>
+                            <label style={{
+                                display: "block",
+                                marginBottom: "6px",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: "#333"
+                            }}>
+                                웹프로젝트명
+                            </label>
+                            <Input
+                                className="k-input k-input-solid"
+                                value={projectnum || ""}
+                                disabled
+                                style={{ width: "100%" }}
+                            />
+                        </div>
 
-                    <div style={{ marginBottom: "20px" }}>
-                        <label style={{
-                            display: "block",
-                            marginBottom: "6px",
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            color: "#333"
-                        }}>
-                            조사명
-                        </label>
-                        <Input
-                            className="k-input k-input-solid"
-                            value={projectname || ""}
-                            disabled
-                            style={{ width: "100%" }}
-                        />
-                    </div>
+                        <div style={{ marginBottom: "20px" }}>
+                            <label style={{
+                                display: "block",
+                                marginBottom: "6px",
+                                fontSize: "14px",
+                                fontWeight: "600",
+                                color: "#333"
+                            }}>
+                                조사명
+                            </label>
+                            <Input
+                                className="k-input k-input-solid"
+                                value={projectname || ""}
+                                disabled
+                                style={{ width: "100%" }}
+                            />
+                        </div>
 
-                    <div style={{ textAlign: "center" }}>
-                        <Button
-                            type="submit"
-                            className="btnL"
-                            themeColor="primary"
-                            disabled={loading || !hasData}
-                            style={{
-                                minWidth: "180px",
-                                height: "44px",
-                                fontSize: "15px",
-                                fontWeight: "600"
-                            }}
-                        >
-                            {loading ? "등록 중..." : "등록"}
-                        </Button>
+                        <div style={{ textAlign: "center" }}>
+                            <Button
+                                type="submit"
+                                className="btnL"
+                                themeColor="primary"
+                                disabled={loading || !hasData}
+                                style={{
+                                    minWidth: "180px",
+                                    height: "44px",
+                                    fontSize: "15px",
+                                    fontWeight: "600"
+                                }}
+                            >
+                                {loading ? "등록 중..." : "등록"}
+                            </Button>
 
-                        <div style={{
-                            marginTop: "12px",
-                            color: hasData ? "#666" : "#ff4646",
-                            fontSize: "13px",
-                            lineHeight: "1.4"
-                        }}>
-                            {hasData
-                                ? "문항추가, 응답자 데이터 추가를 자동으로 등록합니다."
-                                : "데이터맵이 등록되지 않았습니다. 웹 제작 담당자에게 문의 및 데이터맵을 저장해 주세요."}
+                            <div style={{
+                                marginTop: "12px",
+                                color: hasData ? "#666" : "#ff4646",
+                                fontSize: "13px",
+                                lineHeight: "1.4"
+                            }}>
+                                {hasData
+                                    ? "문항추가, 응답자 데이터 추가를 자동으로 등록합니다."
+                                    : "데이터맵이 등록되지 않았습니다. 웹 제작 담당자에게 문의 및 데이터맵을 저장해 주세요."}
+                            </div>
                         </div>
                     </div>
-                </div>
-            </form>
-        </Fragment>
+                </form>
+            </div>
+        </div>
     );
 };
 export default ProRegisterTab1;
