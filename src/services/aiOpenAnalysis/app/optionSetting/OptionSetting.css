@@ -475,26 +475,27 @@
 
 .lv3-panel-toggle {
   position: fixed;
-  top: 12px;
-  width: 32px;
-  height: 32px;
+  top: 50%;
+  margin-top: -20px;
+  width: 40px;
+  height: 40px;
   background: #fff;
-  border: 1px solid #e0e0e0;
-  border-right: none;
-  border-radius: 8px 0 0 8px;
-  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid #dcdcdc;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 200;
-  right: 0;
-  transition: transform 0.25s ease-out;
+  right: 16px;
+  transition: transform 0.25s ease-out, background-color 0.2s;
   will-change: transform;
 }
 
 .lv3-panel-toggle:hover {
   background: #f8fafc;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
 .lv3-side-panel.open+.lv3-panel-toggle {
