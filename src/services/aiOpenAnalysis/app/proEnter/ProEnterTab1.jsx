@@ -103,7 +103,11 @@ const ProEnterTab1 = (props) => {
                                 sessionStorage.setItem("projectpof", "");
                                 sessionStorage.setItem("merge_pn", "");
                                 sessionStorage.setItem("merge_pn_text", "");
-                                navigate("/project", { state: { from } }); //프로젝트 목록 페이지로 이동 (진입 경로 유지)
+                                if (props.onSuccess) {
+                                    props.onSuccess();
+                                } else {
+                                    navigate("/project", { state: { from } }); //프로젝트 목록 페이지로 이동 (진입 경로 유지)
+                                }
                             }
                         }],
                     });

@@ -1,9 +1,10 @@
-﻿import React, { useRef, useMemo, useCallback, useEffect } from "react";
+﻿import React, { useRef, useMemo, useCallback, useEffect, useState } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import ProListPopup from "@/services/aiOpenAnalysis/app/proList/ProListPopup";
+import ProRegisterPopup from "@/services/aiOpenAnalysis/app/proList/ProRegisterPopup";
 import GridHeaderBtnPrimary from "@/components/style/button/GridHeaderBtnPrimary.jsx";
 import GridHeaderBtnTxt from "@/components/style/button/GridHeaderBtnTxt.jsx";
 import AiDataHeader from "@/services/aiOpenAnalysis/components/AiDataHeader.jsx";
@@ -13,6 +14,7 @@ import "./ProList.css";
 import { process } from "@progress/kendo-data-query";
 
 const ProListGridRenderer = (props) => {
+    const [showRegisterPopup, setShowRegisterPopup] = useState(false);
     const renderCount = useRef(0);
     renderCount.current += 1;
 
@@ -850,7 +852,7 @@ const ProListGridRenderer = (props) => {
                 )}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
                     <GridHeaderBtnPrimary
-                        onClick={() => navigate('/ai_open_analysis/pro_register')}
+                        onClick={() => setShowRegisterPopup(true)}
                         style={{
                             height: '40px',
                             fontSize: '14px',
@@ -1009,6 +1011,14 @@ const ProListGridRenderer = (props) => {
                 <ProListPopup
                     popupShow={popupShow}
                     setPopupShow={setPopupShow}
+                />
+            )}
+
+            {showRegisterPopup && (
+                <ProRegisterPopup
+                    popupShow={showRegisterPopup}
+                    setPopupShow={setShowRegisterPopup}
+                    onRefresh={handleSearch}
                 />
             )}
         </div>

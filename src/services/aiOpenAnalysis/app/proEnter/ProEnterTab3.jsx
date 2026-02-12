@@ -97,9 +97,12 @@ const ProEnterTab3 = () => {
                             sessionStorage.setItem("projectname", "");
                             sessionStorage.setItem("servername", "");
                             sessionStorage.setItem("projectpof", "");
-                            sessionStorage.setItem("merge_pn", "");
                             sessionStorage.setItem("merge_pn_text", "");
-                            navigate("/project"); //프로젝트 목록 페이지로 이동
+                            if (props.onSuccess) {
+                                props.onSuccess();
+                            } else {
+                                navigate("/project"); //프로젝트 목록 페이지로 이동
+                            }
                         }
                     }],   ////문항 목록 페이지로 이동
                 });
@@ -199,8 +202,9 @@ const ProEnterTab3 = () => {
                             fontSize: '15px',
                             fontWeight: '600',
                             borderRadius: '6px',
-                            backgroundColor: '#7C3AED',
-                            border: 'none'
+                            backgroundColor: '#FF6B00',
+                            border: 'none',
+                            color: '#fff'
                         }}
                     >
                         {loading ? "등록 중..." : "등록하기"}

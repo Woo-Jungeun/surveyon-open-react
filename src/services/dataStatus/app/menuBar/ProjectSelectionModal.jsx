@@ -18,12 +18,12 @@ const ProjectSelectionModal = ({ onClose, onSelect }) => {
                         {activeTab === 'select' ? (
                             <>
                                 <Folder size={20} className="ps-header-icon" />
-                                <span style={{ "fontSize": "20px" }}>프로젝트 선택</span>
+                                <span style={{ fontSize: "20px" }}>프로젝트 선택</span>
                             </>
                         ) : (
                             <>
                                 <Plus size={20} className="ps-header-icon" />
-                                <span style={{ "fontSize": "20px" }}>프로젝트 등록</span>
+                                <span style={{ fontSize: "20px" }}>프로젝트 등록</span>
                             </>
                         )}
                     </div>
