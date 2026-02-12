@@ -134,7 +134,16 @@ const OptionSettingBody = () => {
   }, []);
 
   /*버튼 이벤트 핸들러*/
-  const onTab1SaveClick = () => tab1Ref.current?.saveChanges?.();
+  const onTab1SaveClick = async () => {
+    try {
+      loadingSpinner.show();
+      await tab1Ref.current?.saveChanges?.();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loadingSpinner.hide();
+    }
+  };
   const onTab2SaveClick = async () => {
     try {
       loadingSpinner.show();
