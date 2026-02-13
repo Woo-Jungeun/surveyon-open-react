@@ -31,7 +31,7 @@ const TokenUsageGrid = ({ data }) => {
         { field: "register_date", title: "등록일시", show: true, width: "165px", align: "center" },
         { field: "project_update_date", title: "최근업데이트", show: true, width: "165px", align: "center" },
         { field: "project_status", title: "진행상태", show: true, width: "110px", align: "center" },
-        { field: "tokens_cost_sum", title: "토큰 비용($)", show: true, width: "135px", align: "center" }
+        { field: "tokens_cost_sum", title: "토큰 비용($)", show: true, width: "135px", align: "center", filter: "numeric" }
     ]);
 
     // 데이터에 No 추가 및 비용 포맷팅
@@ -39,7 +39,8 @@ const TokenUsageGrid = ({ data }) => {
         () => (Array.isArray(data) ? data : []).map((item, idx) => ({
             ...item,
             no: idx + 1,
-            tokens_cost_sum: item.tokens_cost_sum ? Number(item.tokens_cost_sum).toFixed(6) : "0.000000"
+            // 정렬을 위해 숫자형으로 변환 (표시는 cell renderer에서 처리)
+            tokens_cost_sum: item.tokens_cost_sum ? Number(item.tokens_cost_sum) : 0
         })),
         [data]
     );
@@ -93,11 +94,15 @@ const TokenUsageGrid = ({ data }) => {
                                     title={c.title}
                                     width={c.width}
                                     columnMenu={columnMenu}
-                                    cell={(props) => (
-                                        <td style={{ textAlign: (c.align || 'center') + ' !important' }}>
-                                            {props.dataItem[c.field]}
-                                        </td>
-                                    )}
+                                    filter={c.filter}
+                                    cell={(props) => {
+                                        let value = props.dataItem[c.field];
+                                        return (
+                                            <td style={{ textAlign: (c.align || 'center') + ' !important' }}>
+                                                {value}
+                                            </td>
+                                        );
+                                    }}
                                 />
                             ))}
                         </KendoGrid>
