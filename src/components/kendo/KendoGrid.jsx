@@ -3,6 +3,8 @@ import { useCallback, useMemo, Children, useRef, useEffect, cloneElement, useSta
 import PropTypes from "prop-types";
 import { process } from "@progress/kendo-data-query";
 
+const EMPTY_ARRAY = [];
+
 /**
  * GridData와 함께 사용하는 KendoGrid (정렬/필터는 ExcelColumnMenu로 관리)
  *
@@ -20,7 +22,7 @@ const KendoGrid = ({ parentProps, children }) => {
     // sort/filter는 상위(MainList)에서 관리 (ExcelColumnMenu)
     const sortChange = parentProps?.sortChange;
     const filterChange = parentProps?.filterChange;
-    const sort = parentProps?.sort ?? parentProps?.initialSort ?? [];
+    const sort = parentProps?.sort ?? parentProps?.initialSort ?? EMPTY_ARRAY;
     const filter = parentProps?.filter ?? parentProps?.initialFilter ?? undefined;
 
     const page = parentProps?.page;

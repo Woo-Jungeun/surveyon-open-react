@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import ReactDOM from 'react-dom';
 import { X, Layout } from 'lucide-react';
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -14,9 +14,18 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
         { field: "title", title: "제목" }
     ]);
 
-    const onRowClick = (e) => {
+    const onRowClick = useCallback((e) => {
         onSelect(e.dataItem);
-    };
+    }, [onSelect]);
+
+    const parentProps = useMemo(() => ({
+        data: data,
+        dataItemKey: "pageid",
+        style: { height: "100%", border: "none" },
+        sortable: true,
+        scrollable: "scrollable",
+        onRowClick: onRowClick,
+    }), [data, onRowClick]);
 
     return ReactDOM.createPortal(
         <div className="pl-modal-overlay">
@@ -34,14 +43,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
                     <div className="pl-content-wrapper">
                         <div className="cmn_grid singlehead" style={{ height: "100%" }}>
                             <KendoGrid
-                                parentProps={{
-                                    data: data,
-                                    dataItemKey: "pageid",
-                                    style: { height: "100%", border: "none" },
-                                    sortable: true,
-                                    scrollable: "scrollable",
-                                    onRowClick: onRowClick,
-                                }}
+                                parentProps={parentProps}
                             >
                                 {columns.map((c) => (
                                     <Column

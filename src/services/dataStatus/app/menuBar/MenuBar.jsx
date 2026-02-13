@@ -150,8 +150,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       const user = auth?.user?.userId;
       const mergePn = project.merge_pn;
       if (!user || !mergePn) {
-        console.error("User or MergePN missing");
-        navigate(0); // fallback
+        modal.showErrorAlert("알림", "프로젝트 정보가 올바르지 않습니다 (MergePN 누락).");
         return;
       }
 
@@ -161,13 +160,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         setPageListData(pageRes.resultjson);
         setIsPageListPopupOpen(true); // 페이지 목록 팝업 열기
       } else {
-        modal.showErrorAlert("알림", "조회된 페이지가 없습니다.");
-        navigate(0);
+        modal.showErrorAlert("알림", "조회된 페이지가 없습니다.\n응답: " + JSON.stringify(pageRes));
       }
     } catch (e) {
-      console.error(e);
       modal.showErrorAlert("오류", "페이지 목록 조회 중 오류가 발생했습니다.");
-      navigate(0);
     }
   };
 
@@ -242,7 +238,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         <NewDataModal
           onClose={() => setIsNewDataModalOpen(false)}
           onConfirm={(data) => {
-            console.log("New Data:", data);
             setIsNewDataModalOpen(false);
           }}
         />

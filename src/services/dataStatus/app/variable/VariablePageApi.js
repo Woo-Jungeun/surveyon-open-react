@@ -23,6 +23,9 @@ export function VariablePageApi() {
         {
             onMutate: () => {
                 loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
             }
         }
     );
