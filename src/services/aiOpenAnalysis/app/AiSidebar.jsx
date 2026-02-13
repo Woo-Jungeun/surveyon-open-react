@@ -85,7 +85,8 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         try {
             const res = await updateChargeCost.mutateAsync({
                 chargecostInput: Number(chargeInput),
-                apigubun: "openai"
+                apigubun: "openai",
+                user: auth?.user?.userId
             });
             if (res?.success === "777") {
                 modal.showAlert("알림", "충전 금액이 업데이트되었습니다.");
@@ -109,29 +110,32 @@ const AiSidebar = ({ onOpenProjectModal }) => {
     const BalanceCard = () => (
         <div className="ai-balance-card-container" style={{ padding: '0 16px 16px 16px' }}>
             {isAiSolutionTeam && (
-                <div className="ai-charge-manage" style={{ marginBottom: '12px' }}>
-                    <div className="ai-charge-input-wrapper">
-                        <span className="ai-charge-currency">누적액 $</span>
-                        <input
-                            type="number"
-                            className="ai-charge-input"
-                            value={chargeInput}
-                            onChange={(e) => setChargeInput(e.target.value)}
-                            placeholder="0.00"
-                        />
+                <>
+                    <div className="ai-charge-manage" style={{ marginBottom: '12px' }}>
+                        <div className="ai-charge-input-wrapper">
+                            <span className="ai-charge-currency">누적액 $</span>
+                            <input
+                                type="number"
+                                className="ai-charge-input"
+                                value={chargeInput}
+                                onChange={(e) => setChargeInput(e.target.value)}
+                                placeholder="0.00"
+                            />
+                        </div>
+                        <button type="button" className="ai-charge-btn" onClick={handleUpdateCharge}>
+                            업데이트
+                        </button>
                     </div>
-                    <button type="button" className="ai-charge-btn" onClick={handleUpdateCharge}>
-                        업데이트
-                    </button>
-                </div>
+
+                    <div className="ai-balance-chip" style={{ width: '100%', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Sparkles size={14} className="ai-balance-icon" />
+                            <span className="ai-balance-label">OPEN AI 잔액</span>
+                        </div>
+                        <span className="ai-balance-value">약 ${Number(balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                    </div>
+                </>
             )}
-            <div className="ai-balance-chip" style={{ width: '100%', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Sparkles size={14} className="ai-balance-icon" />
-                    <span className="ai-balance-label">OPEN AI 잔액</span>
-                </div>
-                <span className="ai-balance-value">약 ${Number(balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
         </div>
     );
 
