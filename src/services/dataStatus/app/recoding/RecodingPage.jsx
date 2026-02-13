@@ -85,7 +85,7 @@ const RecodingPage = () => {
     const modal = useContext(modalContext);
 
     const [variables, setVariables] = useState([]);
-    const [selectedVar, setSelectedVar] = useState({ id: null, name: '', label: '', info: [] });
+    const [selectedVar, setSelectedVar] = useState({ id: null, label: '', info: [] });
     const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
@@ -93,14 +93,18 @@ const RecodingPage = () => {
             // ... existing logic ...
             if (auth?.user?.userId) {
                 const userId = auth.user.userId;
-                const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+                const pageId = sessionStorage.getItem("pageId");
+
+                if (!pageId) {
+                    modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+                    return;
+                }
 
                 try {
                     const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
                     if (result?.success === "777" && result.resultjson) {
                         const transformedData = Object.values(result.resultjson).map(item => ({
                             id: item.id,
-                            name: item.name,
                             label: item.label,
                             type: item.type,
                             info: item.info || [] // Include info array
@@ -145,15 +149,7 @@ const RecodingPage = () => {
     const [initialState, setInitialState] = useState(null);
     const lastSelectedIdRef = useRef(null);
 
-    // Update categories when selected variable changes (only if ID changes)
     useEffect(() => {
-        // Function to extract state for comparison
-        const getCurrentState = (v, c) => ({
-            name: v?.name || '',
-            label: v?.label || '',
-            categories: c || []
-        });
-
         if (selectedVar?.id !== lastSelectedIdRef.current) {
             lastSelectedIdRef.current = selectedVar?.id;
 
@@ -167,18 +163,14 @@ const RecodingPage = () => {
                 }));
                 setCategories(newCategories);
                 setInitialState({
-                    name: selectedVar.name,
+                    id: selectedVar.id,
                     label: selectedVar.label,
                     categories: newCategories // Deep copy not strictly needed if we don't mutate this array directly in place without copy
                 });
             } else if (selectedVar?.id === null) {
-                // New variable
-                // But only if we are truly resetting (handled by handleAddVariable usually, but here for safety)
-                // If switching from existing to New, handleAddVariable is called.
-                // If just mounting, selectedVar is empty.
-                if (selectedVar.name === '') {
+                if (selectedVar.id === '') {
                     setCategories([]);
-                    setInitialState({ name: '', label: '', categories: [] });
+                    setInitialState({ id: '', label: '', categories: [] });
                 }
             }
             setIsDirty(false);
@@ -189,11 +181,11 @@ const RecodingPage = () => {
     useEffect(() => {
         if (!initialState) return;
 
-        const currentName = selectedVar.name || '';
+        const currentId = selectedVar.id || '';
         const currentLabel = selectedVar.label || '';
 
         // Simple comparison for strings
-        const nameChanged = currentName !== initialState.name;
+        const idChanged = currentId !== initialState.id;
         const labelChanged = currentLabel !== initialState.label;
 
         // Deep comparison for categories
@@ -205,8 +197,8 @@ const RecodingPage = () => {
             realVal: c.realVal, category: c.category, val: c.val, logic: c.logic
         })));
 
-        setIsDirty(nameChanged || labelChanged || categoriesChanged);
-    }, [selectedVar.name, selectedVar.label, categories, initialState]);
+        setIsDirty(idChanged || labelChanged || categoriesChanged);
+    }, [selectedVar.id, selectedVar.label, categories, initialState]);
 
     const handleVariableSelect = (item) => {
         // Prevent selection if same ID
@@ -230,7 +222,7 @@ const RecodingPage = () => {
     }
 
     const filteredVariables = variables.filter(item =>
-        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.label || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
@@ -269,16 +261,20 @@ const RecodingPage = () => {
     ]);
 
     const handleLogicCheck = async () => {
-        if (!auth?.user?.userId || !selectedVar.name) return;
+        console.log("handleLogicCheck", auth?.user?.userId, selectedVar)
+        if (!auth?.user?.userId || !selectedVar.id) return;
 
         const userId = auth.user.userId;
-        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
-        const variableKey = selectedVar.id;
+        const pageId = sessionStorage.getItem("pageId");
+
+        if (!pageId) {
+            modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+            return;
+        }
 
         const variablesPayload = {
-            [variableKey]: {
-                id: variableKey,
-                name: selectedVar.name,
+            [selectedVar.id]: {
+                id: selectedVar.id,
                 label: selectedVar.label,
                 type: selectedVar.type || "categorical",
                 info: categories.map(c => ({
@@ -297,12 +293,12 @@ const RecodingPage = () => {
                 user: userId,
                 filter_expression: "",
                 weight_col: null,
-                table: { x_info: [variableKey], y_info: [] },
+                table: { x_info: [selectedVar.id], y_info: [] },
                 variables: variablesPayload
             };
-
+            console.log("handleLogicCheck", handleLogicCheck)
             const result = await verifyRecodeLogic.mutateAsync(payload);
-
+            console.log(result);
             if (result?.success === "777") {
 
                 const data = result.resultjson || {};
@@ -408,7 +404,7 @@ const RecodingPage = () => {
 
     const handleAddVariable = () => {
         // Clear selection to start fresh
-        setSelectedVar({ id: null, name: '', label: '', info: [] });
+        setSelectedVar({ id: null, label: '', info: [] });
         setCategories([]);
         setEvaluationResult(null);
         setCheckedLogics({});
@@ -416,13 +412,19 @@ const RecodingPage = () => {
 
     const saveVariableData = async (categoriesToSave) => {
         if (!auth?.user?.userId) return;
-        if (!selectedVar.name) {
+        if (!selectedVar.id) {
             setToast({ show: true, message: '문항 ID를 입력해주세요.' });
             return;
         }
 
         const userId = auth.user.userId;
-        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+        const pageId = sessionStorage.getItem("pageId");
+
+        if (!pageId) {
+            modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+            return;
+        }
+
         const variableKey = selectedVar.id;
 
         const targetCategories = categoriesToSave || categories;
@@ -430,7 +432,6 @@ const RecodingPage = () => {
         const variablesPayload = {
             [variableKey]: {
                 id: variableKey,
-                name: selectedVar.name,
                 label: selectedVar.label,
                 type: selectedVar.type || "categorical",
                 info: targetCategories.map(c => ({
@@ -457,14 +458,13 @@ const RecodingPage = () => {
                 if (getResult?.success === "777" && getResult.resultjson) {
                     const transformedData = Object.values(getResult.resultjson).map(item => ({
                         id: item.id,
-                        name: item.name,
                         label: item.label,
                         type: item.type,
                         info: item.info || []
                     }));
                     setVariables(transformedData);
                     // Reselect the saved variable to ensure we have latest state
-                    const savedVar = transformedData.find(v => v.name === variableKey);
+                    const savedVar = transformedData.find(v => v.id === variableKey);
                     if (savedVar) {
                         setSelectedVar(savedVar);
 
@@ -478,7 +478,7 @@ const RecodingPage = () => {
                         }));
                         setCategories(savedCategories);
                         setInitialState({
-                            name: savedVar.name,
+                            id: savedVar.id,
                             label: savedVar.label,
                             categories: savedCategories
                         });
@@ -504,7 +504,7 @@ const RecodingPage = () => {
 
 
     const handleDeleteVariable = () => {
-        if (!auth?.user?.userId || !selectedVar.name) return;
+        if (!auth?.user?.userId || !selectedVar.id) return;
 
         modal.showConfirm("알림", "선택한 문항을 삭제하시겠습니까?", {
             btns: [
@@ -513,13 +513,18 @@ const RecodingPage = () => {
                     title: "삭제",
                     click: async () => {
                         const userId = auth.user.userId;
-                        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+                        const pageId = sessionStorage.getItem("pageId");
+
+                        if (!pageId) {
+                            modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+                            return;
+                        }
 
                         try {
                             const result = await deleteRecodedVariable.mutateAsync({
                                 user: userId,
                                 pageid: pageId,
-                                variables: [selectedVar.name]
+                                variables: [selectedVar.id]
                             });
 
                             if (result?.success === "777") {
@@ -530,7 +535,6 @@ const RecodingPage = () => {
                                 if (getResult?.success === "777" && getResult.resultjson) {
                                     const transformedData = Object.values(getResult.resultjson).map(item => ({
                                         id: item.id,
-                                        name: item.name,
                                         label: item.label,
                                         type: item.type,
                                         info: item.info || []
@@ -597,9 +601,9 @@ const RecodingPage = () => {
                                 <label className="recoding-label">문항 ID</label>
                                 <input
                                     type="text"
-                                    value={selectedVar?.name || ''}
+                                    value={selectedVar?.id || ''}
                                     readOnly={selectedVar?.id !== null}
-                                    onChange={(e) => setSelectedVar({ ...selectedVar, name: e.target.value })}
+                                    onChange={(e) => setSelectedVar({ ...selectedVar, id: e.target.value })}
                                     className={`recoding-input ${selectedVar?.id !== null ? 'recoding-input-readonly' : ''}`}
                                     placeholder="예: AgeGroup"
                                 />

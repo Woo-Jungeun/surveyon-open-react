@@ -25,7 +25,7 @@ export function CrossTabPageApi() {
 
     /** 교차테이블 분석 실행 */
     const evaluateTable = useMutation(
-        async (data) => await api.post(data, "/analysis/evaluate-table", "API_BASE_URL_DATASTATUS")
+        async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS")
     );
 
     return {

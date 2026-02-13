@@ -21,7 +21,7 @@ const CrossTabPage = () => {
     const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = CrossTabPageApi();
     const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
-    const PAGE_ID = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+    const PAGE_ID = sessionStorage.getItem("pageId");
 
     // Data State
     const [tables, setTables] = useState([]);
@@ -53,8 +53,8 @@ const CrossTabPage = () => {
     // Filter weight variables from API response
     const weightVariableOptions = useMemo(() => {
         const weights = variables
-            .filter(v => v.name.startsWith('weight_'))
-            .map(v => v.name);
+            .filter(v => v?.name?.startsWith('weight_'))
+            .map(v => v?.name);
         return ["없음", ...weights];
     }, [variables]);
 
@@ -122,6 +122,10 @@ const CrossTabPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             if (!auth?.user?.userId) return;
+            if (!PAGE_ID) {
+                modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+                return;
+            }
 
             let loadedVariables = [];
 
@@ -347,7 +351,7 @@ const CrossTabPage = () => {
         };
 
         fetchData();
-    }, [auth?.user?.userId]);
+    }, [auth?.user?.userId, PAGE_ID]);
 
     // Preview Data Calculation
     const previewData = useMemo(() => {
@@ -601,8 +605,8 @@ const CrossTabPage = () => {
 
     // Filter variables based on search term
     const filteredVariables = variables.filter(variable =>
-        variable.name.toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
-        variable.label.toLowerCase().includes(variableSearchTerm.toLowerCase())
+        variable?.name?.toLowerCase().includes(variableSearchTerm.toLowerCase()) ||
+        variable?.label?.toLowerCase().includes(variableSearchTerm.toLowerCase())
     );
 
     // Result Data State
