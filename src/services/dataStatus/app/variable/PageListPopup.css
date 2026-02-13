@@ -1,4 +1,13 @@
 /* PageListPopup.css */
+/* Grid Row Cursor Pointer */
+.pl-content-wrapper .k-grid tbody tr {
+    cursor: pointer !important;
+}
+
+.pl-content-wrapper .k-grid tbody tr:hover {
+    background-color: #f0f4ff !important;
+}
+
 .pl-modal-overlay {
     position: fixed;
     top: 0;
