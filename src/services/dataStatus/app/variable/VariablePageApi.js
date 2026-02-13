@@ -7,9 +7,9 @@ export function VariablePageApi() {
 
     const loadingSpinner = useContext(loadingSpinnerContext);
 
-    /** 원본 변수 목록 조회 */
+    /** 문항관리 목록 조회 */
     const getOriginalVariables = useMutation(
-        async (data) => await api.post(data, "/pages/variables", "API_BASE_URL_DATASTATUS"),
+        async (data) => await api.post(data, "/datasets/variables", "API_BASE_URL_DATASTATUS"),
         {
             onMutate: (vars) => {
                 // loadingSpinner.show();
