@@ -98,7 +98,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 사이드바에 전달할 프로젝트 정보
   const projectInfoData = {
     title: pageInfo.title,
-    subTitle: sessionStorage.getItem("projectpof") || "ID 미지정",
+    subTitle: sessionStorage.getItem("merge_pn") || sessionStorage.getItem("projectpof") || "ID 미지정",
     onSettingsClick: () => {
       if (onOpenProjectModal) {
         onOpenProjectModal();
@@ -143,6 +143,12 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     sessionStorage.setItem("merge_pn", project.merge_pn || "");
     sessionStorage.setItem("merge_pn_text", project.merge_pn_text || "");
 
+    // Update local state for immediate feedback
+    setPageInfo(prev => ({
+      ...prev,
+      title: project.projectname || "조사명 없음"
+    }));
+
     setIsProjectModalOpen(false); // 프로젝트 팝업 닫기
 
     // 2. 페이지 목록 조회
@@ -160,7 +166,9 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         setPageListData(pageRes.resultjson);
         setIsPageListPopupOpen(true); // 페이지 목록 팝업 열기
       } else {
-        modal.showErrorAlert("알림", "조회된 페이지가 없습니다.\n응답: " + JSON.stringify(pageRes));
+        modal.showAlert("알림", "조회된 페이지가 없습니다. \n프로젝트를 다시 선택해주세요.", null, () => {
+          setIsProjectModalOpen(true);
+        });
       }
     } catch (e) {
       modal.showErrorAlert("오류", "페이지 목록 조회 중 오류가 발생했습니다.");
@@ -203,9 +211,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
             title: resultjson?.title,
             processedAt: formattedDate
           }));
-
-          // 페이지 선택 후 새로고침하여 데이터 갱신 (선택된 페이지 컨텍스트로)
-          navigate(0);
         }
       } else {
         modal.showErrorAlert("에러", metadataResult?.message || "메타데이터 조회 실패");
