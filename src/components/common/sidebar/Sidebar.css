@@ -749,3 +749,7 @@
 .common-sidebar.collapsed .sidebar-nav::-webkit-scrollbar {
     display: none;
 }
+
+.common-sidebar.collapsed .last-updated-text {
+    display: none !important;
+}

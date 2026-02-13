@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
-  Table, ClipboardList, Sparkles, Upload, RefreshCw, List, Users, BrainCircuit
+  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
@@ -127,6 +127,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         <RefreshCw size={16} />
         <span>데이터 새로고침</span>
       </button>
+      <div className="last-updated-text" style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+        <Clock size={12} strokeWidth={2.5} />
+        <span>{pageInfo.processedAt}</span>
+      </div>
     </div>
   );
 
