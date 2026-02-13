@@ -38,6 +38,7 @@ export default defineConfig(({ mode }) => {
                     },
                     // /APIs 로 시작하는 요청 프록시 (BoardApi 등)
                     "^/APIs(?:/|$)": {
+                        // target: (env.VITE_PROXY_URL_OTHER) ?? env.VITE_PROXY_URL,
                         target: env.VITE_PROXY_URL,
                         changeOrigin: true,
                         secure: false,
