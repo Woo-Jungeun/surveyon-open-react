@@ -53,7 +53,13 @@ const DataViewerPage = () => {
         const fetchData = async () => {
             if (auth?.user?.userId) {
                 const userId = auth.user.userId;
-                const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+                const pageId = sessionStorage.getItem("pageId");
+
+                if (!pageId) {
+                    modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+                    loadingSpinner.hide();
+                    return;
+                }
 
                 try {
                     const apiCall = isLabelView ? getPageRows2 : getPageRows;
