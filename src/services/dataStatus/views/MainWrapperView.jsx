@@ -3,7 +3,6 @@ import { useLocation, Outlet, useNavigate } from "react-router-dom";
 
 import MenuBar from "@/services/dataStatus/app/menuBar/MenuBar.jsx";
 import FooterSection from "@/services/homePage/FooterSection";
-import ProjectSelectionModal from "@/services/dataStatus/app/menuBar/ProjectSelectionModal.jsx";
 import { useSelector } from "react-redux";
 
 const MainWrapperView = (props) => {
@@ -12,56 +11,25 @@ const MainWrapperView = (props) => {
     const navigate = useNavigate();
     const [authMenuList, setAuthMenuList] = useState([]);
     const [menuData, setMenuData] = useState();
-    const [projectUpdated, setProjectUpdated] = useState(0);
-    const [isProjectModalOpen, setProjectModalOpen] = useState(false);
+
+    // Key to force re-render when project changes (can be managed via context later if needed)
+    // For now, MenuBar refreshes the page on project change, so this is less critical, 
+    // but we can keep it simple.
 
     const index = menuData?.findIndex(i => i.menuUrl === location.pathname || location.pathname === "/" || location.pathname === "/business-plan/course2/time-table/detail");
 
-    useEffect(() => {
-        const projectnum = sessionStorage.getItem("projectnum");
-        if (!projectnum) {
-            setProjectModalOpen(true);
-        }
-    }, [location.pathname, navigate]);
-
     return (
         <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f5f7fa' }}>
-            {isProjectModalOpen && (
-                <ProjectSelectionModal
-                    onSelect={(project) => {
-                        sessionStorage.setItem("projectnum", project.projectnum || "");
-                        sessionStorage.setItem("projectname", project.projectname || "");
-                        sessionStorage.setItem("servername", project.servername || "");
-                        sessionStorage.setItem("projectpof", project.projectpof || "");
-                        sessionStorage.setItem("merge_pn", project.merge_pn || "");
-                        sessionStorage.setItem("merge_pn_text", project.merge_pn_text || "");
-
-                        setProjectModalOpen(false);
-                        setProjectUpdated((prev) => prev + 1);
-
-                        // Refresh to apply session changes
-                        navigate(0);
-                    }}
-                    onClose={() => {
-                        setProjectModalOpen(false);
-                        // Only go home if no project is selected
-                        const projectnum = sessionStorage.getItem("projectnum");
-                        if (!projectnum) {
-                            navigate("/"); // Go home if no project selected
-                        }
-                        // Otherwise just close the modal
-                    }}
-                />
-            )}
-            <MenuBar userName={auth?.user?.userName ?? ""} onOpenProjectModal={() => setProjectModalOpen(true)} />
+            <MenuBar userName={auth?.user?.userName ?? ""} />
             <section style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    <Outlet key={projectUpdated} />
+                    <Outlet />
                 </div>
                 <FooterSection style={{ height: '40px', padding: '0 20px' }} />
             </section>
         </div>
     );
 };
+
 
 export default MainWrapperView;

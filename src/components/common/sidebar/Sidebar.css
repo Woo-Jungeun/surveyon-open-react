@@ -27,6 +27,8 @@
 .common-sidebar.collapsed .header-divider,
 .common-sidebar.collapsed .home-btn span,
 .common-sidebar.collapsed .brand-title,
+.common-sidebar.collapsed .menu-bar-logo,
+.common-sidebar.collapsed .logo-accent,
 .common-sidebar.collapsed .brand-area-alt,
 .common-sidebar.collapsed .project-info-box,
 .common-sidebar.collapsed .extra-actions,
@@ -34,8 +36,24 @@
 .common-sidebar.collapsed .group-arrow,
 .common-sidebar.collapsed .nav-item span,
 .common-sidebar.collapsed .user-info,
-.common-sidebar.collapsed .user-dropdown {
+.common-sidebar.collapsed .user-dropdown,
+.common-sidebar.collapsed .menu-bar-action-btn span {
     display: none;
+}
+
+.common-sidebar.collapsed .menu-bar-action-btn {
+    justify-content: center !important;
+    padding: 0 !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.common-sidebar.collapsed .extra-actions-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .common-sidebar.collapsed .sidebar-header {
@@ -719,4 +737,15 @@
 /* Hide AI balance card when sidebar is collapsed */
 .common-sidebar.collapsed .ai-balance-card-container {
     display: none !important;
+}
+
+/* Hide scrollbar in collapsed state */
+.common-sidebar.collapsed .sidebar-nav {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    overflow-y: auto;
+}
+
+.common-sidebar.collapsed .sidebar-nav::-webkit-scrollbar {
+    display: none;
 }

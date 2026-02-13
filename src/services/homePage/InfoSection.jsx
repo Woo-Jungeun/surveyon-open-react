@@ -209,14 +209,11 @@ const InfoSection = () => {
             <div
               className="hp-feature-item"
               onClick={() => {
-                const projectnum = sessionStorage.getItem("projectnum");
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/project" } });
-                } else if (projectnum) {
-                  navigate("/data_status/setting/variable");
-                } else {
-                  navigate("/project", { state: { from: 'data_status' } });
+                  navigate("/login", { state: { from: "/data_status/setting/variable" } });
+                  return;
                 }
+                navigate("/data_status/setting/variable", { state: { from: "data_status" } });
               }}
               style={{ cursor: "pointer" }}
             >

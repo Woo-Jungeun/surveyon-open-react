@@ -1,0 +1,95 @@
+/* PageListPopup.css */
+.pl-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.pl-modal-container {
+    width: 80%;
+    max-width: 1200px;
+    height: 80vh;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    /* transition: all 0.3s ease; */
+}
+
+.pl-modal-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.pl-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+}
+
+.pl-header-icon {
+    color: #1472ff;
+    /* Blue Theme */
+}
+
+.pl-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.pl-close-btn:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.pl-modal-content {
+    flex: 1;
+    background: #fbfbfc;
+    padding: 24px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.pl-content-wrapper {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eee;
+}
+
+/* Kendo Grid overrides for popup context if needed */
+.pl-content-wrapper .k-grid {
+    border: none;
+}

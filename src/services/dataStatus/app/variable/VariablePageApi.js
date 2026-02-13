@@ -12,7 +12,7 @@ export function VariablePageApi() {
         async (data) => await api.post(data, "/pages/variables", "API_BASE_URL_DATASTATUS"),
         {
             onMutate: (vars) => {
-                loadingSpinner.show();
+                // loadingSpinner.show();
             }
         }
     );

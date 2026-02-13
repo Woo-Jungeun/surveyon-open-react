@@ -51,8 +51,8 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
 
     // Determine source based on state or current path
     const getFromSource = () => {
-        if (location.state?.from) return location.state.from;
         if (location.pathname.includes("data_status")) return "data_status";
+        if (location.state?.from) return location.state.from;
         return "ai_open";
     };
 

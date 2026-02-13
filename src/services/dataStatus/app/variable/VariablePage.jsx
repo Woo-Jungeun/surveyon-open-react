@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import DataHeader from '../../components/DataHeader';
-import { ChevronDown, Plus } from 'lucide-react';
 import VariablePageModal from './VariablePageModal';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
@@ -11,16 +10,19 @@ import './VariablePage.css';
 import { VariablePageApi } from './VariablePageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
-
 import { useSelector } from 'react-redux';
 
+
+
 const VariablePage = () => {
-    const { getOriginalVariables, pageList } = VariablePageApi();
+    const { getOriginalVariables } = VariablePageApi();
     const auth = useSelector((store) => store.auth);
     const [variables, setVariables] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
+
     // Hide loading spinner only after data is rendered
     useEffect(() => {
         if (isDataLoaded && variables.length >= 0) {
@@ -39,9 +41,7 @@ const VariablePage = () => {
         if (!isDataLoaded) return;
 
         const isDifferent = JSON.stringify(variables.map(v => {
-            const { isNew, ...rest } = v; // Exclude UI flags from comparison if needed, but new rows make list different
-            // Actually, if it's new, it defaults to different list length or content.
-            // We should compare significant fields.
+            const { isNew, ...rest } = v;
             return {
                 sysName: v.sysName,
                 name: v.name,
@@ -66,105 +66,53 @@ const VariablePage = () => {
         const fetchVariables = async () => {
             if (auth?.user?.userId) {
                 const userId = auth.user.userId;
-                const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
+                const pageId = sessionStorage.getItem('pageId');
 
-                try {
-                    const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
+                if (pageId) {
+                    try {
+                        loadingSpinner.show();
+                        // ... existing logic ...
+                        const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
+                        // ...
+                        if (result.success === "777") {
+                            if (result.resultjson) {
+                                // ... transformation logic ...
+                                const transformedData = Object.values(result.resultjson).map(item => {
+                                    let typeLabel = item.type;
+                                    if (item.type === 'categorical') typeLabel = '범주형';
+                                    else if (item.type === 'continuous') typeLabel = '연속형';
+                                    else if (item.type === 'text') typeLabel = '텍스트';
 
-                    if (result.success === "777") {
-                        if (result.resultjson) {
-                            const transformedData = Object.values(result.resultjson).map(item => {
-                                let typeLabel = item.type;
-                                if (item.type === 'categorical') typeLabel = '범주형';
-                                else if (item.type === 'continuous') typeLabel = '연속형';
-                                else if (item.type === 'text') typeLabel = '텍스트';
-
-                                return {
-                                    id: item.id,
-                                    sysName: item.id,
-                                    name: item.name,
-                                    label: item.label,
-                                    category: item.info ? item.info.map(i => `{${i.value};${i.label}}`).join('') : '',
-                                    logic: '',
-                                    count: '',
-                                    type: typeLabel
-                                };
-                            });
-                            setVariables(transformedData);
-                            setOriginalVariables(JSON.parse(JSON.stringify(transformedData))); // Deep copy
-                            setIsDataLoaded(true);
+                                    return {
+                                        id: item.id,
+                                        sysName: item.id,
+                                        name: item.name,
+                                        label: item.label,
+                                        category: item.info ? item.info.map(i => `{${i.value};${i.label}}`).join('') : '',
+                                        logic: '',
+                                        count: '',
+                                        type: typeLabel
+                                    };
+                                });
+                                setVariables(transformedData);
+                                setOriginalVariables(JSON.parse(JSON.stringify(transformedData))); // Deep copy
+                                setIsDataLoaded(true);
+                            }
+                        } else {
+                            modal.showErrorAlert("에러", result?.message);
+                            loadingSpinner.hide();
                         }
-                    } else {
-                        modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
+                    } catch (error) {
+                        console.error("Variable Fetch Error:", error);
+                        modal.showErrorAlert("에러", "변수 목록 조회 중 오류가 발생했습니다.");
                         loadingSpinner.hide();
                     }
-                } catch (error) {
-                    console.error("API Error:", error);
-                    modal.showErrorAlert("에러", "문항 목록 조회 중 오류가 발생했습니다.");
-                    loadingSpinner.hide();
                 }
             }
         };
 
         fetchVariables();
     }, [auth?.user?.userId]);
-
-    //   useEffect(() => {
-    //         const fetchVariables = async () => {
-    //             if (auth?.user?.userId) {
-    //                 const userId = auth.user.userId;
-    //                 try {
-    //                     const mergePn = sessionStorage.getItem('merge_pn');
-    //                     // 1. 페이지 목록 조회
-    //                     const pageRes = await pageList.mutateAsync({ user: userId, merge_pn: mergePn });
-
-    //                     // 2. 페이지 목록이 있으면 첫 번째 페이지의 변수 목록 조회
-    //                     if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
-    //                         const targetPage = pageRes.resultjson[0];
-    //                         const pageId = targetPage.pageid || targetPage.id;
-
-    //                         const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
-
-    //                         if (result.success === "777") {
-    //                             if (result.resultjson) {
-    //                                 const transformedData = Object.values(result.resultjson).map(item => {
-    //                                     let typeLabel = item.type;
-    //                                     if (item.type === 'categorical') typeLabel = '범주형';
-    //                                     else if (item.type === 'continuous') typeLabel = '연속형';
-    //                                     else if (item.type === 'text') typeLabel = '텍스트';
-
-    //                                     return {
-    //                                         id: item.id,
-    //                                         sysName: item.id,
-    //                                         name: item.name,
-    //                                         label: item.label,
-    //                                         category: item.info ? item.info.map(i => `{${i.value};${i.label}}`).join('') : '',
-    //                                         logic: '',
-    //                                         count: '',
-    //                                         type: typeLabel
-    //                                     };
-    //                                 });
-    //                                 setVariables(transformedData);
-    //                                 setOriginalVariables(JSON.parse(JSON.stringify(transformedData))); // Deep copy
-    //                                 setIsDataLoaded(true);
-    //                             }
-    //                         } else {
-    //                             modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
-    //                             loadingSpinner.hide();
-    //                         }
-    //                     } else {
-    //                         loadingSpinner.hide();
-    //                     }
-    //                 } catch (error) {
-    //                     console.error("API Error:", error);
-    //                     modal.showErrorAlert("에러", "문항 목록 조회 중 오류가 발생했습니다.");
-    //                     loadingSpinner.hide();
-    //                 }
-    //             }
-    //         };
-
-    //         fetchVariables();
-    //     }, [auth?.user?.userId]);
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업 open
     const [sort, setSort] = useState([]);

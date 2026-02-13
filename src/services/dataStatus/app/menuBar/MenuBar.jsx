@@ -8,8 +8,11 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
 import { MenuBarApi } from "./MenuBarApi";
 import ProjectSelectionModal from "./ProjectSelectionModal";
+import PageListPopup from "../variable/PageListPopup"; // Import PageListPopup
+import { VariablePageApi } from "../variable/VariablePageApi"; // Import API for page list
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 // 메뉴 아이템 정의
 const MENU_ITEMS = [
@@ -51,60 +54,29 @@ const MENU_ITEMS = [
 
 const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const modal = useContext(modalContext);
+  const loadingSpinner = useContext(loadingSpinnerContext);
   const auth = useSelector((store) => store.auth);
   const navigate = useNavigate();
   const { getPageMetadata } = MenuBarApi();
+  const { pageList } = VariablePageApi(); // Use VariablePageApi for page list
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
+  const [isPageListPopupOpen, setIsPageListPopupOpen] = useState(false);
+  const [pageListData, setPageListData] = useState([]);
+
   const [pageInfo, setPageInfo] = useState({
     title: projectName || sessionStorage.getItem("projectname") || "조사명 없음",
     processedAt: lastUpdated || "-"
   });
 
-  // 페이지 메타데이터 조회 (프로젝트 정보 업데이트)
+  // 초기 진입 시 프로젝트가 없으면 프로젝트 선택 팝업 오픈
   useEffect(() => {
-    const fetchData = async () => {
-      if (auth?.user?.userId) {
-        const userId = auth.user.userId;
-        const pageId = "0c1de699-0270-49bf-bfac-7e6513a3f525";
-
-        try {
-          // 페이지 메타데이터 조회 API 호출
-          const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
-
-          if (metadataResult?.success === "777") {
-            const { resultjson } = metadataResult;
-            if (resultjson) {
-              // 처리 일시 포맷팅 (YYYY-MM-DD HH:mm:ss)
-              const rawDate = resultjson?.dataset?.processedAt;
-              let formattedDate = "-";
-              if (rawDate) {
-                const d = new Date(rawDate);
-                if (!isNaN(d.getTime())) {
-                  const pad = (n) => String(n).padStart(2, '0');
-                  formattedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-                } else {
-                  formattedDate = rawDate;
-                }
-              }
-
-              setPageInfo(prev => ({
-                ...prev,
-                title: resultjson?.title,
-                processedAt: formattedDate
-              }));
-            }
-          }
-        } catch (error) {
-          console.error("API Error:", error);
-        }
-      }
-    };
-
-    fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth?.user?.userId]); // getPageMetadata를 의존성에서 제거하여 무한 루프 방지
+    const projectnum = sessionStorage.getItem("projectnum");
+    if (!projectnum) {
+      setIsProjectModalOpen(true);
+    }
+  }, []);
 
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
@@ -158,6 +130,95 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     </div>
   );
 
+  const handleProjectSelect = async (project) => {
+    // 1. 세션 스토리지 저장
+    sessionStorage.setItem("projectnum", project.projectnum || "");
+    sessionStorage.setItem("projectname", project.projectname || "");
+    sessionStorage.setItem("servername", project.servername || "");
+    sessionStorage.setItem("projectpof", project.projectpof || "");
+    sessionStorage.setItem("merge_pn", project.merge_pn || "");
+    sessionStorage.setItem("merge_pn_text", project.merge_pn_text || "");
+
+    setIsProjectModalOpen(false); // 프로젝트 팝업 닫기
+
+    // 2. 페이지 목록 조회
+    try {
+      const user = auth?.user?.userId;
+      const mergePn = project.merge_pn;
+      if (!user || !mergePn) {
+        console.error("User or MergePN missing");
+        navigate(0); // fallback
+        return;
+      }
+
+      const pageRes = await pageList.mutateAsync({ user: user, merge_pn: mergePn });
+
+      if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
+        setPageListData(pageRes.resultjson);
+        setIsPageListPopupOpen(true); // 페이지 목록 팝업 열기
+      } else {
+        modal.showErrorAlert("알림", "조회된 페이지가 없습니다.");
+        navigate(0);
+      }
+    } catch (e) {
+      console.error(e);
+      modal.showErrorAlert("오류", "페이지 목록 조회 중 오류가 발생했습니다.");
+      navigate(0);
+    }
+  };
+
+  const handlePageSelect = async (selectedPage) => {
+    setIsPageListPopupOpen(false);
+    const userId = auth?.user?.userId;
+    const pageId = selectedPage.id || selectedPage.pageid;
+
+    if (!userId || !pageId) return;
+
+    // Save pageId to session storage so VariablePage can use it
+    sessionStorage.setItem("pageId", pageId);
+
+    try {
+      loadingSpinner.show();
+      // 페이지 메타데이터 조회 API 호출
+      const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
+
+      if (metadataResult?.success === "777") {
+        const { resultjson } = metadataResult;
+        if (resultjson) {
+          // 처리 일시 포맷팅 (YYYY-MM-DD HH:mm:ss)
+          const rawDate = resultjson?.dataset?.processedAt;
+          let formattedDate = "-";
+          if (rawDate) {
+            const d = new Date(rawDate);
+            if (!isNaN(d.getTime())) {
+              const pad = (n) => String(n).padStart(2, '0');
+              formattedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+            } else {
+              formattedDate = rawDate;
+            }
+          }
+
+          setPageInfo(prev => ({
+            ...prev,
+            title: resultjson?.title,
+            processedAt: formattedDate
+          }));
+
+          // 페이지 선택 후 새로고침하여 데이터 갱신 (선택된 페이지 컨텍스트로)
+          navigate(0);
+        }
+      } else {
+        modal.showErrorAlert("에러", metadataResult?.message || "메타데이터 조회 실패");
+      }
+      loadingSpinner.hide();
+    } catch (error) {
+      console.error("API Error:", error);
+      loadingSpinner.hide();
+      modal.showErrorAlert("오류", "메타데이터 조회 중 오류가 발생했습니다.");
+    }
+  };
+
+
   return (
     <>
       <Sidebar
@@ -184,24 +245,24 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       )}
       {isProjectModalOpen && (
         <ProjectSelectionModal
-          onSelect={(project) => {
-            sessionStorage.setItem("projectnum", project.projectnum || "");
-            sessionStorage.setItem("projectname", project.projectname || "");
-            sessionStorage.setItem("servername", project.servername || "");
-            sessionStorage.setItem("projectpof", project.projectpof || "");
-            sessionStorage.setItem("merge_pn", project.merge_pn || "");
-            sessionStorage.setItem("merge_pn_text", project.merge_pn_text || "");
-            setIsProjectModalOpen(false);
-            navigate(0); // Refresh to apply session changes
-          }}
+          from="data_status"
+          onSelect={handleProjectSelect}
           onClose={() => {
             setIsProjectModalOpen(false);
-            // Only go home if no project is selected
             const projectnum = sessionStorage.getItem("projectnum");
             if (!projectnum) {
-              navigate("/"); // Go home if no project selected
+              navigate("/");
             }
           }}
+        />
+      )}
+      {/* Page List Popup */}
+      {isPageListPopupOpen && (
+        <PageListPopup
+          isOpen={isPageListPopupOpen}
+          data={pageListData}
+          onClose={() => setIsPageListPopupOpen(false)}
+          onSelect={handlePageSelect}
         />
       )}
     </>
