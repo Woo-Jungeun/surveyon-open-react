@@ -28,9 +28,9 @@
     letter-spacing: -0.5px;
     display: flex;
     align-items: center;
-    align-items: center;
     gap: 8px;
     user-select: none;
+    white-space: nowrap;
 }
 
 .data-header-title::before {

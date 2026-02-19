@@ -30,6 +30,7 @@
     align-items: center;
     gap: 8px;
     user-select: none;
+    white-space: nowrap;
 }
 
 .ai-data-header-title::before {
