@@ -53,7 +53,7 @@ const DataHeader = ({ title, children, onAdd, addButtonLabel = "추가", onSave,
                         onClick={saveButtonDisabled ? undefined : onSave}
                         disabled={saveButtonDisabled}
                         className={`data-header-btn ${saveButtonDisabled ? '' : 'data-header-btn-primary'}`}
-                        style={saveButtonDisabled ? { backgroundColor: '#e2e8f0', color: '#94a3b8', cursor: 'not-allowed' } : {}}
+                        style={saveButtonDisabled ? { backgroundColor: '#e2e8f0', color: '#94a3b8', cursor: 'default' } : {}}
                     >
                         <Save size={16} />
                         <span>{saveButtonLabel}</span>
