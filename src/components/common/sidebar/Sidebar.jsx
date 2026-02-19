@@ -28,7 +28,8 @@ const Sidebar = ({
     theme = "purple",
     moduleItems = [],
     extraActions,
-    bottomActions
+    bottomActions,
+    pageInfo
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -105,6 +106,8 @@ const Sidebar = ({
         sessionStorage.setItem("projectpof", "");
         sessionStorage.setItem("merge_pn", "");
         sessionStorage.setItem("merge_pn_text", "");
+        sessionStorage.setItem("pageId", "");
+        sessionStorage.setItem("pagetitle", "");
         navigate("/");
     };
 
@@ -142,7 +145,7 @@ const Sidebar = ({
                 </button>
             </div>
 
-            {/* Project Info Section (맨 위) */}
+            {/* Project Info Section */}
             {projectInfo && !isCollapsed && (
                 <div className="project-info-box">
                     <div className="sidebar-project-label">현재 조사</div>
@@ -156,6 +159,25 @@ const Sidebar = ({
                             onClick={(e) => {
                                 e.stopPropagation();
                                 if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
+                            }}
+                        >
+                            <Settings size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Page Info Section */}
+            {pageInfo && !isCollapsed && (
+                <div className="project-info-box">
+                    <div className="sidebar-project-label">현재 페이지</div>
+                    <div className="project-info-card">
+                        <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }}>{pageInfo.title}</div>
+                        <button
+                            className="project-settings-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
                             }}
                         >
                             <Settings size={16} />

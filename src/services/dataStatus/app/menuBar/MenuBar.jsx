@@ -149,6 +149,14 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       title: project.projectname || "조사명 없음"
     }));
 
+    // Reset page info on project change
+    sessionStorage.setItem("pageId", "");
+    sessionStorage.setItem("pagetitle", "");
+    setPageState({
+      title: "페이지 없음",
+      merge_pn: "-"
+    });
+
     setIsProjectModalOpen(false); // 프로젝트 팝업 닫기
 
     // 2. 페이지 목록 조회
@@ -175,15 +183,30 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
+  // 페이지 정보 state 추가
+  const [pageState, setPageState] = useState({
+    title: sessionStorage.getItem("pagetitle") || "페이지 없음",
+    merge_pn: sessionStorage.getItem("merge_pn") || "-"
+  });
+
+  // ... (existing code)
+
   const handlePageSelect = async (selectedPage) => {
     setIsPageListPopupOpen(false);
     const userId = auth?.user?.userId;
     const pageId = selectedPage.id || selectedPage.pageid;
+    const pageTitle = selectedPage.title || selectedPage.name || "제목 없음";
 
     if (!userId || !pageId) return;
 
-    // Save pageId to session storage so VariablePage can use it
+    // Save pageId and pagetitle to session storage
     sessionStorage.setItem("pageId", pageId);
+    sessionStorage.setItem("pagetitle", pageTitle);
+
+    setPageState({
+      title: pageTitle,
+      merge_pn: sessionStorage.getItem("merge_pn") || "-"
+    });
 
     try {
       loadingSpinner.show();
@@ -208,7 +231,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
           setPageInfo(prev => ({
             ...prev,
-            title: resultjson?.title,
             processedAt: formattedDate
           }));
         }
@@ -223,6 +245,32 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
+  // 사이드바에 전달할 페이지 정보
+  const sidebarPageInfo = {
+    title: pageState.title,
+    subTitle: pageState.merge_pn,
+    onSettingsClick: () => {
+      // Open page list popup
+      // We need to fetch the list like in handleProjectSelect, or just open if we have data?
+      // We might need to re-fetch if project changed, but usually project is same.
+      // Let's try to reuse the fetch logic or just open if we have data.
+      // But better to fetch to be safe or checks.
+      // Since handleProjectSelect fetches and sets data, maybe we can just open?
+      // But what if we refreshed? pageList data might be empty.
+      // So we should fetch page list again using current merge_pn.
+
+      const user = auth?.user?.userId;
+      const mergePn = sessionStorage.getItem("merge_pn");
+      if (user && mergePn) {
+        pageList.mutateAsync({ user: user, merge_pn: mergePn }).then(res => {
+          if (res?.success === "777") {
+            setPageListData(res.resultjson);
+            setIsPageListPopupOpen(true);
+          }
+        });
+      }
+    }
+  };
 
   return (
     <>
@@ -235,10 +283,12 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         }}
         menuGroups={MENU_ITEMS}
         projectInfo={projectInfoData}
+        pageInfo={sidebarPageInfo} // Add this
         theme="blue"
         moduleItems={moduleItems}
         extraActions={ExtraActions}
       />
+
       {isNewDataModalOpen && (
         <NewDataModal
           onClose={() => setIsNewDataModalOpen(false)}
