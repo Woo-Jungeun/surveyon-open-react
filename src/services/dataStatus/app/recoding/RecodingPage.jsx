@@ -298,7 +298,6 @@ const RecodingPage = () => {
             };
             console.log("handleLogicCheck", handleLogicCheck)
             const result = await verifyRecodeLogic.mutateAsync(payload);
-            console.log(result);
             if (result?.success === "777") {
 
                 const data = result.resultjson || {};

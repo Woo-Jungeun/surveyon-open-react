@@ -18,12 +18,12 @@ export function RecodingPageApi() {
 
     /** recoded 변수 저장/수정 */
     const setRecodedVariable = useMutation(
-        async (data) => await api.post(data, "/pages/variables/recoded/set", "API_BASE_URL_DATASTATUS")
+        async (data) => await api.post(data, "/recoded/set", "API_BASE_URL_DATASTATUS")
     );
 
     /** recoded 변수 삭제 */
     const deleteRecodedVariable = useMutation(
-        async (data) => await api.post(data, "/pages/variables/recoded/delete", "API_BASE_URL_DATASTATUS")
+        async (data) => await api.post(data, "/recoded/delete", "API_BASE_URL_DATASTATUS")
     );
 
     /** 로직 체크 */

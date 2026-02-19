@@ -19,6 +19,7 @@ const VariablePage = () => {
     const auth = useSelector((store) => store.auth);
     const [variables, setVariables] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0); // Trigger for re-fetching
 
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -61,6 +62,15 @@ const VariablePage = () => {
 
         setHasChanges(isDifferent);
     }, [variables, originalVariables, isDataLoaded]);
+
+    // Listen for page selection changes
+    useEffect(() => {
+        const handlePageSelected = () => {
+            setRefreshKey(prev => prev + 1);
+        };
+        window.addEventListener("pageSelected", handlePageSelected);
+        return () => window.removeEventListener("pageSelected", handlePageSelected);
+    }, []);
 
     useEffect(() => {
         const fetchVariables = async () => {
@@ -112,7 +122,7 @@ const VariablePage = () => {
         };
 
         fetchVariables();
-    }, [auth?.user?.userId]);
+    }, [auth?.user?.userId, refreshKey]);
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업 open
     const [sort, setSort] = useState([]);
