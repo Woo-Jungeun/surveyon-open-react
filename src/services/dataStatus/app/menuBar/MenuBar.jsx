@@ -202,6 +202,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     // Save pageId and pagetitle to session storage
     sessionStorage.setItem("pageId", pageId);
     sessionStorage.setItem("pagetitle", pageTitle);
+    window.dispatchEvent(new Event("pageSelected"));
 
     setPageState({
       title: pageTitle,
