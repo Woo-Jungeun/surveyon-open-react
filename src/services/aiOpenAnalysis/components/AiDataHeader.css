@@ -179,3 +179,14 @@
     border-color: #ff5722 !important;
     color: #ff5722 !important;
 }
+
+.ai-data-header-btn-secondary:disabled {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #94a3b8 !important;
+    /* Gray text */
+    box-shadow: none !important;
+    cursor: default !important;
+    /* No forbidden cursor */
+    opacity: 1 !important;
+}

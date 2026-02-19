@@ -665,7 +665,7 @@ const OptionSettingBody = () => {
                     ]
                   });
                 }}
-                style={{ height: "40px", fontSize: "14px", padding: "0 24px", borderRadius: "6px", cursor: canSave["1"] ? "not-allowed" : "pointer", opacity: canSave["1"] ? 0.6 : 1, display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ height: "40px", fontSize: "14px", padding: "0 24px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px" }}
               >
                 중복코드 제거(DB)
                 <span
