@@ -304,10 +304,10 @@ const RecodingPage = () => {
                 const data = result.resultjson || {};
                 const stats = data.columns?.[0] || {};
                 const rows = data.rows || [];
+                const columnsN = (data.columns || []).reduce((acc, c) => acc + (Number(c.total) || 0), 0);
 
-                // Update Evaluation Result
                 setEvaluationResult({
-                    n: stats.n || 0,
+                    n: stats.n || columnsN || 0,
                     mean: stats.mean !== undefined ? stats.mean : '-',
                     stdDev: stats.std !== undefined ? stats.std : '-',
                     min: stats.min !== undefined ? stats.min : '-',
@@ -317,15 +317,28 @@ const RecodingPage = () => {
                 });
                 setIsEvaluationOpen(true);
 
-                // Update Grid Checks
                 const newChecks = {};
                 categories.forEach(cat => {
-                    // Match category value with row value
+                    let count = null;
+                    let percent = null;
+
                     const matchedRow = rows.find(r => String(r.value) === String(cat.val));
 
                     if (matchedRow && matchedRow.cells?.total_auto) {
                         const cell = matchedRow.cells.total_auto;
-                        newChecks[cat.id] = `${cell.count} / ${cell.percent}%`;
+                        count = cell.count;
+                        percent = cell.percent;
+                    }
+                    else {
+                        const matchedCol = (data.columns || []).find(c => c.label === cat.category);
+                        if (matchedCol) {
+                            count = matchedCol.total;
+                            percent = columnsN > 0 ? ((count / columnsN) * 100).toFixed(1) : "0.0";
+                        }
+                    }
+
+                    if (count !== null) {
+                        newChecks[cat.id] = `${count} / ${percent}%`;
                     } else {
                         newChecks[cat.id] = "- / -%";
                     }
