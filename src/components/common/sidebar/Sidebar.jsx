@@ -187,7 +187,7 @@ const Sidebar = ({
             )}
 
             {/* 1. Main Menu (Fixed) */}
-            {/* {moduleItems.length > 0 && (
+            {moduleItems.length > 0 && (
                 <div className="nav-group module-group fixed-menu">
                     <div className="group-header" onClick={() => setModuleListOpen(!moduleListOpen)}>
                         <span className="group-title">메인 메뉴</span>
@@ -222,7 +222,7 @@ const Sidebar = ({
                         </ul>
                     )}
                 </div>
-            )} */}
+            )}
 
             {/* Navigation Menu (Scrollable) */}
             <nav className="sidebar-nav">
