@@ -1157,6 +1157,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     });
                     handleSearch();                              // 재조회
                     return true;
+                } else if (res?.success === "763") {
+                    modal.showAlert("에러", "응답자데이터와 보기코드가 매칭되지 않습니다. \n응답자 데이터분석시 참고해주세요."); //오류 팝업 표출
+                    return false; // 실패 시 그리드 상태 변경 안 함
                 } else {
                     modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다."); //오류 팝업 표출
                     return false; // 실패 시 그리드 상태 변경 안 함
