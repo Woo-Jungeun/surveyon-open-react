@@ -1146,7 +1146,7 @@
 
 .board-view-more.disabled {
   background: #9ca3af;
-  cursor: not-allowed;
+  cursor: default;
 }
 
 .board-view-more.disabled:hover {

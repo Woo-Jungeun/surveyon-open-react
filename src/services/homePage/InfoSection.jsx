@@ -208,14 +208,14 @@ const InfoSection = () => {
 
             <div
               className="hp-feature-item"
-              onClick={() => {
-                if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/data_status/setting/variable" } });
-                  return;
-                }
-                navigate("/data_status/setting/variable", { state: { from: "data_status" } });
-              }}
-              style={{ cursor: "pointer" }}
+            // onClick={() => {
+            //   if (!isLoggedIn) {
+            //     navigate("/login", { state: { from: "/data_status/setting/variable" } });
+            //     return;
+            //   }
+            //   navigate("/data_status/setting/variable", { state: { from: "data_status" } });
+            // }}
+            // style={{ cursor: "pointer" }}
             >
               <BarChart3 className="hp-feature-icon" />
               <span>데이터현황</span>
