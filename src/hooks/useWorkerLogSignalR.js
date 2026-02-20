@@ -5,7 +5,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
  * @param {string} hubUrl 서버 URL
  * @param {string} hubName 서버 허브 이름
  */
-export default function useWorkerLogSignalR({ hubUrl, hubName, onCompleted, idleMs = 60000 }) {
+export default function useWorkerLogSignalR({ hubUrl, hubName, onCompleted, idleMs = 1200 }) {
   const connectionRef = useRef(null);
   const hubRef = useRef(null);
   const currentJobRef = useRef(null);
