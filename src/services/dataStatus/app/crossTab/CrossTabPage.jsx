@@ -14,6 +14,8 @@ import { CrossTabPageApi } from './CrossTabPageApi';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
+import { VariablePageApi } from '../variable/VariablePageApi';
+import PageListPopup from '../variable/PageListPopup';
 
 const CrossTabPage = () => {
     // Auth & API
@@ -106,6 +108,42 @@ const CrossTabPage = () => {
         });
     };
 
+    const { pageList: getPageList } = VariablePageApi();
+    const [isPageListOpen, setIsPageListOpen] = useState(false);
+    const [pageListData, setPageListData] = useState([]);
+
+    const handleOpenPageList = async () => {
+        const userId = auth?.user?.userId;
+        const mergePn = sessionStorage.getItem("merge_pn");
+
+        if (!userId || !mergePn) {
+            modal.showErrorAlert("알림", "프로젝트 정보가 없습니다.");
+            return;
+        }
+
+        try {
+            const result = await getPageList.mutateAsync({ user: userId, merge_pn: mergePn });
+            if (result?.success === "777" && result.resultjson) {
+                setPageListData(result.resultjson);
+                setIsPageListOpen(true);
+            } else {
+                modal.showErrorAlert("알림", "조회된 페이지가 없습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("오류", "페이지 목록 조회 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handlePageSelected = (page) => {
+        const pageId = page.pageid || page.id;
+        const pageTitle = page.title || page.name;
+        sessionStorage.setItem("pageId", pageId);
+        sessionStorage.setItem("pagetitle", pageTitle);
+        setIsPageListOpen(false);
+        window.location.reload();
+    };
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (totalFilterRef.current && !totalFilterRef.current.contains(event.target)) {
@@ -123,7 +161,7 @@ const CrossTabPage = () => {
         const fetchData = async () => {
             if (!auth?.user?.userId) return;
             if (!PAGE_ID) {
-                modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+                modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
                 return;
             }
 
@@ -291,6 +329,7 @@ const CrossTabPage = () => {
                                         variables: variablesMap,
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
+                                        include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
                                         table: {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
@@ -803,6 +842,7 @@ const CrossTabPage = () => {
                             variables: variablesMap,
                             weight_col: weightId,
                             filter_expression: filterExpr,
+                            include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
                             table: {
                                 id: item.id,
                                 name: item.name || "Untitled Table",
@@ -832,14 +872,15 @@ const CrossTabPage = () => {
                                 return { label: r.label, values: processedValues, total: total };
                             });
 
+                            const statsMap = newData.stats || {};
                             const newParsedStats = {
-                                mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                                med: newColumnsList.map(c => c.med !== undefined ? c.med : '-'),
-                                mod: newColumnsList.map(c => c.mod !== undefined ? c.mod : '-'),
-                                std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
-                                min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
-                                max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
-                                n: newColumnsList.map(c => c.n || 0)
+                                mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? '-'),
+                                med: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
+                                mod: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
+                                std: newColumnsList.map(c => statsMap[c.key]?.std ?? '-'),
+                                min: newColumnsList.map(c => statsMap[c.key]?.min ?? '-'),
+                                max: newColumnsList.map(c => statsMap[c.key]?.max ?? '-'),
+                                n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0)
                             };
 
                             setResultData({
@@ -995,14 +1036,15 @@ const CrossTabPage = () => {
                             };
                         });
 
+                        const statsMap = data.stats || {};
                         const parsedStats = {
-                            mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                            med: columnsList.map(c => c.med !== undefined ? c.med : '-'),
-                            mod: columnsList.map(c => c.mod !== undefined ? c.mod : '-'),
-                            std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
-                            min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
-                            max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
-                            n: columnsList.map(c => c.n || 0)
+                            mean: columnsList.map(c => statsMap[c.key]?.mean ?? '-'),
+                            med: columnsList.map(c => statsMap[c.key]?.median ?? '-'),
+                            mod: columnsList.map(c => statsMap[c.key]?.mode ?? '-'),
+                            std: columnsList.map(c => statsMap[c.key]?.std ?? '-'),
+                            min: columnsList.map(c => statsMap[c.key]?.min ?? '-'),
+                            max: columnsList.map(c => statsMap[c.key]?.max ?? '-'),
+                            n: columnsList.map(c => statsMap[c.key]?.n ?? 0)
                         };
 
                         setResultData({
@@ -1102,6 +1144,7 @@ const CrossTabPage = () => {
                     variables: variablesMap,
                     weight_col: weightId,
                     filter_expression: filterExpression,
+                    include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
                     table: {
                         id: selectedTableId,
                         name: tableName || "Untitled Table",
@@ -1132,14 +1175,15 @@ const CrossTabPage = () => {
                         return { label: r.label, values: processedValues, total: total };
                     });
 
+                    const statsMap = newData.stats || {};
                     const newParsedStats = {
-                        mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                        med: newColumnsList.map(c => c.med !== undefined ? c.med : '-'),
-                        mod: newColumnsList.map(c => c.mod !== undefined ? c.mod : '-'),
-                        std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
-                        min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
-                        max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
-                        n: newColumnsList.map(c => c.n || 0)
+                        mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? '-'),
+                        med: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
+                        mod: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
+                        std: newColumnsList.map(c => statsMap[c.key]?.std ?? '-'),
+                        min: newColumnsList.map(c => statsMap[c.key]?.min ?? '-'),
+                        max: newColumnsList.map(c => statsMap[c.key]?.max ?? '-'),
+                        n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0)
                     };
 
                     setResultData({
@@ -2123,6 +2167,13 @@ const CrossTabPage = () => {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onCreate={handleCreateTable}
+            />
+
+            <PageListPopup
+                isOpen={isPageListOpen}
+                onClose={() => setIsPageListOpen(false)}
+                data={pageListData}
+                onSelect={handlePageSelected}
             />
         </div >
     );
