@@ -136,17 +136,6 @@ const RecodingPage = () => {
         fetchVariables();
     }, [auth?.user?.userId]);
 
-    // ... (selectedVar 로직을 위한 useEffect - 변경 없음)
-
-
-    // ... (filteredVariables, categories 상태 - 변경 없음)
-
-    // ... (헬퍼 함수들 - 변경 없음)
-
-
-
-    // ... (handleSave - 변경 없음)
-
     const [categories, setCategories] = useState([]);
     const [checkedLogics, setCheckedLogics] = useState({});
     const [evaluationResult, setEvaluationResult] = useState(null);
@@ -165,6 +154,10 @@ const RecodingPage = () => {
         if (selectedVar?.id !== lastSelectedIdRef.current) {
             lastSelectedIdRef.current = selectedVar?.id;
 
+            // Clear previous logic check results and evaluation stats
+            setCheckedLogics({});
+            setEvaluationResult(null);
+
             if (selectedVar?.id && selectedVar.info) {
                 const newCategories = selectedVar.info.map(item => ({
                     id: item.index,
@@ -176,7 +169,6 @@ const RecodingPage = () => {
                 setCategories(newCategories);
                 setInitialState({
                     id: selectedVar.id,
-                    label: selectedVar.label,
                     label: selectedVar.label,
                     categories: newCategories // 깊은 복사가 엄격하게 필요하지 않을 수 있지만, 안전을 위해
                 });
@@ -230,6 +222,7 @@ const RecodingPage = () => {
             });
         } else {
             setSelectedVar(item);
+            setSort([]); // 그리드 정렬 초기화
             setIsAddMode(false); // 기존 항목 선택 시 추가 모드 해제
         }
     }
@@ -306,7 +299,8 @@ const RecodingPage = () => {
                 user: userId,
                 filter_expression: "",
                 weight_col: null,
-                table: { x_info: [selectedVar.id], y_info: [] },
+                table: { x_info: [], y_info: [selectedVar.id] },
+                include_stats: ["mean", "std", "min", "max", "n", "median", "mode"],
                 variables: variablesPayload
             };
             console.log("handleLogicCheck", handleLogicCheck)
@@ -314,7 +308,8 @@ const RecodingPage = () => {
             if (result?.success === "777") {
 
                 const data = result.resultjson || {};
-                const stats = data.columns?.[0] || {};
+                const stats = data.stats?.total_auto || {};
+
                 const rows = data.rows || [];
                 const columnsN = (data.columns || []).reduce((acc, c) => acc + (Number(c.total) || 0), 0);
 
@@ -324,8 +319,8 @@ const RecodingPage = () => {
                     stdDev: stats.std !== undefined ? stats.std : '-',
                     min: stats.min !== undefined ? stats.min : '-',
                     max: stats.max !== undefined ? stats.max : '-',
-                    mode: stats.mod !== undefined ? stats.mod : '-',
-                    median: stats.med !== undefined ? stats.med : '-'
+                    mode: stats.mode !== undefined ? stats.mode : '-',
+                    median: stats.median !== undefined ? stats.median : '-'
                 });
                 setIsEvaluationOpen(true);
 
@@ -390,7 +385,7 @@ const RecodingPage = () => {
             rows.forEach((row, rIdx) => {
                 const currentRowIndex = startRowIndex + rIdx;
 
-                // 행이 존재하면 업데이트. 존재하지 않으면 생성?
+                // 행이 존재하면 업데이트. 존재하지 않으면 생성
                 // 현재는 안전을 위해 기존 행만 업데이트하도록 함. 필요시 새 행 추가 로직 구현
                 // 가중치 페이지 로직도 기존 행만 업데이트함. 일단 동일하게 유지.
                 if (currentRowIndex >= newData.length) return;
