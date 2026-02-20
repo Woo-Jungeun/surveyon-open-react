@@ -55,8 +55,8 @@ const CrossTabPage = () => {
     // Filter weight variables from API response
     const weightVariableOptions = useMemo(() => {
         const weights = variables
-            .filter(v => v?.name?.startsWith('weight_'))
-            .map(v => v?.name);
+            .filter(v => v?.id?.startsWith('weight_'))
+            .map(v => v?.id);
         return ["없음", ...weights];
     }, [variables]);
 
@@ -177,7 +177,7 @@ const CrossTabPage = () => {
                 if (varResult?.success === "777" && varResult.resultjson) {
                     loadedVariables = Object.values(varResult.resultjson).map(item => ({
                         id: item.id, // Use name as ID
-                        name: item.name,
+                        name: item.id,
                         label: item.label,
                         info: item.info || []
                     }));
@@ -201,7 +201,7 @@ const CrossTabPage = () => {
 
                     const mappedTables = data.map(item => ({
                         id: item.id,
-                        name: item.TABLE_TITLE || item.name || `Table ${item.id}`,
+                        name: item.TABLE_TITLE || item.id || `Table ${item.id}`,
                         row: item.row || item.rows || [],
                         col: item.col || item.cols || []
                     }));
@@ -212,7 +212,7 @@ const CrossTabPage = () => {
                         // Select first table automatically
                         const firstTable = mappedTables[0];
                         setSelectedTableId(firstTable.id);
-                        setTableName(firstTable.name || "");
+                        setTableName(firstTable.id || "");
 
                         // Set configuration using loaded variables
                         const newRowVars = (firstTable.row || []).map(id => {
@@ -401,15 +401,15 @@ const CrossTabPage = () => {
                 const variable = variables.find(existing => existing.id === v.id);
                 let labels = [];
                 if (!variable || !variable.info) {
-                    labels = [v.name];
+                    labels = [v.id]; // Fallback to ID
                 } else {
                     labels = variable.info
                         .filter(i => i.type !== 'config')
                         .map(i => i.label);
-                    // If labels empty but info exists (edge case), use name
-                    if (labels.length === 0) labels = [v.name];
+
+                    if (labels.length === 0) labels = [v.id];
                 }
-                return { name: v.name, labels };
+                return { name: v.id, labels };
             });
         };
 
