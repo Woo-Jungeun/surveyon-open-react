@@ -174,6 +174,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     // SignalR 완료 콜백 직후, 
     // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
     // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
+    const logActionsRef = useRef(null);
+
+    // SignalR 완료 콜백 직후, 
+    // 상태 API와 현재 로그 스냅샷(라인 수)을 짧은 간격으로 몇 차례 확인해(연속 안정 2회) 
+    // 실제 로그 유입이 멈췄을 때만 최종 완료 처리(모달/로딩 off)하는 함수
     const confirmEndByStatusAndSnapshot = useCallback(
         async ({ interval = 1000, hasError = false, job }) => {
             const startTime = Date.now();
@@ -197,6 +202,23 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
                     const statusRes = await optionAnalysisStatus.mutateAsync(payload);
                     const out = String(statusRes?.output || "");
+
+                    // 로그 동기화 (Polling Fallback)
+                    const { appendLog, clearLog } = logActionsRef.current || {};
+                    if (appendLog && clearLog && out) {
+                        const currentLog = logTextRef.current || "";
+                        // 서버 로그가 더 길면 동기화 시도
+                        if (out.length > currentLog.length) {
+                            if (out.startsWith(currentLog)) {
+                                // 기존 로그의 뒷부분만 추가
+                                appendLog(out.substring(currentLog.length));
+                            } else {
+                                // 불일치 시 전체 교체 (안전장치)
+                                clearLog();
+                                appendLog(out);
+                            }
+                        }
+                    }
 
                     // 완료 조건 1: 서버 플래그
                     if (statusRes?.IsCompleted === true) {
@@ -240,6 +262,12 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             }
         },
     });
+
+    // appendLog, clearLog를 ref에 저장 (callback에서 사용하기 위함)
+    useEffect(() => {
+        logActionsRef.current = { appendLog, clearLog };
+    }, [appendLog, clearLog]);
+
     // 최신 logText를 ref에 반영
     useEffect(() => {
         logTextRef.current = String(logText ?? "");
