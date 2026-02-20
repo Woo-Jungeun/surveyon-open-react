@@ -11,6 +11,8 @@ import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu'
 import '../../../../assets/css/grid_vertical_borders.css';
 import './RecodingPage.css';
 import { modalContext } from '../../../../components/common/Modal';
+import { VariablePageApi } from '../variable/VariablePageApi';
+import PageListPopup from '../variable/PageListPopup';
 
 const EditableCell = (props) => {
     const { dataItem, field, columns, onUpdate, onPaste } = props;
@@ -89,6 +91,42 @@ const RecodingPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddMode, setIsAddMode] = useState(false); // 추가 모드 상태 관리
 
+    const { pageList: getPageList } = VariablePageApi();
+    const [isPageListOpen, setIsPageListOpen] = useState(false);
+    const [pageListData, setPageListData] = useState([]);
+
+    const handleOpenPageList = async () => {
+        const userId = auth?.user?.userId;
+        const mergePn = sessionStorage.getItem("merge_pn");
+
+        if (!userId || !mergePn) {
+            modal.showErrorAlert("알림", "프로젝트 정보가 없습니다.");
+            return;
+        }
+
+        try {
+            const result = await getPageList.mutateAsync({ user: userId, merge_pn: mergePn });
+            if (result?.success === "777" && result.resultjson) {
+                setPageListData(result.resultjson);
+                setIsPageListOpen(true);
+            } else {
+                modal.showErrorAlert("알림", "조회된 페이지가 없습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("오류", "페이지 목록 조회 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handlePageSelected = (page) => {
+        const pageId = page.pageid || page.id;
+        const pageTitle = page.title || page.name;
+        sessionStorage.setItem("pageId", pageId);
+        sessionStorage.setItem("pagetitle", pageTitle);
+        setIsPageListOpen(false);
+        window.location.reload();
+    };
+
     const isInitialized = useRef(false);
 
     useEffect(() => {
@@ -99,7 +137,7 @@ const RecodingPage = () => {
                 const pageId = sessionStorage.getItem("pageId");
 
                 if (!pageId) {
-                    modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+                    modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
                     return;
                 }
 
@@ -274,7 +312,7 @@ const RecodingPage = () => {
         const pageId = sessionStorage.getItem("pageId");
 
         if (!pageId) {
-            modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+            modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
             return;
         }
 
@@ -442,7 +480,7 @@ const RecodingPage = () => {
         const pageId = sessionStorage.getItem("pageId");
 
         if (!pageId) {
-            modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+            modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
             return;
         }
 
@@ -539,7 +577,7 @@ const RecodingPage = () => {
                         const pageId = sessionStorage.getItem("pageId");
 
                         if (!pageId) {
-                            modal.showErrorAlert("알림", "선택된 페이지 정보가 없습니다.");
+                            modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
                             return;
                         }
 
@@ -597,6 +635,13 @@ const RecodingPage = () => {
                 show={toast.show}
                 message={toast.message}
                 onClose={() => setToast({ ...toast, show: false })}
+            />
+
+            <PageListPopup
+                isOpen={isPageListOpen}
+                onClose={() => setIsPageListOpen(false)}
+                data={pageListData}
+                onSelect={handlePageSelected}
             />
 
             <div className="recoding-layout">
