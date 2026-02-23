@@ -21,6 +21,12 @@ const InquiryDetail = () => {
     const [isAnswering, setIsAnswering] = useState(false);
     const [answerContent, setAnswerContent] = useState('');
 
+    const maskName = (name) => {
+        if (!name || name.length < 2) return name;
+        if (name.length === 2) return name[0] + '*';
+        return name[0] + '*'.repeat(name.length - 2) + name[name.length - 1];
+    };
+
     const { inquiryDetail, inquiryTransaction } = InquiryApi();
     const [inquiryData, setInquiryData] = useState(null);
 
@@ -35,8 +41,8 @@ const InquiryDetail = () => {
                             parentId: data.parentId || null,
                             category: data.category,
                             title: data.title,
-                            writer: data.author,
-                            writerId: data.userId || '',
+                            writer: data.author || data.userNm,
+                            writerId: data.userId || data.user_id || data.user || data.authorId || data.author_id || data.regId || data.reg_id || '',
                             createdAt: data.createdAt,
                             status: data.answer ? 'answered' : 'waiting',
                             isSecret: data.isSecret,
@@ -179,8 +185,8 @@ const InquiryDetail = () => {
                                                                 parentId: data.parentId || null,
                                                                 category: data.category,
                                                                 title: data.title,
-                                                                writer: data.author,
-                                                                writerId: data.userId || '',
+                                                                writer: data.author || data.userNm,
+                                                                writerId: data.userId || data.user_id || data.user || data.authorId || data.author_id || data.regId || data.reg_id || '',
                                                                 createdAt: data.createdAt,
                                                                 status: data.answer ? 'answered' : 'waiting',
                                                                 isSecret: data.isSecret,
@@ -238,9 +244,9 @@ const InquiryDetail = () => {
 
                 {!isAnswering && (
                     <div className="id-footer">
-                        {/* 작성자 본인일 경우에만 표시 */}
                         <div className="id-user-btns">
-                            {inquiryData.writerId === userId && (
+                            {/* 작성자 본인일 경우(일반사용자 혹은 관리자 작성글) 표시 */}
+                            {(String(inquiryData.writerId) === String(userId) || inquiryData.writer === maskName(userName) || inquiryData.writer === userName) && (
                                 <>
                                     {inquiryData.status !== 'answered' && (
                                         <>
@@ -300,6 +306,7 @@ const InquiryDetail = () => {
                                     )}
                                 </>
                             )}
+                            {/* 관리자 권한 메뉴 */}
                             {isAdmin == 1 && (
                                 inquiryData.answer ? (
                                     !isAnswering && (
@@ -342,8 +349,8 @@ const InquiryDetail = () => {
                                                                                         parentId: data.parentId || null,
                                                                                         category: data.category,
                                                                                         title: data.title,
-                                                                                        writer: data.author,
-                                                                                        writerId: data.userId || '',
+                                                                                        writer: data.author || data.userNm,
+                                                                                        writerId: data.userId || data.user_id || data.user || data.authorId || data.author_id || data.regId || data.reg_id || '',
                                                                                         createdAt: data.createdAt,
                                                                                         status: data.answer ? 'answered' : 'waiting',
                                                                                         isSecret: data.isSecret,
