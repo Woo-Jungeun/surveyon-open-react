@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Search, Copy } from 'lucide-react';
@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { WeightPageApi } from './WeightPageApi';
 import { VariablePageApi } from '../variable/VariablePageApi';
+import { modalContext } from "@/components/common/Modal";
 
 // Move initial data outside component to prevent re-creation on every render
 const INITIAL_GRID_DATA = [
@@ -23,8 +24,9 @@ const INITIAL_GRID_DATA = [
 
 const WeightPage = () => {
     const auth = useSelector((store) => store.auth);
+    const modal = useContext(modalContext);
     const { getRecodedVariables } = RecodingPageApi();
-    const { getWeightVariable } = WeightPageApi();
+    const { getWeightVariable, evaluateTable, deleteWeight } = WeightPageApi();
     const { getOriginalVariables } = VariablePageApi();
 
     // Mock Data for Weights (Sidebar)
@@ -85,7 +87,7 @@ const WeightPage = () => {
             try {
                 const result = await getWeightVariable.mutateAsync({
                     pageid: pageId,
-                    weight_variable: selectedWeight.id
+                    weight_variable_name: selectedWeight.id
                 });
 
                 if (result?.success === "777" && result.resultjson) {
@@ -132,15 +134,69 @@ const WeightPage = () => {
                         });
                         setTargetGridData(newTargetGridData);
 
-                        // Fake current data just for layout demo
-                        const newCurrentGridData = (yVar.info || []).map((yItem) => {
-                            const row = { category: yItem.label };
-                            (xVar.info || []).forEach((xItem, xIndex) => {
-                                row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
+                        // Fetch evaluate table for "현재 분포"
+                        const evalPayload = {
+                            user: auth?.user?.userId,
+                            pageid: pageId,
+                            variables: vars,
+                            weight_col: "",
+                            filter_expression: "",
+                            include_stats: [],
+                            table: {
+                                id: "weight_eval",
+                                name: "Weight Evaluation",
+                                x_info: xIds,
+                                y_info: yIds
+                            }
+                        };
+                        try {
+                            const evalResult = await evaluateTable.mutateAsync(evalPayload);
+                            if (evalResult?.success === "777" && evalResult.resultjson) {
+                                const evalData = evalResult.resultjson;
+                                const evalCols = evalData.columns || [];
+                                const evalRows = evalData.rows || [];
+                                const evalColKeys = evalCols.map(c => c.key);
+
+                                const newCurrentGridData = (yVar.info || []).map((yItem) => {
+                                    const row = { category: yItem.label };
+                                    const evalRow = evalRows.find(r => r.label === yItem.label || r.key === `${yIds[0]}__${yItem.index}` || String(r.value) === String(yItem.index));
+
+                                    (xVar.info || []).forEach((xItem, xIndex) => {
+                                        let count = '-', pct = '-';
+                                        if (evalRow) {
+                                            const matchCol = evalCols.find(c => c.label === xItem.label || c.key === `${xIds[0]}__${xItem.index}` || String(c.value) === String(xItem.index));
+                                            const cell = matchCol ? evalRow.cells?.[matchCol.key] : null;
+                                            if (cell) {
+                                                count = cell.count ?? 0;
+                                                pct = cell.percent ?? "0.0";
+                                            }
+                                        }
+                                        row[`col${xIndex + 1}`] = { count, pct };
+                                    });
+                                    return row;
+                                });
+                                setGridData(newCurrentGridData);
+                            } else {
+                                const fakeData = (yVar.info || []).map((yItem) => {
+                                    const row = { category: yItem.label };
+                                    (xVar.info || []).forEach((xItem, xIndex) => {
+                                        row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
+                                    });
+                                    return row;
+                                });
+                                setGridData(fakeData);
+                            }
+                        } catch (e) {
+                            console.error("Evaluate table error:", e);
+                            const fakeData = (yVar.info || []).map((yItem) => {
+                                const row = { category: yItem.label };
+                                (xVar.info || []).forEach((xItem, xIndex) => {
+                                    row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
+                                });
+                                return row;
                             });
-                            return row;
-                        });
-                        setGridData(newCurrentGridData);
+                            setGridData(fakeData);
+                        }
                     }
                 }
             } catch (error) {
@@ -153,6 +209,7 @@ const WeightPage = () => {
 
     // Dynamic Data for Questions (Inner List)
     const [questions, setQuestions] = useState([]);
+    const [rawVariables, setRawVariables] = useState({});
 
     useEffect(() => {
         const fetchQuestions = async () => {
@@ -164,6 +221,7 @@ const WeightPage = () => {
                     try {
                         const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
                         if (result?.success === "777" && result.resultjson) {
+                            setRawVariables(result.resultjson);
                             const transformedData = Object.values(result.resultjson).map(item => {
                                 let typeLabel = item.type;
                                 let color = 'gray';
@@ -204,12 +262,31 @@ const WeightPage = () => {
     const [colItems, setColItems] = useState([]);
 
     const handleDeleteWeight = (id) => {
-        if (window.confirm('정말 삭제하시겠습니까?')) {
-            setWeights(prev => prev.filter(w => w.id !== id));
-            if (selectedWeight?.id === id) {
-                setSelectedWeight(null);
+        modal.showConfirm("알림", '정말 삭제하시겠습니까?', async () => {
+            const pageId = sessionStorage.getItem("pageId");
+            if (!pageId) return;
+
+            try {
+                const result = await deleteWeight.mutateAsync({
+                    user: auth?.user?.userId,
+                    pageid: pageId,
+                    weight_variable_name: id
+                });
+
+                if (result?.success === "777") {
+                    setWeights(prev => prev.filter(w => w.id !== id));
+                    if (selectedWeight?.id === id) {
+                        setSelectedWeight(null);
+                    }
+                    modal.showAlert("알림", '가중치가 삭제되었습니다.');
+                } else {
+                    modal.showAlert("알림", '가중치 삭제에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error("Delete Weight Error:", error);
+                modal.showAlert("알림", '가중치 삭제 중 오류가 발생했습니다.');
             }
-        }
+        });
     };
 
     const handleDragStart = (e, item) => {
@@ -230,10 +307,12 @@ const WeightPage = () => {
             if (target === 'row') {
                 if (!rowItems.find(i => i.id === item.id)) {
                     setRowItems([...rowItems, item]);
+                    setIsCalculated(false);
                 }
             } else if (target === 'col') {
                 if (!colItems.find(i => i.id === item.id)) {
                     setColItems([...colItems, item]);
+                    setIsCalculated(false);
                 }
             }
         }
@@ -245,22 +324,102 @@ const WeightPage = () => {
         } else {
             setColItems(colItems.filter(i => i.id !== id));
         }
+        setIsCalculated(false);
     };
 
     // Analysis Result State
     const [isCalculated, setIsCalculated] = useState(false);
     const [weightName, setWeightName] = useState('');
 
-    // Reset calculation when items change
-    useEffect(() => {
-        setIsCalculated(false);
-    }, [rowItems, colItems]);
+    // Reset calculation when items change is now handled directly in drop handlers
 
-    const handleRunAnalysis = () => {
+    const handleRunAnalysis = async () => {
         if (rowItems.length === 0 && colItems.length === 0) {
-            alert('가로축과 세로축에 문항을 추가해주세요.');
+            modal.showAlert("알림", '가로축과 세로축에 문항을 추가해주세요.');
             return;
         }
+
+        setWeightName(''); // Reset weight name when running analysis
+
+        const yIds = rowItems.map(r => r.id);
+        const xIds = colItems.map(c => c.id);
+        const yVar = yIds.length > 0 ? rawVariables[yIds[0]] : null;
+        const xVar = xIds.length > 0 ? rawVariables[xIds[0]] : null;
+
+        if (!yVar || !xVar) {
+            modal.showAlert("알림", '가로축과 세로축 문항 데이터가 유효하지 않습니다.');
+            return;
+        }
+
+        const pageId = sessionStorage.getItem("pageId");
+
+        // 1. Generate columns from xVar
+        const newCols = (xVar.info || []).map((xItem, xIndex) => ({
+            field: `col${xIndex + 1}`,
+            title: xItem.label
+        }));
+        setGridColumns(newCols);
+
+        // 2. Setup Initial Target Grid with empty targets
+        const newTargetGridData = (yVar.info || []).map((yItem) => {
+            const row = { category: yItem.label, rowId: yItem.index };
+            (xVar.info || []).forEach((xItem, xIndex) => {
+                row[`col${xIndex + 1}`] = '';
+            });
+            return row;
+        });
+        setTargetGridData(newTargetGridData);
+
+        // 3. Evaluate table for Current grid
+        const evalPayload = {
+            user: auth?.user?.userId,
+            pageid: pageId,
+            variables: {
+                [yVar.id]: yVar,
+                [xVar.id]: xVar
+            },
+            weight_col: "",
+            filter_expression: "",
+            include_stats: [],
+            table: {
+                id: "eval_run",
+                name: "Evaluation Run",
+                x_info: xIds,
+                y_info: yIds
+            }
+        };
+
+        try {
+            const evalResult = await evaluateTable.mutateAsync(evalPayload);
+            if (evalResult?.success === "777" && evalResult.resultjson) {
+                const evalData = evalResult.resultjson;
+                const evalCols = evalData.columns || [];
+                const evalRows = evalData.rows || [];
+
+                const newCurrentGridData = (yVar.info || []).map((yItem) => {
+                    const row = { category: yItem.label };
+                    const evalRow = evalRows.find(r => r.label === yItem.label || r.key === `${yIds[0]}__${yItem.index}` || String(r.value) === String(yItem.index));
+
+                    (xVar.info || []).forEach((xItem, xIndex) => {
+                        let count = '-', pct = '-';
+                        if (evalRow) {
+                            const matchCol = evalCols.find(c => c.label === xItem.label || c.key === `${xIds[0]}__${xItem.index}` || String(c.value) === String(xItem.index));
+                            const cell = matchCol ? evalRow.cells?.[matchCol.key] : null;
+                            if (cell) {
+                                count = cell.count ?? 0;
+                                pct = cell.percent ?? "0.0";
+                            }
+                        }
+                        row[`col${xIndex + 1}`] = { count, pct };
+                    });
+                    return row;
+                });
+                setGridData(newCurrentGridData);
+            }
+        } catch (e) {
+            console.error("Evaluate Run Error:", e);
+        }
+
         setIsCalculated(true);
     };
 
@@ -286,6 +445,30 @@ const WeightPage = () => {
             col1: '', col2: '', col3: '' // Empty initial targets
         }))
     );
+
+    // Dynamic grid container width to allow fluid column expansion
+    const [gridContainerWidth, setGridContainerWidth] = useState(1000);
+    const resizeObserverRef = useRef(null);
+
+    const contentAreaRef = useCallback((node) => {
+        if (resizeObserverRef.current) {
+            resizeObserverRef.current.disconnect();
+        }
+        if (node !== null) {
+            setGridContainerWidth(node.getBoundingClientRect().width);
+            resizeObserverRef.current = new ResizeObserver((entries) => {
+                if (entries[0]) {
+                    setGridContainerWidth(entries[0].contentRect.width);
+                }
+            });
+            resizeObserverRef.current.observe(node);
+        }
+    }, []);
+
+    // Calculate column width to fill container if there are few columns, 
+    // but guarantee at least 120px minimum for horizontal scrolling.
+    // 150px (Variable column) + 30px (Scrollbar and padding buffers) = 180px
+    const dynamicColWidth = Math.max(120, Math.floor((gridContainerWidth - 180) / Math.max(1, gridColumns.length)));
 
 
     const handleTargetChange = useCallback((dataItem, field, value) => {
@@ -314,7 +497,7 @@ const WeightPage = () => {
         try {
             const rows = targetGridData.map(item => {
                 const cols = gridColumns.map(c => item[c.field]);
-                return [item.category, ...cols].join('\t');
+                return cols.join('\t');
             }).join('\n');
 
             await navigator.clipboard.writeText(rows);
@@ -327,11 +510,20 @@ const WeightPage = () => {
     };
 
     const CurrentDistCell = useCallback((props) => {
-        const { count, pct } = props.dataItem[props.field];
+        const cellData = props.dataItem[props.field];
+        if (!cellData) {
+            return (
+                <td style={{ textAlign: 'center', padding: '8px 12px' }}>
+                    <div style={{ fontWeight: '600', fontSize: '13px' }}>-</div>
+                    <div style={{ fontSize: '11px', color: '#888' }}>-</div>
+                </td>
+            );
+        }
+        const { count, pct } = cellData;
         return (
-            <td style={{ textAlign: 'right', padding: '8px 12px' }}>
+            <td style={{ textAlign: 'center', padding: '8px 12px' }}>
                 <div style={{ fontWeight: '600', fontSize: '13px' }}>{count}</div>
-                <div style={{ fontSize: '11px', color: '#888' }}>{pct}%</div>
+                <div style={{ fontSize: '11px', color: '#888' }}>{pct !== '-' ? `${pct}%` : '-'}</div>
             </td>
         );
     }, []);
@@ -396,7 +588,7 @@ const WeightPage = () => {
                         padding: '6px',
                         borderRadius: '4px',
                         border: '1px solid #ddd',
-                        textAlign: 'right',
+                        textAlign: 'center',
                         fontSize: '13px'
                     }}
                 />
@@ -531,7 +723,7 @@ const WeightPage = () => {
                                                         gap: '6px',
                                                         whiteSpace: 'nowrap'
                                                     }}>
-                                                        {item.title}
+                                                        {item.id}
                                                         <button
                                                             onClick={() => removeDroppedItem(item.id, 'col')}
                                                             style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', color: '#1976d2' }}
@@ -591,7 +783,7 @@ const WeightPage = () => {
                                                         alignItems: 'center',
                                                         justifyContent: 'space-between'
                                                     }}>
-                                                        {item.title}
+                                                        {item.id}
                                                         <button
                                                             onClick={() => removeDroppedItem(item.id, 'row')}
                                                             style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', color: '#2e7d32' }}
@@ -643,7 +835,7 @@ const WeightPage = () => {
                                         ) : (
                                             <>
                                                 {/* Scrollable Content Area */}
-                                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px', overflowY: 'auto' }}>
+                                                <div ref={contentAreaRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px', overflowY: 'auto' }}>
                                                     {/* Current Distribution */}
                                                     <div>
                                                         <div
@@ -654,7 +846,7 @@ const WeightPage = () => {
                                                             {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isCurrentDistOpen && (
-                                                            <div className="cmn_grid singlehead">
+                                                            <div className="cmn_grid singlehead" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
                                                                 <KendoGrid
                                                                     parentProps={{
                                                                         data: gridData,
@@ -665,9 +857,11 @@ const WeightPage = () => {
                                                                         pageable: false
                                                                     }}
                                                                 >
-                                                                    <Column field="category" title="Variable" width="150px" />
+                                                                    <Column field="category" title="Variable" width="150px" locked={true} />
                                                                     {gridColumns.map(col => (
-                                                                        <Column key={col.field} field={col.field} title={col.title} cell={CurrentDistCell} />
+                                                                        <Column key={col.field} field={col.field} title={col.title} cell={CurrentDistCell} width={`${dynamicColWidth}px`} headerCell={() => (
+                                                                            <span style={{ fontWeight: '600' }}>{col.title}</span>
+                                                                        )} />
                                                                     ))}
                                                                 </KendoGrid>
                                                             </div>
@@ -730,7 +924,7 @@ const WeightPage = () => {
                                                             {isTargetDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isTargetDistOpen && (
-                                                            <div className="cmn_grid singlehead">
+                                                            <div className="cmn_grid singlehead" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
                                                                 <KendoGrid
                                                                     parentProps={{
                                                                         data: targetGridData,
@@ -741,9 +935,11 @@ const WeightPage = () => {
                                                                         pageable: false
                                                                     }}
                                                                 >
-                                                                    <Column field="category" title="Variable" width="150px" />
+                                                                    <Column field="category" title="Variable" width="150px" locked={true} />
                                                                     {gridColumns.map(col => (
-                                                                        <Column key={col.field} field={col.field} title={col.title} cell={TargetEditCell} />
+                                                                        <Column key={col.field} field={col.field} title={col.title} cell={TargetEditCell} width={`${dynamicColWidth}px`} headerCell={() => (
+                                                                            <span style={{ fontWeight: '600' }}>{col.title}</span>
+                                                                        )} />
                                                                     ))}
                                                                 </KendoGrid>
                                                             </div>

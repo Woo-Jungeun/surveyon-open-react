@@ -6,11 +6,6 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 export function WeightPageApi() {
     const loadingSpinner = useContext(loadingSpinnerContext);
 
-    /** 문항 목록 조회 (예시) */
-    const getVariableList = useMutation(
-        async () => await api.post({}, "/pages/be30866e-b079-44b3-a26c-ad75f89c5134/variables/recoded", "API_BASE_URL_DATASTATUS")
-    );
-
     const getWeightVariable = useMutation(
         async (data) => await api.post(data, "/weight/get", "API_BASE_URL_DATASTATUS"),
         {
@@ -19,8 +14,25 @@ export function WeightPageApi() {
         }
     );
 
+    const evaluateTable = useMutation(
+        async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
+    const deleteWeight = useMutation(
+        async (data) => await api.post(data, "/weight/delete", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
     return {
-        getVariableList,
         getWeightVariable,
+        evaluateTable,
+        deleteWeight,
     };
 }
