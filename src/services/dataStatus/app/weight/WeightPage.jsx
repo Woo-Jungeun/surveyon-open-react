@@ -611,15 +611,15 @@ const WeightPage = () => {
         const rows = clipboardData.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
         if (rows.length === 0) return;
 
-        // Find start position
-        const startRowIndex = targetGridData.findIndex(item => item.category === dataItem.category);
-        if (startRowIndex === -1) return;
-
-        const columns = gridColumns.map(c => c.field);
-        const startColIndex = columns.indexOf(field);
-        if (startColIndex === -1) return;
-
         setTargetGridData(prevData => {
+            // Find start position inside the updater to avoid dependency issue
+            const startRowIndex = prevData.findIndex(item => item.category === dataItem.category);
+            if (startRowIndex === -1) return prevData;
+
+            const columns = gridColumns.map(c => c.field);
+            const startColIndex = columns.indexOf(field);
+            if (startColIndex === -1) return prevData;
+
             const newData = [...prevData];
 
             rows.forEach((row, rIdx) => {
@@ -641,20 +641,42 @@ const WeightPage = () => {
 
             return newData;
         });
-    }, [targetGridData]);
+    }, [gridColumns]);
 
     const TargetEditCell = useCallback((props) => {
         const value = props.dataItem[props.field];
+        const [localValue, setLocalValue] = useState(value);
+
+        useEffect(() => {
+            setLocalValue(value);
+        }, [value]);
+
         const handleChange = (e) => {
-            handleTargetChange(props.dataItem, props.field, e.target.value);
+            setLocalValue(e.target.value);
+        };
+
+        const handleBlur = () => {
+            if (localValue !== value) {
+                handleTargetChange(props.dataItem, props.field, localValue);
+            }
+        };
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Enter') {
+                if (localValue !== value) {
+                    handleTargetChange(props.dataItem, props.field, localValue);
+                }
+            }
         };
 
         return (
             <td style={{ padding: '4px' }}>
                 <input
                     type="text"
-                    value={value}
+                    value={localValue === undefined ? "" : localValue}
                     onChange={handleChange}
+                    onBlur={handleBlur}
+                    onKeyDown={handleKeyDown}
                     onPaste={(e) => handlePaste(e, props.dataItem, props.field)}
                     placeholder="N"
                     style={{
