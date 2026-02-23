@@ -12,7 +12,7 @@ import { WeightPageApi } from './WeightPageApi';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import { modalContext } from "@/components/common/Modal";
 
-// Move initial data outside component to prevent re-creation on every render
+// 초기 데이터 (렌더링 시 재생성 방지)
 const INITIAL_GRID_DATA = [
     { category: '18-24', col1: { count: 10, pct: 6.7 }, col2: { count: 13, pct: 7.7 }, col3: { count: 16, pct: 8.6 } },
     { category: '25-29', col1: { count: 16, pct: 10.7 }, col2: { count: 19, pct: 11.3 }, col3: { count: 22, pct: 11.8 } },
@@ -29,7 +29,7 @@ const WeightPage = () => {
     const { getWeightVariable, evaluateTable, deleteWeight, setWeight } = WeightPageApi();
     const { getOriginalVariables } = VariablePageApi();
 
-    // Mock Data for Weights (Sidebar)
+    // 가중치 목록 상태
     const [weights, setWeights] = useState([]);
     const [selectedWeight, setSelectedWeight] = useState(null);
     const [weightSearchTerm, setWeightSearchTerm] = useState('');
@@ -77,14 +77,14 @@ const WeightPage = () => {
         (item.label || '').toLowerCase().includes(weightSearchTerm.toLowerCase())
     );
 
-    // Grid Columns State (Dynamic)
+    // 그리드 컬럼 상태
     const [gridColumns, setGridColumns] = useState([
         { field: 'col1', title: 'Banner A' },
         { field: 'col2', title: 'Banner B' },
         { field: 'col3', title: 'Banner C' }
     ]);
 
-    // Detail fetch effect
+    // 가중치 상세 데이터 조회
     useEffect(() => {
         const fetchWeightDetail = async () => {
             if (!selectedWeight || !selectedWeight.id) return;
@@ -141,7 +141,7 @@ const WeightPage = () => {
                         });
                         setTargetGridData(newTargetGridData);
 
-                        // Fetch evaluate table for "현재 분포"
+                        // "현재 분포" 데이터 조회
                         const evalPayload = {
                             user: auth?.user?.userId,
                             pageid: pageId,
@@ -214,7 +214,7 @@ const WeightPage = () => {
         fetchWeightDetail();
     }, [selectedWeight?.id, auth?.user?.userId]);
 
-    // Dynamic Data for Questions (Inner List)
+    // 전체 문항 목록 상태
     const [questions, setQuestions] = useState([]);
     const [rawVariables, setRawVariables] = useState({});
 
@@ -264,7 +264,7 @@ const WeightPage = () => {
         fetchQuestions();
     }, [auth?.user?.userId]);
 
-    // Drag and Drop State
+    // 드래그 앤 드롭 상태
     const [rowItems, setRowItems] = useState([]);
     const [colItems, setColItems] = useState([]);
 
@@ -340,11 +340,9 @@ const WeightPage = () => {
         setIsCalculated(false);
     };
 
-    // Analysis Result State
+    // 분석 상태 및 가중치명
     const [isCalculated, setIsCalculated] = useState(false);
     const [weightName, setWeightName] = useState('');
-
-    // Reset calculation when items change is now handled directly in drop handlers
 
     const handleRunAnalysis = async () => {
         if (rowItems.length === 0 && colItems.length === 0) {
@@ -366,14 +364,14 @@ const WeightPage = () => {
 
         const pageId = sessionStorage.getItem("pageId");
 
-        // 1. Generate columns from xVar
+        // 1. 표 컬럼 생성 (가로축 기준)
         const newCols = (xVar.info || []).map((xItem, xIndex) => ({
             field: `col${xIndex + 1}`,
             title: xItem.label
         }));
         setGridColumns(newCols);
 
-        // 2. Setup Initial Target Grid with empty targets
+        // 2. 목표 분포표 초기화
         const newTargetGridData = (yVar.info || []).map((yItem) => {
             const row = { category: yItem.label, rowId: yItem.index };
             (xVar.info || []).forEach((xItem, xIndex) => {
@@ -383,7 +381,7 @@ const WeightPage = () => {
         });
         setTargetGridData(newTargetGridData);
 
-        // 3. Evaluate table for Current grid
+        // 3. 현재 분포 데이터 계산
         const evalPayload = {
             user: auth?.user?.userId,
             pageid: pageId,
@@ -436,30 +434,30 @@ const WeightPage = () => {
         setIsCalculated(true);
     };
 
-    // Question List Panel State
+    // 문항 목록 패널 상태
     const [isQuestionPanelOpen, setIsQuestionPanelOpen] = useState(true);
     const [questionSearchTerm, setQuestionSearchTerm] = useState('');
 
-    // Filter questions based on search term
+    // 문항 검색 필터
     const filteredQuestions = questions.filter(q =>
         q.title.toLowerCase().includes(questionSearchTerm.toLowerCase()) ||
         q.desc.toLowerCase().includes(questionSearchTerm.toLowerCase())
     );
 
-    // Distribution Grid Toggle States
+    // 아코디언 메뉴 상태
     const [isCurrentDistOpen, setIsCurrentDistOpen] = useState(true);
     const [isTargetDistOpen, setIsTargetDistOpen] = useState(true);
 
-    // Kendo Grid Data & Handlers
+    // 그리드 데이터 상태
     const [gridData, setGridData] = useState(INITIAL_GRID_DATA);
     const [targetGridData, setTargetGridData] = useState(() =>
         INITIAL_GRID_DATA.map(item => ({
             ...item,
-            col1: '', col2: '', col3: '' // Empty initial targets
+            col1: '', col2: '', col3: ''
         }))
     );
 
-    // Dynamic grid container width to allow fluid column expansion
+    // 그리드 컨테이너 너비 계산 (동적 컬럼 너비 용)
     const [gridContainerWidth, setGridContainerWidth] = useState(1000);
     const resizeObserverRef = useRef(null);
 
@@ -478,11 +476,8 @@ const WeightPage = () => {
         }
     }, []);
 
-    // Calculate column width to fill container if there are few columns, 
-    // but guarantee at least 120px minimum for horizontal scrolling.
-    // 150px (Variable column) + 30px (Scrollbar and padding buffers) = 180px
+    // 컬럼 최소 너비 120px 보장 및 컨테이너 너비 비례 계산
     const dynamicColWidth = Math.max(120, Math.floor((gridContainerWidth - 180) / Math.max(1, gridColumns.length)));
-
 
     const handleTargetChange = useCallback((dataItem, field, value) => {
         setTargetGridData(prevData =>
@@ -490,12 +485,12 @@ const WeightPage = () => {
                 item.category === dataItem.category ? { ...item, [field]: value } : item
             )
         );
-    }, []); // No dependencies needed with functional setState
+    }, []);
 
-    // Toast State
+    // 토스트 알림 상태
     const [toast, setToast] = useState({ show: false, message: '' });
 
-    // Toast Timer
+    // 토스트 타이머
     useEffect(() => {
         if (toast.show) {
             const timer = setTimeout(() => {
@@ -505,7 +500,7 @@ const WeightPage = () => {
         }
     }, [toast.show]);
 
-    // Copy to Clipboard (Excel format)
+    // 클립보드 복사 (엑셀 호환)
     const handleCopyToClipboard = async () => {
         try {
             const rows = targetGridData.map(item => {
@@ -602,17 +597,16 @@ const WeightPage = () => {
         );
     }, []);
 
-    // Handle Paste from Excel
+    // 엑셀 붙여넣기 기능
     const handlePaste = useCallback((e, dataItem, field) => {
         e.preventDefault();
         const clipboardData = e.clipboardData.getData('text');
 
-        // Parse Excel data (rows by newline, cols by tab)
         const rows = clipboardData.split(/\r\n|\n|\r/).filter(row => row.trim() !== '');
         if (rows.length === 0) return;
 
         setTargetGridData(prevData => {
-            // Find start position inside the updater to avoid dependency issue
+            // 업데이트 함수 내에서 시작 위치 찾기 (의존성 최소화)
             const startRowIndex = prevData.findIndex(item => item.category === dataItem.category);
             if (startRowIndex === -1) return prevData;
 
@@ -697,7 +691,6 @@ const WeightPage = () => {
             <DataHeader title="가중치 생성" />
 
             <div className="weight-layout">
-                {/* Sidebar - Weight List */}
                 <SideBar
                     title="가중치 목록"
                     items={filteredWeights}
@@ -707,16 +700,14 @@ const WeightPage = () => {
                     onDelete={handleDeleteWeight}
                 />
 
-                {/* Main Content Area */}
                 <div className="weight-main-content">
                     <div className="weight-content-card">
-                        {/* Header for Calculation Setting */}
                         <div className="weight-header">
                             <h3>가중치 계산 설정</h3>
                         </div>
 
                         <div className="weight-layout">
-                            {/* Inner Left - Question List */}
+                            {/* 문항 목록 패널 */}
                             <div className={`question-panel ${!isQuestionPanelOpen ? 'collapsed' : ''}`}>
                                 <div className="question-panel-header">
                                     {isQuestionPanelOpen && <h3 className="question-panel-title">문항 목록</h3>}
@@ -729,7 +720,6 @@ const WeightPage = () => {
                                 </div>
                                 {isQuestionPanelOpen && (
                                     <>
-                                        {/* Search Input */}
                                         <div className="search-container">
                                             <div className="search-input-wrapper">
                                                 <Search size={14} className="search-icon" />
@@ -742,7 +732,7 @@ const WeightPage = () => {
                                                 />
                                             </div>
                                         </div>
-                                        {/* Question List */}
+
                                         <div className="question-list">
                                             {filteredQuestions.map(q => (
                                                 <div
@@ -766,16 +756,13 @@ const WeightPage = () => {
                                 )}
                             </div>
 
-                            {/* Inner Right - Drop Zones */}
+                            {/* 드래그 앤 드롭 영역 */}
                             <div className="drop-zones-container">
-                                {/* Top Row: Axis Info & Column Drop Zone */}
                                 <div className="drop-zones-top">
-                                    {/* Empty Top-Left Corner */}
                                     <div className="corner-label">
                                         세로 × 가로
                                     </div>
 
-                                    {/* Column Drop Zone */}
                                     <div
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, 'col')}
@@ -833,9 +820,7 @@ const WeightPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Bottom Row: Row Drop Zone & Result Area */}
                                 <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
-                                    {/* Row Drop Zone */}
                                     <div
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, 'row')}
@@ -892,7 +877,6 @@ const WeightPage = () => {
                                         </div>
                                     </div>
 
-                                    {/* Result Area */}
                                     <div style={{
                                         flex: 1,
                                         background: '#fff',
@@ -930,9 +914,7 @@ const WeightPage = () => {
                                             </div>
                                         ) : (
                                             <>
-                                                {/* Scrollable Content Area */}
                                                 <div ref={contentAreaRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '24px', overflowY: 'auto' }}>
-                                                    {/* Current Distribution */}
                                                     <div>
                                                         <div
                                                             onClick={() => setIsCurrentDistOpen(!isCurrentDistOpen)}
@@ -964,7 +946,6 @@ const WeightPage = () => {
                                                         )}
                                                     </div>
 
-                                                    {/* Target Distribution */}
                                                     <div style={{ marginTop: '32px' }}>
                                                         <div
                                                             onClick={() => setIsTargetDistOpen(!isTargetDistOpen)}
