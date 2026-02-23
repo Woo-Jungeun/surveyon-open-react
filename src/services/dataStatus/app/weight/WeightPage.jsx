@@ -26,7 +26,7 @@ const WeightPage = () => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const { getRecodedVariables } = RecodingPageApi();
-    const { getWeightVariable, evaluateTable, deleteWeight } = WeightPageApi();
+    const { getWeightVariable, evaluateTable, deleteWeight, setWeight } = WeightPageApi();
     const { getOriginalVariables } = VariablePageApi();
 
     // Mock Data for Weights (Sidebar)
@@ -34,36 +34,43 @@ const WeightPage = () => {
     const [selectedWeight, setSelectedWeight] = useState(null);
     const [weightSearchTerm, setWeightSearchTerm] = useState('');
 
-    useEffect(() => {
-        const fetchWeights = async () => {
-            if (auth?.user?.userId) {
-                const userId = auth.user.userId;
-                const pageId = sessionStorage.getItem("pageId");
+    const fetchWeights = useCallback(async (newWeightId = null) => {
+        if (auth?.user?.userId) {
+            const userId = auth.user.userId;
+            const pageId = sessionStorage.getItem("pageId");
 
-                if (pageId) {
-                    try {
-                        const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
-                        if (result?.success === "777" && result.resultjson) {
-                            const transformedData = Object.values(result.resultjson)
-                                .map(item => ({
-                                    ...item,
-                                    name: item.id,
-                                }))
-                                .filter(item => item.id && item.id.startsWith('weight_'));
-                            setWeights(transformedData);
-                            if (transformedData.length > 0) {
-                                setSelectedWeight(transformedData[0]);
+            if (pageId) {
+                try {
+                    const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
+                    if (result?.success === "777" && result.resultjson) {
+                        const transformedData = Object.values(result.resultjson)
+                            .map(item => ({
+                                ...item,
+                                name: item.id,
+                            }))
+                            .filter(item => item.id && item.id.startsWith('weight_'));
+                        setWeights(transformedData);
+                        setSelectedWeight(prev => {
+                            if (newWeightId) {
+                                const target = transformedData.find(w => w.id === newWeightId);
+                                if (target) return target;
                             }
-                        }
-                    } catch (error) {
-                        console.error("Weight Fetch Error:", error);
+                            if (prev && transformedData.find(w => w.id === prev.id)) {
+                                return prev;
+                            }
+                            return transformedData.length > 0 ? transformedData[0] : null;
+                        });
                     }
+                } catch (error) {
+                    console.error("Weight Fetch Error:", error);
                 }
             }
-        };
-
-        fetchWeights();
+        }
     }, [auth?.user?.userId]);
+
+    useEffect(() => {
+        fetchWeights();
+    }, [fetchWeights]);
 
     const filteredWeights = weights.filter(item =>
         (item.name || '').toLowerCase().includes(weightSearchTerm.toLowerCase()) ||
@@ -87,7 +94,7 @@ const WeightPage = () => {
             try {
                 const result = await getWeightVariable.mutateAsync({
                     pageid: pageId,
-                    weight_variable_name: selectedWeight.id
+                    weight_variable: selectedWeight.id
                 });
 
                 if (result?.success === "777" && result.resultjson) {
@@ -262,30 +269,36 @@ const WeightPage = () => {
     const [colItems, setColItems] = useState([]);
 
     const handleDeleteWeight = (id) => {
-        modal.showConfirm("알림", '정말 삭제하시겠습니까?', async () => {
-            const pageId = sessionStorage.getItem("pageId");
-            if (!pageId) return;
+        modal.showConfirm("알림", '정말 삭제하시겠습니까?', {
+            btns: [{
+                title: "확인",
+                click: async () => {
+                    const pageId = sessionStorage.getItem("pageId");
+                    if (!pageId) return;
 
-            try {
-                const result = await deleteWeight.mutateAsync({
-                    user: auth?.user?.userId,
-                    pageid: pageId,
-                    weight_variable_name: id
-                });
+                    try {
+                        const result = await deleteWeight.mutateAsync({
+                            user: auth?.user?.userId,
+                            pageid: pageId,
+                            weight_variable_name: id
+                        });
 
-                if (result?.success === "777") {
-                    setWeights(prev => prev.filter(w => w.id !== id));
-                    if (selectedWeight?.id === id) {
-                        setSelectedWeight(null);
+                        if (result?.success === "777") {
+                            setWeights(prev => {
+                                const newWeights = prev.filter(w => w.id !== id);
+                                setSelectedWeight(newWeights.length > 0 ? newWeights[0] : null);
+                                return newWeights;
+                            });
+                            modal.showAlert("알림", '가중치가 삭제되었습니다.');
+                        } else {
+                            modal.showAlert("알림", '가중치 삭제에 실패했습니다.');
+                        }
+                    } catch (error) {
+                        console.error("Delete Weight Error:", error);
+                        modal.showAlert("알림", '가중치 삭제 중 오류가 발생했습니다.');
                     }
-                    modal.showAlert("알림", '가중치가 삭제되었습니다.');
-                } else {
-                    modal.showAlert("알림", '가중치 삭제에 실패했습니다.');
                 }
-            } catch (error) {
-                console.error("Delete Weight Error:", error);
-                modal.showAlert("알림", '가중치 삭제 중 오류가 발생했습니다.');
-            }
+            }]
         });
     };
 
@@ -506,6 +519,67 @@ const WeightPage = () => {
         } catch (err) {
             console.error('Failed to copy:', err);
             setToast({ show: true, message: '복사 실패' });
+        }
+    };
+
+    const handleSaveWeight = async () => {
+        if (!weightName.trim()) {
+            modal.showAlert("알림", "가중치 문항명을 입력해주세요.");
+            return;
+        }
+
+        const pageId = sessionStorage.getItem("pageId");
+        if (!pageId) return;
+
+        const yIds = rowItems.map(r => r.id);
+        const xIds = colItems.map(c => c.id);
+        const yVar = yIds.length > 0 ? rawVariables[yIds[0]] : null;
+        const xVar = xIds.length > 0 ? rawVariables[xIds[0]] : null;
+
+        if (!yVar || !xVar) {
+            modal.showAlert("알림", "유효한 문항 데이터가 없습니다. 먼저 실행해주세요.");
+            return;
+        }
+
+        const target_values = {};
+
+        targetGridData.forEach(row => {
+            gridColumns.forEach((col, index) => {
+                let colValue = row[col.field];
+                if (colValue === "" || colValue === undefined || colValue === null || isNaN(colValue)) {
+                    colValue = 0;
+                }
+                const xItemIndex = xVar.info[index].index;
+                const key = `${yVar.id}__${row.rowId}-${xVar.id}__${xItemIndex}`;
+                target_values[key] = Number(colValue);
+            });
+        });
+
+        const payload = {
+            pageid: pageId,
+            weight_variable_name: `weight_${weightName}`,
+            x_info: xIds,
+            y_info: yIds,
+            target_values: target_values,
+            variables: {
+                [yVar.id]: yVar,
+                [xVar.id]: xVar
+            }
+        };
+
+        const isUpdate = weights.some(w => w.id === `weight_${weightName}`);
+
+        try {
+            const result = await setWeight.mutateAsync(payload);
+            if (result?.success === "777") {
+                modal.showAlert("알림", isUpdate ? "가중치가 성공적으로 수정되었습니다." : "가중치가 성공적으로 생성되었습니다.");
+                fetchWeights(`weight_${weightName}`);
+            } else {
+                modal.showAlert("알림", isUpdate ? "가중치 수정에 실패했습니다." : "가중치 생성에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error(isUpdate ? "Update Weight Error:" : "Save Weight Error:", error);
+            modal.showAlert("알림", isUpdate ? "가중치 수정 중 오류가 발생했습니다." : "가중치 생성 중 오류가 발생했습니다.");
         }
     };
 
@@ -961,7 +1035,7 @@ const WeightPage = () => {
                                                             placeholder="예: region_gender"
                                                             className="save-input"
                                                         />
-                                                        <button className="save-button">
+                                                        <button className="save-button" onClick={handleSaveWeight}>
                                                             가중치 문항 생성
                                                         </button>
                                                     </div>

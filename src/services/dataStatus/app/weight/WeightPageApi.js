@@ -30,9 +30,18 @@ export function WeightPageApi() {
         }
     );
 
+    const setWeight = useMutation(
+        async (data) => await api.post(data, "/weight/set", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
     return {
         getWeightVariable,
         evaluateTable,
         deleteWeight,
+        setWeight,
     };
 }
