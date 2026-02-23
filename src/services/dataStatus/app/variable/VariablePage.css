@@ -337,3 +337,13 @@
     position: absolute;
     right: 16px;
 }
+
+/* Replace Kendo default orange focus color with SRT blue theme */
+.variable-page .k-dropdownlist.k-focus,
+.variable-page .k-dropdownlist:focus-within,
+.variable-page .k-picker.k-focus,
+.variable-page .k-picker:focus-within,
+.variable-page .k-dropdownlist:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
