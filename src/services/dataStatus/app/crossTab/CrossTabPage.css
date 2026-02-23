@@ -1336,11 +1336,25 @@
 }
 
 .preview-table {
+    display: table !important;
     min-width: 100%;
     width: max-content;
     border-collapse: separate;
     border-spacing: 0;
     font-size: 12px;
+}
+
+.preview-table thead {
+    display: table-header-group !important;
+}
+
+.preview-table tr {
+    display: table-row !important;
+}
+
+.preview-th,
+.preview-td {
+    display: table-cell !important;
 }
 
 .preview-th {
