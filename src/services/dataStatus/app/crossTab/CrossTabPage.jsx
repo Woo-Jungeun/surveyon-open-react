@@ -201,7 +201,7 @@ const CrossTabPage = () => {
 
                     const mappedTables = data.map(item => ({
                         id: item.id,
-                        name: item.TABLE_TITLE || item.id || `Table ${item.id}`,
+                        name: item.name || item.TABLE_TITLE || item.id || `Table ${item.id}`,
                         row: item.row || item.rows || [],
                         col: item.col || item.cols || []
                     }));
@@ -1464,6 +1464,7 @@ const CrossTabPage = () => {
                             <div className="config-header__left-group">
                                 <div
                                     onClick={() => setIsConfigOpen(!isConfigOpen)}
+                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                 >
                                     {isConfigOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
                                 </div>
