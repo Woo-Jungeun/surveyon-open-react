@@ -131,7 +131,6 @@ const RecodingPage = () => {
 
     useEffect(() => {
         const fetchVariables = async () => {
-            // ... existing logic ...
             if (auth?.user?.userId) {
                 const userId = auth.user.userId;
                 const pageId = sessionStorage.getItem("pageId");
@@ -152,14 +151,14 @@ const RecodingPage = () => {
                         }));
                         setVariables(transformedData);
 
-                        // 1. 초기 로드 시: 첫 번째 항목 자동 선택
+                        // 1. 초기 로드 시 첫 번째 자동 선택
                         if (!isInitialized.current) {
                             if (transformedData.length > 0) {
                                 setSelectedVar(transformedData[0]);
                             }
                             isInitialized.current = true;
                         }
-                        // 2. 초기화 이후: "추가 모드"가 아닐 때만 선택 상태 동기화
+                        // 2. 초기화 이후: 추가 모드가 아닐 때 선택 동기화
                         else if (!isAddMode && selectedVar.id !== null && transformedData.length > 0) {
                             const found = transformedData.find(v => v.id === selectedVar.id);
                             if (found) setSelectedVar(found);
@@ -180,19 +179,19 @@ const RecodingPage = () => {
     const [isEvaluationOpen, setIsEvaluationOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
 
-    // 변경 상태 확인 (Dirty Check State)
+    // 변경 및 초기 상태 관리 (저장 버튼 활성화용)
     const [isDirty, setIsDirty] = useState(false);
     const [initialState, setInitialState] = useState(null);
     const lastSelectedIdRef = useRef(null);
 
     useEffect(() => {
-        // In Add Mode, if ID is not null (user is typing), ignore this effect to prevent resetting initialState.
+        // 추가 모드에서 ID 입력 중이면 초기화 방지
         if (isAddMode && selectedVar.id !== null) return;
 
         if (selectedVar?.id !== lastSelectedIdRef.current) {
             lastSelectedIdRef.current = selectedVar?.id;
 
-            // Clear previous logic check results and evaluation stats
+            // 로직 체크 기록 및 통계 초기화
             setCheckedLogics({});
             setEvaluationResult(null);
 
@@ -208,10 +207,10 @@ const RecodingPage = () => {
                 setInitialState({
                     id: selectedVar.id,
                     label: selectedVar.label,
-                    categories: newCategories // 깊은 복사가 엄격하게 필요하지 않을 수 있지만, 안전을 위해
+                    categories: newCategories
                 });
             } else if (selectedVar?.id === null) {
-                // Fix: Always reset state when entering Add Mode (id is null)
+                // 추가 모드 진입 시 전체 초기화
                 setCategories([]);
                 setInitialState({ id: '', label: '', categories: [] });
             }
@@ -243,7 +242,7 @@ const RecodingPage = () => {
     }, [selectedVar.id, selectedVar.label, categories, initialState]);
 
     const handleVariableSelect = (item) => {
-        // 같은 ID이면 선택 방지
+        // 이미 선택된 항목이면 스킵
         if (item.id === selectedVar.id) return;
 
         if (isDirty) {
@@ -260,8 +259,8 @@ const RecodingPage = () => {
             });
         } else {
             setSelectedVar(item);
-            setSort([]); // 그리드 정렬 초기화
-            setIsAddMode(false); // 기존 항목 선택 시 추가 모드 해제
+            setSort([]); // 정렬 초기화
+            setIsAddMode(false); // 추가 모드 해지
         }
     }
 
@@ -270,14 +269,11 @@ const RecodingPage = () => {
         (item.label || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // 기존 categories 상태 정의 삭제 (위로 이동됨)
-    // const [categories, setCategories] = useState([]);
+    // 선택된 항목의 보기 카테고리 상태 (임시 보관용) - 위에서 선언됨
 
     const handleCopyToClipboard = async () => {
         try {
-            // 헤더
             const headers = columns.filter(c => c.show && c.field !== 'delete' && c.field !== 'check').map(c => c.title).join('\t');
-            // 행 데이터
             const rows = categories.map(item => {
                 return columns.filter(c => c.show && c.field !== 'delete' && c.field !== 'check').map(c => item[c.field]).join('\t');
             }).join('\n');
@@ -423,9 +419,6 @@ const RecodingPage = () => {
             rows.forEach((row, rIdx) => {
                 const currentRowIndex = startRowIndex + rIdx;
 
-                // 행이 존재하면 업데이트. 존재하지 않으면 생성
-                // 현재는 안전을 위해 기존 행만 업데이트하도록 함. 필요시 새 행 추가 로직 구현
-                // 가중치 페이지 로직도 기존 행만 업데이트함. 일단 동일하게 유지.
                 if (currentRowIndex >= newData.length) return;
 
                 const cells = row.split('\t');
@@ -461,12 +454,12 @@ const RecodingPage = () => {
     };
 
     const handleAddVariable = () => {
-        // 선택 초기화하여 새로 시작
+        // 새 문항 생성을 위한 상태 초기화
         setSelectedVar({ id: null, label: '', info: [] });
         setCategories([]);
         setEvaluationResult(null);
         setCheckedLogics({});
-        setIsAddMode(true); // 추가 모드 활성화
+        setIsAddMode(true);
     };
 
     const saveVariableData = async (categoriesToSave) => {
@@ -522,13 +515,13 @@ const RecodingPage = () => {
                         info: item.info || []
                     }));
                     setVariables(transformedData);
-                    // 저장된 변수를 다시 선택하여 최신 상태 확보
+                    // 최신 데이터로 업데이트하여 선택 유지
                     const savedVar = transformedData.find(v => v.id === variableKey);
                     if (savedVar) {
                         setSelectedVar(savedVar);
-                        setIsAddMode(false); // 저장 후 추가 모드 해제
+                        setIsAddMode(false);
 
-                        // 서버 상태와 일치하도록 상태 업데이트 및 더티 상태 초기화
+                        // 상태 재초기화
                         const savedCategories = (savedVar.info || []).map(item => ({
                             id: item.index,
                             realVal: item.index,
@@ -542,7 +535,6 @@ const RecodingPage = () => {
                             label: savedVar.label,
                             categories: savedCategories
                         });
-                        setIsAddMode(false); // 저장 후 추가 모드 해제 (이 부분은 위 if문 안에서 처리되지만 확실하게)
                     }
                 }
             } else {
@@ -601,7 +593,7 @@ const RecodingPage = () => {
                                         info: item.info || []
                                     }));
                                     setVariables(transformedData);
-                                    handleAddVariable(); // 추가 모드로 리셋
+                                    handleAddVariable();
                                 } else {
                                     setVariables([]);
                                     handleAddVariable();
@@ -621,7 +613,6 @@ const RecodingPage = () => {
 
     return (
         <div className="recoding-page" data-theme="data-dashboard">
-            {/* Header */}
             <DataHeader
                 title="변수 생성"
                 addButtonLabel={isAddMode ? null : "문항 추가"}
@@ -645,7 +636,6 @@ const RecodingPage = () => {
             />
 
             <div className="recoding-layout">
-                {/* Sidebar */}
                 <SideBar
                     items={filteredVariables}
                     title="문항 목록"
@@ -656,14 +646,12 @@ const RecodingPage = () => {
                     displayField="id"
                 />
 
-                {/* Content Area */}
                 <div className="recoding-content">
                     <div className="recoding-card">
                         <h3 className="recoding-title">
                             {isAddMode ? "문항 추가" : "문항 수정"}
                         </h3>
 
-                        {/* Variable Info Inputs */}
                         <div className="recoding-variable-info" style={{ display: 'flex', gap: '24px' }}>
                             <div style={{ flex: 1 }}>
                                 <label className="recoding-label">문항 ID</label>
@@ -689,7 +677,6 @@ const RecodingPage = () => {
                             </div>
                         </div>
 
-                        {/* Evaluation Result Section */}
                         {evaluationResult && (
                             <div className="recoding-evaluation">
                                 <div
@@ -740,7 +727,6 @@ const RecodingPage = () => {
                             </div>
                         )}
 
-                        {/* Categories Grid Section */}
                         <div className="recoding-categories">
                             <div className="recoding-categories-header">
                                 <h4 className="recoding-categories-title">보기</h4>
