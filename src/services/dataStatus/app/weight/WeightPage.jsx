@@ -6,6 +6,10 @@ import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from '@progress/kendo-react-grid';
 import '@progress/kendo-theme-default/dist/all.css';
 import './WeightPage.css';
+import { useSelector } from 'react-redux';
+import { RecodingPageApi } from '../recoding/RecodingPageApi';
+import { WeightPageApi } from './WeightPageApi';
+import { VariablePageApi } from '../variable/VariablePageApi';
 
 // Move initial data outside component to prevent re-creation on every render
 const INITIAL_GRID_DATA = [
@@ -18,25 +22,182 @@ const INITIAL_GRID_DATA = [
 ];
 
 const WeightPage = () => {
+    const auth = useSelector((store) => store.auth);
+    const { getRecodedVariables } = RecodingPageApi();
+    const { getWeightVariable } = WeightPageApi();
+    const { getOriginalVariables } = VariablePageApi();
+
     // Mock Data for Weights (Sidebar)
-    const [weights, setWeights] = useState([
-        { id: 'weight_demo', name: 'weight_demo', label: 'Weight Demo' },
-    ]);
-    const [selectedWeight, setSelectedWeight] = useState(weights[0]);
+    const [weights, setWeights] = useState([]);
+    const [selectedWeight, setSelectedWeight] = useState(null);
     const [weightSearchTerm, setWeightSearchTerm] = useState('');
+
+    useEffect(() => {
+        const fetchWeights = async () => {
+            if (auth?.user?.userId) {
+                const userId = auth.user.userId;
+                const pageId = sessionStorage.getItem("pageId");
+
+                if (pageId) {
+                    try {
+                        const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
+                        if (result?.success === "777" && result.resultjson) {
+                            const transformedData = Object.values(result.resultjson)
+                                .map(item => ({
+                                    ...item,
+                                    name: item.id,
+                                }))
+                                .filter(item => item.id && item.id.startsWith('weight_'));
+                            setWeights(transformedData);
+                            if (transformedData.length > 0) {
+                                setSelectedWeight(transformedData[0]);
+                            }
+                        }
+                    } catch (error) {
+                        console.error("Weight Fetch Error:", error);
+                    }
+                }
+            }
+        };
+
+        fetchWeights();
+    }, [auth?.user?.userId]);
 
     const filteredWeights = weights.filter(item =>
         (item.name || '').toLowerCase().includes(weightSearchTerm.toLowerCase()) ||
         (item.label || '').toLowerCase().includes(weightSearchTerm.toLowerCase())
     );
 
-    // Mock Data for Questions (Inner List)
-    const [questions, setQuestions] = useState([
-        { id: 'q1', title: '문항1', desc: '서비스 전반적인 만족도는?', type: '단일', count: '1000/1000', color: 'purple' },
-        { id: 'q2', title: '문항2', desc: '선호하는 기능을 모두 선택하세요', type: '복수', count: '980/1000', color: 'orange' },
-        { id: 'age', title: '연령대', desc: '귀하의 연령대는?', type: '단일', count: '1000/1000', color: 'purple' },
-        { id: 'gender', title: '성별', desc: '귀하의 성별은?', type: '단일', count: '1000/1000', color: 'purple' },
+    // Grid Columns State (Dynamic)
+    const [gridColumns, setGridColumns] = useState([
+        { field: 'col1', title: 'Banner A' },
+        { field: 'col2', title: 'Banner B' },
+        { field: 'col3', title: 'Banner C' }
     ]);
+
+    // Detail fetch effect
+    useEffect(() => {
+        const fetchWeightDetail = async () => {
+            if (!selectedWeight || !selectedWeight.id) return;
+            const pageId = sessionStorage.getItem("pageId");
+            if (!pageId) return;
+
+            try {
+                const result = await getWeightVariable.mutateAsync({
+                    pageid: pageId,
+                    weight_variable: selectedWeight.id
+                });
+
+                if (result?.success === "777" && result.resultjson) {
+                    const data = result.resultjson;
+
+                    const yIds = data.y_info || [];
+                    const xIds = data.x_info || [];
+                    const vars = data.variables_json || {};
+
+                    const parseItem = (id) => ({
+                        id: id,
+                        title: vars[id]?.label || id,
+                        type: '단일',
+                        color: 'purple'
+                    });
+
+                    setRowItems(yIds.map(parseItem));
+                    setColItems(xIds.map(parseItem));
+                    setIsCalculated(true);
+                    setWeightName(data.weight_variable.replace('weight_', ''));
+
+                    const yVar = yIds.length > 0 ? vars[yIds[0]] : null;
+                    const xVar = xIds.length > 0 ? vars[xIds[0]] : null;
+
+                    if (yVar && xVar) {
+                        const newCols = (xVar.info || []).map((xItem, xIndex) => ({
+                            field: `col${xIndex + 1}`,
+                            title: xItem.label
+                        }));
+                        setGridColumns(newCols);
+
+                        const newTargetGridData = (yVar.info || []).map((yItem) => {
+                            const rowId = `${yVar.id}__${yItem.index}`;
+                            const row = { category: yItem.label, rowId: yItem.index };
+
+                            (xVar.info || []).forEach((xItem, xIndex) => {
+                                const colId = `${xVar.id}__${xItem.index}`;
+                                const targetKey = `${rowId}-${colId}`;
+                                const targetVal = data.targets_json?.[targetKey] ?? '';
+                                row[`col${xIndex + 1}`] = targetVal;
+                            });
+
+                            return row;
+                        });
+                        setTargetGridData(newTargetGridData);
+
+                        // Fake current data just for layout demo
+                        const newCurrentGridData = (yVar.info || []).map((yItem) => {
+                            const row = { category: yItem.label };
+                            (xVar.info || []).forEach((xItem, xIndex) => {
+                                row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
+                            });
+                            return row;
+                        });
+                        setGridData(newCurrentGridData);
+                    }
+                }
+            } catch (error) {
+                console.error("Fetch Detail Error:", error);
+            }
+        };
+
+        fetchWeightDetail();
+    }, [selectedWeight?.id, auth?.user?.userId]);
+
+    // Dynamic Data for Questions (Inner List)
+    const [questions, setQuestions] = useState([]);
+
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            if (auth?.user?.userId) {
+                const userId = auth.user.userId;
+                const pageId = sessionStorage.getItem("pageId");
+
+                if (pageId) {
+                    try {
+                        const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
+                        if (result?.success === "777" && result.resultjson) {
+                            const transformedData = Object.values(result.resultjson).map(item => {
+                                let typeLabel = item.type;
+                                let color = 'gray';
+                                if (item.type === 'categorical') {
+                                    typeLabel = '범주형';
+                                    color = 'purple';
+                                } else if (item.type === 'continuous') {
+                                    typeLabel = '연속형';
+                                    color = 'orange';
+                                } else if (item.type === 'text') {
+                                    typeLabel = '텍스트';
+                                    color = 'blue';
+                                }
+
+                                return {
+                                    id: item.id,
+                                    title: item.name || item.id,
+                                    desc: item.label || '',
+                                    type: typeLabel,
+                                    count: '',
+                                    color: color
+                                };
+                            });
+                            setQuestions(transformedData);
+                        }
+                    } catch (error) {
+                        console.error("Variable Fetch Error:", error);
+                    }
+                }
+            }
+        };
+
+        fetchQuestions();
+    }, [auth?.user?.userId]);
 
     // Drag and Drop State
     const [rowItems, setRowItems] = useState([]);
@@ -152,7 +313,8 @@ const WeightPage = () => {
     const handleCopyToClipboard = async () => {
         try {
             const rows = targetGridData.map(item => {
-                return [item.category, item.col1, item.col2, item.col3].join('\t');
+                const cols = gridColumns.map(c => item[c.field]);
+                return [item.category, ...cols].join('\t');
             }).join('\n');
 
             await navigator.clipboard.writeText(rows);
@@ -187,7 +349,7 @@ const WeightPage = () => {
         const startRowIndex = targetGridData.findIndex(item => item.category === dataItem.category);
         if (startRowIndex === -1) return;
 
-        const columns = ['col1', 'col2', 'col3'];
+        const columns = gridColumns.map(c => c.field);
         const startColIndex = columns.indexOf(field);
         if (startColIndex === -1) return;
 
@@ -504,9 +666,9 @@ const WeightPage = () => {
                                                                     }}
                                                                 >
                                                                     <Column field="category" title="Variable" width="150px" />
-                                                                    <Column field="col1" title="Banner A" cell={CurrentDistCell} />
-                                                                    <Column field="col2" title="Banner B" cell={CurrentDistCell} />
-                                                                    <Column field="col3" title="Banner C" cell={CurrentDistCell} />
+                                                                    {gridColumns.map(col => (
+                                                                        <Column key={col.field} field={col.field} title={col.title} cell={CurrentDistCell} />
+                                                                    ))}
                                                                 </KendoGrid>
                                                             </div>
                                                         )}
@@ -580,9 +742,9 @@ const WeightPage = () => {
                                                                     }}
                                                                 >
                                                                     <Column field="category" title="Variable" width="150px" />
-                                                                    <Column field="col1" title="Banner A" cell={TargetEditCell} />
-                                                                    <Column field="col2" title="Banner B" cell={TargetEditCell} />
-                                                                    <Column field="col3" title="Banner C" cell={TargetEditCell} />
+                                                                    {gridColumns.map(col => (
+                                                                        <Column key={col.field} field={col.field} title={col.title} cell={TargetEditCell} />
+                                                                    ))}
                                                                 </KendoGrid>
                                                             </div>
                                                         )}
