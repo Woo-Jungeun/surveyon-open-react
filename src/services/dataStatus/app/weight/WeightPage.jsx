@@ -78,12 +78,7 @@ const WeightPage = () => {
     );
 
     // 그리드 컬럼 상태
-    const [gridColumns, setGridColumns] = useState([
-        { field: 'col1', title: 'Banner A' },
-        { field: 'col2', title: 'Banner B' },
-        { field: 'col3', title: 'Banner C' }
-    ]);
-
+    const [gridColumns, setGridColumns] = useState([]);
     // 가중치 상세 데이터 조회
     useEffect(() => {
         const fetchWeightDetail = async () => {
@@ -116,33 +111,7 @@ const WeightPage = () => {
                     setIsCalculated(true);
                     setWeightName(data.weight_variable.replace('weight_', ''));
 
-                    const yItems = yIds.flatMap(id => vars[id] ? (vars[id].info || []).map(item => ({ ...item, varId: id })) : []);
-                    const xItems = xIds.flatMap(id => vars[id] ? (vars[id].info || []).map(item => ({ ...item, varId: id })) : []);
-
-                    if (yItems.length > 0 && xItems.length > 0) {
-                        const newCols = xItems.map((xItem, xIndex) => ({
-                            field: `col${xIndex + 1}`,
-                            title: xItem.label,
-                            varId: xItem.varId,
-                            itemIndex: xItem.index
-                        }));
-                        setGridColumns(newCols);
-
-                        const newTargetGridData = yItems.map((yItem) => {
-                            const rowId = `${yItem.varId}__${yItem.index}`;
-                            const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
-
-                            xItems.forEach((xItem, xIndex) => {
-                                const colId = `${xItem.varId}__${xItem.index}`;
-                                const targetKey = `${rowId}-${colId}`;
-                                const targetVal = data.targets_json?.[targetKey] ?? '';
-                                row[`col${xIndex + 1}`] = targetVal;
-                            });
-
-                            return row;
-                        });
-                        setTargetGridData(newTargetGridData);
-
+                    if (yIds.length > 0 && xIds.length > 0) {
                         // "현재 분포" 데이터 조회
                         const evalPayload = {
                             user: auth?.user?.userId,
@@ -151,60 +120,52 @@ const WeightPage = () => {
                             weight_col: "",
                             filter_expression: "",
                             include_stats: [],
-                            axis_mode: "interaction",
                             table: {
                                 id: "weight_eval",
                                 name: "Weight Evaluation",
                                 x_info: xIds,
-                                y_info: yIds
+                                y_info: yIds,
+                                axis_mode: "interaction"
                             }
                         };
                         try {
                             const evalResult = await evaluateTable.mutateAsync(evalPayload);
                             if (evalResult?.success === "777" && evalResult.resultjson) {
                                 const evalData = evalResult.resultjson;
-                                const evalCols = evalData.columns || [];
-                                const evalRows = evalData.rows || [];
+                                const evalCols = (evalData.columns || []).filter(c => c.key !== 'total');
+                                const evalRows = (evalData.rows || []).filter(r => r.key !== 'total');
 
-                                const newCurrentGridData = yItems.map((yItem) => {
-                                    const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
-                                    const evalRow = evalRows.find(r => r.key === `${yItem.varId}__${yItem.index}`);
+                                const newCols = evalCols.map((c, i) => ({
+                                    field: `col${i + 1}`,
+                                    title: c.label,
+                                    evalKey: c.key
+                                }));
+                                setGridColumns(newCols);
 
-                                    xItems.forEach((xItem, xIndex) => {
-                                        let count = '-', pct = '-';
-                                        if (evalRow) {
-                                            const matchCol = evalCols.find(c => c.key === `${xItem.varId}__${xItem.index}`);
-                                            const cell = matchCol ? evalRow.cells?.[matchCol.key] : null;
-                                            if (cell) {
-                                                count = cell.count ?? 0;
-                                                pct = cell.percent ?? "0.0";
-                                            }
-                                        }
-                                        row[`col${xIndex + 1}`] = { count, pct };
+                                const newTargetGridData = evalRows.map((r) => {
+                                    const row = { category: r.label, evalKey: r.key };
+                                    evalCols.forEach((c, cIdx) => {
+                                        const targetKey1 = `${r.key}-${c.key}`;
+                                        const targetKey2 = `${c.key}-${r.key}`;
+                                        const targetVal = data.targets_json?.[targetKey1] ?? data.targets_json?.[targetKey2] ?? '';
+                                        row[`col${cIdx + 1}`] = targetVal;
+                                    });
+                                    return row;
+                                });
+                                setTargetGridData(newTargetGridData);
+
+                                const newCurrentGridData = evalRows.map((r) => {
+                                    const row = { category: r.label, evalKey: r.key };
+                                    evalCols.forEach((c, cIdx) => {
+                                        const cell = r.cells?.[c.key];
+                                        row[`col${cIdx + 1}`] = cell ? { count: cell.count ?? 0, pct: cell.percent ?? "0.0" } : { count: '-', pct: '-' };
                                     });
                                     return row;
                                 });
                                 setGridData(newCurrentGridData);
-                            } else {
-                                const fakeData = yItems.map((yItem) => {
-                                    const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
-                                    xItems.forEach((xItem, xIndex) => {
-                                        row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
-                                    });
-                                    return row;
-                                });
-                                setGridData(fakeData);
                             }
                         } catch (e) {
                             console.error("Evaluate table error:", e);
-                            const fakeData = yItems.map((yItem) => {
-                                const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
-                                xItems.forEach((xItem, xIndex) => {
-                                    row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
-                                });
-                                return row;
-                            });
-                            setGridData(fakeData);
                         }
                     }
                 }
@@ -357,35 +318,6 @@ const WeightPage = () => {
         const yIds = rowItems.map(r => r.id);
         const xIds = colItems.map(c => c.id);
         const yItems = yIds.flatMap(id => rawVariables[id] ? (rawVariables[id].info || []).map(item => ({ ...item, varId: id })) : []);
-        const xItems = xIds.flatMap(id => rawVariables[id] ? (rawVariables[id].info || []).map(item => ({ ...item, varId: id })) : []);
-
-        if (yItems.length === 0 || xItems.length === 0) {
-            modal.showAlert("알림", '가로축과 세로축 문항 데이터가 유효하지 않습니다.');
-            return;
-        }
-
-        const pageId = sessionStorage.getItem("pageId");
-
-        // 1. 표 컬럼 생성 (가로축 기준)
-        const newCols = xItems.map((xItem, xIndex) => ({
-            field: `col${xIndex + 1}`,
-            title: xItem.label,
-            varId: xItem.varId,
-            itemIndex: xItem.index
-        }));
-        setGridColumns(newCols);
-
-        // 2. 목표 분포표 초기화
-        const newTargetGridData = yItems.map((yItem) => {
-            const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
-            xItems.forEach((xItem, xIndex) => {
-                row[`col${xIndex + 1}`] = '';
-            });
-            return row;
-        });
-        setTargetGridData(newTargetGridData);
-
-        // 3. 현재 분포 데이터 계산
         const activeVariables = {};
         yIds.forEach(id => {
             if (rawVariables[id]) activeVariables[id] = rawVariables[id];
@@ -394,6 +326,13 @@ const WeightPage = () => {
             if (rawVariables[id]) activeVariables[id] = rawVariables[id];
         });
 
+        if (Object.keys(activeVariables).length === 0) {
+            modal.showAlert("알림", '가로축과 세로축 문항 데이터가 유효하지 않습니다.');
+            return;
+        }
+
+        const pageId = sessionStorage.getItem("pageId");
+
         const evalPayload = {
             user: auth?.user?.userId,
             pageid: pageId,
@@ -401,12 +340,12 @@ const WeightPage = () => {
             weight_col: "",
             filter_expression: "",
             include_stats: [],
-            axis_mode: "interaction",
             table: {
                 id: "eval_run",
                 name: "Evaluation Run",
                 x_info: xIds,
-                y_info: yIds
+                y_info: yIds,
+                axis_mode: "interaction"
             }
         };
 
@@ -414,24 +353,30 @@ const WeightPage = () => {
             const evalResult = await evaluateTable.mutateAsync(evalPayload);
             if (evalResult?.success === "777" && evalResult.resultjson) {
                 const evalData = evalResult.resultjson;
-                const evalCols = evalData.columns || [];
-                const evalRows = evalData.rows || [];
+                const evalCols = (evalData.columns || []).filter(c => c.key !== 'total');
+                const evalRows = (evalData.rows || []).filter(r => r.key !== 'total');
 
-                const newCurrentGridData = yItems.map((yItem) => {
-                    const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
-                    const evalRow = evalRows.find(r => r.key === `${yItem.varId}__${yItem.index}`);
+                const newCols = evalCols.map((c, i) => ({
+                    field: `col${i + 1}`,
+                    title: c.label,
+                    evalKey: c.key
+                }));
+                setGridColumns(newCols);
 
-                    xItems.forEach((xItem, xIndex) => {
-                        let count = '-', pct = '-';
-                        if (evalRow) {
-                            const matchCol = evalCols.find(c => c.key === `${xItem.varId}__${xItem.index}`);
-                            const cell = matchCol ? evalRow.cells?.[matchCol.key] : null;
-                            if (cell) {
-                                count = cell.count ?? 0;
-                                pct = cell.percent ?? "0.0";
-                            }
-                        }
-                        row[`col${xIndex + 1}`] = { count, pct };
+                const newTargetGridData = evalRows.map((r) => {
+                    const row = { category: r.label, evalKey: r.key };
+                    evalCols.forEach((c, cIdx) => {
+                        row[`col${cIdx + 1}`] = '';
+                    });
+                    return row;
+                });
+                setTargetGridData(newTargetGridData);
+
+                const newCurrentGridData = evalRows.map((r) => {
+                    const row = { category: r.label, evalKey: r.key };
+                    evalCols.forEach((c, cIdx) => {
+                        const cell = r.cells?.[c.key];
+                        row[`col${cIdx + 1}`] = cell ? { count: cell.count ?? 0, pct: cell.percent ?? "0.0" } : { count: '-', pct: '-' };
                     });
                     return row;
                 });
@@ -566,12 +511,18 @@ const WeightPage = () => {
                 if (colValue === "" || colValue === undefined || colValue === null || isNaN(colValue)) {
                     colValue = 0;
                 }
-                const xItemIndex = col.itemIndex !== undefined ? col.itemIndex : xItems[index]?.index;
-                const xItemVarId = col.varId !== undefined ? col.varId : xItems[index]?.varId;
 
-                if (row.varId && row.rowId && xItemVarId && xItemIndex !== undefined) {
-                    const key = `${row.varId}__${row.rowId}-${xItemVarId}__${xItemIndex}`;
+                if (row.evalKey && col.evalKey) {
+                    const key = `${row.evalKey}-${col.evalKey}`;
                     target_values[key] = Number(colValue);
+                } else {
+                    const xItemIndex = col.itemIndex !== undefined ? col.itemIndex : xItems[index]?.index;
+                    const xItemVarId = col.varId !== undefined ? col.varId : xItems[index]?.varId;
+
+                    if (row.varId && row.rowId && xItemVarId && xItemIndex !== undefined) {
+                        const key = `${row.varId}__${row.rowId}-${xItemVarId}__${xItemIndex}`;
+                        target_values[key] = Number(colValue);
+                    }
                 }
             });
         });
