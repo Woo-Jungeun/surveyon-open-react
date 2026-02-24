@@ -462,6 +462,10 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         });
 
         const d = res?.resultjson?.[0] || {};
+        if (res?.duplicateRemoveDate) {
+            d.duplicateRemoveDate = res.duplicateRemoveDate;
+        }
+
         setQid(prev => {
             const next = String(d?.qid || "").trim();
             return next ? next : prev;
