@@ -649,6 +649,9 @@ const OptionSettingBody = () => {
 
                               if (res?.success === "777") {
                                 modal.showAlert("알림", "중복코드가 제거되었습니다.");
+                                if (res?.duplicateRemoveDate) {
+                                  setDuplicateRemoveDate(res.duplicateRemoveDate);
+                                }
                                 tab1Ref.current?.reload?.();
                                 fetchLv3Options(true);
                               } else if (res?.success === "771") {
