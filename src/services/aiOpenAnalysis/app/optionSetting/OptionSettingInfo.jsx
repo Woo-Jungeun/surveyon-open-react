@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, project_lock, onAnalysisComplete }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, onDuplicateRemoveDateLoaded, project_lock, onAnalysisComplete }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -87,6 +87,13 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             onQidLoaded?.(qid);
         }
     }, [qid, onQidLoaded]);
+
+    useEffect(() => {
+        if (data?.duplicateRemoveDate) {
+            onDuplicateRemoveDateLoaded?.(data.duplicateRemoveDate);
+        }
+    }, [data?.duplicateRemoveDate, onDuplicateRemoveDateLoaded]);
+
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
     const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
     const nextTabRef = useRef(null);    //탭 이동
@@ -440,6 +447,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (modelInit) {
             setModelValue(String(modelInit.value));
             setData(prev => ({ ...prev, model_select: modelInit.value }));
+        }
+
+        // --- duplicateRemoveDate ---
+        if (d?.duplicateRemoveDate) {
+            setData(prev => ({ ...prev, duplicateRemoveDate: d.duplicateRemoveDate }));
         }
     };
 

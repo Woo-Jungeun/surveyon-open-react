@@ -1105,11 +1105,11 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             onClick={() => {
                                 const hasAnalysisData = (dataState?.data || []).some(r => r.ex_gubun === 'analysis');
                                 if (!hasAnalysisData) {
-                                    modal.showAlert("알림", "보기유형이 analysis인 데이터가 존재하지 않습니다.");
+                                    modal.showAlert("알림", "보기유형이 분석(수정가능)인 데이터가 존재하지 않습니다.");
                                     return;
                                 }
 
-                                modal.showConfirm("알림", "보기유형이 analysis인 모든 보기 레이블을 삭제하시겠습니까?", {
+                                modal.showConfirm("알림", "보기유형이 분석(수정가능)인 모든 보기 레이블을 삭제하시겠습니까?", {
                                     btns: [
                                         {
                                             title: "취소",
@@ -1298,10 +1298,17 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                                 {c.title}
                                                 <span
                                                     className="info-icon"
-                                                    data-tooltip={`보기유형|• survey: 설문지 원본 보기 데이터 ('보기분석' 시 유지)\n• analysis: 분석된 보기 데이터 ('보기분석' 시 변경)`}
+                                                    data-tooltip={`보기유형|• 설문(수정불가): 설문지 원본 보기 데이터 ('보기분석' 시 유지)\n• 분석(수정가능): 분석된 보기 데이터 ('보기분석' 시 변경)`}
                                                 ></span>
                                             </div>
                                         )}
+                                        cell={(props) => {
+                                            const val = props.dataItem[c.field];
+                                            let displayVal = val;
+                                            if (val === 'survey') displayVal = '설문(수정불가)';
+                                            else if (val === 'analysis') displayVal = '분석(수정가능)';
+                                            return <td className="k-table-td">{displayVal}</td>;
+                                        }}
                                         columnMenu={columnMenu}
                                     />
                                 );
