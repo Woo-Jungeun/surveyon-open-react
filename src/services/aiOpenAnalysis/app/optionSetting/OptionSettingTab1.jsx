@@ -101,7 +101,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
         , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel
-        , lv3Options, onRequestLv3Refresh, onResponseCountChange, isLeftOpen } = props;
+        , lv3Options, onRequestLv3Refresh, onResponseCountChange, isLeftOpen, onDuplicateRemoveDateLoaded } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const SELECTED_FIELD = "selected";
@@ -1667,6 +1667,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     // resultjson이 빈 배열일 경우 로딩바 닫기
                     if (Array.isArray(res?.resultjson) && res.resultjson.length === 0) {
                         loadingSpinner.hide();
+                    }
+
+                    if (res?.duplicateRemoveDate) {
+                        onDuplicateRemoveDateLoaded?.(res.duplicateRemoveDate);
                     }
                     return res;
                 },

@@ -820,6 +820,7 @@ const OptionSettingBody = () => {
                   }}
                   onResponseCountChange={setResponseCount}
                   isLeftOpen={isLeftOpen}
+                  onDuplicateRemoveDateLoaded={setDuplicateRemoveDate}
                 />
               ) : tabDivision === "2" ? (
                 <OptionSettingTab2
