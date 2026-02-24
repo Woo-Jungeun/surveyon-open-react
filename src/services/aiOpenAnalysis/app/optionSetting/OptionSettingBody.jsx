@@ -676,7 +676,7 @@ const OptionSettingBody = () => {
                       data-tooltip={`중복코드 제거(DB, Excel)|문항 머지된 변수를 기준으로 조사 DB(큐마)에 코드가 업데이트되며, \n이 과정에서 중복 데이터는 제거됨.\n 예를 들어, ‘최초상기+비보조상기’ 변수를 하나로 머지하여 코드 설정 후 중복을 제거하면, 해당 머지된 변수 기준으로 중복이 제거된 상태로 조사 DB에 반영.`}
                     ></span>
                   </div>
-                  {duplicateRemoveDate && (
+                  {duplicateRemoveDate !== "" && (
                     <span style={{ fontSize: "11px", color: "#8b94a6", fontWeight: "normal" }}>
                       {duplicateRemoveDate}
                     </span>
