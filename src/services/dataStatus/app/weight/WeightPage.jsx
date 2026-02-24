@@ -94,7 +94,7 @@ const WeightPage = () => {
             try {
                 const result = await getWeightVariable.mutateAsync({
                     pageid: pageId,
-                    weight_variable: selectedWeight.id
+                    weight_variable_name: selectedWeight.id
                 });
 
                 if (result?.success === "777" && result.resultjson) {
@@ -116,22 +116,22 @@ const WeightPage = () => {
                     setIsCalculated(true);
                     setWeightName(data.weight_variable.replace('weight_', ''));
 
-                    const yVar = yIds.length > 0 ? vars[yIds[0]] : null;
-                    const xVar = xIds.length > 0 ? vars[xIds[0]] : null;
+                    const yItems = yIds.flatMap(id => vars[id] ? (vars[id].info || []).map(item => ({ ...item, varId: id })) : []);
+                    const xItems = xIds.flatMap(id => vars[id] ? (vars[id].info || []).map(item => ({ ...item, varId: id })) : []);
 
-                    if (yVar && xVar) {
-                        const newCols = (xVar.info || []).map((xItem, xIndex) => ({
+                    if (yItems.length > 0 && xItems.length > 0) {
+                        const newCols = xItems.map((xItem, xIndex) => ({
                             field: `col${xIndex + 1}`,
                             title: xItem.label
                         }));
                         setGridColumns(newCols);
 
-                        const newTargetGridData = (yVar.info || []).map((yItem) => {
-                            const rowId = `${yVar.id}__${yItem.index}`;
-                            const row = { category: yItem.label, rowId: yItem.index };
+                        const newTargetGridData = yItems.map((yItem) => {
+                            const rowId = `${yItem.varId}__${yItem.index}`;
+                            const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
 
-                            (xVar.info || []).forEach((xItem, xIndex) => {
-                                const colId = `${xVar.id}__${xItem.index}`;
+                            xItems.forEach((xItem, xIndex) => {
+                                const colId = `${xItem.varId}__${xItem.index}`;
                                 const targetKey = `${rowId}-${colId}`;
                                 const targetVal = data.targets_json?.[targetKey] ?? '';
                                 row[`col${xIndex + 1}`] = targetVal;
@@ -149,6 +149,7 @@ const WeightPage = () => {
                             weight_col: "",
                             filter_expression: "",
                             include_stats: [],
+                            axis_mode: "interaction",
                             table: {
                                 id: "weight_eval",
                                 name: "Weight Evaluation",
@@ -162,16 +163,15 @@ const WeightPage = () => {
                                 const evalData = evalResult.resultjson;
                                 const evalCols = evalData.columns || [];
                                 const evalRows = evalData.rows || [];
-                                const evalColKeys = evalCols.map(c => c.key);
 
-                                const newCurrentGridData = (yVar.info || []).map((yItem) => {
-                                    const row = { category: yItem.label };
-                                    const evalRow = evalRows.find(r => r.label === yItem.label || r.key === `${yIds[0]}__${yItem.index}` || String(r.value) === String(yItem.index));
+                                const newCurrentGridData = yItems.map((yItem) => {
+                                    const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
+                                    const evalRow = evalRows.find(r => r.key === `${yItem.varId}__${yItem.index}`);
 
-                                    (xVar.info || []).forEach((xItem, xIndex) => {
+                                    xItems.forEach((xItem, xIndex) => {
                                         let count = '-', pct = '-';
                                         if (evalRow) {
-                                            const matchCol = evalCols.find(c => c.label === xItem.label || c.key === `${xIds[0]}__${xItem.index}` || String(c.value) === String(xItem.index));
+                                            const matchCol = evalCols.find(c => c.key === `${xItem.varId}__${xItem.index}`);
                                             const cell = matchCol ? evalRow.cells?.[matchCol.key] : null;
                                             if (cell) {
                                                 count = cell.count ?? 0;
@@ -184,9 +184,9 @@ const WeightPage = () => {
                                 });
                                 setGridData(newCurrentGridData);
                             } else {
-                                const fakeData = (yVar.info || []).map((yItem) => {
-                                    const row = { category: yItem.label };
-                                    (xVar.info || []).forEach((xItem, xIndex) => {
+                                const fakeData = yItems.map((yItem) => {
+                                    const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
+                                    xItems.forEach((xItem, xIndex) => {
                                         row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
                                     });
                                     return row;
@@ -195,9 +195,9 @@ const WeightPage = () => {
                             }
                         } catch (e) {
                             console.error("Evaluate table error:", e);
-                            const fakeData = (yVar.info || []).map((yItem) => {
-                                const row = { category: yItem.label };
-                                (xVar.info || []).forEach((xItem, xIndex) => {
+                            const fakeData = yItems.map((yItem) => {
+                                const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
+                                xItems.forEach((xItem, xIndex) => {
                                     row[`col${xIndex + 1}`] = { count: '-', pct: '-' };
                                 });
                                 return row;
@@ -354,10 +354,10 @@ const WeightPage = () => {
 
         const yIds = rowItems.map(r => r.id);
         const xIds = colItems.map(c => c.id);
-        const yVar = yIds.length > 0 ? rawVariables[yIds[0]] : null;
-        const xVar = xIds.length > 0 ? rawVariables[xIds[0]] : null;
+        const yItems = yIds.flatMap(id => rawVariables[id] ? (rawVariables[id].info || []).map(item => ({ ...item, varId: id })) : []);
+        const xItems = xIds.flatMap(id => rawVariables[id] ? (rawVariables[id].info || []).map(item => ({ ...item, varId: id })) : []);
 
-        if (!yVar || !xVar) {
+        if (yItems.length === 0 || xItems.length === 0) {
             modal.showAlert("알림", '가로축과 세로축 문항 데이터가 유효하지 않습니다.');
             return;
         }
@@ -365,16 +365,16 @@ const WeightPage = () => {
         const pageId = sessionStorage.getItem("pageId");
 
         // 1. 표 컬럼 생성 (가로축 기준)
-        const newCols = (xVar.info || []).map((xItem, xIndex) => ({
+        const newCols = xItems.map((xItem, xIndex) => ({
             field: `col${xIndex + 1}`,
             title: xItem.label
         }));
         setGridColumns(newCols);
 
         // 2. 목표 분포표 초기화
-        const newTargetGridData = (yVar.info || []).map((yItem) => {
-            const row = { category: yItem.label, rowId: yItem.index };
-            (xVar.info || []).forEach((xItem, xIndex) => {
+        const newTargetGridData = yItems.map((yItem) => {
+            const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
+            xItems.forEach((xItem, xIndex) => {
                 row[`col${xIndex + 1}`] = '';
             });
             return row;
@@ -382,16 +382,22 @@ const WeightPage = () => {
         setTargetGridData(newTargetGridData);
 
         // 3. 현재 분포 데이터 계산
+        const activeVariables = {};
+        yIds.forEach(id => {
+            if (rawVariables[id]) activeVariables[id] = rawVariables[id];
+        });
+        xIds.forEach(id => {
+            if (rawVariables[id]) activeVariables[id] = rawVariables[id];
+        });
+
         const evalPayload = {
             user: auth?.user?.userId,
             pageid: pageId,
-            variables: {
-                [yVar.id]: yVar,
-                [xVar.id]: xVar
-            },
+            variables: activeVariables,
             weight_col: "",
             filter_expression: "",
             include_stats: [],
+            axis_mode: "interaction",
             table: {
                 id: "eval_run",
                 name: "Evaluation Run",
@@ -407,14 +413,14 @@ const WeightPage = () => {
                 const evalCols = evalData.columns || [];
                 const evalRows = evalData.rows || [];
 
-                const newCurrentGridData = (yVar.info || []).map((yItem) => {
-                    const row = { category: yItem.label };
-                    const evalRow = evalRows.find(r => r.label === yItem.label || r.key === `${yIds[0]}__${yItem.index}` || String(r.value) === String(yItem.index));
+                const newCurrentGridData = yItems.map((yItem) => {
+                    const row = { category: yItem.label, rowId: yItem.index, varId: yItem.varId };
+                    const evalRow = evalRows.find(r => r.key === `${yItem.varId}__${yItem.index}`);
 
-                    (xVar.info || []).forEach((xItem, xIndex) => {
+                    xItems.forEach((xItem, xIndex) => {
                         let count = '-', pct = '-';
                         if (evalRow) {
-                            const matchCol = evalCols.find(c => c.label === xItem.label || c.key === `${xIds[0]}__${xItem.index}` || String(c.value) === String(xItem.index));
+                            const matchCol = evalCols.find(c => c.key === `${xItem.varId}__${xItem.index}`);
                             const cell = matchCol ? evalRow.cells?.[matchCol.key] : null;
                             if (cell) {
                                 count = cell.count ?? 0;
@@ -531,10 +537,22 @@ const WeightPage = () => {
         const yVar = yIds.length > 0 ? rawVariables[yIds[0]] : null;
         const xVar = xIds.length > 0 ? rawVariables[xIds[0]] : null;
 
-        if (!yVar || !xVar) {
+        const yItems = yIds.flatMap(id => rawVariables[id] ? (rawVariables[id].info || []).map(item => ({ ...item, varId: id })) : []);
+        const xItems = xIds.flatMap(id => rawVariables[id] ? (rawVariables[id].info || []).map(item => ({ ...item, varId: id })) : []);
+
+        if (yItems.length === 0 || xItems.length === 0) {
             modal.showAlert("알림", "유효한 문항 데이터가 없습니다. 먼저 실행해주세요.");
             return;
         }
+
+        // Ensure activeVariables is available, similar to handleRunAnalysis
+        const activeVariables = {};
+        yIds.forEach(id => {
+            if (rawVariables[id]) activeVariables[id] = rawVariables[id];
+        });
+        xIds.forEach(id => {
+            if (rawVariables[id]) activeVariables[id] = rawVariables[id];
+        });
 
         const target_values = {};
 
@@ -544,8 +562,9 @@ const WeightPage = () => {
                 if (colValue === "" || colValue === undefined || colValue === null || isNaN(colValue)) {
                     colValue = 0;
                 }
-                const xItemIndex = xVar.info[index].index;
-                const key = `${yVar.id}__${row.rowId}-${xVar.id}__${xItemIndex}`;
+                const xItemIndex = xItems[index].index;
+                const xItemVarId = xItems[index].varId;
+                const key = `${row.varId}__${row.rowId}-${xItemVarId}__${xItemIndex}`;
                 target_values[key] = Number(colValue);
             });
         });
@@ -556,10 +575,7 @@ const WeightPage = () => {
             x_info: xIds,
             y_info: yIds,
             target_values: target_values,
-            variables: {
-                [yVar.id]: yVar,
-                [xVar.id]: xVar
-            }
+            variables: activeVariables
         };
 
         const isUpdate = weights.some(w => w.id === `weight_${weightName}`);
