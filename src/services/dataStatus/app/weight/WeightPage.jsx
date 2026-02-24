@@ -122,7 +122,9 @@ const WeightPage = () => {
                     if (yItems.length > 0 && xItems.length > 0) {
                         const newCols = xItems.map((xItem, xIndex) => ({
                             field: `col${xIndex + 1}`,
-                            title: xItem.label
+                            title: xItem.label,
+                            varId: xItem.varId,
+                            itemIndex: xItem.index
                         }));
                         setGridColumns(newCols);
 
@@ -367,7 +369,9 @@ const WeightPage = () => {
         // 1. 표 컬럼 생성 (가로축 기준)
         const newCols = xItems.map((xItem, xIndex) => ({
             field: `col${xIndex + 1}`,
-            title: xItem.label
+            title: xItem.label,
+            varId: xItem.varId,
+            itemIndex: xItem.index
         }));
         setGridColumns(newCols);
 
@@ -562,18 +566,23 @@ const WeightPage = () => {
                 if (colValue === "" || colValue === undefined || colValue === null || isNaN(colValue)) {
                     colValue = 0;
                 }
-                const xItemIndex = xItems[index].index;
-                const xItemVarId = xItems[index].varId;
-                const key = `${row.varId}__${row.rowId}-${xItemVarId}__${xItemIndex}`;
-                target_values[key] = Number(colValue);
+                const xItemIndex = col.itemIndex !== undefined ? col.itemIndex : xItems[index]?.index;
+                const xItemVarId = col.varId !== undefined ? col.varId : xItems[index]?.varId;
+
+                if (row.varId && row.rowId && xItemVarId && xItemIndex !== undefined) {
+                    const key = `${row.varId}__${row.rowId}-${xItemVarId}__${xItemIndex}`;
+                    target_values[key] = Number(colValue);
+                }
             });
         });
 
         const payload = {
+            user: auth?.user?.userId,
             pageid: pageId,
             weight_variable_name: `weight_${weightName}`,
             x_info: xIds,
             y_info: yIds,
+            axis_mode: "interaction",
             target_values: target_values,
             variables: activeVariables
         };
