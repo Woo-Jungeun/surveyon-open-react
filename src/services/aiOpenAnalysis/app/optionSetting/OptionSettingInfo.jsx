@@ -917,7 +917,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                                 onClick={async () => {
                                     try {
                                         const hasAnalysis = (lv3Options ?? []).some(
-                                            (r) => r.ex_gubun?.trim?.() === "analysis"
+                                            (r) => r.ex_gubun?.trim?.() === "분석(수정가능)"
                                         );
                                         if (hasAnalysis) {
                                             modal.showConfirm(

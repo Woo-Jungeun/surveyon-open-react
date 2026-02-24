@@ -396,7 +396,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             // 대상 키 집합 계산
             const eligible = rows.filter(r =>
                 r?.__pendingDelete !== true &&
-                r?.ex_gubun !== "survey" &&
+                r?.ex_gubun !== "설문(수정불가)" &&
                 String(r?.lv123code ?? "").trim() !== ""
             );
             const byCode = new Map();
@@ -718,7 +718,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                 lv123code: nextLv123,
                 lv3: "",
                 ex_sum: "0",
-                ex_gubun: "analysis",
+                ex_gubun: "분석(수정가능)",
                 inEdit: true,
                 __isNew: true,
                 __rowKey: tmpKey,
@@ -746,8 +746,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
             rememberScroll();
             const clicked = e.dataItem;
 
-            // 보기유형이 survey면 편집 진입 막기 
-            if (clicked?.ex_gubun === 'survey') return;
+            // 보기유형이 설문(수정불가)면 편집 진입 막기 
+            if (clicked?.ex_gubun === '설문(수정불가)') return;
 
             const clickedKey = getKey(clicked);
             setDataState(prev => ({
@@ -1045,7 +1045,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                     lv2code: String(r.lv2code ?? ""),
                     lv321code: String(r.lv321code ?? ""),
                     summary: String(r.summary ?? ""),
-                    ex_gubun: String(r.ex_gubun ?? "analysis"),
+                    ex_gubun: String(r.ex_gubun ?? "분석(수정가능)"),
                     lv23code: String(r.lv23code ?? ""),
                     lv123code: String(r.lv123code ?? ""),
                     representative_response: String(r.representative_response ?? ""),
@@ -1103,7 +1103,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                             themeColor="primary"
                             className="btnM"
                             onClick={() => {
-                                const hasAnalysisData = (dataState?.data || []).some(r => r.ex_gubun === 'analysis');
+                                const hasAnalysisData = (dataState?.data || []).some(r => r.ex_gubun === '분석(수정가능)');
                                 if (!hasAnalysisData) {
                                     modal.showAlert("알림", "보기유형이 분석(수정가능)인 데이터가 존재하지 않습니다.");
                                     return;
@@ -1237,8 +1237,8 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         cell={(props) => {
                                             const row = props.dataItem;
 
-                                            // 보기유형이 survey이면 삭제 버튼 숨김
-                                            if (row?.ex_gubun === 'survey') return <td />;
+                                            // 보기유형이 설문(수정불가)이면 삭제 버튼 숨김
+                                            if (row?.ex_gubun === '설문(수정불가)') return <td />;
                                             const pending = props.dataItem.__pendingDelete === true;
                                             return (
                                                 <td
@@ -1304,10 +1304,7 @@ const OptionSettingTab2 = forwardRef((props, ref) => {
                                         )}
                                         cell={(props) => {
                                             const val = props.dataItem[c.field];
-                                            let displayVal = val;
-                                            if (val === 'survey') displayVal = '설문(수정불가)';
-                                            else if (val === 'analysis') displayVal = '분석(수정가능)';
-                                            return <td className="k-table-td">{displayVal}</td>;
+                                            return <td className="k-table-td">{val}</td>;
                                         }}
                                         columnMenu={columnMenu}
                                     />
