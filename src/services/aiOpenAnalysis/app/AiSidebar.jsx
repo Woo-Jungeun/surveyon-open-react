@@ -143,9 +143,9 @@ const AiSidebar = ({ onOpenProjectModal }) => {
     const moduleItems = [
 
         { label: "설문제작", icon: <FileText />, path: "/project/pro_list", isDisabled: true },
-        { label: "데이터현황", icon: <BarChart3 />, path: "/data_status/setting/variable" },
+        { label: "데이터현황", icon: <BarChart3 />, path: "/data_status/setting/variable", isDisabled: true }, //데이터현황 임시 주석 
         { label: "데이터관리", icon: <Database />, path: "/data_status", isDisabled: true },
-        { label: "AI오픈분석", icon: <BrainCircuit />, path: "/ai_open_analysis", highlight: true }, // Current App Highlighted
+        { label: "AI오픈분석", icon: <BrainCircuit />, path: "/ai_open_analysis", highlight: true },
         { label: "응답자관리", icon: <Users />, path: "/project", isDisabled: true },
     ];
 

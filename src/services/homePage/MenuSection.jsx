@@ -92,7 +92,7 @@ const MenuSection = () => {
           // 설문제작, 데이터관리, 응답자관리는 disabled
           const isDisabled =
             item.id === "survey-creation" ||
-            // item.id === "data-dashboard" ||
+            item.id === "data-dashboard" || //todo 데이터현황
             item.id === "data-management" ||
             item.id === "respondent-management";
 
