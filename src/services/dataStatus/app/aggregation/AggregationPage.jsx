@@ -8,6 +8,9 @@ import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
 import './AggregationPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
+import { useSelector } from 'react-redux';
+import { VariablePageApi } from '../variable/VariablePageApi';
+import { AggregationPageApi } from './AggregationPageApi';
 
 const AggregationCard = ({ q }) => {
     const [chartMode, setChartMode] = useState('column');
@@ -247,6 +250,9 @@ const AggregationCard = ({ q }) => {
 };
 
 const AggregationPage = () => {
+    const auth = useSelector((store) => store.auth);
+    const { getOriginalVariables } = VariablePageApi();
+    const { getAggregationData } = AggregationPageApi();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
     const [selectedFilters, setSelectedFilters] = useState(['전체']);
@@ -259,6 +265,7 @@ const AggregationPage = () => {
 
     const filterRef = useRef(null);
     const mainRef = useRef(null);
+    const fetchingRef = useRef(new Set());
 
     // Close filter dropdown when clicking outside
     useEffect(() => {
@@ -324,71 +331,142 @@ const AggregationPage = () => {
         '수도권/비수도권'
     ];
 
-    const questions = [
-        {
-            id: 'q1',
-            label: '서비스 전반적인 만족도는?',
-            n: 240,
-            data: [
-                { name: 'Very Low', '완료': 100, '선정탈락': 16, '쿼터오버': 8, total: 124 },
-                { name: 'Low', '완료': 5, '선정탈락': 16, '쿼터오버': 50, total: 48 },
-                { name: 'Neutral', '완료': 11, '선정탈락': 16, '쿼터오버': 30, total: 57 },
-                { name: 'High', '완료': 16, '선정탈락': 16, '쿼터오버': 40, total: 72 },
-                { name: 'Very High', '완료': 10, '선정탈락': 10, '쿼터오버': 20, total: 40 },
+    const [questions, setQuestions] = useState([]);
 
-            ]
-        },
-        {
-            id: 'q2',
-            label: '선호하는 기능을 모두 선택하세요',
-            n: 240,
-            data: [
-                { name: 'Option A', '완료': 20, '선정탈락': 15, '쿼터오버': 25, total: 60 },
-                { name: 'Option B', '완료': 10, '선정탈락': 30, '쿼터오버': 10, total: 50 },
-                { name: 'Option C', '완료': 25, '선정탈락': 15, '쿼터오버': 20, total: 60 },
-                { name: 'Option D', '완료': 15, '선정탈락': 20, '쿼터오버': 35, total: 70 },
-            ]
-        },
-        {
-            id: 'gender',
-            label: '귀하의 성별은?',
-            n: 240,
-            data: [
-                { name: 'Male', '완료': 40, '선정탈락': 35, '쿼터오버': 45, total: 120 },
-                { name: 'Female', '완료': 40, '선정탈락': 45, '쿼터오버': 35, total: 120 },
-            ]
-        },
-        {
-            id: 'age',
-            label: '귀하의 연령대는?',
-            n: 240,
-            data: [
-                { name: '20s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: '30s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: '40s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: '50s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-            ]
-        },
-        {
-            id: 'region',
-            label: '거주 지역은?',
-            n: 240,
-            data: [
-                { name: 'Seoul', '완료': 30, '선정탈락': 30, '쿼터오버': 30, total: 90 },
-                { name: 'Busan', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: 'Incheon', '완료': 15, '선정탈락': 15, '쿼터오버': 15, total: 45 },
-                { name: 'Others', '완료': 15, '선정탈락': 15, '쿼터오버': 15, total: 45 },
-            ]
-        },
-        {
-            id: 'weight_demo',
-            label: '가중치 적용',
-            n: 240,
-            data: [
-                { name: 'Applied', '완료': 80, '선정탈락': 80, '쿼터오버': 80, total: 240 },
-            ]
-        }
-    ];
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            if (auth?.user?.userId) {
+                const userId = auth.user.userId;
+                const pageId = sessionStorage.getItem("pageId");
+
+                if (pageId) {
+                    try {
+                        const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
+                        if (result?.success === "777" && result.resultjson) {
+
+                            // 기본 질문 목록 우선 세팅 (데이터는 로딩 전 임시값 혹은 0)
+                            const initialQuestions = Object.values(result.resultjson).map(item => {
+                                const initialData = item.info && Array.isArray(item.info) ? item.info.map((o, idx) => ({
+                                    name: o.label || o.value || `보기 ${idx + 1}`,
+                                    value: o.value !== undefined ? String(o.value) : undefined,
+                                    label: o.label,
+                                    '완료': 0,
+                                    '선정탈락': 0,
+                                    '쿼터오버': 0,
+                                    total: 0
+                                })) : [
+                                    { name: '해당없음', value: '해당없음', '완료': 0, '선정탈락': 0, '쿼터오버': 0, total: 0 }
+                                ];
+
+                                return {
+                                    id: item.id,
+                                    label: item.label || item.name || item.id,
+                                    n: 0,
+                                    data: initialData,
+                                    isLoaded: false
+                                };
+                            });
+
+                            setQuestions(initialQuestions);
+                            // 화면 노출/선택 시점에 5개씩 가져오도록 분리
+                        }
+                    } catch (error) {
+                        console.error("Aggregation Variable Fetch Error:", error);
+                    }
+                }
+            }
+        };
+
+        fetchQuestions();
+    }, [auth?.user?.userId]);
+
+    // 활성 아이템 기준 5개씩 데이터 분할 조회
+    useEffect(() => {
+        if (!activeId || questions.length === 0 || !auth?.user?.userId) return;
+
+        const fetchChunkData = async () => {
+            const index = questions.findIndex(q => q.id === activeId);
+            if (index === -1) return;
+
+            // 선택된 문항 포함 이후 5개 (사용자가 스크롤 내리는 흐름 반영)
+            const targetQuestions = questions.slice(index, index + 5);
+            const idsToFetch = targetQuestions
+                .filter(q => !q.isLoaded && !fetchingRef.current.has(q.id))
+                .map(q => q.id);
+
+            if (idsToFetch.length === 0) return;
+
+            // 로딩 상태 등록 (중복 요청 방지)
+            idsToFetch.forEach(id => fetchingRef.current.add(id));
+
+            try {
+                const pageId = sessionStorage.getItem("pageId");
+                const payload = {
+                    pageid: pageId,
+                    x_info: idsToFetch,
+                    start: index,
+                    limit: 5,
+                    user: auth.user.userId
+                };
+
+                const aggResult = await getAggregationData.mutateAsync(payload);
+                if (aggResult?.success === "777" && aggResult.resultjson) {
+                    const resultsArray = aggResult.resultjson.results || [];
+
+                    setQuestions(prevQuestions => prevQuestions.map(q => {
+                        // 이번에 가져온 타겟들이 아니면 그대로 둠
+                        if (!idsToFetch.includes(q.id)) return q;
+
+                        const tableInfo = resultsArray.find(r => r.table_id === q.id);
+
+                        // 응답 결과에 해당 문항이 없으면 기본값으로 두고 로드완료 처리
+                        if (!tableInfo) {
+                            return { ...q, isLoaded: true };
+                        }
+
+                        const aggInfoRows = tableInfo.result.rows || [];
+
+                        const updatedData = q.data.map(opt => {
+                            const optionValue = opt.value !== undefined ? String(opt.value) : opt.name;
+                            const row = aggInfoRows.find(r => r.key === `${q.id}__${optionValue}`);
+
+                            let done = 0;
+                            let fail = 0;
+                            let quota = 0;
+
+                            if (row && row.cells) {
+                                // 셀의 count 항목들을 모두 합산하여 완료(done)로 처리
+                                const values = Object.values(row.cells).map(c => c.count || 0);
+                                done = values.reduce((sum, val) => sum + val, 0);
+                            }
+
+                            return {
+                                ...opt,
+                                '완료': done,
+                                '선정탈락': fail,
+                                '쿼터오버': quota,
+                                total: done + fail + quota
+                            };
+                        });
+
+                        return {
+                            ...q,
+                            n: updatedData.reduce((acc, cur) => acc + cur.total, 0),
+                            data: updatedData,
+                            isLoaded: true
+                        };
+                    }));
+                }
+            } catch (error) {
+                console.error("Aggregation Chunk Fetch Error:", error);
+            } finally {
+                // 백그라운드 요청 완료 시 상태 제거
+                idsToFetch.forEach(id => fetchingRef.current.delete(id));
+            }
+        };
+
+        fetchChunkData();
+    }, [activeId, questions.length, auth?.user?.userId]);
 
     const filteredQuestions = questions.filter(q =>
         q.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
