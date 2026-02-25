@@ -330,7 +330,7 @@
 }
 
 .sidebar-project-label {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     color: #666;
     margin-bottom: 8px;
@@ -471,8 +471,8 @@
 
 .group-title {
     font-size: 13px;
-    font-weight: 700;
-    color: #888;
+    font-weight: 600;
+    color: #666;
 }
 
 .group-arrow {
