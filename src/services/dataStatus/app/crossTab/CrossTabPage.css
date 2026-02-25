@@ -350,7 +350,7 @@
 }
 
 .corner-label {
-    width: 240px;
+    width: 200px;
     background: #f0f2f5;
     display: flex;
     align-items: center;
@@ -417,7 +417,7 @@
 }
 
 .row-drop-zone {
-    width: 240px;
+    width: 200px;
     background: #f0fdf4;
     padding: 16px;
     display: flex;

@@ -801,7 +801,7 @@ const WeightPage = () => {
                                         onDragOver={handleDragOver}
                                         onDrop={(e) => handleDrop(e, 'row')}
                                         style={{
-                                            width: '240px',
+                                            width: '200px',
                                             background: '#f0fdf4',
                                             borderRadius: '0 0 0 12px',
                                             borderRight: '1px solid #e0e0e0',
@@ -900,7 +900,7 @@ const WeightPage = () => {
                                                             {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isCurrentDistOpen && (
-                                                            <div className="cmn_grid singlehead" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
+                                                            <div className="cmn_grid singlehead weight-grid-current">
                                                                 <KendoGrid
                                                                     parentProps={{
                                                                         data: gridData,
@@ -977,7 +977,7 @@ const WeightPage = () => {
                                                             {isTargetDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isTargetDistOpen && (
-                                                            <div className="cmn_grid singlehead" style={{ maxWidth: '100%', overflowX: 'hidden' }}>
+                                                            <div className="cmn_grid singlehead weight-grid-target">
                                                                 <KendoGrid
                                                                     parentProps={{
                                                                         data: targetGridData,
