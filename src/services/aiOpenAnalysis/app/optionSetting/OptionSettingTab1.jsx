@@ -1155,7 +1155,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         const kept = (prev.data || []).filter(r => r.__pendingDelete !== true);
                         return { ...prev, data: kept };
                     });
-                    handleSearch();                              // 재조회
+                    await handleSearch();                              // 재조회 대기 (in 조회 완료)
                     return true;
                 } else if (res?.success === "763") {
                     modal.showAlert("에러", "응답자데이터와 보기코드가 매칭되지 않습니다. \n응답자 데이터분석시 참고해주세요."); //오류 팝업 표출

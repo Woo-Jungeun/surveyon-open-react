@@ -127,8 +127,15 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     {
                         title: "확인",
                         click: async () => {
+                            // 1. 분석 완료 후 저장 API (gb: 'in' 저장 후 조회 등)
                             try {
-                                //상태 확인 했다는 API 태움 
+                                await onAnalysisComplete?.();
+                            } catch (e) {
+                                console.error("[OptionSettingInfo] onAnalysisComplete error:", e);
+                            }
+
+                            // 2. 상태 확인 API (gb: 'popupcheck')
+                            try {
                                 await optionEditData.mutateAsync({
                                     params: {
                                         user: auth?.user?.userId || "",
@@ -140,27 +147,24 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                             } catch {
                             }
 
-                            // 소분류 리스트 재조회 추가
+                            // 3. 소분류 리스트 재조회 API (lb)
                             try {
                                 await fetchLv3Options?.();
                             } catch (err) {
                                 console.warn("lb 재조회 실패", err);
                             }
 
-                            // 탭 이동
+                            // 4. 탭 이동
                             if (nextTabRef.current) {
                                 onNavigateTab?.(nextTabRef.current);
                                 nextTabRef.current = null;
                             }
-
-                            // 분석 완료 후 저장 API 트리거
-                            onAnalysisComplete?.();
                         },
                     },
                 ],
             });
         }
-    }, [modal, onNavigateTab, setAnalyzing]);
+    }, [modal, onNavigateTab, setAnalyzing, optionEditData, auth, projectnum, qnum, fetchLv3Options, onAnalysisComplete]);
 
 
     // status 호출용

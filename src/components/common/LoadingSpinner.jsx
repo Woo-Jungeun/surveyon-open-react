@@ -40,13 +40,14 @@ function LoadingProvider(props) {
     **/
     const show = (param) => {
         cnt += 1;
-
-        setSpinner((s) => ({
-            ...s,
-            loading: true,
-            content: param?.content ?? s.content,
-            target: param?.target ?? s.target,
-        }));
+        setTimeout(() => {
+            setSpinner((s) => ({
+                ...s,
+                loading: cnt > 0,
+                content: param?.content ?? s.content,
+                target: param?.target ?? s.target,
+            }));
+        }, 0);
     }
 
     /**
@@ -63,9 +64,11 @@ function LoadingProvider(props) {
     const hide = () => {
         if (cnt <= 0) return;     // 짝 안 맞는 hide 무시 (음수 방지)
         cnt -= 1;
-        if (cnt === 0) {
-            setSpinner((s) => ({ ...s, loading: false, content: null }));
-        }
+        setTimeout(() => {
+            if (cnt === 0) {
+                setSpinner((s) => ({ ...s, loading: false, content: null }));
+            }
+        }, 0);
     }
 
 
