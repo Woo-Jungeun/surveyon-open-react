@@ -624,73 +624,71 @@ const OptionSettingBody = () => {
       <AiDataHeader
         title={TITLE_LIST[2] !== "" ? TITLE_LIST[2] : TITLE_LIST[1]}
       >
-        <div style={{ display: "flex", gap: "8px" }}>
+        <div style={{ display: "flex", gap: "8px", alignItems: "stretch" }}>
           {tabDivision === "1" && (
             <>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end" }}>
-                <button
-                  className="ai-data-header-btn-secondary"
-                  disabled={canSave["1"]}
-                  onClick={async () => {
-                    modal.showConfirm("알림", "중복코드를 제거하시겠습니까?", {
-                      btns: [
-                        { title: "취소" },
-                        {
-                          title: "확인",
-                          click: async () => {
-                            try {
-                              loadingSpinner.show();
-                              const res = await optionSaveData.mutateAsync({
-                                user: auth?.user?.userId || "",
-                                projectnum: sessionStorage.getItem("projectnum") ?? "",
-                                qnum: sessionStorage.getItem("qnum") ?? "",
-                                gb: "duplicate_answer",
-                              });
+              <button
+                className="ai-data-header-btn-secondary"
+                disabled={canSave["1"]}
+                onClick={async () => {
+                  modal.showConfirm("알림", "중복코드를 제거하시겠습니까?", {
+                    btns: [
+                      { title: "취소" },
+                      {
+                        title: "확인",
+                        click: async () => {
+                          try {
+                            loadingSpinner.show();
+                            const res = await optionSaveData.mutateAsync({
+                              user: auth?.user?.userId || "",
+                              projectnum: sessionStorage.getItem("projectnum") ?? "",
+                              qnum: sessionStorage.getItem("qnum") ?? "",
+                              gb: "duplicate_answer",
+                            });
 
-                              if (res?.success === "777") {
-                                modal.showAlert("알림", "중복코드가 제거되었습니다.");
-                                if (res?.duplicateRemoveDate) {
-                                  setDuplicateRemoveDate(res.duplicateRemoveDate);
-                                }
-                                tab1Ref.current?.reload?.();
-                                fetchLv3Options(true);
-                              } else if (res?.success === "771") {
-                                modal.showAlert("알림", "중복코드가 존재하지 않습니다.");
-                              } else {
-                                modal.showErrorAlert("오류", "중복코드 제거에 실패했습니다.");
+                            if (res?.success === "777") {
+                              modal.showAlert("알림", "중복코드가 제거되었습니다.");
+                              if (res?.duplicateRemoveDate) {
+                                setDuplicateRemoveDate(res.duplicateRemoveDate);
                               }
-                            } catch (e) {
-                              console.error(e);
-                              modal.showErrorAlert("오류", "요청 중 오류가 발생했습니다.");
-                            } finally {
-                              loadingSpinner.hide();
+                              tab1Ref.current?.reload?.();
+                              fetchLv3Options(true);
+                            } else if (res?.success === "771") {
+                              modal.showAlert("알림", "중복코드가 존재하지 않습니다.");
+                            } else {
+                              modal.showErrorAlert("오류", "중복코드 제거에 실패했습니다.");
                             }
+                          } catch (e) {
+                            console.error(e);
+                            modal.showErrorAlert("오류", "요청 중 오류가 발생했습니다.");
+                          } finally {
+                            loadingSpinner.hide();
                           }
                         }
-                      ]
-                    });
-                  }}
-                  style={{ height: "auto", minHeight: "40px", fontSize: "14px", padding: "6px 15px", borderRadius: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px" }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                    중복코드 제거(DB, Excel)
-                    <span
-                      className="info-icon"
-                      data-tooltip={`중복코드 제거(DB, Excel)|문항 머지된 변수를 기준으로 조사 DB(큐마)에 코드가 업데이트되며, \n이 과정에서 중복 데이터는 제거됨.\n 예를 들어, ‘최초상기+비보조상기’ 변수를 하나로 머지하여 코드 설정 후 중복을 제거하면, 해당 머지된 변수 기준으로 중복이 제거된 상태로 조사 DB에 반영.`}
-                    ></span>
-                  </div>
-                  {duplicateRemoveDate !== "" && (
-                    <span style={{ fontSize: "11px", color: "#8b94a6", fontWeight: "normal" }}>
-                      {duplicateRemoveDate}
-                    </span>
-                  )}
-                </button>
-              </div>
+                      }
+                    ]
+                  });
+                }}
+                style={{ height: "auto", minHeight: "40px", fontSize: "14px", padding: "6px 15px", borderRadius: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px" }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  중복코드 제거(DB, Excel)
+                  <span
+                    className="info-icon"
+                    data-tooltip={`중복코드 제거(DB, Excel)|문항 머지된 변수를 기준으로 조사 DB(큐마)에 코드가 업데이트되며, \n이 과정에서 중복 데이터는 제거됨.\n 예를 들어, ‘최초상기+비보조상기’ 변수를 하나로 머지하여 코드 설정 후 중복을 제거하면, 해당 머지된 변수 기준으로 중복이 제거된 상태로 조사 DB에 반영.`}
+                  ></span>
+                </div>
+                {duplicateRemoveDate !== "" && (
+                  <span style={{ fontSize: "11px", color: "#8b94a6", fontWeight: "normal" }}>
+                    {duplicateRemoveDate}
+                  </span>
+                )}
+              </button>
 
               <GridHeaderBtnPrimary
                 disabled={!canSave["1"]}
                 onClick={onTab1SaveClick}
-                style={{ height: "40px", fontSize: "14px", padding: "0 24px" }}
+                style={{ height: "auto", minHeight: "40px", fontSize: "14px", padding: "0 24px", display: "flex", alignItems: "center" }}
               >
                 저장
               </GridHeaderBtnPrimary>
