@@ -86,8 +86,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     {
       label: "데이터관리",
       icon: <Database size={16} />,
-      path: "/data_management/setting/variable",
-      onClick: () => { navigate("/data_management/setting/variable"); }
+      path: "/data_management/setting/map",
+      onClick: () => { navigate("/data_management/setting/map"); }
       , isDisabled: true
     },
     {

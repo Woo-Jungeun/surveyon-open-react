@@ -224,14 +224,14 @@ const InfoSection = () => {
 
             <div
               className="hp-feature-item"
-            // onClick={() => {
-            //   if (!isLoggedIn) {
-            //     navigate("/login", { state: { from: "/data_management/setting/variable" } });
-            //     return;
-            //   }
-            //   navigate("/data_management/setting/variable", { state: { from: "data_management" } });
-            // }}
-            // style={{ cursor: "pointer" }}
+              onClick={() => {
+                if (!isLoggedIn) {
+                  navigate("/login", { state: { from: "/data_management/setting/map" } });
+                  return;
+                }
+                navigate("/data_management/setting/map", { state: { from: "data_management" } });
+              }}
+              style={{ cursor: "pointer" }}
             >
               <Database className="hp-feature-icon" />
               <span>데이터관리</span>

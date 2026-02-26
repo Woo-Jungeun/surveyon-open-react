@@ -3,6 +3,7 @@ window.API_CONFIG = {
     API_BASE_URL_OPENAI: "https://s.hrc.kr/APIs/o",
     API_BASE_URL_BOARD: "https://s.hrc.kr/APIs/n",
     API_BASE_URL_DATASTATUS: "https://s.hrc.kr/APIs/s",
+    API_BASE_URL_DATAMANAGEMENT: "https://s.hrc.kr/APIs/d",
     SIGNALR_PATH: "signalr",
     // DEFAULT_PATH: "/o"
 };

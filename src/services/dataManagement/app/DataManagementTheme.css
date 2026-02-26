@@ -2,10 +2,14 @@
 
 :root {
     /* Primary Colors - Green Theme */
-    --dm-primary: #10b981;
-    --dm-primary-hover: #059669;
-    --dm-primary-light: #ecfdf5;
-    --dm-primary-border: #a7f3d0;
+    --dm-primary: #16a34a;
+    /* green-600 */
+    --dm-primary-hover: #15803d;
+    /* green-700 */
+    --dm-primary-light: #f0fdf4;
+    /* green-50 */
+    --dm-primary-border: #bbf7d0;
+    /* green-200 */
 
     /* Neutral Colors */
     --dm-bg: #f8fafc;
@@ -146,4 +150,20 @@
 [data-theme="data-management"] .lucide-trash-2 {
     stroke: #64748b !important;
     color: #64748b !important;
+}
+
+/* DataHeader Title Bar Override */
+[data-theme="data-management"] .data-header-title::before {
+    background: var(--dm-primary);
+}
+
+/* DataHeader Primary Button Override */
+[data-theme="data-management"] .data-header-btn-primary {
+    background: var(--dm-primary);
+    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.2);
+}
+
+[data-theme="data-management"] .data-header-btn-primary:hover {
+    background: var(--dm-primary-hover);
+    box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
 }

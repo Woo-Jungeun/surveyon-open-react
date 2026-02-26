@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
-import VariablePageModal from './VariablePageModal';
+import MapManagementPageModal from './MapManagementPageModal';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import '../../../../assets/css/grid_vertical_borders.css';
-import './VariablePage.css';
-import { VariablePageApi } from './VariablePageApi';
+import './MapManagementPage.css';
+import { MapManagementPageApi } from './MapManagementPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { useSelector } from 'react-redux';
 
 
 
-const VariablePage = () => {
-    const { getOriginalVariables } = VariablePageApi();
+const MapManagementPage = () => {
+    const { getMapVariables } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const [variables, setVariables] = useState([]);
     const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -76,47 +76,61 @@ const VariablePage = () => {
         const fetchVariables = async () => {
             if (auth?.user?.userId) {
                 const userId = auth.user.userId;
-                const pageId = sessionStorage.getItem('pageId');
+                const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
 
-                if (pageId) {
+                if (pn) {
                     try {
                         loadingSpinner.show();
-                        // ... existing logic ...
-                        const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
-                        // ...
-                        if (result.success === "777") {
-                            if (result.resultjson) {
-                                // ... transformation logic ...
-                                const transformedData = Object.values(result.resultjson).map(item => {
-                                    let typeLabel = item.type;
-                                    if (item.type === 'categorical') typeLabel = '범주형';
-                                    else if (item.type === 'continuous') typeLabel = '연속형';
-                                    else if (item.type === 'text') typeLabel = '텍스트';
 
-                                    return {
-                                        id: item.id,
-                                        sysName: item.id,
-                                        name: item.name,
-                                        label: item.label,
-                                        category: item.info ? item.info.map(i => `{${i.value};${i.label}}`).join('') : '',
-                                        logic: '',
-                                        count: '',
-                                        type: typeLabel
-                                    };
-                                });
-                                setVariables(transformedData);
-                                setOriginalVariables(JSON.parse(JSON.stringify(transformedData))); // Deep copy
-                                setIsDataLoaded(true);
-                            }
+                        const result = await getMapVariables.mutateAsync({ user: userId, pn: pn });
+
+                        if (result?.variables) {
+                            const transformedData = result.variables.map(item => {
+                                let typeLabel = item.type;
+                                if (item.type === 'single' || item.type === 'multi' || item.type === 'categorical') typeLabel = '범주형';
+                                else if (item.type === 'continuous') typeLabel = '연속형';
+                                else if (item.type === 'text' || item.type === 'string') typeLabel = '텍스트';
+                                else typeLabel = '범주형'; // 기본값
+
+                                return {
+                                    id: item.id || item.cQuestionVariable,
+                                    sysName: item.cQuestionVariable || item.name || '',
+                                    name: item.cQuestionVariable || item.name || '',
+                                    label: item.label || '',
+                                    category: item.info ? item.info.map(i => `{${i.value};${i.label}}`).join('') : '',
+                                    logic: '',
+                                    count: '',
+                                    type: typeLabel
+                                };
+                            });
+                            setVariables(transformedData);
+                            setOriginalVariables(JSON.parse(JSON.stringify(transformedData))); // Deep copy
+                            setIsDataLoaded(true);
+                        } else if (result?.success === false || result?.status === 404 || result?.status === 400 || result?.status === 500) {
+                            modal.showErrorAlert("에러", result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.");
+                            setIsDataLoaded(true);
                         } else {
-                            modal.showErrorAlert("에러", result?.message);
-                            loadingSpinner.hide();
+                            // 데이터가 비어있거나, 응답 형식이 다를 때 처리
+                            setVariables([]);
+                            setOriginalVariables([]);
+                            setIsDataLoaded(true);
                         }
+                        loadingSpinner.hide();
                     } catch (error) {
                         console.error("Variable Fetch Error:", error);
-                        modal.showErrorAlert("에러", "변수 목록 조회 중 오류가 발생했습니다.");
+                        if (error.response && error.response.status === 404) {
+                            modal.showErrorAlert("알림", "리소스를 찾을 수 없습니다. (프로젝트를 찾을 수 없음)");
+                        } else if (error.response && error.response.status === 400) {
+                            modal.showErrorAlert("알림", "잘못된 요청입니다.");
+                        } else {
+                            modal.showErrorAlert("에러", "맵 목록 조회 중 오류가 발생했습니다.");
+                        }
+                        setIsDataLoaded(true);
                         loadingSpinner.hide();
                     }
+                } else {
+                    // pn이 없는 경우
+                    setIsDataLoaded(true);
                 }
             }
         };
@@ -136,9 +150,9 @@ const VariablePage = () => {
     };
 
     const [columns, setColumns] = useState([
-        { field: 'sysName', title: '시스템 문항', show: true, width: '150px' },
-        { field: 'name', title: '문항 이름', show: true, width: '150px' },
-        { field: 'label', title: '문항', show: true, minWidth: 200 },
+        { field: 'sysName', title: '시스템 맵', show: true, width: '150px' },
+        { field: 'name', title: '맵 이름', show: true, width: '150px' },
+        { field: 'label', title: '맵', show: true, minWidth: 200 },
         { field: 'category', title: '보기', show: true, minWidth: 250 },
         { field: 'logic', title: '로직', show: true, width: '200px' },
         { field: 'count', title: '카운트 (값/로직/오류)', show: true, width: '180px' },
@@ -279,7 +293,7 @@ const VariablePage = () => {
             // 고유 ID 생성 (Key 충돌 방지)
             const newId = Date.now();
 
-            // 'var_N' 형태의 고유한 시스템 문항 이름 생성
+            // 'var_N' 형태의 고유한 시스템 맵 이름 생성
             let counter = 1;
             while (prev.some(v => v.sysName === `var_${counter}`)) {
                 counter++;
@@ -317,8 +331,8 @@ const VariablePage = () => {
     return (
         <div className="variable-page" data-theme="data-management">
             <DataHeader
-                title="문항 관리"
-                addButtonLabel="문항 추가"
+                title="맵 관리"
+                addButtonLabel="맵 추가"
                 onAdd={handleAddVariable}
                 saveButtonLabel="변경사항 저장"
                 onSave={() => alert('변경사항 저장 클릭')}
@@ -365,7 +379,7 @@ const VariablePage = () => {
 
             {/* Category Edit Modal */}
             {editingCategoryPopupOpen && (
-                <VariablePageModal
+                <MapManagementPageModal
                     variable={editingCategoryPopupOpen}
                     onClose={() => SetEditingCategoryPopupOpen(null)}
                     onSave={handleCategorySave}
@@ -375,5 +389,5 @@ const VariablePage = () => {
     );
 };
 
-export default VariablePage;
+export default MapManagementPage;
 

@@ -733,6 +733,83 @@
     color: #f97316;
 }
 
+/* Green Theme */
+.green .home-btn:hover {
+    color: #16a34a;
+    background: #f0fdf4;
+}
+
+.green .logo-accent {
+    color: #16a34a;
+}
+
+.green .module-toggle-btn:hover,
+.green .module-toggle-btn.active {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.green .project-info-card {
+    background: #ffffff;
+    border: 1px solid #bbf7d0;
+}
+
+.green .project-title {
+    color: #15803d;
+}
+
+.green .project-id-badge {
+    color: #16a34a;
+    background: #dcfce7;
+}
+
+.green .project-settings-btn:hover {
+    color: #16a34a;
+}
+
+.green .sidebar-nav {
+    background: #f4fbf7;
+    border-top: 1px solid #dcfce7;
+    padding-top: 16px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.green .nav-group {
+    padding: 0 16px;
+}
+
+.green .group-header {
+    padding-left: 6px;
+    padding-right: 6px;
+}
+
+.green .nav-link.active {
+    background: #f0fdf4;
+    color: #16a34a;
+    font-weight: 700;
+    border-left-color: #16a34a;
+    border-radius: 0 8px 8px 0;
+    box-shadow: none;
+}
+
+.green .nav-link.main-nav-link.active {
+    background: #dcfce7;
+    color: #15803d;
+    font-weight: 700;
+    border-left-color: #16a34a;
+    border-radius: 0 12px 12px 0;
+    box-shadow: 2px 2px 8px rgba(22, 163, 74, 0.15);
+}
+
+.green .user-card:hover {
+    border-color: #16a34a;
+}
+
+.green .logout-btn {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
 
 /* Hide AI balance card when sidebar is collapsed */
 .common-sidebar.collapsed .ai-balance-card-container {

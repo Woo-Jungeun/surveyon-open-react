@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import './VariablePage.css';
+import './MapManagementPage.css';
 
-const VariablePageModal = ({ variable, onClose, onSave }) => {
+const MapManagementPageModal = ({ variable, onClose, onSave }) => {
     const [categories, setCategories] = useState([]);
 
     useEffect(() => {
@@ -131,4 +131,4 @@ const VariablePageModal = ({ variable, onClose, onSave }) => {
     );
 };
 
-export default VariablePageModal;
+export default MapManagementPageModal;
