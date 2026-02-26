@@ -7,9 +7,7 @@ import {
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
-import { MenuBarApi } from "./MenuBarApi";
 import ProjectSelectionModal from "./ProjectSelectionModal";
-import { MapManagementPageApi } from "../mapManagement/MapManagementPageApi"; // Import API for page list
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -29,8 +27,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const loadingSpinner = useContext(loadingSpinnerContext);
   const auth = useSelector((store) => store.auth);
   const navigate = useNavigate();
-  const { getPageMetadata } = MenuBarApi();
-  const { pageList } = MapManagementPageApi(); // Use MapManagementPageApi for page list
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -105,64 +101,11 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     // Reset page info on project change
     sessionStorage.setItem("pageId", "");
     sessionStorage.setItem("pagetitle", "");
-    setPageState({
-      title: "페이지 없음",
-      merge_pn: "-"
-    });
 
     setIsProjectModalOpen(false); // 프로젝트 팝업 닫기
 
-    // 2. 페이지 목록 조회
-    try {
-      const user = auth?.user?.userId;
-      const mergePn = project.merge_pn;
-      if (!user || !mergePn) {
-        modal.showErrorAlert("알림", "프로젝트 정보가 올바르지 않습니다 (MergePN 누락).");
-        return;
-      }
-
-      const pageRes = await pageList.mutateAsync({ user: user, merge_pn: mergePn });
-
-      if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
-        const firstPage = pageRes.resultjson[0];
-        const pageId = firstPage.id || firstPage.pageid;
-        const pageTitle = firstPage.title || firstPage.name || "제목 없음";
-
-        sessionStorage.setItem("pageId", pageId);
-        sessionStorage.setItem("pagetitle", pageTitle);
-        window.dispatchEvent(new Event("pageSelected"));
-
-        // 메타데이터 조회
-        try {
-          loadingSpinner.show();
-          const metadataResult = await getPageMetadata.mutateAsync({ user, pageid: pageId });
-          if (metadataResult?.success === "777" && metadataResult.resultjson) {
-            const rawDate = metadataResult.resultjson?.dataset?.processedAt;
-            let formattedDate = "-";
-            if (rawDate) {
-              const d = new Date(rawDate);
-              if (!isNaN(d.getTime())) {
-                const pad = (n) => String(n).padStart(2, '0');
-                formattedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-              } else {
-                formattedDate = rawDate;
-              }
-            }
-            setPageInfo(prev => ({ ...prev, processedAt: formattedDate }));
-          }
-          loadingSpinner.hide();
-        } catch (err) {
-          console.error(err);
-          loadingSpinner.hide();
-        }
-      } else {
-        modal.showAlert("알림", "조회된 페이지가 없습니다. \n프로젝트를 다시 선택해주세요.", null, () => {
-          setIsProjectModalOpen(true);
-        });
-      }
-    } catch (e) {
-      modal.showErrorAlert("오류", "프로젝트 정보 처리 중 오류가 발생했습니다.");
-    }
+    // Trigger event context change for MapManagementPage
+    window.dispatchEvent(new Event("pageSelected"));
   };
 
 
