@@ -148,7 +148,7 @@ const Sidebar = ({
             {/* Project Info Section */}
             {projectInfo && !isCollapsed && (
                 <div className="project-info-box">
-                    <div className="sidebar-project-label">현재 조사</div>
+                    {/* <div className="sidebar-project-label">현재 조사</div> */}
                     <div className="project-info-card">
                         <div className="project-title">{projectInfo.title}</div>
                         {projectInfo.subTitle && (
@@ -170,7 +170,7 @@ const Sidebar = ({
             {/* Page Info Section */}
             {pageInfo && !isCollapsed && (
                 <div className="project-info-box">
-                    <div className="sidebar-project-label">현재 페이지</div>
+                    {/* <div className="sidebar-project-label">현재 페이지</div> */}
                     <div className="project-info-card">
                         <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }}>{pageInfo.title}</div>
                         <button

@@ -105,7 +105,7 @@ const MenuSection = () => {
             }
 
             if (item.id === "data-dashboard") {
-              navigate("/data_status/setting/variable", { state: { from: "data_status" } });
+              navigate("/data_status/aggregation/status", { state: { from: "data_status" } });
               return;
             }
 

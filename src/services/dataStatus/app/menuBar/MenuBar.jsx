@@ -13,27 +13,10 @@ import { VariablePageApi } from "../variable/VariablePageApi"; // Import API for
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import "./MenuBar.css";
 
 // 메뉴 아이템 정의
 const MENU_ITEMS = [
-  {
-    label: "데이터설정",
-    items: [
-      { label: "문항 관리", path: "/data_status/setting/variable", icon: Info },
-      {
-        label: "전체 데이터(뷰어)", path: "/data_status/setting/viewer", icon: Database,
-        onClick: (e) => {
-          e.preventDefault();
-          const width = window.screen.width;
-          const height = window.screen.height;
-          window.open("/data_status/setting/viewer", "_blank", `width=${width},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
-        }
-      },
-      { label: "변수 생성", path: "/data_status/setting/recoding", icon: Wrench },
-      { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
-      { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
-    ]
-  },
   {
     label: "집계 현황",
     items: [
@@ -48,6 +31,24 @@ const MENU_ITEMS = [
     items: [
       { label: "AI분석", path: "/data_status/ai/analysis", icon: Sparkles, isPending: true },
       { label: "AI리포트", path: "/data_status/ai/report", icon: FileText, isPending: true },
+    ]
+  },
+  {
+    label: "데이터설정",
+    items: [
+      // { label: "문항 관리", path: "/data_status/setting/variable", icon: Info },
+      /* {
+        label: "전체 데이터(뷰어)", path: "/data_status/setting/viewer", icon: Database,
+        onClick: (e) => {
+          e.preventDefault();
+          const width = window.screen.width;
+          const height = window.screen.height;
+          window.open("/data_status/setting/viewer", "_blank", `width=${width},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
+        }
+      }, */
+      { label: "변수 생성", path: "/data_status/setting/recoding", icon: Wrench },
+      { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
+      { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
     ]
   },
 ];
@@ -82,7 +83,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const moduleItems = [
 
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-    { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/setting/variable", highlight: true },
+    { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/aggregation/status", highlight: true },
     {
       label: "데이터관리",
       icon: <Database size={16} />,
@@ -114,28 +115,21 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
-  // 추가 액션 영역 (데이터 등록, 새로고침 버튼)
+  // 추가 액션 영역 (날짜와 새로고침 아이콘 한 줄 정리)
   const ExtraActions = (
-    <div style={{ padding: '0 20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      <button
-        className="menu-bar-action-btn"
-        onClick={() => setIsNewDataModalOpen(true)}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', fontSize: '14px', fontWeight: '600', color: '#333', cursor: 'pointer' }}
-      >
-        <Upload size={16} />
-        <span>데이터 신규등록</span>
-      </button>
-      <button
-        className="menu-bar-action-btn"
-        onClick={() => modal.showAlert("알림", "데이터 새로고침 기능은 준비 중입니다.")}
-        style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '10px', borderRadius: '8px', border: '1px solid #e0e0e0', background: '#fff', fontSize: '14px', fontWeight: '600', color: '#333', cursor: 'pointer' }}
-      >
-        <RefreshCw size={16} />
-        <span>데이터 새로고침</span>
-      </button>
-      <div className="last-updated-text" style={{ fontSize: '11px', color: '#999', textAlign: 'center', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-        <Clock size={12} strokeWidth={2.5} />
-        <span>{pageInfo.processedAt}</span>
+    <div className="menu-bar-actions">
+      <div className="menu-bar-refresh-bar">
+        <div className="menu-bar-info-group">
+          <Clock size={12} strokeWidth={2.5} />
+          <span>{pageInfo.processedAt}</span>
+        </div>
+        <button
+          className="menu-bar-refresh-btn-minimal"
+          onClick={() => modal.showAlert("알림", "데이터 새로고침 기능은 준비 중입니다.")}
+          title="데이터 새로고침"
+        >
+          <RefreshCw size={14} />
+        </button>
       </div>
     </div>
   );
@@ -286,7 +280,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           title: "데이터 현황",
           logoText: "SRT",
           logoClass: "menu-bar-logo",
-          onClick: () => navigate("/data_status/setting/variable")
+          onClick: () => navigate("/data_status/aggregation/status")
         }}
         menuGroups={MENU_ITEMS}
         projectInfo={projectInfoData}

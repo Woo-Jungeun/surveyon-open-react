@@ -22,6 +22,7 @@
 .menu-bar.collapsed .menu-bar-project,
 .menu-bar.collapsed .menu-bar-action-btn span,
 .menu-bar.collapsed .menu-bar-last-update span,
+.menu-bar.collapsed .menu-bar-refresh-bar,
 .menu-bar.collapsed .menu-bar-section-title,
 .menu-bar.collapsed .menu-bar-section-header svg,
 .menu-bar.collapsed .menu-bar-nav-link span,
@@ -283,6 +284,54 @@
     font-size: 11px;
     color: #999;
     margin-top: 6px;
+}
+
+/* Minimal Refresh Bar */
+.common-sidebar .menu-bar-refresh-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 6px 12px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    border: 1px solid #dbeafe !important;
+    transition: all 0.2s ease;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+.common-sidebar .menu-bar-info-group {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 11px !important;
+    color: #475569 !important;
+    white-space: nowrap !important;
+}
+
+.common-sidebar .menu-bar-refresh-btn-minimal {
+    background: none !important;
+    border: none !important;
+    padding: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    color: #94a3b8 !important;
+    /* slate-400 */
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.common-sidebar .menu-bar-refresh-btn-minimal:hover {
+    color: #3b82f6 !important;
+    /* blue-500 */
+    transform: rotate(30deg);
+}
+
+.common-sidebar .menu-bar-refresh-btn-minimal svg {
+    display: block !important;
 }
 
 /* Navigation Menu */
