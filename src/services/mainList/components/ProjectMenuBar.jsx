@@ -22,12 +22,12 @@ const ProjectMenuBar = () => {
                     end: true,
                     onClick: (e) => {
                         e.preventDefault();
-                        sessionStorage.setItem("projectnum", "");
-                        sessionStorage.setItem("projectname", "");
-                        sessionStorage.setItem("servername", "");
-                        sessionStorage.setItem("projectpof", "");
-                        sessionStorage.setItem("merge_pn", "");
-                        sessionStorage.setItem("merge_pn_text", "");
+                        // sessionStorage.setItem("projectnum", "");
+                        // sessionStorage.setItem("projectname", "");
+                        // sessionStorage.setItem("servername", "");
+                        // sessionStorage.setItem("projectpof", "");
+                        // sessionStorage.setItem("merge_pn", "");
+                        // sessionStorage.setItem("merge_pn_text", "");
                         navigate("/project", { state: { from } });
                     }
                 },
@@ -47,12 +47,12 @@ const ProjectMenuBar = () => {
     ];
 
     const handleBrandClick = () => {
-        sessionStorage.setItem("projectnum", "");
-        sessionStorage.setItem("projectname", "");
-        sessionStorage.setItem("servername", "");
-        sessionStorage.setItem("projectpof", "");
-        sessionStorage.setItem("merge_pn", "");
-        sessionStorage.setItem("merge_pn_text", "");
+        // sessionStorage.setItem("projectnum", "");
+        // sessionStorage.setItem("projectname", "");
+        // sessionStorage.setItem("servername", "");
+        // sessionStorage.setItem("projectpof", "");
+        // sessionStorage.setItem("merge_pn", "");
+        // sessionStorage.setItem("merge_pn_text", "");
         navigate("/project", { state: { from } });
     };
 

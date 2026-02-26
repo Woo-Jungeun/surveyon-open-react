@@ -102,14 +102,14 @@ const Sidebar = ({
     };
 
     const onHomeClick = () => {
-        sessionStorage.setItem("projectnum", "");
-        sessionStorage.setItem("projectname", "");
-        sessionStorage.setItem("servername", "");
-        sessionStorage.setItem("projectpof", "");
-        sessionStorage.setItem("merge_pn", "");
-        sessionStorage.setItem("merge_pn_text", "");
-        sessionStorage.setItem("pageId", "");
-        sessionStorage.setItem("pagetitle", "");
+        // sessionStorage.setItem("projectnum", "");
+        // sessionStorage.setItem("projectname", "");
+        // sessionStorage.setItem("servername", "");
+        // sessionStorage.setItem("projectpof", "");
+        // sessionStorage.setItem("merge_pn", "");
+        // sessionStorage.setItem("merge_pn_text", "");
+        // sessionStorage.setItem("pageId", "");
+        // sessionStorage.setItem("pagetitle", "");
         navigate("/");
     };
 
