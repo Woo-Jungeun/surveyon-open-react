@@ -7,9 +7,9 @@
     --dm-primary-hover: #15803d;
     /* green-700 */
     --dm-primary-light: #f0fdf4;
-    /* green-50 */
-    --dm-primary-border: #bbf7d0;
-    /* green-200 */
+    /* Emerald-50: Clean and professional for headers */
+    --dm-primary-border: #dcfce7;
+    /* Emerald-100 */
 
     /* Neutral Colors */
     --dm-bg: #f8fafc;
@@ -64,7 +64,7 @@
 
 /* Grid Body */
 [data-theme="data-management"] .k-grid-content tr:not(.k-grouping-row):hover {
-    background-color: #f1f5f9 !important;
+    background-color: var(--dm-primary-light) !important;
 }
 
 [data-theme="data-management"] .k-grid-content td {

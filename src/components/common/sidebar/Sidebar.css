@@ -822,12 +822,12 @@
 }
 
 .green .project-info-card {
-    background: #ffffff;
+    background: #f0fdf4;
     border: 1px solid #bbf7d0;
 }
 
 .green .project-title {
-    color: #15803d;
+    color: #1a8342;
 }
 
 .green .project-id-badge {
@@ -840,7 +840,7 @@
 }
 
 .green .sidebar-nav {
-    background: #f4fbf7;
+    background: #f9fcf9;
     border-top: 1px solid #dcfce7;
     padding-top: 16px;
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.03);
@@ -856,7 +856,7 @@
 }
 
 .green .nav-link.active {
-    background: #f0fdf4;
+    background: #effaf3;
     color: #16a34a;
     font-weight: 700;
     border-left-color: #16a34a;

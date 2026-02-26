@@ -5,14 +5,230 @@ import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
+import { Checkbox } from "@progress/kendo-react-inputs";
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
 import { MapManagementPageApi } from './MapManagementPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { useSelector } from 'react-redux';
+import { Plus, Trash2 } from 'lucide-react';
 
+// Context for sharing state with grid cells to prevent unmount loops
+const MapManagementContext = React.createContext(null);
 
+// --- Stable Cell Components moved outside MapManagementPage ---
+
+const InputCell = (props) => {
+    const { setVariables, editingRowId } = useContext(MapManagementContext);
+    const textareaRef = useRef(null);
+    const { dataItem, field, style, className } = props;
+
+    const adjustHeight = () => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+        }
+    };
+
+    useEffect(() => {
+        adjustHeight();
+    }, [dataItem[field], editingRowId]);
+
+    const handleBlur = (e) => {
+        const newValue = e.target.value;
+        if (dataItem[field] !== newValue) {
+            setVariables(prev => prev.map(v =>
+                v.id === dataItem.id ? { ...v, [field]: newValue } : v
+            ));
+        }
+    };
+
+    const isEditing = dataItem.id === editingRowId || dataItem.isNew;
+
+    if (!isEditing) {
+        return (
+            <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
+                <div className="variable-text-readonly" style={{ background: 'transparent', border: 'none', pointerEvents: 'none' }}>
+                    {dataItem[field]}
+                </div>
+            </td>
+        );
+    }
+
+    return (
+        <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
+            <textarea
+                ref={textareaRef}
+                defaultValue={dataItem[field]}
+                className="variable-input"
+                rows={1}
+                onInput={adjustHeight}
+                onBlur={handleBlur}
+                autoFocus
+            />
+        </td>
+    );
+};
+
+const CategoryCell = (props) => {
+    const { SetEditingCategoryPopupOpen, editingRowId } = useContext(MapManagementContext);
+    const isEditing = props.dataItem.id === editingRowId || props.dataItem.isNew;
+
+    return (
+        <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
+            <div className="category-cell-container">
+                <div className="category-cell-content" style={{ border: !isEditing ? 'none' : undefined, background: !isEditing ? 'transparent' : undefined, pointerEvents: !isEditing ? 'none' : undefined }}>
+                    {props.dataItem.category}
+                </div>
+                {isEditing && (
+                    <button
+                        onClick={() => SetEditingCategoryPopupOpen(props.dataItem)}
+                        className="category-edit-btn"
+                    >
+                        변경
+                    </button>
+                )}
+            </div>
+        </td>
+    );
+};
+
+const TypeCell = (props) => {
+    const { setVariables, editingRowId } = useContext(MapManagementContext);
+    const { dataItem, style, className } = props;
+
+    const handleChange = (e) => {
+        const newType = e.target.value;
+        setVariables(prev => prev.map(v => v.id === dataItem.id ? { ...v, type: newType } : v));
+    };
+
+    const typeOptions = ["Single", "Multi", "multi", "Dummy", "OPEN", "Open", "CUSTOM", "string", "numeric"];
+    const isEditing = dataItem.id === editingRowId || dataItem.isNew;
+
+    if (!isEditing) {
+        return (
+            <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
+                <div className="variable-text-readonly" style={{ background: 'transparent', border: 'none', pointerEvents: 'none' }}>
+                    {dataItem.type}
+                </div>
+            </td>
+        );
+    }
+
+    return (
+        <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
+            <DropDownList
+                data={typeOptions}
+                value={dataItem.type}
+                onChange={handleChange}
+                style={{ width: '100%' }}
+            />
+        </td>
+    );
+};
+
+const CheckboxCell = (props) => {
+    const { setVariables, editingRowId } = useContext(MapManagementContext);
+    const { dataItem, field, style, className } = props;
+
+    const handleChange = (e) => {
+        const isChecked = e.target.checked;
+        setVariables(prev => prev.map(v => v.id === dataItem.id ? { ...v, [field]: isChecked } : v));
+    };
+
+    const isEditing = dataItem.id === editingRowId || dataItem.isNew;
+
+    return (
+        <td style={{ ...style, textAlign: 'center', verticalAlign: 'middle' }} className={className}>
+            <Checkbox
+                value={dataItem[field] || false}
+                onChange={handleChange}
+                disabled={!isEditing}
+                className="dm-custom-checkbox"
+                style={{ cursor: isEditing ? 'pointer' : 'default' }}
+            />
+        </td>
+    );
+};
+
+const multilineHeader = (props) => {
+    return (
+        <span style={{
+            display: 'block',
+            textAlign: 'center',
+            whiteSpace: 'pre-line',
+            lineHeight: '1.2',
+            width: '100%'
+        }}>
+            {props.title}
+        </span>
+    );
+};
+
+const ReadOnlyCell = (props) => (
+    <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
+        <div className="variable-text-readonly" style={{ pointerEvents: 'none' }}>{props.dataItem[props.field]}</div>
+    </td>
+);
+
+const CountCell = (props) => (
+    <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
+        <div className="count-cell">{props.dataItem.count}</div>
+    </td>
+);
+
+const AddCell = (props) => {
+    const { onAdd } = useContext(MapManagementContext);
+    return (
+        <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle' }}>
+            <button onClick={onAdd} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#16a34a' }}>
+                <Plus size={18} />
+            </button>
+        </td>
+    );
+};
+
+const DeleteCell = (props) => {
+    const { onDelete } = useContext(MapManagementContext);
+    return (
+        <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle' }}>
+            <button
+                onClick={() => onDelete(props.dataItem.id)}
+                style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
+            >
+                <Trash2 size={16} />
+            </button>
+        </td>
+    );
+};
+
+const getCell = (field) => {
+    switch (field) {
+        case 'sysName': return ReadOnlyCell;
+        case 'name':
+        case 'label':
+        case 'logic':
+        case 'minQuestions':
+        case 'memo':
+        case 'startPos':
+        case 'valLen':
+        case 'valCnt':
+        case 'totalLen':
+        case 'etcOpen':
+        case 'spssName': return InputCell;
+        case 'category': return CategoryCell;
+        case 'type': return TypeCell;
+        case 'count': return CountCell;
+        case 'multiValChange':
+        case 'excludeOpenMerge':
+        case 'verificationVar':
+        case 'excludeOutput': return CheckboxCell;
+        case 'add': return AddCell;
+        case 'delete': return DeleteCell;
+        default: return null;
+    }
+};
 
 const MapManagementPage = () => {
     const { getMapVariables } = MapManagementPageApi();
@@ -41,24 +257,22 @@ const MapManagementPage = () => {
     useEffect(() => {
         if (!isDataLoaded) return;
 
+        const editableFields = [
+            'label', 'logic', 'decimal', 'spssName', 'type', 'memo',
+            'multiValChange', 'minQuestions', 'excludeOpenMerge',
+            'verificationVar', 'excludeOutput', 'startPos', 'valLen',
+            'valCnt', 'totalLen', 'etcOpen'
+        ];
+
         const isDifferent = JSON.stringify(variables.map(v => {
-            const { isNew, ...rest } = v;
-            return {
-                sysName: v.sysName,
-                name: v.name,
-                label: v.label,
-                category: v.category,
-                logic: v.logic,
-                type: v.type
-            };
-        })) !== JSON.stringify(originalVariables.map(v => ({
-            sysName: v.sysName,
-            name: v.name,
-            label: v.label,
-            category: v.category,
-            logic: v.logic,
-            type: v.type
-        })));
+            const obj = { sysName: v.sysName };
+            editableFields.forEach(f => obj[f] = v[f]);
+            return obj;
+        })) !== JSON.stringify(originalVariables.map(v => {
+            const obj = { sysName: v.sysName };
+            editableFields.forEach(f => obj[f] = v[f]);
+            return obj;
+        }));
 
         setHasChanges(isDifferent);
     }, [variables, originalVariables, isDataLoaded]);
@@ -86,21 +300,33 @@ const MapManagementPage = () => {
 
                         if (result?.variables) {
                             const transformedData = result.variables.map(item => {
-                                let typeLabel = item.type;
-                                if (item.type === 'single' || item.type === 'multi' || item.type === 'categorical') typeLabel = '범주형';
-                                else if (item.type === 'continuous') typeLabel = '연속형';
-                                else if (item.type === 'text' || item.type === 'string') typeLabel = '텍스트';
-                                else typeLabel = '범주형'; // 기본값
+                                // Format categories: "1=Label1, 2=Label2"
+                                const categoryStr = (item.labels || [])
+                                    .map(l => `${l.code}=${l.label}`)
+                                    .join(', ');
 
                                 return {
-                                    id: item.id || item.cQuestionVariable,
-                                    sysName: item.cQuestionVariable || item.name || '',
-                                    name: item.cQuestionVariable || item.name || '',
+                                    id: item.id,
+                                    sysName: item.cQuestionVariable || '',
+                                    name: item.cQuestionVariable || '',
                                     label: item.label || '',
-                                    category: item.info ? item.info.map(i => `{${i.value};${i.label}}`).join('') : '',
-                                    logic: '',
-                                    count: '',
-                                    type: typeLabel
+                                    type: item.type || 'Single',
+                                    startPos: item.startPos || 0,
+                                    valLen: item.codeLen || 0,
+                                    valCnt: item.optCount || 0,
+                                    totalLen: item.totalLen || 0,
+                                    etcOpen: item.openRule || '',
+                                    logic: item.logicCheck || '',
+                                    spssName: item.spssName || '',
+                                    decimal: item.decimalPlaces || 0,
+                                    memo: item.memo || '',
+                                    multiValChange: !!item.multiChange,
+                                    minQuestions: item.minAnswer || 0,
+                                    excludeOpenMerge: !!item.noOpenMerge,
+                                    verificationVar: !!item.isValid,
+                                    excludeOutput: !!item.noOutput,
+                                    category: categoryStr,
+                                    labels: item.labels || []
                                 };
                             });
                             setVariables(transformedData);
@@ -149,16 +375,6 @@ const MapManagementPage = () => {
         setPageSize(event.page.take);
     };
 
-    const [columns, setColumns] = useState([
-        { field: 'sysName', title: '시스템 맵', show: true, width: '150px' },
-        { field: 'name', title: '맵 이름', show: true, width: '150px' },
-        { field: 'label', title: '맵', show: true, minWidth: 200 },
-        { field: 'category', title: '보기', show: true, minWidth: 250 },
-        { field: 'logic', title: '로직', show: true, width: '200px' },
-        { field: 'count', title: '카운트 (값/로직/오류)', show: true, width: '180px' },
-        { field: 'type', title: '타입', show: true, width: '150px' }
-    ]);
-
     const handleCategorySave = (id, newCategoryStr) => {
         setVariables(variables.map(v => v.id === id ? { ...v, category: newCategoryStr } : v));
         SetEditingCategoryPopupOpen(null);
@@ -167,125 +383,14 @@ const MapManagementPage = () => {
     const columnMenu = (props) => (
         <ExcelColumnMenu
             {...props}
-            columns={columns}
-            onColumnsChange={setColumns}
             filter={filter}
             onFilterChange={setFilter}
             onSortChange={setSort}
         />
     );
 
-    const InputCell = (props) => {
-        const textareaRef = useRef(null);
-
-        const adjustHeight = () => {
-            if (textareaRef.current) {
-                textareaRef.current.style.height = "auto";
-                textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
-            }
-        };
-
-        useEffect(() => {
-            adjustHeight();
-        }, [props.dataItem[props.field]]);
-
-        const handleBlur = (e) => {
-            const newValue = e.target.value;
-            // Only update if value changed to avoid unnecessary re-renders
-            if (props.dataItem[props.field] !== newValue) {
-                setVariables(prev => prev.map(v =>
-                    v.id === props.dataItem.id ? { ...v, [props.field]: newValue } : v
-                ));
-            }
-        };
-
-        return (
-            <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
-                <textarea
-                    ref={textareaRef}
-                    defaultValue={props.dataItem[props.field]}
-                    className="variable-input"
-                    rows={1}
-                    onInput={adjustHeight}
-                    onBlur={handleBlur}
-                />
-            </td>
-        );
-    };
-
-    const CategoryCell = (props) => {
-        return (
-            <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
-                <div className="category-cell-container">
-                    <div className="category-cell-content">
-                        {props.dataItem.category}
-                    </div>
-                    <button
-                        onClick={() => SetEditingCategoryPopupOpen(props.dataItem)}
-                        className="category-edit-btn"
-                    >
-                        변경
-                    </button>
-                </div>
-            </td>
-        );
-    };
-
-    const TypeCell = (props) => {
-        const handleChange = (e) => {
-            const newType = e.target.value;
-            setVariables(variables.map(v => v.id === props.dataItem.id ? { ...v, type: newType } : v));
-        };
-
-        return (
-            <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
-                <DropDownList
-                    data={["범주형", "연속형", "텍스트"]}
-                    value={props.dataItem.type}
-                    onChange={handleChange}
-                    style={{ width: '100%' }}
-                />
-            </td>
-        );
-    };
-
-    const CountCell = (props) => {
-        return (
-            <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
-                <div className="count-cell">
-                    {props.dataItem.count}
-                </div>
-            </td>
-        );
-    };
-
-    const ReadOnlyCell = (props) => {
-        return (
-            <td style={{ ...props.style, verticalAlign: 'middle' }} className={props.className}>
-                <div className="variable-text-readonly">
-                    {props.dataItem[props.field]}
-                </div>
-            </td>
-        );
-    };
-
-    const getCell = (field) => {
-        switch (field) {
-            case 'sysName':
-                return ReadOnlyCell;
-            case 'name':
-            case 'label':
-            case 'logic':
-                return InputCell;
-            case 'category':
-                return CategoryCell;
-            case 'type':
-                return TypeCell;
-            case 'count':
-                return CountCell;
-            default:
-                return null;
-        }
+    const handleDeleteVariable = (id) => {
+        setVariables(prev => prev.filter(v => v.id !== id));
     };
 
     const handleAddVariable = () => {
@@ -315,79 +420,238 @@ const MapManagementPage = () => {
     };
 
     const rowRender = (trElement, props) => {
-        const isNew = props.dataItem.isNew;
+        const { dataItem } = props;
+        const isEditing = dataItem.id === editingRowId;
+        const isNew = dataItem.isNew;
+
         const trProps = {
             ...trElement.props,
+            className: `${trElement.props.className} ${isEditing ? 'editing-row' : ''} ${isNew ? 'new-row' : ''}`.trim(),
             style: {
                 ...trElement.props.style,
-                backgroundColor: isNew ? '#e6f4ff' : trElement.props.style?.backgroundColor,
+                // Still keep this for immediate JS-side override
+                borderLeft: isEditing ? '3px solid var(--dm-primary)' : trElement.props.style?.borderLeft,
             }
         };
         return React.cloneElement(trElement, { ...trProps }, trElement.props.children);
     };
 
+    const [activeTab, setActiveTab] = useState('mapping'); // 'mapping' | 'category'
+    const [isDetailed, setIsDetailed] = useState(false);
+    const [selectedVariable, setSelectedVariable] = useState(null);
+    const [editingRowId, setEditingRowId] = useState(null);
 
+    // Initial variable selection for category tab
+    useEffect(() => {
+        if (activeTab === 'category' && variables.length > 0 && !selectedVariable) {
+            setSelectedVariable(variables[0]);
+        }
+    }, [activeTab, variables]);
+
+    const handleSave = () => {
+        modal.showConfirm("알림", "변경사항을 저장하시겠습니까?", () => {
+            alert('저장되었습니다.');
+        });
+    };
+
+    // Derived columns for MAP 구성 based on isDetailed
+    const mappingColumns = isDetailed
+        ? [
+            { field: 'add', title: '+', width: '50px' },
+            { field: 'id', title: '#', width: '50px' },
+            { field: 'sysName', title: '변수명', width: '120px' },
+            { field: 'logic', title: '로직체크', width: '120px' },
+            { field: 'label', title: '레이블', width: '250px' },
+            { field: 'decimal', title: '소수점\n자리수', width: '100px', headerCell: multilineHeader },
+            { field: 'spssName', title: 'SPSS\n변수명', width: '120px', headerCell: multilineHeader },
+            { field: 'type', title: '변수 유형', width: '120px' },
+            { field: 'memo', title: '메모', minWidth: 200 },
+            { field: 'multiValChange', title: '멀티값\n변경', width: '100px' },
+            { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '100px' },
+            { field: 'verificationVar', title: '검증문항', width: '100px' },
+            { field: 'excludeOutput', title: '출력제외', width: '100px' },
+            { field: 'delete', title: '삭제', width: '80px' }
+        ]
+        : [
+            { field: 'add', title: '+', width: '45px' },
+            { field: 'id', title: '#', width: '50px' },
+            { field: 'sysName', title: '변수명', width: '85px' },
+            { field: 'startPos', title: '시작\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'valLen', title: '보기\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'valCnt', title: '보기\n갯수', width: '85px', headerCell: multilineHeader },
+            { field: 'totalLen', title: '총\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'etcOpen', title: '기타\n오픈정의', width: '100px', headerCell: multilineHeader },
+            { field: 'logic', title: '로직\n체크', width: '95px' },
+            { field: 'label', title: '레이블', minWidth: 50 },
+            { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
+            { field: 'type', title: '변수\n유형', width: '95px' },
+            { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
+            { field: 'memo', title: '메모', minWidth: 50 },
+            { field: 'delete', title: '삭제', width: '80px' }
+        ];
 
     return (
-        <div className="variable-page" data-theme="data-management">
-            <DataHeader
-                title="맵 관리"
-                addButtonLabel="맵 추가"
-                onAdd={handleAddVariable}
-                saveButtonLabel="변경사항 저장"
-                onSave={() => alert('변경사항 저장 클릭')}
-                saveButtonDisabled={!hasChanges}
-            />
-
-            <div className="variable-page-content">
-                <div className="variable-page-card">
-                    <div className="cmn_grid singlehead">
-                        <KendoGrid
-                            parentProps={{
-                                data: variables,
-                                dataItemKey: "id",
-                                sort,
-                                filter,
-                                sortChange: ({ sort }) => setSort(sort),
-                                filterChange: ({ filter }) => setFilter(filter),
-                                height: "100%",
-                                rowRender: rowRender,
-                                pageable: true,
-                                total: variables.length,
-                                skip: skip,
-                                pageSize: pageSize,
-                                onPageChange: pageChange
-
-                            }}
-                        >
-                            {columns.filter(c => c.show).map((c) => (
-                                <Column
-                                    key={c.field}
-                                    field={c.field}
-                                    title={c.title}
-                                    width={c.width}
-                                    minWidth={c.minWidth}
-                                    columnMenu={columnMenu}
-                                    cell={getCell(c.field)}
-                                    headerClassName="k-header-center variable-column-header"
-                                />
-                            ))}
-                        </KendoGrid>
-                    </div>
-                </div>
-            </div>
-
-            {/* Category Edit Modal */}
-            {editingCategoryPopupOpen && (
-                <MapManagementPageModal
-                    variable={editingCategoryPopupOpen}
-                    onClose={() => SetEditingCategoryPopupOpen(null)}
-                    onSave={handleCategorySave}
+        <MapManagementContext.Provider value={{
+            variables,
+            setVariables,
+            editingRowId,
+            setEditingRowId,
+            SetEditingCategoryPopupOpen,
+            onAdd: handleAddVariable,
+            onDelete: handleDeleteVariable
+        }}>
+            <div className="variable-page" data-theme="data-management">
+                <DataHeader
+                    title="맵 관리"
+                    addButtonLabel={activeTab === 'mapping' ? "맵 추가" : "보기 추가"}
+                    onAdd={activeTab === 'mapping' ? handleAddVariable : () => alert('보기 추가')}
+                    saveButtonLabel="변경사항 저장"
+                    onSave={handleSave}
+                    saveButtonDisabled={!hasChanges && activeTab === 'mapping'}
                 />
-            )}
-        </div>
+
+                <div className="variable-page-content">
+                    <div className="tab-container">
+                        <button
+                            className={`tab-btn ${activeTab === 'mapping' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('mapping')}
+                        >
+                            MAP 구성
+                        </button>
+                        <button
+                            className={`tab-btn ${activeTab === 'category' ? 'active' : ''}`}
+                            onClick={() => setActiveTab('category')}
+                        >
+                            보기 레이블
+                        </button>
+                    </div>
+
+                    {activeTab === 'mapping' ? (
+                        <>
+                            <div className="map-subheader">
+                                <div className="map-stats">
+                                    <span className="stat-item">전체 <strong>{variables.length}</strong> 건</span>
+                                </div>
+                                <div className="map-controls">
+                                    <span className="grid-guide"><span className="guide-icon">💡</span> 셀 클릭 편집 | '+': 행 추가 | 'Trash': 삭제 | 가로/세로 스크롤 시 고정</span>
+                                    <div className="toggle-wrapper">
+                                        <span className="toggle-label">상세 설정</span>
+                                        <label className="switch">
+                                            <input type="checkbox" checked={isDetailed} onChange={() => setIsDetailed(!isDetailed)} />
+                                            <span className="slider round"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="variable-page-card">
+                                <div className="cmn_grid singlehead">
+                                    <KendoGrid
+                                        parentProps={{
+                                            data: variables,
+                                            dataItemKey: "id",
+                                            sort,
+                                            filter,
+                                            sortChange: ({ sort }) => setSort(sort),
+                                            filterChange: ({ filter }) => setFilter(filter),
+                                            height: "100%",
+                                            rowRender: rowRender,
+                                            pageable: true,
+                                            total: variables.length,
+                                            skip: skip,
+                                            pageSize: pageSize,
+                                            onPageChange: pageChange,
+                                            onRowClick: (e) => setEditingRowId(e.dataItem.id)
+                                        }}
+                                    >
+                                        {mappingColumns.map((c) => (
+                                            <Column
+                                                key={c.field}
+                                                field={c.field}
+                                                title={c.title}
+                                                width={c.width}
+                                                minWidth={c.minWidth}
+                                                columnMenu={columnMenu}
+                                                cell={getCell(c.field)}
+                                                headerClassName="k-header-center variable-column-header"
+                                            />
+                                        ))}
+                                    </KendoGrid>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="category-label-layout">
+                            <div className="variable-sidebar">
+                                <div className="sidebar-header-box">
+                                    <h3>변수 목록</h3>
+                                    <div className="search-box">
+                                        <input type="text" placeholder="변수 검색..." />
+                                    </div>
+                                </div>
+                                <div className="variable-list">
+                                    {variables.map(v => (
+                                        <div
+                                            key={v.id}
+                                            className={`variable-item ${selectedVariable?.id === v.id ? 'active' : ''}`}
+                                            onClick={() => setSelectedVariable(v)}
+                                        >
+                                            <div className="v-name">{v.sysName}</div>
+                                            <div className="v-label">{v.label || '레이블 없음'}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="category-detail-content">
+                                <div className="detail-header">
+                                    <div className="v-info-title">
+                                        /{selectedVariable?.sysName} <span className="v-info-label">{selectedVariable?.label}</span>
+                                    </div>
+                                    <button className="add-value-btn" onClick={() => SetEditingCategoryPopupOpen(selectedVariable)}>
+                                        <Plus size={14} /> 값 추가
+                                    </button>
+                                </div>
+                                <div className="category-grid-container">
+                                    <div className="cmn_grid singlehead">
+                                        {/* Mock Category Grid */}
+                                        <KendoGrid
+                                            parentProps={{
+                                                data: selectedVariable?.labels?.map((l, idx) => ({
+                                                    ...l,
+                                                    rowNo: idx + 1
+                                                })) || [],
+                                                height: "100%",
+                                            }}
+                                        >
+                                            <Column field="rowNo" title="#" width="60px" />
+                                            <Column field="code" title="코드" width="100px" />
+                                            <Column field="label" title="레이블" />
+                                            <Column field="delete" title="삭제" width="80px" cell={(props) => (
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <button style={{ border: 'none', background: 'transparent' }}>
+                                                        <Trash2 size={16} color="#64748b" />
+                                                    </button>
+                                                </td>
+                                            )} />
+                                        </KendoGrid>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Category Edit Modal */}
+                {editingCategoryPopupOpen && (
+                    <MapManagementPageModal
+                        variable={editingCategoryPopupOpen}
+                        onClose={() => SetEditingCategoryPopupOpen(null)}
+                        onSave={handleCategorySave}
+                    />
+                )}
+            </div>
+        </MapManagementContext.Provider>
     );
 };
 
 export default MapManagementPage;
-
