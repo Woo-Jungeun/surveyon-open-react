@@ -259,6 +259,7 @@ const Sidebar = ({
                                             <li key={i} className="nav-item">
                                                 <div
                                                     className={`nav-link ${item.isPending ? "pending" : ""}`}
+                                                    title={isCollapsed ? item.label : undefined}
                                                     onClick={(e) => {
                                                         if (item.isPending) {
                                                             e.preventDefault();
@@ -282,6 +283,7 @@ const Sidebar = ({
                                             <NavLink
                                                 to={item.path}
                                                 end={item.end}
+                                                title={isCollapsed ? item.label : undefined}
                                                 className={({ isActive }) => {
                                                     const finalActive = item.isActive ? item.isActive(location.pathname) : isActive;
                                                     return `nav-link ${finalActive ? "active" : ""} ${item.isPending ? "pending" : ""}`;
