@@ -677,28 +677,28 @@ input:checked+.slider:before {
     color: #cbd5e1;
 }
 
-/* Replace Kendo default orange/blue focus color with Data Management green theme globally for popups too */
+/* Replace Kendo default orange/blue focus color with Data Management green theme */
 .variable-page .k-dropdownlist.k-focus,
 .variable-page .k-dropdownlist:focus-within,
 .variable-page .k-picker.k-focus,
 .variable-page .k-picker:focus-within,
 .variable-page .k-dropdownlist:focus,
-.k-input-solid:focus,
-.k-input-solid:focus-within,
-.k-input-solid.k-focus {
+[data-theme="data-management"] .k-input-solid:focus,
+[data-theme="data-management"] .k-input-solid:focus-within,
+[data-theme="data-management"] .k-input-solid.k-focus {
     border-color: var(--dm-primary) !important;
     box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
 }
 
-/* Kendo Custom Checkbox for Data Management (Global to catch popups and cells) */
-.k-checkbox:checked,
-.k-checkbox:checked:focus {
+/* Kendo Custom Checkbox for Data Management */
+[data-theme="data-management"] .k-checkbox:checked,
+[data-theme="data-management"] .k-checkbox:checked:focus {
     background-color: var(--dm-primary) !important;
     border-color: var(--dm-primary) !important;
 }
 
-.k-checkbox:focus,
-.k-checkbox.k-focus {
+[data-theme="data-management"] .k-checkbox:focus,
+[data-theme="data-management"] .k-checkbox.k-focus {
     box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
     border-color: var(--dm-primary) !important;
 }
