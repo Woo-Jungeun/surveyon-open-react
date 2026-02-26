@@ -121,10 +121,12 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
     // 부모(OptionSettingBody.jsx) 에게 노출
     useImperativeHandle(ref, () => ({
-        saveChanges: () => saveChangesRef.current(),   // 부모 저장 버튼이 호출
-        reload: () => {
+        saveChanges: (skipReload) => saveChangesRef.current(skipReload),   // 부모 저장 버튼이 호출
+        reload: async () => {
             gridRef.current?.resetAutoSelection?.(); // 재조회 시 선택 로직 초기화
-            latestCtxRef.current?.handleSearch?.();
+            if (latestCtxRef.current?.handleSearch) {
+                await latestCtxRef.current.handleSearch();
+            }
         },
         applyLv3To: (targets, opt) => gridRef.current?.applyLv3To?.(targets, opt),
         resetAutoSelection: () => gridRef.current?.resetAutoSelection?.(),
@@ -1125,7 +1127,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
         useEffect(() => { onSavedRef.current = onSaved; }, [onSaved]);
 
         /* 저장: API 호출 */
-        const saveChanges = useCallback(async () => {
+        const saveChanges = useCallback(async (skipReload) => {
             // selected → recheckyn 반영 + 페이로드 생성
             const payload = buildSavePayload(rows.filter(r => r.__pendingDelete !== true), {   // 실제 저장 데이터만
                 user: auth?.user?.userId || "",
@@ -1155,7 +1157,9 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                         const kept = (prev.data || []).filter(r => r.__pendingDelete !== true);
                         return { ...prev, data: kept };
                     });
-                    await handleSearch();                              // 재조회 대기 (in 조회 완료)
+                    if (skipReload !== true) {
+                        await handleSearch();                              // 재조회 대기 (in 조회 완료)
+                    }
                     return true;
                 } else if (res?.success === "763") {
                     modal.showAlert("에러", "응답자데이터와 보기코드가 매칭되지 않습니다. \n응답자 데이터분석시 참고해주세요."); //오류 팝업 표출

@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, onDuplicateRemoveDateLoaded, project_lock, onAnalysisComplete }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, onDuplicateRemoveDateLoaded, project_lock, onAnalysisComplete, onFetchIn, onSaveIn }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -96,6 +96,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
     const { optionEditData, optionSaveData, optionAnalysisStart, optionAnalysisStatus, optionStatus } = OptionSettingApi();
     const activeJobRef = useRef(null);                  // ← 현재 진행중 job 기억
+    const activeTypeRef = useRef(null);
     const nextTabRef = useRef(null);    //탭 이동
     // 유틸: 짧게 기다리기
     const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -127,34 +128,45 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     {
                         title: "확인",
                         click: async () => {
-                            // 1. 분석 완료 후 저장 API (gb: 'in' 저장 후 조회 등)
-                            try {
-                                await onAnalysisComplete?.();
-                            } catch (e) {
-                                console.error("[OptionSettingInfo] onAnalysisComplete error:", e);
+                            const curType = activeTypeRef.current;
+                            if (curType === "response" || curType === "recallResponse") {
+                                try {
+                                    // 1. in 조회
+                                    await onFetchIn?.();
+
+                                    // 2. popupcheck 조회
+                                    await optionEditData.mutateAsync({
+                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
+                                    });
+
+                                    // 3. lb 조회
+                                    await fetchLv3Options?.();
+
+                                    // 4. 앞의 조회가 모두 성공하면 in 저장 (재조회 스킵 true)
+                                    await onSaveIn?.(true);
+                                } catch (e) {
+                                    console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
+                                    // 하나라도 실패하면 저장을 진행하지 않거나 별도 처리가 가능
+                                }
+                            } else {
+                                // 번역, 보기분석 등은 in 저장 없이 조회만 수행
+                                try {
+                                    // 1. in 조회
+                                    await onFetchIn?.();
+
+                                    // 2. popupcheck 조회
+                                    await optionEditData.mutateAsync({
+                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
+                                    });
+
+                                    // 3. lb 조회
+                                    await fetchLv3Options?.();
+                                } catch (e) {
+                                    console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
+                                }
                             }
 
-                            // 2. 상태 확인 API (gb: 'popupcheck')
-                            try {
-                                await optionEditData.mutateAsync({
-                                    params: {
-                                        user: auth?.user?.userId || "",
-                                        projectnum, qnum,
-                                        gb: "popupcheck",
-                                        checkyn: 1
-                                    },
-                                });
-                            } catch {
-                            }
-
-                            // 3. 소분류 리스트 재조회 API (lb)
-                            try {
-                                await fetchLv3Options?.();
-                            } catch (err) {
-                                console.warn("lb 재조회 실패", err);
-                            }
-
-                            // 4. 탭 이동
+                            // 탭 이동
                             if (nextTabRef.current) {
                                 onNavigateTab?.(nextTabRef.current);
                                 nextTabRef.current = null;
@@ -164,7 +176,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                 ],
             });
         }
-    }, [modal, onNavigateTab, setAnalyzing, optionEditData, auth, projectnum, qnum, fetchLv3Options, onAnalysisComplete]);
+    }, [modal, onNavigateTab, setAnalyzing, optionEditData, auth, projectnum, qnum, fetchLv3Options, onAnalysisComplete, onFetchIn, onSaveIn]);
 
 
     // status 호출용
@@ -638,6 +650,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
 
         // 새 작업 시작 시 초기화 (검증 다 통과한 후)
         completedOnceRef.current = false;
+        activeTypeRef.current = type;
         lastStableRef.current = 0;
         lineCountRef.current = getLogMetrics(logTextRef.current).lines;
 

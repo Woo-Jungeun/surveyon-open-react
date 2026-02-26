@@ -727,6 +727,12 @@ const OptionSettingBody = () => {
                 // 분석이 다 완료되고서 분석이 완료되었습니다 팝업 확인 누르면 Tab1의 저장 API 실행 (이후 popupcheck 등 타기 위함)
                 await tab1Ref.current?.saveChanges?.();
               }}
+              onFetchIn={async () => {
+                try { await tab1Ref.current?.reload?.(); } catch (e) { }
+              }}
+              onSaveIn={async (skipReload) => {
+                try { await tab1Ref.current?.saveChanges?.(skipReload); } catch (e) { }
+              }}
             />
           </div>
 
