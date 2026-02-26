@@ -238,17 +238,17 @@ const CrossTabPage = () => {
 
                                 // Apply config from API result
                                 if (tData.config) {
-                                    // x_info -> 세로축 (Rows)
+                                    // x_info -> 가로축 (Cols)
                                     if (tData.config.x_info) {
                                         const xIds = tData.config.x_info;
-                                        const mappedRows = xIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
-                                        setRowVars(mappedRows);
+                                        const mappedCols = xIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        setColVars(mappedCols);
                                     }
-                                    // y_info -> 가로축 (Cols)
+                                    // y_info -> 세로축 (Rows)
                                     if (tData.config.y_info) {
                                         const yIds = tData.config.y_info;
-                                        const mappedCols = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
-                                        setColVars(mappedCols);
+                                        const mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        setRowVars(mappedRows);
                                     }
                                     // Filter Expression
                                     if (tData.config.filter_expression !== undefined) {
@@ -729,17 +729,17 @@ const CrossTabPage = () => {
 
                     // Apply config from API result
                     if (data.config) {
-                        // x_info -> 세로축 (Rows)
+                        // x_info -> 가로축 (Cols)
                         if (data.config.x_info) {
                             const xIds = data.config.x_info;
-                            const mappedRows = xIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
-                            setRowVars(mappedRows);
+                            const mappedCols = xIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                            setColVars(mappedCols);
                         }
-                        // y_info -> 가로축 (Cols)
+                        // y_info -> 세로축 (Rows)
                         if (data.config.y_info) {
                             const yIds = data.config.y_info;
-                            const mappedCols = yIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
-                            setColVars(mappedCols);
+                            const mappedRows = yIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                            setRowVars(mappedRows);
                         }
                         // Filter Expression
                         if (data.config.filter_expression !== undefined) {
@@ -846,8 +846,8 @@ const CrossTabPage = () => {
                             table: {
                                 id: item.id,
                                 name: item.name || "Untitled Table",
-                                x_info: mappedRowsRun.map(v => v.id || v.name),
-                                y_info: mappedColsRun.map(v => v.id || v.name)
+                                x_info: mappedColsRun.map(v => v.id || v.name),
+                                y_info: mappedRowsRun.map(v => v.id || v.name)
                             }
                         };
 
@@ -992,8 +992,8 @@ const CrossTabPage = () => {
                 pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: rowVars.map(v => v.name),
-                    y_info: colVars.map(v => v.name),
+                    x_info: colVars.map(v => v.name),
+                    y_info: rowVars.map(v => v.name),
                     filter_expression: filterExpression,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight
                 }
@@ -1103,8 +1103,8 @@ const CrossTabPage = () => {
                 pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: rowVars.map(v => v.id),
-                    y_info: colVars.map(v => v.id),
+                    x_info: colVars.map(v => v.id),
+                    y_info: rowVars.map(v => v.id),
                     filter_expression: filterExpression,
                     weight_col: weightId
                 }
@@ -1148,8 +1148,8 @@ const CrossTabPage = () => {
                     table: {
                         id: selectedTableId,
                         name: tableName || "Untitled Table",
-                        x_info: rowVars.map(v => v.id || v.name),
-                        y_info: colVars.map(v => v.id || v.name)
+                        x_info: colVars.map(v => v.id || v.name),
+                        y_info: rowVars.map(v => v.id || v.name)
                     }
                 };
 
@@ -1260,8 +1260,8 @@ const CrossTabPage = () => {
             table: {
                 id: selectedTableId,
                 name: tableName || "Untitled Table",
-                x_info: rowVars.map(v => v.id || v.name),
-                y_info: colVars.map(v => v.id || v.name)
+                x_info: colVars.map(v => v.id || v.name),
+                y_info: rowVars.map(v => v.id || v.name)
             }
         };
 
