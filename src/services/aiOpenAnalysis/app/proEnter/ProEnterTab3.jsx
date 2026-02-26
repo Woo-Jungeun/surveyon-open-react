@@ -101,8 +101,6 @@ const ProEnterTab3 = (props) => {
                             sessionStorage.setItem("merge_pn_text", "");
                             if (props.onSuccess) {
                                 props.onSuccess();
-                            } else {
-                                navigate("/project"); //프로젝트 목록 페이지로 이동
                             }
                         }
                     }],   ////문항 목록 페이지로 이동
