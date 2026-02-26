@@ -1,0 +1,149 @@
+/* Data Management Project Global Theme */
+
+:root {
+    /* Primary Colors - Green Theme */
+    --dm-primary: #10b981;
+    --dm-primary-hover: #059669;
+    --dm-primary-light: #ecfdf5;
+    --dm-primary-border: #a7f3d0;
+
+    /* Neutral Colors */
+    --dm-bg: #f8fafc;
+    --dm-surface: #ffffff;
+    --dm-text-main: #1e293b;
+    --dm-text-sub: #64748b;
+    --dm-border: #e2e8f0;
+
+    /* Shadows */
+    --dm-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --dm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --dm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Global Layout Background */
+[data-theme="data-management"] {
+    background-color: var(--dm-bg);
+    color: var(--dm-text-main);
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+}
+
+/* Card Style Enhancement */
+[data-theme="data-management"] .variable-page-card {
+    background: var(--dm-surface);
+    border-radius: 12px;
+    box-shadow: var(--dm-shadow);
+    border: 1px solid var(--dm-border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Kendo Grid Customization for Data Management */
+[data-theme="data-management"] .k-grid {
+    border: none;
+    font-size: 13px;
+    color: var(--dm-text-main);
+}
+
+/* Grid Header */
+[data-theme="data-management"] .k-grid-header {
+    background-color: var(--dm-primary-light);
+    border-bottom: 2px solid var(--dm-primary-border);
+}
+
+[data-theme="data-management"] .k-grid-header .k-header {
+    background-color: transparent;
+    color: var(--dm-text-main);
+    font-weight: 700;
+    border-color: var(--dm-border);
+    padding: 12px 8px;
+    text-align: center;
+}
+
+/* Grid Body */
+[data-theme="data-management"] .k-grid-content tr:not(.k-grouping-row):hover {
+    background-color: #f1f5f9 !important;
+}
+
+[data-theme="data-management"] .k-grid-content td {
+    border-color: var(--dm-border);
+    padding: 10px 12px;
+    vertical-align: middle;
+}
+
+[data-theme="data-management"] .k-grid-content tr.k-alt {
+    background-color: #fcfcfc;
+}
+
+/* Grid Selection */
+[data-theme="data-management"] .k-grid td.k-state-selected,
+[data-theme="data-management"] .k-grid tr.k-state-selected>td {
+    background-color: var(--dm-primary-light) !important;
+    color: var(--dm-text-main);
+}
+
+/* Input Fields Enhancement */
+[data-theme="data-management"] input[type="text"],
+[data-theme="data-management"] select,
+[data-theme="data-management"] .k-dropdown {
+    border: 1px solid var(--dm-border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    transition: all 0.2s;
+    background-color: #fff;
+}
+
+[data-theme="data-management"] input[type="text"]:focus,
+[data-theme="data-management"] select:focus,
+[data-theme="data-management"] .k-dropdown:focus-within {
+    border-color: var(--dm-primary);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    outline: none;
+}
+
+/* Buttons Enhancement */
+[data-theme="data-management"] button {
+    transition: all 0.2s;
+}
+
+[data-theme="data-management"] button:active {
+    transform: translateY(1px);
+}
+
+/* Data Header Enhancement */
+[data-theme="data-management"] .data-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--dm-border);
+}
+
+[data-theme="data-management"] .data-header h2 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--dm-text-main);
+    letter-spacing: -0.5px;
+}
+
+/* Scrollbar Styling */
+[data-theme="data-management"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="data-management"] ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+[data-theme="data-management"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+[data-theme="data-management"] ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Global Trash Icon Style */
+[data-theme="data-management"] .lucide-trash2,
+[data-theme="data-management"] .lucide-trash-2 {
+    stroke: #64748b !important;
+    color: #64748b !important;
+}

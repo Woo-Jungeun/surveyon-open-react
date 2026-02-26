@@ -9,6 +9,7 @@ import "@/common/utils/tooltip.js";
 
 import AiOpenAnalysisRoutes from "@/services/aiOpenAnalysis";
 import DataStatusRoutes from "@/services/dataStatus";
+import DataManagementRoutes from "@/services/dataManagement";
 import ManualPage from "@/services/aiOpenAnalysis/app/ManualPage";
 import ManualEditor from "@/services/aiOpenAnalysis/app/ManualEditor";
 import ExcelGuidePage from "@/services/proRegister/ExcelGuidePage";
@@ -55,6 +56,7 @@ function App() {
               <Route path="/project/*" element={<AiOpenAnalysisRoutes />} />
               <Route path="/ai_open_analysis/*" element={<AiOpenAnalysisRoutes />} />
               <Route path="/data_status/*" element={<DataStatusRoutes />} />
+              <Route path="/data_management/*" element={<DataManagementRoutes />} />
             </>
           ) : (
             // 로그인 안 되어 있는데 내부 메뉴 접근 시 → /login 으로 이동
@@ -62,6 +64,7 @@ function App() {
               <Route path="/project/*" element={<Navigate to="/login" replace />} />
               <Route path="/ai_open_analysis/*" element={<Navigate to="/login" replace />} />
               <Route path="/data_status/*" element={<Navigate to="/login" replace />} />
+              <Route path="/data_management/*" element={<Navigate to="/login" replace />} />
             </>
           )}
 
