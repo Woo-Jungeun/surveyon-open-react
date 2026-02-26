@@ -19,7 +19,7 @@ const ProEnterTab1 = (props) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const navigate = useNavigate();
-    const { persistedPrefs, onPrefsChange } = props;
+    const { persistedPrefs, onPrefsChange, onSuccess } = props;
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
     const location = useLocation();
@@ -104,8 +104,8 @@ const ProEnterTab1 = (props) => {
                                 sessionStorage.setItem("projectpof", "");
                                 sessionStorage.setItem("merge_pn", "");
                                 sessionStorage.setItem("merge_pn_text", "");
-                                if (props.onSuccess) {
-                                    props.onSuccess();
+                                if (onSuccess) {
+                                    onSuccess();
                                 }
                             }
                         }],
