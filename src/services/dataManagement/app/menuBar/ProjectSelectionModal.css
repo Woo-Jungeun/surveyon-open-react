@@ -446,6 +446,38 @@ body:has(.ps-modal-overlay) .k-popup.k-list-container {
     border-color: #7C3AED !important;
 }
 
+/* ExcelColumnMenu buttons / inputs inside global Popup (when modal is open) */
+body:has(.ps-modal-overlay) .k-popup .k-button-solid-primary,
+body:has(.ps-modal-overlay) .k-animation-container .k-button-solid-primary {
+    background-color: #7C3AED !important;
+    border-color: #7C3AED !important;
+}
+
+body:has(.ps-modal-overlay) .k-popup .k-button-solid-primary:hover,
+body:has(.ps-modal-overlay) .k-animation-container .k-button-solid-primary:hover {
+    background-color: #6D28D9 !important;
+    border-color: #6D28D9 !important;
+}
+
+body:has(.ps-modal-overlay) .k-popup .k-input,
+body:has(.ps-modal-overlay) .k-popup .k-input-solid,
+body:has(.ps-modal-overlay) .k-animation-container .k-input,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-solid {
+    border-color: #7C3AED !important;
+}
+
+body:has(.ps-modal-overlay) .k-popup .k-input:focus,
+body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus,
+body:has(.ps-modal-overlay) .k-popup .k-input:focus-within,
+body:has(.ps-modal-overlay) .k-popup .k-input-solid:focus-within,
+body:has(.ps-modal-overlay) .k-animation-container .k-input:focus,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus,
+body:has(.ps-modal-overlay) .k-animation-container .k-input:focus-within,
+body:has(.ps-modal-overlay) .k-animation-container .k-input-solid:focus-within {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
 /* Grid/Data Container Border */
 .ps-modal-container .ps-grid-wrapper,
 .ps-modal-container .ps-data-container,
