@@ -83,7 +83,13 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
     { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/setting/variable", highlight: true },
-    { label: "데이터관리", icon: <Database size={16} />, path: "/data_status", isDisabled: true },
+    {
+      label: "데이터관리",
+      icon: <Database size={16} />,
+      path: "/data_management/setting/variable",
+      onClick: () => { navigate("/data_management/setting/variable"); }
+      , isDisabled: true
+    },
     {
       label: "AI오픈분석",
       icon: <BrainCircuit size={16} />,
