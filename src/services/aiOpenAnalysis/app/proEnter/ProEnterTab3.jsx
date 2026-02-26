@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
  * @author jewoo
  * @since 2025-09-24<br />
  */
-const ProEnterTab3 = () => {
+const ProEnterTab3 = (props) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const navigate = useNavigate();
@@ -74,7 +74,7 @@ const ProEnterTab3 = () => {
         if (!nameTrim) errs.push("조사명을 입력해 주세요.");
 
         if (errs.length) {
-            modal.showErrorAlert("알림", errs.join("\n"));
+            modal.showErrorAlert("알림", errs.join("\n"), { themeClass: "purple-theme" });
             return;
         }
 
@@ -91,6 +91,7 @@ const ProEnterTab3 = () => {
             const res = await proEnterSaveData.mutateAsync(payload);
             if (res?.success === "777") {
                 modal.showConfirm("알림", "프로젝트가 등록되었습니다.", {
+                    themeClass: "purple-theme",
                     btns: [{
                         title: "확인", click: () => {
                             sessionStorage.setItem("projectnum", "");
@@ -108,12 +109,12 @@ const ProEnterTab3 = () => {
                 });
             } else if (res?.success === "765") {
                 // 중복
-                modal.showErrorAlert("알림", "이미 등록된 프로젝트 입니다.");
+                modal.showErrorAlert("알림", "이미 등록된 프로젝트 입니다.", { themeClass: "purple-theme" });
             } else {
-                modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.");
+                modal.showErrorAlert("에러", "등록 중 오류가 발생했습니다.", { themeClass: "purple-theme" });
             }
         } catch (err) {
-            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.");
+            modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.", { themeClass: "purple-theme" });
         } finally {
             setLoading(false);
         }

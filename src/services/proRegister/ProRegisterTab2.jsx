@@ -18,7 +18,7 @@ import * as XLSX from "xlsx";
  * @author jewoo
  * @since 2025-10-15<br />
  */
-const ProRegisterTab2 = () => {
+const ProRegisterTab2 = (props) => {
   const auth = useSelector((store) => store.auth);
   const modal = useContext(modalContext);
   const navigate = useNavigate();
@@ -217,7 +217,15 @@ const ProRegisterTab2 = () => {
         const res = await proRegisterMutation.mutateAsync(payload);
         if (res?.success === "777") {
           modal.showConfirm("알림", "문항이 등록되었습니다.", {
-            btns: [{ title: "확인", click: () => navigate("/ai_open_analysis/pro_list") }],
+            btns: [{
+              title: "확인", click: () => {
+                if (props.onSuccess) {
+                  props.onSuccess();
+                } else {
+                  navigate("/ai_open_analysis/pro_list");
+                }
+              }
+            }],
           });
         } else if (res?.success === "768" || res?.success === "769") {
           let dupJson = res?.resultjson || {};

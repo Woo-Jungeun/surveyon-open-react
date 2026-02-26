@@ -28,7 +28,8 @@ function ModalProvider(props) {
         code: "",
         visibleOn: null,             // string | RegExp | (path)=>boolean | null
         autoCloseOnRouteChange: true,// 라우트 바뀌면 자동 닫기
-        zIndex: undefined            // 필요시 z-index 제어
+        zIndex: undefined,           // 필요시 z-index 제어
+        themeClass: undefined        // 테마 클래스 강제 적용용
     });
     const { pathname } = useLocation();
 
@@ -65,7 +66,8 @@ function ModalProvider(props) {
             width: 400,
             visibleOn: options?.visibleOn ?? null,
             autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-            zIndex: options?.zIndex ?? undefined
+            zIndex: options?.zIndex ?? undefined,
+            themeClass: options?.themeClass ?? undefined
         }));
     }
 
@@ -91,7 +93,8 @@ function ModalProvider(props) {
             code: status,
             visibleOn: options?.visibleOn ?? null,
             autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-            zIndex: options?.zIndex ?? undefined
+            zIndex: options?.zIndex ?? undefined,
+            themeClass: options?.themeClass ?? undefined
         }));
     }
 
@@ -144,7 +147,8 @@ function ModalProvider(props) {
             width: 400,
             visibleOn: options?.visibleOn ?? null,
             autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-            zIndex: options?.zIndex ?? undefined
+            zIndex: options?.zIndex ?? undefined,
+            themeClass: options?.themeClass ?? undefined
         }));
     }
 
@@ -183,7 +187,8 @@ function ModalProvider(props) {
                 width: 400,
                 visibleOn: options?.visibleOn ?? null,
                 autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-                zIndex: options?.zIndex ?? undefined
+                zIndex: options?.zIndex ?? undefined,
+                themeClass: options?.themeClass ?? undefined
             }));
         else
             setModal(prevState => ({
@@ -197,7 +202,8 @@ function ModalProvider(props) {
                 width: 400,
                 visibleOn: options?.visibleOn ?? null,
                 autoCloseOnRouteChange: options?.autoCloseOnRouteChange ?? true,
-                zIndex: options?.zIndex ?? undefined
+                zIndex: options?.zIndex ?? undefined,
+                themeClass: options?.themeClass ?? undefined
             }));
     }
 
@@ -220,7 +226,8 @@ function ModalProvider(props) {
             width: 400,
             visibleOn: options.visibleOn ?? btnOptions.visibleOn ?? null,
             autoCloseOnRouteChange: options.autoCloseOnRouteChange ?? btnOptions.autoCloseOnRouteChange ?? true,
-            zIndex: options.zIndex ?? btnOptions.zIndex ?? undefined
+            zIndex: options.zIndex ?? btnOptions.zIndex ?? undefined,
+            themeClass: options.themeClass ?? btnOptions.themeClass ?? undefined
         }));
     }
 
@@ -237,7 +244,8 @@ function ModalProvider(props) {
             width: isNaN(option && option.width) ? 400 : option.width,
             visibleOn: option?.visibleOn ?? null,
             autoCloseOnRouteChange: option?.autoCloseOnRouteChange ?? true,
-            zIndex: option?.zIndex ?? undefined
+            zIndex: option?.zIndex ?? undefined,
+            themeClass: option?.themeClass ?? undefined
         }));
     }
 
@@ -292,7 +300,8 @@ function ModalProvider(props) {
         return "purple-theme"; // 기본값
     };
 
-    const themeClass = getThemeClass(pathname);
+    const defaultThemeClass = getThemeClass(pathname);
+    const themeClass = modal.themeClass || defaultThemeClass;
 
     return (
         <modalContext.Provider value={{

@@ -89,8 +89,8 @@ const ProjectSelectionModal = ({ onClose, onSelect }) => {
                                 </button>
                             </div>
                             <div className="ps-content-wrapper sub-tab-content">
-                                {createSubTab === 'qmaster' && <ProEnterTab1 />}
-                                {createSubTab === 'new' && <ProEnterTab3 />}
+                                {createSubTab === 'qmaster' && <ProEnterTab1 onSuccess={() => setActiveTab('select')} />}
+                                {createSubTab === 'new' && <ProEnterTab3 onSuccess={() => setActiveTab('select')} />}
                             </div>
                         </div>
                     )}
