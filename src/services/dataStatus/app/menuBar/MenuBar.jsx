@@ -81,7 +81,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
-
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
     { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/aggregation/status", highlight: true },
     {
@@ -89,14 +88,13 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       icon: <Database size={16} />,
       path: "/data_management/setting/map",
       onClick: () => { navigate("/data_management/setting/map"); }
-      , isDisabled: true
     },
     {
       label: "AI오픈분석",
       icon: <BrainCircuit size={16} />,
-      path: "/project/pro_list",
+      path: "/ai_open_analysis",
       onClick: () => {
-        navigate("/project/pro_list");
+        navigate("/ai_open_analysis");
       }
     },
     { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },

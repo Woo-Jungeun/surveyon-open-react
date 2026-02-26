@@ -37,8 +37,17 @@
 .common-sidebar.collapsed .nav-item span,
 .common-sidebar.collapsed .user-info,
 .common-sidebar.collapsed .user-dropdown,
-.common-sidebar.collapsed .menu-bar-action-btn span {
-    display: none;
+.common-sidebar.collapsed .menu-bar-action-btn span,
+.common-sidebar.collapsed .menu-bar-info-group {
+    display: none !important;
+}
+
+/* No forbidding cursor for blocked/pending items */
+.nav-link.disabled,
+.module-link.disabled,
+.nav-link.pending,
+.pending {
+    cursor: default !important;
 }
 
 .common-sidebar.collapsed .menu-bar-action-btn {
@@ -54,6 +63,14 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+}
+
+.common-sidebar.collapsed .menu-bar-refresh-bar {
+    justify-content: center !important;
+    padding: 6px 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
 }
 
 .common-sidebar.collapsed .sidebar-header {
@@ -227,83 +244,138 @@
     color: #3b82f6;
 }
 
-/* Module Switcher */
-.module-toggle-btn {
+/* Module Menu Button in Header */
+.module-menu-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.module-menu-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 6px;
     border: none;
     background: transparent;
-    color: #555;
+    color: #4b5563;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.module-toggle-btn:hover,
-.module-toggle-btn.active {
+.module-menu-btn:hover,
+.module-menu-btn.active {
     background: rgba(0, 0, 0, 0.05);
 }
 
-.purple .module-toggle-btn:hover,
-.purple .module-toggle-btn.active {
+.purple .module-menu-btn:hover,
+.purple .module-menu-btn.active {
     background: #F3F1FF;
     color: #5A4BFF;
 }
 
-.blue .module-toggle-btn:hover,
-.blue .module-toggle-btn.active {
+.blue .module-menu-btn:hover,
+.blue .module-menu-btn.active {
     background: #eff6ff;
     color: #3b82f6;
 }
 
+.orange .module-menu-btn:hover,
+.orange .module-menu-btn.active {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+.green .module-menu-btn:hover,
+.green .module-menu-btn.active {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+/* Module Dropdown */
 .module-dropdown {
     position: absolute;
     top: 40px;
-    left: 4px;
-    width: 180px;
+    left: 0;
+    width: 220px;
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     padding: 8px;
-    border: 1px solid #eee;
+    border: 1px solid #e5e7eb;
     z-index: 2000;
 }
 
-.module-item {
+.module-dropdown.collapsed {
+    left: 0;
+}
+
+.module-dropdown-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.module-dropdown-item {
+    padding: 0;
+    margin: 0;
+}
+
+.module-link {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
+    gap: 12px;
+    padding: 10px 14px;
     border-radius: 8px;
-    border: none;
-    background: transparent;
-    color: #444;
+    color: #4b5563;
     font-size: 14px;
     font-weight: 500;
+    text-decoration: none;
     cursor: pointer;
     transition: all 0.2s;
 }
 
-.module-item:hover:not(.highlight) {
-    background: #f0f7ff;
-    color: #3b82f6;
+.module-link:hover:not(.active):not(.disabled) {
+    background: #f3f4f6;
+    color: #111827;
 }
 
-.module-item.highlight {
+.module-link.active {
+    font-weight: 600;
+}
+
+.purple .module-link.active {
+    background: #F3F1FF;
+    color: #5A4BFF;
+}
+
+.blue .module-link.active {
     background: #eff6ff;
     color: #3b82f6;
-    font-weight: 700;
-    margin-bottom: 6px;
 }
 
-.module-item.disabled {
-    opacity: 0.5;
+.orange .module-link.active {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+.green .module-link.active {
+    background: #f0fdf4;
+    color: #16a34a;
+}
+
+.module-link.disabled {
+    opacity: 0.4;
     cursor: default;
     filter: grayscale(1);
+}
+
+.module-icon {
+    flex-shrink: 0;
+    color: inherit;
 }
 
 /* Collapse Toggle */
