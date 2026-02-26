@@ -320,8 +320,8 @@ const ProPermission = () => {
                       "오픈팀(관리,읽기,쓰기)",
                       "제작자(관리,읽기,쓰기)",
                       "연구원(읽기,쓰기)",
-                      "고객(읽기)",
-                      "일반(읽기)",
+                      // "고객(읽기)",
+                      // "일반(읽기)",
                     ]}
                     value={formData.permission_gubun}
                     onChange={(e) => handleChange("permission_gubun", e.value)}
