@@ -139,22 +139,22 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         </div>
     );
 
-    // Module Switcher Items
+    //todo Module Switcher Items
     const moduleItems = [
         { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
         {
             label: "데이터현황",
             icon: <BarChart3 size={16} />,
             path: "/data_status/aggregation/status",
-            //onClick: () => { navigate("/data_status/aggregation/status"); }
-            isDisabled: true
+            onClick: () => { navigate("/data_status/aggregation/status"); }
+            // isDisabled: true
         },
         {
             label: "데이터관리",
             icon: <Database size={16} />,
             path: "/data_management/setting/map",
-            // onClick: () => { navigate("/data_management/setting/map"); }
-            isDisabled: true
+            onClick: () => { navigate("/data_management/setting/map"); }
+            // isDisabled: true
         },
         { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/ai_open_analysis", highlight: true },
         { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
