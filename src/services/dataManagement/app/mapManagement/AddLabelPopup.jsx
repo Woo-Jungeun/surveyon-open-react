@@ -1,12 +1,68 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
+import { modalContext } from "@/components/common/Modal.jsx";
 
-const AddLabelPopup = ({ isOpen, onClose, onSave }) => {
+const AddLabelPopup = ({ isOpen, onClose, onSave, initialLabels }) => {
     const [addValueText, setAddValueText] = useState("");
+    const modal = useContext(modalContext);
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialLabels && initialLabels.length > 0) {
+                const initText = initialLabels.map(l => `${l.code}. ${l.label}`).join('\n');
+                setAddValueText(initText);
+            } else {
+                setAddValueText("");
+            }
+        }
+    }, [isOpen, initialLabels]);
 
     if (!isOpen) return null;
 
     const handleSave = () => {
-        onSave(addValueText);
+        if (!addValueText.trim()) {
+            onSave([]); // 비어 있으면 빈 배열 전달
+            setAddValueText("");
+            return;
+        }
+
+        const lines = addValueText.split('\n').filter(line => line.trim() !== '');
+
+        let lastCodeNum = 0;
+        const newLabels = [];
+        const codeSet = new Set();
+        let duplicateCode = null;
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            const match = trimmed.match(/^(\d+)[\.\s-]+(.*)$/);
+
+            let code;
+            let labelText;
+
+            if (match && match[2].trim()) {
+                code = String(match[1]);
+                labelText = match[2].trim();
+                lastCodeNum = Math.max(lastCodeNum, parseInt(match[1], 10) || 0);
+            } else {
+                lastCodeNum += 1;
+                code = String(lastCodeNum);
+                labelText = trimmed;
+            }
+
+            if (codeSet.has(code)) {
+                duplicateCode = code;
+                break;
+            }
+            codeSet.add(code);
+            newLabels.push({ code, label: labelText });
+        }
+
+        if (duplicateCode) {
+            modal.showErrorAlert("에러", `중복된 번호(코드)가 존재합니다: ${duplicateCode}`);
+            return;
+        }
+
+        onSave(newLabels);
         setAddValueText("");
     };
 
@@ -21,14 +77,14 @@ const AddLabelPopup = ({ isOpen, onClose, onSave }) => {
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{ width: '4px', height: '18px', backgroundColor: 'var(--dm-primary)', borderRadius: '4px', marginRight: '8px' }}></div>
-                        <h3 className="variable-modal-title">레이블 추가</h3>
+                        <h3 className="variable-modal-title">보기 레이블 편집</h3>
                     </div>
                     <button onClick={handleClose} className="variable-modal-close">&times;</button>
                 </div>
                 <div className="variable-modal-body">
                     <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px' }}>
                         한 줄에 하나의 보기를 입력하세요. (예: 1. 첫번째 보기)<br />
-                        번호 없이 입력하면 자동으로 코드가 부여됩니다.
+                        번호 없이 입력하면 자동으로 코드가 부여되며, 기존 내용은 덮어씌워집니다.
                     </p>
                     <textarea
                         value={addValueText}

@@ -1,7 +1,7 @@
 import React from 'react';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Edit2 } from 'lucide-react';
 
 const ViewLabelTab = ({
     variables,
@@ -11,7 +11,8 @@ const ViewLabelTab = ({
     setSelectedVariableId,
     selectedVariable,
     SetEditingCategoryPopupOpen,
-    setAddValueModalOpen
+    setAddValueModalOpen,
+    handleDeleteLabel
 }) => {
     return (
         <div className="category-label-layout">
@@ -69,18 +70,19 @@ const ViewLabelTab = ({
                         <span className="v-info-label">{selectedVariable?.label}</span>
                     </div>
                     <button className="add-value-btn" onClick={() => setAddValueModalOpen(true)}>
-                        <Plus size={14} /> 값 추가
+                        <Edit2 size={14} /> 레이블 편집
                     </button>
                 </div>
                 <div className="category-grid-container">
                     <div className="cmn_grid singlehead">
-                        {/* key로 변수 선택 시 강제 재마운트 → 내부 viewData 캐시 초기화 */}
+                        {/* key로 변수 선택/변경 시 강제 재마운트 → 내부 viewData 캐시 초기화 */}
                         <KendoGrid
-                            key={selectedVariableId ?? 'empty'}
+                            key={`${selectedVariableId ?? 'empty'}_${selectedVariable?.category ?? ''}`}
                             parentProps={{
                                 data: selectedVariable?.labels?.map((l, idx) => ({
                                     ...l,
-                                    rowNo: idx + 1
+                                    rowNo: idx + 1,
+                                    id: idx + 1
                                 })) || [],
                                 dataItemKey: "id",
                                 height: "100%",
@@ -92,7 +94,10 @@ const ViewLabelTab = ({
                             <Column field="label" title="레이블" />
                             <Column field="delete" title="삭제" width="80px" cell={(props) => (
                                 <td style={{ textAlign: 'center' }}>
-                                    <button style={{ border: 'none', background: 'transparent' }}>
+                                    <button
+                                        style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
+                                        onClick={() => handleDeleteLabel(props.dataItem.code)}
+                                    >
                                         <Trash2 size={16} color="#64748b" />
                                     </button>
                                 </td>

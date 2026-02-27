@@ -164,43 +164,31 @@ const MapManagementPage = () => {
         SetEditingCategoryPopupOpen(null);
     };
 
-    const handleAddValueSave = (addValueText) => {
-        if (!addValueText.trim() || !selectedVariableId) {
-            setAddValueModalOpen(false);
-            return;
-        }
+    const handleAddValueSave = (newLabels) => {
+        if (!selectedVariableId) return;
 
-        const lines = addValueText.split('\n').filter(line => line.trim() !== '');
-        const currentLabels = selectedVariable?.labels || [];
-
-        let lastCodeNum = 0;
-        currentLabels.forEach(l => {
-            const num = parseInt(l.code, 10);
-            if (!isNaN(num) && num > lastCodeNum) lastCodeNum = num;
-        });
-
-        const newLabels = lines.map(line => {
-            const trimmed = line.trim();
-            const match = trimmed.match(/^(\d+)[\.\s-]+(.*)$/);
-
-            if (match && match[2].trim()) {
-                return { code: String(match[1]), label: match[2].trim() };
-            } else {
-                lastCodeNum += 1;
-                return { code: String(lastCodeNum), label: trimmed };
-            }
-        });
-
-        const mergedLabels = [...currentLabels, ...newLabels];
-        const newCategoryStr = mergedLabels.map(l => `{${l.code};${l.label}}`).join('');
+        const newCategoryStr = newLabels.map(l => `{${l.code};${l.label}}`).join('');
 
         setVariables(variables.map(v =>
             v.id === selectedVariableId
-                ? { ...v, labels: mergedLabels, category: newCategoryStr }
+                ? { ...v, labels: newLabels, category: newCategoryStr }
                 : v
         ));
 
         setAddValueModalOpen(false);
+    };
+
+    const handleDeleteLabel = (codeToRemove) => {
+        if (!selectedVariableId) return;
+        const currentLabels = selectedVariable?.labels || [];
+        const newLabels = currentLabels.filter(l => l.code !== codeToRemove);
+        const newCategoryStr = newLabels.map(l => `{${l.code};${l.label}}`).join('');
+
+        setVariables(variables.map(v =>
+            v.id === selectedVariableId
+                ? { ...v, labels: newLabels, category: newCategoryStr }
+                : v
+        ));
     };
 
     const handleDeleteVariable = (id) => {
@@ -367,6 +355,7 @@ const MapManagementPage = () => {
                             selectedVariable={selectedVariable}
                             SetEditingCategoryPopupOpen={SetEditingCategoryPopupOpen}
                             setAddValueModalOpen={setAddValueModalOpen}
+                            handleDeleteLabel={handleDeleteLabel}
                         />
                     )}
                 </div>
@@ -385,6 +374,7 @@ const MapManagementPage = () => {
                     isOpen={addValueModalOpen}
                     onClose={() => setAddValueModalOpen(false)}
                     onSave={handleAddValueSave}
+                    initialLabels={selectedVariable?.labels}
                 />
             </div>
         </MapManagementContext.Provider>
