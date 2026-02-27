@@ -36,10 +36,10 @@ const menuItems = [
     description:
       "설문 응답 데이터를 효율적으로 관리하고 필터링, 정제, 내보내기 작업을 수행합니다.",
     icon: Database,
-    status: "예정",
+    status: "개발중",
     color: "#23C6A3",
     bg: "rgba(35,198,163,0.12)",
-    statusColor: "#6E6E6E"
+    statusColor: "#F8B400"
   },
   {
     id: "ai-open-analysis",
@@ -92,8 +92,6 @@ const MenuSection = () => {
           // 설문제작, 데이터관리, 응답자관리는 disabled
           const isDisabled =
             item.id === "survey-creation" ||
-            // item.id === "data-dashboard" || //todo 데이터현황
-            // item.id === "data-management" ||
             item.id === "respondent-management";
 
           const handleCardClick = () => {
@@ -111,6 +109,11 @@ const MenuSection = () => {
 
             if (item.id === "ai-open-analysis") {
               navigate("/ai_open_analysis");
+              return;
+            }
+
+            if (item.id === "data-management") {
+              navigate("/data_management/setting/map", { state: { from: "data_management" } });
               return;
             }
 
