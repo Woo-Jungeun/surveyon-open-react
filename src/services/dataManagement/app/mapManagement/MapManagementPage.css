@@ -690,15 +690,73 @@ input:checked+.slider:before {
     box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
 }
 
-/* Kendo Custom Checkbox for Data Management */
-[data-theme="data-management"] .k-checkbox:checked,
-[data-theme="data-management"] .k-checkbox:checked:focus {
-    background-color: var(--dm-primary) !important;
-    border-color: var(--dm-primary) !important;
+/* === Custom Checkbox for Data Management (dm-checkbox) === */
+.dm-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
 }
 
-[data-theme="data-management"] .k-checkbox:focus,
-[data-theme="data-management"] .k-checkbox.k-focus {
-    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
-    border-color: var(--dm-primary) !important;
+.dm-checkbox-label.dm-checkbox-disabled {
+    cursor: default;
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+/* 실제 input은 완전히 숨김 */
+.dm-checkbox-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
+}
+
+/* 커스텀 박스 */
+.dm-checkbox-box {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 5px;
+    background: #fff;
+    position: relative;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+}
+
+/* 체크됐을 때 박스 - 배경 없이 테두리만 색상 */
+.dm-checkbox-input:checked+.dm-checkbox-box {
+    background: #fff;
+    border-color: var(--dm-primary);
+    border-width: 1px;
+}
+
+/* 체크 아이콘 - 컬러 체크마크 */
+.dm-checkbox-input:checked+.dm-checkbox-box::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 5px;
+    height: 10px;
+    border: 2px solid var(--dm-primary);
+    border-top: none;
+    border-left: none;
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* 호버 효과 */
+.dm-checkbox-label:hover .dm-checkbox-box {
+    border-color: var(--dm-primary);
+}
+
+/* 포커스 효과 */
+.dm-checkbox-input:focus+.dm-checkbox-box {
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.25);
+    border-color: var(--dm-primary);
 }

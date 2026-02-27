@@ -17,7 +17,17 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** 맵 관리 저장 (수정/삭제) */
+    const updateMapVariables = useMutation(
+        async (data) => await api.post(data, "/map/variables/update", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
-        getMapVariables
+        getMapVariables,
+        updateMapVariables
     };
 }
