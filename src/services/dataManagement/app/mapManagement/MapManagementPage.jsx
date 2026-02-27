@@ -303,10 +303,14 @@ const MapManagementPage = () => {
 
     const [activeTab, setActiveTab] = useState('mapping');    // 'mapping' | 'category'
     const [isDetailed, setIsDetailed] = useState(false);      // 상세 설정 토글
-    const [selectedVariable, setSelectedVariable] = useState(null); // 보기 레이블 탭에서 선택된 변수
+    const [selectedVariableId, setSelectedVariableId] = useState(null); // 보기 레이블 탭에서 선택된 변수 id
     const [editingRowId, setEditingRowId] = useState(null);   // 현재 편집 중인 행 id
+    const [sidebarSearchQuery, setSidebarSearchQuery] = useState(''); // 변수 목록 검색어
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
+    const [addValueModalOpen, setAddValueModalOpen] = useState(false);        // 레이블 추가 팝업 상태
+    const [addValueText, setAddValueText] = useState("");                     // 레이블 입력 텍스트
+
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
     const [skip, setSkip] = useState(0);
@@ -415,12 +419,22 @@ const MapManagementPage = () => {
         return () => window.removeEventListener("pageSelected", handlePageSelected);
     }, []);
 
-    // 보기 레이블 탭 진입 시 첫 번째 변수 자동 선택
+    // 탭 변경 시 변수 선택 상태 관리
     useEffect(() => {
-        if (activeTab === 'category' && variables.length > 0 && !selectedVariable) {
-            setSelectedVariable(variables[0]);
+        if (activeTab === 'category') {
+            // 보기 레이블 탭: 선택된 것 없으면 첫 번째 자동 선택
+            if (variables.length > 0 && !selectedVariableId) {
+                setSelectedVariableId(variables[0].id);
+            }
+        } else {
+            // MAP 구성 탭 등 다른 탭으로 이동 시 선택 초기화
+            setSelectedVariableId(null);
+            setSidebarSearchQuery(''); // 검색어 같이 초기화 추가
         }
     }, [activeTab, variables]);
+
+    // variables에서 항상 최신 데이터를 참조 (labels 포함)
+    const selectedVariable = variables.find(v => v.id === selectedVariableId) ?? null;
 
     // ── 핸들러 ──
 
@@ -433,6 +447,51 @@ const MapManagementPage = () => {
     const handleCategorySave = (id, newCategoryStr) => {
         setVariables(variables.map(v => v.id === id ? { ...v, category: newCategoryStr } : v));
         SetEditingCategoryPopupOpen(null);
+    };
+
+    /** 레이블 추가 (textarea 줄바꿈 파싱) */
+    const handleAddValueSave = () => {
+        if (!addValueText.trim() || !selectedVariableId) {
+            setAddValueModalOpen(false);
+            setAddValueText("");
+            return;
+        }
+
+        const lines = addValueText.split('\n').filter(line => line.trim() !== '');
+        const currentLabels = selectedVariable?.labels || [];
+
+        // 기존 라벨 중에서 가장 큰 코드 번호 찾기 (코드 자동 부여용)
+        let lastCodeNum = 0;
+        currentLabels.forEach(l => {
+            const num = parseInt(l.code, 10);
+            if (!isNaN(num) && num > lastCodeNum) lastCodeNum = num;
+        });
+
+        const newLabels = lines.map(line => {
+            const trimmed = line.trim();
+            // 숫자 + 점 또는 공백 구조 (예: "1. 보기1", "1 보기1", "1-보기1") 추출 시도
+            const match = trimmed.match(/^(\d+)[\.\s-]+(.*)$/);
+
+            if (match && match[2].trim()) {
+                return { code: String(match[1]), label: match[2].trim() };
+            } else {
+                // 숫자로 시작하지 않으면 자동 증가 코드 부여
+                lastCodeNum += 1;
+                return { code: String(lastCodeNum), label: trimmed };
+            }
+        });
+
+        const mergedLabels = [...currentLabels, ...newLabels];
+        const newCategoryStr = mergedLabels.map(l => `{${l.code};${l.label}}`).join('');
+
+        setVariables(variables.map(v =>
+            v.id === selectedVariableId
+                ? { ...v, labels: mergedLabels, category: newCategoryStr }
+                : v
+        ));
+
+        setAddValueModalOpen(false);
+        setAddValueText("");
     };
 
     /** 컬럼 메뉴 (필터/정렬) - useCallback으로 불필요한 재생성 방지 */
@@ -575,7 +634,7 @@ const MapManagementPage = () => {
     const mappingColumns = useMemo(() => isDetailed
         ? [
             { field: 'add', title: '+', width: '50px' },
-            { field: 'id', title: '#', width: '50px' },
+            { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '120px' },
             { field: 'logic', title: '로직체크', width: '120px' },
             { field: 'label', title: '레이블', width: '250px' },
@@ -591,7 +650,7 @@ const MapManagementPage = () => {
         ]
         : [
             { field: 'add', title: '+', width: '45px' },
-            { field: 'id', title: '#', width: '50px' },
+            { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '85px' },
             { field: 'startPos', title: '시작\n자리수', width: '90px', headerCell: multilineHeader },
             { field: 'valLen', title: '보기\n자리수', width: '90px', headerCell: multilineHeader },
@@ -712,20 +771,44 @@ const MapManagementPage = () => {
                                 <div className="sidebar-header-box">
                                     <h3>변수 목록</h3>
                                     <div className="search-box">
-                                        <input type="text" placeholder="변수 검색..." />
+                                        <input
+                                            type="text"
+                                            placeholder="변수명 / 레이블 검색..."
+                                            value={sidebarSearchQuery}
+                                            onChange={e => setSidebarSearchQuery(e.target.value)}
+                                        />
                                     </div>
                                 </div>
                                 <div className="variable-list">
-                                    {variables.map(v => (
-                                        <div
-                                            key={v.id}
-                                            className={`variable-item ${selectedVariable?.id === v.id ? 'active' : ''}`}
-                                            onClick={() => setSelectedVariable(v)}
-                                        >
-                                            <div className="v-name">{v.sysName}</div>
-                                            <div className="v-label">{v.label || '레이블 없음'}</div>
-                                        </div>
-                                    ))}
+                                    {variables
+                                        .filter(v => {
+                                            if (!sidebarSearchQuery.trim()) return true;
+                                            const q = sidebarSearchQuery.toLowerCase();
+                                            return (
+                                                v.sysName?.toLowerCase().includes(q) ||
+                                                v.label?.toLowerCase().includes(q)
+                                            );
+                                        })
+                                        .map(v => (
+                                            <div
+                                                key={v.id}
+                                                className={`variable-item ${selectedVariableId === v.id ? 'active' : ''}`}
+                                                onClick={() => setSelectedVariableId(v.id)}
+                                            >
+                                                <div className="v-name">{v.sysName}</div>
+                                                <div className="v-label">{v.label || '레이블 없음'}</div>
+                                            </div>
+                                        ))
+                                    }
+                                    {/* 검색 결과 없음 */}
+                                    {sidebarSearchQuery.trim() && variables.every(v => {
+                                        const q = sidebarSearchQuery.toLowerCase();
+                                        return !v.sysName?.toLowerCase().includes(q) && !v.label?.toLowerCase().includes(q);
+                                    }) && (
+                                            <div style={{ padding: '12px', color: '#94a3b8', fontSize: '13px', textAlign: 'center' }}>
+                                                검색 결과가 없습니다.
+                                            </div>
+                                        )}
                                 </div>
                             </div>
 
@@ -733,24 +816,29 @@ const MapManagementPage = () => {
                             <div className="category-detail-content">
                                 <div className="detail-header">
                                     <div className="v-info-title">
-                                        /{selectedVariable?.sysName} <span className="v-info-label">{selectedVariable?.label}</span>
+                                        <span>{selectedVariable?.sysName}</span>
+                                        <span className="v-info-label">{selectedVariable?.label}</span>
                                     </div>
-                                    <button className="add-value-btn" onClick={() => SetEditingCategoryPopupOpen(selectedVariable)}>
+                                    <button className="add-value-btn" onClick={() => { setAddValueText(''); setAddValueModalOpen(true); }}>
                                         <Plus size={14} /> 값 추가
                                     </button>
                                 </div>
                                 <div className="category-grid-container">
                                     <div className="cmn_grid singlehead">
+                                        {/* key로 변수 선택 시 강제 재마운트 → 내부 viewData 캐시 초기화 */}
                                         <KendoGrid
+                                            key={selectedVariableId ?? 'empty'}
                                             parentProps={{
                                                 data: selectedVariable?.labels?.map((l, idx) => ({
                                                     ...l,
                                                     rowNo: idx + 1
                                                 })) || [],
+                                                dataItemKey: "id",
                                                 height: "100%",
+                                                filterable: false,
                                             }}
                                         >
-                                            <Column field="rowNo" title="#" width="60px" />
+                                            <Column field="rowNo" title="no" width="60px" />
                                             <Column field="code" title="코드" width="100px" />
                                             <Column field="label" title="레이블" />
                                             <Column field="delete" title="삭제" width="80px" cell={(props) => (
@@ -768,13 +856,57 @@ const MapManagementPage = () => {
                     )}
                 </div>
 
-                {/* 보기(카테고리) 편집 팝업 */}
+                {/* 기존 보기(카테고리) 편집 팝업 */}
                 {editingCategoryPopupOpen && (
                     <MapManagementPageModal
                         variable={editingCategoryPopupOpen}
                         onClose={() => SetEditingCategoryPopupOpen(null)}
                         onSave={handleCategorySave}
                     />
+                )}
+
+                {/* 레이블 팝업 (textarea) */}
+                {addValueModalOpen && (
+                    <div className="variable-modal-overlay">
+                        <div className="variable-modal-content" style={{ width: '480px' }}>
+                            <div className="variable-modal-header">
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div style={{ width: '4px', height: '18px', backgroundColor: 'var(--dm-primary)', borderRadius: '4px', marginRight: '8px' }}></div>
+                                    <h3 className="variable-modal-title">레이블 추가</h3>
+                                </div>
+                                <button onClick={() => setAddValueModalOpen(false)} className="variable-modal-close">&times;</button>
+                            </div>
+                            <div className="variable-modal-body">
+                                <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '10px' }}>
+                                    한 줄에 하나의 보기를 입력하세요. (예: 1. 첫번째 보기)<br />
+                                    번호 없이 입력하면 자동으로 코드가 부여됩니다.
+                                </p>
+                                <textarea
+                                    value={addValueText}
+                                    onChange={(e) => setAddValueText(e.target.value)}
+                                    placeholder="1. 전혀 그렇지 않다&#13;&#10;2. 그렇지 않은 편이다&#13;&#10;3. 보통이다"
+                                    style={{
+                                        width: '100%',
+                                        height: '240px',
+                                        padding: '12px',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '8px',
+                                        resize: 'none',
+                                        outline: 'none',
+                                        fontSize: '14px',
+                                        fontFamily: 'inherit',
+                                        lineHeight: '1.5',
+                                        boxSizing: 'border-box'
+                                    }}
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="variable-modal-footer">
+                                <button onClick={() => setAddValueModalOpen(false)} className="btn-cancel">취소</button>
+                                <button onClick={handleAddValueSave} className="btn-save">등록하기</button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
         </MapManagementContext.Provider>
