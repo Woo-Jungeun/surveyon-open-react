@@ -20,10 +20,10 @@ const MENU_ITEMS = [
   {
     label: "집계 현황",
     items: [
-      { label: "문항 집계 현황", path: "/data_status/aggregation/status", icon: BarChart3 },
-      { label: "교차 테이블", path: "/data_status/aggregation/cross", icon: Grid },
-      { label: "DP 테이블", path: "/data_status/aggregation/dp_table", icon: Table, isPending: true },
-      { label: "쿼터현황/관리", path: "/data_status/aggregation/quota", icon: ClipboardList },
+      { label: "빈도분석", path: "/data_status/analysis/frequency", icon: BarChart3 },
+      { label: "추가분석", path: "/data_status/analysis/additional", icon: Grid },
+      { label: "교차분석", path: "/data_status/analysis/cross", icon: Table, isPending: true },
+      { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
     ]
   },
   {
@@ -82,7 +82,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-    { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/aggregation/status", highlight: true },
+    { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/analysis/frequency", highlight: true },
     {
       label: "데이터관리",
       icon: <Database size={16} />,
@@ -278,7 +278,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           title: "데이터 현황",
           logoText: "SRT",
           logoClass: "menu-bar-logo",
-          onClick: () => navigate("/data_status/aggregation/status")
+          onClick: () => navigate("/data_status/analysis/frequency")
         }}
         menuGroups={MENU_ITEMS}
         projectInfo={projectInfoData}

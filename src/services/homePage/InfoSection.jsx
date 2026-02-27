@@ -211,10 +211,10 @@ const InfoSection = () => {
               // todo 데이터현황 임시 주석 
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/data_status/setting/variable" } });
+                  navigate("/login", { state: { from: "/data_status/analysis/frequency" } });
                   return;
                 }
-                navigate("/data_status/setting/variable", { state: { from: "data_status" } });
+                navigate("/data_status/analysis/frequency", { state: { from: "data_status" } });
               }}
               style={{ cursor: "pointer" }}
             >

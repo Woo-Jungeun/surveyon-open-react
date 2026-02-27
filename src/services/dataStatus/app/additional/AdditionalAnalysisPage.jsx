@@ -9,18 +9,18 @@ import '@progress/kendo-theme-default/dist/all.css';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import CreateTablePopup from './CreateTablePopup';
-import './CrossTabPage.css';
-import { CrossTabPageApi } from './CrossTabPageApi';
+import './AdditionalAnalysisPage.css';
+import { AdditionalAnalysisPageApi } from './AdditionalAnalysisPageApi';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
 
-const CrossTabPage = () => {
+const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = CrossTabPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = AdditionalAnalysisPageApi();
     const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const PAGE_ID = sessionStorage.getItem("pageId");
@@ -1366,7 +1366,7 @@ const CrossTabPage = () => {
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
             <DataHeader
-                title="교차 테이블"
+                title="추가분석"
             >
                 {/* 전체 필터 드롭다운 */}
                 <div className="response-filter-container" ref={totalFilterRef} style={{ marginRight: '16px' }}>
@@ -1428,7 +1428,7 @@ const CrossTabPage = () => {
                     }}
                 >
                     <Plus size={16} />
-                    교차 테이블 추가
+                    추가분석 추가
                 </button>
             </DataHeader>
 
@@ -2180,4 +2180,4 @@ const CrossTabPage = () => {
     );
 };
 
-export default CrossTabPage;
+export default AdditionalAnalysisPage;

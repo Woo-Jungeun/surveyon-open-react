@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X } from 'lucide-react';
-import './CrossTabPage.css';
+import './AdditionalAnalysisPage.css';
 
 const CreateTablePopup = ({ isOpen, onClose, onCreate }) => {
     const [tableName, setTableName] = useState('');

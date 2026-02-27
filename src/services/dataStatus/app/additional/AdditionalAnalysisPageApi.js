@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from "react-query";
 import api from "@/common/queries/Api.js";
 
-export function CrossTabPageApi() {
+export function AdditionalAnalysisPageApi() {
 
     /** 교차테이블 목록 조회 */
     const getCrossTabList = useMutation(

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { FileText, BarChart3, Database, BrainCircuit, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -103,12 +103,17 @@ const MenuSection = () => {
             }
 
             if (item.id === "data-dashboard") {
-              navigate("/data_status/aggregation/status", { state: { from: "data_status" } });
+              navigate("/data_status/analysis/frequency", { state: { from: "data_status" } });
               return;
             }
 
             if (item.id === "ai-open-analysis") {
               navigate("/ai_open_analysis");
+              return;
+            }
+
+            if (item.id === "data-management") {
+              navigate("/data_management/setting/map", { state: { from: "data_management" } });
               return;
             }
 

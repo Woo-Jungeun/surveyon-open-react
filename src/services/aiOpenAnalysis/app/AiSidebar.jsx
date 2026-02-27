@@ -145,8 +145,8 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         {
             label: "데이터현황",
             icon: <BarChart3 size={16} />,
-            path: "/data_status/aggregation/status",
-            onClick: () => { navigate("/data_status/aggregation/status"); }
+            path: "/data_status/analysis/frequency",
+            onClick: () => { navigate("/data_status/analysis/frequency"); }
             // isDisabled: true
         },
         {
