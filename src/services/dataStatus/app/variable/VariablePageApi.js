@@ -17,7 +17,7 @@ export function VariablePageApi() {
         }
     );
 
-    /** 페이지 목록 조회 */
+    /** 대시보드 목록 조회 */
     const pageList = useMutation(
         async (data) => await api.post(data, "/pages/list", "API_BASE_URL_DATASTATUS"),
         {
@@ -30,8 +30,36 @@ export function VariablePageApi() {
         }
     );
 
+    /** 대시보드 목록 수정, 추가 */
+    const pageSet = useMutation(
+        async (data) => await api.post(data, "/pages/set", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
+        }
+    );
+
+    /** 대시보드 삭제 */
+    const pageDelete = useMutation(
+        async (data) => await api.post(data, "/pages/delete", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
+        }
+    );
+
     return {
         getOriginalVariables,
-        pageList
+        pageList,
+        pageSet,
+        pageDelete
     };
 }

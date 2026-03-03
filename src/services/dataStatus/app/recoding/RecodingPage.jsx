@@ -110,11 +110,11 @@ const RecodingPage = () => {
                 setPageListData(result.resultjson);
                 setIsPageListOpen(true);
             } else {
-                modal.showErrorAlert("알림", "조회된 페이지가 없습니다.");
+                modal.showErrorAlert("알림", "조회된 대시보드가 없습니다.");
             }
         } catch (e) {
             console.error(e);
-            modal.showErrorAlert("오류", "페이지 목록 조회 중 오류가 발생했습니다.");
+            modal.showErrorAlert("오류", "대시보드 목록 조회 중 오류가 발생했습니다.");
         }
     };
 
@@ -136,7 +136,7 @@ const RecodingPage = () => {
                 const pageId = sessionStorage.getItem("pageId");
 
                 if (!pageId) {
-                    modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
+                    modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                     return;
                 }
 
@@ -307,7 +307,7 @@ const RecodingPage = () => {
         const pageId = sessionStorage.getItem("pageId");
 
         if (!pageId) {
-            modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
+            modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
             return;
         }
 
@@ -471,7 +471,7 @@ const RecodingPage = () => {
         const pageId = sessionStorage.getItem("pageId");
 
         if (!pageId) {
-            modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
+            modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
             return;
         }
 
@@ -567,7 +567,7 @@ const RecodingPage = () => {
                         const pageId = sessionStorage.getItem("pageId");
 
                         if (!pageId) {
-                            modal.showAlert("알림", "선택된 페이지 정보가 없습니다.", null, handleOpenPageList);
+                            modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                             return;
                         }
 

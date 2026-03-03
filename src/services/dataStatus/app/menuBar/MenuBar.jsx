@@ -157,7 +157,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     setIsProjectModalOpen(false); // 프로젝트 팝업 닫기
 
-    // 2. 페이지 목록 조회
+    // 2. 대시보드 목록 조회
     try {
       const user = auth?.user?.userId;
       const mergePn = project.merge_pn;
@@ -170,22 +170,34 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
       if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
         setPageListData(pageRes.resultjson);
-        setIsPageListPopupOpen(true); // 페이지 목록 팝업 열기
+        setIsPageListPopupOpen(true); // 대시보드 목록 팝업 열기
       } else {
-        modal.showAlert("알림", "조회된 페이지가 없습니다. \n프로젝트를 다시 선택해주세요.", null, () => {
+        modal.showAlert("알림", "조회된 대시보드가 없습니다. \n프로젝트를 다시 선택해주세요.", null, () => {
           setIsProjectModalOpen(true);
         });
       }
     } catch (e) {
-      modal.showErrorAlert("오류", "페이지 목록 조회 중 오류가 발생했습니다.");
+      modal.showErrorAlert("오류", "대시보드 목록 조회 중 오류가 발생했습니다.");
     }
   };
 
-  // 페이지 정보 state 추가
+  // 대시보드 정보 state 추가
   const [pageState, setPageState] = useState({
     title: sessionStorage.getItem("pagetitle") || "대시보드(수정가능)",
     merge_pn: sessionStorage.getItem("merge_pn") || "-"
   });
+
+  // pageSelected 이벤트 발생(다른 곳에서 삭제, 변경 등) 시 즉각 갱신
+  useEffect(() => {
+    const handlePageUpdate = () => {
+      setPageState({
+        title: sessionStorage.getItem("pagetitle") || "대시보드(수정가능)",
+        merge_pn: sessionStorage.getItem("merge_pn") || "-"
+      });
+    };
+    window.addEventListener("pageSelected", handlePageUpdate);
+    return () => window.removeEventListener("pageSelected", handlePageUpdate);
+  }, []);
 
   // ... (existing code)
 
@@ -209,7 +221,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     try {
       loadingSpinner.show();
-      // 페이지 메타데이터 조회 API 호출
+      // 대시보드 메타데이터 조회 API 호출
       const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
 
       if (metadataResult?.success === "777") {
@@ -244,7 +256,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
-  // 사이드바에 전달할 페이지 정보
+  // 사이드바에 전달할 대시보드 정보
   const sidebarPageInfo = {
     title: pageState.title,
     subTitle: pageState.merge_pn,

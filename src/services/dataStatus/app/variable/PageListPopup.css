@@ -51,11 +51,65 @@
     font-size: 18px;
     font-weight: 700;
     color: #333;
+    flex: 1;
+}
+
+.pl-header-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: 16px;
+    margin-right: 16px;
 }
 
 .pl-header-icon {
     color: #1472ff;
     /* Blue Theme */
+}
+
+.pl-action-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pl-action-btn:hover {
+    background: #f3f4f6;
+    border-color: #ccc;
+}
+
+.pl-action-btn.primary {
+    background: #1472ff;
+    border-color: #1472ff;
+    color: #fff;
+}
+
+.pl-action-btn.primary:hover {
+    background: #0d5be3;
+    border-color: #0d5be3;
+}
+
+.pl-edit-input {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid #1472ff;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    background: #f0f4ff;
+    box-sizing: border-box;
+}
+
+.pl-edit-input:focus {
+    box-shadow: 0 0 0 2px rgba(20, 114, 255, 0.2);
 }
 
 .pl-close-btn {
