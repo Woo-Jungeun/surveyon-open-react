@@ -26,7 +26,7 @@ const WeightPage = () => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const { getRecodedVariables } = RecodingPageApi();
-    const { getWeightVariable, evaluateTable, deleteWeight, setWeight } = WeightPageApi();
+    const { getWeightVariable, evaluateTable, deleteWeight, setWeight, getEligibleVariable } = WeightPageApi();
     const { getOriginalVariables } = VariablePageApi();
 
     // 가중치 목록 상태
@@ -189,26 +189,30 @@ const WeightPage = () => {
 
                 if (pageId) {
                     try {
-                        const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
-                        if (result?.success === "777" && result.resultjson) {
-                            setRawVariables(result.resultjson);
-                            const transformedData = Object.values(result.resultjson).map(item => {
-                                let typeLabel = item.type;
+                        const result = await getEligibleVariable.mutateAsync({ user: userId, pageid: pageId, include_variables: true });
+                        if (result?.success === "777" && result.resultjson && result.resultjson.variables) {
+                            const rawVarsObj = result.resultjson.variables.reduce((acc, v) => {
+                                acc[v.id] = v.variable; // 새 API 형식에서는 v.variable 내부에 원본(info, id, label 포함)이 들어있습니다.
+                                return acc;
+                            }, {});
+                            setRawVariables(rawVarsObj);
+                            const transformedData = result.resultjson.variables.map(item => {
+                                let typeLabel = item.type || 'categorical';
                                 let color = 'gray';
-                                if (item.type === 'categorical') {
+                                if (typeLabel === 'categorical') {
                                     typeLabel = '범주형';
                                     color = 'purple';
-                                } else if (item.type === 'continuous') {
+                                } else if (typeLabel === 'continuous') {
                                     typeLabel = '연속형';
                                     color = 'orange';
-                                } else if (item.type === 'text') {
+                                } else if (typeLabel === 'text') {
                                     typeLabel = '텍스트';
                                     color = 'blue';
                                 }
 
                                 return {
                                     id: item.id,
-                                    title: item.name || item.id,
+                                    title: item.id || '',
                                     desc: item.label || '',
                                     type: typeLabel,
                                     count: '',
@@ -325,7 +329,6 @@ const WeightPage = () => {
         xIds.forEach(id => {
             if (rawVariables[id]) activeVariables[id] = rawVariables[id];
         });
-
         if (Object.keys(activeVariables).length === 0) {
             modal.showAlert("알림", '가로축과 세로축 문항 데이터가 유효하지 않습니다.');
             return;
@@ -393,11 +396,13 @@ const WeightPage = () => {
     const [isQuestionPanelOpen, setIsQuestionPanelOpen] = useState(true);
     const [questionSearchTerm, setQuestionSearchTerm] = useState('');
 
-    // 문항 검색 필터
-    const filteredQuestions = questions.filter(q =>
-        q.title.toLowerCase().includes(questionSearchTerm.toLowerCase()) ||
-        q.desc.toLowerCase().includes(questionSearchTerm.toLowerCase())
-    );
+    // 문항 검색 필터 (TypeError 방지)
+    const filteredQuestions = questions.filter(q => {
+        const titleStr = q.title || '';
+        const descStr = q.desc || '';
+        const searchStr = questionSearchTerm ? questionSearchTerm.toLowerCase() : '';
+        return titleStr.toLowerCase().includes(searchStr) || descStr.toLowerCase().includes(searchStr);
+    });
 
     // 아코디언 메뉴 상태
     const [isCurrentDistOpen, setIsCurrentDistOpen] = useState(true);

@@ -42,10 +42,20 @@ export function WeightPageApi() {
         }
     );
 
+    // 문항 목록 조회
+    const getEligibleVariable = useMutation(
+        async (data) => await api.post(data, "/weight/eligible-variables", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
     return {
         getWeightVariable,
         evaluateTable,
         deleteWeight,
         setWeight,
+        getEligibleVariable
     };
 }
