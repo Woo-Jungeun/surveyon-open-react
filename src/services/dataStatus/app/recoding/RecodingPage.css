@@ -50,6 +50,15 @@
 .recoding-variable-info {
     margin-top: 24px;
     margin-bottom: 24px;
+    display: flex;
+    gap: 24px;
+}
+
+.recoding-input-group {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .recoding-label {
@@ -60,6 +69,12 @@
     color: #555;
 }
 
+.recoding-input-group .recoding-label {
+    margin-bottom: 0;
+    white-space: nowrap;
+    min-width: 45px;
+}
+
 .recoding-input {
     width: 100%;
     padding: 10px;
@@ -67,6 +82,11 @@
     border: 1px solid #ddd;
     margin-bottom: 16px;
     transition: border-color 0.2s;
+}
+
+.recoding-input-group .recoding-input {
+    flex: 1;
+    margin-bottom: 0;
 }
 
 .recoding-input:focus {

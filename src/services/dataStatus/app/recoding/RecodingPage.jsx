@@ -301,7 +301,6 @@ const RecodingPage = () => {
     ]);
 
     const handleLogicCheck = async () => {
-        console.log("handleLogicCheck", auth?.user?.userId, selectedVar)
         if (!auth?.user?.userId || !selectedVar.id) return;
 
         const userId = auth.user.userId;
@@ -337,7 +336,6 @@ const RecodingPage = () => {
                 include_stats: ["mean", "std", "min", "max", "n", "median", "mode"],
                 variables: variablesPayload
             };
-            console.log("handleLogicCheck", handleLogicCheck)
             const result = await verifyRecodeLogic.mutateAsync(payload);
             if (result?.success === "777") {
 
@@ -652,8 +650,8 @@ const RecodingPage = () => {
                             {isAddMode ? "문항 추가" : "문항 수정"}
                         </h3> */}
 
-                        <div className="recoding-variable-info" style={{ display: 'flex', gap: '24px' }}>
-                            <div style={{ flex: 1 }}>
+                        <div className="recoding-variable-info">
+                            <div className="recoding-input-group">
                                 <label className="recoding-label">변수명</label>
                                 <input
                                     style={!isAddMode ? { background: "#F3F4F6" } : null}
@@ -665,7 +663,7 @@ const RecodingPage = () => {
                                     placeholder="예: AgeGroup"
                                 />
                             </div>
-                            <div style={{ flex: 1 }}>
+                            <div className="recoding-input-group">
                                 <label className="recoding-label">라벨</label>
                                 <input
                                     type="text"
