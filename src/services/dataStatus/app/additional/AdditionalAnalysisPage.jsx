@@ -1517,44 +1517,43 @@ const AdditionalAnalysisPage = () => {
                             }}>
                                 {/* Variable Panel */}
                                 <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
-                                    <div className="variable-panel-header">
-                                        {isVariablePanelOpen && <span className="variable-panel-title">문항 목록</span>}
+                                    <div className="variable-panel-header" style={{ justifyContent: isVariablePanelOpen ? 'space-between' : 'center', gap: '8px', padding: '16px' }}>
+                                        {isVariablePanelOpen && (
+                                            <div className="search-input-wrapper" style={{ flex: 1 }}>
+                                                <Search size={14} className="search-icon" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="문항을 검색하세요."
+                                                    value={variableSearchTerm}
+                                                    onChange={(e) => setVariableSearchTerm(e.target.value)}
+                                                    className="search-input"
+                                                    style={{ width: '100%' }}
+                                                />
+                                            </div>
+                                        )}
                                         <button
                                             className="toggle-button"
                                             onClick={() => setIsVariablePanelOpen(!isVariablePanelOpen)}
+                                            style={{ flexShrink: 0, padding: 0 }}
                                         >
-                                            {isVariablePanelOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                                            {isVariablePanelOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                                         </button>
                                     </div>
 
                                     {isVariablePanelOpen && (
-                                        <>
-                                            <div className="variable-search">
-                                                <div className="search-input-wrapper">
-                                                    <Search size={14} className="search-icon" />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="문항을 검색하세요."
-                                                        className="search-input"
-                                                        value={variableSearchTerm}
-                                                        onChange={(e) => setVariableSearchTerm(e.target.value)}
-                                                    />
+                                        <div className="variable-list">
+                                            {filteredVariables.map(v => (
+                                                <div
+                                                    key={v.id}
+                                                    className="variable-item"
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, v)}
+                                                >
+                                                    <div className="variable-item__name">{v.id}</div>
+                                                    <div className="variable-item__label">{v.label}</div>
                                                 </div>
-                                            </div>
-                                            <div className="variable-list">
-                                                {filteredVariables.map(v => (
-                                                    <div
-                                                        key={v.id}
-                                                        className="variable-item"
-                                                        draggable
-                                                        onDragStart={(e) => handleDragStart(e, v)}
-                                                    >
-                                                        <div className="variable-item__name">{v.id}</div>
-                                                        <div className="variable-item__label">{v.label}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
 

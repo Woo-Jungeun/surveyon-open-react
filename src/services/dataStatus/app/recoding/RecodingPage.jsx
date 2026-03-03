@@ -294,7 +294,7 @@ const RecodingPage = () => {
     const [columns, setColumns] = useState([
         { field: 'realVal', title: '코드', show: true, width: '80px', editable: false },
         { field: 'category', title: '보기', show: true, minWidth: 200, editable: true },
-        { field: 'val', title: '가공값', show: true, width: '120px', editable: true },
+        { field: 'val', title: '새코드', show: true, width: '120px', editable: true },
         { field: 'logic', title: '로직', show: true, minWidth: 200, editable: true },
         { field: 'check', title: '로직체크', show: true, width: '120px', editable: false },
         { field: 'delete', title: '삭제', show: true, width: '100px', editable: false },
@@ -638,7 +638,7 @@ const RecodingPage = () => {
             <div className="recoding-layout">
                 <SideBar
                     items={filteredVariables}
-                    title="문항 목록"
+                    // title="문항 목록"
                     selectedId={selectedVar?.id}
                     onItemClick={handleVariableSelect}
                     onSearch={setSearchTerm}
@@ -648,13 +648,13 @@ const RecodingPage = () => {
 
                 <div className="recoding-content">
                     <div className="recoding-card">
-                        <h3 className="recoding-title">
+                        {/* <h3 className="recoding-title">
                             {isAddMode ? "문항 추가" : "문항 수정"}
-                        </h3>
+                        </h3> */}
 
                         <div className="recoding-variable-info" style={{ display: 'flex', gap: '24px' }}>
                             <div style={{ flex: 1 }}>
-                                <label className="recoding-label">문항 ID</label>
+                                <label className="recoding-label">변수명</label>
                                 <input
                                     style={!isAddMode ? { background: "#F3F4F6" } : null}
                                     type="text"
@@ -666,7 +666,7 @@ const RecodingPage = () => {
                                 />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <label className="recoding-label">문항 라벨</label>
+                                <label className="recoding-label">라벨</label>
                                 <input
                                     type="text"
                                     value={selectedVar?.label || ''}

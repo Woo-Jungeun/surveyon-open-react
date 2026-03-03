@@ -685,50 +685,49 @@ const WeightPage = () => {
                         <div className="weight-layout">
                             {/* 문항 목록 패널 */}
                             <div className={`question-panel ${!isQuestionPanelOpen ? 'collapsed' : ''}`}>
-                                <div className="question-panel-header">
-                                    {isQuestionPanelOpen && <h3 className="question-panel-title">문항 목록</h3>}
+                                <div className="question-panel-header" style={{ justifyContent: isQuestionPanelOpen ? 'space-between' : 'center', gap: '8px', padding: '16px' }}>
+                                    {isQuestionPanelOpen && (
+                                        <div className="search-input-wrapper" style={{ flex: 1 }}>
+                                            <Search size={14} className="search-icon" />
+                                            <input
+                                                type="text"
+                                                placeholder="문항을 검색하세요."
+                                                value={questionSearchTerm}
+                                                onChange={(e) => setQuestionSearchTerm(e.target.value)}
+                                                className="search-input"
+                                                style={{ width: '100%' }}
+                                            />
+                                        </div>
+                                    )}
                                     <button
                                         onClick={() => setIsQuestionPanelOpen(!isQuestionPanelOpen)}
                                         className="toggle-button"
+                                        style={{ flexShrink: 0, padding: 0 }}
                                     >
                                         {isQuestionPanelOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                                     </button>
                                 </div>
-                                {isQuestionPanelOpen && (
-                                    <>
-                                        <div className="search-container">
-                                            <div className="search-input-wrapper">
-                                                <Search size={14} className="search-icon" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="문항을 검색하세요."
-                                                    value={questionSearchTerm}
-                                                    onChange={(e) => setQuestionSearchTerm(e.target.value)}
-                                                    className="search-input"
-                                                />
-                                            </div>
-                                        </div>
 
-                                        <div className="question-list">
-                                            {filteredQuestions.map(q => (
-                                                <div
-                                                    key={q.id}
-                                                    draggable
-                                                    onDragStart={(e) => handleDragStart(e, q)}
-                                                    className="question-item"
-                                                >
-                                                    <div className="question-item-header">
-                                                        <span className="question-title">{q.title}</span>
-                                                        <span className={`question-type-badge ${q.color}`}>
-                                                            {q.type}
-                                                        </span>
-                                                    </div>
-                                                    <p className="question-desc">{q.desc}</p>
-                                                    <div className="question-count">{q.count}</div>
+                                {isQuestionPanelOpen && (
+                                    <div className="question-list">
+                                        {filteredQuestions.map(q => (
+                                            <div
+                                                key={q.id}
+                                                draggable
+                                                onDragStart={(e) => handleDragStart(e, q)}
+                                                className="question-item"
+                                            >
+                                                <div className="question-item-header">
+                                                    <span className="question-title">{q.title}</span>
+                                                    <span className={`question-type-badge ${q.color}`}>
+                                                        {q.type}
+                                                    </span>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </>
+                                                <p className="question-desc">{q.desc}</p>
+                                                <div className="question-count">{q.count}</div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 )}
                             </div>
 

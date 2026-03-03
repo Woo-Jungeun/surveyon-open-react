@@ -548,7 +548,7 @@ const FrequencyAnalysisPage = () => {
             </DataHeader>
             <div className="aggregation-layout">
                 <SideBar
-                    title="문항 목록"
+                    // title="문항 목록"
                     items={sidebarItems}
                     selectedId={activeId}
                     onItemClick={(item) => scrollToId(item.id)} // 스크롤 위치에 따라 선택된 아이템 표시

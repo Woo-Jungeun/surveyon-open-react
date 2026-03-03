@@ -8,30 +8,26 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
     return (
         <div className="sidebar-container" style={{ width: isOpen ? '280px' : '48px' }}>
             <div className="sidebar-header">
-                <div className="sidebar-title-row" style={{ justifyContent: isOpen ? 'space-between' : 'center' }}>
+                <div className="sidebar-title-row" style={{ justifyContent: isOpen ? 'space-between' : 'center', gap: '8px' }}>
                     {isOpen && (
-                        <div className="sidebar-title">
-                            {title || "목록"}
+                        <div className="sidebar-search" style={{ flex: 1 }}>
+                            <Search size={14} className="sidebar-search-icon" />
+                            <input
+                                type="text"
+                                placeholder="검색어를 입력하세요."
+                                onChange={(e) => onSearch && onSearch(e.target.value)}
+                                className="sidebar-search-input"
+                            />
                         </div>
                     )}
                     <button
                         onClick={() => setIsOpen(!isOpen)}
                         className="sidebar-toggle-btn"
+                        style={{ flexShrink: 0 }}
                     >
                         {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
                     </button>
                 </div>
-                {isOpen && (
-                    <div className="sidebar-search">
-                        <Search size={14} className="sidebar-search-icon" />
-                        <input
-                            type="text"
-                            placeholder="검색어를 입력하세요."
-                            onChange={(e) => onSearch && onSearch(e.target.value)}
-                            className="sidebar-search-input"
-                        />
-                    </div>
-                )}
             </div>
             {isOpen && (
                 <div className="sidebar-list">
