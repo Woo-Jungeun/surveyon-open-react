@@ -33,5 +33,5 @@ export const EDITABLE_FIELDS = [
     'label', 'logic', 'decimal', 'spssName', 'type', 'memo',
     'multiValChange', 'minQuestions', 'excludeOpenMerge',
     'verificationVar', 'excludeOutput', 'startPos', 'valLen',
-    'valCnt', 'totalLen', 'etcOpen'
+    'valCnt', 'totalLen', 'etcOpen', 'category'
 ];

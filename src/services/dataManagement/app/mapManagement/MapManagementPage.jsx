@@ -9,6 +9,7 @@ import { MapManagementContext, EDITABLE_FIELDS, recalcVariables } from './MapMan
 import MapConfigTab from './MapConfigTab';
 import ViewLabelTab from './ViewLabelTab';
 import AddLabelPopup from './AddLabelPopup';
+import LogicEditPopup from './LogicEditPopup';
 
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
@@ -36,6 +37,7 @@ const MapManagementPage = () => {
     const [sidebarSearchQuery, setSidebarSearchQuery] = useState(''); // 변수 목록 검색어
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
+    const [editingLogicPopupOpen, setEditingLogicPopupOpen] = useState(null);       // 로직 변경 팝업
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);        // 레이블 추가 팝업 상태
 
     const [sort, setSort] = useState([]);
@@ -162,6 +164,11 @@ const MapManagementPage = () => {
     const handleCategorySave = (id, newCategoryStr) => {
         setVariables(variables.map(v => v.id === id ? { ...v, category: newCategoryStr } : v));
         SetEditingCategoryPopupOpen(null);
+    };
+
+    const handleLogicSave = (id, newLogicStr) => {
+        setVariables(variables.map(v => v.id === id ? { ...v, logic: newLogicStr } : v));
+        setEditingLogicPopupOpen(null);
     };
 
     const handleAddValueSave = (newLabels) => {
@@ -298,6 +305,7 @@ const MapManagementPage = () => {
         editingRowId,
         setEditingRowId,
         SetEditingCategoryPopupOpen,
+        setEditingLogicPopupOpen,
         isDetailed,
         onAdd: handleAddVariable,
         onDelete: handleDeleteVariable,
@@ -311,7 +319,7 @@ const MapManagementPage = () => {
                     title="맵 관리"
                     saveButtonLabel="변경사항 저장"
                     onSave={handleSave}
-                    saveButtonDisabled={!hasChanges && activeTab === 'mapping'}
+                    saveButtonDisabled={!hasChanges}
                 />
 
                 <div className="variable-page-content">
@@ -366,6 +374,16 @@ const MapManagementPage = () => {
                         variable={editingCategoryPopupOpen}
                         onClose={() => SetEditingCategoryPopupOpen(null)}
                         onSave={handleCategorySave}
+                    />
+                )}
+
+                {/* 로직 편집 팝업 */}
+                {editingLogicPopupOpen && (
+                    <LogicEditPopup
+                        variable={editingLogicPopupOpen}
+                        variablesList={variables}
+                        onClose={() => setEditingLogicPopupOpen(null)}
+                        onSave={handleLogicSave}
                     />
                 )}
 

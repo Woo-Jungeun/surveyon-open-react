@@ -786,3 +786,514 @@ input:checked+.slider:before {
     box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.25);
     border-color: var(--dm-primary);
 }
+
+/* === Logic Edit Popup V2 Styling === */
+.logic-popup-content-new {
+    width: 900px !important;
+    max-width: 90vw;
+}
+
+.logic-popup-header-v2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.logic-popup-title-area h3 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    padding-left: 12px;
+    border-left: 4px solid var(--dm-primary);
+}
+
+.logic-popup-title-area p {
+    margin: 0;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.logic-popup-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logic-guide-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--dm-primary);
+    border-radius: 20px;
+    color: var(--dm-primary);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logic-guide-btn:hover {
+    background: #f0faf5;
+}
+
+.logic-close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #94a3b8;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+
+.logic-close-btn:hover {
+    color: #475569;
+}
+
+.logic-popup-body-v2 {
+    padding: 24px;
+    max-height: 65vh;
+    /* 화면의 65% 높이 제한 */
+    overflow-y: auto;
+    /* 내용이 길어지면 세로 스크롤 생성 */
+}
+
+/* Custom Scrollbar for popup body */
+.logic-popup-body-v2::-webkit-scrollbar {
+    width: 6px;
+}
+
+.logic-popup-body-v2::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.logic-popup-body-v2::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 4px;
+}
+
+.logic-popup-body-v2::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+/* Guide Section */
+.logic-guide-container {
+    background-color: #fefce8;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    gap: 16px;
+}
+
+.logic-guide-card {
+    flex: 1;
+    background: #fff;
+    border: 1px solid #fde047;
+    border-radius: 6px;
+    padding: 16px;
+}
+
+.logic-guide-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 12px;
+}
+
+.logic-guide-text {
+    font-size: 13px;
+    color: #b45309;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.logic-guide-text p {
+    margin: 0 0 6px 0;
+}
+
+.logic-guide-text p:last-child {
+    margin: 0;
+}
+
+.logic-guide-text b {
+    font-weight: 700;
+}
+
+/* AI Box */
+.logic-ai-box {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.logic-ai-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #0369a1;
+    margin-bottom: 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.logic-ai-input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.logic-ai-input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 14px;
+    color: #334155;
+    outline: none;
+}
+
+.logic-ai-input::placeholder {
+    color: #94a3b8;
+}
+
+.logic-ai-convert-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 20px;
+    background: #7dd3fc;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logic-ai-convert-btn:hover {
+    background: #38bdf8;
+}
+
+.logic-ai-hint {
+    font-size: 13px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Rules Header */
+.logic-rules-header {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+}
+
+/* Rules Container */
+.logic-rules-container {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #fff;
+}
+
+.logic-rules-top {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 16px 20px 0;
+}
+
+.logic-toggle-group {
+    display: flex;
+    background: #f1f5f9;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.logic-toggle-btn {
+    padding: 8px 16px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logic-toggle-btn.active {
+    background: var(--dm-primary);
+    color: #fff;
+    box-shadow: none;
+}
+
+.logic-group-delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    margin-left: auto;
+}
+
+.logic-group-delete-btn:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.logic-rules-inner {
+    padding: 20px;
+}
+
+.logic-rule-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.logic-rule-row:last-child {
+    margin-bottom: 0;
+}
+
+.logic-rule-select,
+.logic-rule-input {
+    padding: 8px 36px 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #475569;
+    background: #fff;
+    outline: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.logic-rule-select:focus,
+.logic-rule-input:focus {
+    border-color: var(--dm-primary);
+}
+
+.logic-kendo-dropdown {
+    height: 36px;
+    font-size: 13px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.logic-kendo-dropdown.k-focus,
+.logic-kendo-dropdown:focus {
+    border-color: var(--dm-primary);
+    box-shadow: none;
+}
+
+.logic-kendo-dropdown .k-input-inner {
+    padding: 8px 12px;
+    color: #475569;
+}
+
+.logic-kendo-dropdown.var-select {
+    flex: 1;
+    min-width: 280px;
+    max-width: 500px;
+}
+
+.logic-kendo-dropdown.op-select {
+    width: 140px;
+}
+
+/* Custom Dropdown Popup List Styles */
+.logic-dropdown-popup {
+    border-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+}
+
+.logic-dropdown-popup .k-list-item {
+    font-size: 13px;
+    color: #334155;
+    padding: 8px 12px;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+/* 호버/포커스 상태 (연하고 부드러운 회색) */
+.logic-dropdown-popup .k-list-item:hover,
+.logic-dropdown-popup .k-list-item.k-focus,
+.logic-dropdown-popup .k-list-item.k-state-hover {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+}
+
+/* 선택된 행 상태 (테마색 배경의 연한 톤 & 데이터관리 텍스트) */
+.logic-dropdown-popup .k-list-item.k-selected,
+.logic-dropdown-popup .k-list-item.k-state-selected {
+    background-color: #f0faf5 !important;
+    /* 연한 초록색 */
+    color: var(--dm-primary) !important;
+    font-weight: 600;
+}
+
+/* ── LogicCell Styles (MapConfigTab.jsx) ── */
+.logic-cell-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    height: 100%;
+}
+
+.logic-cell-wrapper.has-logic {
+    justify-content: space-between;
+}
+
+.logic-cell-wrapper.no-logic {
+    justify-content: center;
+}
+
+.logic-cell-text {
+    flex: 1;
+    word-break: break-word;
+    white-space: normal;
+    text-align: left;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.4;
+}
+
+.logic-cell-btn {
+    min-width: 40px;
+    padding: 4px 10px;
+    background: #fff;
+    border: 1px solid #10b981;
+    border-radius: 4px;
+    color: #10b981;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.logic-cell-btn:hover {
+    background: #f0fdf4;
+}
+
+.logic-rule-input {
+    width: 140px;
+}
+
+.logic-rule-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logic-rule-action-btn.logic-rule-add {
+    color: #10b981;
+}
+
+.logic-rule-action-btn.logic-rule-add:hover {
+    background: #f0fdf4;
+    border-color: #10b981;
+}
+
+.logic-rule-action-btn.logic-rule-delete {
+    color: #94a3b8;
+}
+
+.logic-rule-action-btn.logic-rule-delete:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #475569;
+}
+
+/* 하단 점선 컨테이너 및 조건 세트 추가 버튼 */
+.logic-add-set-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-top: 16px;
+}
+
+.logic-add-set-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border: 1px dashed var(--dm-primary);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--dm-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.logic-add-set-btn:hover {
+    background: #f0faf5;
+}
+
+/* Global Connector UI */
+.logic-global-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding: 16px 0;
+}
+
+.logic-connector-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background-color: #e2e8f0;
+    z-index: 1;
+}
+
+.logic-global-toggle-box {
+    position: relative;
+    z-index: 2;
+    background: #fff;
+    padding: 12px 16px;
+    border: 1px solid var(--dm-primary);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.logic-global-desc {
+    font-size: 11px;
+    color: var(--dm-primary);
+    font-weight: 600;
+}

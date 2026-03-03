@@ -103,6 +103,39 @@ const CategoryCell = (props) => {
     );
 };
 
+const LogicCell = (props) => {
+    const { setEditingLogicPopupOpen, editingRowId } = useContext(MapManagementContext);
+    const { dataItem, style, className } = props;
+    const isEditing = dataItem.id === editingRowId || dataItem.isNew;
+
+    return (
+        <td style={{ ...style, verticalAlign: 'middle', textAlign: 'center', padding: '4px 8px' }} className={className}>
+            <div className={`logic-cell-wrapper ${dataItem.logic ? 'has-logic' : 'no-logic'}`}>
+                {dataItem.logic && (
+                    <span
+                        className="logic-cell-text"
+                        title={dataItem.logic}
+                    >
+                        {dataItem.logic}
+                    </span>
+                )}
+
+                <button
+                    type="button"
+                    className="logic-cell-btn"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingLogicPopupOpen(dataItem);
+                    }}
+                    title="로직 편집"
+                >
+                    설정
+                </button>
+            </div>
+        </td>
+    );
+};
+
 /** 변수 유형 셀 - 편집 중이면 드롭다운, 아니면 읽기 전용 */
 const TypeCell = (props) => {
     const { setVariables, editingRowId } = useContext(MapManagementContext);
@@ -217,7 +250,6 @@ const getCell = (field) => {
         case 'totalLen': return ReadOnlyCell;
         case 'name':
         case 'label':
-        case 'logic':
         case 'minQuestions':
         case 'memo':
         case 'valLen':
@@ -226,6 +258,7 @@ const getCell = (field) => {
         case 'spssName': return InputCell;
         case 'category': return CategoryCell;
         case 'type': return TypeCell;
+        case 'logic': return LogicCell;
         case 'multiValChange':
         case 'excludeOpenMerge':
         case 'verificationVar':
@@ -255,7 +288,7 @@ const MapConfigTab = ({
             { field: 'add', title: '+', width: '50px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '120px' },
-            { field: 'logic', title: '로직체크', width: '120px' },
+            { field: 'logic', title: '로직체크', width: '220px' },
             { field: 'label', title: '레이블', width: '250px' },
             { field: 'decimal', title: '소수점\n자리수', width: '100px', headerCell: multilineHeader },
             { field: 'spssName', title: 'SPSS\n변수명', width: '120px', headerCell: multilineHeader },
@@ -276,7 +309,7 @@ const MapConfigTab = ({
             { field: 'valCnt', title: '보기\n갯수', width: '85px', headerCell: multilineHeader },
             { field: 'totalLen', title: '총\n자리수', width: '90px', headerCell: multilineHeader },
             { field: 'etcOpen', title: '기타\n오픈정의', width: '100px', headerCell: multilineHeader },
-            { field: 'logic', title: '로직\n체크', width: '95px' },
+            { field: 'logic', title: '로직체크', width: '150px' },
             { field: 'label', title: '레이블', minWidth: 50 },
             { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
             { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
