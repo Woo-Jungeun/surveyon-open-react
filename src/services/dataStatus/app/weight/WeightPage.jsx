@@ -112,7 +112,7 @@ const WeightPage = () => {
                     setWeightName(data.weight_variable.replace('weight_', ''));
 
                     if (yIds.length > 0 && xIds.length > 0) {
-                        // "현재 분포" 데이터 조회
+                        // "현재값" 데이터 조회
                         const evalPayload = {
                             user: auth?.user?.userId,
                             pageid: pageId,
@@ -474,7 +474,7 @@ const WeightPage = () => {
 
     const handleSaveWeight = async () => {
         if (!weightName.trim()) {
-            modal.showAlert("알림", "가중치 문항명을 입력해주세요.");
+            modal.showAlert("알림", "가중치 변수명을 입력해주세요.");
             return;
         }
 
@@ -678,9 +678,9 @@ const WeightPage = () => {
 
                 <div className="weight-main-content">
                     <div className="weight-content-card">
-                        <div className="weight-header">
+                        {/* <div className="weight-header">
                             <h3>가중치 계산 설정</h3>
-                        </div>
+                        </div> */}
 
                         <div className="weight-layout">
                             {/* 문항 목록 패널 */}
@@ -895,7 +895,7 @@ const WeightPage = () => {
                                                             onClick={() => setIsCurrentDistOpen(!isCurrentDistOpen)}
                                                             className="weight-section-header"
                                                         >
-                                                            <h4 className="weight-section-title">현재 분포</h4>
+                                                            <h4 className="weight-section-title">현재값</h4>
                                                             {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                         </div>
                                                         {isCurrentDistOpen && (
@@ -927,7 +927,7 @@ const WeightPage = () => {
                                                             className="weight-section-header"
                                                         >
                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }}>
-                                                                <h4 className="weight-section-title">목표 분포</h4>
+                                                                <h4 className="weight-section-title">목표값</h4>
                                                                 <button
                                                                     onClick={(e) => { e.stopPropagation(); handleCopyToClipboard(); }}
                                                                     style={{
@@ -1001,7 +1001,7 @@ const WeightPage = () => {
 
                                                 {/* Fixed Save Section */}
                                                 <div className="save-section">
-                                                    <label className="save-label">가중치 문항명</label>
+                                                    <label className="save-label">가중치 변수명</label>
                                                     <div className="save-input-group">
                                                         <div className="save-prefix">
                                                             weight_
@@ -1014,7 +1014,7 @@ const WeightPage = () => {
                                                             className="save-input"
                                                         />
                                                         <button className="save-button" onClick={handleSaveWeight}>
-                                                            가중치 문항 생성
+                                                            가중치 생성
                                                         </button>
                                                     </div>
                                                 </div>
