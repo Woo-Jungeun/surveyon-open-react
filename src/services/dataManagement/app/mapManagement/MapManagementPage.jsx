@@ -18,7 +18,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, updateMapVariables } = MapManagementPageApi();
+    const { getMapVariables, updateMapVariables, updateMapLabels } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -59,81 +59,79 @@ const MapManagementPage = () => {
         });
     }, [variables, originalVariables, deletedIds, isDataLoaded]);
 
+    const loadData = async () => {
+        if (!auth?.user?.userId) return;
+        const userId = auth.user.userId;
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
+        if (!pn) {
+            setIsDataLoaded(true);
+            return;
+        }
+
+        try {
+            loadingSpinner.show();
+            const result = await getMapVariables.mutateAsync({ user: userId, pn });
+
+            if (result?.variables) {
+                const transformedData = result.variables.map(item => {
+                    const categoryStr = (item.labels || [])
+                        .map(l => `${l.code}=${l.label}`)
+                        .join(', ');
+
+                    return {
+                        id: item.id,
+                        sysName: item.cQuestionVariable || '',
+                        name: item.cQuestionVariable || '',
+                        label: item.label || '',
+                        type: item.type || 'Single',
+                        startPos: item.startPos || 0,
+                        valLen: item.codeLen || 0,
+                        valCnt: item.optCount || 0,
+                        totalLen: item.totalLen || 0,
+                        etcOpen: item.openRule || '',
+                        logic: item.logicCheck || '',
+                        spssName: item.spssName || '',
+                        decimal: item.decimalPlaces || 0,
+                        memo: item.memo || '',
+                        multiValChange: !!item.multiChange,
+                        minQuestions: item.minAnswer || 0,
+                        excludeOpenMerge: !!item.noOpenMerge,
+                        verificationVar: !!item.isValid,
+                        excludeOutput: !!item.noOutput,
+                        category: categoryStr,
+                        labels: item.labels || []
+                    };
+                });
+
+                const allZero = transformedData.every(v => v.startPos === 0);
+                const finalData = allZero ? recalcVariables(transformedData) : transformedData;
+
+                setVariables(finalData);
+                setOriginalVariables(JSON.parse(JSON.stringify(finalData)));
+            } else if (result?.success === false || result?.status === 404 || result?.status === 400 || result?.status === 500) {
+                modal.showErrorAlert("에러", result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.");
+            } else {
+                setVariables([]);
+                setOriginalVariables([]);
+            }
+        } catch (error) {
+            console.error("맵 변수 조회 오류:", error);
+            if (error?.response?.status === 404) {
+                modal.showErrorAlert("알림", "프로젝트를 찾을 수 없습니다.");
+            } else if (error?.response?.status === 400) {
+                modal.showErrorAlert("알림", "잘못된 요청입니다.");
+            } else {
+                modal.showErrorAlert("에러", "맵 목록 조회 중 오류가 발생했습니다.");
+            }
+        } finally {
+            setIsDataLoaded(true);
+            loadingSpinner.hide();
+        }
+    };
+
     // ── 데이터 조회 ──
     useEffect(() => {
-        const fetchVariables = async () => {
-            if (!auth?.user?.userId) return;
-
-            const userId = auth.user.userId;
-            const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
-
-            if (!pn) {
-                setIsDataLoaded(true);
-                return;
-            }
-
-            try {
-                loadingSpinner.show();
-                const result = await getMapVariables.mutateAsync({ user: userId, pn });
-
-                if (result?.variables) {
-                    const transformedData = result.variables.map(item => {
-                        const categoryStr = (item.labels || [])
-                            .map(l => `${l.code}=${l.label}`)
-                            .join(', ');
-
-                        return {
-                            id: item.id,
-                            sysName: item.cQuestionVariable || '',
-                            name: item.cQuestionVariable || '',
-                            label: item.label || '',
-                            type: item.type || 'Single',
-                            startPos: item.startPos || 0,
-                            valLen: item.codeLen || 0,
-                            valCnt: item.optCount || 0,
-                            totalLen: item.totalLen || 0,
-                            etcOpen: item.openRule || '',
-                            logic: item.logicCheck || '',
-                            spssName: item.spssName || '',
-                            decimal: item.decimalPlaces || 0,
-                            memo: item.memo || '',
-                            multiValChange: !!item.multiChange,
-                            minQuestions: item.minAnswer || 0,
-                            excludeOpenMerge: !!item.noOpenMerge,
-                            verificationVar: !!item.isValid,
-                            excludeOutput: !!item.noOutput,
-                            category: categoryStr,
-                            labels: item.labels || []
-                        };
-                    });
-
-                    const allZero = transformedData.every(v => v.startPos === 0);
-                    const finalData = allZero ? recalcVariables(transformedData) : transformedData;
-
-                    setVariables(finalData);
-                    setOriginalVariables(JSON.parse(JSON.stringify(finalData)));
-                } else if (result?.success === false || result?.status === 404 || result?.status === 400 || result?.status === 500) {
-                    modal.showErrorAlert("에러", result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.");
-                } else {
-                    setVariables([]);
-                    setOriginalVariables([]);
-                }
-            } catch (error) {
-                console.error("맵 변수 조회 오류:", error);
-                if (error.response?.status === 404) {
-                    modal.showErrorAlert("알림", "프로젝트를 찾을 수 없습니다.");
-                } else if (error.response?.status === 400) {
-                    modal.showErrorAlert("알림", "잘못된 요청입니다.");
-                } else {
-                    modal.showErrorAlert("에러", "맵 목록 조회 중 오류가 발생했습니다.");
-                }
-            } finally {
-                setIsDataLoaded(true);
-                loadingSpinner.hide();
-            }
-        };
-
-        fetchVariables();
+        loadData();
     }, [auth?.user?.userId, refreshKey]);
 
     useEffect(() => {
@@ -176,11 +174,24 @@ const MapManagementPage = () => {
 
         const newCategoryStr = newLabels.map(l => `{${l.code};${l.label}}`).join('');
 
-        setVariables(variables.map(v =>
-            v.id === selectedVariableId
-                ? { ...v, labels: newLabels, category: newCategoryStr }
-                : v
-        ));
+        setVariables(variables.map(v => {
+            if (v.id !== selectedVariableId) return v;
+
+            const existingLabels = v.labels || [];
+            const existingLabelsMap = new Map();
+            existingLabels.forEach(l => existingLabelsMap.set(l.code, l));
+
+            const mergedLabels = newLabels.map(nl => {
+                const existing = existingLabelsMap.get(nl.code);
+                if (existing) {
+                    return { ...existing, label: nl.label };
+                }
+                return nl;
+            });
+
+            const newCategoryStr = mergedLabels.map(l => `{${l.code};${l.label}}`).join('');
+            return { ...v, labels: mergedLabels, category: newCategoryStr };
+        }));
 
         setAddValueModalOpen(false);
     };
@@ -227,75 +238,200 @@ const MapManagementPage = () => {
         });
     };
 
-    const handleSave = () => {
-        const executeSave = async () => {
-            try {
-                const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
-                const userId = auth?.user?.userId || '';
+    const executeSave = async (showSuccessModal = true) => {
+        try {
+            const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '';
+            const userId = auth?.user?.userId || '';
 
+            if (activeTab === 'category') {
                 const originalMap = new Map(originalVariables.map(v => [v.id, v]));
-                const updated = variables
-                    .filter(v => {
-                        if (v.isNew) return true;
-                        const orig = originalMap.get(v.id);
-                        if (!orig) return true;
-                        return EDITABLE_FIELDS.some(f => v[f] !== orig[f]);
-                    })
-                    .map(v => ({
-                        id: v.isNew ? 0 : v.id,
-                        projectId: 0,
-                        pn,
-                        sQuestionVariable: v.sysName || '',
-                        cQuestionVariable: v.name || v.sysName || '',
-                        label: v.label || '',
-                        type: v.type || '',
-                        startPos: v.startPos || 0,
-                        codeLen: v.valLen || 0,
-                        optCount: v.valCnt || 0,
-                        totalLen: v.totalLen || 0,
-                        openRule: v.etcOpen || '',
-                        logicCheck: v.logic || '',
-                        spssName: v.spssName || '',
-                        decimalPlaces: v.decimal || 0,
-                        memo: v.memo || '',
-                        multiChange: !!v.multiValChange,
-                        minAnswer: v.minQuestions || 0,
-                        noOpenMerge: !!v.excludeOpenMerge,
-                        isValid: !!v.verificationVar,
-                        noOutput: !!v.excludeOutput,
-                        ranking: 0,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        labels: v.labels || []
-                    }));
-
-                const result = await updateMapVariables.mutateAsync({
-                    pn,
-                    user: userId,
-                    updated,
-                    deleted: deletedIds,
+                const variablesWithLabelChanges = variables.filter(v => {
+                    if (v.isNew) return false;
+                    const orig = originalMap.get(v.id);
+                    if (!orig) return false;
+                    return JSON.stringify(v.labels || []) !== JSON.stringify(orig.labels || []);
                 });
 
-                if (result?.success === '777' || result?.success === true) {
-                    modal.showAlert("알림", "저장되었습니다.", () => {
-                        setDeletedIds([]);
-                        setRefreshKey(prev => prev + 1);
-                    });
-                } else {
-                    modal.showErrorAlert("에러", result?.message || "저장에 실패했습니다.");
+                if (variablesWithLabelChanges.length === 0) {
+                    if (showSuccessModal) modal.showAlert("알림", "변경된 데이터가 없습니다.", () => { });
+                    return true;
                 }
-            } catch (e) {
-                console.error('저장 오류:', e);
-                modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
-            }
-        };
 
+                let allSuccess = true;
+
+                for (const v of variablesWithLabelChanges) {
+                    const origLabels = originalMap.get(v.id)?.labels || [];
+                    const currentLabels = v.labels || [];
+
+                    const currentCodesSet = new Set(currentLabels.map(l => l.code));
+                    const deletedLabelIds = origLabels
+                        .filter(l => !currentCodesSet.has(l.code))
+                        .map(l => l.id)
+                        .filter(id => id != null);
+
+                    const origLabelsMap = new Map(origLabels.map(l => [l.code, l]));
+                    const updatedLabelPayloads = [];
+
+                    currentLabels.forEach((l, index) => {
+                        const orig = origLabelsMap.get(l.code);
+                        const rankingVal = l.ranking !== undefined ? l.ranking : (orig?.ranking !== undefined ? orig.ranking : index + 1);
+
+                        const isOpenVal = l.isOpen !== undefined ? l.isOpen : false;
+                        const lenNumVal = l.lenNum || 0;
+                        const isNumVal = l.isNum !== undefined ? l.isNum : false;
+
+                        const isChanged = !orig ||
+                            orig.label !== l.label ||
+                            (orig.isOpen || false) !== isOpenVal ||
+                            (orig.lenNum || 0) !== lenNumVal ||
+                            (orig.isNum || false) !== isNumVal ||
+                            (orig.ranking !== undefined ? orig.ranking : index + 1) !== rankingVal;
+
+                        if (isChanged) {
+                            updatedLabelPayloads.push({
+                                id: l.id || 0,
+                                pn: l.pn || pn,
+                                variableId: v.id,
+                                code: l.code,
+                                label: l.label,
+                                isOpen: isOpenVal,
+                                lenNum: lenNumVal,
+                                isNum: isNumVal,
+                                ranking: rankingVal,
+                                createdAt: l.createdAt || new Date().toISOString(),
+                                updatedAt: new Date().toISOString()
+                            });
+                        }
+                    });
+
+                    const payload = {
+                        variableId: v.id,
+                        user: userId,
+                        updated: updatedLabelPayloads,
+                        deleted: deletedLabelIds
+                    };
+
+                    if (updatedLabelPayloads.length > 0 || deletedLabelIds.length > 0) {
+                        const saveResult = await updateMapLabels.mutateAsync(payload);
+                        if (!(saveResult?.success === '777' || saveResult?.success === true)) {
+                            allSuccess = false;
+                        }
+                    }
+                }
+
+                if (allSuccess) {
+                    await loadData();
+                    if (showSuccessModal) modal.showAlert("알림", "보기 레이블 정보가 저장되었습니다.");
+                    return true;
+                } else {
+                    modal.showErrorAlert("에러", "일부 보기 레이블 저장 중 에러가 발생했습니다.");
+                    return false;
+                }
+            }
+
+            const originalMap = new Map(originalVariables.map(v => [v.id, v]));
+            const updated = variables
+                .filter(v => {
+                    if (v.isNew) return true;
+                    const orig = originalMap.get(v.id);
+                    if (!orig) return true;
+                    return EDITABLE_FIELDS.some(f => v[f] !== orig[f]);
+                })
+                .map(v => ({
+                    id: v.isNew ? 0 : v.id,
+                    projectId: 0,
+                    pn,
+                    sQuestionVariable: v.sysName || '',
+                    cQuestionVariable: v.name || v.sysName || '',
+                    label: v.label || '',
+                    type: v.type || '',
+                    startPos: v.startPos || 0,
+                    codeLen: v.valLen || 0,
+                    optCount: v.valCnt || 0,
+                    totalLen: v.totalLen || 0,
+                    openRule: v.etcOpen || '',
+                    logicCheck: v.logic || '',
+                    spssName: v.spssName || '',
+                    decimalPlaces: v.decimal || 0,
+                    memo: v.memo || '',
+                    multiChange: !!v.multiValChange,
+                    minAnswer: v.minQuestions || 0,
+                    noOpenMerge: !!v.excludeOpenMerge,
+                    isValid: !!v.verificationVar,
+                    noOutput: !!v.excludeOutput,
+                    ranking: 0,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    labels: v.labels || []
+                }));
+
+            const result = await updateMapVariables.mutateAsync({
+                pn,
+                user: userId,
+                updated,
+                deleted: deletedIds,
+            });
+
+            if (result?.success === '777' || result?.success === true) {
+                setDeletedIds([]);
+                await loadData();
+                if (showSuccessModal) modal.showAlert("알림", "저장되었습니다.");
+                return true;
+            } else {
+                modal.showErrorAlert("에러", result?.message || "저장에 실패했습니다.");
+                return false;
+            }
+        } catch (e) {
+            console.error('저장 오류:', e);
+            modal.showErrorAlert("에러", "저장 중 오류가 발생했습니다.");
+            return false;
+        }
+    };
+
+    const handleSave = () => {
         modal.showConfirm("알림", "변경사항을 저장하시겠습니까?", {
             btns: [
                 { title: "취소", click: () => { } },
-                { title: "확인", click: executeSave },
+                { title: "확인", click: () => executeSave(true) },
             ]
         });
+    };
+
+    const handleTabChange = async (targetTab) => {
+        if (targetTab === activeTab) return;
+
+        if (hasChanges) {
+            const action = await new Promise((resolve) => {
+                modal.showConfirm("알림", "저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?", {
+                    btns: [
+                        { title: "취소", click: () => resolve("cancel") },
+                        { title: "이동", click: () => resolve("go") },
+                        { title: "저장 후 이동", click: () => resolve("saveThenGo") }
+                    ]
+                });
+            });
+
+            if (action === "cancel") {
+                return;
+            } else if (action === "go") {
+                // 변경 무시: 원본 데이터로 되돌림
+                setVariables(JSON.parse(JSON.stringify(originalVariables)));
+                setDeletedIds([]);
+                setSelectedVariableId(null);
+                setSidebarSearchQuery('');
+                setActiveTab(targetTab);
+            } else if (action === "saveThenGo") {
+                const success = await executeSave(false);
+                console.log(success) //todo 아직 에러코드 적용 X
+                //if (success) {
+                setSelectedVariableId(null);
+                setSidebarSearchQuery('');
+                setActiveTab(targetTab);
+                // }
+            }
+        } else {
+            setActiveTab(targetTab);
+        }
     };
 
     // ── Context 값 ──
@@ -327,13 +463,13 @@ const MapManagementPage = () => {
                     <div className="tab-container">
                         <button
                             className={`tab-btn ${activeTab === 'mapping' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('mapping')}
+                            onClick={() => handleTabChange('mapping')}
                         >
                             MAP 구성
                         </button>
                         <button
                             className={`tab-btn ${activeTab === 'category' ? 'active' : ''}`}
-                            onClick={() => setActiveTab('category')}
+                            onClick={() => handleTabChange('category')}
                         >
                             보기 레이블
                         </button>

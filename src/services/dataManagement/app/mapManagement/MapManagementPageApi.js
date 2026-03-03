@@ -26,8 +26,18 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** 보기 레이블 저장 (수정/삭제) */
+    const updateMapLabels = useMutation(
+        async (data) => await api.post(data, "/map/labels/update", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
-        updateMapVariables
+        updateMapVariables,
+        updateMapLabels
     };
 }

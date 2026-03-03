@@ -93,9 +93,19 @@ const ViewLabelTab = ({
                             <Column field="code" title="코드" width="100px" />
                             <Column field="label" title="레이블" />
                             <Column field="delete" title="삭제" width="80px" cell={(props) => (
-                                <td style={{ textAlign: 'center' }}>
+                                <td style={{ padding: 0 }}>
                                     <button
-                                        style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
+                                        style={{
+                                            border: 'none',
+                                            background: 'transparent',
+                                            cursor: 'pointer',
+                                            width: '100%',
+                                            height: '100%',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            minHeight: '36px' // 셀 높이 최소 보장
+                                        }}
                                         onClick={() => handleDeleteLabel(props.dataItem.code)}
                                     >
                                         <Trash2 size={16} color="#64748b" />

@@ -1161,6 +1161,7 @@ input:checked+.slider:before {
 
 .logic-cell-wrapper.has-logic {
     justify-content: space-between;
+    padding: 10px;
 }
 
 .logic-cell-wrapper.no-logic {
