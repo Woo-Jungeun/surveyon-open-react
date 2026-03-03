@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+﻿import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
@@ -151,7 +151,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     sessionStorage.setItem("pageId", "");
     sessionStorage.setItem("pagetitle", "");
     setPageState({
-      title: "페이지 없음",
+      title: "대시보드(수정가능)",
       merge_pn: "-"
     });
 
@@ -183,7 +183,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   // 페이지 정보 state 추가
   const [pageState, setPageState] = useState({
-    title: sessionStorage.getItem("pagetitle") || "페이지 없음",
+    title: sessionStorage.getItem("pagetitle") || "대시보드(수정가능)",
     merge_pn: sessionStorage.getItem("merge_pn") || "-"
   });
 
