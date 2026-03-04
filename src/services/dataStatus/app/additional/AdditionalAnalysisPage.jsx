@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, LineChart, Map, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
@@ -49,7 +49,7 @@ const AdditionalAnalysisPage = () => {
     const [variables, setVariables] = useState([]);
 
     const [rowVars, setRowVars] = useState([]);
-    const [colVars, setColVars] = useState([]);
+    const [colVars, setColVars] = useState([]); // Array of arrays: [[v1, v2], [v3]]
     const [draggedItem, setDraggedItem] = useState(null);
 
     // Filter weight variables from API response
@@ -220,8 +220,14 @@ const AdditionalAnalysisPage = () => {
                             return found || { id, name: id, label: id, info: [] };
                         });
                         const newColVars = (firstTable.col || []).map(id => {
+                            if (Array.isArray(id)) {
+                                return id.map(subId => {
+                                    const found = loadedVariables.find(v => v.id === subId);
+                                    return found || { id: subId, name: subId, label: subId, info: [] };
+                                });
+                            }
                             const found = loadedVariables.find(v => v.id === id);
-                            return found || { id, name: id, label: id, info: [] };
+                            return [found || { id, name: id, label: id, info: [] }];
                         });
                         setRowVars(newRowVars);
                         setColVars(newColVars);
@@ -241,7 +247,12 @@ const AdditionalAnalysisPage = () => {
                                     // x_info -> 가로축 (Cols)
                                     if (tData.config.x_info) {
                                         const xIds = tData.config.x_info;
-                                        const mappedCols = xIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        const mappedCols = xIds.map(item => {
+                                            if (Array.isArray(item)) {
+                                                return item.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                            }
+                                            return [loadedVariables.find(v => v.name === item || v.id === item) || { id: item, name: item }];
+                                        });
                                         setColVars(mappedCols);
                                     }
                                     // y_info -> 세로축 (Rows)
@@ -309,7 +320,7 @@ const AdditionalAnalysisPage = () => {
                                     const weightCol = config.weight_col || "";
                                     const filterExpr = config.filter_expression || "";
 
-                                    const selectedVarNames = new Set([...xInfo, ...yInfo]);
+                                    const selectedVarNames = new Set([...xInfo.flat(), ...yInfo]);
                                     if (weightCol && weightCol !== "없음" && weightCol !== "") {
                                         selectedVarNames.add(weightCol);
                                     }
@@ -414,7 +425,7 @@ const AdditionalAnalysisPage = () => {
         };
 
         let rowGroups = getGroupedLabels(rowVars);
-        let colGroups = getGroupedLabels(colVars);
+        let colGroups = getGroupedLabels(colVars.flat());
 
         // Default handling
         if (rowGroups.length === 0) rowGroups = [{ name: '', labels: [''] }];
@@ -710,8 +721,14 @@ const AdditionalAnalysisPage = () => {
             return found || { id, name: id, label: id, info: [] };
         });
         const newColVars = (item.col || []).map(id => {
+            if (Array.isArray(id)) {
+                return id.map(subId => {
+                    const found = variables.find(v => v.id === subId);
+                    return found || { id: subId, name: subId, label: subId, info: [] };
+                });
+            }
             const found = variables.find(v => v.id === id);
-            return found || { id, name: id, label: id, info: [] };
+            return [found || { id, name: id, label: id, info: [] }];
         });
         setRowVars(newRowVars);
         setColVars(newColVars);
@@ -732,7 +749,12 @@ const AdditionalAnalysisPage = () => {
                         // x_info -> 가로축 (Cols)
                         if (data.config.x_info) {
                             const xIds = data.config.x_info;
-                            const mappedCols = xIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                            const mappedCols = xIds.map(item => {
+                                if (Array.isArray(item)) {
+                                    return item.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                }
+                                return [variables.find(v => v.name === item || v.id === item) || { id: item, name: item }];
+                            });
                             setColVars(mappedCols);
                         }
                         // y_info -> 세로축 (Rows)
@@ -814,7 +836,7 @@ const AdditionalAnalysisPage = () => {
                         });
 
                         const variablesMap = {};
-                        [...mappedRowsRun, ...mappedColsRun].forEach(v => {
+                        [...mappedRowsRun.flat(), ...mappedColsRun.flat()].forEach(v => {
                             const varId = v.id || v.name;
                             if (v && varId) {
                                 variablesMap[varId] = v;
@@ -846,8 +868,8 @@ const AdditionalAnalysisPage = () => {
                             table: {
                                 id: item.id,
                                 name: item.name || "Untitled Table",
-                                x_info: mappedColsRun.map(v => v.id || v.name),
-                                y_info: mappedRowsRun.map(v => v.id || v.name)
+                                x_info: xInfo, // Retain original nested structure
+                                y_info: yInfo
                             }
                         };
 
@@ -928,46 +950,173 @@ const AdditionalAnalysisPage = () => {
         setIsConfigOpen(true);
     };
 
-    const handleDragStart = (e, item) => {
-        setDraggedItem(item);
-        e.dataTransfer.effectAllowed = 'copy';
+    const handleDragStart = (e, dragData) => {
+        if (!dragData.type) {
+            setDraggedItem({ type: 'NEW', item: dragData });
+        } else {
+            setDraggedItem(dragData);
+        }
+        e.stopPropagation();
+        e.dataTransfer.effectAllowed = 'move';
     };
 
     const handleDragOver = (e) => {
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'copy';
+        e.dataTransfer.dropEffect = 'move';
     };
 
-    const handleDrop = (e, type) => {
+    const handleDrop = (e, targetType, targetGroupIndex = null, targetItemIndex = null) => {
         e.preventDefault();
+        e.stopPropagation();
         if (!draggedItem) return;
 
-        // Find the full variable object from the variables list
-        const fullVariable = variables.find(v => v.id === draggedItem.id);
-        const newItem = fullVariable || {
-            id: draggedItem.id,
-            name: draggedItem.name,
-            label: draggedItem.label || draggedItem.name,
-            info: draggedItem.info || []
-        };
+        const dragType = draggedItem.type || 'NEW';
+        const item = draggedItem.item || (dragType === 'NEW' ? draggedItem : null);
+        const srcGroupIndex = draggedItem.groupIndex;
+        const srcItemIndex = draggedItem.itemIndex;
 
-        if (type === 'row') {
-            if (!rowVars.find(v => v.id === newItem.id)) {
-                setRowVars([...rowVars, newItem]);
+        const fullVariable = item ? (variables.find(v => v.id === item.id) || item) : null;
+        const newItem = fullVariable ? {
+            id: fullVariable.id,
+            name: fullVariable.name,
+            label: fullVariable.label || fullVariable.name,
+            info: fullVariable.info || []
+        } : null;
+
+        if (targetType === 'row' || targetType === 'row_item') {
+            const newRowVars = [...rowVars];
+
+            if (dragType === 'ROW_ITEM') {
+                const [moved] = newRowVars.splice(srcItemIndex, 1);
+                if (targetType === 'row_item') {
+                    newRowVars.splice(targetItemIndex, 0, moved);
+                } else {
+                    newRowVars.push(moved);
+                }
+                setRowVars(newRowVars);
+            } else if (newItem) {
+                if (dragType === 'COL_ITEM') {
+                    removeVar(newItem.id, 'col', srcGroupIndex);
+                }
+                if (rowVars.length >= 10 && !rowVars.find(v => v.id === newItem.id)) {
+                    modal.showAlert('알림', '세로축(행)은 최대 10개까지만 등록할 수 있습니다.');
+                } else if (!rowVars.find(v => v.id === newItem.id)) {
+                    if (targetType === 'row_item') {
+                        newRowVars.splice(targetItemIndex, 0, newItem);
+                    } else {
+                        newRowVars.push(newItem);
+                    }
+                    setRowVars(newRowVars);
+                }
             }
-        } else if (type === 'col') {
-            if (!colVars.find(v => v.id === newItem.id)) {
-                setColVars([...colVars, newItem]);
+        } else if (targetType === 'col' || targetType === 'col_item' || targetType === 'new_col_group') {
+            const newColVars = [...colVars];
+
+            if (dragType === 'COL_GROUP') {
+                if (targetType === 'col' || targetType === 'col_item') {
+                    if (srcGroupIndex !== targetGroupIndex) {
+                        const [movedGroup] = newColVars.splice(srcGroupIndex, 1);
+                        newColVars.splice(targetGroupIndex, 0, movedGroup);
+                        setColVars(newColVars);
+                    }
+                } else if (targetType === 'new_col_group') {
+                    const [movedGroup] = newColVars.splice(srcGroupIndex, 1);
+                    newColVars.push(movedGroup);
+                    setColVars(newColVars);
+                }
+                setDraggedItem(null);
+                return;
+            }
+
+            if (!newItem) {
+                setDraggedItem(null);
+                return;
+            }
+
+            if (dragType === 'COL_ITEM') {
+                if (targetType === 'col' || targetType === 'col_item') {
+                    if (srcGroupIndex === targetGroupIndex) {
+                        const [moved] = newColVars[srcGroupIndex].splice(srcItemIndex, 1);
+                        if (targetType === 'col_item') {
+                            newColVars[targetGroupIndex].splice(targetItemIndex, 0, moved);
+                        } else {
+                            newColVars[targetGroupIndex].push(moved);
+                        }
+                        setColVars(newColVars);
+                    } else {
+                        if (newColVars[targetGroupIndex].length < 2 && !newColVars[targetGroupIndex].find(v => v.id === newItem.id)) {
+                            newColVars[srcGroupIndex].splice(srcItemIndex, 1);
+                            if (newColVars[srcGroupIndex].length === 0) {
+                                newColVars.splice(srcGroupIndex, 1);
+                                const actualTargetIndex = srcGroupIndex < targetGroupIndex ? targetGroupIndex - 1 : targetGroupIndex;
+                                if (targetType === 'col_item') {
+                                    newColVars[actualTargetIndex].splice(targetItemIndex, 0, newItem);
+                                } else {
+                                    newColVars[actualTargetIndex].push(newItem);
+                                }
+                            } else {
+                                if (targetType === 'col_item') {
+                                    newColVars[targetGroupIndex].splice(targetItemIndex, 0, newItem);
+                                } else {
+                                    newColVars[targetGroupIndex].push(newItem);
+                                }
+                            }
+                            setColVars(newColVars);
+                        }
+                    }
+                } else if (targetType === 'new_col_group') {
+                    if (newColVars.length < 10) {
+                        newColVars[srcGroupIndex].splice(srcItemIndex, 1);
+                        if (newColVars[srcGroupIndex].length === 0) {
+                            newColVars.splice(srcGroupIndex, 1);
+                        }
+                        newColVars.push([newItem]);
+                        setColVars(newColVars);
+                    } else {
+                        modal.showAlert('알림', '가로축 그룹은 최대 10개까지만 생성할 수 있습니다.');
+                    }
+                }
+            } else { // NEW or ROW_ITEM
+                if (targetType === 'col' || targetType === 'col_item') {
+                    if (newColVars[targetGroupIndex].length < 2 && !newColVars[targetGroupIndex].find(v => v.id === newItem.id)) {
+                        if (dragType === 'ROW_ITEM') {
+                            setRowVars(rowVars.filter(v => v.id !== newItem.id));
+                        }
+                        if (targetType === 'col_item') {
+                            newColVars[targetGroupIndex].splice(targetItemIndex, 0, newItem);
+                        } else {
+                            newColVars[targetGroupIndex].push(newItem);
+                        }
+                        setColVars(newColVars);
+                    }
+                } else if (targetType === 'new_col_group') {
+                    if (newColVars.length < 10) {
+                        if (dragType === 'ROW_ITEM') {
+                            setRowVars(rowVars.filter(v => v.id !== newItem.id));
+                        }
+                        newColVars.push([newItem]);
+                        setColVars(newColVars);
+                    } else {
+                        modal.showAlert('알림', '가로축 그룹은 최대 10개까지만 생성할 수 있습니다.');
+                    }
+                }
             }
         }
         setDraggedItem(null);
     };
 
-    const removeVar = (id, type) => {
+    const removeVar = (id, type, groupIndex = null) => {
         if (type === 'row') {
             setRowVars(rowVars.filter(v => v.id !== id));
         } else {
-            setColVars(colVars.filter(v => v.id !== id));
+            if (groupIndex !== null) {
+                const newColVars = [...colVars];
+                newColVars[groupIndex] = newColVars[groupIndex].filter(v => v.id !== id);
+                if (newColVars[groupIndex].length === 0) {
+                    newColVars.splice(groupIndex, 1);
+                }
+                setColVars(newColVars);
+            }
         }
     };
 
@@ -992,7 +1141,7 @@ const AdditionalAnalysisPage = () => {
                 pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: colVars.map(v => v.name),
+                    x_info: colVars.map(group => group.map(v => v.name)),
                     y_info: rowVars.map(v => v.name),
                     filter_expression: filterExpression,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight
@@ -1103,7 +1252,7 @@ const AdditionalAnalysisPage = () => {
                 pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: colVars.map(v => v.id),
+                    x_info: colVars.map(group => group.map(v => v.id)),
                     y_info: rowVars.map(v => v.id),
                     filter_expression: filterExpression,
                     weight_col: weightId
@@ -1124,7 +1273,7 @@ const AdditionalAnalysisPage = () => {
                 const variablesMap = {};
 
                 // Add Row and Column variables directly
-                [...rowVars, ...colVars].forEach(v => {
+                [...rowVars, ...colVars.flat()].forEach(v => {
                     const varId = v.id || v.name;
                     if (v && varId) {
                         variablesMap[varId] = v;
@@ -1148,7 +1297,7 @@ const AdditionalAnalysisPage = () => {
                     table: {
                         id: selectedTableId,
                         name: tableName || "Untitled Table",
-                        x_info: colVars.map(v => v.id || v.name),
+                        x_info: colVars.map(group => group.map(v => v.id || v.name)),
                         y_info: rowVars.map(v => v.id || v.name)
                     }
                 };
@@ -1224,7 +1373,7 @@ const AdditionalAnalysisPage = () => {
         // 선택된 변수들만 필터링
         const selectedVarNames = new Set();
         rowVars.forEach(v => selectedVarNames.add(v.name));
-        colVars.forEach(v => selectedVarNames.add(v.name));
+        colVars.flat().forEach(v => selectedVarNames.add(v.name));
 
         if (selectedWeight && selectedWeight !== "없음") {
             selectedVarNames.add(selectedWeight);
@@ -1233,7 +1382,7 @@ const AdditionalAnalysisPage = () => {
         const variablesMap = {};
 
         // Add Row and Column variables directly
-        [...rowVars, ...colVars].forEach(v => {
+        [...rowVars, ...colVars.flat()].forEach(v => {
             const varId = v.id || v.name;
             if (v && varId) {
                 variablesMap[varId] = v;
@@ -1260,7 +1409,7 @@ const AdditionalAnalysisPage = () => {
             table: {
                 id: selectedTableId,
                 name: tableName || "Untitled Table",
-                x_info: colVars.map(v => v.id || v.name),
+                x_info: colVars.map(group => group.map(v => v.id || v.name)),
                 y_info: rowVars.map(v => v.id || v.name)
             }
         };
@@ -1565,22 +1714,54 @@ const AdditionalAnalysisPage = () => {
                                         <div className="corner-label">
                                             세로 × 가로
                                         </div>
-                                        <div
-                                            className="col-drop-zone"
-                                            onDragOver={handleDragOver}
-                                            onDrop={(e) => handleDrop(e, 'col')}
-                                        >
+                                        <div className="col-drop-zone">
                                             <span className="drop-zone-label">가로축 (열)</span>
-                                            <div className="drop-zone-area">
-                                                {colVars.length === 0 ? (
-                                                    <span className="drop-zone-placeholder">문항을 여기로 드래그하세요</span>
-                                                ) : (
-                                                    colVars.map(v => (
-                                                        <div key={v.id} className="dropped-tag">
-                                                            {v.id}
-                                                            <X size={14} className="remove" onClick={() => removeVar(v.id, 'col')} />
+                                            <div className="drop-zone-area" style={{ padding: '8px', overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                {colVars.map((group, groupIndex) => (
+                                                    <div
+                                                        key={`group-${groupIndex}`}
+                                                        className="col-group"
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, { type: 'COL_GROUP', groupIndex })}
+                                                        onDragOver={handleDragOver}
+                                                        onDrop={(e) => handleDrop(e, 'col', groupIndex)}
+                                                    >
+                                                        <div className="group-drag-handle" title="그룹 이동">
+                                                            <GripVertical size={16} />
                                                         </div>
-                                                    ))
+                                                        <div className="col-group-items">
+                                                            {group.map((v, itemIndex) => (
+                                                                <div
+                                                                    key={v.id}
+                                                                    className="dropped-tag grouped"
+                                                                    draggable
+                                                                    onDragStart={(e) => handleDragStart(e, { type: 'COL_ITEM', groupIndex, itemIndex, item: v })}
+                                                                    onDragOver={handleDragOver}
+                                                                    onDrop={(e) => handleDrop(e, 'col_item', groupIndex, itemIndex)}
+                                                                >
+                                                                    <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
+                                                                    <span className="tag-text">{v.id}</span>
+                                                                    <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'col', groupIndex); }} />
+                                                                </div>
+                                                            ))}
+                                                            {group.length < 2 && Array.from({ length: 2 - group.length }).map((_, i) => (
+                                                                <div key={`empty-${i}`} className="empty-slot"></div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {colVars.length < 10 && (
+                                                    <div
+                                                        className="col-group new-group"
+                                                        onDragOver={handleDragOver}
+                                                        onDrop={(e) => handleDrop(e, 'new_col_group')}
+                                                    >
+                                                        {colVars.length === 0 && (
+                                                            <div className="drop-zone-placeholder" style={{ position: 'absolute', width: '100%', textAlign: 'center', margin: 'auto', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                                                                문항을 여기로 드래그하세요
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -1598,10 +1779,18 @@ const AdditionalAnalysisPage = () => {
                                                 {rowVars.length === 0 ? (
                                                     <div className="drop-zone-placeholder vertical">문항을 여기로<br />드래그하세요</div>
                                                 ) : (
-                                                    rowVars.map(v => (
-                                                        <div key={v.id} className="dropped-tag row-tag">
-                                                            {v.id}
-                                                            <X size={14} className="remove" onClick={() => removeVar(v.id, 'row')} />
+                                                    rowVars.map((v, itemIndex) => (
+                                                        <div
+                                                            key={v.id}
+                                                            className="dropped-tag row-tag"
+                                                            draggable
+                                                            onDragStart={(e) => handleDragStart(e, { type: 'ROW_ITEM', itemIndex, item: v })}
+                                                            onDragOver={handleDragOver}
+                                                            onDrop={(e) => handleDrop(e, 'row_item', null, itemIndex)}
+                                                        >
+                                                            <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
+                                                            <span className="tag-text">{v.id}</span>
+                                                            <X size={14} className="remove" style={{ flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'row'); }} />
                                                         </div>
                                                     ))
                                                 )}

@@ -344,9 +344,9 @@
     background: #fff;
 }
 
-.drop-zones-top {
+.cross-tab-page .drop-zones-top {
     display: flex;
-    height: 140px;
+    height: 190px;
 }
 
 .corner-label {
@@ -361,8 +361,9 @@
     font-weight: 500;
 }
 
-.col-drop-zone {
+.cross-tab-page .col-drop-zone {
     flex: 1;
+    min-width: 0;
     background: #eff6ff;
     padding: 16px;
     display: flex;
@@ -377,7 +378,7 @@
     margin-bottom: 8px;
 }
 
-.drop-zone-area {
+.cross-tab-page .drop-zone-area {
     flex: 1;
     border: 2px dashed #d0d7de;
     border-radius: 8px;
@@ -467,13 +468,117 @@
     white-space: nowrap;
 }
 
+/* Column Group Styles */
+.cross-tab-page .col-group {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px;
+    border: 1px dashed #93c5fd;
+    border-radius: 8px;
+    background: #eff6ff;
+    /* light blue */
+    min-width: 160px;
+    flex-shrink: 0;
+}
+
+.cross-tab-page .col-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.cross-tab-page .col-group.new-group {
+    border: 1px dashed transparent;
+    background: transparent;
+    position: relative;
+    flex: 1;
+    min-width: 150px;
+    min-height: 96px;
+}
+
+.cross-tab-page .dropped-tag.grouped {
+    border-radius: 6px;
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 6px 10px 6px 6px;
+    justify-content: flex-start;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    white-space: normal;
+    height: auto;
+}
+
+.cross-tab-page .dropped-tag.grouped .tag-text {
+    flex: 1;
+    text-align: left;
+    word-break: break-all;
+    line-height: 1.4;
+}
+
+.cross-tab-page .item-drag-handle {
+    cursor: grab;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 6px;
+    width: 20px;
+    height: 20px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    color: #94a3b8;
+    transition: all 0.2s;
+}
+
+.cross-tab-page .item-drag-handle:hover {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.cross-tab-page .group-drag-handle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    width: 20px;
+    color: #cbd5e1;
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.cross-tab-page .group-drag-handle:hover {
+    background: #e2e8f0;
+    color: #64748b;
+}
+
+.empty-slot {
+    height: 36px;
+    border-radius: 6px;
+    background: #dae3f3;
+    /* empty slot shadow */
+    opacity: 0.6;
+}
+
 .dropped-tag.row-tag {
     background: #e8f5e9;
     color: #2e7d32;
     border: 1px solid #a5d6a7;
-    padding: 8px 12px;
+    padding: 8px 10px;
     border-radius: 6px;
-    justify-content: space-between;
+    justify-content: flex-start;
+    white-space: normal;
+    height: auto;
+}
+
+.dropped-tag.row-tag .tag-text {
+    flex: 1;
+    text-align: left;
+    word-break: break-all;
+    line-height: 1.4;
 }
 
 .dropped-tag .remove {
