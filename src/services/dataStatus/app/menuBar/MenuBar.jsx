@@ -21,8 +21,8 @@ const MENU_ITEMS = [
     label: "집계 현황",
     items: [
       { label: "빈도분석", path: "/data_status/analysis/frequency", icon: BarChart3 },
-      { label: "추가분석", path: "/data_status/analysis/additional", icon: Grid },
       { label: "교차분석", path: "/data_status/analysis/cross", icon: Table, isPending: true },
+      { label: "추가분석", path: "/data_status/analysis/additional", icon: Grid },
       { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
     ]
   },
