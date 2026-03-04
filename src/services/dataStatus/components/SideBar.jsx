@@ -34,6 +34,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                     {items.map((item) => (
                         <div
                             key={item.id}
+                            id={`sidebar-item-${item.id}`}
                             onClick={() => onItemClick(item)}
                             className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
                         >

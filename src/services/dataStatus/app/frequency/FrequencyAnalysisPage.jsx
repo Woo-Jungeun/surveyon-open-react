@@ -273,6 +273,8 @@ const FrequencyAnalysisPage = () => {
     const filterRef = useRef(null);
     const mainRef = useRef(null);
     const fetchingRef = useRef(new Set());
+    const isClickingRef = useRef(false);
+    const clickTimeoutRef = useRef(null);
 
     // Close filter dropdown when clicking outside
     useEffect(() => {
@@ -537,18 +539,37 @@ const FrequencyAnalysisPage = () => {
     }, [filteredQuestions]);
 
     const scrollToId = (id) => {
+        isClickingRef.current = true;
+        if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
+
         const element = document.getElementById(id);
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // 클릭과 동시에 activeId를 확정해주고 스크롤 진행
             setActiveId(id);
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        // 애니메이션 스크롤이 굉장히 길 수 있으므로 넉넉하게 1500ms(1.5초) 간 옵저버 무시
+        clickTimeoutRef.current = setTimeout(() => {
+            isClickingRef.current = false;
+        }, 1500);
     };
+
+    // 오른쪽 스크롤 시 왼쪽 사이드바 목록 자동 스크롤 동기화
+    useEffect(() => {
+        if (activeId && !isClickingRef.current) {
+            const sidebarItemEl = document.getElementById(`sidebar-item-${activeId}`);
+            if (sidebarItemEl) {
+                sidebarItemEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+    }, [activeId]);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
+                    if (entry.isIntersecting && !isClickingRef.current) {
                         setActiveId(entry.target.id);
                     }
                 });
