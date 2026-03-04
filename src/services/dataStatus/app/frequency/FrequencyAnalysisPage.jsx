@@ -553,6 +553,7 @@ const FrequencyAnalysisPage = () => {
                     selectedId={activeId}
                     onItemClick={(item) => scrollToId(item.id)} // 스크롤 위치에 따라 선택된 아이템 표시
                     onSearch={setSearchTerm}
+                    searchPlaceholder="문항을 검색하세요."
                 />
 
                 <div className="agg-main" ref={mainRef}>

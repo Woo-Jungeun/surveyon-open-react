@@ -642,6 +642,7 @@ const RecodingPage = () => {
                     onSearch={setSearchTerm}
                     onDelete={handleDeleteVariable}
                     displayField="id"
+                    searchPlaceholder="테이블을 검색하세요."
                 />
 
                 <div className="recoding-content">

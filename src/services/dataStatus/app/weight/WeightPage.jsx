@@ -679,6 +679,7 @@ const WeightPage = () => {
                     onItemClick={setSelectedWeight}
                     onSearch={setWeightSearchTerm}
                     onDelete={handleDeleteWeight}
+                    searchPlaceholder="가중치를 검색하세요."
                 />
 
                 <div className="weight-main-content">

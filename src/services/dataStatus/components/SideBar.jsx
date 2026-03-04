@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './SideBar.css';
 
-const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name' }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.' }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
@@ -14,7 +14,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                             <Search size={14} className="sidebar-search-icon" />
                             <input
                                 type="text"
-                                placeholder="검색어를 입력하세요."
+                                placeholder={searchPlaceholder}
                                 onChange={(e) => onSearch && onSearch(e.target.value)}
                                 className="sidebar-search-input"
                             />

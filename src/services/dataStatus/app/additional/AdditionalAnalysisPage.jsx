@@ -1448,6 +1448,7 @@ const AdditionalAnalysisPage = () => {
                     onSearch={setTableSearchTerm}
                     onDelete={handleDeleteTable}
                     displayField="name"
+                    searchPlaceholder="테이블을 검색하세요."
                 />
 
                 {/* Main Content */}
