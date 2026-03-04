@@ -39,7 +39,8 @@ const Login = () => {
             }
             // 로그인 성공 후 페이지 이동
             const from = location.state?.from || "/";
-            navigate(from, { replace: true });
+            const originalState = location.state?.originalState;
+            navigate(from, { replace: true, state: originalState });
         } else {
             modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
         }

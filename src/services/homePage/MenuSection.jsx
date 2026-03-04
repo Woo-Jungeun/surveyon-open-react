@@ -97,32 +97,28 @@ const MenuSection = () => {
           const handleCardClick = () => {
             if (isDisabled) return;
 
-            if (!isLoggedIn) {
-              navigate("/login", { state: { from: "/project" } });
-              return;
-            }
+            let targetPath = "/project";
+            let targetState = {};
 
             if (item.id === "data-dashboard") {
-              navigate("/data_status/analysis/frequency", { state: { from: "data_status" } });
+              targetPath = "/data_status/analysis/frequency";
+              targetState = { from: "data_status" };
+            } else if (item.id === "ai-open-analysis") {
+              const projectnum = sessionStorage.getItem("projectnum");
+              targetPath = projectnum ? "/project/pro_list" : "/project";
+              targetState = { from: 'ai_open' };
+            } else if (item.id === "data-management") {
+              targetPath = "/data_management/setting/map";
+              targetState = { from: "data_management" };
+            }
+
+            if (!isLoggedIn) {
+              // Pass the intended path to Login so it can redirect correctly
+              navigate("/login", { state: { from: targetPath, originalState: targetState } });
               return;
             }
 
-            if (item.id === "ai-open-analysis") {
-              navigate("/ai_open_analysis");
-              return;
-            }
-
-            if (item.id === "data-management") {
-              navigate("/data_management/setting/map", { state: { from: "data_management" } });
-              return;
-            }
-
-            if (item.id === "data-management") {
-              navigate("/data_management/setting/map", { state: { from: "data_management" } });
-              return;
-            }
-
-
+            navigate(targetPath, { state: targetState });
           };
 
           return (

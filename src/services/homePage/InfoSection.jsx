@@ -211,7 +211,7 @@ const InfoSection = () => {
               // todo 데이터현황 임시 주석 
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/data_status/analysis/frequency" } });
+                  navigate("/login", { state: { from: "/data_status/analysis/frequency", originalState: { from: "data_status" } } });
                   return;
                 }
                 navigate("/data_status/analysis/frequency", { state: { from: "data_status" } });
@@ -226,7 +226,7 @@ const InfoSection = () => {
               className="hp-feature-item"
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/data_management/setting/map" } });
+                  navigate("/login", { state: { from: "/data_management/setting/map", originalState: { from: "data_management" } } });
                   return;
                 }
                 navigate("/data_management/setting/map", { state: { from: "data_management" } });
@@ -242,7 +242,7 @@ const InfoSection = () => {
               onClick={() => {
                 const projectnum = sessionStorage.getItem("projectnum");
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/project" } });
+                  navigate("/login", { state: { from: "/project", originalState: { from: 'ai_open' } } });
                 } else if (projectnum) {
                   navigate("/project/pro_list");
                 } else {
