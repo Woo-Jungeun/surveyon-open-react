@@ -1615,6 +1615,49 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                     />
                                 );
                             }
+                            if (c.field === 'answer') {
+                                return (
+                                    <Column
+                                        key={c.field}
+                                        field={c.field}
+                                        title={c.title}
+                                        width={c.width}
+                                        editable={c.editable}
+                                        columnMenu={columnMenu}
+                                        cell={(props) => {
+                                            const row = props.dataItem;
+                                            const answerText = row?.answer || "";
+                                            const excerpts = row?.excerpts || "여자";   // todo 임시 테스트 
+                                            // const excerpts = row?.excerpts;
+
+                                            let content = answerText;
+
+                                            // excerpts가 null/빈값이 아니고, 클리닝응답과 100% 일치하지 않으며, 안에 포함되어 있을 경우 하이라이트
+                                            if (excerpts && String(answerText).trim() !== String(excerpts).trim() && String(answerText).includes(String(excerpts))) {
+                                                const excerptsStr = String(excerpts);
+                                                content = String(answerText).split(excerptsStr).reduce((prev, current, i) => {
+                                                    if (!i) return [current];
+                                                    return prev.concat(
+                                                        <span key={i} style={{ color: '#005CE5', fontWeight: '500' }}>{excerptsStr}</span>,
+                                                        current
+                                                    );
+                                                }, []);
+                                            }
+
+                                            return (
+                                                <td
+                                                    style={props.style}
+                                                    className={props.className}
+                                                    colSpan={props.colSpan}
+                                                    title={answerText}
+                                                >
+                                                    {content}
+                                                </td>
+                                            );
+                                        }}
+                                    />
+                                );
+                            }
                             // 일반 텍스트 컬럼
                             return (
                                 <Column
