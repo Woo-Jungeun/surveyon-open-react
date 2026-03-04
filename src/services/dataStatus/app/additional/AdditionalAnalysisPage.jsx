@@ -270,10 +270,10 @@ const AdditionalAnalysisPage = () => {
                                     if (tData.config.y_info) {
                                         const yIds = tData.config.y_info;
                                         let mappedRows = [];
-                                        if (yIds.length === 1 && typeof yIds[0] === 'string' && yIds[0].includes('*')) {
-                                            mappedRows = yIds[0].split('*').filter(id => id.trim()).map(id => {
-                                                const trimmed = id.trim();
-                                                return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
+                                        if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
+                                            const parts = yIds[0].split(/[+*]/).map(s => s.trim()).filter(Boolean);
+                                            mappedRows = parts.map(id => {
+                                                return loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id, label: id, type: "categorical", info: [] };
                                             });
                                         } else {
                                             mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
@@ -902,22 +902,25 @@ const AdditionalAnalysisPage = () => {
                         const xIds = xInfo;
                         const yIds = yInfo;
 
-                        const mappedRowsRun = xIds.map(id => {
-                            const found = variables.find(v => v.id === id || v.name === id);
-                            return found || { id, name: id, label: id, info: [] };
-                        });
-                        const mappedColsRun = yIds.map(id => {
-                            const found = variables.find(v => v.id === id || v.name === id);
-                            return found || { id, name: id, label: id, info: [] };
-                        });
-
                         const variablesMap = {};
-                        [...mappedRowsRun.flat(), ...mappedColsRun.flat()].forEach(v => {
-                            const varId = v.id || v.name;
-                            if (v && varId) {
-                                variablesMap[varId] = v;
-                            }
-                        });
+                        const extractRawVars = (arr) => {
+                            if (!Array.isArray(arr)) return;
+                            arr.forEach(str => {
+                                if (typeof str !== 'string') return;
+                                const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
+                                parts.forEach(part => {
+                                    const found = variables.find(v => v.id === part || v.name === part);
+                                    if (found) {
+                                        variablesMap[part] = found;
+                                    } else {
+                                        variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
+                                    }
+                                });
+                            });
+                        };
+
+                        extractRawVars(xIds);
+                        extractRawVars(yIds);
 
                         let weightId = "";
                         if (weightCol && weightCol !== "없음") {
