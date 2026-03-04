@@ -95,8 +95,8 @@ const WeightPage = () => {
                 if (result?.success === "777" && result.resultjson) {
                     const data = result.resultjson;
 
-                    const yIds = data.y_info || [];
-                    const xIds = data.x_info || [];
+                    const yIds = (data.y_info || []).flatMap(str => str.includes('*') ? str.split('*') : str);
+                    const xIds = (data.x_info || []).flatMap(str => str.includes('*') ? str.split('*') : str);
                     const vars = data.variables_json || {};
 
                     const parseItem = (id) => ({
@@ -112,7 +112,6 @@ const WeightPage = () => {
                     setWeightName(data.weight_variable.replace('weight_', ''));
 
                     if (yIds.length > 0 && xIds.length > 0) {
-                        // "현재값" 데이터 조회
                         const evalPayload = {
                             user: auth?.user?.userId,
                             pageid: pageId,
@@ -123,8 +122,8 @@ const WeightPage = () => {
                             table: {
                                 id: "weight_eval",
                                 name: "Weight Evaluation",
-                                x_info: xIds,
-                                y_info: yIds,
+                                x_info: xIds.length > 0 ? [xIds.join('*')] : [],
+                                y_info: yIds.length > 0 ? [yIds.join('*')] : [],
                                 // axis_mode: "interaction"
                             }
                         };
@@ -385,8 +384,8 @@ const WeightPage = () => {
             table: {
                 id: "eval_run",
                 name: "Evaluation Run",
-                x_info: xIds,
-                y_info: yIds,
+                x_info: xIds.length > 0 ? [xIds.join('*')] : [],
+                y_info: yIds.length > 0 ? [yIds.join('*')] : [],
                 // axis_mode: "interaction"
             }
         };
@@ -575,8 +574,8 @@ const WeightPage = () => {
             user: auth?.user?.userId,
             pageid: pageId,
             weight_variable_name: `weight_${weightName}`,
-            x_info: xIds,
-            y_info: yIds,
+            x_info: xIds.length > 0 ? [xIds.join('*')] : [],
+            y_info: yIds.length > 0 ? [yIds.join('*')] : [],
             // axis_mode: "interaction",
             target_values: target_values,
             variables: activeVariables
