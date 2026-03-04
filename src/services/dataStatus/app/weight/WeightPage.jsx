@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext, useRef } from 'react';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
-import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Search, Copy } from 'lucide-react';
+import { ChevronRight, ChevronLeft, ChevronDown, ChevronUp, Search, Copy, GripVertical, X } from 'lucide-react';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from '@progress/kendo-react-grid';
 import '@progress/kendo-theme-default/dist/all.css';
@@ -279,19 +279,58 @@ const WeightPage = () => {
         e.dataTransfer.dropEffect = 'copy';
     };
 
-    const handleDrop = (e, target) => {
+    const handleDrop = (e, target, targetIndex = null) => {
         e.preventDefault();
         const data = e.dataTransfer.getData('application/json');
         if (data) {
             const item = JSON.parse(data);
-            if (target === 'row') {
-                if (!rowItems.find(i => i.id === item.id)) {
-                    setRowItems([...rowItems, item]);
+
+            if (target === 'row' || target === 'row_item') {
+                const newRowItems = [...rowItems];
+                if (item.dragType !== 'ROW_ITEM' && newRowItems.length >= 10 && !newRowItems.find(i => i.id === item.id)) {
+                    modal.showAlert('알림', '세로축은 최대 10개까지만 추가할 수 있습니다.');
+                    return;
+                }
+                if (item.dragType === 'ROW_ITEM') {
+                    const [moved] = newRowItems.splice(item.srcIndex, 1);
+                    if (targetIndex !== null) {
+                        newRowItems.splice(targetIndex, 0, moved);
+                    } else {
+                        newRowItems.push(moved);
+                    }
+                    setRowItems(newRowItems);
+                    setIsCalculated(false);
+                } else if (!rowItems.find(i => i.id === item.id)) {
+                    if (targetIndex !== null) {
+                        newRowItems.splice(targetIndex, 0, item);
+                    } else {
+                        newRowItems.push(item);
+                    }
+                    setRowItems(newRowItems);
                     setIsCalculated(false);
                 }
-            } else if (target === 'col') {
-                if (!colItems.find(i => i.id === item.id)) {
-                    setColItems([...colItems, item]);
+            } else if (target === 'col' || target === 'col_item') {
+                const newColItems = [...colItems];
+                if (item.dragType !== 'COL_ITEM' && newColItems.length >= 10 && !newColItems.find(i => i.id === item.id)) {
+                    modal.showAlert('알림', '가로축은 최대 10개까지만 추가할 수 있습니다.');
+                    return;
+                }
+                if (item.dragType === 'COL_ITEM') {
+                    const [moved] = newColItems.splice(item.srcIndex, 1);
+                    if (targetIndex !== null) {
+                        newColItems.splice(targetIndex, 0, moved);
+                    } else {
+                        newColItems.push(moved);
+                    }
+                    setColItems(newColItems);
+                    setIsCalculated(false);
+                } else if (!colItems.find(i => i.id === item.id)) {
+                    if (targetIndex !== null) {
+                        newColItems.splice(targetIndex, 0, item);
+                    } else {
+                        newColItems.push(item);
+                    }
+                    setColItems(newColItems);
                     setIsCalculated(false);
                 }
             }
@@ -758,7 +797,8 @@ const WeightPage = () => {
                                             borderBottom: '1px solid #e0e0e0',
                                             padding: '16px',
                                             display: 'flex',
-                                            flexDirection: 'column'
+                                            flexDirection: 'column',
+                                            minWidth: 0
                                         }}
                                     >
                                         <span style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>가로축 (열)</span>
@@ -777,27 +817,51 @@ const WeightPage = () => {
                                             {colItems.length === 0 ? (
                                                 <span style={{ color: '#999', fontSize: '14px' }}>문항을 여기로 드래그하세요</span>
                                             ) : (
-                                                colItems.map(item => (
-                                                    <div key={item.id} style={{
-                                                        padding: '6px 12px',
-                                                        background: '#e3f2fd',
-                                                        borderRadius: '6px',
-                                                        border: '1px solid #90caf9',
-                                                        color: '#1976d2',
-                                                        fontSize: '13px',
-                                                        fontWeight: '600',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '6px',
-                                                        whiteSpace: 'nowrap'
-                                                    }}>
-                                                        {item.id}
-                                                        <button
+                                                colItems.map((item, index) => (
+                                                    <div
+                                                        key={item.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, { ...item, dragType: 'COL_ITEM', srcIndex: index })}
+                                                        onDragOver={handleDragOver}
+                                                        onDrop={(e) => { e.stopPropagation(); handleDrop(e, 'col_item', index); }}
+                                                        style={{
+                                                            padding: '6px 10px 6px 6px',
+                                                            background: '#e3f2fd',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid #90caf9',
+                                                            color: '#1976d2',
+                                                            fontSize: '13px',
+                                                            fontWeight: '600',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '6px',
+                                                            whiteSpace: 'normal',
+                                                            height: 'auto',
+                                                            textAlign: 'left',
+                                                            flexShrink: 0,
+                                                            maxWidth: '180px'
+                                                        }}
+                                                    >
+                                                        <span style={{
+                                                            cursor: 'grab',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            marginRight: '6px',
+                                                            width: '20px',
+                                                            height: '20px',
+                                                            background: '#f8fafc',
+                                                            border: '1px solid #e2e8f0',
+                                                            borderRadius: '4px',
+                                                            color: '#94a3b8',
+                                                            flexShrink: 0
+                                                        }}><GripVertical size={13} strokeWidth={2.5} /></span>
+                                                        <span style={{ flex: 1, wordBreak: 'break-all', lineHeight: '1.4' }}>{item.id}</span>
+                                                        <X
+                                                            size={14}
                                                             onClick={() => removeDroppedItem(item.id, 'col')}
-                                                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', color: '#1976d2' }}
-                                                        >
-                                                            ×
-                                                        </button>
+                                                            style={{ cursor: 'pointer', color: '#1976d2', flexShrink: 0 }}
+                                                        />
                                                     </div>
                                                 ))
                                             )}
@@ -836,26 +900,49 @@ const WeightPage = () => {
                                             {rowItems.length === 0 ? (
                                                 <span style={{ color: '#999', fontSize: '14px', lineHeight: '1.5', textAlign: 'center' }}>문항을 여기로 드래그하세요</span>
                                             ) : (
-                                                rowItems.map(item => (
-                                                    <div key={item.id} style={{
-                                                        padding: '8px 12px',
-                                                        background: '#e8f5e9',
-                                                        borderRadius: '6px',
-                                                        border: '1px solid #a5d6a7',
-                                                        color: '#2e7d32',
-                                                        fontSize: '13px',
-                                                        fontWeight: '600',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'space-between'
-                                                    }}>
-                                                        {item.id}
-                                                        <button
+                                                rowItems.map((item, index) => (
+                                                    <div
+                                                        key={item.id}
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, { ...item, dragType: 'ROW_ITEM', srcIndex: index })}
+                                                        onDragOver={handleDragOver}
+                                                        onDrop={(e) => { e.stopPropagation(); handleDrop(e, 'row_item', index); }}
+                                                        style={{
+                                                            padding: '8px 10px',
+                                                            background: '#e8f5e9',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid #a5d6a7',
+                                                            color: '#2e7d32',
+                                                            fontSize: '13px',
+                                                            fontWeight: '600',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'flex-start',
+                                                            whiteSpace: 'normal',
+                                                            height: 'auto',
+                                                            gap: '6px'
+                                                        }}
+                                                    >
+                                                        <span style={{
+                                                            cursor: 'grab',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            marginRight: '6px',
+                                                            width: '20px',
+                                                            height: '20px',
+                                                            background: '#f8fafc',
+                                                            border: '1px solid #e2e8f0',
+                                                            borderRadius: '4px',
+                                                            color: '#94a3b8',
+                                                            flexShrink: 0
+                                                        }}><GripVertical size={13} strokeWidth={2.5} /></span>
+                                                        <span style={{ flex: 1, wordBreak: 'break-all', lineHeight: '1.4', textAlign: 'left' }}>{item.id}</span>
+                                                        <X
+                                                            size={14}
                                                             onClick={() => removeDroppedItem(item.id, 'row')}
-                                                            style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, display: 'flex', color: '#2e7d32' }}
-                                                        >
-                                                            ×
-                                                        </button>
+                                                            style={{ cursor: 'pointer', color: '#2e7d32', flexShrink: 0 }}
+                                                        />
                                                     </div>
                                                 ))
                                             )}
