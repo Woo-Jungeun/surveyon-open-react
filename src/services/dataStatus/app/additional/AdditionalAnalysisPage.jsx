@@ -247,18 +247,37 @@ const AdditionalAnalysisPage = () => {
                                     // x_info -> 가로축 (Cols)
                                     if (tData.config.x_info) {
                                         const xIds = tData.config.x_info;
-                                        const mappedCols = xIds.map(item => {
-                                            if (Array.isArray(item)) {
-                                                return item.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
-                                            }
-                                            return [loadedVariables.find(v => v.name === item || v.id === item) || { id: item, name: item }];
-                                        });
-                                        setColVars(mappedCols);
+                                        let mappedCols = [];
+                                        if (xIds.length === 1 && typeof xIds[0] === 'string' && (xIds[0].includes('*') || xIds[0].includes('+'))) {
+                                            const groups = xIds[0].split('+');
+                                            mappedCols = groups.map(g => {
+                                                return g.split('*').filter(id => id.trim()).map(id => {
+                                                    const trimmed = id.trim();
+                                                    return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
+                                                });
+                                            });
+                                        } else {
+                                            mappedCols = xIds.map(item => {
+                                                if (Array.isArray(item)) {
+                                                    return item.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                                }
+                                                return [loadedVariables.find(v => v.name === item || v.id === item) || { id: item, name: item }];
+                                            });
+                                        }
+                                        setColVars(mappedCols.filter(g => g.length > 0));
                                     }
                                     // y_info -> 세로축 (Rows)
                                     if (tData.config.y_info) {
                                         const yIds = tData.config.y_info;
-                                        const mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        let mappedRows = [];
+                                        if (yIds.length === 1 && typeof yIds[0] === 'string' && yIds[0].includes('*')) {
+                                            mappedRows = yIds[0].split('*').filter(id => id.trim()).map(id => {
+                                                const trimmed = id.trim();
+                                                return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
+                                            });
+                                        } else {
+                                            mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        }
                                         setRowVars(mappedRows);
                                     }
                                     // Filter Expression
@@ -749,18 +768,37 @@ const AdditionalAnalysisPage = () => {
                         // x_info -> 가로축 (Cols)
                         if (data.config.x_info) {
                             const xIds = data.config.x_info;
-                            const mappedCols = xIds.map(item => {
-                                if (Array.isArray(item)) {
-                                    return item.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
-                                }
-                                return [variables.find(v => v.name === item || v.id === item) || { id: item, name: item }];
-                            });
-                            setColVars(mappedCols);
+                            let mappedCols = [];
+                            if (xIds.length === 1 && typeof xIds[0] === 'string' && (xIds[0].includes('*') || xIds[0].includes('+'))) {
+                                const groups = xIds[0].split('+');
+                                mappedCols = groups.map(g => {
+                                    return g.split('*').filter(id => id.trim()).map(id => {
+                                        const trimmed = id.trim();
+                                        return variables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
+                                    });
+                                });
+                            } else {
+                                mappedCols = xIds.map(item => {
+                                    if (Array.isArray(item)) {
+                                        return item.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                    }
+                                    return [variables.find(v => v.name === item || v.id === item) || { id: item, name: item }];
+                                });
+                            }
+                            setColVars(mappedCols.filter(g => g.length > 0));
                         }
                         // y_info -> 세로축 (Rows)
                         if (data.config.y_info) {
                             const yIds = data.config.y_info;
-                            const mappedRows = yIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                            let mappedRows = [];
+                            if (yIds.length === 1 && typeof yIds[0] === 'string' && yIds[0].includes('*')) {
+                                mappedRows = yIds[0].split('*').filter(id => id.trim()).map(id => {
+                                    const trimmed = id.trim();
+                                    return variables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
+                                });
+                            } else {
+                                mappedRows = yIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
+                            }
                             setRowVars(mappedRows);
                         }
                         // Filter Expression
@@ -1141,8 +1179,8 @@ const AdditionalAnalysisPage = () => {
                 pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: colVars.map(group => group.map(v => v.name)),
-                    y_info: rowVars.map(v => v.name),
+                    x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
+                    y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : [],
                     filter_expression: filterExpression,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight
                 }
@@ -1252,8 +1290,8 @@ const AdditionalAnalysisPage = () => {
                 pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: colVars.map(group => group.map(v => v.id)),
-                    y_info: rowVars.map(v => v.id),
+                    x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
+                    y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : [],
                     filter_expression: filterExpression,
                     weight_col: weightId
                 }
@@ -1297,8 +1335,8 @@ const AdditionalAnalysisPage = () => {
                     table: {
                         id: selectedTableId,
                         name: tableName || "Untitled Table",
-                        x_info: colVars.map(group => group.map(v => v.id || v.name)),
-                        y_info: rowVars.map(v => v.id || v.name)
+                        x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
+                        y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : []
                     }
                 };
 
@@ -1409,8 +1447,8 @@ const AdditionalAnalysisPage = () => {
             table: {
                 id: selectedTableId,
                 name: tableName || "Untitled Table",
-                x_info: colVars.map(group => group.map(v => v.id || v.name)),
-                y_info: rowVars.map(v => v.id || v.name)
+                x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
+                y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : []
             }
         };
 
