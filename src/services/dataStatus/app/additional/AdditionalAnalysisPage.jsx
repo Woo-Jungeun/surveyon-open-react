@@ -426,35 +426,81 @@ const AdditionalAnalysisPage = () => {
     const previewData = useMemo(() => {
         if (rowVars.length === 0 && colVars.length === 0) return null;
 
-        const getGroupedLabels = (vars) => {
-            return vars.map(v => {
-                const variable = variables.find(existing => existing.id === v.id);
+        const getGroupDefinitions = (group) => {
+            if (group.length === 0) return [];
+
+            return group.map(v => {
+                const variable = variables.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
                 let labels = [];
                 if (!variable || !variable.info) {
-                    labels = [v.id]; // Fallback to ID
+                    labels = [v.id || v.name];
                 } else {
                     labels = variable.info
                         .filter(i => i.type !== 'config')
                         .map(i => i.label);
 
-                    if (labels.length === 0) labels = [v.id];
+                    if (labels.length === 0) labels = [v.id || v.name];
                 }
-                return { name: v.id, labels };
+                return { name: v.id || v.name, labels: labels.map(String) };
             });
         };
 
-        let rowGroups = getGroupedLabels(rowVars);
-        let colGroups = getGroupedLabels(colVars.flat());
+        const colGroupsDefs = colVars.filter(g => g.length > 0).length > 0
+            ? colVars.filter(g => g.length > 0).map(g => getGroupDefinitions(g))
+            : [[{ name: '', labels: [''] }]];
 
-        // Default handling
-        if (rowGroups.length === 0) rowGroups = [{ name: '', labels: [''] }];
-        if (colGroups.length === 0) colGroups = [{ name: '', labels: [''] }];
+        const maxColLevels = Math.max(...colGroupsDefs.map(g => g.length));
+
+        const colHeaderRows = [];
+        for (let i = 0; i < maxColLevels + 1; i++) {
+            colHeaderRows.push([]);
+        }
+
+        let totalDataCols = 0;
+
+        colGroupsDefs.forEach(groupDefs => {
+            const groupName = groupDefs.map(d => d.name).join(' * ');
+            const groupTotalCols = groupDefs.reduce((acc, curr) => acc * curr.labels.length, 1);
+            totalDataCols += groupTotalCols;
+
+            // Row 0: Group Name
+            colHeaderRows[0].push({
+                label: groupName,
+                colspan: groupTotalCols,
+                rowspan: 1,
+                isGroupHeader: true
+            });
+
+            // For each level in maxColLevels
+            for (let level = 0; level < maxColLevels; level++) {
+                if (level < groupDefs.length) {
+                    const def = groupDefs[level];
+                    const numRepeats = groupDefs.slice(0, level).reduce((a, c) => a * c.labels.length, 1);
+                    const colspan = groupDefs.slice(level + 1).reduce((a, c) => a * c.labels.length, 1);
+
+                    for (let r = 0; r < numRepeats; r++) {
+                        for (let lbl of def.labels) {
+                            const isLastLevelForGroup = (level === groupDefs.length - 1);
+                            colHeaderRows[level + 1].push({
+                                label: lbl,
+                                colspan: colspan,
+                                rowspan: isLastLevelForGroup ? (maxColLevels - level) : 1,
+                                isColHeader: true
+                            });
+                        }
+                    }
+                }
+            }
+        });
+
+        let rowGroups = rowVars.length > 0 ? getGroupDefinitions(rowVars) : [{ name: '', labels: [''] }];
 
         return {
+            colHeaderRows,
             rowGroups,
-            colGroups,
-            rows: rowGroups.flatMap(g => g.labels),
-            cols: colGroups.flatMap(g => g.labels)
+            totalDataCols,
+            maxColLevels,
+            maxRowLevels: 2
         };
     }, [rowVars, colVars, variables]);
 
@@ -847,23 +893,15 @@ const AdditionalAnalysisPage = () => {
                         stats: parsedStats
                     });
 
-                    // Auto-run analysis to get fresh data
                     try {
                         const config = data.config || {};
                         const xInfo = config.x_info || [];
                         const yInfo = config.y_info || [];
                         const weightCol = config.weight_col || "";
                         const filterExpr = config.filter_expression || "";
-
-                        // Re-derive mapped vars to be sure (since state is async)
-                        // Actually I can access mappedRows/mappedCols if I move their declaration up or just re-map here.
-                        // But mappedRows/mappedCols definitions are inside narrower scope above.
-                        // I will redefine them for clarity or use let outside.
-                        // Better to re-map to be safe and clean.
                         const xIds = xInfo;
                         const yIds = yInfo;
 
-                        // We need the full variable objects
                         const mappedRowsRun = xIds.map(id => {
                             const found = variables.find(v => v.id === id || v.name === id);
                             return found || { id, name: id, label: id, info: [] };
@@ -1176,7 +1214,7 @@ const AdditionalAnalysisPage = () => {
             const payload = {
                 user: auth.user.userId,
                 tableid: selectedTableId,
-                pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
+                pageid: PAGE_ID,
                 name: tableName || "Untitled Table",
                 config: {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
@@ -1278,16 +1316,8 @@ const AdditionalAnalysisPage = () => {
 
             const savePayload = {
                 user: auth.user.userId,
-                tableid: selectedTableId, // Note: backend expects 'tableid' for update? Check API (saveCrossTable usually uses /tables/set which might expect table obj or flat fields? Checked Step 523 code view).
-                // Wait, previous code used `tableid` here?
-                // Step 632 view shows:
-                // user: auth.user.userId,
-                // tableid: selectedTableId,
-                // pageid: ...,
-                // name: ...,
-                // config: { ... }
-                // So I keep this structure but update values inside config.
-                pageid: "0c1de699-0270-49bf-bfac-7e6513a3f525",
+                tableid: selectedTableId,
+                pageid: PAGE_ID,
                 name: tableName || "Untitled Table",
                 config: {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
@@ -1841,30 +1871,36 @@ const AdditionalAnalysisPage = () => {
                                                 <div className="preview-table-wrapper">
                                                     <table className="preview-table">
                                                         <thead>
-                                                            <tr>
-                                                                <th rowSpan={2} colSpan={2} className="preview-th corner-header"></th>
-                                                                {previewData.colGroups.map((group, i) => (
-                                                                    <th key={i} colSpan={group.labels.length} className="preview-th group-header">
-                                                                        {group.name}
-                                                                    </th>
-                                                                ))}
-                                                            </tr>
-                                                            <tr>
-                                                                {previewData.colGroups.flatMap((group, i) =>
-                                                                    group.labels.map((label, j) => (
-                                                                        <th key={`${i}-${j}`} className="preview-th col-header">
-                                                                            {label}
+                                                            {previewData.colHeaderRows.map((rowCells, rIndex) => (
+                                                                <tr key={`col-header-row-${rIndex}`}>
+                                                                    {rIndex === 0 && (
+                                                                        <th
+                                                                            rowSpan={previewData.maxColLevels + 1}
+                                                                            colSpan={previewData.maxRowLevels}
+                                                                            className="preview-th corner-header"
+                                                                            style={{ top: 0 }}
+                                                                        ></th>
+                                                                    )}
+                                                                    {rowCells.map((cell, cIndex) => (
+                                                                        <th
+                                                                            key={`col-header-cell-${cIndex}`}
+                                                                            colSpan={cell.colspan}
+                                                                            rowSpan={cell.rowspan}
+                                                                            className={`preview-th ${cell.isGroupHeader ? 'group-header' : 'col-header'}`}
+                                                                            style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4', top: `${rIndex * 40}px` }}
+                                                                        >
+                                                                            {cell.label}
                                                                         </th>
-                                                                    ))
-                                                                )}
-                                                            </tr>
+                                                                    ))}
+                                                                </tr>
+                                                            ))}
                                                         </thead>
                                                         <tbody>
                                                             {previewData.rowGroups.map((group, groupIdx) => (
                                                                 group.labels.map((label, labelIdx) => (
                                                                     <tr key={`${groupIdx}-${labelIdx}`}>
                                                                         {group.name === '' ? (
-                                                                            <td colSpan={2} className="preview-td row-head sticky-left">
+                                                                            <td colSpan={2} className="preview-td row-head sticky-left" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
                                                                                 {label}
                                                                             </td>
                                                                         ) : (
@@ -1874,12 +1910,12 @@ const AdditionalAnalysisPage = () => {
                                                                                         {group.name}
                                                                                     </td>
                                                                                 )}
-                                                                                <td className="preview-td row-head sticky-left-indent">
+                                                                                <td className="preview-td row-head sticky-left-indent" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
                                                                                     {label}
                                                                                 </td>
                                                                             </>
                                                                         )}
-                                                                        {previewData.cols.map((_, colIdx) => (
+                                                                        {Array.from({ length: previewData.totalDataCols }).map((_, colIdx) => (
                                                                             <td key={colIdx} className="preview-td data-cell">
                                                                                 <span className="data-placeholder">-</span>
                                                                             </td>
