@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
 import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
@@ -11,7 +11,7 @@ import '@progress/kendo-theme-default/dist/all.css';
 import { useSelector } from 'react-redux';
 import { FrequencyAnalysisPageApi } from './FrequencyAnalysisPageApi';
 
-const AggregationCard = ({ q }) => {
+const AggregationCard = memo(({ q }) => {
     const [chartMode, setChartMode] = useState('column');
     const [showChart, setShowChart] = useState(true);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -254,7 +254,8 @@ const AggregationCard = ({ q }) => {
             </div>
         </div>
     );
-};
+});
+AggregationCard.displayName = 'AggregationCard';
 
 const FrequencyAnalysisPage = () => {
     const auth = useSelector((store) => store.auth);
@@ -520,16 +521,20 @@ const FrequencyAnalysisPage = () => {
         fetchChunkData();
     }, [activeId, questions.length, auth?.user?.userId]);
 
-    const filteredQuestions = questions.filter(q =>
-        q.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        q.label.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredQuestions = useMemo(() => {
+        return questions.filter(q =>
+            q.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            q.label.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [questions, searchTerm]);
 
-    const sidebarItems = filteredQuestions.map(q => ({
-        id: q.id,
-        name: q.id,
-        label: q.label
-    }));
+    const sidebarItems = useMemo(() => {
+        return filteredQuestions.map(q => ({
+            id: q.id,
+            name: q.id,
+            label: q.label
+        }));
+    }, [filteredQuestions]);
 
     const scrollToId = (id) => {
         const element = document.getElementById(id);
