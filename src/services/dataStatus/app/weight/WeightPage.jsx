@@ -125,7 +125,7 @@ const WeightPage = () => {
                                 name: "Weight Evaluation",
                                 x_info: xIds,
                                 y_info: yIds,
-                                axis_mode: "interaction"
+                                // axis_mode: "interaction"
                             }
                         };
                         try {
@@ -348,7 +348,7 @@ const WeightPage = () => {
                 name: "Evaluation Run",
                 x_info: xIds,
                 y_info: yIds,
-                axis_mode: "interaction"
+                // axis_mode: "interaction"
             }
         };
 
@@ -538,7 +538,7 @@ const WeightPage = () => {
             weight_variable_name: `weight_${weightName}`,
             x_info: xIds,
             y_info: yIds,
-            axis_mode: "interaction",
+            // axis_mode: "interaction",
             target_values: target_values,
             variables: activeVariables
         };
