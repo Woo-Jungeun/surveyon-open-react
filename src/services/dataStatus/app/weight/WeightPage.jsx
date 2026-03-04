@@ -781,7 +781,7 @@ const WeightPage = () => {
                                                     <div key={item.id} style={{
                                                         padding: '6px 12px',
                                                         background: '#e3f2fd',
-                                                        borderRadius: '20px',
+                                                        borderRadius: '6px',
                                                         border: '1px solid #90caf9',
                                                         color: '#1976d2',
                                                         fontSize: '13px',
