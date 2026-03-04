@@ -1428,7 +1428,7 @@ const AdditionalAnalysisPage = () => {
                     }}
                 >
                     <Plus size={16} />
-                    추가분석 추가
+                    추가
                 </button>
             </DataHeader>
 
@@ -1667,7 +1667,7 @@ const AdditionalAnalysisPage = () => {
 
                                             <div className="filter-weight-row" style={{ display: 'flex', gap: '20px', position: 'sticky', bottom: 0, background: '#f8f9fa', zIndex: 10, padding: '8px 12px', borderTop: '1px solid #e0e0e0', alignItems: 'center', boxShadow: '0 -2px 5px rgba(0,0,0,0.05)' }}>
                                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터식</span>
+                                                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터</span>
                                                     <input
                                                         type="text"
                                                         className="center-content__input"
