@@ -8,6 +8,8 @@ import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
 import './FrequencyAnalysisPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
+import { useSelector } from 'react-redux';
+import { FrequencyAnalysisPageApi } from './FrequencyAnalysisPageApi';
 
 const AggregationCard = ({ q }) => {
     const [chartMode, setChartMode] = useState('column');
@@ -198,9 +200,13 @@ const AggregationCard = ({ q }) => {
                         <thead>
                             <tr>
                                 <th>항목</th>
-                                <th>완료</th>
-                                <th>선정탈락</th>
-                                <th>쿼터오버</th>
+                                {q.columns ? q.columns.map(col => <th key={col.key}>{col.label}</th>) : (
+                                    <>
+                                        <th>완료</th>
+                                        <th>선정탈락</th>
+                                        <th>쿼터오버</th>
+                                    </>
+                                )}
                                 <th>합계</th>
                             </tr>
                         </thead>
@@ -208,9 +214,13 @@ const AggregationCard = ({ q }) => {
                             {q.data.map((row, i) => (
                                 <tr key={i}>
                                     <td>{row.name}</td>
-                                    <td>{row['완료']}</td>
-                                    <td>{row['선정탈락']}</td>
-                                    <td>{row['쿼터오버']}</td>
+                                    {q.columns ? q.columns.map(col => <td key={col.key}>{row[col.label]}</td>) : (
+                                        <>
+                                            <td>{row['완료']}</td>
+                                            <td>{row['선정탈락']}</td>
+                                            <td>{row['쿼터오버']}</td>
+                                        </>
+                                    )}
                                     <td>{row.total}</td>
                                 </tr>
                             ))}
@@ -247,6 +257,8 @@ const AggregationCard = ({ q }) => {
 };
 
 const FrequencyAnalysisPage = () => {
+    const auth = useSelector((store) => store.auth);
+    const { getOverviewList, getOverviewData } = FrequencyAnalysisPageApi();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
     const [selectedFilters, setSelectedFilters] = useState(['전체']);
@@ -259,6 +271,7 @@ const FrequencyAnalysisPage = () => {
 
     const filterRef = useRef(null);
     const mainRef = useRef(null);
+    const fetchingRef = useRef(new Set());
 
     // Close filter dropdown when clicking outside
     useEffect(() => {
@@ -324,71 +337,188 @@ const FrequencyAnalysisPage = () => {
         '수도권/비수도권'
     ];
 
-    const questions = [
-        {
-            id: 'q1',
-            label: '서비스 전반적인 만족도는?',
-            n: 240,
-            data: [
-                { name: 'Very Low', '완료': 100, '선정탈락': 16, '쿼터오버': 8, total: 124 },
-                { name: 'Low', '완료': 5, '선정탈락': 16, '쿼터오버': 50, total: 48 },
-                { name: 'Neutral', '완료': 11, '선정탈락': 16, '쿼터오버': 30, total: 57 },
-                { name: 'High', '완료': 16, '선정탈락': 16, '쿼터오버': 40, total: 72 },
-                { name: 'Very High', '완료': 10, '선정탈락': 10, '쿼터오버': 20, total: 40 },
+    const [questions, setQuestions] = useState([]);
 
-            ]
-        },
-        {
-            id: 'q2',
-            label: '선호하는 기능을 모두 선택하세요',
-            n: 240,
-            data: [
-                { name: 'Option A', '완료': 20, '선정탈락': 15, '쿼터오버': 25, total: 60 },
-                { name: 'Option B', '완료': 10, '선정탈락': 30, '쿼터오버': 10, total: 50 },
-                { name: 'Option C', '완료': 25, '선정탈락': 15, '쿼터오버': 20, total: 60 },
-                { name: 'Option D', '완료': 15, '선정탈락': 20, '쿼터오버': 35, total: 70 },
-            ]
-        },
-        {
-            id: 'gender',
-            label: '귀하의 성별은?',
-            n: 240,
-            data: [
-                { name: 'Male', '완료': 40, '선정탈락': 35, '쿼터오버': 45, total: 120 },
-                { name: 'Female', '완료': 40, '선정탈락': 45, '쿼터오버': 35, total: 120 },
-            ]
-        },
-        {
-            id: 'age',
-            label: '귀하의 연령대는?',
-            n: 240,
-            data: [
-                { name: '20s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: '30s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: '40s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: '50s', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-            ]
-        },
-        {
-            id: 'region',
-            label: '거주 지역은?',
-            n: 240,
-            data: [
-                { name: 'Seoul', '완료': 30, '선정탈락': 30, '쿼터오버': 30, total: 90 },
-                { name: 'Busan', '완료': 20, '선정탈락': 20, '쿼터오버': 20, total: 60 },
-                { name: 'Incheon', '완료': 15, '선정탈락': 15, '쿼터오버': 15, total: 45 },
-                { name: 'Others', '완료': 15, '선정탈락': 15, '쿼터오버': 15, total: 45 },
-            ]
-        },
-        {
-            id: 'weight_demo',
-            label: '가중치 적용',
-            n: 240,
-            data: [
-                { name: 'Applied', '완료': 80, '선정탈락': 80, '쿼터오버': 80, total: 240 },
-            ]
-        }
-    ];
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            if (auth?.user?.userId) {
+                const userId = auth.user.userId;
+                const pageId = sessionStorage.getItem("pageId");
+
+                if (pageId) {
+                    try {
+                        const payload = {
+                            pageid: pageId,
+                            user: userId,
+                            start: 0,
+                            limit: 1000
+                        };
+                        const result = await getOverviewList.mutateAsync(payload);
+                        if (result?.success === "777" && result.resultjson) {
+
+                            const overviewList = result.resultjson.tables || [];
+
+                            // 기본 질문 목록 우선 세팅 (데이터는 로딩 전 임시값 혹은 0)
+                            const initialQuestions = overviewList.map(item => {
+                                // overviewList 내의 요소는 question 정보를 담은 객체일 것이라 가정,
+                                // options 배열이 있다면 이를 보기로 활용 (API 응답 양식에 따라 구체적 필드명 조정 필요, 여기서는 일반적인 형태 반영)
+                                const optionsList = item.options || item.info || [];
+
+                                const initialData = optionsList.length > 0 ? optionsList.map((o, idx) => ({
+                                    name: o.label || o.value || o.name || `보기 ${idx + 1}`,
+                                    value: o.value !== undefined ? String(o.value) : (o.id || o.name),
+                                    label: o.label || o.name,
+                                    '완료': 0,
+                                    '선정탈락': 0,
+                                    '쿼터오버': 0,
+                                    total: 0
+                                })) : [
+                                    { name: '해당없음', value: '해당없음', '완료': 0, '선정탈락': 0, '쿼터오버': 0, total: 0 }
+                                ];
+
+                                return {
+                                    id: item.table_id || item.id,
+                                    target_id: item.id || item.table_id, // 실제 변수/문항 ID (BQ4 등)
+                                    label: item.title || item.label || item.name || item.table_id || item.id,
+                                    n: 0,
+                                    data: initialData,
+                                    isLoaded: false
+                                };
+                            });
+
+                            setQuestions(initialQuestions);
+                            // 화면 노출/선택 시점에 5개씩 가져오도록 분리
+                        }
+                    } catch (error) {
+                        console.error("Aggregation Variable Fetch Error:", error);
+                    }
+                }
+            }
+        };
+
+        fetchQuestions();
+    }, [auth?.user?.userId]);
+
+    // 활성 아이템 기준 5개씩 데이터 분할 조회
+    useEffect(() => {
+        if (!activeId || questions.length === 0 || !auth?.user?.userId) return;
+
+        const fetchChunkData = async () => {
+            const index = questions.findIndex(q => q.id === activeId);
+            if (index === -1) return;
+
+            // 이미 로드된 문항이면 API를 다시 태우지 않음
+            if (questions[index].isLoaded) return;
+
+            const limit = 10;
+            // 선택된 문항부터 limit개만큼 타겟으로 잡음
+            const targetQuestions = questions.slice(index, index + limit);
+
+            const tableIdsToSet = targetQuestions
+                .filter(q => !q.isLoaded && !fetchingRef.current.has(q.id))
+                .map(q => q.id);
+
+            if (tableIdsToSet.length === 0) return;
+
+            // 로딩 상태 등록 (중복 요청 방지, table_id 기준)
+            tableIdsToSet.forEach(id => fetchingRef.current.add(id));
+
+            try {
+                const pageId = sessionStorage.getItem("pageId");
+
+                const startTargetId = questions[index].target_id;
+
+                const payload = {
+                    pageid: pageId,
+                    x_info: [startTargetId], // 시작 포인트의 실제 target_id
+                    start: index,  // tables 순번에 해당하는 시작 인덱스
+                    limit: limit, // 가져올 갯수
+                    weight_col: "", // 또는 실제 사용하는 가중치
+                    filter_expression: "",
+                    include_stats: []
+                };
+
+                const aggResult = await getOverviewData.mutateAsync(payload);
+                if (aggResult?.success === "777" && aggResult.resultjson) {
+                    const resultsArray = aggResult.resultjson.results || [];
+
+                    setQuestions(prevQuestions => prevQuestions.map(q => {
+                        // 이번에 가져온 타겟들이 아니면 그대로 둠
+                        if (!tableIdsToSet.includes(q.id)) return q;
+
+                        const tableInfo = resultsArray.find(r => r.table_id === q.id);
+
+                        // 응답 결과에 해당 문항이 없으면 기본값으로 두고 로드완료 처리
+                        if (!tableInfo) {
+                            return { ...q, isLoaded: true };
+                        }
+
+                        const aggInfoRows = tableInfo.result.rows || [];
+                        const aggInfoCols = tableInfo.result.columns || [];
+
+                        // UI Columns (배너 등): result.columns 에서 추출
+                        const tableColumns = aggInfoCols.map(c => ({
+                            key: c.key,
+                            label: c.label || c.var_label || c.name || c.key
+                        }));
+
+                        // UI Rows (문항 보기): result.rows 에서 추출 (total 제외)
+                        let optionRows = aggInfoRows.filter(r => r.key !== 'total');
+                        if (optionRows.length === 0) optionRows = aggInfoRows;
+
+                        const updatedData = optionRows.map(row => {
+                            let rowData = {
+                                name: row.label || row.var_label || row.name || row.key,
+                                value: row.key
+                            };
+                            let totalCount = 0;
+
+                            if (tableColumns.length > 0) {
+                                // 배너가 적용된 경우 각 컬럼(배너 옵션)에 대해 값을 매핑
+                                tableColumns.forEach(banner => {
+                                    let val = 0;
+                                    if (row.cells && row.cells[banner.key]) {
+                                        val = Number(row.cells[banner.key].count || 0);
+                                    }
+                                    rowData[banner.label] = val;
+                                    totalCount += val;
+                                });
+                            } else {
+                                // 단일 빈도분석이나 배너가 없는 경우
+                                if (row.cells && Object.keys(row.cells).length > 0) {
+                                    const firstKey = Object.keys(row.cells)[0];
+                                    totalCount = Number(row.cells[firstKey].count || 0);
+                                } else {
+                                    totalCount = Number(row.value || 0);
+                                }
+                                rowData['전체'] = totalCount;
+                            }
+
+                            rowData.total = totalCount;
+                            return rowData;
+                        });
+
+                        const columnsForUI = tableColumns.length > 0 ? tableColumns : [{ key: 'total', label: '전체' }];
+
+                        return {
+                            ...q,
+                            n: updatedData.reduce((acc, cur) => acc + cur.total, 0),
+                            columns: columnsForUI,
+                            data: updatedData,
+                            isLoaded: true
+                        };
+                    }));
+                }
+            } catch (error) {
+                console.error("Aggregation Chunk Fetch Error:", error);
+            } finally {
+                // 백그라운드 요청 완료 시 상태 제거
+                tableIdsToSet.forEach(id => fetchingRef.current.delete(id));
+            }
+        };
+
+        fetchChunkData();
+    }, [activeId, questions.length, auth?.user?.userId]);
 
     const filteredQuestions = questions.filter(q =>
         q.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
