@@ -428,11 +428,12 @@ const FrequencyAnalysisPage = () => {
 
             try {
                 const pageId = sessionStorage.getItem("pageId");
-
+                const userId = auth.user.userId;
                 const startTargetId = questions[index].target_id;
 
                 const payload = {
                     pageid: pageId,
+                    user: userId,
                     x_info: [startTargetId], // 시작 포인트의 실제 target_id
                     start: index,  // tables 순번에 해당하는 시작 인덱스
                     limit: limit, // 가져올 갯수
