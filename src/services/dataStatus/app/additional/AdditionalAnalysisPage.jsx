@@ -20,7 +20,7 @@ import PageListPopup from '../variable/PageListPopup';
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = AdditionalAnalysisPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, evaluateTables } = AdditionalAnalysisPageApi();
     const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const PAGE_ID = sessionStorage.getItem("pageId");
@@ -36,7 +36,7 @@ const AdditionalAnalysisPage = () => {
     const [tableName, setTableName] = useState('Banner by Q1'); // Added table name state
     const [filterExpression, setFilterExpression] = useState(''); // Added filter expression state
     const [chartMode, setChartMode] = useState(null);
-    const [tableMode, setTableMode] = useState('separated'); // 'merged' | 'separated'
+    const [tableMode, setTableMode] = useState('merged'); // 'merged' | 'separated'
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(false);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
@@ -277,6 +277,11 @@ const AdditionalAnalysisPage = () => {
                                             });
                                         } else {
                                             mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
+                                        }
+                                        if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
+                                            setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
+                                        } else if (yIds.length > 1) {
+                                            setTableMode('separated');
                                         }
                                         setRowVars(mappedRows);
                                     }
@@ -937,22 +942,37 @@ const AdditionalAnalysisPage = () => {
                             }
                         }
 
-                        const payload = {
+                        let runPayload = {
                             user: auth.user.userId,
                             pageid: PAGE_ID,
                             variables: variablesMap,
                             weight_col: weightId,
                             filter_expression: filterExpr,
                             include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
-                            table: {
-                                id: item.id,
-                                name: item.name || "Untitled Table",
-                                x_info: xInfo, // Retain original nested structure
-                                y_info: yInfo
-                            }
+                            sort: { group_by: "label2_label3" }
                         };
 
-                        const evalResult = await evaluateTable.mutateAsync(payload);
+                        const localIsSeparated = yInfo.length > 1 || (yInfo.length === 1 && !yInfo[0].includes('+') && tableMode === 'separated');
+
+                        if (localIsSeparated) {
+                            runPayload.tables = yInfo.map((yId, idx) => ({
+                                id: `${item.id}_${idx + 1}`,
+                                name: `${item.name || "Untitled Table"} - ${yId}`,
+                                x_info: xInfo,
+                                y_info: [yId]
+                            }));
+                        } else {
+                            runPayload.table = {
+                                id: item.id,
+                                name: item.name || "Untitled Table",
+                                x_info: xInfo,
+                                y_info: yInfo
+                            };
+                        }
+
+                        const evalResult = localIsSeparated
+                            ? await evaluateTables.mutateAsync(runPayload)
+                            : await evaluateTable.mutateAsync(runPayload);
 
                         if (evalResult?.success === "777" && evalResult.resultjson) {
                             const newData = evalResult.resultjson;
@@ -1221,7 +1241,7 @@ const AdditionalAnalysisPage = () => {
                 name: tableName || "Untitled Table",
                 config: {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
-                    y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : [],
+                    y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
                     filter_expression: filterExpression,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight
                 }
@@ -1324,7 +1344,7 @@ const AdditionalAnalysisPage = () => {
                 name: tableName || "Untitled Table",
                 config: {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
-                    y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : [],
+                    y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
                     filter_expression: filterExpression,
                     weight_col: weightId
                 }
@@ -1358,22 +1378,38 @@ const AdditionalAnalysisPage = () => {
                     }
                 }
 
-                const runPayload = {
+                const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
+                const baseTableName = tableName || "Untitled Table";
+
+                let runPayload = {
                     user: auth.user.userId,
                     pageid: PAGE_ID,
                     variables: variablesMap,
                     weight_col: weightId,
                     filter_expression: filterExpression,
                     include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
-                    table: {
-                        id: selectedTableId,
-                        name: tableName || "Untitled Table",
-                        x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
-                        y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : []
-                    }
+                    sort: { group_by: "label2_label3" }
                 };
 
-                const evalResult = await evaluateTable.mutateAsync(runPayload);
+                if (tableMode === 'separated') {
+                    runPayload.tables = rowVars.map((v, idx) => ({
+                        id: `${selectedTableId || 'T1'}_${idx + 1}`,
+                        name: `${baseTableName} - ${v.label || v.name || v.id}`,
+                        x_info: xInfo,
+                        y_info: [v.id || v.name]
+                    }));
+                } else {
+                    runPayload.table = {
+                        id: selectedTableId || 'T1',
+                        name: baseTableName,
+                        x_info: xInfo,
+                        y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join(' + ')] : []
+                    };
+                }
+
+                const evalResult = tableMode === 'separated'
+                    ? await evaluateTables.mutateAsync(runPayload)
+                    : await evaluateTable.mutateAsync(runPayload);
 
                 if (evalResult?.success === "777" && evalResult.resultjson) {
                     const newData = evalResult.resultjson;
@@ -1471,22 +1507,39 @@ const AdditionalAnalysisPage = () => {
             }
         }
 
-        const payload = {
+        const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
+        const baseTableName = tableName || "Untitled Table";
+
+        let payload = {
             user: auth.user.userId,
             pageid: PAGE_ID,
             variables: variablesMap,
             weight_col: weightId,
             filter_expression: filterExpression,
-            table: {
-                id: selectedTableId,
-                name: tableName || "Untitled Table",
-                x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
-                y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join('*')] : []
-            }
+            include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
+            sort: { group_by: "label2_label3" }
         };
 
+        if (tableMode === 'separated') {
+            payload.tables = rowVars.map((v, idx) => ({
+                id: `${selectedTableId || 'T1'}_${idx + 1}`,
+                name: `${baseTableName} - ${v.label || v.name || v.id}`,
+                x_info: xInfo,
+                y_info: [v.id || v.name]
+            }));
+        } else {
+            payload.table = {
+                id: selectedTableId || 'T1',
+                name: baseTableName,
+                x_info: xInfo,
+                y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join(' + ')] : []
+            };
+        }
+
         try {
-            const result = await evaluateTable.mutateAsync(payload);
+            const result = tableMode === 'separated'
+                ? await evaluateTables.mutateAsync(payload)
+                : await evaluateTable.mutateAsync(payload);
 
             if (result?.success === "777" && result.resultjson) {
                 const data = result.resultjson;

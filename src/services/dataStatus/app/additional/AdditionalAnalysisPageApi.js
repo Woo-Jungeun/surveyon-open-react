@@ -23,9 +23,14 @@ export function AdditionalAnalysisPageApi() {
         async (data) => await api.post(data, "/tables/delete", "API_BASE_URL_DATASTATUS")
     );
 
-    /** 교차테이블 분석 실행 */
+    /** 교차테이블 분석(표 병합) 실행 */
     const evaluateTable = useMutation(
         async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** 교차테이블 분석(표 분리) 실행 */
+    const evaluateTables = useMutation(
+        async (data) => await api.post(data, "/analysis/evaluate/tables", "API_BASE_URL_DATASTATUS")
     );
 
     return {
@@ -33,6 +38,7 @@ export function AdditionalAnalysisPageApi() {
         getCrossTabData,
         saveCrossTable,
         deleteCrossTable,
-        evaluateTable
+        evaluateTable,
+        evaluateTables
     };
 }
