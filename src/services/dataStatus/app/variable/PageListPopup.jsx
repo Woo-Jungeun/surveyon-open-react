@@ -101,7 +101,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
         const tempId = `temp_${Date.now()}`;
         const newRow = {
             id: "-",
-            merge_pn: localData.length > 0 ? localData[0].merge_pn : "",
+            merge_pn: localData.length > 0 ? localData[0].pn : "",
             title: "",
             originalTitle: "",
             isNew: true,
@@ -126,7 +126,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
         try {
             const payload = {
                 title: finalTitle,
-                merge_pn: dataItem.merge_pn,
+                pn: dataItem.merge_pn,
                 parent_id: null,
                 user: auth?.user?.userId
             };
@@ -140,7 +140,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
 
             if (result?.success === "777") {
                 // 저장 성공 시 목록 재조회
-                const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, merge_pn: dataItem.merge_pn });
+                const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
 
                 if (refreshRes?.success === "777" && refreshRes.resultjson) {
                     setLocalData(refreshRes.resultjson.map(item => ({
@@ -248,13 +248,14 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
     ), [editingRowId, handleEditRow, handleSaveRow, handleCancelRow, handleDeleteRow]);
 
     const columns = useMemo(() => [
-        { field: "id", title: "대시보드 ID", width: "300px" },
-        { field: "merge_pn", title: "대시보드 번호", width: "150px" },
+        // { field: "id", title: "대시보드 ID", width: "300px" },
+        // { field: "merge_pn", title: "대시보드 번호", width: "150px" },
         {
             field: "title",
             title: "제목",
             cell: (props) => <TitleEditCell {...props} editingRowId={editingRowId} onTitleChange={handleTitleChange} />
         },
+        { field: "created_at", title: "생성일", width: "150px" },
         {
             title: "편집",
             width: "120px",

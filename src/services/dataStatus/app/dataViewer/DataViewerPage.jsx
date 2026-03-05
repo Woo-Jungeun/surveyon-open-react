@@ -55,7 +55,7 @@ const DataViewerPage = () => {
         }
 
         try {
-            const result = await getPageList.mutateAsync({ user: userId, merge_pn: mergePn });
+            const result = await getPageList.mutateAsync({ user: userId, pn: mergePn });
             if (result?.success === "777" && result.resultjson) {
                 setPageListData(result.resultjson);
                 setIsPageListOpen(true);

@@ -168,7 +168,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         return;
       }
 
-      const pageRes = await pageList.mutateAsync({ user: user, merge_pn: mergePn });
+      const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
 
       if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
         setPageListData(pageRes.resultjson);
@@ -263,19 +263,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     title: pageState.title,
     subTitle: pageState.merge_pn,
     onSettingsClick: () => {
-      // Open page list popup
-      // We need to fetch the list like in handleProjectSelect, or just open if we have data?
-      // We might need to re-fetch if project changed, but usually project is same.
-      // Let's try to reuse the fetch logic or just open if we have data.
-      // But better to fetch to be safe or checks.
-      // Since handleProjectSelect fetches and sets data, maybe we can just open?
-      // But what if we refreshed? pageList data might be empty.
-      // So we should fetch page list again using current merge_pn.
-
       const user = auth?.user?.userId;
       const mergePn = sessionStorage.getItem("merge_pn");
       if (user && mergePn) {
-        pageList.mutateAsync({ user: user, merge_pn: mergePn }).then(res => {
+        pageList.mutateAsync({ user: user, pn: mergePn }).then(res => {
           if (res?.success === "777") {
             setPageListData(res.resultjson);
             setIsPageListPopupOpen(true);
