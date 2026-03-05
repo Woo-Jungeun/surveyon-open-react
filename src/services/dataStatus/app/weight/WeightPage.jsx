@@ -501,7 +501,7 @@ const WeightPage = () => {
     }, []);
 
     // 토스트 알림 상태
-    const [toast, setToast] = useState({ show: false, message: '' });
+    const [toast, setToast] = useState({ show: false, message: '', source: '' });
 
     // 토스트 타이머
     useEffect(() => {
@@ -513,20 +513,44 @@ const WeightPage = () => {
         }
     }, [toast.show]);
 
+    // 현재값 클립보드 복사 (엑셀 호환)
+    const handleCopyCurrentToClipboard = async () => {
+        try {
+            const headerRow = ['Variable', ...gridColumns.map(c => c.title)].join('\t');
+            const dataRows = gridData.map(item => {
+                const cols = gridColumns.map(c => {
+                    const cellData = item[c.field];
+                    if (!cellData) return '-';
+                    if (displayMode === 'value') return cellData.count;
+                    if (displayMode === 'percent') return cellData.pct !== '-' ? `${cellData.pct}%` : '-';
+                    return `${cellData.count} (${cellData.pct !== '-' ? `${cellData.pct}%` : '-'})`;
+                });
+                return [item.category, ...cols].join('\t');
+            }).join('\n');
+
+            await navigator.clipboard.writeText(`${headerRow}\n${dataRows}`);
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)', source: 'current' });
+        } catch (err) {
+            console.error('Failed to copy current dist:', err);
+            setToast({ show: true, message: '복사 실패', source: 'current' });
+        }
+    };
+
     // 클립보드 복사 (엑셀 호환)
     const handleCopyToClipboard = async () => {
         try {
-            const rows = targetGridData.map(item => {
+            const headerRow = ['Variable', ...gridColumns.map(c => c.title)].join('\t');
+            const dataRows = targetGridData.map(item => {
                 const cols = gridColumns.map(c => item[c.field]);
-                return cols.join('\t');
+                return [item.category, ...cols].join('\t');
             }).join('\n');
 
-            await navigator.clipboard.writeText(rows);
+            await navigator.clipboard.writeText(`${headerRow}\n${dataRows}`);
 
-            setToast({ show: true, message: '복사 완료 (Ctrl+V)' });
+            setToast({ show: true, message: '복사 완료 (Ctrl+V)', source: 'target' });
         } catch (err) {
             console.error('Failed to copy:', err);
-            setToast({ show: true, message: '복사 실패' });
+            setToast({ show: true, message: '복사 실패', source: 'target' });
         }
     };
 
@@ -1013,79 +1037,129 @@ const WeightPage = () => {
                                                             className="weight-section-header"
                                                             style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                                                         >
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                                 <h4 className="weight-section-title">현재값</h4>
-                                                                {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
-                                                            </div>
 
-                                                            <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }} onClick={(e) => e.stopPropagation()}>
-                                                                <div
-                                                                    className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
-                                                                    onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
-                                                                    style={{
-                                                                        height: '32px',
-                                                                        padding: '0 8px 0 10px',
-                                                                        gap: '4px',
-                                                                        background: '#fff',
-                                                                        border: '1px solid #e9ecef',
-                                                                        borderRadius: '6px',
-                                                                        fontSize: '13px',
-                                                                        fontWeight: '500',
-                                                                        color: '#495057',
-                                                                        cursor: 'pointer',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'space-between',
-                                                                        userSelect: 'none'
-                                                                    }}
-                                                                >
-                                                                    <span className="trigger-text">
-                                                                        {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
-                                                                    </span>
-                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
-                                                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                                                    </svg>
+                                                                <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }} onClick={(e) => e.stopPropagation()}>
+                                                                    <div
+                                                                        className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
+                                                                        onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
+                                                                        style={{
+                                                                            height: '32px',
+                                                                            padding: '0 8px 0 10px',
+                                                                            gap: '4px',
+                                                                            background: '#fff',
+                                                                            border: '1px solid #e9ecef',
+                                                                            borderRadius: '6px',
+                                                                            fontSize: '13px',
+                                                                            fontWeight: '500',
+                                                                            color: '#495057',
+                                                                            cursor: 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'space-between',
+                                                                            userSelect: 'none'
+                                                                        }}
+                                                                    >
+                                                                        <span className="trigger-text">
+                                                                            {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
+                                                                        </span>
+                                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
+                                                                            <polyline points="6 9 12 15 18 9"></polyline>
+                                                                        </svg>
+                                                                    </div>
+
+                                                                    {isDisplayMenuOpen && (
+                                                                        <div className="custom-filter-menu" style={{
+                                                                            position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+                                                                            width: '100%',
+                                                                            padding: '4px',
+                                                                            background: '#fff', border: '1px solid #e2e8f0',
+                                                                            borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                                            zIndex: 1000, overflow: 'hidden'
+                                                                        }}>
+                                                                            {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
+                                                                                <div
+                                                                                    key={item.value}
+                                                                                    onClick={() => {
+                                                                                        setDisplayMode(item.value);
+                                                                                        setIsDisplayMenuOpen(false);
+                                                                                    }}
+                                                                                    style={{
+                                                                                        padding: '6px 8px',
+                                                                                        cursor: 'pointer',
+                                                                                        fontSize: '13px',
+                                                                                        color: displayMode === item.value ? '#3b82f6' : '#495057',
+                                                                                        background: displayMode === item.value ? '#eff6ff' : 'transparent',
+                                                                                        transition: 'background 0.1s',
+                                                                                        textAlign: 'center',
+                                                                                        borderRadius: '4px',
+                                                                                        userSelect: 'none'
+                                                                                    }}
+                                                                                    onMouseEnter={(e) => {
+                                                                                        if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
+                                                                                    }}
+                                                                                    onMouseLeave={(e) => {
+                                                                                        if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
+                                                                                    }}
+                                                                                >
+                                                                                    {item.label}
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
 
-                                                                {isDisplayMenuOpen && (
-                                                                    <div className="custom-filter-menu" style={{
-                                                                        position: 'absolute', top: 'calc(100% + 4px)', right: 0,
-                                                                        width: '100%',
-                                                                        padding: '4px',
-                                                                        background: '#fff', border: '1px solid #e2e8f0',
-                                                                        borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                                                        zIndex: 1000, overflow: 'hidden'
-                                                                    }}>
-                                                                        {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
-                                                                            <div
-                                                                                key={item.value}
-                                                                                onClick={() => {
-                                                                                    setDisplayMode(item.value);
-                                                                                    setIsDisplayMenuOpen(false);
-                                                                                }}
-                                                                                style={{
-                                                                                    padding: '6px 8px',
-                                                                                    cursor: 'pointer',
-                                                                                    fontSize: '13px',
-                                                                                    color: displayMode === item.value ? '#3b82f6' : '#495057',
-                                                                                    background: displayMode === item.value ? '#eff6ff' : 'transparent',
-                                                                                    transition: 'background 0.1s',
-                                                                                    textAlign: 'center',
-                                                                                    borderRadius: '4px',
-                                                                                    userSelect: 'none'
-                                                                                }}
-                                                                                onMouseEnter={(e) => {
-                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
-                                                                                }}
-                                                                                onMouseLeave={(e) => {
-                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
-                                                                                }}
-                                                                            >
-                                                                                {item.label}
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', position: 'relative' }} onClick={(e) => e.stopPropagation()}>
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); handleCopyCurrentToClipboard(); }}
+                                                                        style={{
+                                                                            border: 'none',
+                                                                            background: '#f1f5f9',
+                                                                            cursor: 'pointer',
+                                                                            padding: '4px 8px',
+                                                                            borderRadius: '4px',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '4px',
+                                                                            color: '#64748b',
+                                                                            fontSize: '11px',
+                                                                            fontWeight: '600'
+                                                                        }}
+                                                                        title="데이터 복사"
+                                                                    >
+                                                                        <Copy size={12} />
+                                                                        복사
+                                                                    </button>
+                                                                    {toast.show && toast.source === 'current' && (
+                                                                        <div style={{
+                                                                            position: 'absolute',
+                                                                            left: '100%',
+                                                                            top: '50%',
+                                                                            transform: 'translateY(-50%)',
+                                                                            marginLeft: '8px',
+                                                                            background: '#1e293b',
+                                                                            color: '#fff',
+                                                                            padding: '4px 8px',
+                                                                            borderRadius: '4px',
+                                                                            fontSize: '11px',
+                                                                            fontWeight: '500',
+                                                                            whiteSpace: 'nowrap',
+                                                                            zIndex: 10,
+                                                                            animation: 'fadeIn 0.2s ease-out',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '4px'
+                                                                        }}>
+                                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#4ade80' }}></div>
+                                                                            {toast.message}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '4px' }}>
+                                                                {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
                                                             </div>
                                                         </div>
                                                         {isCurrentDistOpen && (
@@ -1138,7 +1212,7 @@ const WeightPage = () => {
                                                                     <Copy size={12} />
                                                                     복사
                                                                 </button>
-                                                                {toast.show && (
+                                                                {toast.show && toast.source === 'target' && (
                                                                     <div style={{
                                                                         position: 'absolute',
                                                                         left: '100%',
