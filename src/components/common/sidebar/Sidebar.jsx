@@ -8,6 +8,7 @@ import { useCookies } from "react-cookie";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
 import { LoginApi } from "@/services/login/LoginApi.js";
+import ProPermissionModal from "./ProPermissionModal.jsx";
 import "./Sidebar.css";
 
 /**
@@ -42,7 +43,7 @@ const Sidebar = ({
         const projectnum = sessionStorage.getItem("projectnum");
         setUserOpen(false);
         if (projectnum) {
-            navigate("/ai_open_analysis/pro_permission");
+            setPermissionOpen(true);
         } else {
             navigate("/project", { state: { from: 'ai_open', redirect: 'pro_permission' } });
         }
@@ -50,6 +51,8 @@ const Sidebar = ({
 
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [userOpen, setUserOpen] = useState(false);
+    const [hasMergePn, setHasMergePn] = useState(false);
+    const [permissionOpen, setPermissionOpen] = useState(false);
     // 모듈 리스트 내 '메인 메뉴' 토글 상태 (기본값 true로 펼쳐둠)
     const [moduleListOpen, setModuleListOpen] = useState(false); // 드롭다운용으로 사용
     const [openSections, setOpenSections] = useState({});
@@ -132,149 +135,177 @@ const Sidebar = ({
     };
 
     return (
-        <aside className={`common-sidebar ${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : ""}>
-            {/* Header Area */}
-            <div className="sidebar-header">
-                <div className="header-top" style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
-                    {/* 홈 버튼 */}
-                    <button type="button" className="home-btn" title="홈으로" onClick={onHomeClick} style={{ padding: '6px' }}>
-                        <Home size={18} />
+        <>
+            <aside className={`common-sidebar ${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : ""}>
+                {/* Header Area */}
+                <div className="sidebar-header">
+                    <div className="header-top" style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
+                        {/* 홈 버튼 */}
+                        <button type="button" className="home-btn" title="홈으로" onClick={onHomeClick} style={{ padding: '6px' }}>
+                            <Home size={18} />
+                        </button>
+
+                        <div className="header-divider" style={{ margin: '0 2px' }}></div>
+
+                        {/* 모듈 메뉴 (드롭다운) */}
+                        <div className="module-menu-wrapper" ref={moduleMenuRef}>
+                            <button
+                                type="button"
+                                className={`module-menu-btn ${moduleListOpen ? 'active' : ''}`}
+                                onClick={() => setModuleListOpen(!moduleListOpen)}
+                                title="메인 메뉴"
+                            >
+                                <Menu size={20} />
+                            </button>
+
+                            {moduleListOpen && (
+                                <div className={`module-dropdown ${isCollapsed ? 'collapsed' : ''}`}>
+                                    <ul className="module-dropdown-list">
+                                        {moduleItems
+                                            .filter(m => m.label !== "프로젝트 목록")
+                                            .map((m, i) => (
+                                                <li key={i} className="module-dropdown-item">
+                                                    <div
+                                                        className={`module-link ${m.highlight || m.module === theme.replace('blue', 'data_status') ? 'active' : ''} ${m.isDisabled ? 'disabled' : ''}`}
+                                                        onClick={() => {
+                                                            if (m.isDisabled) return;
+                                                            setModuleListOpen(false);
+                                                            if (m.onClick) {
+                                                                m.onClick();
+                                                            } else {
+                                                                navigate(m.path, { state: m.state });
+                                                            }
+                                                        }}
+                                                    >
+                                                        {m.icon && React.cloneElement(m.icon, { size: 18, strokeWidth: 2, className: "module-icon" })}
+                                                        <span>{m.label}</span>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="header-divider"></div>
+                        {/* 상단: 브랜드 */}
+                        <div className="brand-area" onClick={onBrandClick}>
+                            {brand?.icon}
+                            <span className={brand?.logoClass || "brand-title"}>
+                                {brand?.logoText && <span className="logo-accent">{brand.logoText}</span>}
+                                {brand?.title}
+                            </span>
+                        </div>
+                    </div>
+
+                    {/* Toggle Button */}
+                    <button className="collapse-toggle" onClick={() => setIsCollapsed(!isCollapsed)}>
+                        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
                     </button>
-
-                    <div className="header-divider" style={{ margin: '0 2px' }}></div>
-
-                    {/* 모듈 메뉴 (드롭다운) */}
-                    <div className="module-menu-wrapper" ref={moduleMenuRef}>
-                        <button
-                            type="button"
-                            className={`module-menu-btn ${moduleListOpen ? 'active' : ''}`}
-                            onClick={() => setModuleListOpen(!moduleListOpen)}
-                            title="메인 메뉴"
-                        >
-                            <Menu size={20} />
-                        </button>
-
-                        {moduleListOpen && (
-                            <div className={`module-dropdown ${isCollapsed ? 'collapsed' : ''}`}>
-                                <ul className="module-dropdown-list">
-                                    {moduleItems
-                                        .filter(m => m.label !== "프로젝트 목록")
-                                        .map((m, i) => (
-                                            <li key={i} className="module-dropdown-item">
-                                                <div
-                                                    className={`module-link ${m.highlight || m.module === theme.replace('blue', 'data_status') ? 'active' : ''} ${m.isDisabled ? 'disabled' : ''}`}
-                                                    onClick={() => {
-                                                        if (m.isDisabled) return;
-                                                        setModuleListOpen(false);
-                                                        if (m.onClick) {
-                                                            m.onClick();
-                                                        } else {
-                                                            navigate(m.path, { state: m.state });
-                                                        }
-                                                    }}
-                                                >
-                                                    {m.icon && React.cloneElement(m.icon, { size: 18, strokeWidth: 2, className: "module-icon" })}
-                                                    <span>{m.label}</span>
-                                                </div>
-                                            </li>
-                                        ))}
-                                </ul>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="header-divider"></div>
-                    {/* 상단: 브랜드 */}
-                    <div className="brand-area" onClick={onBrandClick}>
-                        {brand?.icon}
-                        <span className={brand?.logoClass || "brand-title"}>
-                            {brand?.logoText && <span className="logo-accent">{brand.logoText}</span>}
-                            {brand?.title}
-                        </span>
-                    </div>
                 </div>
 
-                {/* Toggle Button */}
-                <button className="collapse-toggle" onClick={() => setIsCollapsed(!isCollapsed)}>
-                    {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-                </button>
-            </div>
-
-            {/* Project Info Section */}
-            {projectInfo && !isCollapsed && (
-                <div className="project-info-box">
-                    <div className="project-info-card">
-                        <div className="project-title">{projectInfo.title}</div>
-                        {projectInfo.subTitle && (
-                            <span className="project-id-badge">{projectInfo.subTitle}</span>
-                        )}
-                        <button
-                            className="project-settings-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
-                            }}
-                        >
-                            <Settings size={16} />
-                        </button>
+                {/* Project Info Section */}
+                {projectInfo && !isCollapsed && (
+                    <div className="project-info-box">
+                        <div className="project-info-card">
+                            <div className="project-title">{projectInfo.title}</div>
+                            {projectInfo.subTitle && (
+                                <span className="project-id-badge">{projectInfo.subTitle}</span>
+                            )}
+                            <button
+                                className="project-settings-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
+                                }}
+                            >
+                                <Settings size={16} />
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Page Info Section */}
-            {pageInfo && !isCollapsed && (
-                <div className="project-info-box">
-                    <div className="project-info-card">
-                        <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }}>{pageInfo.title}</div>
-                        <button
-                            className="project-settings-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
-                            }}
-                        >
-                            <Settings size={16} />
-                        </button>
+                {/* Page Info Section */}
+                {pageInfo && !isCollapsed && (
+                    <div className="project-info-box">
+                        <div className="project-info-card">
+                            <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }}>{pageInfo.title}</div>
+                            <button
+                                className="project-settings-btn"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
+                                }}
+                            >
+                                <Settings size={16} />
+                            </button>
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Navigation Menu (Scrollable) */}
-            <nav className="sidebar-nav">
-                {/* Extra Actions (데이터 신규등록 등) - Scrollable */}
-                {extraActions && <div className="extra-actions-wrapper">{extraActions}</div>}
+                {/* Navigation Menu (Scrollable) */}
+                <nav className="sidebar-nav">
+                    {/* Extra Actions (데이터 신규등록 등) - Scrollable */}
+                    {extraActions && <div className="extra-actions-wrapper">{extraActions}</div>}
 
-                {/* 2. Sub Menus (Current Page Menus) */}
-                {menuGroups.map((group, idx) => (
-                    <div key={idx} className="nav-group">
-                        {group.label && (
-                            <div className="group-header" onClick={() => toggleSection(group.label)}>
-                                <span className="group-title">{group.label}</span>
-                                {!isCollapsed && (
-                                    <ChevronDown
-                                        size={14}
-                                        className={`group-arrow ${openSections[group.label] ? 'open' : ''}`}
-                                    />
-                                )}
-                            </div>
-                        )}
+                    {/* 2. Sub Menus (Current Page Menus) */}
+                    {menuGroups.map((group, idx) => (
+                        <div key={idx} className="nav-group">
+                            {group.label && (
+                                <div className="group-header" onClick={() => toggleSection(group.label)}>
+                                    <span className="group-title">{group.label}</span>
+                                    {!isCollapsed && (
+                                        <ChevronDown
+                                            size={14}
+                                            className={`group-arrow ${openSections[group.label] ? 'open' : ''}`}
+                                        />
+                                    )}
+                                </div>
+                            )}
 
-                        {(isCollapsed || openSections[group.label]) && (
-                            <ul className="group-list">
-                                {group.items.map((item, i) => {
-                                    const Icon = item.icon;
+                            {(isCollapsed || openSections[group.label]) && (
+                                <ul className="group-list">
+                                    {group.items.map((item, i) => {
+                                        const Icon = item.icon;
 
-                                    if (!item.path) {
+                                        if (!item.path) {
+                                            return (
+                                                <li key={i} className="nav-item">
+                                                    <div
+                                                        className={`nav-link ${item.isPending ? "pending" : ""}`}
+                                                        title={isCollapsed ? item.label : undefined}
+                                                        onClick={(e) => {
+                                                            if (item.isPending) {
+                                                                e.preventDefault();
+                                                                modal.showAlert("알림", "서비스 준비 중입니다.");
+                                                                return;
+                                                            }
+                                                            if (item.onClick) {
+                                                                item.onClick(e);
+                                                            }
+                                                        }}
+                                                    >
+                                                        {Icon && <Icon className="nav-icon" size={18} strokeWidth={2} />}
+                                                        <span>{item.label}</span>
+                                                    </div>
+                                                </li>
+                                            );
+                                        }
+
                                         return (
                                             <li key={i} className="nav-item">
-                                                <div
-                                                    className={`nav-link ${item.isPending ? "pending" : ""}`}
+                                                <NavLink
+                                                    to={item.path}
+                                                    end={item.end}
                                                     title={isCollapsed ? item.label : undefined}
+                                                    className={({ isActive }) => {
+                                                        const finalActive = item.isActive ? item.isActive(location.pathname) : isActive;
+                                                        return `nav-link ${finalActive ? "active" : ""} ${item.isPending ? "pending" : ""}`;
+                                                    }}
                                                     onClick={(e) => {
                                                         if (item.isPending) {
                                                             e.preventDefault();
                                                             modal.showAlert("알림", "서비스 준비 중입니다.");
-                                                            return;
                                                         }
                                                         if (item.onClick) {
                                                             item.onClick(e);
@@ -283,77 +314,58 @@ const Sidebar = ({
                                                 >
                                                     {Icon && <Icon className="nav-icon" size={18} strokeWidth={2} />}
                                                     <span>{item.label}</span>
-                                                </div>
+                                                </NavLink>
                                             </li>
                                         );
-                                    }
-
-                                    return (
-                                        <li key={i} className="nav-item">
-                                            <NavLink
-                                                to={item.path}
-                                                end={item.end}
-                                                title={isCollapsed ? item.label : undefined}
-                                                className={({ isActive }) => {
-                                                    const finalActive = item.isActive ? item.isActive(location.pathname) : isActive;
-                                                    return `nav-link ${finalActive ? "active" : ""} ${item.isPending ? "pending" : ""}`;
-                                                }}
-                                                onClick={(e) => {
-                                                    if (item.isPending) {
-                                                        e.preventDefault();
-                                                        modal.showAlert("알림", "서비스 준비 중입니다.");
-                                                    }
-                                                    if (item.onClick) {
-                                                        item.onClick(e);
-                                                    }
-                                                }}
-                                            >
-                                                {Icon && <Icon className="nav-icon" size={18} strokeWidth={2} />}
-                                                <span>{item.label}</span>
-                                            </NavLink>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
-                        )}
-                    </div>
-                ))}
-                {bottomActions && (
-                    <div className="sidebar-bottom-scroll-actions" style={{ marginTop: '16px' }}>
-                        {bottomActions}
-                    </div>
-                )}
-            </nav>
-
-            {/* Footer / User Area */}
-            <div className="sidebar-footer" ref={userRef}>
-                <div className="user-wrap">
-                    {userOpen && (
-                        <div className="user-dropdown">
-                            <button className="permission-btn" onClick={handleGoPermission}>
-                                <ShieldCheck size={16} />
-                                <span>권한 관리</span>
-                            </button>
-                            <button className="logout-btn" onClick={handleLogout}>
-                                <LogOut size={16} />
-                                <span>로그아웃</span>
-                            </button>
+                                    })}
+                                </ul>
+                            )}
+                        </div>
+                    ))}
+                    {bottomActions && (
+                        <div className="sidebar-bottom-scroll-actions" style={{ marginTop: '16px' }}>
+                            {bottomActions}
                         </div>
                     )}
+                </nav>
 
-                    <div className="user-card" onClick={() => setUserOpen(!userOpen)}>
-                        <div className="user-avatar">
-                            <User size={16} />
-                        </div>
-                        {!isCollapsed && (
-                            <div className="user-info">
-                                <span className="user-name">{auth?.user?.userNm || "사용자"}님</span>
+                {/* Footer / User Area */}
+                <div className="sidebar-footer" ref={userRef}>
+                    <div className="user-wrap">
+                        {userOpen && (
+                            <div className="user-dropdown">
+                                {hasMergePn && (
+                                    <button className="permission-btn" onClick={handleGoPermission}>
+                                        <ShieldCheck size={16} />
+                                        <span>권한 관리</span>
+                                    </button>
+                                )}
+                                <button className="logout-btn" onClick={handleLogout}>
+                                    <LogOut size={16} />
+                                    <span>로그아웃</span>
+                                </button>
                             </div>
                         )}
+
+                        <div className="user-card" onClick={() => {
+                            const pn = sessionStorage.getItem("merge_pn");
+                            setHasMergePn(!!(pn && pn.trim() !== ""));
+                            setUserOpen(!userOpen);
+                        }}>
+                            <div className="user-avatar">
+                                <User size={16} />
+                            </div>
+                            {!isCollapsed && (
+                                <div className="user-info">
+                                    <span className="user-name">{auth?.user?.userNm || "사용자"}님</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
-            </div>
-        </aside>
+            </aside>
+            <ProPermissionModal open={permissionOpen} onClose={() => setPermissionOpen(false)} />
+        </>
     );
 };
 

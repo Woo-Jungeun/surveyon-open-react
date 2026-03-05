@@ -196,10 +196,11 @@ const AiSidebar = ({ onOpenProjectModal }) => {
 
     // 4. Admin/Utils
     const adminItems = [];
-    if (!manage) {
-        adminItems.push({ label: "권한 관리", path: "/ai_open_analysis/pro_permission", icon: UserCog });
-        // adminItems.push({ label: "API 설정", path: "/ai_open_analysis/pro_key", icon: Settings });
-    }
+    // 권한 관리 팝업으로 변경
+    // if (!manage) {
+    //     adminItems.push({ label: "권한 관리", path: "/ai_open_analysis/pro_permission", icon: UserCog });
+    //     // adminItems.push({ label: "API 설정", path: "/ai_open_analysis/pro_key", icon: Settings });
+    // }
 
     // Always add Manual
     adminItems.push({

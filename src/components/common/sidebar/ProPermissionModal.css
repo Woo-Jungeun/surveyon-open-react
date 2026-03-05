@@ -1,0 +1,524 @@
+/* ProPermissionModal.css - 프로젝트 선택 팝업 스타일 기반 */
+
+/* ============ CSS 변수 전역 오버라이드 (로딩 스피너 + Kendo 검색창) ============ */
+body:has(.pp-modal-overlay) {
+    --primary-color: #5A4BFF;
+    --kendo-color-primary: #5A4BFF;
+    --kendo-color-primary-hover: #4a3bef;
+    --kendo-color-primary-active: #3b2dd6;
+}
+
+/* ============ 알림/확인 팝업 (orange-theme.modal → 보라색 오버라이드) ============ */
+/* common.css 패턴과 동일하게 ai_open_analysis에서 뜨는 orange-theme.modal을 보라색으로 교체 */
+body:has(.pp-modal-overlay) .orange-theme.modal .k-button-solid-primary,
+body:has(.pp-modal-overlay) .orange-theme.modal .btnM[themeColor="primary"] {
+    background-color: #5A4BFF !important;
+    border-color: #5A4BFF !important;
+    color: #fff !important;
+}
+
+body:has(.pp-modal-overlay) .orange-theme.modal .k-button-solid-primary:hover,
+body:has(.pp-modal-overlay) .orange-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #4a3bef !important;
+    border-color: #4a3bef !important;
+}
+
+/* 취소 버튼 (btnTxt type01) 주황 → 보라 */
+body:has(.pp-modal-overlay) .orange-theme.modal .btnTxt.type01 {
+    color: #5A4BFF !important;
+    border-color: #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) .orange-theme.modal .btnTxt.type01:hover {
+    background-color: #f3f1ff !important;
+}
+
+/* 알림 아이콘 (iconNoti) 보라색으로 */
+body:has(.pp-modal-overlay) .orange-theme.modal .iconNoti::before {
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%235A4BFF'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%235A4BFF'/%3e%3c/svg%3e") no-repeat center / contain !important;
+}
+
+/* ============ 로딩 스피너 주황 → 보라 (--primary-color 직접 오버라이드) ============ */
+body:has(.pp-modal-overlay) .survey-loading-spinner::before,
+body:has(.pp-modal-overlay) .survey-loading-spinner::after {
+    border-color: #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) .survey-loading-spinner::after {
+    background:
+        linear-gradient(#5A4BFF 0 0) 10px 15px / 40px 3px,
+        linear-gradient(#5A4BFF 0 0) 10px 28px / 40px 3px,
+        linear-gradient(#5A4BFF 0 0) 10px 41px / 40px 3px,
+        linear-gradient(#5A4BFF 0 0) 10px 54px / 28px 3px !important;
+    background-repeat: no-repeat !important;
+}
+
+body:has(.pp-modal-overlay) .survey-loading-spinner .dot {
+    background: #5A4BFF !important;
+}
+
+/* ============ 드롭다운 검색창 주황 테두리 → 보라 ============ */
+body:has(.pp-modal-overlay) .k-searchbox {
+    border-color: #7C3AED !important;
+}
+
+body:has(.pp-modal-overlay) .k-animation-container .k-searchbox {
+    border-color: #7C3AED !important;
+}
+
+body:has(.pp-modal-overlay) .k-animation-container .k-searchbox:focus-within {
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
+/* ============ nprogress 로딩바 보라 ============ */
+body:has(.pp-modal-overlay) #nprogress .bar {
+    background: #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) #nprogress .peg {
+    box-shadow: 0 0 10px #5A4BFF, 0 0 5px #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) #nprogress .spinner-icon {
+    border-top-color: #5A4BFF !important;
+    border-left-color: #5A4BFF !important;
+}
+
+.pp-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.pp-modal-container {
+    width: 90%;
+    max-width: 1100px;
+    height: 80vh;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Header */
+.pp-modal-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.pp-modal-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+}
+
+.pp-modal-header-icon {
+    color: #5A4BFF;
+}
+
+.pp-modal-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pp-modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+}
+
+.pp-modal-subtitle {
+    font-size: 13px;
+    color: #999;
+    margin: 0 0 0 4px;
+    font-weight: 400;
+}
+
+.pp-modal-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.pp-modal-close:hover {
+    background: #f5f5f5;
+    color: #333;
+}
+
+.pp-btn-delete-project {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 20px;
+    border-radius: 6px;
+    border: 1px solid #5A4BFF;
+    background: #5A4BFF;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pp-btn-delete-project:hover {
+    background: #4a3bef;
+    border-color: #4a3bef;
+}
+
+/* Body Layout */
+.pp-modal-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    background: #fbfbfc;
+    padding: 20px;
+    gap: 20px;
+}
+
+/* Left: Form */
+.pp-modal-left {
+    width: 280px;
+    flex-shrink: 0;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.pp-form-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #5A4BFF;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #ede9fe;
+}
+
+.pp-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+}
+
+.pp-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.pp-form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.pp-required {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.pp-btn-submit {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #5A4BFF !important;
+    color: #fff !important;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 4px;
+}
+
+.pp-btn-submit:hover:not(:disabled) {
+    background: #4a3bef !important;
+}
+
+.pp-btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Right: Grid */
+.pp-modal-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-width: 0;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #eee;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    padding: 16px;
+}
+
+.pp-grid-header {
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.pp-grid-wrap {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.pp-del-btn {
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid #ffe4e6;
+    background: #fff1f2;
+    color: #e11d48;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.pp-del-btn:hover {
+    background: #ffe4e6;
+}
+
+/* Purple theme overrides for Kendo inside modal */
+.pp-modal-container .k-input,
+.pp-modal-container .k-input-solid,
+.pp-modal-container .k-picker,
+.pp-modal-container .k-dropdownlist {
+    border-color: #d8b4fe;
+}
+
+.pp-modal-container .k-input:focus-within,
+.pp-modal-container .k-picker:focus-within,
+.pp-modal-container .k-dropdownlist.k-focus {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18) !important;
+}
+
+.pp-modal-container .k-dropdownlist.k-picker>button,
+.pp-modal-container .k-picker .k-input-button {
+    background-color: #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) .k-animation-container,
+body:has(.pp-modal-overlay) .k-popup,
+body:has(.pp-modal-overlay) .k-list-container {
+    border-color: #7C3AED !important;
+}
+
+body:has(.pp-modal-overlay) .k-list .k-selected,
+body:has(.pp-modal-overlay) .k-list-item.k-selected {
+    background-color: #F3F1FF !important;
+    color: #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) .k-list-item:hover {
+    background-color: #EBE7FF !important;
+    color: #5A4BFF !important;
+}
+
+/* DatePicker 캘린더 버튼 오렌지/초록 배경 제거 및 보라색 테마 적용 */
+.pp-modal-container .k-datepicker .k-input-button,
+.pp-modal-container .k-datepicker>button,
+.pp-modal-container .k-datepicker .k-button {
+    background-color: #5A4BFF !important;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2' ry='2'%3E%3C/rect%3E%3Cline x1='16' y1='2' x2='16' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='2' x2='8' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='10' x2='21' y2='10'%3E%3C/line%3E%3C/svg%3E") !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: 18px !important;
+    border-radius: 0 8px 8px 0 !important;
+    width: 40px !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    border: none !important;
+}
+
+/* 기존 Kendo SVG 아이콘 및 span 강제 숨김 */
+.pp-modal-container .k-datepicker .k-input-button svg,
+.pp-modal-container .k-datepicker>button svg,
+.pp-modal-container .k-datepicker .k-input-button .k-icon,
+.pp-modal-container .k-datepicker .k-input-button .k-button-icon {
+    display: none !important;
+}
+
+.pp-modal-container .k-datepicker .k-input-button:hover,
+.pp-modal-container .k-datepicker>button:hover,
+.pp-modal-container .k-datepicker .k-button:hover {
+    background-color: #4a3bef !important;
+}
+
+/* 드롭다운 필터 검색 input 포커스 테두리 주황 → 보라 */
+body:has(.pp-modal-overlay) .k-searchbox,
+body:has(.pp-modal-overlay) .k-searchbox:focus-within,
+body:has(.pp-modal-overlay) .k-input-inner:focus {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.18) !important;
+    outline: none !important;
+}
+
+body:has(.pp-modal-overlay) .k-searchbox .k-input-inner {
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* 드롭다운 내 검색창(k-searchbox) 및 모든 Kendo 입력창 주황 테두리 강제 제거 */
+body:has(.pp-modal-overlay) .k-animation-container .k-searchbox,
+body:has(.pp-modal-overlay) .k-animation-container .k-list-filter .k-searchbox,
+body:has(.pp-modal-overlay) .k-popup .k-searchbox,
+body:has(.pp-modal-overlay) .k-popup .k-input,
+body:has(.pp-modal-overlay) .k-animation-container .k-input {
+    border-color: #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) .k-animation-container .k-searchbox:focus-within,
+body:has(.pp-modal-overlay) .k-popup .k-searchbox:focus-within,
+body:has(.pp-modal-overlay) .k-popup .k-input:focus-within {
+    border-color: #5A4BFF !important;
+    box-shadow: 0 0 0 2px rgba(90, 75, 255, 0.18) !important;
+}
+
+body:has(.pp-modal-overlay) .k-animation-container input[type="text"],
+body:has(.pp-modal-overlay) .k-animation-container .k-input-inner,
+body:has(.pp-modal-overlay) .k-popup .k-input-inner {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+/* GridDataCount 숫자 주황 → 보라 */
+.pp-modal-container .grid-data-count__number {
+    color: #5A4BFF !important;
+}
+
+/* 첫번째 행(관리자) 주황 배경 제거 */
+.pp-grid-wrap .k-grid tbody tr:first-child,
+.pp-grid-wrap .k-grid tr.k-table-row:first-child {
+    background-color: transparent !important;
+}
+
+/* ============ 캘린더 팝업 내부 보라 테마 ============ */
+/* 선택된 날짜 원형 */
+body:has(.pp-modal-overlay) .k-calendar .k-selected .k-link,
+body:has(.pp-modal-overlay) .k-calendar td.k-selected .k-link,
+body:has(.pp-modal-overlay) .k-calendar .k-selected>.k-link {
+    background-color: #5A4BFF !important;
+    border-color: #5A4BFF !important;
+    color: #fff !important;
+}
+
+/* 오늘 날짜 테두리 */
+body:has(.pp-modal-overlay) .k-calendar .k-today .k-link,
+body:has(.pp-modal-overlay) .k-calendar td.k-today .k-link {
+    border-color: #5A4BFF !important;
+    color: #5A4BFF !important;
+}
+
+/* 날짜 hover */
+body:has(.pp-modal-overlay) .k-calendar td:not(.k-selected):hover .k-link {
+    background-color: #ede9fe !important;
+    color: #5A4BFF !important;
+}
+
+/* 캘린더 팝업 테두리 */
+body:has(.pp-modal-overlay) .k-calendar-container,
+body:has(.pp-modal-overlay) .k-calendar-popup {
+    border-color: #7C3AED !important;
+}
+
+/* 캘린더 "오늘" 버튼 */
+body:has(.pp-modal-overlay) .k-calendar .k-today-btn,
+body:has(.pp-modal-overlay) .k-calendar .k-nav-today {
+    color: #5A4BFF !important;
+}
+
+/* ============ 알림/확인 팝업 버튼 보라 테마 ============ */
+/* common.css의 .orange-theme.modal 강제 스타일을 오버라이드하여 보라색 테마 적용 */
+body:has(.pp-modal-overlay) .orange-theme.modal .k-button-solid-primary,
+body:has(.pp-modal-overlay) .orange-theme.modal .btnM[themeColor="primary"],
+body:has(.pp-modal-overlay) .modal-confirm-btn,
+body:has(.pp-modal-overlay) [class*="confirm-btn"],
+body:has(.pp-modal-overlay) [class*="alert-btn"] {
+    background-color: #5A4BFF !important;
+    border-color: #5A4BFF !important;
+    color: #fff !important;
+}
+
+/* 취소 버튼 등 텍스트형 버튼 */
+body:has(.pp-modal-overlay) .orange-theme.modal .btnTxt.type01 {
+    color: #5A4BFF !important;
+    border-color: #5A4BFF !important;
+}
+
+/* 알림 아이콘(!) 보라색으로 변경 */
+body:has(.pp-modal-overlay) .orange-theme.modal .iconNoti::before {
+    background-image: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%235A4BFF'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%235A4BFF'/%3e%3c/svg%3e") !important;
+}
+
+body:has(.pp-modal-overlay) .orange-theme.modal .k-button-solid-primary:hover,
+body:has(.pp-modal-overlay) .orange-theme.modal .btnM[themeColor="primary"]:hover,
+body:has(.pp-modal-overlay) .modal-confirm-btn:hover {
+    background-color: #4a3bef !important;
+    border-color: #4a3bef !important;
+}
+
+/* ============ nprogress 로딩바 보라 ============ */
+body:has(.pp-modal-overlay) #nprogress .bar {
+    background: #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) #nprogress .peg {
+    box-shadow: 0 0 10px #5A4BFF, 0 0 5px #5A4BFF !important;
+}
+
+body:has(.pp-modal-overlay) #nprogress .spinner-icon {
+    border-top-color: #5A4BFF !important;
+    border-left-color: #5A4BFF !important;
+}
+
+/* ============ 그리드 행 hover 보라 ============ */
+.pp-grid-wrap .k-grid .k-table-row:hover td,
+.pp-grid-wrap .k-grid tr:hover td,
+.pp-grid-wrap .k-grid tbody tr:hover {
+    background-color: #F3F1FF !important;
+}
