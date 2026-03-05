@@ -711,8 +711,8 @@
     padding: 10px 12px;
     border-radius: 8px;
     border: none;
-    background: #F3F1FF;
-    color: #5A4BFF;
+    background: transparent;
+    color: #4b5563;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -721,17 +721,41 @@
 }
 
 .blue .logout-btn {
-    background: #eff6ff;
-    color: #3b82f6;
+    background: transparent;
+    color: #4b5563;
 }
 
 .logout-btn:hover {
-    background: #EBE7FF;
+    background: #FEF2F2;
+    color: #dc2626;
 }
 
 
 .blue .logout-btn:hover {
-    background: #dbeafe;
+    background: #FEF2F2;
+    color: #dc2626;
+}
+
+.permission-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #4b5563;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.permission-btn:hover {
+    background: #f3f4f6;
+    color: #111827;
 }
 
 /* Orange Theme */
@@ -807,8 +831,13 @@
 }
 
 .orange .logout-btn {
-    background: #fff7ed;
-    color: #f97316;
+    background: transparent;
+    color: #4b5563;
+}
+
+.orange .logout-btn:hover {
+    background: #FEF2F2;
+    color: #dc2626;
 }
 
 /* Green Theme */
@@ -884,8 +913,13 @@
 }
 
 .green .logout-btn {
-    background: #f0fdf4;
-    color: #16a34a;
+    background: transparent;
+    color: #4b5563;
+}
+
+.green .logout-btn:hover {
+    background: #FEF2F2;
+    color: #dc2626;
 }
 
 

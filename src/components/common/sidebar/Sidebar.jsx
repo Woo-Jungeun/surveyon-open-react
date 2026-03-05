@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
-    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings
+    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings, ShieldCheck
 } from "lucide-react";
 import { useNavigate, useLocation, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -37,6 +37,16 @@ const Sidebar = ({
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const { logoutMutation } = LoginApi();
+
+    const handleGoPermission = () => {
+        const projectnum = sessionStorage.getItem("projectnum");
+        setUserOpen(false);
+        if (projectnum) {
+            navigate("/ai_open_analysis/pro_permission");
+        } else {
+            navigate("/project", { state: { from: 'ai_open', redirect: 'pro_permission' } });
+        }
+    };
 
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [userOpen, setUserOpen] = useState(false);
@@ -320,6 +330,10 @@ const Sidebar = ({
                 <div className="user-wrap">
                     {userOpen && (
                         <div className="user-dropdown">
+                            <button className="permission-btn" onClick={handleGoPermission}>
+                                <ShieldCheck size={16} />
+                                <span>권한 관리</span>
+                            </button>
                             <button className="logout-btn" onClick={handleLogout}>
                                 <LogOut size={16} />
                                 <span>로그아웃</span>
