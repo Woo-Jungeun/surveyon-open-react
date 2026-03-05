@@ -146,8 +146,8 @@ const WeightPage = () => {
                             const evalResult = await evaluateTable.mutateAsync(evalPayload);
                             if (evalResult?.success === "777" && evalResult.resultjson) {
                                 const evalData = evalResult.resultjson;
-                                const evalCols = (evalData.columns || []).filter(c => c.key !== 'total');
-                                const evalRows = (evalData.rows || []).filter(r => r.key !== 'total');
+                                const evalCols = (evalData.columns || []);
+                                const evalRows = (evalData.rows || []);
 
                                 const newCols = evalCols.map((c, i) => ({
                                     field: `col${i + 1}`,
@@ -409,8 +409,8 @@ const WeightPage = () => {
             const evalResult = await evaluateTable.mutateAsync(evalPayload);
             if (evalResult?.success === "777" && evalResult.resultjson) {
                 const evalData = evalResult.resultjson;
-                const evalCols = (evalData.columns || []).filter(c => c.key !== 'total');
-                const evalRows = (evalData.rows || []).filter(r => r.key !== 'total');
+                const evalCols = (evalData.columns || []);
+                const evalRows = (evalData.rows || []);
 
                 const newCols = evalCols.map((c, i) => ({
                     field: `col${i + 1}`,
@@ -588,7 +588,10 @@ const WeightPage = () => {
         const target_values = {};
 
         targetGridData.forEach(row => {
+            if (row.evalKey === 'total') return; // Skip total row for target payload
             gridColumns.forEach((col, index) => {
+                if (col.evalKey === 'total') return; // Skip total column for target payload
+
                 let colValue = row[col.field];
                 if (colValue === "" || colValue === undefined || colValue === null || isNaN(colValue)) {
                     colValue = 0;
