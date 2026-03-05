@@ -214,7 +214,16 @@ const AggregationCard = memo(({ q }) => {
                             {q.data.map((row, i) => (
                                 <tr key={i}>
                                     <td>{row.name}</td>
-                                    {q.columns ? q.columns.map(col => <td key={col.key}>{row[col.label]}</td>) : (
+                                    {q.columns ? q.columns.map(col => {
+                                        const count = row[col.key] ?? 0;
+                                        const pct = row[`${col.key}_pct`];
+                                        return (
+                                            <td key={col.key}>
+                                                {count}
+                                                {pct !== undefined && <span style={{ color: '#888', fontSize: '0.85em', marginLeft: '4px' }}>({pct}%)</span>}
+                                            </td>
+                                        );
+                                    }) : (
                                         <>
                                             <td>{row['완료']}</td>
                                             <td>{row['선정탈락']}</td>
@@ -481,10 +490,13 @@ const FrequencyAnalysisPage = () => {
                                 // 배너가 적용된 경우 각 컬럼(배너 옵션)에 대해 값을 매핑
                                 tableColumns.forEach(banner => {
                                     let val = 0;
+                                    let pct = 0;
                                     if (row.cells && row.cells[banner.key]) {
                                         val = Number(row.cells[banner.key].count || 0);
+                                        pct = Number(row.cells[banner.key].percent || 0);
                                     }
-                                    rowData[banner.label] = val;
+                                    rowData[banner.key] = val;
+                                    rowData[`${banner.key}_pct`] = pct;
                                     totalCount += val;
                                 });
                             } else {
@@ -680,7 +692,7 @@ const FrequencyAnalysisPage = () => {
                     </div>
                 </div>
 
-                <button
+                {/* <button
                     style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -701,7 +713,7 @@ const FrequencyAnalysisPage = () => {
                 >
                     <Download size={16} />
                     엑셀 다운로드
-                </button>
+                </button> */}
             </DataHeader>
             <div className="aggregation-layout">
                 <SideBar
