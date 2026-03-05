@@ -2090,17 +2090,27 @@ const AdditionalAnalysisPage = () => {
                                 <div className="stats-controls__section">
                                     <span className="stats-controls__section-label">배치 옵션</span>
                                     <div className="sortable-list">
+                                        {/* todo 임시 주석 */}
+                                        {/* {layoutOptions.map((item, index) => ( */}
                                         {layoutOptions.map((item, index) => (
                                             <div
                                                 key={item.id}
-                                                className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                draggable
-                                                onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
-                                                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                onDrop={(e) => handleSortDrop(e, index, 'layout')}
-                                                onClick={() => toggleLayoutOption(item.id)}
+                                                //      className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                // draggable
+                                                // onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
+                                                // onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                // onDrop={(e) => handleSortDrop(e, index, 'layout')}
+                                                // onClick={() => toggleLayoutOption(item.id)}
+                                                className={`sortable-item ${item.checked ? 'checked' : ''} ${item.id === 'ai' ? 'disabled' : ''}`}
+                                                draggable={item.id !== 'ai'}
+                                                onDragStart={(e) => item.id !== 'ai' && handleSortDragStart(e, index, 'layout')}
+                                                onDragOver={(e) => { if (item.id !== 'ai') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                                                onDrop={(e) => item.id !== 'ai' && handleSortDrop(e, index, 'layout')}
+                                                onClick={() => item.id !== 'ai' && toggleLayoutOption(item.id)}
+                                                style={item.id === 'ai' ? { opacity: 1, cursor: 'default', backgroundColor: '#f9f9f9', color: '#ccc' } : {}}
                                             >
-                                                <GripVertical size={14} className="drag-handle" />
+                                                {/* <GripVertical size={14} className="drag-handle"/> */}
+                                                <GripVertical size={14} className="drag-handle" style={item.id === 'ai' ? { display: 'none' } : {}} />
                                                 <span>{item.label}</span>
                                             </div>
                                         ))}
