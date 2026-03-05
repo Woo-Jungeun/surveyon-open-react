@@ -145,12 +145,13 @@
     padding-left: 24px;
 }
 
+/* 
 .agg-table th:last-child {
     border-right: none;
     background: #f1f5f9;
     color: #475569;
     text-align: center;
-}
+} */
 
 .agg-table td {
     text-align: right;
@@ -183,14 +184,14 @@
 }
 
 /* Total Column Highlighting */
-.agg-table td:last-child {
+/* .agg-table td:last-child {
     font-weight: 700;
     color: #2563eb;
     background: #f8fafc;
     position: relative;
     text-align: center;
     border-right: none;
-}
+} */
 
 .agg-table tbody tr:hover td:last-child {
     background: #f1f5f9;
