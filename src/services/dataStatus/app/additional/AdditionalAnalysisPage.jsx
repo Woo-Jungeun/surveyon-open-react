@@ -68,14 +68,20 @@ const AdditionalAnalysisPage = () => {
         { id: 'ai', label: 'AI 분석', checked: false }
     ]);
     const [statsOptions, setStatsOptions] = useState([
-        { id: 'Mean', label: 'Mean', checked: true },
-        { id: 'Med', label: 'Med', checked: true },
-        { id: 'Mod', label: 'Mod', checked: true },
-        { id: 'Std', label: 'Std', checked: true },
-        { id: 'Min', label: 'Min', checked: true },
-        { id: 'Max', label: 'Max', checked: true },
-        { id: 'N', label: 'N', checked: true },
+        { id: 'mean', label: '평균', checked: true },
+        { id: 'median', label: '중앙값', checked: false },
+        { id: 'mode', label: '최빈값', checked: false },
+        { id: 'std', label: '표준편차', checked: false },
+        { id: 'min', label: '최소값', checked: false },
+        { id: 'max', label: '최대값', checked: false },
+        { id: 'n', label: '표본수', checked: false },
+        { id: 'rse', label: '상대표준오차', checked: false },
+        { id: 'chi2', label: '카이제곱값', checked: false },
+        { id: 'df', label: '자유도', checked: false },
+        { id: 'p_value', label: 'p값', checked: false },
     ]);
+    const [isMoreStatsOpen, setIsMoreStatsOpen] = useState(false);
+    const moreStatsRef = useRef(null);
 
     // Column Layout Option (1-column or 2-column)
     const [columnLayout, setColumnLayout] = useState('single'); // 'single' (1단) or 'double' (2단)
@@ -157,6 +163,9 @@ const AdditionalAnalysisPage = () => {
             }
             if (displayMenuRef.current && !displayMenuRef.current.contains(event.target)) {
                 setIsDisplayMenuOpen(false);
+            }
+            if (moreStatsRef.current && !moreStatsRef.current.contains(event.target)) {
+                setIsMoreStatsOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -370,7 +379,7 @@ const AdditionalAnalysisPage = () => {
                                         variables: variablesMap,
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
-                                        include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
+                                        include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
                                         table: {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
@@ -402,12 +411,16 @@ const AdditionalAnalysisPage = () => {
 
                                         const newParsedStats = {
                                             mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                                            med: newColumnsList.map(c => c.med !== undefined ? c.med : '-'),
-                                            mod: newColumnsList.map(c => c.mod !== undefined ? c.mod : '-'),
+                                            median: newColumnsList.map(c => c.median !== undefined ? c.median : ((c.med !== undefined) ? c.med : '-')),
+                                            mode: newColumnsList.map(c => c.mode !== undefined ? c.mode : ((c.mod !== undefined) ? c.mod : '-')),
                                             std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
                                             min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
                                             max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
-                                            n: newColumnsList.map(c => c.n || 0)
+                                            n: newColumnsList.map(c => c.n || 0),
+                                            rse: newColumnsList.map(c => c.rse !== undefined ? c.rse : '-'),
+                                            chi2: newColumnsList.map(c => c.chi2 !== undefined ? c.chi2 : '-'),
+                                            df: newColumnsList.map(c => c.df !== undefined ? c.df : '-'),
+                                            p_value: newColumnsList.map(c => c.p_value !== undefined ? c.p_value : '-'),
                                         };
 
                                         setResultData({
@@ -958,7 +971,7 @@ const AdditionalAnalysisPage = () => {
                             variables: variablesMap,
                             weight_col: weightId,
                             filter_expression: filterExpr,
-                            include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
+                            include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
                             sort: { group_by: "label2_label3" }
                         };
 
@@ -1006,12 +1019,16 @@ const AdditionalAnalysisPage = () => {
                             const statsMap = newData.stats || {};
                             const newParsedStats = {
                                 mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? '-'),
-                                med: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
-                                mod: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
+                                median: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
+                                mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
                                 std: newColumnsList.map(c => statsMap[c.key]?.std ?? '-'),
                                 min: newColumnsList.map(c => statsMap[c.key]?.min ?? '-'),
                                 max: newColumnsList.map(c => statsMap[c.key]?.max ?? '-'),
-                                n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0)
+                                n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0),
+                                rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? '-'),
+                                chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? '-'),
+                                df: newColumnsList.map(c => statsMap[c.key]?.df ?? '-'),
+                                p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? '-'),
                             };
 
                             setResultData({
@@ -1397,7 +1414,7 @@ const AdditionalAnalysisPage = () => {
                     variables: variablesMap,
                     weight_col: weightId,
                     filter_expression: filterExpression,
-                    include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
+                    include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
                     sort: { group_by: "label2_label3" }
                 };
 
@@ -1444,12 +1461,16 @@ const AdditionalAnalysisPage = () => {
                     const statsMap = newData.stats || {};
                     const newParsedStats = {
                         mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? '-'),
-                        med: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
-                        mod: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
+                        median: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
+                        mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
                         std: newColumnsList.map(c => statsMap[c.key]?.std ?? '-'),
                         min: newColumnsList.map(c => statsMap[c.key]?.min ?? '-'),
                         max: newColumnsList.map(c => statsMap[c.key]?.max ?? '-'),
-                        n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0)
+                        n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0),
+                        rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? '-'),
+                        chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? '-'),
+                        df: newColumnsList.map(c => statsMap[c.key]?.df ?? '-'),
+                        p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? '-'),
                     };
 
                     setResultData({
@@ -1526,7 +1547,7 @@ const AdditionalAnalysisPage = () => {
             variables: variablesMap,
             weight_col: weightId,
             filter_expression: filterExpression,
-            include_stats: statsOptions.filter(opt => opt.checked).map(opt => ({ 'Mean': 'mean', 'Med': 'median', 'Mod': 'mode', 'Std': 'std', 'Min': 'min', 'Max': 'max', 'N': 'n' })[opt.id]),
+            include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
             sort: { group_by: "label2_label3" }
         };
 
@@ -1577,12 +1598,16 @@ const AdditionalAnalysisPage = () => {
 
                 const parsedStats = {
                     mean: columnsList.map(c => (c.mean !== undefined && c.mean !== null) ? c.mean : '-'),
-                    med: columnsList.map(c => (c.med !== undefined && c.med !== null) ? c.med : ((c.median !== undefined && c.median !== null) ? c.median : '-')),
-                    mod: columnsList.map(c => (c.mod !== undefined && c.mod !== null) ? c.mod : ((c.mode !== undefined && c.mode !== null) ? c.mode : '-')),
+                    median: columnsList.map(c => (c.median !== undefined && c.median !== null) ? c.median : ((c.med !== undefined && c.med !== null) ? c.med : '-')),
+                    mode: columnsList.map(c => (c.mode !== undefined && c.mode !== null) ? c.mode : ((c.mod !== undefined && c.mod !== null) ? c.mod : '-')),
                     std: columnsList.map(c => (c.std !== undefined && c.std !== null) ? c.std : '-'),
                     min: columnsList.map(c => (c.min !== undefined && c.min !== null) ? c.min : '-'),
                     max: columnsList.map(c => (c.max !== undefined && c.max !== null) ? c.max : '-'),
-                    n: columnsList.map(c => c.n || 0)
+                    n: columnsList.map(c => (c.n !== undefined && c.n !== null) ? c.n : 0),
+                    rse: columnsList.map(c => (c.rse !== undefined && c.rse !== null) ? c.rse : '-'),
+                    chi2: columnsList.map(c => (c.chi2 !== undefined && c.chi2 !== null) ? c.chi2 : '-'),
+                    df: columnsList.map(c => (c.df !== undefined && c.df !== null) ? c.df : '-'),
+                    p_value: columnsList.map(c => (c.p_value !== undefined && c.p_value !== null) ? c.p_value : '-'),
                 };
 
                 setResultData({
@@ -2133,20 +2158,64 @@ const AdditionalAnalysisPage = () => {
                                         <div className="stats-controls__section">
                                             <span className="stats-controls__section-label">통계 옵션</span>
                                             <div className="sortable-list">
-                                                {statsOptions.map((item, index) => (
-                                                    <div
-                                                        key={item.id}
-                                                        className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                        draggable
-                                                        onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
-                                                        onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                        onDrop={(e) => handleSortDrop(e, index, 'stats')}
-                                                        onClick={() => toggleStatOption(item.id)}
-                                                    >
-                                                        <GripVertical size={14} className="drag-handle" />
-                                                        <span>{item.label}</span>
+                                                {statsOptions.map((item, index) => {
+                                                    const isMainOrChecked = ['mean', 'median', 'mode'].includes(item.id) || item.checked;
+                                                    if (!isMainOrChecked) return null;
+                                                    return (
+                                                        <div
+                                                            key={item.id}
+                                                            className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                            draggable
+                                                            onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
+                                                            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                            onDrop={(e) => handleSortDrop(e, index, 'stats')}
+                                                            onClick={() => toggleStatOption(item.id)}
+                                                        >
+                                                            <GripVertical size={14} className="drag-handle" />
+                                                            <span>{item.label}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                                {statsOptions.some(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked) && (
+                                                    <div style={{ position: 'relative' }} ref={moreStatsRef}>
+                                                        <div
+                                                            className="sortable-item"
+                                                            style={{ padding: '0 8px', cursor: 'pointer', background: 'transparent', height: '100%', border: 'none', boxShadow: 'none' }}
+                                                            onClick={() => setIsMoreStatsOpen(!isMoreStatsOpen)}
+                                                        >
+                                                            <div className="more-btn" style={{
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                width: '28px', height: '28px', borderRadius: '4px',
+                                                                background: isMoreStatsOpen ? '#e2e8f0' : '#f1f5f9', color: '#64748b', transition: 'background 0.2s'
+                                                            }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = isMoreStatsOpen ? '#e2e8f0' : '#f1f5f9'}>
+                                                                <MoreHorizontal size={14} />
+                                                            </div>
+                                                        </div>
+                                                        {isMoreStatsOpen && (
+                                                            <div style={{
+                                                                position: 'absolute', top: '100%', left: '0', marginTop: '6px',
+                                                                background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px',
+                                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                                                zIndex: 100, display: 'flex', flexDirection: 'column', padding: '4px', minWidth: '90px'
+                                                            }}>
+                                                                {statsOptions.filter(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked).map(item => (
+                                                                    <div
+                                                                        key={item.id}
+                                                                        style={{
+                                                                            padding: '8px 12px', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+                                                                            color: '#475569', borderRadius: '4px', transition: 'all 0.1s'
+                                                                        }}
+                                                                        onClick={() => { toggleStatOption(item.id); setIsMoreStatsOpen(false); }}
+                                                                        onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#3b82f6'; }}
+                                                                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#475569'; }}
+                                                                    >
+                                                                        {item.label}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                ))}
+                                                )}
                                             </div>
                                         </div>
                                     </>
@@ -2417,12 +2486,8 @@ const AdditionalAnalysisPage = () => {
                                                             </thead>
                                                             <tbody>
                                                                 {statsOptions.filter(opt => opt.checked).map((stat) => {
-                                                                    const statKey = stat.id.toLowerCase();
-                                                                    let actualKey = statKey;
-                                                                    if (statKey.startsWith('med')) actualKey = 'median';
-                                                                    if (statKey.startsWith('mod')) actualKey = 'mode';
-                                                                    if (statKey.startsWith('std')) actualKey = 'stdDev';
-                                                                    const statValues = (resultData.stats && (resultData.stats[actualKey] || resultData.stats[statKey])) ||
+                                                                    const statKey = stat.id;
+                                                                    const statValues = (resultData.stats && resultData.stats[statKey]) ||
                                                                         new Array(resultData.columns.length).fill('-');
 
                                                                     return (
