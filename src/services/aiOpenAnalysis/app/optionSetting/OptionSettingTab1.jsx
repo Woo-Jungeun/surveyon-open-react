@@ -1638,7 +1638,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                                 content = String(answerText).split(excerptsStr).reduce((prev, current, i) => {
                                                     if (!i) return [current];
                                                     return prev.concat(
-                                                        <span key={i} style={{ color: '#005CE5', fontWeight: '500' }}>{excerptsStr}</span>,
+                                                        <span key={i} style={{ color: '#fb9320', fontWeight: '600' }}>{excerptsStr}</span>,
                                                         current
                                                     );
                                                 }, []);
