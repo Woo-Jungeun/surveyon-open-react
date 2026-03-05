@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
-import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
+import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
+import Toast from '../../../../components/common/Toast';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
@@ -15,6 +16,7 @@ const AggregationCard = memo(({ q }) => {
     const [chartMode, setChartMode] = useState('column');
     const [showChart, setShowChart] = useState(true);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const [toast, setToast] = useState({ show: false, message: '' });
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
 
@@ -31,6 +33,45 @@ const AggregationCard = memo(({ q }) => {
     }, []);
 
     // Chart type name mapping
+    const handleCopyTable = React.useCallback(async () => {
+        try {
+            let headersText = "항목\t";
+            if (q.columns) {
+                headersText += q.columns.map(c => c.label).join('\t') + "\t합계";
+            } else {
+                headersText += "완료\t선정탈락\t쿼터오버\t합계";
+            }
+
+            let rowsText = q.data.map(row => {
+                let rowText = `${row.name}\t`;
+                if (q.columns) {
+                    const rowValues = q.columns.map(col => {
+                        const count = row[col.key] ?? 0;
+                        const pct = row[`${col.key}_pct`];
+                        return pct !== undefined ? `${count} (${pct}%)` : `${count}`;
+                    });
+                    rowText += rowValues.join('\t') + `\t${row.total}`;
+                } else {
+                    rowText += `${row['완료'] || 0}\t${row['선정탈락'] || 0}\t${row['쿼터오버'] || 0}\t${row.total || 0}`;
+                }
+                return rowText;
+            }).join('\n');
+
+            await navigator.clipboard.writeText(`${headersText}\n${rowsText}`);
+
+            setToast(prev => ({ ...prev, show: false }));
+            setTimeout(() => {
+                setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
+            }, 50);
+        } catch (e) {
+            console.error(e);
+            setToast(prev => ({ ...prev, show: false }));
+            setTimeout(() => {
+                setToast({ show: true, message: "복사 실패" });
+            }, 50);
+        }
+    }, [q]);
+
     const getChartTypeName = (mode) => {
         const typeMap = {
             'column': 'column',
@@ -144,53 +185,76 @@ const AggregationCard = memo(({ q }) => {
 
     return (
         <div id={q.id} className="agg-card">
-            <div className="agg-card-header">
-                <div className="agg-card-title-group">
-                    <div className="agg-card-id">{q.id}</div>
-                    <div className="agg-card-label">{q.label}</div>
-                </div>
-                <div className="view-options">
-                    {/* Download Button */}
-                    {showChart && (
-                        <div className="download-menu-container" ref={downloadMenuRef}>
-                            <button
-                                className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
-                                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                                title="차트 다운로드"
-                            >
-                                <Download size={18} />
-                            </button>
-                            {showDownloadMenu && (
-                                <div className="download-dropdown">
-                                    <button onClick={() => handleDownload('png')}>
-                                        PNG (이미지)
-                                    </button>
-                                    <button onClick={() => handleDownload('svg')}>
-                                        SVG (PPT용)
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                onClose={() => setToast(prev => ({ ...prev, show: false }))}
+            />
+            <div className="agg-card-header" style={{ gap: '32px' }}>
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', minWidth: 0, gap: '16px' }}>
+                    <div className="agg-card-title-group" style={{ flex: 1, minWidth: 0 }}>
+                        <div className="agg-card-id">{q.id}</div>
+                        <div className="agg-card-label" style={{ whiteSpace: 'pre-wrap', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.4' }}>{q.label}</div>
+                    </div>
 
                     <button
-                        className={`view-option-btn close-chart-btn ${!showChart ? 'active' : ''}`}
-                        onClick={() => setShowChart(false)}
-                        title="차트 숨기기"
+                        onClick={handleCopyTable}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            padding: '6px 12px', background: '#f8f9fa',
+                            border: '1px solid #e9ecef', borderRadius: '6px',
+                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                            cursor: 'pointer', flexShrink: 0, height: '36px'
+                        }}
                     >
-                        <X size={18} />
+                        <Copy size={14} /> 복사
                     </button>
-                    <button className={`view-option-btn ${showChart && (chartMode === 'column' || chartMode === 'bar') ? 'active' : ''}`} onClick={() => { setChartMode('column'); setShowChart(true); }} title="막대형 차트"><BarChart2 size={18} /></button>
-                    <button className={`view-option-btn ${showChart && (chartMode === 'stackedColumn' || chartMode === 'stacked100Column') ? 'active' : ''}`} onClick={() => { setChartMode('stackedColumn'); setShowChart(true); }} title="누적형 차트"><Layers size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'line' ? 'active' : ''}`} onClick={() => { setChartMode('line'); setShowChart(true); }} title="선형 차트"><LineChart size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'pie' ? 'active' : ''}`} onClick={() => { setChartMode('pie'); setShowChart(true); }} title="원형 차트"><PieChart size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'donut' ? 'active' : ''}`} onClick={() => { setChartMode('donut'); setShowChart(true); }} title="도넛형 차트"><Donut size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => { setChartMode('radarArea'); setShowChart(true); }} title="방사형 차트"><Aperture size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'funnel' ? 'active' : ''}`} onClick={() => { setChartMode('funnel'); setShowChart(true); }} title="깔때기 차트"><Filter size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => { setChartMode('scatterPoint'); setShowChart(true); }} title="점 도표"><MoreHorizontal size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'area' ? 'active' : ''}`} onClick={() => { setChartMode('area'); setShowChart(true); }} title="영역형 차트"><AreaChart size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => { setChartMode('heatmap'); setShowChart(true); }} title="히트맵"><LayoutGrid size={18} /></button>
-                    <button className={`view-option-btn ${showChart && chartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => { setChartMode('wordCloud'); setShowChart(true); }} title="워드클라우드"><Cloud size={18} /></button>
+                </div>
+
+                <div style={{ width: showChart ? 'calc(50% - 16px)' : 'auto', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
+                    <div className="view-options">
+                        {/* Download Button */}
+                        {showChart && (
+                            <div className="download-menu-container" ref={downloadMenuRef}>
+                                <button
+                                    className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
+                                    onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                                    title="차트 다운로드"
+                                >
+                                    <Download size={18} />
+                                </button>
+                                {showDownloadMenu && (
+                                    <div className="download-dropdown">
+                                        <button onClick={() => handleDownload('png')}>
+                                            PNG (이미지)
+                                        </button>
+                                        <button onClick={() => handleDownload('svg')}>
+                                            SVG (PPT용)
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <button
+                            className={`view-option-btn close-chart-btn ${!showChart ? 'active' : ''}`}
+                            onClick={() => setShowChart(false)}
+                            title="차트 숨기기"
+                        >
+                            <X size={18} />
+                        </button>
+                        <button className={`view-option-btn ${showChart && (chartMode === 'column' || chartMode === 'bar') ? 'active' : ''}`} onClick={() => { setChartMode('column'); setShowChart(true); }} title="막대형 차트"><BarChart2 size={18} /></button>
+                        <button className={`view-option-btn ${showChart && (chartMode === 'stackedColumn' || chartMode === 'stacked100Column') ? 'active' : ''}`} onClick={() => { setChartMode('stackedColumn'); setShowChart(true); }} title="누적형 차트"><Layers size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'line' ? 'active' : ''}`} onClick={() => { setChartMode('line'); setShowChart(true); }} title="선형 차트"><LineChart size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'pie' ? 'active' : ''}`} onClick={() => { setChartMode('pie'); setShowChart(true); }} title="원형 차트"><PieChart size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'donut' ? 'active' : ''}`} onClick={() => { setChartMode('donut'); setShowChart(true); }} title="도넛형 차트"><Donut size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => { setChartMode('radarArea'); setShowChart(true); }} title="방사형 차트"><Aperture size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'funnel' ? 'active' : ''}`} onClick={() => { setChartMode('funnel'); setShowChart(true); }} title="깔때기 차트"><Filter size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => { setChartMode('scatterPoint'); setShowChart(true); }} title="점 도표"><MoreHorizontal size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'area' ? 'active' : ''}`} onClick={() => { setChartMode('area'); setShowChart(true); }} title="영역형 차트"><AreaChart size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => { setChartMode('heatmap'); setShowChart(true); }} title="히트맵"><LayoutGrid size={18} /></button>
+                        <button className={`view-option-btn ${showChart && chartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => { setChartMode('wordCloud'); setShowChart(true); }} title="워드클라우드"><Cloud size={18} /></button>
+                    </div>
                 </div>
             </div>
             <div className="agg-card-body">
