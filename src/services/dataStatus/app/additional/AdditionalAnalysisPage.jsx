@@ -80,7 +80,10 @@ const AdditionalAnalysisPage = () => {
     // Column Layout Option (1-column or 2-column)
     const [columnLayout, setColumnLayout] = useState('single'); // 'single' (1단) or 'double' (2단)
 
-
+    // Result Display Mode
+    const [displayMode, setDisplayMode] = useState('all');
+    const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
+    const displayMenuRef = useRef(null);
     // AI Analysis State
     const [aiResult, setAiResult] = useState(null);
     const [isAiLoading, setIsAiLoading] = useState(false);
@@ -151,6 +154,9 @@ const AdditionalAnalysisPage = () => {
             }
             if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
                 setShowDownloadMenu(false);
+            }
+            if (displayMenuRef.current && !displayMenuRef.current.contains(event.target)) {
+                setIsDisplayMenuOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -753,7 +759,11 @@ const AdditionalAnalysisPage = () => {
         try {
             const headers = ['문항', ...resultData.columns].join('\t');
             const rows = resultData.rows.map(row =>
-                [row.label, ...row.values.map(v => v.count)].join('\t')
+                [row.label, ...row.values.map(v => {
+                    if (displayMode === 'value') return v.count;
+                    if (displayMode === 'percent') return `${v.percent}%`;
+                    return `${v.count} (${v.percent}%)`;
+                })].join('\t')
             ).join('\n');
             await navigator.clipboard.writeText(`${headers}\n${rows}`);
             setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
@@ -2187,6 +2197,75 @@ const AdditionalAnalysisPage = () => {
                                                             <span className="section-title">표</span>
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }}>
+                                                                <div
+                                                                    className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
+                                                                    onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
+                                                                    style={{
+                                                                        height: '36px',
+                                                                        padding: '0 8px 0 10px',
+                                                                        gap: '4px',
+                                                                        background: '#fff',
+                                                                        border: '1px solid #e9ecef',
+                                                                        borderRadius: '6px',
+                                                                        fontSize: '13px',
+                                                                        fontWeight: '500',
+                                                                        color: '#495057',
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between',
+                                                                        userSelect: 'none'
+                                                                    }}
+                                                                >
+                                                                    <span className="trigger-text">
+                                                                        {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
+                                                                    </span>
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
+                                                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                                                    </svg>
+                                                                </div>
+
+                                                                {isDisplayMenuOpen && (
+                                                                    <div className="custom-filter-menu" style={{
+                                                                        position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+                                                                        width: '100%',
+                                                                        padding: '4px',
+                                                                        background: '#fff', border: '1px solid #e2e8f0',
+                                                                        borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                                        zIndex: 1000, overflow: 'hidden'
+                                                                    }}>
+                                                                        {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
+                                                                            <div
+                                                                                key={item.value}
+                                                                                onClick={() => {
+                                                                                    setDisplayMode(item.value);
+                                                                                    setIsDisplayMenuOpen(false);
+                                                                                }}
+                                                                                style={{
+                                                                                    padding: '6px 8px',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '13px',
+                                                                                    color: displayMode === item.value ? '#3b82f6' : '#495057',
+                                                                                    background: displayMode === item.value ? '#eff6ff' : 'transparent',
+                                                                                    transition: 'background 0.1s',
+                                                                                    textAlign: 'center',
+                                                                                    borderRadius: '4px',
+                                                                                    userSelect: 'none'
+                                                                                }}
+                                                                                onMouseEnter={(e) => {
+                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
+                                                                                }}
+                                                                                onMouseLeave={(e) => {
+                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
+                                                                                }}
+                                                                            >
+                                                                                {item.label}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                             <button
                                                                 onClick={handleCopyTable}
                                                                 style={{
@@ -2194,7 +2273,7 @@ const AdditionalAnalysisPage = () => {
                                                                     padding: '6px 12px', background: '#f8f9fa',
                                                                     border: '1px solid #e9ecef', borderRadius: '6px',
                                                                     fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                    cursor: 'pointer', flexShrink: 0
+                                                                    cursor: 'pointer', flexShrink: 0, height: '36px'
                                                                 }}
                                                             >
                                                                 <Copy size={14} /> 복사
@@ -2266,8 +2345,14 @@ const AdditionalAnalysisPage = () => {
                                                                                     padding: '0 8px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
                                                                                 }}>
                                                                                     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-                                                                                        <div className="cell-value">{val.count}</div>
-                                                                                        <div className="cell-pct">{val.percent}%</div>
+                                                                                        {displayMode === 'all' && (
+                                                                                            <>
+                                                                                                <div className="cell-value">{val.count}</div>
+                                                                                                <div className="cell-pct" style={{ color: '#888', fontSize: '0.9em' }}>{val.percent}%</div>
+                                                                                            </>
+                                                                                        )}
+                                                                                        {displayMode === 'value' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.count}</div>}
+                                                                                        {displayMode === 'percent' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.percent !== undefined ? `${val.percent}%` : '-'}</div>}
                                                                                     </div>
                                                                                 </td>
                                                                             ))}

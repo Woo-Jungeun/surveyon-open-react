@@ -79,6 +79,21 @@ const WeightPage = () => {
 
     // 그리드 컬럼 상태
     const [gridColumns, setGridColumns] = useState([]);
+
+    // Result Display Mode
+    const [displayMode, setDisplayMode] = useState('all');
+    const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
+    const displayMenuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (displayMenuRef.current && !displayMenuRef.current.contains(event.target)) {
+                setIsDisplayMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     // 가중치 상세 데이터 조회
     useEffect(() => {
         const fetchWeightDetail = async () => {
@@ -603,18 +618,24 @@ const WeightPage = () => {
             return (
                 <td style={{ textAlign: 'center', padding: '8px 12px' }}>
                     <div style={{ fontWeight: '600', fontSize: '13px' }}>-</div>
-                    <div style={{ fontSize: '11px', color: '#888' }}>-</div>
+                    {displayMode === 'all' && <div style={{ fontSize: '11px', color: '#888' }}>-</div>}
                 </td>
             );
         }
         const { count, pct } = cellData;
         return (
             <td style={{ textAlign: 'center', padding: '8px 12px' }}>
-                <div style={{ fontWeight: '600', fontSize: '13px' }}>{count}</div>
-                <div style={{ fontSize: '11px', color: '#888' }}>{pct !== '-' ? `${pct}%` : '-'}</div>
+                {displayMode === 'all' && (
+                    <>
+                        <div style={{ fontWeight: '600', fontSize: '13px' }}>{count}</div>
+                        <div style={{ fontSize: '11px', color: '#888' }}>{pct !== '-' ? `${pct}%` : '-'}</div>
+                    </>
+                )}
+                {displayMode === 'value' && <div style={{ fontWeight: '600', fontSize: '13px' }}>{count}</div>}
+                {displayMode === 'percent' && <div style={{ fontWeight: '600', fontSize: '13px' }}>{pct !== '-' ? `${pct}%` : '-'}</div>}
             </td>
         );
-    }, []);
+    }, [displayMode]);
 
     // 엑셀 붙여넣기 기능
     const handlePaste = useCallback((e, dataItem, field) => {
@@ -990,9 +1011,82 @@ const WeightPage = () => {
                                                         <div
                                                             onClick={() => setIsCurrentDistOpen(!isCurrentDistOpen)}
                                                             className="weight-section-header"
+                                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
                                                         >
-                                                            <h4 className="weight-section-title">현재값</h4>
-                                                            {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <h4 className="weight-section-title">현재값</h4>
+                                                                {isCurrentDistOpen ? <ChevronUp size={18} color="#666" /> : <ChevronDown size={18} color="#666" />}
+                                                            </div>
+
+                                                            <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }} onClick={(e) => e.stopPropagation()}>
+                                                                <div
+                                                                    className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
+                                                                    onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
+                                                                    style={{
+                                                                        height: '32px',
+                                                                        padding: '0 8px 0 10px',
+                                                                        gap: '4px',
+                                                                        background: '#fff',
+                                                                        border: '1px solid #e9ecef',
+                                                                        borderRadius: '6px',
+                                                                        fontSize: '13px',
+                                                                        fontWeight: '500',
+                                                                        color: '#495057',
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'space-between',
+                                                                        userSelect: 'none'
+                                                                    }}
+                                                                >
+                                                                    <span className="trigger-text">
+                                                                        {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
+                                                                    </span>
+                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
+                                                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                                                    </svg>
+                                                                </div>
+
+                                                                {isDisplayMenuOpen && (
+                                                                    <div className="custom-filter-menu" style={{
+                                                                        position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+                                                                        width: '100%',
+                                                                        padding: '4px',
+                                                                        background: '#fff', border: '1px solid #e2e8f0',
+                                                                        borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                                        zIndex: 1000, overflow: 'hidden'
+                                                                    }}>
+                                                                        {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
+                                                                            <div
+                                                                                key={item.value}
+                                                                                onClick={() => {
+                                                                                    setDisplayMode(item.value);
+                                                                                    setIsDisplayMenuOpen(false);
+                                                                                }}
+                                                                                style={{
+                                                                                    padding: '6px 8px',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '13px',
+                                                                                    color: displayMode === item.value ? '#3b82f6' : '#495057',
+                                                                                    background: displayMode === item.value ? '#eff6ff' : 'transparent',
+                                                                                    transition: 'background 0.1s',
+                                                                                    textAlign: 'center',
+                                                                                    borderRadius: '4px',
+                                                                                    userSelect: 'none'
+                                                                                }}
+                                                                                onMouseEnter={(e) => {
+                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
+                                                                                }}
+                                                                                onMouseLeave={(e) => {
+                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
+                                                                                }}
+                                                                            >
+                                                                                {item.label}
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         {isCurrentDistOpen && (
                                                             <div className="cmn_grid singlehead weight-grid-current">
