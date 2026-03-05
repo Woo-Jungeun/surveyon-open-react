@@ -604,3 +604,135 @@
     box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
     z-index: 1000;
 }
+
+/* Copy Button */
+.weight-copy-button {
+    border: none;
+    background: #f1f5f9;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 600;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.weight-copy-button:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+/* Toast Message */
+.weight-toast-message {
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+    background: #1e293b;
+    color: #fff;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 10;
+    animation: fadeIn 0.2s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.weight-toast-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+}
+
+/* Current Value Header Layout Elements */
+.weight-header-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.weight-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.weight-header-toggle {
+    display: flex;
+    align-items: center;
+    margin-left: 4px;
+}
+
+.weight-display-trigger {
+    height: 32px;
+    padding: 0 8px 0 10px;
+    gap: 4px;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.weight-display-trigger:hover,
+.weight-display-trigger.open {
+    border-color: #3b82f6;
+    background: #f8fafc;
+}
+
+.weight-display-trigger.open .trigger-icon {
+    transform: rotate(180deg);
+}
+
+.weight-display-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    width: 100%;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.weight-display-menu-item {
+    padding: 6px 8px;
+    cursor: pointer;
+    font-size: 13px;
+    color: #495057;
+    background: transparent;
+    transition: background 0.1s;
+    text-align: center;
+    border-radius: 4px;
+    user-select: none;
+}
+
+.weight-display-menu-item:hover {
+    background: #f1f5f9;
+}
+
+.weight-display-menu-item.active {
+    color: #3b82f6;
+    background: #eff6ff;
+}
