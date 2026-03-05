@@ -1103,6 +1103,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                     fixed_key: r.fixed_key ?? "",
                     lv123code: r.lv123code ?? "",
                     sentiment: r.sentiment ?? "",
+                    excerpts: r.excerpts ?? "",
 
                     //  체크 해제면 빈 문자열로 확실히 세팅
                     recheckyn: isChecked ? "y" : "",
@@ -1627,8 +1628,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                                         cell={(props) => {
                                             const row = props.dataItem;
                                             const answerText = row?.answer || "";
-                                            const excerpts = row?.excerpts || "여자";   // todo 임시 테스트 
-                                            // const excerpts = row?.excerpts;
+                                            const excerpts = row?.excerpts || "";
 
                                             let content = answerText;
 
