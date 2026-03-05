@@ -16,15 +16,21 @@ const AggregationCard = memo(({ q }) => {
     const [chartMode, setChartMode] = useState('column');
     const [showChart, setShowChart] = useState(true);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const [displayMode, setDisplayMode] = useState('all');
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
+    const displayMenuRef = useRef(null);
 
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
                 setShowDownloadMenu(false);
+            }
+            if (displayMenuRef.current && !displayMenuRef.current.contains(event.target)) {
+                setIsDisplayMenuOpen(false);
             }
         };
 
@@ -48,6 +54,8 @@ const AggregationCard = memo(({ q }) => {
                     const rowValues = q.columns.map(col => {
                         const count = row[col.key] ?? 0;
                         const pct = row[`${col.key}_pct`];
+                        if (displayMode === 'value') return `${count}`;
+                        if (displayMode === 'percent') return pct !== undefined ? `${pct}%` : '-';
                         return pct !== undefined ? `${count} (${pct}%)` : `${count}`;
                     });
                     rowText += rowValues.join('\t') + `\t${row.total}`;
@@ -70,7 +78,7 @@ const AggregationCard = memo(({ q }) => {
                 setToast({ show: true, message: "복사 실패" });
             }, 50);
         }
-    }, [q]);
+    }, [q, displayMode]);
 
     const getChartTypeName = (mode) => {
         const typeMap = {
@@ -197,18 +205,89 @@ const AggregationCard = memo(({ q }) => {
                         <div className="agg-card-label" style={{ whiteSpace: 'pre-wrap', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.4' }}>{q.label}</div>
                     </div>
 
-                    <button
-                        onClick={handleCopyTable}
-                        style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '6px',
-                            padding: '6px 12px', background: '#f8f9fa',
-                            border: '1px solid #e9ecef', borderRadius: '6px',
-                            fontSize: '13px', fontWeight: '500', color: '#495057',
-                            cursor: 'pointer', flexShrink: 0, height: '36px'
-                        }}
-                    >
-                        <Copy size={14} /> 복사
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }}>
+                            <div
+                                className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
+                                onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
+                                style={{
+                                    height: '36px',
+                                    padding: '0 8px 0 10px',
+                                    gap: '4px',
+                                    background: '#fff',
+                                    border: '1px solid #e9ecef',
+                                    borderRadius: '6px',
+                                    fontSize: '13px',
+                                    fontWeight: '500',
+                                    color: '#495057',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    userSelect: 'none'
+                                }}
+                            >
+                                <span className="trigger-text">
+                                    {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
+                                </span>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </div>
+
+                            {isDisplayMenuOpen && (
+                                <div className="custom-filter-menu" style={{
+                                    position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+                                    width: '100%',
+                                    padding: '4px',
+                                    background: '#fff', border: '1px solid #e2e8f0',
+                                    borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                    zIndex: 1000, overflow: 'hidden'
+                                }}>
+                                    {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
+                                        <div
+                                            key={item.value}
+                                            onClick={() => {
+                                                setDisplayMode(item.value);
+                                                setIsDisplayMenuOpen(false);
+                                            }}
+                                            style={{
+                                                padding: '6px 8px',
+                                                cursor: 'pointer',
+                                                fontSize: '13px',
+                                                color: displayMode === item.value ? '#3b82f6' : '#495057',
+                                                background: displayMode === item.value ? '#eff6ff' : 'transparent',
+                                                transition: 'background 0.1s',
+                                                textAlign: 'center',
+                                                borderRadius: '4px',
+                                                userSelect: 'none'
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
+                                            }}
+                                        >
+                                            {item.label}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                        <button
+                            onClick={handleCopyTable}
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                padding: '6px 12px', background: '#f8f9fa',
+                                border: '1px solid #e9ecef', borderRadius: '6px',
+                                fontSize: '13px', fontWeight: '500', color: '#495057',
+                                cursor: 'pointer', flexShrink: 0, height: '36px'
+                            }}
+                        >
+                            <Copy size={14} /> 복사
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ width: showChart ? 'calc(50% - 16px)' : 'auto', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
@@ -283,8 +362,14 @@ const AggregationCard = memo(({ q }) => {
                                         const pct = row[`${col.key}_pct`];
                                         return (
                                             <td key={col.key}>
-                                                {count}
-                                                {pct !== undefined && <span style={{ color: '#888', fontSize: '0.85em', marginLeft: '4px' }}>({pct}%)</span>}
+                                                {displayMode === 'all' && (
+                                                    <>
+                                                        {count}
+                                                        {pct !== undefined && <span style={{ color: '#888', fontSize: '0.85em', marginLeft: '4px' }}>({pct}%)</span>}
+                                                    </>
+                                                )}
+                                                {displayMode === 'value' && count}
+                                                {displayMode === 'percent' && (pct !== undefined ? `${pct}%` : '-')}
                                             </td>
                                         );
                                     }) : (
