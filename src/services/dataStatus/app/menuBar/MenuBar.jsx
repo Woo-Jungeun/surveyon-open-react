@@ -23,7 +23,9 @@ const MENU_ITEMS = [
       { label: "빈도분석", path: "/data_status/analysis/frequency", icon: BarChart3 },
       { label: "교차분석", path: "/data_status/analysis/cross", icon: Table, isPending: true },
       { label: "추가분석", path: "/data_status/analysis/additional", icon: Grid },
-      { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
+      // todo 임시 주석  [쿼터현황/관리] 메뉴
+      // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
+      { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList, isPending: true },
     ]
   },
   {
