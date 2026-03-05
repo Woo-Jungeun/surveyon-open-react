@@ -2239,7 +2239,7 @@ const AdditionalAnalysisPage = () => {
                                                                                 verticalAlign: 'middle'
                                                                             }}>
                                                                                 {col}
-                                                                                <div style={{ fontSize: '11px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div>
+                                                                                {/* <div style={{ fontSize: '11px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div> */}
                                                                             </th>
                                                                         ))}
                                                                     </tr>
