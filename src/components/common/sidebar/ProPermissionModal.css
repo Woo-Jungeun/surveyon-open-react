@@ -172,17 +172,23 @@ body:has(.pp-modal-overlay) #nprogress .spinner-icon {
     color: #333;
 }
 
+.pp-delete-project-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
 .pp-btn-delete-project {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 20px;
+    gap: 8px;
+    padding: 6px 14px;
     border-radius: 6px;
     border: 1px solid #5A4BFF;
     background: #5A4BFF;
     color: #fff;
     font-size: 13px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -190,6 +196,75 @@ body:has(.pp-modal-overlay) #nprogress .spinner-icon {
 .pp-btn-delete-project:hover {
     background: #4a3bef;
     border-color: #4a3bef;
+}
+
+.pp-info-icon {
+    margin-left: 2px;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    padding: 1px;
+}
+
+/* 프로젝트 삭제 설명 툴팁 */
+.pp-delete-tooltip {
+    visibility: hidden;
+    position: absolute;
+    top: calc(100% + 15px);
+    right: 0;
+    width: 240px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    padding: 14px;
+    z-index: 1001;
+    opacity: 0;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+/* 툴팁 화살표 */
+.pp-delete-tooltip::after {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 40px;
+    width: 10px;
+    height: 10px;
+    background: #ffffff;
+    border-left: 1px solid #e5e7eb;
+    border-top: 1px solid #e5e7eb;
+    transform: rotate(45deg);
+}
+
+.pp-delete-project-wrapper:hover .pp-delete-tooltip {
+    visibility: visible;
+    opacity: 1;
+    top: calc(100% + 8px);
+}
+
+.pp-tooltip-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #5A4BFF;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.pp-tooltip-header svg {
+    color: #94a3b8;
+    /* 아이콘은 차분한 그레이 */
+}
+
+.pp-tooltip-body {
+    color: #334155;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+    word-break: keep-all;
 }
 
 /* Body Layout */

@@ -1,6 +1,6 @@
 import React, { useState, useContext, useEffect, useMemo } from "react";
 import ReactDOM from "react-dom";
-import { X, Trash2, ShieldCheck, UserPlus } from "lucide-react";
+import { X, Trash2, ShieldCheck, UserPlus, Info } from "lucide-react";
 import { Input } from "@progress/kendo-react-inputs";
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { DatePicker } from "@progress/kendo-react-dateinputs";
@@ -187,10 +187,22 @@ const ProPermissionModal = ({ open, onClose }) => {
                         {projectname && <span className="pp-modal-subtitle">— {projectname}</span>}
                     </div>
                     <div className="pp-modal-header-right">
-                        <button className="pp-btn-delete-project" onClick={handleDeleteProject}>
-                            {/* <Trash2 size={14} /> */}
-                            <span>프로젝트 삭제</span>
-                        </button>
+                        <div className="pp-delete-project-wrapper">
+                            <button className="pp-btn-delete-project" onClick={handleDeleteProject}>
+                                <Trash2 size={14} />
+                                <span>프로젝트 삭제</span>
+                                <Info size={14} className="pp-info-icon" />
+                            </button>
+                            <div className="pp-delete-tooltip">
+                                <div className="pp-tooltip-header">
+                                    <Info size={14} />
+                                    <span>프로젝트 삭제</span>
+                                </div>
+                                <div className="pp-tooltip-body">
+                                    삭제된 데이터는 복구할 수 없습니다.
+                                </div>
+                            </div>
+                        </div>
                         <button className="pp-modal-close" onClick={onClose}>
                             <X size={20} />
                         </button>
