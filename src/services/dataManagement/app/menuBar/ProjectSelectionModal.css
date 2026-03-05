@@ -229,15 +229,15 @@
 .ps-modal-container .k-grid,
 .ps-modal-container .k-grid .k-table-row,
 .ps-modal-container .k-grid tr {
-    --kendo-color-primary: #7C3AED !important;
-    --kendo-color-primary-hover: #6D28D9 !important;
-    --kendo-color-primary-active: #5B21B6 !important;
+    --kendo-color-primary: #5A4BFF !important;
+    --kendo-color-primary-hover: #4a3bef !important;
+    --kendo-color-primary-active: #3b2dd6 !important;
     --primary-bg-hover: #F9F8FF !important;
     --primary-bg-selected: #F3F1FF !important;
-    --primary-color: #7C3AED !important;
-    --primary-hover: #6D28D9 !important;
-    --primary-focus: #5B21B6 !important;
-    --primary-border: #D8B4FE !important;
+    --primary-color: #5A4BFF !important;
+    --primary-hover: #4a3bef !important;
+    --primary-focus: #3b2dd6 !important;
+    --primary-border: #7C3AED !important;
 }
 
 /* Grid Selection Styles */
@@ -371,47 +371,66 @@
 .ps-modal-container .k-loading-image,
 .ps-modal-container .k-i-loading,
 .ps-modal-container .k-loading-color {
-    color: #7C3AED !important;
+    color: #5A4BFF !important;
+}
+
+/* ============ survey-loading-spinner 오버라이드 ============ */
+body:has(.ps-modal-overlay) .survey-loading-spinner::before,
+body:has(.ps-modal-overlay) .survey-loading-spinner::after {
+    border-color: #5A4BFF !important;
+}
+
+body:has(.ps-modal-overlay) .survey-loading-spinner::after {
+    background:
+        linear-gradient(#5A4BFF 0 0) 10px 15px / 40px 3px,
+        linear-gradient(#5A4BFF 0 0) 10px 28px / 40px 3px,
+        linear-gradient(#5A4BFF 0 0) 10px 41px / 40px 3px,
+        linear-gradient(#5A4BFF 0 0) 10px 54px / 28px 3px !important;
+    background-repeat: no-repeat !important;
+}
+
+body:has(.ps-modal-overlay) .survey-loading-spinner .dot {
+    background: #5A4BFF !important;
 }
 
 /* NProgress Loading Bar */
 body:has(.ps-modal-overlay) #nprogress .bar {
-    background: #7C3AED !important;
+    background: #5A4BFF !important;
 }
 
 body:has(.ps-modal-overlay) #nprogress .peg {
-    box-shadow: 0 0 10px #7C3AED, 0 0 5px #7C3AED !important;
+    box-shadow: 0 0 10px #5A4BFF, 0 0 5px #5A4BFF !important;
 }
 
 body:has(.ps-modal-overlay) #nprogress .spinner-icon {
-    border-top-color: #7C3AED !important;
-    border-left-color: #7C3AED !important;
+    border-top-color: #5A4BFF !important;
+    border-left-color: #5A4BFF !important;
 }
 
 /* Checkbox */
 .ps-modal-container .k-checkbox:checked,
 .ps-modal-container .k-checkbox.k-checked {
-    background-color: #7C3AED !important;
-    border-color: #7C3AED !important;
+    background-color: #5A4BFF !important;
+    border-color: #5A4BFF !important;
 }
 
 /* Popup/Dropdown Lists */
 .ps-modal-container .k-animation-container .k-popup,
 .purple-theme-context .k-popup {
-    border-color: #7C3AED !important;
+    border-color: #5A4BFF !important;
 }
 
-.ps-modal-container .k-list .k-selected,
-.ps-modal-container .k-list .k-item.k-selected,
-.ps-modal-container .k-list-item.k-selected {
+body:has(.ps-modal-overlay) .k-list .k-selected,
+body:has(.ps-modal-overlay) .k-list .k-item.k-selected,
+body:has(.ps-modal-overlay) .k-list-item.k-selected {
     background-color: #F3F1FF !important;
-    color: #7C3AED !important;
+    color: #5A4BFF !important;
 }
 
-.ps-modal-container .k-list .k-item:hover,
-.ps-modal-container .k-list-item:hover {
+body:has(.ps-modal-overlay) .k-list .k-item:hover,
+body:has(.ps-modal-overlay) .k-list-item:hover {
     background-color: #EBE7FF !important;
-    color: #7C3AED !important;
+    color: #5A4BFF !important;
 }
 
 /* Additional Row Selection Override - Stronger Specificity */

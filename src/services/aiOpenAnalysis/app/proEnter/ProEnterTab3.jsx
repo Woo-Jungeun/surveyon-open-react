@@ -201,7 +201,7 @@ const ProEnterTab3 = (props) => {
                             fontSize: '15px',
                             fontWeight: '600',
                             borderRadius: '6px',
-                            backgroundColor: '#FF6B00',
+                            backgroundColor: '#5A4BFF',
                             border: 'none',
                             color: '#fff'
                         }}
