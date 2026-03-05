@@ -624,9 +624,8 @@ const FrequencyAnalysisPage = () => {
                             label: c.label || c.var_label || c.name || c.key
                         }));
 
-                        // UI Rows (문항 보기): result.rows 에서 추출 (total 제외)
-                        let optionRows = aggInfoRows.filter(r => r.key !== 'total');
-                        if (optionRows.length === 0) optionRows = aggInfoRows;
+                        // UI Rows (문항 보기): result.rows 에서 추출
+                        let optionRows = aggInfoRows;
 
                         const updatedData = optionRows.map(row => {
                             let rowData = {
