@@ -244,7 +244,7 @@ const RowSelectCell = (props) => {
     };
 
     return (
-        <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+        <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', padding: 0 }}
             onClick={e => e.stopPropagation()}
         >
             <label className="dm-checkbox-label">
@@ -275,7 +275,7 @@ const HeaderCheckboxCell = ({ allIds, style, className }) => {
     };
 
     return (
-        <th style={{ ...style, textAlign: 'center', verticalAlign: 'middle', display: 'flex', justifyContent: 'center', alignItems: 'center' }} className={className}>
+        <th style={{ ...style, textAlign: 'center', verticalAlign: 'middle', padding: 0 }} className={className}>
             <label className="dm-checkbox-label">
                 <input
                     type="checkbox"
