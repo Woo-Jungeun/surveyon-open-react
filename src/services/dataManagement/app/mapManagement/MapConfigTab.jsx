@@ -220,7 +220,7 @@ const AddCell = (props) => {
     const { onAdd } = useContext(MapManagementContext);
     return (
         <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle' }}>
-            <button onClick={onAdd} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#16a34a' }}>
+            <button onClick={() => onAdd(props.dataItem.id)} style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#16a34a' }}>
                 <Plus size={18} />
             </button>
         </td>

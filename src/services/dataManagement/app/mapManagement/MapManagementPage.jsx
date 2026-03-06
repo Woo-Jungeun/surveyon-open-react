@@ -18,7 +18,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, updateMapVariables, updateMapLabels } = MapManagementPageApi();
+    const { getMapVariables, createMapVariables, updateMapVariables, updateMapLabels } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -34,6 +34,7 @@ const MapManagementPage = () => {
     const [isDetailed, setIsDetailed] = useState(false);      // 상세 설정 토글
     const [selectedVariableId, setSelectedVariableId] = useState(null); // 보기 레이블 탭에서 선택된 변수 id
     const [editingRowId, setEditingRowId] = useState(null);   // 현재 편집 중인 행 id
+    const [selectedIds, setSelectedIds] = useState(new Set()); // 체크된 행 id Set
     const [sidebarSearchQuery, setSidebarSearchQuery] = useState(''); // 변수 목록 검색어
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
@@ -215,16 +216,17 @@ const MapManagementPage = () => {
             setDeletedIds(prev => [...prev, id]);
         }
         setVariables(prev => prev.filter(v => v.id !== id));
+        setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     };
 
-    const handleAddVariable = () => {
+    const handleAddVariable = (afterId) => {
         setVariables(prev => {
             const newId = Date.now();
             let counter = 1;
             while (prev.some(v => v.sysName === `var_${counter}`)) counter++;
             const newName = `var_${counter}`;
 
-            return [{
+            const newRow = {
                 id: newId,
                 sysName: newName,
                 name: newName,
@@ -234,7 +236,18 @@ const MapManagementPage = () => {
                 count: '0 / 0',
                 type: '범주형',
                 isNew: true
-            }, ...prev];
+            };
+
+            // afterId가 있으면 해당 행 바로 아래에 삽입, 없으면 맨 위
+            if (afterId != null) {
+                const idx = prev.findIndex(v => v.id === afterId);
+                if (idx !== -1) {
+                    const next = [...prev];
+                    next.splice(idx + 1, 0, newRow);
+                    return next;
+                }
+            }
+            return [newRow, ...prev];
         });
     };
 
@@ -330,55 +343,81 @@ const MapManagementPage = () => {
             }
 
             const originalMap = new Map(originalVariables.map(v => [v.id, v]));
-            const updated = variables
-                .filter(v => {
-                    if (v.isNew) return true;
-                    const orig = originalMap.get(v.id);
-                    if (!orig) return true;
-                    return EDITABLE_FIELDS.some(f => v[f] !== orig[f]);
-                })
-                .map(v => ({
-                    id: v.isNew ? 0 : v.id,
-                    projectId: 0,
-                    pn,
-                    sQuestionVariable: v.sysName || '',
-                    cQuestionVariable: v.name || v.sysName || '',
-                    label: v.label || '',
-                    type: v.type || '',
-                    startPos: v.startPos || 0,
-                    codeLen: v.valLen || 0,
-                    optCount: v.valCnt || 0,
-                    totalLen: v.totalLen || 0,
-                    openRule: v.etcOpen || '',
-                    logicCheck: v.logic || '',
-                    spssName: v.spssName || '',
-                    decimalPlaces: v.decimal || 0,
-                    memo: v.memo || '',
-                    multiChange: !!v.multiValChange,
-                    minAnswer: v.minQuestions || 0,
-                    noOpenMerge: !!v.excludeOpenMerge,
-                    isValid: !!v.verificationVar,
-                    noOutput: !!v.excludeOutput,
-                    ranking: 0,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    labels: v.labels || []
-                }));
 
-            const result = await updateMapVariables.mutateAsync({
-                pn,
-                user: userId,
-                updated,
-                deleted: deletedIds,
+            // 신규 행과 수정된 기존 행 분리
+            const newRows = variables.filter(v => v.isNew);
+            const modifiedRows = variables.filter(v => {
+                if (v.isNew) return false;
+                const orig = originalMap.get(v.id);
+                if (!orig) return false;
+                return EDITABLE_FIELDS.some(f => v[f] !== orig[f]);
             });
 
-            if (result?.success === '777' || result?.success === true) {
+            const toPayload = (v, isNew) => ({
+                id: isNew ? 0 : v.id,
+                projectId: 0,
+                pn,
+                sQuestionVariable: v.sysName || '',
+                cQuestionVariable: v.name || v.sysName || '',
+                label: v.label || '',
+                type: v.type || '',
+                startPos: v.startPos || 0,
+                codeLen: v.valLen || 0,
+                optCount: v.valCnt || 0,
+                totalLen: v.totalLen || 0,
+                openRule: v.etcOpen || '',
+                logicCheck: v.logic || '',
+                spssName: v.spssName || '',
+                decimalPlaces: v.decimal || 0,
+                memo: v.memo || '',
+                multiChange: !!v.multiValChange,
+                minAnswer: v.minQuestions || 0,
+                noOpenMerge: !!v.excludeOpenMerge,
+                isValid: !!v.verificationVar,
+                noOutput: !!v.excludeOutput,
+                ranking: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                labels: v.labels || []
+            });
+
+            let createSuccess = true;
+            let updateSuccess = true;
+
+            // 신규 행: create API 호출
+            if (newRows.length > 0) {
+                const createPayload = {
+                    pn,
+                    user: userId,
+                    variables: newRows.map(v => toPayload(v, true)),
+                };
+                const createResult = await createMapVariables.mutateAsync(createPayload);
+                //if (!(createResult?.success === '777' || createResult?.success === true)) {
+                createSuccess = false;
+                // }
+            }
+
+            // 수정된 기존 행 + 삭제: update API 호출
+            if (modifiedRows.length > 0 || deletedIds.length > 0) {
+                const updatePayload = {
+                    pn,
+                    user: userId,
+                    updated: modifiedRows.map(v => toPayload(v, false)),
+                    deleted: deletedIds,
+                };
+                const updateResult = await updateMapVariables.mutateAsync(updatePayload);
+                if (!(updateResult?.success === '777' || updateResult?.success === true)) {
+                    updateSuccess = false;
+                }
+            }
+
+            if (createSuccess && updateSuccess) {
                 setDeletedIds([]);
                 await loadData();
                 if (showSuccessModal) modal.showAlert("알림", "저장되었습니다.");
                 return true;
             } else {
-                modal.showErrorAlert("에러", result?.message || "저장에 실패했습니다.");
+                modal.showErrorAlert("에러", "저장에 실패했습니다.");
                 return false;
             }
         } catch (e) {
@@ -440,12 +479,14 @@ const MapManagementPage = () => {
         setVariables,
         editingRowId,
         setEditingRowId,
+        selectedIds,
+        setSelectedIds,
         SetEditingCategoryPopupOpen,
         setEditingLogicPopupOpen,
         isDetailed,
         onAdd: handleAddVariable,
         onDelete: handleDeleteVariable,
-    }), [variables, editingRowId, isDetailed]);
+    }), [variables, editingRowId, isDetailed, selectedIds]);
 
     // ── 렌더 ──
     return (

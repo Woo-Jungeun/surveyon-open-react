@@ -17,6 +17,15 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** 맵 관리 신규 행 생성 */
+    const createMapVariables = useMutation(
+        async (data) => await api.post(data, "/map/variables/create", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     /** 맵 관리 저장 (수정/삭제) */
     const updateMapVariables = useMutation(
         async (data) => await api.post(data, "/map/variables/update", "API_BASE_URL_DATAMANAGEMENT"),
@@ -37,6 +46,7 @@ export function MapManagementPageApi() {
 
     return {
         getMapVariables,
+        createMapVariables,
         updateMapVariables,
         updateMapLabels
     };
