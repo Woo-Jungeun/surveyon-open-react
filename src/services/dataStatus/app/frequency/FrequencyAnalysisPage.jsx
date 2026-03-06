@@ -498,66 +498,99 @@ const FrequencyAnalysisPage = () => {
         '수도권/비수도권'
     ];
 
+    const QUESTION_LIST_LIMIT = 20;
     const [questions, setQuestions] = useState([]);
+    const [listStart, setListStart] = useState(0);
+    const [hasMoreQuestions, setHasMoreQuestions] = useState(true);
+    const isFetchingListRef = useRef(false);
 
-    useEffect(() => {
-        const fetchQuestions = async () => {
-            if (auth?.user?.userId) {
-                const userId = auth.user.userId;
-                const pageId = sessionStorage.getItem("pageId");
+    const parseOverviewList = (overviewList) =>
+        overviewList.map(item => {
+            const optionsList = item.options || item.info || [];
+            const initialData = optionsList.length > 0
+                ? optionsList.map((o, idx) => ({
+                    name: o.label || o.value || o.name || `보기 ${idx + 1}`,
+                    value: o.value !== undefined ? String(o.value) : (o.id || o.name),
+                    label: o.label || o.name,
+                    '완료': 0, '선정탈락': 0, '쿼터오버': 0, total: 0
+                }))
+                : [{ name: '해당없음', value: '해당없음', '완료': 0, '선정탈락': 0, '쿼터오버': 0, total: 0 }];
 
-                if (pageId) {
-                    try {
-                        const payload = {
-                            pageid: pageId,
-                            user: userId,
-                            start: 0,
-                            limit: 1000
-                        };
-                        const result = await getOverviewList.mutateAsync(payload);
-                        if (result?.success === "777" && result.resultjson) {
+            return {
+                id: item.table_id || item.id,
+                target_id: item.id || item.table_id,
+                label: item.title || item.label || item.name || item.table_id || item.id,
+                n: 0,
+                data: initialData,
+                isLoaded: false
+            };
+        });
 
-                            const overviewList = result.resultjson.tables || [];
+    const fetchQuestions = async (start) => {
+        if (isFetchingListRef.current) return;
+        if (!auth?.user?.userId) return;
+        const pageId = sessionStorage.getItem("pageId");
+        if (!pageId) return;
 
-                            // 기본 질문 목록 우선 세팅 (데이터는 로딩 전 임시값 혹은 0)
-                            const initialQuestions = overviewList.map(item => {
-                                // overviewList 내의 요소는 question 정보를 담은 객체일 것이라 가정,
-                                // options 배열이 있다면 이를 보기로 활용 (API 응답 양식에 따라 구체적 필드명 조정 필요, 여기서는 일반적인 형태 반영)
-                                const optionsList = item.options || item.info || [];
+        isFetchingListRef.current = true;
+        try {
+            const payload = {
+                pageid: pageId,
+                user: auth.user.userId,
+                start,
+                limit: QUESTION_LIST_LIMIT
+            };
+            const result = await getOverviewList.mutateAsync(payload);
+            if (result?.success === "777" && result.resultjson) {
+                const overviewList = result.resultjson.tables || [];
+                const newQuestions = parseOverviewList(overviewList);
 
-                                const initialData = optionsList.length > 0 ? optionsList.map((o, idx) => ({
-                                    name: o.label || o.value || o.name || `보기 ${idx + 1}`,
-                                    value: o.value !== undefined ? String(o.value) : (o.id || o.name),
-                                    label: o.label || o.name,
-                                    '완료': 0,
-                                    '선정탈락': 0,
-                                    '쿼터오버': 0,
-                                    total: 0
-                                })) : [
-                                    { name: '해당없음', value: '해당없음', '완료': 0, '선정탈락': 0, '쿼터오버': 0, total: 0 }
-                                ];
-
-                                return {
-                                    id: item.table_id || item.id,
-                                    target_id: item.id || item.table_id, // 실제 변수/문항 ID (BQ4 등)
-                                    label: item.title || item.label || item.name || item.table_id || item.id,
-                                    n: 0,
-                                    data: initialData,
-                                    isLoaded: false
-                                };
-                            });
-
-                            setQuestions(initialQuestions);
-                            // 화면 노출/선택 시점에 5개씩 가져오도록 분리
-                        }
-                    } catch (error) {
-                        console.error("Aggregation Variable Fetch Error:", error);
-                    }
+                if (start === 0) {
+                    setQuestions(newQuestions);
+                } else {
+                    setQuestions(prev => {
+                        // 중복 제거 후 추가
+                        const existingIds = new Set(prev.map(q => q.id));
+                        const unique = newQuestions.filter(q => !existingIds.has(q.id));
+                        return [...prev, ...unique];
+                    });
                 }
-            }
-        };
 
-        fetchQuestions();
+                const fetched = overviewList.length;
+                setHasMoreQuestions(fetched >= QUESTION_LIST_LIMIT);
+                setListStart(start + fetched);
+            }
+        } catch (error) {
+            console.error("Aggregation Variable Fetch Error:", error);
+        } finally {
+            isFetchingListRef.current = false;
+        }
+    };
+
+    // 초기 로드
+    useEffect(() => {
+        if (auth?.user?.userId) {
+            setQuestions([]);
+            setListStart(0);
+            setHasMoreQuestions(true);
+            fetchQuestions(0);
+        }
+    }, [auth?.user?.userId]);
+
+    // 대시보드(페이지) 선택 팝업 닫힐 때 재조회
+    useEffect(() => {
+        const handlePageSelected = () => {
+            if (!auth?.user?.userId) return;
+            setQuestions([]);
+            setListStart(0);
+            setHasMoreQuestions(true);
+            setActiveId(null);
+            // isFetchingListRef 강제 해제 후 재조회
+            isFetchingListRef.current = false;
+            fetchQuestions(0);
+        };
+        window.addEventListener('pageSelected', handlePageSelected);
+        return () => window.removeEventListener('pageSelected', handlePageSelected);
     }, [auth?.user?.userId]);
 
     // 활성 아이템 기준 5개씩 데이터 분할 조회
@@ -703,17 +736,32 @@ const FrequencyAnalysisPage = () => {
         isClickingRef.current = true;
         if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
 
-        const element = document.getElementById(id);
-        if (element) {
-            // 클릭과 동시에 activeId를 확정해주고 스크롤 진행
-            setActiveId(id);
-            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // 현재 목록에 없는 문항이면 해당 문항이 포함될 구간을 재조회
+        const existsInList = questions.some(q => q.id === id);
+        if (!existsInList && hasMoreQuestions) {
+            // 목록에 없으면 현재 listStart부터 추가 로드
+            fetchQuestions(listStart);
         }
 
-        // 애니메이션 스크롤이 굉장히 길 수 있으므로 넉넉하게 1500ms(1.5초) 간 옵저버 무시
+        const element = document.getElementById(id);
+        if (element) {
+            setActiveId(id);
+            element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+            // DOM에 아직 없으면 state 업데이트 후 스크롤 시도
+            setActiveId(id);
+        }
+
         clickTimeoutRef.current = setTimeout(() => {
             isClickingRef.current = false;
         }, 1500);
+    };
+
+    // 사이드바 스크롤 끝 도달 시 추가 문항 로드
+    const handleSidebarScrollEnd = () => {
+        if (hasMoreQuestions && !isFetchingListRef.current) {
+            fetchQuestions(listStart);
+        }
     };
 
     // 오른쪽 스크롤 시 왼쪽 사이드바 목록 자동 스크롤 동기화
@@ -868,9 +916,10 @@ const FrequencyAnalysisPage = () => {
                     // title="문항 목록"
                     items={sidebarItems}
                     selectedId={activeId}
-                    onItemClick={(item) => scrollToId(item.id)} // 스크롤 위치에 따라 선택된 아이템 표시
+                    onItemClick={(item) => scrollToId(item.id)}
                     onSearch={setSearchTerm}
                     searchPlaceholder="문항을 검색하세요."
+                    onScrollEnd={handleSidebarScrollEnd}
                 />
 
                 <div className="agg-main" ref={mainRef}>
