@@ -18,7 +18,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, createMapVariables, updateMapVariables, updateMapLabels } = MapManagementPageApi();
+    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -249,6 +249,57 @@ const MapManagementPage = () => {
             }
             return [newRow, ...prev];
         });
+    };
+
+    const handleSrtTransfer = async () => {
+        const pn = sessionStorage.getItem('merge_pn') || '';
+        const userId = auth?.user?.userId || '';
+
+        // 체크된 행이 없으면 알림
+        if (selectedIds.size === 0) {
+            modal.showAlert('알림', '이관할 행을 체크박스로 선택해주세요.');
+            return;
+        }
+
+        const ids = [...selectedIds];
+
+        try {
+            const response = await srtTransfer.mutateAsync({
+                pn,
+                user: userId,
+                variableIds: ids,
+            });
+
+            // 200 성공 → blob 다운로드
+            const blob = response.data instanceof Blob
+                ? response.data
+                : new Blob([response.data], { type: 'application/octet-stream' });
+
+            // Content-Disposition 헤더에서 파일명 추출 (없으면 기본모5 사용)
+            const disposition = response.headers?.['content-disposition'] || '';
+            const match = disposition.match(/filename[^;=\n]*=(['"]*)(.*?)\1[;\n]?/);
+            const filename = match ? decodeURIComponent(match[2]) : `srt_transfer_${pn}.parquet`;
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                window.URL.revokeObjectURL(url);
+                a.remove();
+            }, 200);
+        } catch (e) {
+            const status = e?.response?.status;
+            if (status === 400) {
+                modal.showErrorAlert('오류', 'GB 파라미터를 초과하였습니다.');
+            } else if (status === 500) {
+                modal.showErrorAlert('오류', '서버 ZIP 아카이빙에 실패했습니다.');
+            } else {
+                modal.showErrorAlert('오류', 'SRT 이관 중 오류가 발생했습니다.');
+            }
+        }
     };
 
     const executeSave = async (showSuccessModal = true) => {
@@ -500,7 +551,7 @@ const MapManagementPage = () => {
                 >
                     {activeTab === 'mapping' && (
                         <button
-                            onClick={() => modal.showAlert('알림', '서비스 준비 중입니다.')}
+                            onClick={handleSrtTransfer}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',

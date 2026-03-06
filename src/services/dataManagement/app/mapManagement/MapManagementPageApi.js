@@ -17,6 +17,15 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** SRT 이관 - Parquet 파일 생성 후 다운로드 */
+    const srtTransfer = useMutation(
+        async (data) => await api.file(data, "/map/variables/bake-parquet", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     /** 맵 관리 신규 행 생성 */
     const createMapVariables = useMutation(
         async (data) => await api.post(data, "/map/variables/create", "API_BASE_URL_DATAMANAGEMENT"),
@@ -46,6 +55,7 @@ export function MapManagementPageApi() {
 
     return {
         getMapVariables,
+        srtTransfer,
         createMapVariables,
         updateMapVariables,
         updateMapLabels
