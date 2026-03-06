@@ -7,14 +7,14 @@ import './MapManagementPage.css';
 const LogicEditPopup = ({ variable, variablesList, onClose, onSave }) => {
     const modal = useContext(modalContext);
     const [conditionSets, setConditionSets] = useState([
-        { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '=', value: '' }] }
+        { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }
     ]);
     const [aiPrompt, setAiPrompt] = useState('');
     const [showGuide, setShowGuide] = useState(false);
 
     const parseLogicString = (logicStr) => {
         const defaultState = [
-            { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '=', value: '' }] }
+            { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }
         ];
         if (!logicStr || logicStr.trim() === '') return defaultState;
 
@@ -78,7 +78,7 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave }) => {
                         value: match[3].replace(/\)+$/, '').trim() // 끝에 남은 괄호 제거
                     };
                 }
-                return { varName: t.replace(/[()]/g, '').trim(), operator: '=', value: '' };
+                return { varName: t.replace(/[()]/g, '').trim(), operator: '==', value: '' };
             }).filter(c => c.varName !== '');
 
             if (parsedConditions.length === 0) {
@@ -112,14 +112,14 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave }) => {
 
     const handleAddCondition = (setIndex, condIndex) => {
         const newSets = [...conditionSets];
-        newSets[setIndex].conditions.splice(condIndex + 1, 0, { varName: '', operator: '=', value: '' });
+        newSets[setIndex].conditions.splice(condIndex + 1, 0, { varName: '', operator: '==', value: '' });
         setConditionSets(newSets);
     };
 
     const handleDeleteCondition = (setIndex, condIndex) => {
         const newSets = [...conditionSets];
         if (newSets[setIndex].conditions.length === 1) {
-            newSets[setIndex].conditions = [{ varName: '', operator: '=', value: '' }];
+            newSets[setIndex].conditions = [{ varName: '', operator: '==', value: '' }];
         } else {
             newSets[setIndex].conditions.splice(condIndex, 1);
         }
@@ -141,7 +141,7 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave }) => {
     const handleAddConditionSet = () => {
         setConditionSets([
             ...conditionSets,
-            { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '=', value: '' }] }
+            { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }
         ]);
     };
 
@@ -149,7 +149,7 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave }) => {
         if (conditionSets.length === 1) {
             // Just reset the single set if it's the only one left
             setConditionSets([
-                { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '=', value: '' }] }
+                { id: Date.now(), logicOp: 'AND', connectorOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }
             ]);
             return;
         }
@@ -164,11 +164,13 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave }) => {
                 .map(c => `${c.varName} ${c.operator} ${c.value}`);
 
             if (validConds.length > 0) {
-                let setStr = validConds.length === 1 ? validConds[0] : `(${validConds.join(` ${set.logicOp} `).trim()})`;
+                const logicOpLower = (set.logicOp || 'AND').toLowerCase();
+                const connectorOpLower = (set.connectorOp || 'AND').toLowerCase();
+                let setStr = validConds.length === 1 ? validConds[0] : `(${validConds.join(` ${logicOpLower} `).trim()})`;
                 if (logicString === '') {
                     logicString = setStr;
                 } else {
-                    logicString += ` ${set.connectorOp || 'AND'} ${setStr}`;
+                    logicString += ` ${connectorOpLower} ${setStr}`;
                 }
             }
         });
@@ -199,14 +201,22 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave }) => {
     }));
 
     const operatorOptions = [
-        { text: '= (같음)', value: '=' },
-        { text: '≠ (같지않음)', value: '!=' },
+        { text: '== (같음)', value: '==' },
+        { text: '!= (같지 않음)', value: '!=' },
         { text: '> (초과)', value: '>' },
-        { text: '≥ (이상)', value: '>=' },
+        { text: '>= (이상)', value: '>=' },
         { text: '< (미만)', value: '<' },
-        { text: '≤ (이하)', value: '<=' },
-        { text: 'IN (포함)', value: 'IN' },
-        { text: 'NOT IN (미포함)', value: 'NOT IN' }
+        { text: '<= (이하)', value: '<=' },
+        { text: 'in (포함)', value: 'in' },
+        { text: 'not in (미포함)', value: 'not in' },
+        // { text: '= (같음)', value: '=' },
+        // { text: '≠ (같지않음)', value: '!=' },
+        // { text: '> (초과)', value: '>' },
+        // { text: '≥ (이상)', value: '>=' },
+        // { text: '< (미만)', value: '<' },
+        // { text: '≤ (이하)', value: '<=' },
+        // { text: 'IN (포함)', value: 'IN' },
+        // { text: 'NOT IN (미포함)', value: 'NOT IN' }
     ];
 
     return (
