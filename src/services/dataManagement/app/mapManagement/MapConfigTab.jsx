@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useContext, useRef, useEffect, useCallback, useMemo, useState } from 'react';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
@@ -227,6 +227,69 @@ const AddCell = (props) => {
     );
 };
 
+/** 행 체크박스 셀 */
+const RowSelectCell = (props) => {
+    const { selectedIds, setSelectedIds } = useContext(MapManagementContext);
+    const id = props.dataItem.id;
+    const checked = selectedIds?.has(id) ?? false;
+
+    const handleChange = (e) => {
+        e.stopPropagation();
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    return (
+        <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+            onClick={e => e.stopPropagation()}
+        >
+            <label className="dm-checkbox-label">
+                <input
+                    type="checkbox"
+                    className="dm-checkbox-input"
+                    checked={checked}
+                    onChange={handleChange}
+                />
+                <span className="dm-checkbox-box" />
+            </label>
+        </td>
+    );
+};
+
+/** 헤더 전체 체크박스 */
+const HeaderCheckboxCell = ({ allIds, style, className }) => {
+    const { selectedIds, setSelectedIds } = useContext(MapManagementContext);
+    const safeSelected = selectedIds ?? new Set();
+    const allChecked = allIds.length > 0 && allIds.every(id => safeSelected.has(id));
+    const someChecked = allIds.some(id => safeSelected.has(id));
+
+    const handleChange = () => {
+        setSelectedIds(() => {
+            if (allChecked) return new Set();
+            return new Set(allIds);
+        });
+    };
+
+    return (
+        <th style={{ ...style, textAlign: 'center', verticalAlign: 'middle', display: 'flex', justifyContent: 'center', alignItems: 'center' }} className={className}>
+            <label className="dm-checkbox-label">
+                <input
+                    type="checkbox"
+                    className="dm-checkbox-input"
+                    checked={allChecked}
+                    ref={el => { if (el) el.indeterminate = someChecked && !allChecked; }}
+                    onChange={handleChange}
+                />
+                <span className="dm-checkbox-box" />
+            </label>
+        </th>
+    );
+};
+
 /** 행 삭제 버튼 셀 */
 const DeleteCell = (props) => {
     const { onDelete } = useContext(MapManagementContext);
@@ -263,6 +326,7 @@ const getCell = (field) => {
         case 'excludeOpenMerge':
         case 'verificationVar':
         case 'excludeOutput': return CheckboxCell;
+        case 'checkbox': return RowSelectCell;
         case 'add': return AddCell;
         case 'delete': return DeleteCell;
         default: return null;
@@ -283,8 +347,12 @@ const MapConfigTab = ({
     setEditingRowId
 }) => {
     // ── 컬럼 구성 ──
+    const { variables: ctxVars } = useContext(MapManagementContext);
+    const allIds = useMemo(() => (ctxVars || []).map(v => v.id), [ctxVars]);
+
     const mappingColumns = useMemo(() => isDetailed
         ? [
+            { field: 'checkbox', title: '', width: '60px', isCheckbox: true },
             { field: 'add', title: '+', width: '50px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '120px' },
@@ -301,6 +369,7 @@ const MapConfigTab = ({
             { field: 'delete', title: '삭제', width: '80px' }
         ]
         : [
+            { field: 'checkbox', title: '', width: '55px', isCheckbox: true },
             { field: 'add', title: '+', width: '45px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '85px' },
@@ -393,9 +462,15 @@ const MapConfigTab = ({
                                 title={c.title}
                                 width={c.width}
                                 minWidth={c.minWidth}
-                                columnMenu={columnMenu}
+                                columnMenu={c.isCheckbox ? undefined : columnMenu}
                                 cell={getCell(c.field)}
+                                headerCell={c.isCheckbox
+                                    ? (props) => <HeaderCheckboxCell {...props} allIds={allIds} />
+                                    : c.headerCell
+                                }
                                 headerClassName="k-header-center variable-column-header"
+                                sortable={!c.isCheckbox}
+                                filterable={!c.isCheckbox}
                             />
                         ))}
                     </KendoGrid>

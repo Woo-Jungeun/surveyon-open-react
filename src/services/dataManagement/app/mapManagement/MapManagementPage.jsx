@@ -497,7 +497,33 @@ const MapManagementPage = () => {
                     saveButtonLabel="변경사항 저장"
                     onSave={handleSave}
                     saveButtonDisabled={!hasChanges}
-                />
+                >
+                    {activeTab === 'mapping' && (
+                        <button
+                            onClick={() => modal.showAlert('알림', '서비스 준비 중입니다.')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '6px 20px',
+                                borderRadius: '6px',
+                                border: '1.5px solid #16a34a',
+                                background: '#fff',
+                                color: '#16a34a',
+                                fontSize: '14px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                                whiteSpace: 'nowrap',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                        >
+                            SRT 이관
+                        </button>
+                    )}
+                </DataHeader>
+
 
                 <div className="variable-page-content">
                     {/* 탭 버튼 */}
