@@ -488,7 +488,7 @@ input:checked+.slider:before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.5) !important;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -788,6 +788,20 @@ input:checked+.slider:before {
 }
 
 /* === Logic Edit Popup V2 Styling === */
+.variable-modal-overlay[data-theme="data-management"] {
+    --dm-primary: #16a34a;
+    --dm-primary-hover: #15803d;
+    --dm-primary-light: #f0fdf4;
+    --dm-primary-border: #dcfce7;
+}
+
+.variable-modal-overlay[data-theme="data-dashboard"] {
+    --dm-primary: #3b82f6;
+    --dm-primary-hover: #2563eb;
+    --dm-primary-light: #eff6ff;
+    --dm-primary-border: #bfdbfe;
+}
+
 .logic-popup-content-new {
     width: 900px !important;
     max-width: 90vw;
@@ -838,7 +852,7 @@ input:checked+.slider:before {
 }
 
 .logic-guide-btn:hover {
-    background: #f0faf5;
+    background: var(--dm-primary-light);
 }
 
 .logic-close-btn {
@@ -1098,9 +1112,12 @@ input:checked+.slider:before {
 }
 
 .logic-kendo-dropdown.k-focus,
-.logic-kendo-dropdown:focus {
-    border-color: var(--dm-primary);
-    box-shadow: none;
+.logic-kendo-dropdown:focus,
+.logic-kendo-dropdown.k-focus-within,
+.logic-kendo-dropdown:focus-within {
+    border-color: var(--dm-primary) !important;
+    box-shadow: 0 0 0 2px var(--dm-primary-light) !important;
+    outline: none !important;
 }
 
 .logic-kendo-dropdown .k-input-inner {
@@ -1125,6 +1142,17 @@ input:checked+.slider:before {
     border: 1px solid #e2e8f0;
 }
 
+/* Popup Theme Variables (Popups often render outside the main overlay) */
+.logic-dropdown-popup.data-management {
+    --dm-primary: #16a34a;
+    --dm-primary-light: #f0fdf4;
+}
+
+.logic-dropdown-popup.data-dashboard {
+    --dm-primary: #3b82f6;
+    --dm-primary-light: #eff6ff;
+}
+
 .logic-dropdown-popup .k-list-item {
     font-size: 13px;
     color: #334155;
@@ -1144,8 +1172,8 @@ input:checked+.slider:before {
 /* 선택된 행 상태 (테마색 배경의 연한 톤 & 데이터관리 텍스트) */
 .logic-dropdown-popup .k-list-item.k-selected,
 .logic-dropdown-popup .k-list-item.k-state-selected {
-    background-color: #f0faf5 !important;
-    /* 연한 초록색 */
+    background-color: var(--dm-primary-light) !important;
+    /* 테마별 연색 */
     color: var(--dm-primary) !important;
     font-weight: 600;
 }
@@ -1182,9 +1210,9 @@ input:checked+.slider:before {
     min-width: 40px;
     padding: 4px 10px;
     background: #fff;
-    border: 1px solid #10b981;
+    border: 1px solid var(--dm-primary);
     border-radius: 4px;
-    color: #10b981;
+    color: var(--dm-primary);
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -1194,7 +1222,7 @@ input:checked+.slider:before {
 }
 
 .logic-cell-btn:hover {
-    background: #f0fdf4;
+    background: var(--dm-primary-light);
 }
 
 .logic-rule-input {
@@ -1215,12 +1243,12 @@ input:checked+.slider:before {
 }
 
 .logic-rule-action-btn.logic-rule-add {
-    color: #10b981;
+    color: var(--dm-primary);
 }
 
 .logic-rule-action-btn.logic-rule-add:hover {
-    background: #f0fdf4;
-    border-color: #10b981;
+    background: var(--dm-primary-light);
+    border-color: var(--dm-primary);
 }
 
 .logic-rule-action-btn.logic-rule-delete {
@@ -1257,7 +1285,7 @@ input:checked+.slider:before {
 }
 
 .logic-add-set-btn:hover {
-    background: #f0faf5;
+    background: var(--dm-primary-light);
 }
 
 /* Global Connector UI */

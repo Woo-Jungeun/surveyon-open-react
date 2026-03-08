@@ -7,6 +7,7 @@ import Toast from '../../../../components/common/Toast';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
+import LogicEditPopup from '../../../dataManagement/app/mapManagement/LogicEditPopup';
 import './FrequencyAnalysisPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
 import { useSelector } from 'react-redux';
@@ -420,10 +421,15 @@ const FrequencyAnalysisPage = () => {
     const { getOverviewList, getOverviewData } = FrequencyAnalysisPageApi();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
+
+    // 고급 필터 팝업 상태
+    const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
+    const [filterLogic, setFilterLogic] = useState('');
+
     const [selectedFilters, setSelectedFilters] = useState(['전체']);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-    // Total Filter States
+    // Total Filter States (이제 팝업으로 대체)
     const [selectedTotalFilters, setSelectedTotalFilters] = useState(['전체']);
     const [isTotalFilterOpen, setIsTotalFilterOpen] = useState(false);
     const totalFilterRef = useRef(null);
@@ -801,45 +807,14 @@ const FrequencyAnalysisPage = () => {
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
             <DataHeader title="빈도분석">
-                {/* 전체 필터 드롭다운 */}
-                <div className="response-filter-container" ref={totalFilterRef} style={{ marginRight: '16px' }}>
-                    <span className="response-filter-label">전체 필터</span>
-                    <div className="custom-filter-wrapper">
-                        <div
-                            className={`custom-filter-trigger ${isTotalFilterOpen ? 'open' : ''}`}
-                            onClick={() => setIsTotalFilterOpen(!isTotalFilterOpen)}
-                        >
-                            <span className="trigger-text">
-                                {selectedTotalFilters.includes('전체') ? '전체' : (selectedTotalFilters.length === 0 ? '선택항목 없음' : `${selectedTotalFilters.length}개 선택됨`)}
-                            </span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                        {isTotalFilterOpen && (
-                            <div className="custom-filter-menu">
-                                {totalFilterList.map((filter, index) => {
-                                    const isChecked = selectedTotalFilters.includes('전체') || selectedTotalFilters.includes(filter);
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            className={`custom-filter-item ${isChecked ? 'selected' : ''}`}
-                                            onClick={() => handleTotalFilterToggle(filter)}
-                                        >
-                                            <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
-                                                {isChecked && (
-                                                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                                                )}
-                                            </div>
-                                            <span className="filter-text">{filter}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                {/* 고급 필터 버튼 - LogicEditPopup 오픈 */}
+                <button
+                    onClick={() => setIsFilterPopupOpen(true)}
+                    className={`advanced-filter-btn ${filterLogic ? 'active' : ''}`}
+                >
+                    <Filter size={15} />
+                    고급 필터{filterLogic ? ' ✓' : ''}
+                </button>
 
                 {/* 전체 배너 드롭다운 */}
                 <div className="response-filter-container" ref={filterRef}>
@@ -928,6 +903,20 @@ const FrequencyAnalysisPage = () => {
                     ))}
                 </div>
             </div>
+
+            {/* 고급 필터 LogicEditPopup */}
+            {isFilterPopupOpen && (
+                <LogicEditPopup
+                    variable={{ id: 'filter', logic: filterLogic }}
+                    variablesList={questions.map(q => ({ sysName: q.id, label: q.label }))}
+                    onClose={() => setIsFilterPopupOpen(false)}
+                    onSave={(_, logicStr) => {
+                        setFilterLogic(logicStr);
+                        setIsFilterPopupOpen(false);
+                    }}
+                    theme="data-dashboard"
+                />
+            )}
         </div>
     );
 };
