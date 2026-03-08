@@ -345,69 +345,81 @@ const AggregationCard = memo(({ q }) => {
                             <tr>
                                 <th>항목</th>
                                 {q.columns ? q.columns.map(col => <th key={col.key}>{col.label}</th>) : (
-                                    <>
-                                        <th>완료</th>
-                                        <th>선정탈락</th>
-                                        <th>쿼터오버</th>
-                                    </>
+                                    <th>사례수</th>
                                 )}
                                 <th>합계</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {q.data.map((row, i) => (
-                                <tr key={i}>
-                                    <td>{row.name}</td>
-                                    {q.columns ? q.columns.map(col => {
-                                        const count = row[col.key] ?? 0;
-                                        const pct = row[`${col.key}_pct`];
-                                        return (
-                                            <td key={col.key}>
-                                                {displayMode === 'all' && (
-                                                    <>
-                                                        {count}
-                                                        {pct !== undefined && <span style={{ color: '#888', fontSize: '0.85em', marginLeft: '4px' }}>({pct}%)</span>}
-                                                    </>
-                                                )}
-                                                {displayMode === 'value' && count}
-                                                {displayMode === 'percent' && (pct !== undefined ? `${pct}%` : '-')}
-                                            </td>
-                                        );
-                                    }) : (
-                                        <>
-                                            <td>{row['완료']}</td>
-                                            <td>{row['선정탈락']}</td>
-                                            <td>{row['쿼터오버']}</td>
-                                        </>
-                                    )}
-                                    <td>{row.total}</td>
+                            {!q.isLoaded ? (
+                                <tr>
+                                    <td colSpan={(q.columns?.length || 1) + 2} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                                        데이터를 불러오는 중입니다...
+                                    </td>
                                 </tr>
-                            ))}
+                            ) : q.data.length === 0 ? (
+                                <tr>
+                                    <td colSpan={(q.columns?.length || 1) + 2} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                                        조회된 데이터가 없습니다.
+                                    </td>
+                                </tr>
+                            ) : (
+                                q.data.map((row, i) => (
+                                    <tr key={i}>
+                                        <td>{row.name}</td>
+                                        {q.columns ? q.columns.map(col => {
+                                            const count = row[col.key] ?? 0;
+                                            const pct = row[`${col.key}_pct`];
+                                            return (
+                                                <td key={col.key}>
+                                                    {displayMode === 'all' && (
+                                                        <>
+                                                            {count}
+                                                            {pct !== undefined && <span style={{ color: '#888', fontSize: '0.85em', marginLeft: '4px' }}>({pct}%)</span>}
+                                                        </>
+                                                    )}
+                                                    {displayMode === 'value' && count}
+                                                    {displayMode === 'percent' && (pct !== undefined ? `${pct}%` : '-')}
+                                                </td>
+                                            );
+                                        }) : (
+                                            <td>{row.total}</td>
+                                        )}
+                                        <td>{row.total}</td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Chart */}
                 {showChart && (
-                    <div className="agg-chart-container" ref={chartContainerRef}>
-                        <KendoChart
-                            data={q.data}
-                            initialType={chartMode}
-                            allowedTypes={
-                                chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
-                                    chartMode === 'wordCloud' ? ['wordCloud'] :
-                                        chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
-                                            chartMode === 'line' ? ['line'] :
-                                                chartMode === 'pie' ? ['pie'] :
-                                                    chartMode === 'donut' ? ['donut'] :
-                                                        chartMode === 'area' ? ['area'] :
-                                                            chartMode === 'heatmap' ? ['heatmap'] :
-                                                                chartMode === 'radarLine' ? ['radarLine'] :
-                                                                    chartMode === 'funnel' ? ['funnel'] :
-                                                                        chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                            chartMode === 'radarArea' ? ['radarArea'] : []
-                            }
-                        />
+                    <div className="agg-chart-container" ref={chartContainerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        {!q.isLoaded ? (
+                            <div style={{ color: '#888', fontSize: '13px' }}>데이터를 불러오는 중입니다...</div>
+                        ) : q.data.length === 0 ? (
+                            <div style={{ color: '#888', fontSize: '13px' }}>조회된 데이터가 없습니다.</div>
+                        ) : (
+                            <KendoChart
+                                data={q.data}
+                                initialType={chartMode}
+                                allowedTypes={
+                                    chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
+                                        chartMode === 'wordCloud' ? ['wordCloud'] :
+                                            chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
+                                                chartMode === 'line' ? ['line'] :
+                                                    chartMode === 'pie' ? ['pie'] :
+                                                        chartMode === 'donut' ? ['donut'] :
+                                                            chartMode === 'area' ? ['area'] :
+                                                                chartMode === 'heatmap' ? ['heatmap'] :
+                                                                    chartMode === 'radarLine' ? ['radarLine'] :
+                                                                        chartMode === 'funnel' ? ['funnel'] :
+                                                                            chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                chartMode === 'radarArea' ? ['radarArea'] : []
+                                }
+                            />
+                        )}
                     </div>
                 )}
             </div>
@@ -523,9 +535,9 @@ const FrequencyAnalysisPage = () => {
                     name: o.label || o.value || o.name || `보기 ${idx + 1}`,
                     value: o.value !== undefined ? String(o.value) : (o.id || o.name),
                     label: o.label || o.name,
-                    '완료': 0, '선정탈락': 0, '쿼터오버': 0, total: 0
+                    total: 0
                 }))
-                : [{ name: '해당없음', value: '해당없음', '완료': 0, '선정탈락': 0, '쿼터오버': 0, total: 0 }];
+                : [];
 
             return {
                 id: item.table_id || item.id,
@@ -891,9 +903,28 @@ const FrequencyAnalysisPage = () => {
                 />
 
                 <div className="agg-main" ref={mainRef}>
-                    {questions.map(q => (
-                        <AggregationCard key={q.id} q={q} />
-                    ))}
+                    {questions.length > 0 ? (
+                        questions.map(q => (
+                            <AggregationCard key={q.id} q={q} />
+                        ))
+                    ) : (
+                        <div style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '12px',
+                            color: '#94a3b8',
+                            fontSize: '15px',
+                            background: '#fff',
+                            borderRadius: '16px',
+                            border: '1px dashed #e2e8f0'
+                        }}>
+                            <div style={{ fontSize: '40px' }}>🔍</div>
+                            조회된 데이터가 없습니다.
+                        </div>
+                    )}
                 </div>
             </div>
 
