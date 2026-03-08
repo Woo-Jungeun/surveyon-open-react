@@ -20,7 +20,7 @@ const CHART_COLORS = [
     "#facc15", "#f472b6", "#818cf8", "#a3e635", "#2dd4bf", "#f87171"
 ];
 
-const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
+const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%" }) => {
     const [chartType, setChartType] = useState(initialType || 'column');
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -47,8 +47,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         return () => resizeObserver.disconnect();
     }, [isWordCloud]);
     const [visibleSeries, setVisibleSeries] = useState(() => {
-        const names = seriesNames || ["완료", "선정탈락", "쿼터오버"];
-        return names.reduce((acc, name) => ({ ...acc, [name]: true }), {});
+        const names = seriesNames || [{ field: 'total', name: '사례수' }];
+        return names.reduce((acc, s) => ({ ...acc, [typeof s === 'string' ? s : s.field]: true }), {});
     });
 
     const allChartTypeOptions = [
@@ -96,11 +96,11 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                     type={chartType}
                     data={data}
                     categoryField="name"
-                    field="total"
-                    name="Total"
+                    field={(seriesNames && seriesNames[0]?.field) || "total"}
+                    name={(seriesNames && seriesNames[0]?.name) || "Total"}
                     labels={{
                         visible: true,
-                        content: (e) => `${e.category}: ${e.value}%`,
+                        content: (e) => `${e.category}: ${e.value}${suffix}`,
                         position: "outsideEnd",
                         background: "none"
                     }}
@@ -131,7 +131,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                     field="value"
                     labels={{
                         visible: true,
-                        content: (e) => `${e.value}%`,
+                        content: (e) => `${e.value}${suffix}`,
                         color: '#fff'
                     }}
                     color="#5c9aff"
@@ -145,14 +145,17 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 color: CHART_COLORS[index % CHART_COLORS.length]
             }));
 
+            const field = (seriesNames && seriesNames[0]?.field) || "total";
+            const name = (seriesNames && seriesNames[0]?.name) || "Total";
+
             return (
                 <ChartSeriesItem
                     type="funnel"
                     data={coloredData}
                     categoryField="name"
-                    field="total"
+                    field={field}
                     colorField="color"
-                    name="Total"
+                    name={name}
                     labels={{
                         visible: false,
                         content: () => "",
@@ -166,31 +169,35 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
         // Sophisticated, modern palette matching the theme (Blue/Slate/Teal based with accents)
         const colors = CHART_COLORS;
 
-        return targetSeries.map((name, index) => (
-            <ChartSeriesItem
-                key={name}
-                type={isRadar ? (chartType === 'radarArea' ? 'radarArea' : 'radarLine') : (isStacked ? "column" : (isScatterPoint ? "line" : chartType))}
-                stack={chartType === 'stacked100Column' ? { type: '100%' } : (chartType === 'stackedColumn' ? true : undefined)}
-                data={data}
-                field={name}
-                name={name}
-                color={colors[index % colors.length]}
-                visible={visibleSeries[name]}
-                style={isRadar ? "smooth" : "normal"}
-                opacity={chartType === 'radarArea' ? 0.3 : undefined}
-                width={isScatterPoint ? 0 : undefined}
-                markers={isScatterPoint ? { visible: true, size: 10, type: "circle" } : undefined}
-                labels={isStacked ? { visible: true, content: (e) => chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : e.value, position: "center", background: "none", color: "#fff" } : undefined}
-            />
-        ));
+        return targetSeries.map((s, index) => {
+            const field = typeof s === 'string' ? s : s.field;
+            const label = typeof s === 'string' ? s : s.name;
+            return (
+                <ChartSeriesItem
+                    key={field}
+                    type={isRadar ? (chartType === 'radarArea' ? 'radarArea' : 'radarLine') : (isStacked ? "column" : (isScatterPoint ? "line" : chartType))}
+                    stack={chartType === 'stacked100Column' ? { type: '100%' } : (chartType === 'stackedColumn' ? true : undefined)}
+                    data={data}
+                    field={field}
+                    name={label}
+                    color={colors[index % colors.length]}
+                    visible={visibleSeries[field]}
+                    style={isRadar ? "smooth" : "normal"}
+                    opacity={chartType === 'radarArea' ? 0.3 : undefined}
+                    width={isScatterPoint ? 0 : undefined}
+                    markers={isScatterPoint ? { visible: true, size: 10, type: "circle" } : undefined}
+                    labels={isStacked ? { visible: true, content: (e) => chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : `${e.value}${suffix}`, position: "center", background: "none", color: "#fff" } : undefined}
+                />
+            );
+        });
     };
 
     const onLegendItemClick = (e) => {
         if (!isPieOrDonut && !isHeatmap && !isWordCloud) {
-            const seriesName = e.series.name;
+            const seriesField = e.series.field;
             setVisibleSeries(prev => ({
                 ...prev,
-                [seriesName]: !prev[seriesName]
+                [seriesField]: !prev[seriesField]
             }));
         }
     };
@@ -315,9 +322,10 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                     !isPieOrDonut && !isHeatmap && !isRadar && (
                         <ChartValueAxis>
                             <ChartValueAxisItem
-                                labels={{ format: chartType === 'stacked100Column' ? "P0" : "{0}%" }}
-                                max={chartType === 'stacked100Column' ? 1 : undefined}
-                                majorUnit={chartType === 'stacked100Column' ? 0.2 : (chartType === 'stackedColumn' ? 50 : 20)}
+                                labels={{ format: `{0}${suffix}` }}
+                                min={0}
+                                max={100}
+                                majorUnit={20}
                             />
                         </ChartValueAxis>
                     )
@@ -325,7 +333,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                 {
                     isRadar && (
                         <ChartValueAxis>
-                            <ChartValueAxisItem labels={{ format: "{0}%" }} majorUnit={20} />
+                            <ChartValueAxisItem
+                                labels={{ format: `{0}${suffix}` }}
+                                min={0}
+                                max={100}
+                                majorUnit={20}
+                            />
                         </ChartValueAxis>
                     )
                 }
@@ -338,24 +351,28 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType }) => {
                                 <ChartCategoryAxisItem categories={data.map(d => d.name)} />
                             </ChartCategoryAxis>
                             <ChartValueAxis name="yAxis">
-                                <ChartValueAxisItem categories={seriesNames || ["완료", "선정탈락", "쿼터오버"]} />
+                                <ChartValueAxisItem categories={(seriesNames || [{ field: 'total', name: '사례수' }]).map(s => typeof s === 'string' ? s : s.name)} />
                             </ChartValueAxis>
                         </>
                     )
                 }
 
-                <ChartTooltip visible={!isPieOrDonut || chartType === 'funnel'} render={(e) => {
+                <ChartTooltip visible={true} render={(e) => {
                     if (isHeatmap) {
-                        return `${e.point?.dataItem?.y} - ${e.point?.dataItem?.x}: ${e.point?.dataItem?.value}%`;
+                        return `${e.point?.dataItem?.y} - ${e.point?.dataItem?.x}: ${e.point?.dataItem?.value}${suffix}`;
                     }
                     if (chartType === 'funnel') {
                         const category = e.point ? e.point.category : e.category;
                         const value = e.point ? e.point.value : e.value;
-                        return `${category}: ${value}`;
+                        return `${category}: ${value}${suffix}`;
                     }
-                    if (!isPieOrDonut) {
-                        return `${e.point?.series?.field}: ${e.point ? e.point.value : e.value}%`;
+                    if (isPieOrDonut) {
+                        return `${e.category}: ${e.value}${suffix}`;
                     }
+                    // e.series가 없는 경우에 대한 방어 코드 추가
+                    const labelName = e.series?.name || e.series?.field || "";
+                    const value = e.point ? e.point.value : e.value;
+                    return labelName ? `${labelName}: ${value}${suffix}` : `${value}${suffix}`;
                 }} />
 
                 <ChartSeries>

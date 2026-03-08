@@ -400,26 +400,37 @@ const AggregationCard = memo(({ q }) => {
                             <div style={{ color: '#888', fontSize: '13px' }}>데이터를 불러오는 중입니다...</div>
                         ) : q.data.length === 0 ? (
                             <div style={{ color: '#888', fontSize: '13px' }}>조회된 데이터가 없습니다.</div>
-                        ) : (
-                            <KendoChart
-                                data={q.data}
-                                initialType={chartMode}
-                                allowedTypes={
-                                    chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
-                                        chartMode === 'wordCloud' ? ['wordCloud'] :
-                                            chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
-                                                chartMode === 'line' ? ['line'] :
-                                                    chartMode === 'pie' ? ['pie'] :
-                                                        chartMode === 'donut' ? ['donut'] :
-                                                            chartMode === 'area' ? ['area'] :
-                                                                chartMode === 'heatmap' ? ['heatmap'] :
-                                                                    chartMode === 'radarLine' ? ['radarLine'] :
-                                                                        chartMode === 'funnel' ? ['funnel'] :
-                                                                            chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                                chartMode === 'radarArea' ? ['radarArea'] : []
-                                }
-                            />
-                        )}
+                        ) : (() => {
+                            // 차트는 무조건 퍼센트 데이터(_pct)를 보도록 고유 매핑
+                            const chartSeries = q.columns
+                                ? q.columns.map(col => ({
+                                    field: `${col.key}_pct`,
+                                    name: col.label
+                                }))
+                                : [{ field: 'total_pct', name: '백분율' }];
+
+                            return (
+                                <KendoChart
+                                    data={q.data}
+                                    seriesNames={chartSeries}
+                                    initialType={chartMode}
+                                    allowedTypes={
+                                        chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
+                                            chartMode === 'wordCloud' ? ['wordCloud'] :
+                                                chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
+                                                    chartMode === 'line' ? ['line'] :
+                                                        chartMode === 'pie' ? ['pie'] :
+                                                            chartMode === 'donut' ? ['donut'] :
+                                                                chartMode === 'area' ? ['area'] :
+                                                                    chartMode === 'heatmap' ? ['heatmap'] :
+                                                                        chartMode === 'radarLine' ? ['radarLine'] :
+                                                                            chartMode === 'funnel' ? ['funnel'] :
+                                                                                chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                    chartMode === 'radarArea' ? ['radarArea'] : []
+                                    }
+                                />
+                            );
+                        })()}
                     </div>
                 )}
             </div>
@@ -698,13 +709,16 @@ const FrequencyAnalysisPage = () => {
                                     totalCount += val;
                                 });
                             } else {
+                                let pct = 0;
                                 if (row.cells && Object.keys(row.cells).length > 0) {
                                     const firstKey = Object.keys(row.cells)[0];
                                     totalCount = Number(row.cells[firstKey].count || 0);
+                                    pct = Number(row.cells[firstKey].percent || 0);
                                 } else {
                                     totalCount = Number(row.value || 0);
                                 }
                                 rowData['전체'] = totalCount;
+                                rowData.total_pct = pct;
                             }
                             rowData.total = totalCount;
                             return rowData;
