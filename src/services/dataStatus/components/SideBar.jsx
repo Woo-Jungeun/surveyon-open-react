@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './SideBar.css';
 
-const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
@@ -67,6 +67,27 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                             )}
                         </div>
                     ))}
+                </div>
+            )}
+            {isOpen && currentPage !== undefined && totalPages !== undefined && (
+                <div className="sidebar-pagination">
+                    <button
+                        className="sidebar-page-btn"
+                        onClick={() => onPageChange(currentPage - 1)}
+                        disabled={currentPage <= 1}
+                    >
+                        <ChevronLeft size={16} />
+                    </button>
+                    <div className="sidebar-page-info">
+                        <span>{currentPage}</span> / <span>{totalPages}</span>
+                    </div>
+                    <button
+                        className="sidebar-page-btn"
+                        onClick={() => onPageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages}
+                    >
+                        <ChevronRight size={16} />
+                    </button>
                 </div>
             )}
         </div>

@@ -421,6 +421,9 @@ const FrequencyAnalysisPage = () => {
     const { getOverviewList, getOverviewData } = FrequencyAnalysisPageApi();
     const [searchTerm, setSearchTerm] = useState('');
     const [activeId, setActiveId] = useState(null);
+    const [sidebarPage, setSidebarPage] = useState(1);
+    const [totalQuestions, setTotalQuestions] = useState(0);
+    const SIDEBAR_PAGE_SIZE = 20;
 
     // 고급 필터 팝업 상태
     const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
@@ -439,6 +442,11 @@ const FrequencyAnalysisPage = () => {
     const fetchingRef = useRef(new Set());
     const isClickingRef = useRef(false);
     const clickTimeoutRef = useRef(null);
+
+    // 검색어 변경 시 페이지 초기화
+    useEffect(() => {
+        setSidebarPage(1);
+    }, [searchTerm]);
 
     // Close filter dropdown when clicking outside
     useEffect(() => {
@@ -504,10 +512,7 @@ const FrequencyAnalysisPage = () => {
         '수도권/비수도권'
     ];
 
-    const QUESTION_LIST_LIMIT = 20;
     const [questions, setQuestions] = useState([]);
-    const [listStart, setListStart] = useState(0);
-    const [hasMoreQuestions, setHasMoreQuestions] = useState(true);
     const isFetchingListRef = useRef(false);
 
     const parseOverviewList = (overviewList) =>
@@ -532,7 +537,7 @@ const FrequencyAnalysisPage = () => {
             };
         });
 
-    const fetchQuestions = async (start) => {
+    const fetchQuestions = async (page) => {
         if (isFetchingListRef.current) return;
         if (!auth?.user?.userId) return;
         const pageId = sessionStorage.getItem("pageId");
@@ -540,31 +545,32 @@ const FrequencyAnalysisPage = () => {
 
         isFetchingListRef.current = true;
         try {
+            const start = (page - 1) * SIDEBAR_PAGE_SIZE;
             const payload = {
                 pageid: pageId,
                 user: auth.user.userId,
                 start,
-                limit: QUESTION_LIST_LIMIT
+                limit: SIDEBAR_PAGE_SIZE,
+                // 검색어가 있다면 API에 전달 (API 지원 여부에 따라)
+                query: searchTerm
             };
             const result = await getOverviewList.mutateAsync(payload);
             if (result?.success === "777" && result.resultjson) {
                 const overviewList = result.resultjson.tables || [];
                 const newQuestions = parseOverviewList(overviewList);
 
-                if (start === 0) {
-                    setQuestions(newQuestions);
-                } else {
-                    setQuestions(prev => {
-                        // 중복 제거 후 추가
-                        const existingIds = new Set(prev.map(q => q.id));
-                        const unique = newQuestions.filter(q => !existingIds.has(q.id));
-                        return [...prev, ...unique];
-                    });
-                }
+                // 페이지별 데이터 교체 (서버사이드 페이징)
+                setQuestions(newQuestions);
 
-                const fetched = overviewList.length;
-                setHasMoreQuestions(fetched >= QUESTION_LIST_LIMIT);
-                setListStart(start + fetched);
+                // 전체 갯수 저장
+                if (result.resultjson.total !== undefined) {
+                    setTotalQuestions(result.resultjson.total);
+                } else if (page === 1 && overviewList.length < SIDEBAR_PAGE_SIZE) {
+                    setTotalQuestions(overviewList.length);
+                } else if (page === 1) {
+                    // total이 없을 경우 추측 (임시)
+                    setTotalQuestions(1000);
+                }
             }
         } catch (error) {
             console.error("Aggregation Variable Fetch Error:", error);
@@ -573,31 +579,36 @@ const FrequencyAnalysisPage = () => {
         }
     };
 
-    // 초기 로드
+    // 페이지 변경 시 재조회
     useEffect(() => {
         if (auth?.user?.userId) {
-            setQuestions([]);
-            setListStart(0);
-            setHasMoreQuestions(true);
-            fetchQuestions(0);
+            fetchQuestions(sidebarPage);
         }
-    }, [auth?.user?.userId]);
+    }, [auth?.user?.userId, sidebarPage]);
+
+    // 검색어 변경 시 1페이지로 리셋 및 재조회
+    useEffect(() => {
+        setSidebarPage(1);
+        if (auth?.user?.userId) {
+            fetchQuestions(1);
+        }
+    }, [searchTerm]);
 
     // 대시보드(페이지) 선택 팝업 닫힐 때 재조회
     useEffect(() => {
         const handlePageSelected = () => {
             if (!auth?.user?.userId) return;
             setQuestions([]);
-            setListStart(0);
-            setHasMoreQuestions(true);
+            setSidebarPage(1);
+            setTotalQuestions(0);
             setActiveId(null);
-            // isFetchingListRef 강제 해제 후 재조회
             isFetchingListRef.current = false;
-            fetchQuestions(0);
+            fetchQuestions(1);
         };
         window.addEventListener('pageSelected', handlePageSelected);
         return () => window.removeEventListener('pageSelected', handlePageSelected);
     }, [auth?.user?.userId]);
+
 
     // 활성 아이템 기준 5개씩 데이터 분할 조회
     useEffect(() => {
@@ -632,9 +643,9 @@ const FrequencyAnalysisPage = () => {
                     pageid: pageId,
                     user: userId,
                     x_info: [startTargetId], // 시작 포인트의 실제 target_id
-                    start: index,  // tables 순번에 해당하는 시작 인덱스
+                    start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,  // 전체 순번에 해당하는 인덱스
                     limit: limit, // 가져올 갯수
-                    weight_col: "", // 또는 실제 사용하는 가중치
+                    weight_col: "",
                     filter_expression: "",
                     include_stats: []
                 };
@@ -644,37 +655,25 @@ const FrequencyAnalysisPage = () => {
                     const resultsArray = aggResult.resultjson.results || [];
 
                     setQuestions(prevQuestions => prevQuestions.map(q => {
-                        // 이번에 가져온 타겟들이 아니면 그대로 둠
                         if (!tableIdsToSet.includes(q.id)) return q;
-
                         const tableInfo = resultsArray.find(r => r.table_id === q.id);
-
-                        // 응답 결과에 해당 문항이 없으면 기본값으로 두고 로드완료 처리
-                        if (!tableInfo) {
-                            return { ...q, isLoaded: true };
-                        }
+                        if (!tableInfo) return { ...q, isLoaded: true };
 
                         const aggInfoRows = tableInfo.result.rows || [];
                         const aggInfoCols = tableInfo.result.columns || [];
-
-                        // UI Columns (배너 등): result.columns 에서 추출
                         const tableColumns = aggInfoCols.map(c => ({
                             key: c.key,
                             label: c.label || c.var_label || c.name || c.key
                         }));
 
-                        // UI Rows (문항 보기): result.rows 에서 추출
                         let optionRows = aggInfoRows;
-
                         const updatedData = optionRows.map(row => {
                             let rowData = {
                                 name: row.label || row.var_label || row.name || row.key,
                                 value: row.key
                             };
                             let totalCount = 0;
-
                             if (tableColumns.length > 0) {
-                                // 배너가 적용된 경우 각 컬럼(배너 옵션)에 대해 값을 매핑
                                 tableColumns.forEach(banner => {
                                     let val = 0;
                                     let pct = 0;
@@ -687,7 +686,6 @@ const FrequencyAnalysisPage = () => {
                                     totalCount += val;
                                 });
                             } else {
-                                // 단일 빈도분석이나 배너가 없는 경우
                                 if (row.cells && Object.keys(row.cells).length > 0) {
                                     const firstKey = Object.keys(row.cells)[0];
                                     totalCount = Number(row.cells[firstKey].count || 0);
@@ -696,13 +694,11 @@ const FrequencyAnalysisPage = () => {
                                 }
                                 rowData['전체'] = totalCount;
                             }
-
                             rowData.total = totalCount;
                             return rowData;
                         });
 
                         const columnsForUI = tableColumns.length > 0 ? tableColumns : [{ key: 'total', label: '전체' }];
-
                         return {
                             ...q,
                             n: updatedData.reduce((acc, cur) => acc + cur.total, 0),
@@ -715,28 +711,26 @@ const FrequencyAnalysisPage = () => {
             } catch (error) {
                 console.error("Aggregation Chunk Fetch Error:", error);
             } finally {
-                // 백그라운드 요청 완료 시 상태 제거
                 tableIdsToSet.forEach(id => fetchingRef.current.delete(id));
             }
         };
-
         fetchChunkData();
-    }, [activeId, questions.length, auth?.user?.userId]);
+    }, [activeId, questions, sidebarPage, auth?.user?.userId]);
 
-    const filteredQuestions = useMemo(() => {
-        return questions.filter(q =>
-            q.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            q.label.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [questions, searchTerm]);
+    const totalSidebarPages = Math.ceil(totalQuestions / SIDEBAR_PAGE_SIZE);
 
     const sidebarItems = useMemo(() => {
-        return filteredQuestions.map(q => ({
+        return questions.map(q => ({
             id: q.id,
             name: q.id,
             label: q.label
         }));
-    }, [filteredQuestions]);
+    }, [questions]);
+
+    const handlePageChange = (newPage) => {
+        if (newPage < 1 || newPage > totalSidebarPages) return;
+        setSidebarPage(newPage);
+    };
 
     const scrollToId = (id) => {
         isClickingRef.current = true;
@@ -763,14 +757,10 @@ const FrequencyAnalysisPage = () => {
         }, 1500);
     };
 
-    // 사이드바 스크롤 끝 도달 시 추가 문항 로드
-    const handleSidebarScrollEnd = () => {
-        if (hasMoreQuestions && !isFetchingListRef.current) {
-            fetchQuestions(listStart);
-        }
-    };
+    // 사이드바 스크롤 끝 도달 시 추가 문항 로드 (페이징 방식에서는 사용 안 함)
+    const handleSidebarScrollEnd = () => { };
 
-    // 오른쪽 스크롤 시 왼쪽 사이드바 목록 자동 스크롤 동기화
+    // 오른쪽 스크롤 시 왼쪽 사이드바 목록 자동 스크롤 및 페이지 동기화 (페이징 방식에서는 페이지 내에서만 동작)
     useEffect(() => {
         if (activeId && !isClickingRef.current) {
             const sidebarItemEl = document.getElementById(`sidebar-item-${activeId}`);
@@ -802,7 +792,7 @@ const FrequencyAnalysisPage = () => {
         return () => {
             cards.forEach((card) => observer.unobserve(card));
         };
-    }, [filteredQuestions]);
+    }, [questions]);
 
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
@@ -895,10 +885,13 @@ const FrequencyAnalysisPage = () => {
                     onSearch={setSearchTerm}
                     searchPlaceholder="문항을 검색하세요."
                     onScrollEnd={handleSidebarScrollEnd}
+                    currentPage={sidebarPage}
+                    totalPages={totalSidebarPages}
+                    onPageChange={handlePageChange}
                 />
 
                 <div className="agg-main" ref={mainRef}>
-                    {filteredQuestions.map(q => (
+                    {questions.map(q => (
                         <AggregationCard key={q.id} q={q} />
                     ))}
                 </div>

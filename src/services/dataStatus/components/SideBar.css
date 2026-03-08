@@ -176,3 +176,52 @@
     color: #ef4444;
     background: #fee2e2;
 }
+
+/* Pagination Section */
+.sidebar-pagination {
+    padding: 12px 16px;
+    border-top: 1px solid var(--ds-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: var(--ds-bg);
+}
+
+.sidebar-page-btn {
+    background: #fff;
+    border: 1px solid var(--ds-border);
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ds-text-sub);
+    transition: all 0.2s;
+}
+
+.sidebar-page-btn:hover:not(:disabled) {
+    border-color: var(--ds-primary);
+    color: var(--ds-primary);
+    background: var(--ds-primary-light);
+}
+
+.sidebar-page-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f1f5f9;
+}
+
+.sidebar-page-info {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ds-text-main);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.sidebar-page-info span:first-child {
+    color: var(--ds-primary);
+}
