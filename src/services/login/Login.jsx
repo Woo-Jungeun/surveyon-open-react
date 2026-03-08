@@ -37,10 +37,7 @@ const Login = () => {
             if (isSavedId) {
                 localStorage.setItem("savedId", formData.user);
             }
-            // 로그인 성공 후 페이지 이동
-            const from = location.state?.from || "/";
-            const originalState = location.state?.originalState;
-            navigate(from, { replace: true, state: originalState });
+            // 로그인 성공 시 navigate는 LoginApi.onSuccess에서 처리
         } else {
             modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
         }

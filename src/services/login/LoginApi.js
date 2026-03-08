@@ -38,7 +38,8 @@ export function LoginApi() {
                 };
                 if (res?.success === "777") {
                     const from = location.state?.from || "/";
-                    navigate(from); // 이전 페이지 또는 홈으로 이동
+                    const originalState = location.state?.originalState;
+
                     // 성공 처리: 스토어/쿠키/세션 동기화
                     const out = parseOutput(res?.output);
                     const info = Array.isArray(out) ? out[0] : out || {};
@@ -60,6 +61,9 @@ export function LoginApi() {
                     if (res?.Token) {
                         setCookie("X-Auth-Token", res.Token, cookieOptions);
                     }
+
+                    // 3) 모든 세팅 완료 후 navigate (isLoggedIn이 true가 된 다음 이동)
+                    navigate(from, { replace: true, state: originalState });
                 }
             },
             onError: (err, v) => {
