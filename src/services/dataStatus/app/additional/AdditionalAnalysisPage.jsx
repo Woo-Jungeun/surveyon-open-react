@@ -76,9 +76,10 @@ const AdditionalAnalysisPage = () => {
         { id: 'max', label: '최대값', checked: false },
         { id: 'n', label: '표본수', checked: false },
         { id: 'rse', label: '상대표준오차', checked: false },
-        { id: 'chi2', label: '카이제곱값', checked: false },
-        { id: 'df', label: '자유도', checked: false },
-        { id: 'p_value', label: 'p값', checked: false },
+        //todo 1차 오픈 기준 임시 주석 
+        // { id: 'chi2', label: '카이제곱값', checked: false },
+        // { id: 'df', label: '자유도', checked: false },
+        // { id: 'p_value', label: 'p값', checked: false },
     ]);
     const [isMoreStatsOpen, setIsMoreStatsOpen] = useState(false);
     const moreStatsRef = useRef(null);
@@ -386,7 +387,8 @@ const AdditionalAnalysisPage = () => {
                                         }
                                     }
 
-                                    const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+                                    // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+                                    const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
                                     const payload = {
                                         user: auth.user.userId,
@@ -987,7 +989,8 @@ const AdditionalAnalysisPage = () => {
                             }
                         }
 
-                        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+                        // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+                        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
                         let runPayload = {
                             user: auth.user.userId,
@@ -1462,7 +1465,8 @@ const AdditionalAnalysisPage = () => {
                 const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
                 const baseTableName = tableName || "Untitled Table";
 
-                const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+                // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+                const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
                 let runPayload = {
                     user: auth.user.userId,
@@ -1634,7 +1638,8 @@ const AdditionalAnalysisPage = () => {
         const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
         const baseTableName = tableName || "Untitled Table";
 
-        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+        // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
         let payload = {
             user: auth.user.userId,

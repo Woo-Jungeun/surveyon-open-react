@@ -333,7 +333,8 @@ const RecodingPage = () => {
                 filter_expression: "",
                 weight_col: null,
                 table: { x_info: [], y_info: [selectedVar.id] },
-                include_stats: ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"],
+                // include_stats: ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"],
+                include_stats: ["mean", "std", "min", "max", "n", "median", "mode", "rse"],
                 variables: variablesPayload
             };
             const result = await verifyRecodeLogic.mutateAsync(payload);
