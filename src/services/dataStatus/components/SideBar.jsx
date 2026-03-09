@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './SideBar.css';
 
-const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
@@ -32,6 +32,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
             {isOpen && (
                 <div
                     className="sidebar-list"
+                    ref={listRef}
                     onScroll={(e) => {
                         const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
                         if (scrollHeight - scrollTop - clientHeight < 80 && onScrollEnd) {

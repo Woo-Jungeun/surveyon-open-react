@@ -47,6 +47,7 @@ const AdditionalAnalysisPage = () => {
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
+    const tableListRef = useRef(null);
     const [fullscreenModal, setFullscreenModal] = useState({ open: false, type: null }); // 'table', 'stats', 'chart'
 
     // Variables for Drag & Drop
@@ -1139,6 +1140,13 @@ const AdditionalAnalysisPage = () => {
         setRowVars([]);
         setColVars([]);
         setIsConfigOpen(true);
+
+        // 다음 렌더 후 사이드바 목록을 맨 아래로 스크롤
+        setTimeout(() => {
+            if (tableListRef.current) {
+                tableListRef.current.scrollTop = tableListRef.current.scrollHeight;
+            }
+        }, 0);
     };
 
     const handleDragStart = (e, dragData) => {
@@ -1890,6 +1898,7 @@ const AdditionalAnalysisPage = () => {
                     onDelete={handleDeleteTable}
                     displayField="name"
                     searchPlaceholder="테이블을 검색하세요."
+                    listRef={tableListRef}
                 />
 
                 {/* Main Content */}
