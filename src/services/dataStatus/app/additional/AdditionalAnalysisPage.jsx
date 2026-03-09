@@ -1733,7 +1733,7 @@ const AdditionalAnalysisPage = () => {
             return;
         }
 
-        modal.showConfirm('삭제 확인', '정말로 이 테이블을 삭제하시겠습니까?', {
+        modal.showConfirm('알림', '해당 테이블을 삭제하시겠습니까?', {
             btns: [
                 { title: '취소' },
                 {
