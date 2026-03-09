@@ -16,6 +16,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
+import LogicEditPopup from '../../../dataManagement/app/mapManagement/LogicEditPopup';
 // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
@@ -42,6 +43,7 @@ const AdditionalAnalysisPage = () => {
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(false);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
@@ -120,7 +122,7 @@ const AdditionalAnalysisPage = () => {
         });
     };
 
-    const { pageList: getPageList } = VariablePageApi();
+    const { pageList: getPageList, getOriginalVariables } = VariablePageApi();
     const [isPageListOpen, setIsPageListOpen] = useState(false);
     const [pageListData, setPageListData] = useState([]);
 
@@ -185,18 +187,19 @@ const AdditionalAnalysisPage = () => {
 
             let loadedVariables = [];
 
-            // Fetch Variables
+            // Fetch Variables (Original Variables)
             try {
-                const varResult = await getRecodedVariables.mutateAsync({
+                const varResult = await getOriginalVariables.mutateAsync({
                     user: auth.user.userId,
                     pageid: PAGE_ID
                 });
 
                 if (varResult?.success === "777" && varResult.resultjson) {
                     loadedVariables = Object.values(varResult.resultjson).map(item => ({
-                        id: item.id, // Use name as ID
+                        id: item.id,
                         name: item.id,
                         label: item.label,
+                        type: item.type,
                         info: item.info || []
                     }));
                     setVariables(loadedVariables);
@@ -387,6 +390,16 @@ const AdditionalAnalysisPage = () => {
                                         if (weightVar) {
                                             variablesMap[weightVar.id || weightVar.name] = weightVar;
                                         }
+                                    }
+
+                                    // Include variables used in filter expression
+                                    if (filterExpr) {
+                                        loadedVariables.forEach(v => {
+                                            const vId = v.id || v.name;
+                                            if (new RegExp('\\b' + vId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(filterExpr)) {
+                                                variablesMap[vId] = v;
+                                            }
+                                        });
                                     }
 
                                     const payload = {
@@ -996,7 +1009,7 @@ const AdditionalAnalysisPage = () => {
                             weight_col: weightId,
                             filter_expression: filterExpr,
                             include_stats: ALL_STATS,
-                            sort: { group_by: "label2_label3" }
+                            // sort: { group_by: "label2_label3" }
                         };
 
                         const localIsSeparated = yInfo.length > 1 || (yInfo.length === 1 && !yInfo[0].includes('+') && tableMode === 'separated');
@@ -1459,6 +1472,16 @@ const AdditionalAnalysisPage = () => {
                     }
                 }
 
+                // Include variables used in filter expression
+                if (filterExpression) {
+                    variables.forEach(v => {
+                        const vId = v.id || v.name;
+                        if (new RegExp('\\b' + vId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(filterExpression)) {
+                            variablesMap[vId] = v;
+                        }
+                    });
+                }
+
                 const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
                 const baseTableName = tableName || "Untitled Table";
 
@@ -1470,7 +1493,7 @@ const AdditionalAnalysisPage = () => {
                     weight_col: weightId,
                     filter_expression: filterExpression,
                     include_stats: ALL_STATS,
-                    sort: { group_by: "label2_label3" }
+                    // sort: { group_by: "label2_label3" }
                 };
 
                 if (tableMode === 'separated') {
@@ -1558,7 +1581,7 @@ const AdditionalAnalysisPage = () => {
         }
     };
 
-    const handleRun = async () => {
+    const handleRun = async (overrideFilter) => {
         if (!auth?.user?.userId) {
             modal.showAlert("알림", "로그인이 필요합니다.");
             return;
@@ -1578,6 +1601,7 @@ const AdditionalAnalysisPage = () => {
             selectedVarNames.add(selectedWeight);
         }
 
+        let weightId = "";
         const variablesMap = {};
 
         // Helper to extract raw variables from interaction strings
@@ -1619,15 +1643,25 @@ const AdditionalAnalysisPage = () => {
             });
         });
 
-        let weightId = "";
-        // Add Weight variable if selected
-        if (selectedWeight && selectedWeight !== "없음") {
+        if (weightId) {
             const weightVar = variables.find(v => v.name === selectedWeight || v.id === selectedWeight);
             if (weightVar) {
                 const wId = weightVar.id || weightVar.name;
                 variablesMap[wId] = weightVar;
                 weightId = wId;
             }
+        }
+
+        const currentFilter = overrideFilter !== undefined ? overrideFilter : filterExpression;
+
+        // Include variables used in filter expression
+        if (currentFilter) {
+            variables.forEach(v => {
+                const vId = v.id || v.name;
+                if (new RegExp('\\b' + vId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(currentFilter)) {
+                    variablesMap[vId] = v;
+                }
+            });
         }
 
         const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
@@ -1639,9 +1673,9 @@ const AdditionalAnalysisPage = () => {
             pageid: PAGE_ID,
             variables: variablesMap,
             weight_col: weightId,
-            filter_expression: filterExpression,
+            filter_expression: currentFilter,
             include_stats: ALL_STATS,
-            sort: { group_by: "label2_label3" }
+            // sort: { group_by: "label2_label3" }
         };
 
         if (tableMode === 'separated') {
@@ -1777,45 +1811,15 @@ const AdditionalAnalysisPage = () => {
             <DataHeader
                 title="추가분석"
             >
-                {/* 전체 필터 드롭다운 */}
-                <div className="response-filter-container" ref={totalFilterRef} style={{ marginRight: '16px' }}>
-                    <span className="response-filter-label">전체 필터</span>
-                    <div className="custom-filter-wrapper">
-                        <div
-                            className={`custom-filter-trigger ${isTotalFilterOpen ? 'open' : ''}`}
-                            onClick={() => setIsTotalFilterOpen(!isTotalFilterOpen)}
-                        >
-                            <span className="trigger-text">
-                                {selectedTotalFilters.includes('전체') ? '전체' : (selectedTotalFilters.length === 0 ? '선택항목 없음' : `${selectedTotalFilters.length}개 선택됨`)}
-                            </span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-                        {isTotalFilterOpen && (
-                            <div className="custom-filter-menu">
-                                {totalFilterList.map((filter, index) => {
-                                    const isChecked = selectedTotalFilters.includes('전체') || selectedTotalFilters.includes(filter);
 
-                                    return (
-                                        <div
-                                            key={index}
-                                            className={`custom-filter-item ${isChecked ? 'selected' : ''}`}
-                                            onClick={() => handleTotalFilterToggle(filter)}
-                                        >
-                                            <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
-                                                {isChecked && (
-                                                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                                                )}
-                                            </div>
-                                            <span className="filter-text">{filter}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                {/* 고급 필터 버튼 - LogicEditPopup 오픈 */}
+                <button
+                    onClick={() => setIsFilterPopupOpen(true)}
+                    className={`advanced-filter-btn ${filterExpression ? 'active' : ''}`}
+                >
+                    <Filter size={15} />
+                    고급 필터{filterExpression ? ' ✓' : ''}
+                </button>
 
                 <button
                     onClick={() => setIsModalOpen(true)}
@@ -2757,6 +2761,20 @@ const AdditionalAnalysisPage = () => {
                 data={pageListData}
                 onSelect={handlePageSelected}
             />
+            {/* 고급 필터 LogicEditPopup */}
+            {isFilterPopupOpen && (
+                <LogicEditPopup
+                    variable={{ id: 'filter', logic: filterExpression }}
+                    variablesList={variables.map(v => ({ sysName: v.id, label: v.label }))}
+                    onClose={() => setIsFilterPopupOpen(false)}
+                    onSave={(_, logicStr) => {
+                        setFilterExpression(logicStr);
+                        setIsFilterPopupOpen(false);
+                        handleRun(logicStr);
+                    }}
+                    theme="data-dashboard"
+                />
+            )}
         </div >
     );
 };

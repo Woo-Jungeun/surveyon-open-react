@@ -1860,3 +1860,33 @@
 .custom-filter-menu::-webkit-scrollbar-thumb:hover {
     background: #94a3b8;
 }
+/* Advanced Filter Button */
+.advanced-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+    cursor: pointer;
+    margin-left: 12px;
+    white-space: nowrap;
+    transition: all 0.15s;
+    margin-top: 5px;
+}
+
+.advanced-filter-btn:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.advanced-filter-btn.active {
+    border: 1.5px solid #3b82f6;
+    background: #eff6ff;
+    color: #3b82f6;
+}
