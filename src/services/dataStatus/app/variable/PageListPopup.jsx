@@ -78,20 +78,28 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
     const draftTitleRef = React.useRef("");
     const [editingRowId, setEditingRowId] = useState(null);
     const [localData, setLocalData] = useState(() => {
-        return (data || []).map(item => ({
-            ...item,
-            originalTitle: item.title,
-            pageid: item.pageid || item.id || `temp_${Math.random()}`
-        }));
+        return (data || []).map(item => {
+            const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
+            return {
+                ...item,
+                merge_pn: mPn,
+                originalTitle: item.title,
+                pageid: item.pageid || item.id || `temp_${Math.random()}`
+            };
+        });
     });
 
     useEffect(() => {
         if (isOpen) {
-            const initialData = (data || []).map(item => ({
-                ...item,
-                originalTitle: item.title,
-                pageid: item.pageid || item.id || `temp_${Math.random()}`
-            }));
+            const initialData = (data || []).map(item => {
+                const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
+                return {
+                    ...item,
+                    merge_pn: mPn,
+                    originalTitle: item.title,
+                    pageid: item.pageid || item.id || `temp_${Math.random()}`
+                };
+            });
             setLocalData(initialData);
             setEditingRowId(null);
         }
@@ -99,9 +107,11 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
 
     const handleAddRow = () => {
         const tempId = `temp_${Date.now()}`;
+        const currentMergePn = sessionStorage.getItem("merge_pn") || (localData.length > 0 ? (localData[0].merge_pn || localData[0].pn) : "");
+
         const newRow = {
             id: "-",
-            merge_pn: localData.length > 0 ? localData[0].pn : "",
+            merge_pn: currentMergePn,
             title: "",
             originalTitle: "",
             isNew: true,
@@ -143,11 +153,15 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
                 const refreshRes = await pageList.mutateAsync({ user: auth?.user?.userId, pn: dataItem.merge_pn });
 
                 if (refreshRes?.success === "777" && refreshRes.resultjson) {
-                    setLocalData(refreshRes.resultjson.map(item => ({
-                        ...item,
-                        originalTitle: item.title,
-                        pageid: item.pageid || item.id || `temp_${Math.random()}`
-                    })));
+                    setLocalData(refreshRes.resultjson.map(item => {
+                        const mPn = item.merge_pn || item.pn || sessionStorage.getItem("merge_pn") || "";
+                        return {
+                            ...item,
+                            merge_pn: mPn,
+                            originalTitle: item.title,
+                            pageid: item.pageid || item.id || `temp_${Math.random()}`
+                        };
+                    }));
                 } else {
                     // 재조회 실패 시 로컬 값으로 임시 대체 (Fallback)
                     setLocalData(prevData => prevData.map(item => {
