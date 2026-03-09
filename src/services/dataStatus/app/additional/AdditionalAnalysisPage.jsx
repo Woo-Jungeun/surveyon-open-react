@@ -286,9 +286,9 @@ const AdditionalAnalysisPage = () => {
                                         const yIds = tData.config.y_info;
                                         let mappedRows = [];
                                         if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
-                                            const parts = yIds[0].split(/[+*]/).map(s => s.trim()).filter(Boolean);
-                                            mappedRows = parts.map(id => {
-                                                return loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id, label: id, type: "categorical", info: [] };
+                                            mappedRows = yIds[0].split(/[+*]/).filter(id => id.trim()).map(id => {
+                                                const trimmed = id.trim();
+                                                return loadedVariables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
                                             });
                                         } else {
                                             mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
@@ -359,19 +359,34 @@ const AdditionalAnalysisPage = () => {
                                     const weightCol = config.weight_col || "";
                                     const filterExpr = config.filter_expression || "";
 
-                                    const selectedVarNames = new Set([...xInfo.flat(), ...yInfo]);
+                                    const variablesMap = {};
+                                    const extractRawVars = (arr) => {
+                                        if (!Array.isArray(arr)) return;
+                                        arr.forEach(str => {
+                                            if (typeof str !== 'string') return;
+                                            const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
+                                            parts.forEach(part => {
+                                                const found = loadedVariables.find(v => v.id === part || v.name === part);
+                                                if (found) {
+                                                    variablesMap[part] = found;
+                                                } else {
+                                                    variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
+                                                }
+                                            });
+                                        });
+                                    };
+
+                                    extractRawVars(xInfo);
+                                    extractRawVars(yInfo);
+
                                     if (weightCol && weightCol !== "없음" && weightCol !== "") {
-                                        selectedVarNames.add(weightCol);
+                                        const weightVar = loadedVariables.find(v => v.id === weightCol || v.name === weightCol);
+                                        if (weightVar) {
+                                            variablesMap[weightVar.id || weightVar.name] = weightVar;
+                                        }
                                     }
 
-                                    const variablesMap = {};
-                                    selectedVarNames.forEach(varIdOrName => {
-                                        const found = loadedVariables.find(v => v.id === varIdOrName || v.name === varIdOrName);
-                                        if (found) {
-                                            const key = found.id || found.name;
-                                            variablesMap[key] = found;
-                                        }
-                                    });
+                                    const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
 
                                     const payload = {
                                         user: auth.user.userId,
@@ -379,7 +394,7 @@ const AdditionalAnalysisPage = () => {
                                         variables: variablesMap,
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
-                                        include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
+                                        include_stats: ALL_STATS,
                                         table: {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
@@ -391,7 +406,13 @@ const AdditionalAnalysisPage = () => {
                                     const evalResult = await evaluateTable.mutateAsync(payload);
 
                                     if (evalResult?.success === "777" && evalResult.resultjson) {
-                                        const newData = evalResult.resultjson;
+                                        let newData = evalResult.resultjson;
+
+                                        // Handle separated mode results if returned as array
+                                        if (newData.results && Array.isArray(newData.results) && newData.results.length > 0) {
+                                            newData = newData.results[0].result || newData.results[0];
+                                        }
+
                                         const newColumnsList = newData.columns || [];
                                         const newRowsList = newData.rows || [];
                                         const newColumnLabels = newColumnsList.map(c => c.label);
@@ -409,18 +430,19 @@ const AdditionalAnalysisPage = () => {
                                             return { label: r.label, values: processedValues, total: total };
                                         });
 
+                                        const statsMap = newData.stats || {};
                                         const newParsedStats = {
-                                            mean: newColumnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                                            median: newColumnsList.map(c => c.median !== undefined ? c.median : ((c.med !== undefined) ? c.med : '-')),
-                                            mode: newColumnsList.map(c => c.mode !== undefined ? c.mode : ((c.mod !== undefined) ? c.mod : '-')),
-                                            std: newColumnsList.map(c => c.std !== undefined ? c.std : '-'),
-                                            min: newColumnsList.map(c => c.min !== undefined ? c.min : '-'),
-                                            max: newColumnsList.map(c => c.max !== undefined ? c.max : '-'),
-                                            n: newColumnsList.map(c => c.n || 0),
-                                            rse: newColumnsList.map(c => c.rse !== undefined ? c.rse : '-'),
-                                            chi2: newColumnsList.map(c => c.chi2 !== undefined ? c.chi2 : '-'),
-                                            df: newColumnsList.map(c => c.df !== undefined ? c.df : '-'),
-                                            p_value: newColumnsList.map(c => c.p_value !== undefined ? c.p_value : '-'),
+                                            mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? (c.mean !== undefined ? c.mean : '-')),
+                                            median: newColumnsList.map(c => statsMap[c.key]?.median ?? statsMap[c.key]?.med ?? (c.median !== undefined ? c.median : (c.med !== undefined ? c.med : '-'))),
+                                            mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? statsMap[c.key]?.mod ?? (c.mode !== undefined ? c.mode : (c.mod !== undefined ? c.mod : '-'))),
+                                            std: newColumnsList.map(c => statsMap[c.key]?.std ?? (c.std !== undefined ? c.std : '-')),
+                                            min: newColumnsList.map(c => statsMap[c.key]?.min ?? (c.min !== undefined ? c.min : '-')),
+                                            max: newColumnsList.map(c => statsMap[c.key]?.max ?? (c.max !== undefined ? c.max : '-')),
+                                            n: newColumnsList.map(c => statsMap[c.key]?.n ?? (c.n !== undefined ? c.n : 0)),
+                                            rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? (c.rse !== undefined ? c.rse : '-')),
+                                            chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? (c.chi2 !== undefined ? c.chi2 : '-')),
+                                            df: newColumnsList.map(c => statsMap[c.key]?.df ?? (c.df !== undefined ? c.df : '-')),
+                                            p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined ? c.p_value : '-')),
                                         };
 
                                         setResultData({
@@ -865,8 +887,8 @@ const AdditionalAnalysisPage = () => {
                         if (data.config.y_info) {
                             const yIds = data.config.y_info;
                             let mappedRows = [];
-                            if (yIds.length === 1 && typeof yIds[0] === 'string' && yIds[0].includes('*')) {
-                                mappedRows = yIds[0].split('*').filter(id => id.trim()).map(id => {
+                            if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
+                                mappedRows = yIds[0].split(/[+*]/).filter(id => id.trim()).map(id => {
                                     const trimmed = id.trim();
                                     return variables.find(v => v.name === trimmed || v.id === trimmed) || { id: trimmed, name: trimmed };
                                 });
@@ -965,13 +987,15 @@ const AdditionalAnalysisPage = () => {
                             }
                         }
 
+                        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+
                         let runPayload = {
                             user: auth.user.userId,
                             pageid: PAGE_ID,
                             variables: variablesMap,
                             weight_col: weightId,
                             filter_expression: filterExpr,
-                            include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
+                            include_stats: ALL_STATS,
                             sort: { group_by: "label2_label3" }
                         };
 
@@ -1390,12 +1414,42 @@ const AdditionalAnalysisPage = () => {
                 // Run Analysis
                 const variablesMap = {};
 
-                // Add Row and Column variables directly
+                // Helper to extract raw variables from interaction strings
+                const extractRawVars = (arr) => {
+                    if (!Array.isArray(arr)) return;
+                    arr.forEach(str => {
+                        if (typeof str !== 'string') return;
+                        const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
+                        parts.forEach(part => {
+                            const found = variables.find(v => v.id === part || v.name === part);
+                            if (found) {
+                                variablesMap[part] = found;
+                            } else if (part) {
+                                variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
+                            }
+                        });
+                    });
+                };
+
+                // Populate variablesMap
                 [...rowVars, ...colVars.flat()].forEach(v => {
                     const varId = v.id || v.name;
                     if (v && varId) {
                         variablesMap[varId] = v;
+                        if (varId.includes('*') || varId.includes('+')) {
+                            extractRawVars([varId]);
+                        }
                     }
+                });
+
+                // Ensure variables from columns are also thoroughly extracted
+                colVars.forEach(group => {
+                    group.forEach(v => {
+                        const id = v.id || v.name;
+                        if (id.includes('*') || id.includes('+')) {
+                            extractRawVars([id]);
+                        }
+                    });
                 });
 
                 if (weightId) {
@@ -1408,13 +1462,15 @@ const AdditionalAnalysisPage = () => {
                 const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
                 const baseTableName = tableName || "Untitled Table";
 
+                const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+
                 let runPayload = {
                     user: auth.user.userId,
                     pageid: PAGE_ID,
                     variables: variablesMap,
                     weight_col: weightId,
                     filter_expression: filterExpression,
-                    include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
+                    include_stats: ALL_STATS,
                     sort: { group_by: "label2_label3" }
                 };
 
@@ -1439,7 +1495,13 @@ const AdditionalAnalysisPage = () => {
                     : await evaluateTable.mutateAsync(runPayload);
 
                 if (evalResult?.success === "777" && evalResult.resultjson) {
-                    const newData = evalResult.resultjson;
+                    let newData = evalResult.resultjson;
+
+                    // 표 분리 모드일 경우 첫 번째 테이블 결과 추출
+                    if (tableMode === 'separated' && newData.results && Array.isArray(newData.results) && newData.results.length > 0) {
+                        newData = newData.results[0].result || newData.results[0];
+                    }
+
                     const newColumnsList = newData.columns || [];
                     const newRowsList = newData.rows || [];
 
@@ -1460,17 +1522,17 @@ const AdditionalAnalysisPage = () => {
 
                     const statsMap = newData.stats || {};
                     const newParsedStats = {
-                        mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? '-'),
-                        median: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
-                        mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
-                        std: newColumnsList.map(c => statsMap[c.key]?.std ?? '-'),
-                        min: newColumnsList.map(c => statsMap[c.key]?.min ?? '-'),
-                        max: newColumnsList.map(c => statsMap[c.key]?.max ?? '-'),
-                        n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0),
-                        rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? '-'),
-                        chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? '-'),
-                        df: newColumnsList.map(c => statsMap[c.key]?.df ?? '-'),
-                        p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? '-'),
+                        mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? (c.mean !== undefined ? c.mean : '-')),
+                        median: newColumnsList.map(c => statsMap[c.key]?.median ?? statsMap[c.key]?.med ?? (c.median !== undefined ? c.median : (c.med !== undefined ? c.med : '-'))),
+                        mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? statsMap[c.key]?.mod ?? (c.mode !== undefined ? c.mode : (c.mod !== undefined ? c.mod : '-'))),
+                        std: newColumnsList.map(c => statsMap[c.key]?.std ?? (c.std !== undefined ? c.std : '-')),
+                        min: newColumnsList.map(c => statsMap[c.key]?.min ?? (c.min !== undefined ? c.min : '-')),
+                        max: newColumnsList.map(c => statsMap[c.key]?.max ?? (c.max !== undefined ? c.max : '-')),
+                        n: newColumnsList.map(c => statsMap[c.key]?.n ?? (c.n !== undefined ? c.n : 0)),
+                        rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? (c.rse !== undefined ? c.rse : '-')),
+                        chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? (c.chi2 !== undefined ? c.chi2 : '-')),
+                        df: newColumnsList.map(c => statsMap[c.key]?.df ?? (c.df !== undefined ? c.df : '-')),
+                        p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined ? c.p_value : '-')),
                     };
 
                     setResultData({
@@ -1519,18 +1581,49 @@ const AdditionalAnalysisPage = () => {
 
         const variablesMap = {};
 
-        // Add Row and Column variables directly
+        // Helper to extract raw variables from interaction strings
+        const extractRawVars = (arr) => {
+            if (!Array.isArray(arr)) return;
+            arr.forEach(str => {
+                if (typeof str !== 'string') return;
+                const parts = str.split(/[+*]/).map(s => s.trim()).filter(Boolean);
+                parts.forEach(part => {
+                    const found = variables.find(v => v.id === part || v.name === part);
+                    if (found) {
+                        variablesMap[part] = found;
+                    } else if (part) {
+                        variablesMap[part] = { id: part, name: part, label: part, type: "categorical", info: [] };
+                    }
+                });
+            });
+        };
+
+        // Populate variablesMap
         [...rowVars, ...colVars.flat()].forEach(v => {
             const varId = v.id || v.name;
             if (v && varId) {
                 variablesMap[varId] = v;
+                // Also check if any Interaction variables within rowVars (though UI doesn't support it yet, for safety)
+                if (varId.includes('*') || varId.includes('+')) {
+                    extractRawVars([varId]);
+                }
             }
+        });
+
+        // Ensure variables from columns are also thoroughly extracted
+        colVars.forEach(group => {
+            group.forEach(v => {
+                const id = v.id || v.name;
+                if (id.includes('*') || id.includes('+')) {
+                    extractRawVars([id]);
+                }
+            });
         });
 
         let weightId = "";
         // Add Weight variable if selected
         if (selectedWeight && selectedWeight !== "없음") {
-            const weightVar = variables.find(v => v.name === selectedWeight);
+            const weightVar = variables.find(v => v.name === selectedWeight || v.id === selectedWeight);
             if (weightVar) {
                 const wId = weightVar.id || weightVar.name;
                 variablesMap[wId] = weightVar;
@@ -1541,13 +1634,15 @@ const AdditionalAnalysisPage = () => {
         const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
         const baseTableName = tableName || "Untitled Table";
 
+        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+
         let payload = {
             user: auth.user.userId,
             pageid: PAGE_ID,
             variables: variablesMap,
             weight_col: weightId,
             filter_expression: filterExpression,
-            include_stats: statsOptions.filter(opt => opt.checked).map(opt => opt.id),
+            include_stats: ALL_STATS,
             sort: { group_by: "label2_label3" }
         };
 
@@ -1573,7 +1668,13 @@ const AdditionalAnalysisPage = () => {
                 : await evaluateTable.mutateAsync(payload);
 
             if (result?.success === "777" && result.resultjson) {
-                const data = result.resultjson;
+                let data = result.resultjson;
+
+                // 표 분리 모드일 경우 첫 번째 테이블 결과 추출
+                if (tableMode === 'separated' && data.results && Array.isArray(data.results) && data.results.length > 0) {
+                    data = data.results[0].result || data.results[0];
+                }
+
                 const columnsList = data.columns || [];
                 const rowsList = data.rows || [];
 
@@ -1596,18 +1697,19 @@ const AdditionalAnalysisPage = () => {
                     };
                 });
 
+                const statsMap = data.stats || {};
                 const parsedStats = {
-                    mean: columnsList.map(c => (c.mean !== undefined && c.mean !== null) ? c.mean : '-'),
-                    median: columnsList.map(c => (c.median !== undefined && c.median !== null) ? c.median : ((c.med !== undefined && c.med !== null) ? c.med : '-')),
-                    mode: columnsList.map(c => (c.mode !== undefined && c.mode !== null) ? c.mode : ((c.mod !== undefined && c.mod !== null) ? c.mod : '-')),
-                    std: columnsList.map(c => (c.std !== undefined && c.std !== null) ? c.std : '-'),
-                    min: columnsList.map(c => (c.min !== undefined && c.min !== null) ? c.min : '-'),
-                    max: columnsList.map(c => (c.max !== undefined && c.max !== null) ? c.max : '-'),
-                    n: columnsList.map(c => (c.n !== undefined && c.n !== null) ? c.n : 0),
-                    rse: columnsList.map(c => (c.rse !== undefined && c.rse !== null) ? c.rse : '-'),
-                    chi2: columnsList.map(c => (c.chi2 !== undefined && c.chi2 !== null) ? c.chi2 : '-'),
-                    df: columnsList.map(c => (c.df !== undefined && c.df !== null) ? c.df : '-'),
-                    p_value: columnsList.map(c => (c.p_value !== undefined && c.p_value !== null) ? c.p_value : '-'),
+                    mean: columnsList.map(c => statsMap[c.key]?.mean ?? (c.mean !== undefined && c.mean !== null ? c.mean : '-')),
+                    median: columnsList.map(c => statsMap[c.key]?.median ?? statsMap[c.key]?.med ?? (c.median !== undefined && c.median !== null ? c.median : ((c.med !== undefined && c.med !== null) ? c.med : '-'))),
+                    mode: columnsList.map(c => statsMap[c.key]?.mode ?? statsMap[c.key]?.mod ?? (c.mode !== undefined && c.mode !== null ? c.mode : ((c.mod !== undefined && c.mod !== null) ? c.mod : '-'))),
+                    std: columnsList.map(c => statsMap[c.key]?.std ?? (c.std !== undefined && c.std !== null ? c.std : '-')),
+                    min: columnsList.map(c => statsMap[c.key]?.min ?? (c.min !== undefined && c.min !== null ? c.min : '-')),
+                    max: columnsList.map(c => statsMap[c.key]?.max ?? (c.max !== undefined && c.max !== null ? c.max : '-')),
+                    n: columnsList.map(c => statsMap[c.key]?.n ?? (c.n !== undefined && c.n !== null ? c.n : 0)),
+                    rse: columnsList.map(c => statsMap[c.key]?.rse ?? (c.rse !== undefined && c.rse !== null ? c.rse : '-')),
+                    chi2: columnsList.map(c => statsMap[c.key]?.chi2 ?? (c.chi2 !== undefined && c.chi2 !== null ? c.chi2 : '-')),
+                    df: columnsList.map(c => statsMap[c.key]?.df ?? (c.df !== undefined && c.df !== null ? c.df : '-')),
+                    p_value: columnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined && c.p_value !== null ? c.p_value : '-')),
                 };
 
                 setResultData({
@@ -1617,7 +1719,8 @@ const AdditionalAnalysisPage = () => {
                 });
 
                 setIsConfigOpen(false);
-            } else {
+            }
+            else {
                 modal.showAlert('실패', '분석 실행 실패');
             }
         } catch (error) {
@@ -2470,6 +2573,7 @@ const AdditionalAnalysisPage = () => {
                                                             </button>
                                                         </div>
                                                     </div>
+
                                                     <div className="stats-table-container">
                                                         <table className="cross-table stats-table">
                                                             <thead>
