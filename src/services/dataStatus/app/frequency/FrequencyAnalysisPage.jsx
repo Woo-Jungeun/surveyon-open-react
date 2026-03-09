@@ -666,7 +666,8 @@ const FrequencyAnalysisPage = () => {
                 const payload = {
                     pageid: pageId,
                     user: userId,
-                    x_info: [startTargetId], // 시작 포인트의 실제 target_id
+                    x_info: [], // 시작 포인트의 실제 target_id
+                    // x_info: [startTargetId], // 시작 포인트의 실제 target_id
                     start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,  // 전체 순번에 해당하는 인덱스
                     limit: limit, // 가져올 갯수
                     weight_col: "",
