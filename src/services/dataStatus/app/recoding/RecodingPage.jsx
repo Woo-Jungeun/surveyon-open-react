@@ -13,6 +13,8 @@ import './RecodingPage.css';
 import { modalContext } from '../../../../components/common/Modal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
+// const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
 const EditableCell = (props) => {
     const { dataItem, field, columns, onUpdate, onPaste } = props;
@@ -334,7 +336,7 @@ const RecodingPage = () => {
                 weight_col: null,
                 table: { x_info: [], y_info: [selectedVar.id] },
                 // include_stats: ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"],
-                include_stats: ["mean", "std", "min", "max", "n", "median", "mode", "rse"],
+                include_stats: ALL_STATS,
                 variables: variablesPayload
             };
             const result = await verifyRecodeLogic.mutateAsync(payload);

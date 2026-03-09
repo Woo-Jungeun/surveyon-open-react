@@ -16,6 +16,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
+// const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
+const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
 const AdditionalAnalysisPage = () => {
     // Auth & API
@@ -386,9 +388,6 @@ const AdditionalAnalysisPage = () => {
                                             variablesMap[weightVar.id || weightVar.name] = weightVar;
                                         }
                                     }
-
-                                    // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
-                                    const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
                                     const payload = {
                                         user: auth.user.userId,
@@ -989,8 +988,6 @@ const AdditionalAnalysisPage = () => {
                             }
                         }
 
-                        // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
-                        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
                         let runPayload = {
                             user: auth.user.userId,
@@ -1465,8 +1462,6 @@ const AdditionalAnalysisPage = () => {
                 const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
                 const baseTableName = tableName || "Untitled Table";
 
-                // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
-                const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
                 let runPayload = {
                     user: auth.user.userId,
@@ -1638,8 +1633,6 @@ const AdditionalAnalysisPage = () => {
         const xInfo = colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [];
         const baseTableName = tableName || "Untitled Table";
 
-        // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
-        const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
         let payload = {
             user: auth.user.userId,
