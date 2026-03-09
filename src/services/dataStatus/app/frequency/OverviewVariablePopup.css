@@ -439,7 +439,7 @@
     cursor: pointer;
 }
 
-.btn-save {
+.overview-popup-v2 .btn-save {
     padding: 10px 32px;
     border-radius: 8px;
     border: none;
@@ -451,6 +451,6 @@
     margin-left: 10px;
 }
 
-.btn-save:hover {
+.overview-popup-v2 .btn-save:hover {
     background: #2563eb !important;
 }

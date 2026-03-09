@@ -18,7 +18,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels } = MapManagementPageApi();
+    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -316,6 +316,7 @@ const MapManagementPage = () => {
 
                     const origLabelsMap = new Map(origLabels.map(l => [l.code, l]));
                     const updatedLabelPayloads = [];
+                    const createdLabelPayloads = [];
 
                     currentLabels.forEach((l, index) => {
                         const orig = origLabelsMap.get(l.code);
@@ -325,40 +326,65 @@ const MapManagementPage = () => {
                         const lenNumVal = l.lenNum || 0;
                         const isNumVal = l.isNum !== undefined ? l.isNum : false;
 
-                        const isChanged = !orig ||
-                            orig.label !== l.label ||
-                            (orig.isOpen || false) !== isOpenVal ||
-                            (orig.lenNum || 0) !== lenNumVal ||
-                            (orig.isNum || false) !== isNumVal ||
-                            (orig.ranking !== undefined ? orig.ranking : index + 1) !== rankingVal;
+                        if (l.id) {
+                            const isChanged = !orig ||
+                                orig.label !== l.label ||
+                                (orig.isOpen || false) !== isOpenVal ||
+                                (orig.lenNum || 0) !== lenNumVal ||
+                                (orig.isNum || false) !== isNumVal ||
+                                (orig.ranking !== undefined ? orig.ranking : index + 1) !== rankingVal;
 
-                        if (isChanged) {
-                            updatedLabelPayloads.push({
-                                id: l.id || 0,
-                                pn: l.pn || pn,
-                                variableId: v.id,
+                            if (isChanged) {
+                                updatedLabelPayloads.push({
+                                    id: l.id,
+                                    pn: l.pn || pn,
+                                    variableId: v.id,
+                                    code: l.code,
+                                    label: l.label,
+                                    isOpen: isOpenVal,
+                                    lenNum: lenNumVal,
+                                    isNum: isNumVal,
+                                    ranking: rankingVal,
+                                    createdAt: l.createdAt || new Date().toISOString(),
+                                    updatedAt: new Date().toISOString()
+                                });
+                            }
+                        } else {
+                            createdLabelPayloads.push({
+                                id: 0,
                                 code: l.code,
                                 label: l.label,
                                 isOpen: isOpenVal,
                                 lenNum: lenNumVal,
                                 isNum: isNumVal,
-                                ranking: rankingVal,
-                                createdAt: l.createdAt || new Date().toISOString(),
-                                updatedAt: new Date().toISOString()
+                                ranking: rankingVal
                             });
                         }
                     });
 
-                    const payload = {
-                        variableId: v.id,
-                        user: userId,
-                        updated: updatedLabelPayloads,
-                        deleted: deletedLabelIds
-                    };
-
+                    // Update/Delete labels
                     if (updatedLabelPayloads.length > 0 || deletedLabelIds.length > 0) {
+                        const payload = {
+                            variableId: v.id,
+                            user: userId,
+                            updated: updatedLabelPayloads,
+                            deleted: deletedLabelIds
+                        };
                         const saveResult = await updateMapLabels.mutateAsync(payload);
                         if (!(saveResult?.success === '777' || saveResult?.success === true)) {
+                            allSuccess = false;
+                        }
+                    }
+
+                    // Create new labels
+                    if (createdLabelPayloads.length > 0) {
+                        const createPayload = {
+                            variableId: v.id,
+                            user: userId,
+                            labels: createdLabelPayloads
+                        };
+                        const createResult = await createMapLabels.mutateAsync(createPayload);
+                        if (!(createResult?.success === '777' || createResult?.success === true)) {
                             allSuccess = false;
                         }
                     }
@@ -491,6 +517,7 @@ const MapManagementPage = () => {
                 setSelectedVariableId(null);
                 setSidebarSearchQuery('');
                 setActiveTab(targetTab);
+                if (targetTab === 'mapping') setRefreshKey(prev => prev + 1);
             } else if (action === "saveThenGo") {
                 const success = await executeSave(false);
                 console.log(success) //todo 아직 에러코드 적용 X
@@ -498,10 +525,12 @@ const MapManagementPage = () => {
                 setSelectedVariableId(null);
                 setSidebarSearchQuery('');
                 setActiveTab(targetTab);
+                if (targetTab === 'mapping') setRefreshKey(prev => prev + 1);
                 // }
             }
         } else {
             setActiveTab(targetTab);
+            if (targetTab === 'mapping') setRefreshKey(prev => prev + 1);
         }
     };
 

@@ -53,11 +53,21 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** 보기 레이블 신규 생성 */
+    const createMapLabels = useMutation(
+        async (data) => await api.post(data, "/map/labels/create", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
         srtTransfer,
         createMapVariables,
         updateMapVariables,
-        updateMapLabels
+        updateMapLabels,
+        createMapLabels
     };
 }

@@ -72,7 +72,7 @@ const AddLabelPopup = ({ isOpen, onClose, onSave, initialLabels }) => {
     };
 
     return (
-        <div className="variable-modal-overlay">
+        <div className="variable-modal-overlay" data-theme="data-management">
             <div className="variable-modal-content" style={{ width: '480px' }}>
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
