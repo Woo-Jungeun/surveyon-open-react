@@ -27,7 +27,6 @@ const WeightPage = () => {
     const modal = useContext(modalContext);
     const { getRecodedVariables } = RecodingPageApi();
     const { getWeightVariable, evaluateTable, deleteWeight, setWeight, getEligibleVariable } = WeightPageApi();
-    const { getOriginalVariables } = VariablePageApi();
 
     // 가중치 목록 상태
     const [weights, setWeights] = useState([]);
