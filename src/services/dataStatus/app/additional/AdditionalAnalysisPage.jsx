@@ -459,7 +459,11 @@ const AdditionalAnalysisPage = () => {
 
                                         const newColumnsList = newData.columns || [];
                                         const newRowsList = newData.rows || [];
-                                        const newColumnLabels = newColumnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
+                                        const newColumnLabels = newColumnsList.map(c => ({
+                                            label: c.label,
+                                            label2: c.label2 || '',
+                                            var_label: c.var_label || c.variable_label || ''
+                                        }));
                                         const newColumnKeys = newColumnsList.map(c => c.key);
 
                                         const newParsedRows = newRowsList.map(r => {
@@ -836,6 +840,7 @@ const AdditionalAnalysisPage = () => {
         .map(row => row.label) : [];
 
     const hasColLabel2 = resultData?.columns?.some(c => c.label2);
+    const hasVarLabel = resultData?.columns?.some(c => c.var_label);
     const hasRowLabel2 = resultData?.rows?.some(r => r.label2);
 
     const handleCopyTable = async () => {
@@ -1100,7 +1105,11 @@ const AdditionalAnalysisPage = () => {
                             const newData = evalResult.resultjson;
                             const newColumnsList = newData.columns || [];
                             const newRowsList = newData.rows || [];
-                            const newColumnLabels = newColumnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
+                            const newColumnLabels = newColumnsList.map(c => ({
+                                label: c.label,
+                                label2: c.label2 || '',
+                                var_label: c.var_label || c.variable_label || ''
+                            }));
                             const newColumnKeys = newColumnsList.map(c => c.key);
 
                             const newParsedRows = newRowsList.map(r => {
@@ -2544,19 +2553,59 @@ const AdditionalAnalysisPage = () => {
                                                     </div>
                                                     <div className="table-chart-wrapper" style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
                                                         <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
-                                                            <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed', minWidth: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                                <colgroup>
+                                                                    {hasRowLabel2 ? (
+                                                                        <>
+                                                                            <col style={{ width: '150px' }} />
+                                                                            <col style={{ width: '150px' }} />
+                                                                        </>
+                                                                    ) : (
+                                                                        <col style={{ width: '150px' }} />
+                                                                    )}
+                                                                    {resultData.columns.map((_, i) => (
+                                                                        <col key={`col-group-${i}`} style={{ width: '200px' }} />
+                                                                    ))}
+                                                                </colgroup>
                                                                 <thead>
                                                                     <tr>
-                                                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} style={{
+                                                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} style={{
                                                                             position: 'sticky', left: 0, top: 0, zIndex: 30,
-                                                                            width: hasRowLabel2 ? '240px' : '140px', height: hasColLabel2 ? '50px' : '36px',
-                                                                            background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
+                                                                            height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36,
+                                                                            background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
                                                                             fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
                                                                             textAlign: 'center', verticalAlign: 'middle', padding: '4px'
                                                                         }}>
                                                                             문항
                                                                         </th>
-                                                                        {hasColLabel2 && (() => {
+                                                                        {hasVarLabel && (() => {
+                                                                            const varGroups = [];
+                                                                            resultData.columns.forEach(col => {
+                                                                                const var_label = col.var_label || '';
+                                                                                const label2 = col.label2 || '';
+                                                                                const isSame = var_label === label2;
+                                                                                if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
+                                                                                    varGroups[varGroups.length - 1].colspan += 1;
+                                                                                    // 모든 항목이 label2와 같을 때만 merge 가능하지만, 보통 그룹 단위로 일치함
+                                                                                    if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                                                } else {
+                                                                                    varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                                                }
+                                                                            });
+                                                                            return varGroups.map((group, i) => (
+                                                                                <th key={`var-group-${i}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} style={{
+                                                                                    position: 'sticky', top: 0, zIndex: 20,
+                                                                                    height: group.canMerge ? '50px' : '25px', background: '#dbeafe', borderBottom: '1px solid #cbd5e1',
+                                                                                    borderRight: '1px solid #cbd5e1',
+                                                                                    fontSize: '11px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box',
+                                                                                    textAlign: 'center', padding: '2px 4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                    verticalAlign: 'middle'
+                                                                                }}>
+                                                                                    {group.var_label}
+                                                                                </th>
+                                                                            ));
+                                                                        })()}
+                                                                        {!hasVarLabel && hasColLabel2 && (() => {
                                                                             const colGroups = [];
                                                                             resultData.columns.forEach(col => {
                                                                                 const label2 = col.label2 || '';
@@ -2581,10 +2630,10 @@ const AdditionalAnalysisPage = () => {
                                                                                 </th>
                                                                             ));
                                                                         })()}
-                                                                        {!hasColLabel2 && resultData.columns.map((col, i) => (
+                                                                        {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, i) => (
                                                                             <th key={`col-${i}`} style={{
                                                                                 position: 'sticky', top: 0, zIndex: 20,
-                                                                                width: '100px', height: '36px',
+                                                                                width: '180px', minWidth: '180px', height: '36px',
                                                                                 background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
                                                                                 borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
                                                                                 fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
@@ -2596,14 +2645,46 @@ const AdditionalAnalysisPage = () => {
                                                                             </th>
                                                                         ))}
                                                                     </tr>
-                                                                    {hasColLabel2 && (
+                                                                    {hasVarLabel && hasColLabel2 && (
+                                                                        <tr>
+                                                                            {(() => {
+                                                                                const colGroups = [];
+                                                                                resultData.columns.forEach(col => {
+                                                                                    const label2 = col.label2 || '';
+                                                                                    const var_label = col.var_label || '';
+                                                                                    const isSame = label2 === var_label;
+                                                                                    if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                        colGroups[colGroups.length - 1].colspan += 1;
+                                                                                    } else {
+                                                                                        colGroups.push({ label2, colspan: 1, isSame });
+                                                                                    }
+                                                                                });
+                                                                                return colGroups.map((group, i) => {
+                                                                                    if (group.isSame) return null;
+                                                                                    return (
+                                                                                        <th key={`group2-${i}`} colSpan={group.colspan} style={{
+                                                                                            position: 'sticky', top: '25px', zIndex: 20,
+                                                                                            height: '25px', background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
+                                                                                            borderRight: '1px solid #cbd5e1',
+                                                                                            fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                            textAlign: 'center', padding: '4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                            verticalAlign: 'middle'
+                                                                                        }}>
+                                                                                            {group.label2}
+                                                                                        </th>
+                                                                                    );
+                                                                                });
+                                                                            })()}
+                                                                        </tr>
+                                                                    )}
+                                                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
                                                                         <tr>
                                                                             {resultData.columns.map((col, i) => (
-                                                                                <th key={`col-${i}`} style={{
-                                                                                    position: 'sticky', top: '25px', zIndex: 20,
-                                                                                    width: '100px', height: '25px',
-                                                                                    background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
-                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                                <th key={`col-sub-${i}`} style={{
+                                                                                    position: 'sticky', top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', zIndex: 20,
+                                                                                    width: '180px', minWidth: '180px', height: '25px',
+                                                                                    background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
+                                                                                    borderRight: '1px solid #cbd5e1',
                                                                                     fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
                                                                                     textAlign: 'center', padding: '4px',
                                                                                     whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
@@ -2632,10 +2713,9 @@ const AdditionalAnalysisPage = () => {
                                                                                     {hasRowLabel2 && isFirstInGroup && (
                                                                                         <td rowSpan={rowSpan} style={{
                                                                                             position: 'sticky', left: 0, zIndex: 10,
-                                                                                            width: '120px',
-                                                                                            background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                                            background: '#dbeafe', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
                                                                                             padding: '0 8px', boxSizing: 'border-box',
-                                                                                            fontSize: '12px', fontWeight: 'bold', color: '#333',
+                                                                                            fontSize: '12px', fontWeight: 'bold', color: '#1e40af',
                                                                                             verticalAlign: 'middle', textAlign: 'center',
                                                                                             whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
                                                                                         }}>
@@ -2643,11 +2723,11 @@ const AdditionalAnalysisPage = () => {
                                                                                         </td>
                                                                                     )}
                                                                                     <td style={{
-                                                                                        position: 'sticky', left: hasRowLabel2 ? '120px' : 0, zIndex: 10,
-                                                                                        width: hasRowLabel2 ? '120px' : '140px', height: '36px',
-                                                                                        background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                                        position: 'sticky', left: hasRowLabel2 ? '150px' : 0, zIndex: 10,
+                                                                                        height: '36px',
+                                                                                        background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
                                                                                         padding: '0 8px', boxSizing: 'border-box',
-                                                                                        fontSize: '12px', fontWeight: '500', color: '#333',
+                                                                                        fontSize: '12px', fontWeight: '500', color: '#334155',
                                                                                         verticalAlign: 'middle',
                                                                                         whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
                                                                                     }}>
@@ -2655,9 +2735,9 @@ const AdditionalAnalysisPage = () => {
                                                                                     </td>
                                                                                     {row.values.map((val, j) => (
                                                                                         <td key={j} className="data-cell" style={{
-                                                                                            width: '100px', height: '36px',
-                                                                                            background: '#fff', borderBottom: '1px solid #eee',
-                                                                                            borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
+                                                                                            height: '36px',
+                                                                                            background: '#fff', borderBottom: '1px solid #e2e8f0',
+                                                                                            borderRight: '1px solid #e2e8f0',
                                                                                             padding: '0 8px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
                                                                                         }}>
                                                                                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
@@ -2744,7 +2824,7 @@ const AdditionalAnalysisPage = () => {
                                                                         ));
                                                                     })()}
                                                                     {!hasColLabel2 && resultData.columns.map((col, i) => (
-                                                                        <th key={i} className="stats-th-data" style={{ width: '100px', minWidth: '100px', boxSizing: 'border-box', position: 'sticky', top: 0, zIndex: 20, background: '#eff6ff' }}>
+                                                                        <th key={i} className="stats-th-data" style={{ width: '180px', minWidth: '180px', boxSizing: 'border-box', position: 'sticky', top: 0, zIndex: 20, background: '#eff6ff' }}>
                                                                             {col.label || col}
                                                                         </th>
                                                                     ))}
@@ -2752,7 +2832,7 @@ const AdditionalAnalysisPage = () => {
                                                                 {hasColLabel2 && (
                                                                     <tr>
                                                                         {resultData.columns.map((col, i) => (
-                                                                            <th key={i} className="stats-th-data" style={{ width: '100px', minWidth: '100px', boxSizing: 'border-box', position: 'sticky', top: hasColLabel2 ? '25px' : 0, zIndex: 20, background: '#eff6ff' }}>
+                                                                            <th key={i} className="stats-th-data" style={{ width: '180px', minWidth: '180px', boxSizing: 'border-box', position: 'sticky', top: hasColLabel2 ? '25px' : 0, zIndex: 20, background: '#eff6ff' }}>
                                                                                 {col.label || col}
                                                                             </th>
                                                                         ))}
@@ -2771,7 +2851,7 @@ const AdditionalAnalysisPage = () => {
                                                                                 {stat.label}
                                                                             </td>
                                                                             {statValues.map((v, i) => (
-                                                                                <td key={i} className="stats-td-data" style={{ width: '100px', minWidth: '100px', boxSizing: 'border-box', textAlign: 'center' }}>
+                                                                                <td key={i} className="stats-td-data" style={{ width: '180px', minWidth: '180px', boxSizing: 'border-box', textAlign: 'center' }}>
                                                                                     {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
                                                                                 </td>
                                                                             ))}

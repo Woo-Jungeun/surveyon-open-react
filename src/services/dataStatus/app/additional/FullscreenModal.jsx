@@ -142,6 +142,7 @@ const FullscreenModal = ({
     };
 
     const hasColLabel2 = resultData?.columns?.some(c => c.label2);
+    const hasVarLabel = resultData?.columns?.some(c => c.var_label);
     const hasRowLabel2 = resultData?.rows?.some(r => r.label2);
 
     return (
@@ -204,8 +205,27 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ width: hasRowLabel2 ? '240px' : '120px', minWidth: hasRowLabel2 ? '240px' : '120px', zIndex: 40, top: 0, left: 0 }}>문항</th>
-                                        {hasColLabel2 && (() => {
+                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>문항</th>
+                                        {hasVarLabel && (() => {
+                                            const varGroups = [];
+                                            resultData.columns.forEach(col => {
+                                                const var_label = col.var_label || '';
+                                                const label2 = col.label2 || '';
+                                                const isSame = var_label === label2;
+                                                if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
+                                                    varGroups[varGroups.length - 1].colspan += 1;
+                                                    if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                } else {
+                                                    varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                }
+                                            });
+                                            return varGroups.map((group, idx) => (
+                                                <th key={`fs-var-group-${idx}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: group.canMerge ? '50px' : '25px', zIndex: 20, background: '#dbeafe', color: '#1e40af', fontSize: '11px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                                    {group.var_label}
+                                                </th>
+                                            ));
+                                        })()}
+                                        {!hasVarLabel && hasColLabel2 && (() => {
                                             const colGroups = [];
                                             resultData.columns.forEach(col => {
                                                 const label2 = col.label2 || '';
@@ -221,16 +241,41 @@ const FullscreenModal = ({
                                                 </th>
                                             ));
                                         })()}
-                                        {!hasColLabel2 && resultData.columns.map((col, idx) => (
-                                            <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: 0, zIndex: 20 }}>
+                                        {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, idx) => (
+                                            <th key={idx} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20 }}>
                                                 {col.label || col}
                                             </th>
                                         ))}
                                     </tr>
-                                    {hasColLabel2 && (
+                                    {hasVarLabel && hasColLabel2 && (
+                                        <tr>
+                                            {(() => {
+                                                const colGroups = [];
+                                                resultData.columns.forEach(col => {
+                                                    const label2 = col.label2 || '';
+                                                    const var_label = col.var_label || '';
+                                                    const isSame = label2 === var_label;
+                                                    if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                        colGroups[colGroups.length - 1].colspan += 1;
+                                                    } else {
+                                                        colGroups.push({ label2, colspan: 1, isSame });
+                                                    }
+                                                });
+                                                return colGroups.map((group, idx) => {
+                                                    if (group.isSame) return null;
+                                                    return (
+                                                        <th key={`fs-group2-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: '25px', height: '25px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                                            {group.label2}
+                                                        </th>
+                                                    );
+                                                });
+                                            })()}
+                                        </tr>
+                                    )}
+                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
-                                                <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: '30px', height: '30px', zIndex: 20 }}>
+                                                <th key={idx} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', height: '30px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                     {col.label || col}
                                                 </th>
                                             ))}
@@ -253,15 +298,15 @@ const FullscreenModal = ({
                                             return (
                                                 <tr key={rowIdx}>
                                                     {hasRowLabel2 && isFirstInGroup && (
-                                                        <td rowSpan={rowSpan} className="fullscreen-table-cell-sticky" style={{ width: '120px', minWidth: '120px', fontWeight: 'bold', borderRight: '1px solid #e2e8f0', left: 0, zIndex: 10 }}>
+                                                        <td rowSpan={rowSpan} className="fullscreen-table-cell-sticky" style={{ fontWeight: 'bold', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', left: 0, zIndex: 10, background: '#dbeafe', color: '#1e40af' }}>
                                                             {row.label2}
                                                         </td>
                                                     )}
-                                                    <td className="fullscreen-table-cell-sticky" style={{ width: '120px', minWidth: '120px', left: hasRowLabel2 ? '120px' : 0, zIndex: 10 }}>
+                                                    <td className="fullscreen-table-cell-sticky" style={{ left: hasRowLabel2 ? '150px' : 0, zIndex: 10, background: '#eff6ff', color: '#334155', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                         {row.label}
                                                     </td>
                                                     {row.values.map((val, colIdx) => (
-                                                        <td key={colIdx} className="fullscreen-table-cell" style={{ width: '100px', minWidth: '100px' }}>
+                                                        <td key={colIdx} className="fullscreen-table-cell" style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
                                                             <div className="fullscreen-cell-content">
                                                                 <div className="cell-value">{val.count}</div>
                                                                 <div className="cell-pct">{val.percent}%</div>
@@ -282,8 +327,27 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ width: '120px', minWidth: '120px', zIndex: 40, top: 0, left: 0 }}>통계</th>
-                                        {hasColLabel2 && (() => {
+                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>통계</th>
+                                        {hasVarLabel && (() => {
+                                            const varGroups = [];
+                                            resultData.columns.forEach(col => {
+                                                const var_label = col.var_label || '';
+                                                const label2 = col.label2 || '';
+                                                const isSame = var_label === label2;
+                                                if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
+                                                    varGroups[varGroups.length - 1].colspan += 1;
+                                                    if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                } else {
+                                                    varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                }
+                                            });
+                                            return varGroups.map((group, idx) => (
+                                                <th key={`fs-stat-var-group-${idx}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: group.canMerge ? '50px' : '25px', zIndex: 20, background: '#dbeafe', color: '#1e40af', fontSize: '11px' }}>
+                                                    {group.var_label}
+                                                </th>
+                                            ));
+                                        })()}
+                                        {!hasVarLabel && hasColLabel2 && (() => {
                                             const colGroups = [];
                                             resultData.columns.forEach(col => {
                                                 const label2 = col.label2 || '';
@@ -299,8 +363,8 @@ const FullscreenModal = ({
                                                 </th>
                                             ));
                                         })()}
-                                        {!hasColLabel2 && resultData.columns.map((col, idx) => (
-                                            <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: 0, zIndex: 20 }}>
+                                        {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, idx) => (
+                                            <th key={idx} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20 }}>
                                                 <div>{col.label || col}</div>
                                                 <div className="fullscreen-stats-n">
                                                     N={resultData.stats.n?.[idx] || 0}
@@ -308,10 +372,35 @@ const FullscreenModal = ({
                                             </th>
                                         ))}
                                     </tr>
-                                    {hasColLabel2 && (
+                                    {hasVarLabel && hasColLabel2 && (
+                                        <tr>
+                                            {(() => {
+                                                const colGroups = [];
+                                                resultData.columns.forEach(col => {
+                                                    const label2 = col.label2 || '';
+                                                    const var_label = col.var_label || '';
+                                                    const isSame = label2 === var_label;
+                                                    if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                        colGroups[colGroups.length - 1].colspan += 1;
+                                                    } else {
+                                                        colGroups.push({ label2, colspan: 1, isSame });
+                                                    }
+                                                });
+                                                return colGroups.map((group, idx) => {
+                                                    if (group.isSame) return null;
+                                                    return (
+                                                        <th key={`fs-stat-group2-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: '25px', height: '25px', zIndex: 20 }}>
+                                                            {group.label2}
+                                                        </th>
+                                                    );
+                                                });
+                                            })()}
+                                        </tr>
+                                    )}
+                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
-                                                <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: '30px', height: '50px', zIndex: 20 }}>
+                                                <th key={idx} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', height: '50px', zIndex: 20 }}>
                                                     <div>{col.label || col}</div>
                                                     <div className="fullscreen-stats-n">
                                                         N={resultData.stats.n?.[idx] || 0}
@@ -327,11 +416,11 @@ const FullscreenModal = ({
                                         const statValues = resultData.stats[statKey] || [];
                                         return (
                                             <tr key={statIdx}>
-                                                <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ width: '120px', minWidth: '120px', left: 0, zIndex: 10 }}>
+                                                <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ left: 0, zIndex: 10, background: '#eff6ff', color: '#334155', fontWeight: 'bold', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                     {stat.label}
                                                 </td>
                                                 {statValues.map((val, colIdx) => (
-                                                    <td key={colIdx} className="fullscreen-table-cell" style={{ width: '100px', minWidth: '100px', textAlign: 'center' }}>
+                                                    <td key={colIdx} className="fullscreen-table-cell" style={{ width: '180px', minWidth: '180px', textAlign: 'center' }}>
                                                         {val === null || val === undefined || val === '' ? '-' : (typeof val === 'number' ? val.toFixed(2) : val)}
                                                     </td>
                                                 ))}
