@@ -224,7 +224,11 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave, theme = 'dat
             <div className="variable-modal-content logic-popup-content-new" onClick={(e) => e.stopPropagation()}>
                 <div className="logic-popup-header-v2">
                     <div className="logic-popup-title-area">
-                        <h3>로직 검수 설정 - {variable?.sysName || variable?.title || variable?.id}</h3>
+                        {theme === 'data-dashboard' ? (
+                            <h3>고급 필터</h3>
+                        ) : (
+                            <h3>로직 검수 설정 - {variable?.sysName || variable?.title || variable?.id}</h3>
+                        )}
                         <p>데이터 검수를 위한 로직 조건을 설정하고 조건에 따라 응답 데이터를 필터링합니다.</p>
                     </div>
                     <div className="logic-popup-actions">
