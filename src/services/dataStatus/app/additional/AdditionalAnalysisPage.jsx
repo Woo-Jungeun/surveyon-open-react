@@ -24,7 +24,7 @@ const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
     const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, evaluateTables } = AdditionalAnalysisPageApi();
-    const { getRecodedVariables } = RecodingPageApi();
+    const { getRecodedList } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const PAGE_ID = sessionStorage.getItem("pageId");
 
@@ -195,15 +195,43 @@ const AdditionalAnalysisPage = () => {
                 });
 
                 if (varResult?.success === "777" && varResult.resultjson) {
-                    loadedVariables = Object.values(varResult.resultjson).map(item => ({
+                    const originalVars = Object.values(varResult.resultjson).map(item => ({
                         id: item.id,
                         name: item.id,
                         label: item.label,
                         type: item.type,
                         info: item.info || []
                     }));
-                    setVariables(loadedVariables);
+                    loadedVariables = [...originalVars];
                 }
+
+                // Fetch Recoded Variables (including Banner)
+                const recodedResult = await getRecodedList.mutateAsync({
+                    user: auth.user.userId,
+                    pageid: PAGE_ID
+                });
+
+                if (recodedResult?.success === "777" && recodedResult.resultjson) {
+                    const recodedVars = Object.values(recodedResult.resultjson).map(item => ({
+                        id: item.id,
+                        name: item.id,
+                        label: item.label,
+                        type: item.type || "categorical",
+                        info: item.info || []
+                    }));
+
+                    // Merge recoded variables, avoiding duplicates if any
+                    recodedVars.forEach(rv => {
+                        const idx = loadedVariables.findIndex(v => v.id === rv.id);
+                        if (idx >= 0) {
+                            loadedVariables[idx] = rv;
+                        } else {
+                            loadedVariables.push(rv);
+                        }
+                    });
+                }
+
+                setVariables(loadedVariables);
             } catch (error) {
                 console.error("Failed to fetch variables:", error);
             }
