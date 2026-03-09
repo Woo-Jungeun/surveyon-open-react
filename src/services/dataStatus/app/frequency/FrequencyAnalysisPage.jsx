@@ -395,7 +395,7 @@ const AggregationCard = memo(({ q }) => {
 
                 {/* Chart */}
                 {showChart && (
-                    <div className="agg-chart-container" ref={chartContainerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <div className="agg-chart-container" ref={chartContainerRef}>
                         {!q.isLoaded ? (
                             <div style={{ color: '#888', fontSize: '13px' }}>데이터를 불러오는 중입니다...</div>
                         ) : q.data.length === 0 ? (
@@ -414,6 +414,7 @@ const AggregationCard = memo(({ q }) => {
                                     data={q.data}
                                     seriesNames={chartSeries}
                                     initialType={chartMode}
+                                    labelLimit={10}
                                     allowedTypes={
                                         chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
                                             chartMode === 'wordCloud' ? ['wordCloud'] :

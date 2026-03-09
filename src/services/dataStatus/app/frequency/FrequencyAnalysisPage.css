@@ -97,7 +97,7 @@
     overflow: auto;
     overflow-x: auto;
     /* Handle both x and y scroll */
-    max-height: 330px;
+    max-height: 400px;
     /* Limit height for scrolling */
     border-radius: 8px;
     border: 1px solid #e2e8f0;
@@ -106,13 +106,15 @@
 
 .agg-chart-container {
     flex: 1;
+    min-width: 0;
+    /* 내부 차트 확장이 전체 레이아웃에 영향을 주지 않도록 함 */
     padding: 16px;
     background: #fff;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    min-height: 330px;
+    min-height: 400px;
 }
 
 /* Table Styles */
