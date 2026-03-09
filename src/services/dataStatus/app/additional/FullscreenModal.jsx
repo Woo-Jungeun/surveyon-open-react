@@ -200,11 +200,11 @@ const FullscreenModal = ({
                 {/* Modal Content */}
                 <div className={`fullscreen-modal-content ${type === 'chart' ? 'chart-view' : ''}`}>
                     {type === 'table' && resultData && (
-                        <div className="fullscreen-table-wrapper">
-                            <table className="cross-table fullscreen-table">
+                        <div className="fullscreen-table-wrapper" style={{ width: '100%', overflowX: 'auto' }}>
+                            <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ minWidth: hasRowLabel2 ? '240px' : '120px' }}>문항</th>
+                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ width: hasRowLabel2 ? '240px' : '120px', minWidth: hasRowLabel2 ? '240px' : '120px', zIndex: 40, top: 0, left: 0 }}>문항</th>
                                         {hasColLabel2 && (() => {
                                             const colGroups = [];
                                             resultData.columns.forEach(col => {
@@ -216,13 +216,13 @@ const FullscreenModal = ({
                                                 }
                                             });
                                             return colGroups.map((group, idx) => (
-                                                <th key={`fs-group-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold' }}>
+                                                <th key={`fs-group-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: '30px', zIndex: 20 }}>
                                                     {group.label2}
                                                 </th>
                                             ));
                                         })()}
                                         {!hasColLabel2 && resultData.columns.map((col, idx) => (
-                                            <th key={idx} className="fullscreen-table-header">
+                                            <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: 0, zIndex: 20 }}>
                                                 {col.label || col}
                                             </th>
                                         ))}
@@ -230,7 +230,7 @@ const FullscreenModal = ({
                                     {hasColLabel2 && (
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
-                                                <th key={idx} className="fullscreen-table-header">
+                                                <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: '30px', height: '30px', zIndex: 20 }}>
                                                     {col.label || col}
                                                 </th>
                                             ))}
@@ -253,15 +253,15 @@ const FullscreenModal = ({
                                             return (
                                                 <tr key={rowIdx}>
                                                     {hasRowLabel2 && isFirstInGroup && (
-                                                        <td rowSpan={rowSpan} className="fullscreen-table-cell-sticky" style={{ minWidth: '120px', fontWeight: 'bold', borderRight: '1px solid #e2e8f0' }}>
+                                                        <td rowSpan={rowSpan} className="fullscreen-table-cell-sticky" style={{ width: '120px', minWidth: '120px', fontWeight: 'bold', borderRight: '1px solid #e2e8f0', left: 0, zIndex: 10 }}>
                                                             {row.label2}
                                                         </td>
                                                     )}
-                                                    <td className="fullscreen-table-cell-sticky" style={{ minWidth: '120px', left: hasRowLabel2 ? '120px' : 0, zIndex: 10 }}>
+                                                    <td className="fullscreen-table-cell-sticky" style={{ width: '120px', minWidth: '120px', left: hasRowLabel2 ? '120px' : 0, zIndex: 10 }}>
                                                         {row.label}
                                                     </td>
                                                     {row.values.map((val, colIdx) => (
-                                                        <td key={colIdx} className="fullscreen-table-cell">
+                                                        <td key={colIdx} className="fullscreen-table-cell" style={{ width: '100px', minWidth: '100px' }}>
                                                             <div className="fullscreen-cell-content">
                                                                 <div className="cell-value">{val.count}</div>
                                                                 <div className="cell-pct">{val.percent}%</div>
@@ -278,11 +278,11 @@ const FullscreenModal = ({
                     )}
 
                     {type === 'stats' && resultData && resultData.stats && (
-                        <div className="fullscreen-table-wrapper">
-                            <table className="cross-table fullscreen-table">
+                        <div className="fullscreen-table-wrapper" style={{ width: '100%', overflowX: 'auto' }}>
+                            <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ minWidth: hasRowLabel2 ? '240px' : '120px' }}>통계</th>
+                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ width: '120px', minWidth: '120px', zIndex: 40, top: 0, left: 0 }}>통계</th>
                                         {hasColLabel2 && (() => {
                                             const colGroups = [];
                                             resultData.columns.forEach(col => {
@@ -294,13 +294,13 @@ const FullscreenModal = ({
                                                 }
                                             });
                                             return colGroups.map((group, idx) => (
-                                                <th key={`fs-stat-group-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold' }}>
+                                                <th key={`fs-stat-group-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: '30px', zIndex: 20 }}>
                                                     {group.label2}
                                                 </th>
                                             ));
                                         })()}
                                         {!hasColLabel2 && resultData.columns.map((col, idx) => (
-                                            <th key={idx} className="fullscreen-table-header">
+                                            <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: 0, zIndex: 20 }}>
                                                 <div>{col.label || col}</div>
                                                 <div className="fullscreen-stats-n">
                                                     N={resultData.stats.n?.[idx] || 0}
@@ -311,7 +311,7 @@ const FullscreenModal = ({
                                     {hasColLabel2 && (
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
-                                                <th key={idx} className="fullscreen-table-header">
+                                                <th key={idx} className="fullscreen-table-header" style={{ width: '100px', minWidth: '100px', top: '30px', height: '50px', zIndex: 20 }}>
                                                     <div>{col.label || col}</div>
                                                     <div className="fullscreen-stats-n">
                                                         N={resultData.stats.n?.[idx] || 0}
@@ -327,11 +327,11 @@ const FullscreenModal = ({
                                         const statValues = resultData.stats[statKey] || [];
                                         return (
                                             <tr key={statIdx}>
-                                                <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ minWidth: hasRowLabel2 ? '240px' : '120px' }}>
+                                                <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ width: '120px', minWidth: '120px', left: 0, zIndex: 10 }}>
                                                     {stat.label}
                                                 </td>
                                                 {statValues.map((val, colIdx) => (
-                                                    <td key={colIdx} className="fullscreen-table-cell">
+                                                    <td key={colIdx} className="fullscreen-table-cell" style={{ width: '100px', minWidth: '100px', textAlign: 'center' }}>
                                                         {val === null || val === undefined || val === '' ? '-' : (typeof val === 'number' ? val.toFixed(2) : val)}
                                                     </td>
                                                 ))}

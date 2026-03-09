@@ -2720,11 +2720,11 @@ const AdditionalAnalysisPage = () => {
                                                         </div>
                                                     </div>
 
-                                                    <div className="stats-table-container">
-                                                        <table className="cross-table stats-table">
+                                                    <div className="stats-table-container" style={{ width: '100%', overflowX: 'auto' }}>
+                                                        <table className="cross-table stats-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 0 }}>
                                                             <thead>
                                                                 <tr>
-                                                                    <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="stats-th-label" style={{ minWidth: hasRowLabel2 ? '240px' : '140px' }}>
+                                                                    <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="stats-th-label" style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, width: '120px', minWidth: '120px', background: '#eff6ff', boxSizing: 'border-box' }}>
                                                                         통계
                                                                     </th>
                                                                     {hasColLabel2 && (() => {
@@ -2738,13 +2738,13 @@ const AdditionalAnalysisPage = () => {
                                                                             }
                                                                         });
                                                                         return colGroups.map((group, i) => (
-                                                                            <th key={`stat-group-${i}`} colSpan={group.colspan} className="stats-th-data" style={{ fontWeight: 'bold' }}>
+                                                                            <th key={`stat-group-${i}`} colSpan={group.colspan} className="stats-th-data" style={{ fontWeight: 'bold', position: 'sticky', top: 0, zIndex: 20, background: '#eff6ff' }}>
                                                                                 {group.label2}
                                                                             </th>
                                                                         ));
                                                                     })()}
                                                                     {!hasColLabel2 && resultData.columns.map((col, i) => (
-                                                                        <th key={i} className="stats-th-data">
+                                                                        <th key={i} className="stats-th-data" style={{ width: '100px', minWidth: '100px', boxSizing: 'border-box', position: 'sticky', top: 0, zIndex: 20, background: '#eff6ff' }}>
                                                                             {col.label || col}
                                                                         </th>
                                                                     ))}
@@ -2752,7 +2752,7 @@ const AdditionalAnalysisPage = () => {
                                                                 {hasColLabel2 && (
                                                                     <tr>
                                                                         {resultData.columns.map((col, i) => (
-                                                                            <th key={i} className="stats-th-data">
+                                                                            <th key={i} className="stats-th-data" style={{ width: '100px', minWidth: '100px', boxSizing: 'border-box', position: 'sticky', top: hasColLabel2 ? '25px' : 0, zIndex: 20, background: '#eff6ff' }}>
                                                                                 {col.label || col}
                                                                             </th>
                                                                         ))}
@@ -2767,11 +2767,11 @@ const AdditionalAnalysisPage = () => {
 
                                                                     return (
                                                                         <tr key={stat.id} className="stats-row">
-                                                                            <td colSpan={hasRowLabel2 ? 2 : 1} className="stats-td-label" style={{ minWidth: hasRowLabel2 ? '240px' : '140px' }}>
+                                                                            <td colSpan={hasRowLabel2 ? 2 : 1} className="stats-td-label" style={{ position: 'sticky', left: 0, zIndex: 10, width: '120px', minWidth: '120px', background: '#eff6ff', boxSizing: 'border-box' }}>
                                                                                 {stat.label}
                                                                             </td>
                                                                             {statValues.map((v, i) => (
-                                                                                <td key={i} className="stats-td-data">
+                                                                                <td key={i} className="stats-td-data" style={{ width: '100px', minWidth: '100px', boxSizing: 'border-box', textAlign: 'center' }}>
                                                                                     {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
                                                                                 </td>
                                                                             ))}
