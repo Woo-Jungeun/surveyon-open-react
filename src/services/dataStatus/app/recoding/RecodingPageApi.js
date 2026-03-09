@@ -31,8 +31,18 @@ export function RecodingPageApi() {
         async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS")
     );
 
+    /** recoded 변수 목록 전체 조회 */
+    const getRecodedList = useMutation(
+        async (data) => await api.post(data, "/recoded/list", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
     return {
         getRecodedVariables,
+        getRecodedList,
         setRecodedVariable,
         deleteRecodedVariable,
         verifyRecodeLogic

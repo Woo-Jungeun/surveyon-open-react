@@ -12,6 +12,9 @@ import './FrequencyAnalysisPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
 import { useSelector } from 'react-redux';
 import { FrequencyAnalysisPageApi } from './FrequencyAnalysisPageApi';
+import OverviewVariablePopup from './OverviewVariablePopup';
+import { RecodingPageApi } from '../recoding/RecodingPageApi';
+import { Settings } from 'lucide-react';
 
 const AggregationCard = memo(({ q }) => {
     const [chartMode, setChartMode] = useState('column');
@@ -461,6 +464,35 @@ const FrequencyAnalysisPage = () => {
     const [isTotalFilterOpen, setIsTotalFilterOpen] = useState(false);
     const totalFilterRef = useRef(null);
 
+    // Overview 변수 관련 상태
+    const [isOverviewPopupOpen, setIsOverviewPopupOpen] = useState(false);
+    const [overviewVariables, setOverviewVariables] = useState([]);
+    const { getRecodedList } = RecodingPageApi();
+
+    const fetchOverviewVars = async () => {
+        if (!auth?.user?.userId) return;
+        const pageId = sessionStorage.getItem("pageId");
+        if (!pageId) return;
+
+        try {
+            const result = await getRecodedList.mutateAsync({ user: auth.user.userId, pageid: pageId });
+            if (result?.success === "777" && result.resultjson) {
+                const overviewVars = Object.values(result.resultjson)
+                    .filter(v => v.id.startsWith('overview_'))
+                    .map(v => ({ id: v.id, label: v.label || v.id }));
+                setOverviewVariables(overviewVars);
+            }
+        } catch (error) {
+            console.error("Failed to fetch overview variables:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (auth?.user?.userId) {
+            fetchOverviewVars();
+        }
+    }, [auth?.user?.userId]);
+
     const filterRef = useRef(null);
     const mainRef = useRef(null);
     const fetchingRef = useRef(new Set());
@@ -486,55 +518,23 @@ const FrequencyAnalysisPage = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const handleFilterToggle = (filter) => {
-        if (filter === '전체') {
-            setSelectedFilters(prev => prev.includes('전체') ? [] : ['전체']);
+    const handleFilterToggle = (filterId) => {
+        if (filterId === '전체') {
+            setSelectedFilters(['전체']);
             return;
         }
 
         setSelectedFilters(prev => {
             let newFilters = prev.filter(f => f !== '전체');
-
-            if (newFilters.includes(filter)) {
-                newFilters = newFilters.filter(f => f !== filter);
+            if (newFilters.includes(filterId)) {
+                newFilters = newFilters.filter(f => f !== filterId);
             } else {
-                newFilters = [...newFilters, filter];
+                newFilters = [...newFilters, filterId];
             }
+            if (newFilters.length === 0) return ['전체'];
             return newFilters;
         });
     };
-
-    const handleTotalFilterToggle = (filter) => {
-        if (filter === '전체') {
-            setSelectedTotalFilters(prev => prev.includes('전체') ? [] : ['전체']);
-            return;
-        }
-
-        setSelectedTotalFilters(prev => {
-            let newFilters = prev.filter(f => f !== '전체');
-            if (newFilters.includes(filter)) {
-                newFilters = newFilters.filter(f => f !== filter);
-            } else {
-                newFilters = [...newFilters, filter];
-            }
-            return newFilters;
-        });
-    };
-    const totalFilterList = ['전체', 'reccoded_SQ1', 'reccoded_SQ2'];
-
-    // 전체 배너 목록
-    const filterList = [
-        '전체',
-        'LIFE_STYLE_AGE_라이프스타일 나이',
-        '라이프스타일_나이',
-        'GENDER_성별',
-        'JOB_GROUP_직업군',
-        '지오그룹',
-        'AREA_GROUP_지역그룹',
-        '지역그룹',
-        'AREA_CAPITAL_수도권/비수도권',
-        '수도권/비수도권'
-    ];
 
     const [questions, setQuestions] = useState([]);
     const isFetchingListRef = useRef(false);
@@ -851,52 +851,13 @@ const FrequencyAnalysisPage = () => {
                     고급 필터{filterLogic ? ' ✓' : ''}
                 </button>
 
-                {/* 전체 배너 드롭다운 */}
-                <div className="response-filter-container" ref={filterRef}>
-                    <span className="response-filter-label">
-                        전체 배너
-                    </span>
-                    <div className="custom-filter-wrapper">
-                        <div
-                            className={`custom-filter-trigger ${isFilterOpen ? 'open' : ''}`}
-                            onClick={() => setIsFilterOpen(!isFilterOpen)}
-                        >
-                            <span className="trigger-text">
-                                {selectedFilters.includes('전체')
-                                    ? '전체'
-                                    : (selectedFilters.length === 0 ? '선택항목 없음' : `${selectedFilters.length}개 선택됨`)}
-                            </span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </div>
-
-                        {isFilterOpen && (
-                            <div className="custom-filter-menu">
-                                {filterList.map((filter, index) => {
-                                    const isChecked = selectedFilters.includes('전체') || selectedFilters.includes(filter);
-
-                                    return (
-                                        <div
-                                            key={index}
-                                            className={`custom-filter-item ${isChecked ? 'selected' : ''}`}
-                                            onClick={() => handleFilterToggle(filter)}
-                                        >
-                                            <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
-                                                {isChecked && (
-                                                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                                        <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                )}
-                                            </div>
-                                            <span className="filter-text">{filter}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                </div>
+                <button
+                    className="overview-settings-btn"
+                    onClick={() => setIsOverviewPopupOpen(true)}
+                >
+                    <Settings size={15} />
+                    배너 설정
+                </button>
                 {/*todo 엑셀다운로드 임시 주석 */}
                 {/* <button
                     style={{
@@ -974,6 +935,15 @@ const FrequencyAnalysisPage = () => {
                     theme="data-dashboard"
                 />
             )}
+
+            {/* 집계용 recoded 변수 관리 팝업 */}
+            <OverviewVariablePopup
+                isOpen={isOverviewPopupOpen}
+                onClose={() => setIsOverviewPopupOpen(false)}
+                auth={auth}
+                pageId={sessionStorage.getItem("pageId")}
+                onSaved={fetchOverviewVars}
+            />
         </div>
     );
 };
