@@ -56,6 +56,7 @@ const AdditionalAnalysisPage = () => {
     const [rowVars, setRowVars] = useState([]);
     const [colVars, setColVars] = useState([]); // Array of arrays: [[v1, v2], [v3]]
     const [draggedItem, setDraggedItem] = useState(null);
+    const draggedItemRef = useRef(null); // stale closure 방지용 동기 ref
 
     // Filter weight variables from API response
     const weightVariableOptions = useMemo(() => {
@@ -1150,11 +1151,13 @@ const AdditionalAnalysisPage = () => {
     };
 
     const handleDragStart = (e, dragData) => {
-        if (!dragData.type) {
-            setDraggedItem({ type: 'NEW', item: dragData });
-        } else {
-            setDraggedItem(dragData);
-        }
+        // dragData가 드롭존 내부 아이템인지 확인 (ROW_ITEM, COL_ITEM, COL_GROUP만 내부 이동용)
+        const isDragZoneItem = ['ROW_ITEM', 'COL_ITEM', 'COL_GROUP'].includes(dragData.type);
+        const payload = isDragZoneItem
+            ? dragData
+            : { type: 'NEW', item: dragData };
+        draggedItemRef.current = payload;
+        setDraggedItem(payload);
         e.stopPropagation();
         e.dataTransfer.effectAllowed = 'move';
     };
@@ -1167,12 +1170,14 @@ const AdditionalAnalysisPage = () => {
     const handleDrop = (e, targetType, targetGroupIndex = null, targetItemIndex = null) => {
         e.preventDefault();
         e.stopPropagation();
-        if (!draggedItem) return;
+        // ref를 우선 사용 (state의 stale closure 문제 방지)
+        const currentDraggedItem = draggedItemRef.current || draggedItem;
+        if (!currentDraggedItem) return;
 
-        const dragType = draggedItem.type || 'NEW';
-        const item = draggedItem.item || (dragType === 'NEW' ? draggedItem : null);
-        const srcGroupIndex = draggedItem.groupIndex;
-        const srcItemIndex = draggedItem.itemIndex;
+        const dragType = currentDraggedItem.type || 'NEW';
+        const item = currentDraggedItem.item || (dragType === 'NEW' ? currentDraggedItem : null);
+        const srcGroupIndex = currentDraggedItem.groupIndex;
+        const srcItemIndex = currentDraggedItem.itemIndex;
 
         const fullVariable = item ? (variables.find(v => v.id === item.id) || item) : null;
         const newItem = fullVariable ? {
@@ -1301,6 +1306,7 @@ const AdditionalAnalysisPage = () => {
                 }
             }
         }
+        draggedItemRef.current = null;
         setDraggedItem(null);
     };
 
