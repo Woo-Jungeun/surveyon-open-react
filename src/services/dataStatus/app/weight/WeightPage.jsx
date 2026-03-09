@@ -102,6 +102,7 @@ const WeightPage = () => {
 
             try {
                 const result = await getWeightVariable.mutateAsync({
+                    user: auth?.user?.userId,
                     pageid: pageId,
                     weight_variable_name: selectedWeight.id
                 });
