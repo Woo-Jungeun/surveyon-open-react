@@ -264,32 +264,13 @@ const MapManagementPage = () => {
         const ids = [...selectedIds];
 
         try {
-            const response = await srtTransfer.mutateAsync({
+            await srtTransfer.mutateAsync({
                 pn,
                 user: userId,
                 variableIds: ids,
             });
 
-            // 200 성공 → blob 다운로드
-            const blob = response.data instanceof Blob
-                ? response.data
-                : new Blob([response.data], { type: 'application/octet-stream' });
-
-            // Content-Disposition 헤더에서 파일명 추출 (없으면 기본모5 사용)
-            const disposition = response.headers?.['content-disposition'] || '';
-            const match = disposition.match(/filename[^;=\n]*=(['"]*)(.*?)\1[;\n]?/);
-            const filename = match ? decodeURIComponent(match[2]) : `srt_transfer_${pn}.parquet`;
-
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            setTimeout(() => {
-                window.URL.revokeObjectURL(url);
-                a.remove();
-            }, 200);
+            modal.showAlert('알림', 'SRT 이관이 완료되었습니다.');
         } catch (e) {
             const status = e?.response?.status;
             if (status === 400) {
