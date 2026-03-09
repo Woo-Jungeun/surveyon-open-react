@@ -225,3 +225,11 @@
 .sidebar-page-info span:first-child {
     color: var(--ds-primary);
 }
+
+.sidebar-no-data {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--ds-text-sub);
+    font-size: 13px;
+    font-weight: 500;
+}

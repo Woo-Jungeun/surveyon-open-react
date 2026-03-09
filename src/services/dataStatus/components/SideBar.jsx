@@ -40,34 +40,40 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                         }
                     }}
                 >
-                    {items.map((item) => (
-                        <div
-                            key={item.id}
-                            id={`sidebar-item-${item.id}`}
-                            onClick={() => onItemClick(item)}
-                            className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
-                        >
-                            <div className="sidebar-item-content">
-                                <div className="sidebar-item-name">
-                                    {item[displayField]}
-                                </div>
-                                <div className="sidebar-item-label">
-                                    {item.label}
-                                </div>
-                            </div>
-                            {onDelete && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onDelete(item.id);
-                                    }}
-                                    className="sidebar-delete-btn"
-                                >
-                                    <Trash2 size={16} />
-                                </button>
-                            )}
+                    {items.length === 0 ? (
+                        <div className="sidebar-no-data">
+                            데이터가 없습니다.
                         </div>
-                    ))}
+                    ) : (
+                        items.map((item) => (
+                            <div
+                                key={item.id}
+                                id={`sidebar-item-${item.id}`}
+                                onClick={() => onItemClick(item)}
+                                className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
+                            >
+                                <div className="sidebar-item-content">
+                                    <div className="sidebar-item-name">
+                                        {item[displayField]}
+                                    </div>
+                                    <div className="sidebar-item-label">
+                                        {item.label}
+                                    </div>
+                                </div>
+                                {onDelete && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(item.id);
+                                        }}
+                                        className="sidebar-delete-btn"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
+                            </div>
+                        ))
+                    )}
                 </div>
             )}
             {isOpen && currentPage !== undefined && totalPages !== undefined && (
