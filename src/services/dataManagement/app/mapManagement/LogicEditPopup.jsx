@@ -70,7 +70,7 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave, theme = 'dat
                 const match = t.match(/^(.+?)\s*(>=|<=|!=|==|=|>|<|IN|NOT\s+IN)\s*(.+)$/i);
                 if (match) {
                     let op = match[2].toUpperCase().trim();
-                    if (op === '==') op = '=';
+                    if (op === '=') op = '==';
 
                     return {
                         varName: match[1].replace(/[()]/g, '').trim(), // 불필요한 괄호 찌꺼기 제거
@@ -82,7 +82,7 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave, theme = 'dat
             }).filter(c => c.varName !== '');
 
             if (parsedConditions.length === 0) {
-                parsedConditions.push({ varName: '', operator: '=', value: '' });
+                parsedConditions.push({ varName: '', operator: '==', value: '' });
             }
 
             newSets.push({
@@ -256,7 +256,7 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave, theme = 'dat
                         <div className="logic-guide-card">
                             <div className="logic-guide-title">연산자</div>
                             <div className="logic-guide-text">
-                                <p><b>=</b>: 같음 | <b>!=</b>: 같지 않음</p>
+                                <p><b>==</b>: 같음 | <b>!=</b>: 같지 않음</p>
                                 <p><b>&gt;, &gt;=, &lt;, &lt;=</b>: 크기 비교 (숫자)</p>
                                 <p><b>IN</b>: 여러 값 중 하나 (예: 1,2,3)</p>
                             </div>
