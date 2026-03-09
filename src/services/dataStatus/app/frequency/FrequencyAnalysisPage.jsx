@@ -576,7 +576,7 @@ const FrequencyAnalysisPage = () => {
                 start,
                 limit: SIDEBAR_PAGE_SIZE,
                 // 검색어가 있다면 API에 전달 (API 지원 여부에 따라)
-                query: searchTerm
+                search: searchTerm
             };
             const result = await getOverviewList.mutateAsync(payload);
             if (result?.success === "777" && result.resultjson) {
@@ -585,6 +585,16 @@ const FrequencyAnalysisPage = () => {
 
                 // 페이지별 데이터 교체 (서버사이드 페이징)
                 setQuestions(newQuestions);
+
+                // 목록이 갱신되면 항상 첫 번째 항목을 선택하고 스크롤을 맨 위로 이동
+                if (newQuestions.length > 0) {
+                    setActiveId(newQuestions[0].id);
+                    if (mainRef.current) {
+                        mainRef.current.scrollTo(0, 0);
+                    }
+                } else {
+                    setActiveId(null);
+                }
 
                 // 전체 갯수 저장
                 if (result.resultjson.total !== undefined) {
@@ -633,6 +643,13 @@ const FrequencyAnalysisPage = () => {
         return () => window.removeEventListener('pageSelected', handlePageSelected);
     }, [auth?.user?.userId]);
 
+    // 필터 조건이나 배너 변경 시 데이터 로드 상태 초기화 하여 재조회 유도
+    useEffect(() => {
+        if (questions.length > 0) {
+            setQuestions(prev => prev.map(q => ({ ...q, isLoaded: false })));
+        }
+    }, [filterLogic, selectedFilters]);
+
 
     // 활성 아이템 기준 5개씩 데이터 분할 조회
     useEffect(() => {
@@ -645,7 +662,7 @@ const FrequencyAnalysisPage = () => {
             // 이미 로드된 문항이면 API를 다시 태우지 않음
             if (questions[index].isLoaded) return;
 
-            const limit = 10;
+            const limit = 20;
             // 선택된 문항부터 limit개만큼 타겟으로 잡음
             const targetQuestions = questions.slice(index, index + limit);
 
@@ -666,13 +683,13 @@ const FrequencyAnalysisPage = () => {
                 const payload = {
                     pageid: pageId,
                     user: userId,
-                    x_info: [], // 시작 포인트의 실제 target_id
-                    // x_info: [startTargetId], // 시작 포인트의 실제 target_id
+                    x_info: selectedFilters.includes('전체') ? [] : selectedFilters, // 배너 필터 적용
                     start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,  // 전체 순번에 해당하는 인덱스
                     limit: limit, // 가져올 갯수
                     weight_col: "",
-                    filter_expression: "",
-                    include_stats: []
+                    filter_expression: filterLogic, // 고급 필터 적용
+                    include_stats: [],
+                    search: searchTerm // 검색어 추가
                 };
 
                 const aggResult = await getOverviewData.mutateAsync(payload);

@@ -13,10 +13,10 @@ export function FrequencyAnalysisPageApi() {
         async (payload) => await api.post(payload, "/datasets/overview/list", "API_BASE_URL_DATASTATUS"),
         {
             onMutate: (vars) => {
-                loadingSpinner.show();
+                // loadingSpinner.show();
             },
             onSettled: () => {
-                loadingSpinner.hide();
+                // loadingSpinner.hide();
             }
         }
     );
@@ -26,10 +26,10 @@ export function FrequencyAnalysisPageApi() {
         async (payload) => await api.post(payload, "/datasets/overview", "API_BASE_URL_DATASTATUS"),
         {
             onMutate: (vars) => {
-                loadingSpinner.show();
+                // loadingSpinner.show();
             },
             onSettled: () => {
-                loadingSpinner.hide();
+                // loadingSpinner.hide();
             }
         }
     );
