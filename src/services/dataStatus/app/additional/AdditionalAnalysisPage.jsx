@@ -459,7 +459,7 @@ const AdditionalAnalysisPage = () => {
 
                                         const newColumnsList = newData.columns || [];
                                         const newRowsList = newData.rows || [];
-                                        const newColumnLabels = newColumnsList.map(c => c.label);
+                                        const newColumnLabels = newColumnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
                                         const newColumnKeys = newColumnsList.map(c => c.key);
 
                                         const newParsedRows = newRowsList.map(r => {
@@ -471,7 +471,7 @@ const AdditionalAnalysisPage = () => {
                                                 };
                                             });
                                             const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                                            return { label: r.label, values: processedValues, total: total };
+                                            return { label: r.label, values: processedValues, total: total, label2: r.label2 || '' };
                                         });
 
                                         const statsMap = newData.stats || {};
@@ -817,7 +817,8 @@ const AdditionalAnalysisPage = () => {
     // Result Data State
     const [resultData, setResultData] = useState(null);
 
-    const chartData = resultData ? resultData.columns.map((colName, colIndex) => {
+    const chartData = resultData ? resultData.columns.map((colObj, colIndex) => {
+        const colName = colObj.label || colObj;
         const dataPoint = { name: colName };
         resultData.rows.forEach(row => {
             if (row.label === '합계' || row.label === '전체') {
@@ -834,17 +835,35 @@ const AdditionalAnalysisPage = () => {
         .filter(row => row.label !== '합계' && row.label !== '전체')
         .map(row => row.label) : [];
 
+    const hasColLabel2 = resultData?.columns?.some(c => c.label2);
+    const hasRowLabel2 = resultData?.rows?.some(r => r.label2);
+
     const handleCopyTable = async () => {
         try {
-            const headers = ['문항', ...resultData.columns].join('\t');
-            const rows = resultData.rows.map(row =>
-                [row.label, ...row.values.map(v => {
-                    if (displayMode === 'value') return v.count;
-                    if (displayMode === 'percent') return `${v.percent}%`;
-                    return `${v.count} (${v.percent}%)`;
-                })].join('\t')
-            ).join('\n');
-            await navigator.clipboard.writeText(`${headers}\n${rows}`);
+            let clipboardText = "";
+            if (hasColLabel2 || hasRowLabel2) {
+                const headerPart1 = [(hasRowLabel2 ? '대분류' : ''), '문항', ...resultData.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].filter(Boolean).join('\t');
+                const headerPart2 = [(hasRowLabel2 ? '' : ''), '', ...resultData.columns.map(c => c.label || c)].filter(Boolean).join('\t');
+                const rows = resultData.rows.map(row =>
+                    [(hasRowLabel2 ? (row.label2 || '') : ''), row.label, ...row.values.map(v => {
+                        if (displayMode === 'value') return v.count;
+                        if (displayMode === 'percent') return `${v.percent}%`;
+                        return `${v.count} (${v.percent}%)`;
+                    })].filter(val => val !== '').join('\t')
+                ).join('\n');
+                clipboardText = hasColLabel2 ? `${headerPart1}\n${headerPart2}\n${rows}` : `${headerPart1}\n${rows}`;
+            } else {
+                const headers = ['문항', ...resultData.columns.map(c => c.label || c)].join('\t');
+                const rows = resultData.rows.map(row =>
+                    [row.label, ...row.values.map(v => {
+                        if (displayMode === 'value') return v.count;
+                        if (displayMode === 'percent') return `${v.percent}%`;
+                        return `${v.count} (${v.percent}%)`;
+                    })].join('\t')
+                ).join('\n');
+                clipboardText = `${headers}\n${rows}`;
+            }
+            await navigator.clipboard.writeText(clipboardText);
             setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
         } catch (e) {
             console.error(e);
@@ -854,13 +873,26 @@ const AdditionalAnalysisPage = () => {
 
     const handleCopyStats = async () => {
         try {
-            const headers = ['통계', ...resultData.columns].join('\t');
-            const rows = statsOptions.filter(opt => opt.checked).map(stat => {
-                const statKey = stat.id.toLowerCase();
-                const statValues = resultData.stats[statKey] || [];
-                return [`Region Group_${stat.label}`, ...statValues].join('\t');
-            }).join('\n');
-            await navigator.clipboard.writeText(`${headers}\n${rows}`);
+            let clipboardText = "";
+            if (hasColLabel2 || hasRowLabel2) {
+                const headerPart1 = ['통계분류', '통계항목', ...resultData.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].join('\t');
+                const headerPart2 = ['', '', ...resultData.columns.map(c => c.label || c)].join('\t');
+                const rows = statsOptions.filter(opt => opt.checked).map(stat => {
+                    const statKey = stat.id.toLowerCase();
+                    const statValues = resultData.stats[statKey] || [];
+                    return [stat.label, '', ...statValues].join('\t');
+                }).join('\n');
+                clipboardText = hasColLabel2 ? `${headerPart1}\n${headerPart2}\n${rows}` : `${headerPart1}\n${rows}`;
+            } else {
+                const headers = ['통계', ...resultData.columns.map(c => c.label || c)].join('\t');
+                const rows = statsOptions.filter(opt => opt.checked).map(stat => {
+                    const statKey = stat.id.toLowerCase();
+                    const statValues = resultData.stats[statKey] || [];
+                    return [stat.label, ...statValues].join('\t');
+                }).join('\n');
+                clipboardText = `${headers}\n${rows}`;
+            }
+            await navigator.clipboard.writeText(clipboardText);
             setToast({ show: true, message: "복사 완료 (Ctrl+V)" });
         } catch (e) {
             console.error(e);
@@ -1068,7 +1100,7 @@ const AdditionalAnalysisPage = () => {
                             const newData = evalResult.resultjson;
                             const newColumnsList = newData.columns || [];
                             const newRowsList = newData.rows || [];
-                            const newColumnLabels = newColumnsList.map(c => c.label);
+                            const newColumnLabels = newColumnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
                             const newColumnKeys = newColumnsList.map(c => c.key);
 
                             const newParsedRows = newRowsList.map(r => {
@@ -1080,7 +1112,7 @@ const AdditionalAnalysisPage = () => {
                                     };
                                 });
                                 const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                                return { label: r.label, values: processedValues, total: total };
+                                return { label: r.label, values: processedValues, total: total, label2: r.label2 || '' };
                             });
 
                             const statsMap = newData.stats || {};
@@ -1569,7 +1601,7 @@ const AdditionalAnalysisPage = () => {
                     const newColumnsList = newData.columns || [];
                     const newRowsList = newData.rows || [];
 
-                    const newColumnLabels = newColumnsList.map(c => c.label);
+                    const newColumnLabels = newColumnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
                     const newColumnKeys = newColumnsList.map(c => c.key);
 
                     const newParsedRows = newRowsList.map(r => {
@@ -1581,7 +1613,7 @@ const AdditionalAnalysisPage = () => {
                             };
                         });
                         const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                        return { label: r.label, values: processedValues, total: total };
+                        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '' };
                     });
 
                     const statsMap = newData.stats || {};
@@ -1752,7 +1784,7 @@ const AdditionalAnalysisPage = () => {
                 const columnsList = data.columns || [];
                 const rowsList = data.rows || [];
 
-                const columnLabels = columnsList.map(c => c.label);
+                const columnLabels = columnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
                 const columnKeys = columnsList.map(c => c.key);
 
                 const parsedRows = rowsList.map(r => {
@@ -1767,7 +1799,8 @@ const AdditionalAnalysisPage = () => {
                     return {
                         label: r.label,
                         values: processedValues,
-                        total: total
+                        total: total,
+                        label2: r.label2 || ''
                     };
                 });
 
@@ -2514,19 +2547,44 @@ const AdditionalAnalysisPage = () => {
                                                             <table className="cross-table" style={{ width: '100%', tableLayout: 'fixed', minWidth: 'max-content', borderCollapse: 'separate', borderSpacing: 0 }}>
                                                                 <thead>
                                                                     <tr>
-                                                                        <th style={{
+                                                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} style={{
                                                                             position: 'sticky', left: 0, top: 0, zIndex: 30,
-                                                                            width: '140px', height: '50px',
+                                                                            width: hasRowLabel2 ? '240px' : '140px', height: hasColLabel2 ? '50px' : '36px',
                                                                             background: '#eff6ff', borderBottom: '1px solid #e2e8f0', borderRight: '1px solid #e2e8f0',
                                                                             fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
                                                                             textAlign: 'center', verticalAlign: 'middle', padding: '4px'
                                                                         }}>
                                                                             문항
                                                                         </th>
-                                                                        {resultData.columns.map((col, i) => (
-                                                                            <th key={i} style={{
+                                                                        {hasColLabel2 && (() => {
+                                                                            const colGroups = [];
+                                                                            resultData.columns.forEach(col => {
+                                                                                const label2 = col.label2 || '';
+                                                                                if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                    colGroups[colGroups.length - 1].colspan += 1;
+                                                                                } else {
+                                                                                    colGroups.push({ label2, colspan: 1 });
+                                                                                }
+                                                                            });
+                                                                            return colGroups.map((group, i) => (
+                                                                                <th key={`group-${i}`} colSpan={group.colspan} style={{
+                                                                                    position: 'sticky', top: 0, zIndex: 20,
+                                                                                    height: '25px',
+                                                                                    background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                    borderRight: i === colGroups.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                                    fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                    textAlign: 'center', padding: '4px',
+                                                                                    whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                    verticalAlign: 'middle'
+                                                                                }}>
+                                                                                    {group.label2}
+                                                                                </th>
+                                                                            ));
+                                                                        })()}
+                                                                        {!hasColLabel2 && resultData.columns.map((col, i) => (
+                                                                            <th key={`col-${i}`} style={{
                                                                                 position: 'sticky', top: 0, zIndex: 20,
-                                                                                width: '100px', height: '50px',
+                                                                                width: '100px', height: '36px',
                                                                                 background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
                                                                                 borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
                                                                                 fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
@@ -2534,47 +2592,90 @@ const AdditionalAnalysisPage = () => {
                                                                                 whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
                                                                                 verticalAlign: 'middle'
                                                                             }}>
-                                                                                {col}
-                                                                                {/* <div style={{ fontSize: '11px', fontWeight: '500', color: '#64748b', marginTop: '4px' }}>(n={resultData.stats.n[i]})</div> */}
+                                                                                {col.label || col}
                                                                             </th>
                                                                         ))}
                                                                     </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    {resultData.rows.map((row, i) => (
-                                                                        <tr key={i}>
-                                                                            <td style={{
-                                                                                position: 'sticky', left: 0, zIndex: 10,
-                                                                                width: '140px', height: '36px',
-                                                                                background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
-                                                                                padding: '0 8px', boxSizing: 'border-box',
-                                                                                fontSize: '12px', fontWeight: '500', color: '#333',
-                                                                                verticalAlign: 'middle',
-                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
-                                                                            }}>
-                                                                                {row.label}
-                                                                            </td>
-                                                                            {row.values.map((val, j) => (
-                                                                                <td key={j} className="data-cell" style={{
-                                                                                    width: '100px', height: '36px',
-                                                                                    background: '#fff', borderBottom: '1px solid #eee',
-                                                                                    borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
-                                                                                    padding: '0 8px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
+                                                                    {hasColLabel2 && (
+                                                                        <tr>
+                                                                            {resultData.columns.map((col, i) => (
+                                                                                <th key={`col-${i}`} style={{
+                                                                                    position: 'sticky', top: '25px', zIndex: 20,
+                                                                                    width: '100px', height: '25px',
+                                                                                    background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                                    fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                                    textAlign: 'center', padding: '4px',
+                                                                                    whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                    verticalAlign: 'middle'
                                                                                 }}>
-                                                                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-                                                                                        {displayMode === 'all' && (
-                                                                                            <>
-                                                                                                <div className="cell-value">{val.count}</div>
-                                                                                                <div className="cell-pct" style={{ color: '#888', fontSize: '0.9em' }}>{val.percent}%</div>
-                                                                                            </>
-                                                                                        )}
-                                                                                        {displayMode === 'value' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.count}</div>}
-                                                                                        {displayMode === 'percent' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.percent !== undefined ? `${val.percent}%` : '-'}</div>}
-                                                                                    </div>
-                                                                                </td>
+                                                                                    {col.label || col}
+                                                                                </th>
                                                                             ))}
                                                                         </tr>
-                                                                    ))}
+                                                                    )}
+                                                                </thead>
+                                                                <tbody>
+                                                                    {(() => {
+                                                                        return resultData.rows.map((row, i) => {
+                                                                            let rowSpan = 1;
+                                                                            const isFirstInGroup = hasRowLabel2 && (i === 0 || resultData.rows[i - 1].label2 !== row.label2);
+                                                                            if (isFirstInGroup) {
+                                                                                let count = 1;
+                                                                                while (i + count < resultData.rows.length && resultData.rows[i + count].label2 === row.label2) {
+                                                                                    count++;
+                                                                                }
+                                                                                rowSpan = count;
+                                                                            }
+                                                                            return (
+                                                                                <tr key={i}>
+                                                                                    {hasRowLabel2 && isFirstInGroup && (
+                                                                                        <td rowSpan={rowSpan} style={{
+                                                                                            position: 'sticky', left: 0, zIndex: 10,
+                                                                                            width: '120px',
+                                                                                            background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                                            padding: '0 8px', boxSizing: 'border-box',
+                                                                                            fontSize: '12px', fontWeight: 'bold', color: '#333',
+                                                                                            verticalAlign: 'middle', textAlign: 'center',
+                                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
+                                                                                        }}>
+                                                                                            {row.label2}
+                                                                                        </td>
+                                                                                    )}
+                                                                                    <td style={{
+                                                                                        position: 'sticky', left: hasRowLabel2 ? '120px' : 0, zIndex: 10,
+                                                                                        width: hasRowLabel2 ? '120px' : '140px', height: '36px',
+                                                                                        background: '#eff6ff', borderBottom: '1px solid #eee', borderRight: '1px solid #e2e8f0',
+                                                                                        padding: '0 8px', boxSizing: 'border-box',
+                                                                                        fontSize: '12px', fontWeight: '500', color: '#333',
+                                                                                        verticalAlign: 'middle',
+                                                                                        whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
+                                                                                    }}>
+                                                                                        {row.label}
+                                                                                    </td>
+                                                                                    {row.values.map((val, j) => (
+                                                                                        <td key={j} className="data-cell" style={{
+                                                                                            width: '100px', height: '36px',
+                                                                                            background: '#fff', borderBottom: '1px solid #eee',
+                                                                                            borderRight: j === resultData.columns.length - 1 ? 'none' : '1px solid #eee',
+                                                                                            padding: '0 8px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
+                                                                                        }}>
+                                                                                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                                                                                                {displayMode === 'all' && (
+                                                                                                    <>
+                                                                                                        <div className="cell-value">{val.count}</div>
+                                                                                                        <div className="cell-pct" style={{ color: '#888', fontSize: '0.9em' }}>{val.percent}%</div>
+                                                                                                    </>
+                                                                                                )}
+                                                                                                {displayMode === 'value' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.count}</div>}
+                                                                                                {displayMode === 'percent' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.percent !== undefined ? `${val.percent}%` : '-'}</div>}
+                                                                                            </div>
+                                                                                        </td>
+                                                                                    ))}
+                                                                                </tr>
+                                                                            );
+                                                                        });
+                                                                    })()}
                                                                 </tbody>
                                                             </table>
                                                         </div>
@@ -2623,15 +2724,40 @@ const AdditionalAnalysisPage = () => {
                                                         <table className="cross-table stats-table">
                                                             <thead>
                                                                 <tr>
-                                                                    <th className="stats-th-label">
+                                                                    <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="stats-th-label" style={{ minWidth: hasRowLabel2 ? '240px' : '140px' }}>
                                                                         통계
                                                                     </th>
-                                                                    {resultData.columns.map((col, i) => (
+                                                                    {hasColLabel2 && (() => {
+                                                                        const colGroups = [];
+                                                                        resultData.columns.forEach(col => {
+                                                                            const label2 = col.label2 || '';
+                                                                            if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                colGroups[colGroups.length - 1].colspan += 1;
+                                                                            } else {
+                                                                                colGroups.push({ label2, colspan: 1 });
+                                                                            }
+                                                                        });
+                                                                        return colGroups.map((group, i) => (
+                                                                            <th key={`stat-group-${i}`} colSpan={group.colspan} className="stats-th-data" style={{ fontWeight: 'bold' }}>
+                                                                                {group.label2}
+                                                                            </th>
+                                                                        ));
+                                                                    })()}
+                                                                    {!hasColLabel2 && resultData.columns.map((col, i) => (
                                                                         <th key={i} className="stats-th-data">
-                                                                            {col}
+                                                                            {col.label || col}
                                                                         </th>
                                                                     ))}
                                                                 </tr>
+                                                                {hasColLabel2 && (
+                                                                    <tr>
+                                                                        {resultData.columns.map((col, i) => (
+                                                                            <th key={i} className="stats-th-data">
+                                                                                {col.label || col}
+                                                                            </th>
+                                                                        ))}
+                                                                    </tr>
+                                                                )}
                                                             </thead>
                                                             <tbody>
                                                                 {statsOptions.filter(opt => opt.checked).map((stat) => {
@@ -2641,7 +2767,7 @@ const AdditionalAnalysisPage = () => {
 
                                                                     return (
                                                                         <tr key={stat.id} className="stats-row">
-                                                                            <td className="stats-td-label">
+                                                                            <td colSpan={hasRowLabel2 ? 2 : 1} className="stats-td-label" style={{ minWidth: hasRowLabel2 ? '240px' : '140px' }}>
                                                                                 {stat.label}
                                                                             </td>
                                                                             {statValues.map((v, i) => (

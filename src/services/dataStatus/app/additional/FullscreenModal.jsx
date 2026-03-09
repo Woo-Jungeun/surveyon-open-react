@@ -141,6 +141,9 @@ const FullscreenModal = ({
         return typeMap[localChartMode] || 'column';
     };
 
+    const hasColLabel2 = resultData?.columns?.some(c => c.label2);
+    const hasRowLabel2 = resultData?.rows?.some(r => r.label2);
+
     return (
         <div className="fullscreen-modal-overlay" onClick={onClose}>
             <div className="fullscreen-modal-container" onClick={(e) => e.stopPropagation()}>
@@ -201,30 +204,74 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table">
                                 <thead>
                                     <tr>
-                                        <th className="fullscreen-table-header-sticky">문항</th>
-                                        {resultData.columns.map((col, idx) => (
+                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ minWidth: hasRowLabel2 ? '240px' : '120px' }}>문항</th>
+                                        {hasColLabel2 && (() => {
+                                            const colGroups = [];
+                                            resultData.columns.forEach(col => {
+                                                const label2 = col.label2 || '';
+                                                if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                    colGroups[colGroups.length - 1].colspan += 1;
+                                                } else {
+                                                    colGroups.push({ label2, colspan: 1 });
+                                                }
+                                            });
+                                            return colGroups.map((group, idx) => (
+                                                <th key={`fs-group-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold' }}>
+                                                    {group.label2}
+                                                </th>
+                                            ));
+                                        })()}
+                                        {!hasColLabel2 && resultData.columns.map((col, idx) => (
                                             <th key={idx} className="fullscreen-table-header">
-                                                {col}
+                                                {col.label || col}
                                             </th>
                                         ))}
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    {resultData.rows.map((row, rowIdx) => (
-                                        <tr key={rowIdx}>
-                                            <td className="fullscreen-table-cell-sticky">
-                                                {row.label}
-                                            </td>
-                                            {row.values.map((val, colIdx) => (
-                                                <td key={colIdx} className="fullscreen-table-cell">
-                                                    <div className="fullscreen-cell-content">
-                                                        <div className="cell-value">{val.count}</div>
-                                                        <div className="cell-pct">{val.percent}%</div>
-                                                    </div>
-                                                </td>
+                                    {hasColLabel2 && (
+                                        <tr>
+                                            {resultData.columns.map((col, idx) => (
+                                                <th key={idx} className="fullscreen-table-header">
+                                                    {col.label || col}
+                                                </th>
                                             ))}
                                         </tr>
-                                    ))}
+                                    )}
+                                </thead>
+                                <tbody>
+                                    {(() => {
+                                        return resultData.rows.map((row, rowIdx) => {
+                                            let rowSpan = 1;
+                                            const isFirstInGroup = hasRowLabel2 && (rowIdx === 0 || resultData.rows[rowIdx - 1].label2 !== row.label2);
+                                            if (isFirstInGroup) {
+                                                let count = 1;
+                                                while (rowIdx + count < resultData.rows.length && resultData.rows[rowIdx + count].label2 === row.label2) {
+                                                    count++;
+                                                }
+                                                rowSpan = count;
+                                            }
+
+                                            return (
+                                                <tr key={rowIdx}>
+                                                    {hasRowLabel2 && isFirstInGroup && (
+                                                        <td rowSpan={rowSpan} className="fullscreen-table-cell-sticky" style={{ minWidth: '120px', fontWeight: 'bold', borderRight: '1px solid #e2e8f0' }}>
+                                                            {row.label2}
+                                                        </td>
+                                                    )}
+                                                    <td className="fullscreen-table-cell-sticky" style={{ minWidth: '120px', left: hasRowLabel2 ? '120px' : 0, zIndex: 10 }}>
+                                                        {row.label}
+                                                    </td>
+                                                    {row.values.map((val, colIdx) => (
+                                                        <td key={colIdx} className="fullscreen-table-cell">
+                                                            <div className="fullscreen-cell-content">
+                                                                <div className="cell-value">{val.count}</div>
+                                                                <div className="cell-pct">{val.percent}%</div>
+                                                            </div>
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            );
+                                        });
+                                    })()}
                                 </tbody>
                             </table>
                         </div>
@@ -235,16 +282,44 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table">
                                 <thead>
                                     <tr>
-                                        <th className="fullscreen-table-header-sticky">통계</th>
-                                        {resultData.columns.map((col, idx) => (
+                                        <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ minWidth: hasRowLabel2 ? '240px' : '120px' }}>통계</th>
+                                        {hasColLabel2 && (() => {
+                                            const colGroups = [];
+                                            resultData.columns.forEach(col => {
+                                                const label2 = col.label2 || '';
+                                                if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                    colGroups[colGroups.length - 1].colspan += 1;
+                                                } else {
+                                                    colGroups.push({ label2, colspan: 1 });
+                                                }
+                                            });
+                                            return colGroups.map((group, idx) => (
+                                                <th key={`fs-stat-group-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold' }}>
+                                                    {group.label2}
+                                                </th>
+                                            ));
+                                        })()}
+                                        {!hasColLabel2 && resultData.columns.map((col, idx) => (
                                             <th key={idx} className="fullscreen-table-header">
-                                                <div>{col}</div>
+                                                <div>{col.label || col}</div>
                                                 <div className="fullscreen-stats-n">
                                                     N={resultData.stats.n?.[idx] || 0}
                                                 </div>
                                             </th>
                                         ))}
                                     </tr>
+                                    {hasColLabel2 && (
+                                        <tr>
+                                            {resultData.columns.map((col, idx) => (
+                                                <th key={idx} className="fullscreen-table-header">
+                                                    <div>{col.label || col}</div>
+                                                    <div className="fullscreen-stats-n">
+                                                        N={resultData.stats.n?.[idx] || 0}
+                                                    </div>
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    )}
                                 </thead>
                                 <tbody>
                                     {statsOptions.filter(opt => opt.checked).map((stat, statIdx) => {
@@ -252,7 +327,7 @@ const FullscreenModal = ({
                                         const statValues = resultData.stats[statKey] || [];
                                         return (
                                             <tr key={statIdx}>
-                                                <td className="fullscreen-table-cell-sticky">
+                                                <td colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-cell-sticky" style={{ minWidth: hasRowLabel2 ? '240px' : '120px' }}>
                                                     {stat.label}
                                                 </td>
                                                 {statValues.map((val, colIdx) => (
