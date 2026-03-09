@@ -205,7 +205,7 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>문항</th>
+                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', verticalAlign: 'middle', textAlign: 'center' }}>{resultData?.rows?.[0]?.var_label || '문항'}</th>
                                         {hasVarLabel && (() => {
                                             const varGroups = [];
                                             resultData.columns.forEach(col => {
@@ -327,7 +327,7 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>통계</th>
+                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', verticalAlign: 'middle', textAlign: 'center' }}>통계</th>
                                         {hasVarLabel && (() => {
                                             const varGroups = [];
                                             resultData.columns.forEach(col => {
@@ -364,9 +364,9 @@ const FullscreenModal = ({
                                             ));
                                         })()}
                                         {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, idx) => (
-                                            <th key={idx} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20 }}>
+                                            <th key={`fs-stat-col-${idx}`} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
                                                 <div>{col.label || col}</div>
-                                                <div className="fullscreen-stats-n">
+                                                <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
                                                     N={resultData.stats.n?.[idx] || 0}
                                                 </div>
                                             </th>
@@ -400,9 +400,9 @@ const FullscreenModal = ({
                                     {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
-                                                <th key={idx} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', height: '50px', zIndex: 20 }}>
-                                                    <div>{col.label || col}</div>
-                                                    <div className="fullscreen-stats-n">
+                                                <th key={`fs-stat-label-${idx}`} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', height: '50px', zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
+                                                    <div style={{ wordBreak: 'break-all' }}>{col.label || col}</div>
+                                                    <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
                                                         N={resultData.stats.n?.[idx] || 0}
                                                     </div>
                                                 </th>

@@ -991,7 +991,11 @@ const AdditionalAnalysisPage = () => {
                     const columnsList = data.columns || [];
                     const rowsList = data.rows || [];
 
-                    const columnLabels = columnsList.map(c => c.label);
+                    const columnLabels = columnsList.map(c => ({
+                        label: c.label,
+                        label2: c.label2 || '',
+                        var_label: c.var_label || c.variable_label || ''
+                    }));
                     const columnKeys = columnsList.map(c => c.key);
 
                     const parsedRows = rowsList.map(r => {
@@ -1003,11 +1007,7 @@ const AdditionalAnalysisPage = () => {
                             };
                         });
                         const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                        return {
-                            label: r.label,
-                            values: processedValues,
-                            total: total
-                        };
+                        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
                     });
 
                     const parsedStats = {
@@ -1610,7 +1610,11 @@ const AdditionalAnalysisPage = () => {
                     const newColumnsList = newData.columns || [];
                     const newRowsList = newData.rows || [];
 
-                    const newColumnLabels = newColumnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
+                    const newColumnLabels = newColumnsList.map(c => ({
+                        label: c.label,
+                        label2: c.label2 || '',
+                        var_label: c.var_label || c.variable_label || ''
+                    }));
                     const newColumnKeys = newColumnsList.map(c => c.key);
 
                     const newParsedRows = newRowsList.map(r => {
@@ -1622,7 +1626,7 @@ const AdditionalAnalysisPage = () => {
                             };
                         });
                         const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '' };
+                        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
                     });
 
                     const statsMap = newData.stats || {};
@@ -1793,7 +1797,11 @@ const AdditionalAnalysisPage = () => {
                 const columnsList = data.columns || [];
                 const rowsList = data.rows || [];
 
-                const columnLabels = columnsList.map(c => ({ label: c.label, label2: c.label2 || '' }));
+                const columnLabels = columnsList.map(c => ({
+                    label: c.label,
+                    label2: c.label2 || '',
+                    var_label: c.var_label || c.variable_label || ''
+                }));
                 const columnKeys = columnsList.map(c => c.key);
 
                 const parsedRows = rowsList.map(r => {
@@ -1805,12 +1813,7 @@ const AdditionalAnalysisPage = () => {
                         };
                     });
                     const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                    return {
-                        label: r.label,
-                        values: processedValues,
-                        total: total,
-                        label2: r.label2 || ''
-                    };
+                    return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
                 });
 
                 const statsMap = data.stats || {};
@@ -2576,7 +2579,7 @@ const AdditionalAnalysisPage = () => {
                                                                             fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
                                                                             textAlign: 'center', verticalAlign: 'middle', padding: '4px'
                                                                         }}>
-                                                                            문항
+                                                                            {resultData?.rows?.[0]?.var_label || '문항'}
                                                                         </th>
                                                                         {hasVarLabel && (() => {
                                                                             const varGroups = [];
@@ -2804,10 +2807,42 @@ const AdditionalAnalysisPage = () => {
                                                         <table className="cross-table stats-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 0 }}>
                                                             <thead>
                                                                 <tr>
-                                                                    <th rowSpan={hasColLabel2 ? 2 : 1} colSpan={hasRowLabel2 ? 2 : 1} className="stats-th-label" style={{ position: 'sticky', left: 0, top: 0, zIndex: 30, width: '120px', minWidth: '120px', background: '#eff6ff', boxSizing: 'border-box' }}>
+                                                                    <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="stats-th-label" style={{
+                                                                        position: 'sticky', left: 0, top: 0, zIndex: 30, width: '120px', minWidth: '120px',
+                                                                        background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
+                                                                        fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                        textAlign: 'center', verticalAlign: 'middle', padding: '4px',
+                                                                        height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36
+                                                                    }}>
                                                                         통계
                                                                     </th>
-                                                                    {hasColLabel2 && (() => {
+                                                                    {hasVarLabel && (() => {
+                                                                        const varGroups = [];
+                                                                        resultData.columns.forEach(col => {
+                                                                            const var_label = col.var_label || '';
+                                                                            const label2 = col.label2 || '';
+                                                                            const isSame = var_label === label2;
+                                                                            if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
+                                                                                varGroups[varGroups.length - 1].colspan += 1;
+                                                                                if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                                            } else {
+                                                                                varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                                            }
+                                                                        });
+                                                                        return varGroups.map((group, i) => (
+                                                                            <th key={`stat-var-group-${i}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} style={{
+                                                                                position: 'sticky', top: 0, zIndex: 20,
+                                                                                height: group.canMerge ? '50px' : '25px', background: '#dbeafe', borderBottom: '1px solid #cbd5e1',
+                                                                                borderRight: '1px solid #cbd5e1',
+                                                                                fontSize: '11px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box',
+                                                                                textAlign: 'center', padding: '2px 4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                verticalAlign: 'middle'
+                                                                            }}>
+                                                                                {group.var_label}
+                                                                            </th>
+                                                                        ));
+                                                                    })()}
+                                                                    {!hasVarLabel && hasColLabel2 && (() => {
                                                                         const colGroups = [];
                                                                         resultData.columns.forEach(col => {
                                                                             const label2 = col.label2 || '';
@@ -2818,21 +2853,79 @@ const AdditionalAnalysisPage = () => {
                                                                             }
                                                                         });
                                                                         return colGroups.map((group, i) => (
-                                                                            <th key={`stat-group-${i}`} colSpan={group.colspan} className="stats-th-data" style={{ fontWeight: 'bold', position: 'sticky', top: 0, zIndex: 20, background: '#eff6ff' }}>
+                                                                            <th key={`stat-group-${i}`} colSpan={group.colspan} style={{
+                                                                                position: 'sticky', top: 0, zIndex: 20,
+                                                                                height: '25px',
+                                                                                background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                borderRight: i === colGroups.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                                fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                textAlign: 'center', padding: '4px',
+                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                verticalAlign: 'middle'
+                                                                            }}>
                                                                                 {group.label2}
                                                                             </th>
                                                                         ));
                                                                     })()}
-                                                                    {!hasColLabel2 && resultData.columns.map((col, i) => (
-                                                                        <th key={i} className="stats-th-data" style={{ width: '180px', minWidth: '180px', boxSizing: 'border-box', position: 'sticky', top: 0, zIndex: 20, background: '#eff6ff' }}>
+                                                                    {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, i) => (
+                                                                        <th key={`stat-col-${i}`} style={{
+                                                                            position: 'sticky', top: 0, zIndex: 20,
+                                                                            width: '180px', minWidth: '180px', height: '36px',
+                                                                            background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                            borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                            fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                            textAlign: 'center', padding: '4px',
+                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                            verticalAlign: 'middle'
+                                                                        }}>
                                                                             {col.label || col}
                                                                         </th>
                                                                     ))}
                                                                 </tr>
-                                                                {hasColLabel2 && (
+                                                                {hasVarLabel && hasColLabel2 && (
+                                                                    <tr>
+                                                                        {(() => {
+                                                                            const colGroups = [];
+                                                                            resultData.columns.forEach(col => {
+                                                                                const label2 = col.label2 || '';
+                                                                                const var_label = col.var_label || '';
+                                                                                const isSame = label2 === var_label;
+                                                                                if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                    colGroups[colGroups.length - 1].colspan += 1;
+                                                                                } else {
+                                                                                    colGroups.push({ label2, colspan: 1, isSame });
+                                                                                }
+                                                                            });
+                                                                            return colGroups.map((group, i) => {
+                                                                                if (group.isSame) return null;
+                                                                                return (
+                                                                                    <th key={`stat-group2-${i}`} colSpan={group.colspan} style={{
+                                                                                        position: 'sticky', top: '25px', zIndex: 20,
+                                                                                        height: '25px', background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
+                                                                                        borderRight: '1px solid #cbd5e1',
+                                                                                        fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                        textAlign: 'center', padding: '4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                        verticalAlign: 'middle'
+                                                                                    }}>
+                                                                                        {group.label2}
+                                                                                    </th>
+                                                                                );
+                                                                            });
+                                                                        })()}
+                                                                    </tr>
+                                                                )}
+                                                                {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
                                                                     <tr>
                                                                         {resultData.columns.map((col, i) => (
-                                                                            <th key={i} className="stats-th-data" style={{ width: '180px', minWidth: '180px', boxSizing: 'border-box', position: 'sticky', top: hasColLabel2 ? '25px' : 0, zIndex: 20, background: '#eff6ff' }}>
+                                                                            <th key={`stat-label-${i}`} style={{
+                                                                                position: 'sticky', top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', zIndex: 20,
+                                                                                width: '180px', minWidth: '180px', height: '36px',
+                                                                                background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
+                                                                                fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                                textAlign: 'center', padding: '4px',
+                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                verticalAlign: 'middle'
+                                                                            }}>
                                                                                 {col.label || col}
                                                                             </th>
                                                                         ))}
