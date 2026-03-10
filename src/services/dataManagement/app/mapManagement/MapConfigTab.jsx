@@ -347,12 +347,11 @@ const MapConfigTab = ({
     setEditingRowId
 }) => {
     // ── 컬럼 구성 ──
-    const { variables: ctxVars } = useContext(MapManagementContext);
+    const { variables: ctxVars, selectedIds, setSelectedIds } = useContext(MapManagementContext);
     const allIds = useMemo(() => (ctxVars || []).map(v => v.id), [ctxVars]);
 
     const mappingColumns = useMemo(() => isDetailed
         ? [
-            { field: 'checkbox', title: '', width: '60px', isCheckbox: true },
             { field: 'add', title: '+', width: '50px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '120px' },
@@ -369,7 +368,6 @@ const MapConfigTab = ({
             { field: 'delete', title: '삭제', width: '80px' }
         ]
         : [
-            { field: 'checkbox', title: '', width: '55px', isCheckbox: true },
             { field: 'add', title: '+', width: '45px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '85px' },
@@ -404,9 +402,14 @@ const MapConfigTab = ({
         const isEditing = dataItem.id === editingRowId;
         const isNew = dataItem.isNew;
 
+        // 선택 강조(k-selected) 클래스 제거
+        const baseClass = (trElement.props.className || "")
+            .replace(/\bk-selected\b/g, "")
+            .replace(/\bk-state-selected\b/g, "");
+
         const trProps = {
             ...trElement.props,
-            className: `${trElement.props.className} ${isEditing ? 'editing-row' : ''} ${isNew ? 'new-row' : ''}`.trim(),
+            className: `${baseClass} ${isEditing ? 'editing-row' : ''} ${isNew ? 'new-row' : ''}`.trim(),
             style: {
                 ...trElement.props.style,
                 borderLeft: isEditing ? '3px solid var(--dm-primary)' : trElement.props.style?.borderLeft,
@@ -452,10 +455,23 @@ const MapConfigTab = ({
                             skip,
                             pageSize,
                             onPageChange: pageChange,
-                            onRowClick: (e) => setEditingRowId(e.dataItem.id)
+                            onRowClick: (e) => setEditingRowId(e.dataItem.id),
+                            multiSelect: true,
+                            selectedField: "selected",
+                            selectedState: Array.from(selectedIds).reduce((obj, id) => ({ ...obj, [id]: true }), {}),
+                            setSelectedState: (state) => {
+                                const newIds = new Set();
+                                Object.entries(state).forEach(([id, selected]) => {
+                                    if (selected) newIds.add(Number(id));
+                                });
+                                setSelectedIds(newIds);
+                            },
+                            selectionHeaderTitle: "SRT 이관",
+                            selectionColumnAfterField: "label",
+                            selectionColumnWidth: "110px"
                         }}
                     >
-                        {mappingColumns.map((c) => (
+                        {mappingColumns.filter(c => !c.isCheckbox).map((c) => (
                             <Column
                                 key={c.field}
                                 field={c.field}

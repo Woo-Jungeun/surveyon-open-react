@@ -354,14 +354,20 @@ const KendoGrid = ({ parentProps, children }) => {
                     onClick={stop}
                     style={{
                         display: 'flex',
+                        flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: 6,
+                        gap: '8px',
                         width: '100%',
+                        cursor: 'pointer'
                     }}
                 >
-                    <span>{selectionHeaderTitle}</span>
-                    <div className="k-checkbox-wrap">
+                    {selectionHeaderTitle && (
+                        <span>
+                            {selectionHeaderTitle}
+                        </span>
+                    )}
+                    <div className="k-checkbox-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <input
                             ref={ref}
                             type="checkbox"
@@ -390,7 +396,7 @@ const KendoGrid = ({ parentProps, children }) => {
                             aria-label="Select all rows"
                         />
                     </div>
-                </div>
+                </div >
             );
         };
 
@@ -400,6 +406,7 @@ const KendoGrid = ({ parentProps, children }) => {
                 field={selectedField}
                 width={parentProps?.selectionColumnWidth ?? "120px"}
                 headerCell={SelectionHeaderCell}
+                headerClassName="k-header-center variable-column-header"
                 sortable={false}
                 filterable={false}
                 columnMenu={undefined}
