@@ -484,7 +484,7 @@ const FrequencyAnalysisPage = () => {
             if (result?.success === "777" && result.resultjson) {
                 const overviewVars = Object.values(result.resultjson)
                     .filter(v => v.id.startsWith('overview_'))
-                    .map(v => ({ id: v.id, label: v.label || v.id }));
+                    .map(v => ({ ...v, label: v.label || v.id }));
                 setOverviewVariables(overviewVars);
             }
         } catch (error) {
@@ -493,9 +493,26 @@ const FrequencyAnalysisPage = () => {
     };
 
     useEffect(() => {
-        if (auth?.user?.userId) {
+        if (!auth?.user?.userId) return;
+
+        const initialPageId = sessionStorage.getItem("pageId");
+        if (initialPageId) {
             fetchOverviewVars();
+            return; // 이미 로드했으면 여기서 종료
         }
+
+        // pageId가 아직 없는 경우에만 주기적으로 체크
+        let retryCount = 0;
+        const interval = setInterval(() => {
+            const pid = sessionStorage.getItem("pageId");
+            if (pid) {
+                fetchOverviewVars();
+                clearInterval(interval);
+            }
+            if (retryCount++ > 10) clearInterval(interval);
+        }, 500);
+
+        return () => clearInterval(interval);
     }, [auth?.user?.userId]);
 
     const filterRef = useRef(null);
@@ -645,6 +662,7 @@ const FrequencyAnalysisPage = () => {
             setTotalQuestions(0);
             setActiveId(null);
             isFetchingListRef.current = false;
+            fetchOverviewVars(); // 페이지 변경 시 오버뷰 변수도 다시 조회
             fetchQuestions(1);
         };
         window.addEventListener('pageSelected', handlePageSelected);

@@ -123,7 +123,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             if (result?.success === "777" && result.resultjson) {
                 const overviewVars = Object.values(result.resultjson)
                     .filter(v => v.id.startsWith('overview_'))
-                    .map(v => ({ id: v.id, label: v.label }));
+                    .map(v => ({ ...v, label: v.label || v.id }));
                 setVariables(overviewVars);
             }
         } catch (error) {
@@ -132,13 +132,10 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
     };
 
     useEffect(() => {
-        const init = async () => {
-            if (variables.length === 0) {
-                await fetchList();
-            }
-        };
-        init();
-    }, []);
+        if (initialVariables) {
+            setVariables(initialVariables);
+        }
+    }, [initialVariables]);
 
     useEffect(() => {
         if (isFirstLoad && variables.length > 0) {
@@ -148,11 +145,26 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
     }, [variables, isFirstLoad]);
 
     const handleSelectVariable = async (id) => {
-        if (selectedVarId === id && !isFirstLoad) return;
+        if (!id || id === 'new') return;
         setSelectedVarId(id);
+
+        // Find in local state first to see if we already have the information (to avoid redundant API calls)
+        const localData = variables.find(v => v.id === id);
+        if (localData && localData.info && localData.info.length > 0) {
+            setVarName(localData.id.replace('overview_', ''));
+            setVarLabel(localData.label || '');
+            const newCategories = localData.info.map((item, idx) => ({
+                id: Date.now() + idx + Math.random(),
+                label: item.label || '',
+                conditionSets: parseLogicString(item.logic || '')
+            }));
+            setCategories(newCategories);
+            return;
+        }
+
         setIsLoading(true);
         try {
-            const result = await getRecodedVariables.mutateAsync({ user: auth.user.userId, pageid: pageId });
+            const result = await getRecodedVariables.mutateAsync({ user: auth.user.userId, pageid: pageId, variable_id: [id] });
             if (result?.success === "777" && result.resultjson) {
                 const varData = result.resultjson[id];
                 if (varData) {
@@ -203,7 +215,6 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                             });
                             if (result?.success === "777") {
                                 modal.showAlert("성공", "삭제되었습니다.");
-                                await fetchList();
                                 if (onSaved) onSaved();
                                 if (selectedVarId === varId) handleAddNew();
                             } else {
@@ -359,7 +370,6 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             const result = await setRecodedVariable.mutateAsync(payload);
             if (result?.success === "777") {
                 modal.showAlert("알림", "저장되었습니다.");
-                await fetchList(); // 리스트 재조회
                 setSelectedVarId(fullId); // 신규 저장 후 해당 변수 선택 상태로 변경
                 if (onSaved) onSaved();
             } else {
