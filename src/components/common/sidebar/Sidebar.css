@@ -420,6 +420,41 @@
     flex-direction: row;
     align-items: center;
     gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.project-info-card:hover {
+    background: #fff;
+    border-color: #5A4BFF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.project-info-card:hover .project-settings-btn {
+    color: #5A4BFF;
+}
+
+.blue .project-info-card:hover {
+    background: #fff;
+    border-color: #3b82f6;
+}
+
+.blue .project-info-card:hover .project-settings-btn {
+    color: #3b82f6;
+}
+
+.orange .project-info-card:hover .project-settings-btn {
+    color: #f97316;
+}
+
+.green .project-info-card:hover {
+    background: #fff;
+    border-color: #16a34a;
+}
+
+.green .project-info-card:hover .project-settings-btn {
+    color: #16a34a;
 }
 
 .blue .project-info-card {
@@ -487,6 +522,10 @@
 
 .blue .project-settings-btn:hover {
     color: #3b82f6;
+}
+
+.green .project-settings-btn:hover {
+    color: #16a34a;
 }
 
 .project-title-sub {

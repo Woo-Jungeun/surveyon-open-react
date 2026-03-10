@@ -173,10 +173,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
         setPageListData(pageRes.resultjson);
         setIsPageListPopupOpen(true); // 대시보드 목록 팝업 열기
-      } else {
-        modal.showAlert("알림", "조회된 대시보드가 없습니다. \n프로젝트를 다시 선택해주세요.", null, () => {
-          setIsProjectModalOpen(true);
-        });
       }
     } catch (e) {
       modal.showErrorAlert("오류", "대시보드 목록 조회 중 오류가 발생했습니다.");

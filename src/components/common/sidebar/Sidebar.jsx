@@ -207,18 +207,17 @@ const Sidebar = ({
                 {/* Project Info Section */}
                 {projectInfo && !isCollapsed && (
                     <div className="project-info-box">
-                        <div className="project-info-card">
+                        <div
+                            className="project-info-card"
+                            onClick={() => {
+                                if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
+                            }}
+                        >
                             <div className="project-title">{projectInfo.title}</div>
                             {projectInfo.subTitle && (
                                 <span className="project-id-badge">{projectInfo.subTitle}</span>
                             )}
-                            <button
-                                className="project-settings-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
-                                }}
-                            >
+                            <button className="project-settings-btn">
                                 <Settings size={16} />
                             </button>
                         </div>
@@ -228,15 +227,14 @@ const Sidebar = ({
                 {/* Page Info Section */}
                 {pageInfo && !isCollapsed && (
                     <div className="project-info-box">
-                        <div className="project-info-card">
+                        <div
+                            className="project-info-card"
+                            onClick={() => {
+                                if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
+                            }}
+                        >
                             <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }}>{pageInfo.title}</div>
-                            <button
-                                className="project-settings-btn"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
-                                }}
-                            >
+                            <button className="project-settings-btn">
                                 <Settings size={16} />
                             </button>
                         </div>

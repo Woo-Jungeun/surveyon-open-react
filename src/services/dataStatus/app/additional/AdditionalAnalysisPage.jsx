@@ -142,8 +142,6 @@ const AdditionalAnalysisPage = () => {
             if (result?.success === "777" && result.resultjson) {
                 setPageListData(result.resultjson);
                 setIsPageListOpen(true);
-            } else {
-                modal.showErrorAlert("알림", "조회된 대시보드가 없습니다.");
             }
         } catch (e) {
             console.error(e);
