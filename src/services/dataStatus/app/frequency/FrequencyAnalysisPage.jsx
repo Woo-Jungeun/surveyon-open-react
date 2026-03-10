@@ -15,6 +15,7 @@ import { FrequencyAnalysisPageApi } from './FrequencyAnalysisPageApi';
 import OverviewVariablePopup from './OverviewVariablePopup';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { Settings } from 'lucide-react';
+import { VariablePageApi } from '../variable/VariablePageApi';
 
 const AggregationCard = memo(({ q }) => {
     const [chartMode, setChartMode] = useState('column');
@@ -472,7 +473,9 @@ const FrequencyAnalysisPage = () => {
     // Overview 변수 관련 상태
     const [isOverviewPopupOpen, setIsOverviewPopupOpen] = useState(false);
     const [overviewVariables, setOverviewVariables] = useState([]);
+    const [originalVariables, setOriginalVariables] = useState([]);
     const { getRecodedList } = RecodingPageApi();
+    const { getOriginalVariables } = VariablePageApi();
 
     const fetchOverviewVars = async () => {
         if (!auth?.user?.userId) return;
@@ -492,12 +495,35 @@ const FrequencyAnalysisPage = () => {
         }
     };
 
+    const fetchOriginalVars = async () => {
+        if (!auth?.user?.userId) return;
+        const pageId = sessionStorage.getItem("pageId");
+        if (!pageId) return;
+
+        try {
+            const result = await getOriginalVariables.mutateAsync({
+                user: auth.user.userId,
+                pageid: pageId
+            });
+            if (result?.success === "777" && result.resultjson) {
+                const vars = Object.values(result.resultjson).map(item => ({
+                    sysName: item.id,
+                    label: item.label
+                }));
+                setOriginalVariables(vars);
+            }
+        } catch (error) {
+            console.error("Failed to fetch original variables:", error);
+        }
+    };
+
     useEffect(() => {
         if (!auth?.user?.userId) return;
 
         const initialPageId = sessionStorage.getItem("pageId");
         if (initialPageId) {
             fetchOverviewVars();
+            fetchOriginalVars();
             return; // 이미 로드했으면 여기서 종료
         }
 
@@ -507,6 +533,7 @@ const FrequencyAnalysisPage = () => {
             const pid = sessionStorage.getItem("pageId");
             if (pid) {
                 fetchOverviewVars();
+                fetchOriginalVars();
                 clearInterval(interval);
             }
             if (retryCount++ > 10) clearInterval(interval);
@@ -663,6 +690,7 @@ const FrequencyAnalysisPage = () => {
             setActiveId(null);
             isFetchingListRef.current = false;
             fetchOverviewVars(); // 페이지 변경 시 오버뷰 변수도 다시 조회
+            fetchOriginalVars();
             fetchQuestions(1);
         };
         window.addEventListener('pageSelected', handlePageSelected);
@@ -994,10 +1022,9 @@ const FrequencyAnalysisPage = () => {
             </div>
 
             {/* 고급 필터 팝업 */}
-            {/* 고급 필터 팝업 */}
             {isFilterPopupOpen && (
                 <AdvancedFilterPopup
-                    variablesList={questions.map(q => ({ sysName: q.id, label: q.label }))}
+                    variablesList={originalVariables.length > 0 ? originalVariables : questions.map(q => ({ sysName: q.id, label: q.label }))}
                     initialVariables={overviewVariables}
                     onClose={() => setIsFilterPopupOpen(false)}
                     onSave={(varId, logicStr, label) => {
