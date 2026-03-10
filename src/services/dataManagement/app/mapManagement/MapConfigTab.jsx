@@ -499,6 +499,7 @@ const MapConfigTab = ({
                             pageSize,
                             onPageChange: pageChange,
                             onRowClick: (e) => setEditingRowId(e.dataItem.id),
+                            reorderable: true, // 행 이동 작동 
                             multiSelect: true,
                             selectedField: "selected",
                             selectedState: Array.from(selectedIds).reduce((obj, id) => ({ ...obj, [id]: true }), {}),

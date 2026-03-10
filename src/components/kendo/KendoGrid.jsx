@@ -163,7 +163,8 @@ const KendoGrid = ({ parentProps, children }) => {
         };
 
         // 처음 로드이거나, 정렬/필터가 내용상 바뀐 경우 (Unpinned 대상)
-        if (!initializedRef.current || sortChanged || filterChanged) {
+        // 또는 reorderable 속성이 true일 경우(드래그 앤 드롭 등 명시적인 순서 변경 지원)
+        if (!initializedRef.current || sortChanged || filterChanged || parentProps?.reorderable) {
             initializedRef.current = true;
             sortKeyRef.current = nextSortKey;
             filterKeyRef.current = nextFilterKey;
