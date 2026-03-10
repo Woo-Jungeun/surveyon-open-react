@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
@@ -367,7 +367,8 @@ const AdditionalAnalysisPage = () => {
                                     return {
                                         label: r.label,
                                         values: processedValues, // Now detailed objects
-                                        total: total
+                                        total: total,
+                                        var_label: r.var_label || r.variable_label || ''
                                     };
                                 });
 
@@ -473,7 +474,7 @@ const AdditionalAnalysisPage = () => {
                                                 };
                                             });
                                             const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                                            return { label: r.label, values: processedValues, total: total, label2: r.label2 || '' };
+                                            return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
                                         });
 
                                         const statsMap = newData.stats || {};
@@ -839,7 +840,7 @@ const AdditionalAnalysisPage = () => {
 
     const hasColLabel2 = resultData?.columns?.some(c => c.label2);
     const hasVarLabel = resultData?.columns?.some(c => c.var_label);
-    const hasRowLabel2 = resultData?.rows?.some(r => r.label2);
+    const hasRowLabel2 = resultData?.rows?.some(r => r.label2 || r.var_label);
 
     const handleCopyTable = async () => {
         try {
@@ -1119,7 +1120,7 @@ const AdditionalAnalysisPage = () => {
                                     };
                                 });
                                 const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                                return { label: r.label, values: processedValues, total: total, label2: r.label2 || '' };
+                                return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
                             });
 
                             const statsMap = newData.stats || {};
@@ -1137,9 +1138,25 @@ const AdditionalAnalysisPage = () => {
                                 p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? '-'),
                             };
 
+                            const groupedRows = (() => {
+                                const order = [];
+                                const map = new Map();
+                                newParsedRows.forEach(r => {
+                                    const k = r.label2 || r.var_label || '';
+                                    if (!map.has(k)) {
+                                        map.set(k, []);
+                                        order.push(k);
+                                    }
+                                    map.get(k).push(r);
+                                });
+                                const res = [];
+                                order.forEach(k => res.push(...map.get(k)));
+                                return res;
+                            })();
+
                             setResultData({
                                 columns: newColumnLabels,
-                                rows: newParsedRows,
+                                rows: groupedRows,
                                 stats: newParsedStats
                             });
                         }
@@ -1642,9 +1659,25 @@ const AdditionalAnalysisPage = () => {
                         p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined ? c.p_value : '-')),
                     };
 
+                    const groupedRows = (() => {
+                        const order = [];
+                        const map = new Map();
+                        newParsedRows.forEach(r => {
+                            const k = r.label2 || r.var_label || '';
+                            if (!map.has(k)) {
+                                map.set(k, []);
+                                order.push(k);
+                            }
+                            map.get(k).push(r);
+                        });
+                        const res = [];
+                        order.forEach(k => res.push(...map.get(k)));
+                        return res;
+                    })();
+
                     setResultData({
                         columns: newColumnLabels,
-                        rows: newParsedRows,
+                        rows: groupedRows,
                         stats: newParsedStats
                     });
 
@@ -1829,9 +1862,25 @@ const AdditionalAnalysisPage = () => {
                     p_value: columnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined && c.p_value !== null ? c.p_value : '-')),
                 };
 
+                const groupedRows = (() => {
+                    const order = [];
+                    const map = new Map();
+                    parsedRows.forEach(r => {
+                        const k = r.label2 || r.var_label || '';
+                        if (!map.has(k)) {
+                            map.set(k, []);
+                            order.push(k);
+                        }
+                        map.get(k).push(r);
+                    });
+                    const res = [];
+                    order.forEach(k => res.push(...map.get(k)));
+                    return res;
+                })();
+
                 setResultData({
                     columns: columnLabels,
-                    rows: parsedRows,
+                    rows: groupedRows,
                     stats: parsedStats
                 });
 
@@ -2297,7 +2346,7 @@ const AdditionalAnalysisPage = () => {
                                         <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
                                         <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
                                         <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><Map size={18} /></button>
+                                        <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><MapIcon size={18} /></button>
                                         <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
                                     </>
                                 )}
@@ -2701,10 +2750,10 @@ const AdditionalAnalysisPage = () => {
                                                                     {(() => {
                                                                         return resultData.rows.map((row, i) => {
                                                                             let rowSpan = 1;
-                                                                            const isFirstInGroup = hasRowLabel2 && (i === 0 || resultData.rows[i - 1].label2 !== row.label2);
+                                                                            const isFirstInGroup = hasRowLabel2 && (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label));
                                                                             if (isFirstInGroup) {
                                                                                 let count = 1;
-                                                                                while (i + count < resultData.rows.length && resultData.rows[i + count].label2 === row.label2) {
+                                                                                while (i + count < resultData.rows.length && (resultData.rows[i + count].label2 || resultData.rows[i + count].var_label) === (row.label2 || row.var_label)) {
                                                                                     count++;
                                                                                 }
                                                                                 rowSpan = count;
@@ -2720,7 +2769,7 @@ const AdditionalAnalysisPage = () => {
                                                                                             verticalAlign: 'middle', textAlign: 'center',
                                                                                             whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
                                                                                         }}>
-                                                                                            {row.label2}
+                                                                                            {row.label2 || row.var_label}
                                                                                         </td>
                                                                                     )}
                                                                                     <td style={{

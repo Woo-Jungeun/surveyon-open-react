@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { saveAs } from '@progress/kendo-file-saver';
-import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map, LayoutGrid, Download } from 'lucide-react';
+import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
 
@@ -143,7 +143,7 @@ const FullscreenModal = ({
 
     const hasColLabel2 = resultData?.columns?.some(c => c.label2);
     const hasVarLabel = resultData?.columns?.some(c => c.var_label);
-    const hasRowLabel2 = resultData?.rows?.some(r => r.label2);
+    const hasRowLabel2 = resultData?.rows?.some(r => r.label2 || r.var_label);
 
     return (
         <div className="fullscreen-modal-overlay" onClick={onClose}>
@@ -189,7 +189,7 @@ const FullscreenModal = ({
                             <button className={`view-option-btn ${localChartMode === 'funnel' ? 'active' : ''}`} onClick={() => setLocalChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setLocalChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'area' ? 'active' : ''}`} onClick={() => setLocalChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'map' ? 'active' : ''}`} onClick={() => setLocalChartMode('map')} title="지도"><Map size={18} /></button>
+                            <button className={`view-option-btn ${localChartMode === 'map' ? 'active' : ''}`} onClick={() => setLocalChartMode('map')} title="지도"><MapIcon size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setLocalChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
                         </div>
                     )}
@@ -286,10 +286,10 @@ const FullscreenModal = ({
                                     {(() => {
                                         return resultData.rows.map((row, rowIdx) => {
                                             let rowSpan = 1;
-                                            const isFirstInGroup = hasRowLabel2 && (rowIdx === 0 || resultData.rows[rowIdx - 1].label2 !== row.label2);
+                                            const isFirstInGroup = hasRowLabel2 && (rowIdx === 0 || (resultData.rows[rowIdx - 1].label2 || resultData.rows[rowIdx - 1].var_label) !== (row.label2 || row.var_label));
                                             if (isFirstInGroup) {
                                                 let count = 1;
-                                                while (rowIdx + count < resultData.rows.length && resultData.rows[rowIdx + count].label2 === row.label2) {
+                                                while (rowIdx + count < resultData.rows.length && (resultData.rows[rowIdx + count].label2 || resultData.rows[rowIdx + count].var_label) === (row.label2 || row.var_label)) {
                                                     count++;
                                                 }
                                                 rowSpan = count;
@@ -299,7 +299,7 @@ const FullscreenModal = ({
                                                 <tr key={rowIdx}>
                                                     {hasRowLabel2 && isFirstInGroup && (
                                                         <td rowSpan={rowSpan} className="fullscreen-table-cell-sticky" style={{ fontWeight: 'bold', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', left: 0, zIndex: 10, background: '#dbeafe', color: '#1e40af' }}>
-                                                            {row.label2}
+                                                            {row.label2 || row.var_label}
                                                         </td>
                                                     )}
                                                     <td className="fullscreen-table-cell-sticky" style={{ left: hasRowLabel2 ? '150px' : 0, zIndex: 10, background: '#eff6ff', color: '#334155', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
