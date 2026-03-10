@@ -34,7 +34,7 @@ const MapManagementPage = () => {
     const [isDetailed, setIsDetailed] = useState(false);      // 상세 설정 토글
     const [selectedVariableId, setSelectedVariableId] = useState(null); // 보기 레이블 탭에서 선택된 변수 id
     const [editingRowId, setEditingRowId] = useState(null);   // 현재 편집 중인 행 id
-    const [selectedIds, setSelectedIds] = useState(new Set()); // 체크된 행 id Set
+
     const [sidebarSearchQuery, setSidebarSearchQuery] = useState(''); // 변수 목록 검색어
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
@@ -100,7 +100,9 @@ const MapManagementPage = () => {
                         verificationVar: !!item.isValid,
                         excludeOutput: !!item.noOutput,
                         category: categoryStr,
-                        labels: item.labels || []
+                        labels: item.labels || [],
+                        ranking: item.ranking || 0,
+                        isBaked: !!item.isBaked
                     };
                 });
 
@@ -216,7 +218,6 @@ const MapManagementPage = () => {
             setDeletedIds(prev => [...prev, id]);
         }
         setVariables(prev => prev.filter(v => v.id !== id));
-        setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
     };
 
     const handleAddVariable = (afterId) => {
@@ -251,37 +252,7 @@ const MapManagementPage = () => {
         });
     };
 
-    const handleSrtTransfer = async () => {
-        const pn = sessionStorage.getItem('merge_pn') || '';
-        const userId = auth?.user?.userId || '';
 
-        // 체크된 행이 없으면 알림
-        if (selectedIds.size === 0) {
-            modal.showAlert('알림', '이관할 행을 체크박스로 선택해주세요.');
-            return;
-        }
-
-        const ids = [...selectedIds];
-
-        try {
-            await srtTransfer.mutateAsync({
-                pn,
-                user: userId,
-                variableIds: ids,
-            });
-
-            modal.showAlert('알림', 'SRT 이관이 완료되었습니다.');
-        } catch (e) {
-            const status = e?.response?.status;
-            if (status === 400) {
-                modal.showErrorAlert('오류', 'GB 파라미터를 초과하였습니다.');
-            } else if (status === 500) {
-                modal.showErrorAlert('오류', '서버 ZIP 아카이빙에 실패했습니다.');
-            } else {
-                modal.showErrorAlert('오류', 'SRT 이관 중 오류가 발생했습니다.');
-            }
-        }
-    };
 
     const executeSave = async (showSuccessModal = true) => {
         try {
@@ -433,7 +404,8 @@ const MapManagementPage = () => {
                 noOpenMerge: !!v.excludeOpenMerge,
                 isValid: !!v.verificationVar,
                 noOutput: !!v.excludeOutput,
-                ranking: 0,
+                ranking: v.ranking || 0,
+                isBaked: !!v.isBaked,
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 labels: v.labels || []
@@ -549,15 +521,13 @@ const MapManagementPage = () => {
         setVariables,
         editingRowId,
         setEditingRowId,
-        selectedIds,
-        setSelectedIds,
         SetEditingCategoryPopupOpen,
         setEditingLogicPopupOpen,
         isDetailed,
         onAdd: handleAddVariable,
         onDelete: handleDeleteVariable,
         moveVariable
-    }), [variables, editingRowId, isDetailed, selectedIds, handleAddVariable, handleDeleteVariable, moveVariable]);
+    }), [variables, editingRowId, isDetailed, handleAddVariable, handleDeleteVariable, moveVariable]);
 
     // ── 렌더 ──
     return (
@@ -569,7 +539,7 @@ const MapManagementPage = () => {
                     onSave={handleSave}
                     saveButtonDisabled={!hasChanges}
                 >
-                    {activeTab === 'mapping' && (
+                    {/* {activeTab === 'mapping' && (
                         <button
                             onClick={handleSrtTransfer}
                             style={{
@@ -592,7 +562,7 @@ const MapManagementPage = () => {
                         >
                             SRT 이관
                         </button>
-                    )}
+                    )} */}
                 </DataHeader>
 
 

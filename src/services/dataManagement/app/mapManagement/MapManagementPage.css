@@ -836,23 +836,23 @@ input:checked+.slider:before {
     gap: 12px;
 }
 
-.logic-guide-btn {
+.variable-modal-overlay .logic-guide-btn {
     display: flex;
     align-items: center;
     gap: 6px;
     padding: 6px 14px;
-    border: 1px solid var(--dm-primary);
+    border: 1px solid var(--dm-primary) !important;
     border-radius: 20px;
-    color: var(--dm-primary);
-    background: #fff;
+    color: var(--dm-primary) !important;
+    background-color: #fff !important;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 
-.logic-guide-btn:hover {
-    background: var(--dm-primary-light);
+.variable-modal-overlay .logic-guide-btn:hover {
+    background-color: var(--dm-primary-light) !important;
 }
 
 .logic-close-btn {

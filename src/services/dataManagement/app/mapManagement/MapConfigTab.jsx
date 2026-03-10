@@ -388,30 +388,30 @@ const MapConfigTab = ({
     setEditingRowId
 }) => {
     // ── 컬럼 구성 ──
-    const { variables: ctxVars, selectedIds, setSelectedIds } = useContext(MapManagementContext);
+    const { variables: ctxVars, setVariables } = useContext(MapManagementContext);
     const allIds = useMemo(() => (ctxVars || []).map(v => v.id), [ctxVars]);
 
     const mappingColumns = useMemo(() => isDetailed
         ? [
-            { field: 'drag', title: '', width: '40px', cell: DragCell },
-            { field: 'add', title: '+', width: '50px' },
+            { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
+            { field: 'add', title: '추가', width: '50px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '120px' },
             { field: 'logic', title: '로직체크', width: '100px' },
-            { field: 'label', title: '레이블', width: '250px' },
+            { field: 'label', title: '레이블', width: '180px' },
             { field: 'decimal', title: '소수점\n자리수', width: '100px', headerCell: multilineHeader },
             { field: 'spssName', title: 'SPSS\n변수명', width: '120px', headerCell: multilineHeader },
             { field: 'type', title: '변수 유형', width: '120px' },
             { field: 'memo', title: '메모', minWidth: 200 },
-            { field: 'multiValChange', title: '멀티값\n변경', width: '100px' },
+            { field: 'multiValChange', title: '멀티값\n변경', width: '90px' },
             { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '100px' },
-            { field: 'verificationVar', title: '검증문항', width: '100px' },
-            { field: 'excludeOutput', title: '출력제외', width: '100px' },
-            { field: 'delete', title: '삭제', width: '80px' }
+            { field: 'verificationVar', title: '검증\n문항', width: '80px' },
+            { field: 'excludeOutput', title: '출력\n제외', width: '80px' },
+            { field: 'delete', title: '삭제', width: '50px' }
         ]
         : [
-            { field: 'drag', title: '', width: '40px', cell: DragCell },
-            { field: 'add', title: '+', width: '45px' },
+            { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
+            { field: 'add', title: '추가', width: '50px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '85px' },
             { field: 'startPos', title: '시작\n자리수', width: '90px', headerCell: multilineHeader },
@@ -426,7 +426,7 @@ const MapConfigTab = ({
             { field: 'type', title: '변수\n유형', width: '95px' },
             { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
             { field: 'memo', title: '메모', minWidth: 50 },
-            { field: 'delete', title: '삭제', width: '80px' }
+            { field: 'delete', title: '삭제', width: '50px' }
         ], [isDetailed, variables]);
 
     const columnMenu = useCallback((props) => (
@@ -501,15 +501,17 @@ const MapConfigTab = ({
                             onRowClick: (e) => setEditingRowId(e.dataItem.id),
                             reorderable: true, // 행 이동 작동 
                             multiSelect: true,
-                            selectedField: "selected",
-                            selectedState: Array.from(selectedIds).reduce((obj, id) => ({ ...obj, [id]: true }), {}),
+                            selectedField: "isBaked",
+                            selectedState: (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: !!v.isBaked }), {}),
                             setSelectedState: (state) => {
-                                const newIds = new Set();
-                                Object.entries(state).forEach(([id, selected]) => {
-                                    if (selected) newIds.add(Number(id));
-                                });
-                                setSelectedIds(newIds);
+                                setVariables(prev => prev.map(v => {
+                                    if (v.id in state) {
+                                        return { ...v, isBaked: !!state[v.id] };
+                                    }
+                                    return v;
+                                }));
                             },
+                            linkRowClickToSelection: false,
                             selectionHeaderTitle: "SRT 이관",
                             selectionColumnAfterField: "label",
                             selectionColumnWidth: "110px"

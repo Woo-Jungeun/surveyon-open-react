@@ -11,6 +11,7 @@ export const recalcVariables = (vars) => {
     return vars.map((v, index) => {
         const valLen = Number(v.valLen) || 0;
         const valCnt = Number(v.valCnt) || 0;
+        const ranking = index + 1; // 1-based 순서
 
         // 총자릿수 = 보기자릿수 × 보기갯수
         const totalLen = valLen * valCnt;
@@ -23,8 +24,8 @@ export const recalcVariables = (vars) => {
         nextStart = startPos + totalLen;
 
         // 값이 바뀐 행만 새 객체 반환 (불필요한 리렌더 최소화)
-        if (v.totalLen === totalLen && v.startPos === startPos) return v;
-        return { ...v, totalLen, startPos };
+        if (v.totalLen === totalLen && v.startPos === startPos && v.ranking === ranking) return v;
+        return { ...v, totalLen, startPos, ranking };
     });
 };
 
@@ -33,5 +34,5 @@ export const EDITABLE_FIELDS = [
     'label', 'logic', 'decimal', 'spssName', 'type', 'memo',
     'multiValChange', 'minQuestions', 'excludeOpenMerge',
     'verificationVar', 'excludeOutput', 'startPos', 'valLen',
-    'valCnt', 'totalLen', 'etcOpen', 'category'
+    'valCnt', 'totalLen', 'etcOpen', 'category', 'ranking', 'isBaked'
 ];
