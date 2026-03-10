@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Trash2, Plus, X, HelpCircle } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
+import { modalContext } from "@/components/common/Modal.jsx";
 import './AdvancedFilterPopup.css';
 
 const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved }) => {
-    const { getRecodedList, getRecodedVariables, setRecodedVariable } = RecodingPageApi();
+    const modal = React.useContext(modalContext);
+    const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
 
     const [variables, setVariables] = useState(initialVariables);
     const [selectedVarId, setSelectedVarId] = useState(null);
@@ -187,6 +189,36 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         }]);
     };
 
+    const handleDeleteVariable = (varId) => {
+        modal.showConfirm("삭제", `변수 '${varId}'를 삭제하시겠습니까?`, {
+            btns: [
+                { title: "취소", click: () => { } },
+                {
+                    title: "삭제", click: async () => {
+                        try {
+                            const result = await deleteRecodedVariable.mutateAsync({
+                                user: auth.user.userId,
+                                pageid: pageId,
+                                variables: [varId]
+                            });
+                            if (result?.success === "777") {
+                                modal.showAlert("성공", "삭제되었습니다.");
+                                await fetchList();
+                                if (onSaved) onSaved();
+                                if (selectedVarId === varId) handleAddNew();
+                            } else {
+                                modal.showAlert("오류", result?.message || "삭제 실패");
+                            }
+                        } catch (error) {
+                            console.error("Delete error:", error);
+                            modal.showAlert("오류", "삭제 중 오류가 발생했습니다.");
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
     const handleToggleGuide = () => {
         setShowGuide(!showGuide);
     };
@@ -262,7 +294,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
     const handleSave = async () => {
         if (!varName.trim()) {
-            alert("변수 이름을 입력해주세요.");
+            modal.showAlert("알림", "변수 이름을 입력해주세요.");
             return;
         }
         const fullId = `overview_${varName.trim()}`;
@@ -326,15 +358,16 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         try {
             const result = await setRecodedVariable.mutateAsync(payload);
             if (result?.success === "777") {
-                alert("저장되었습니다.");
+                modal.showAlert("알림", "저장되었습니다.");
                 await fetchList(); // 리스트 재조회
+                setSelectedVarId(fullId); // 신규 저장 후 해당 변수 선택 상태로 변경
                 if (onSaved) onSaved();
             } else {
-                alert(result?.message || "저장 실패");
+                modal.showAlert("알림", result?.message || "저장 실패");
             }
         } catch (error) {
             console.error("Save error:", error);
-            alert("저장 중 오류가 발생했습니다.");
+            modal.showAlert("알림", "저장 중 오류가 발생했습니다.");
         }
     };
 
@@ -374,7 +407,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     {/* Sidebar */}
                     <div className="filter-sidebar-v4">
                         <div className="sidebar-header-v4">
-                            <span>overview 변수 <span className="var-count-badge-v4">{variables.length}</span></span>
+                            <span>overview 변수 <span className="var-count-badge-v4">{variables.length}개</span></span>
                             <button className="add-new-btn-v4" onClick={handleAddNew}>
                                 <Plus size={14} /> 새 변수
                             </button>
@@ -382,8 +415,10 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                         <div className="variable-list-v4">
                             {!selectedVarId && (
                                 <div className="variable-item-v4 active is-new">
-                                    <div className="v-id">{varName ? `overview_${varName}` : '(새 변수)'}</div>
-                                    <div className="v-label">{varLabel || (varName ? '라벨 입력 중...' : '이름 입력 중...')}</div>
+                                    <div className="v-item-info">
+                                        <div className="v-id">{varName ? `overview_${varName}` : '(새 변수)'}</div>
+                                        <div className="v-label">{varLabel || (varName ? '라벨 입력 중...' : '이름 입력 중...')}</div>
+                                    </div>
                                 </div>
                             )}
                             {variables.map(v => (
@@ -392,8 +427,20 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                     className={`variable-item-v4 ${selectedVarId === v.id ? 'active' : ''}`}
                                     onClick={() => handleSelectVariable(v.id)}
                                 >
-                                    <div className="v-id">{v.id}</div>
-                                    <div className="v-label">{v.label}</div>
+                                    <div className="v-item-info">
+                                        <div className="v-id">{v.id}</div>
+                                        <div className="v-label">{v.label}</div>
+                                    </div>
+                                    <button
+                                        className="v-del-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteVariable(v.id);
+                                        }}
+                                        title="변수 삭제"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -591,7 +638,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
                 <div className="filter-popup-footer-v4">
                     <button onClick={onClose} className="btn-cancel-v4">취소</button>
-                    <button onClick={handleSave} className="btn-apply-v4">적용</button>
+                    <button onClick={handleSave} className="btn-apply-v4">저장</button>
                 </div>
             </div>
         </div>
