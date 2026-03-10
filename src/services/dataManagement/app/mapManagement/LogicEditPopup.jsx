@@ -262,7 +262,7 @@ const LogicEditPopup = ({ variable, variablesList, onClose, onSave, theme = 'dat
                             <div className="logic-guide-text">
                                 <p><b>==</b>: 같음 | <b>!=</b>: 같지 않음</p>
                                 <p><b>&gt;, &gt;=, &lt;, &lt;=</b>: 크기 비교 (숫자)</p>
-                                <p><b>IN</b>: 여러 값 중 하나 (예: 1,2,3)</p>
+                                <p><b>IN / NOT IN</b>: 여러 값 포함/제외 (예: 1,2,3)</p>
                             </div>
                         </div>
                     </div>
