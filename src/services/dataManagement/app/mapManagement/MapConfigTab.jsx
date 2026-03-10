@@ -3,8 +3,48 @@ import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, GripVertical } from 'lucide-react';
 import { MapManagementContext, NUMERIC_FIELDS, recalcVariables } from './MapManagementUtils';
+
+/** 행 드래그 핸들 셀 */
+const DragCell = (props) => {
+    const { moveVariable, variables } = useContext(MapManagementContext);
+    const { dataItem } = props;
+    const index = variables.findIndex(v => v.id === dataItem.id);
+
+    const handleDragStart = (e) => {
+        e.dataTransfer.setData("fromIndex", index.toString());
+        e.dataTransfer.effectAllowed = "move";
+    };
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        const fromIndex = parseInt(e.dataTransfer.getData("fromIndex"), 10);
+        if (!isNaN(fromIndex) && fromIndex !== index) {
+            moveVariable(fromIndex, index);
+        }
+    };
+
+    return (
+        <td
+            style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', cursor: 'grab' }}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+        >
+            <div
+                draggable
+                onDragStart={handleDragStart}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}
+            >
+                <GripVertical size={16} color="#999" />
+            </div>
+        </td>
+    );
+};
 
 // ─────────────────────────────────────────────
 // 셀 컴포넌트
@@ -308,6 +348,7 @@ const DeleteCell = (props) => {
 /** 필드명에 따라 적절한 셀 컴포넌트 반환 */
 const getCell = (field) => {
     switch (field) {
+        case 'drag': return DragCell;
         case 'sysName':
         case 'startPos':
         case 'totalLen': return ReadOnlyCell;
@@ -352,10 +393,11 @@ const MapConfigTab = ({
 
     const mappingColumns = useMemo(() => isDetailed
         ? [
+            { field: 'drag', title: '', width: '40px', cell: DragCell },
             { field: 'add', title: '+', width: '50px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '120px' },
-            { field: 'logic', title: '로직체크', width: '220px' },
+            { field: 'logic', title: '로직체크', width: '100px' },
             { field: 'label', title: '레이블', width: '250px' },
             { field: 'decimal', title: '소수점\n자리수', width: '100px', headerCell: multilineHeader },
             { field: 'spssName', title: 'SPSS\n변수명', width: '120px', headerCell: multilineHeader },
@@ -368,6 +410,7 @@ const MapConfigTab = ({
             { field: 'delete', title: '삭제', width: '80px' }
         ]
         : [
+            { field: 'drag', title: '', width: '40px', cell: DragCell },
             { field: 'add', title: '+', width: '45px' },
             { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: '85px' },
@@ -376,7 +419,7 @@ const MapConfigTab = ({
             { field: 'valCnt', title: '보기\n갯수', width: '85px', headerCell: multilineHeader },
             { field: 'totalLen', title: '총\n자리수', width: '90px', headerCell: multilineHeader },
             { field: 'etcOpen', title: '기타\n오픈정의', width: '100px', headerCell: multilineHeader },
-            { field: 'logic', title: '로직체크', width: '150px' },
+            { field: 'logic', title: '로직체크', width: '100px' },
             { field: 'label', title: '레이블', minWidth: 50 },
             { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
             { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
@@ -384,7 +427,7 @@ const MapConfigTab = ({
             { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
             { field: 'memo', title: '메모', minWidth: 50 },
             { field: 'delete', title: '삭제', width: '80px' }
-        ], [isDetailed]);
+        ], [isDetailed, variables]);
 
     const columnMenu = useCallback((props) => (
         <ExcelColumnMenu
@@ -471,24 +514,27 @@ const MapConfigTab = ({
                             selectionColumnWidth: "110px"
                         }}
                     >
-                        {mappingColumns.filter(c => !c.isCheckbox).map((c) => (
-                            <Column
-                                key={c.field}
-                                field={c.field}
-                                title={c.title}
-                                width={c.width}
-                                minWidth={c.minWidth}
-                                columnMenu={c.isCheckbox ? undefined : columnMenu}
-                                cell={getCell(c.field)}
-                                headerCell={c.isCheckbox
-                                    ? (props) => <HeaderCheckboxCell {...props} allIds={allIds} />
-                                    : c.headerCell
-                                }
-                                headerClassName="k-header-center variable-column-header"
-                                sortable={!c.isCheckbox}
-                                filterable={!c.isCheckbox}
-                            />
-                        ))}
+                        {mappingColumns.filter(c => !c.isCheckbox).map((c) => {
+                            const isUtilityColumn = ['drag', 'add', 'logic', 'delete'].includes(c.field);
+                            return (
+                                <Column
+                                    key={c.field}
+                                    field={c.field}
+                                    title={c.title}
+                                    width={c.width}
+                                    minWidth={c.minWidth}
+                                    columnMenu={isUtilityColumn || c.isCheckbox ? undefined : columnMenu}
+                                    cell={getCell(c.field)}
+                                    headerCell={c.isCheckbox
+                                        ? (props) => <HeaderCheckboxCell {...props} allIds={allIds} />
+                                        : c.headerCell
+                                    }
+                                    headerClassName="k-header-center variable-column-header"
+                                    sortable={!isUtilityColumn && !c.isCheckbox}
+                                    filterable={!isUtilityColumn && !c.isCheckbox}
+                                />
+                            );
+                        })}
                     </KendoGrid>
                 </div>
             </div>

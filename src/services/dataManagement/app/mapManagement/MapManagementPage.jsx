@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import MapManagementPageModal from './MapManagementPageModal';
@@ -534,6 +534,15 @@ const MapManagementPage = () => {
         }
     };
 
+    const moveVariable = useCallback((fromIndex, toIndex) => {
+        setVariables(prev => {
+            const newVariables = [...prev];
+            const [moved] = newVariables.splice(fromIndex, 1);
+            newVariables.splice(toIndex, 0, moved);
+            return recalcVariables(newVariables);
+        });
+    }, []);
+
     // ── Context 값 ──
     const contextValue = useMemo(() => ({
         variables,
@@ -547,7 +556,8 @@ const MapManagementPage = () => {
         isDetailed,
         onAdd: handleAddVariable,
         onDelete: handleDeleteVariable,
-    }), [variables, editingRowId, isDetailed, selectedIds]);
+        moveVariable
+    }), [variables, editingRowId, isDetailed, selectedIds, handleAddVariable, handleDeleteVariable, moveVariable]);
 
     // ── 렌더 ──
     return (
