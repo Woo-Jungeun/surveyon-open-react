@@ -180,6 +180,7 @@ const RecodingPage = () => {
     const [evaluationResult, setEvaluationResult] = useState(null);
     const [isEvaluationOpen, setIsEvaluationOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [gridKey, setGridKey] = useState(0);
 
     // 변경 및 초기 상태 관리 (저장 버튼 활성화용)
     const [isDirty, setIsDirty] = useState(false);
@@ -200,12 +201,12 @@ const RecodingPage = () => {
             if (selectedVar?.id && selectedVar.info) {
                 const newCategories = selectedVar.info.map(item => ({
                     id: item.index,
-                    realVal: item.index,
                     category: item.label,
                     val: item.value,
                     logic: item.logic
                 }));
                 setCategories(newCategories);
+                setGridKey(prev => prev + 1);
                 setInitialState({
                     id: selectedVar.id,
                     label: selectedVar.label,
@@ -294,7 +295,7 @@ const RecodingPage = () => {
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
     const [columns, setColumns] = useState([
-        { field: 'realVal', title: '코드', show: true, width: '80px', editable: false },
+        { field: 'id', title: '코드', show: true, width: '80px', editable: false },
         { field: 'category', title: '보기', show: true, minWidth: 200, editable: true },
         { field: 'val', title: '새코드', show: true, width: '120px', editable: true },
         { field: 'logic', title: '로직', show: true, minWidth: 200, editable: true },
@@ -525,12 +526,12 @@ const RecodingPage = () => {
                         // 상태 재초기화
                         const savedCategories = (savedVar.info || []).map(item => ({
                             id: item.index,
-                            realVal: item.index,
                             category: item.label,
                             val: item.value,
                             logic: item.logic
                         }));
                         setCategories(savedCategories);
+                        setGridKey(prev => prev + 1);
                         setInitialState({
                             id: savedVar.id,
                             label: savedVar.label,
@@ -744,7 +745,7 @@ const RecodingPage = () => {
                                     <button
                                         onClick={() => {
                                             const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 0;
-                                            setCategories([...categories, { id: newId, realVal: String(newId), category: '', val: '', logic: '' }]);
+                                            setCategories([...categories, { id: newId, category: '', val: '', logic: '' }]);
                                         }}
                                         className="recoding-add-category-btn"
                                     >
@@ -755,6 +756,7 @@ const RecodingPage = () => {
 
                             <div className="cmn_grid singlehead recoding-grid-container">
                                 <KendoGrid
+                                    key={`${selectedVar?.id || 'new'}_${gridKey}`}
                                     parentProps={{
                                         data: categories,
                                         dataItemKey: "id",
