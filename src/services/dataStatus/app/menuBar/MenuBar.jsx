@@ -60,7 +60,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const loadingSpinner = useContext(loadingSpinnerContext);
   const auth = useSelector((store) => store.auth);
   const navigate = useNavigate();
-  const { getPageMetadata } = MenuBarApi();
+  const { getPageMetadata, getDataInfo, updateMap } = MenuBarApi();
   const { pageList } = VariablePageApi(); // Use VariablePageApi for page list
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
@@ -115,6 +115,67 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
+  // 날짜 포맷팅 함수
+  const formatDate = (rawDate) => {
+    if (!rawDate) return "-";
+    const d = new Date(rawDate);
+    if (isNaN(d.getTime())) return rawDate;
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
+
+  // 데이터 정보 조회 (최종 업데이트 시간)
+  const fetchDataInfo = async (pn) => {
+    const userId = auth?.user?.userId;
+    if (!userId || !pn) return;
+    try {
+      const result = await getDataInfo.mutateAsync({ user: userId, pn });
+      if (result?.parquetBakedAt) {
+        setPageInfo(prev => ({
+          ...prev,
+          processedAt: formatDate(result.parquetBakedAt)
+        }));
+      }
+    } catch (err) {
+      console.warn("fetchDataInfo error", err);
+    }
+  };
+
+  // PN이 있을 경우 초기 정보 조회
+  useEffect(() => {
+    const mergePn = sessionStorage.getItem("merge_pn");
+    if (mergePn) {
+      fetchDataInfo(mergePn);
+    }
+  }, [auth?.user?.userId]);
+
+  // 데이터 새로고침 (update-map)
+  const handleRefresh = async () => {
+    const userId = auth?.user?.userId;
+    const pn = sessionStorage.getItem("merge_pn");
+
+    if (!userId || !pn) {
+      modal.showAlert("알림", "프로젝트 정보나 사용자 정보가 없습니다.");
+      return;
+    }
+
+    try {
+      loadingSpinner.show();
+      const result = await updateMap.mutateAsync({ user: userId, pn });
+
+      if (result) {
+        modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
+        // 새로고침 후 시간 정보 다시 가져오기
+        await fetchDataInfo(pn);
+      }
+    } catch (err) {
+      console.error("Refresh error", err);
+      modal.showErrorAlert("오류", "데이터 새로고침 중 오류가 발생했습니다.");
+    } finally {
+      loadingSpinner.hide();
+    }
+  };
+
   // 추가 액션 영역 (날짜와 새로고침 아이콘 한 줄 정리)
   const ExtraActions = (
     <div className="menu-bar-actions">
@@ -125,10 +186,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         </div>
         <button
           className="menu-bar-refresh-btn-minimal"
-          onClick={() => modal.showAlert("알림", "데이터 새로고침 기능은 준비 중입니다.")}
+          onClick={handleRefresh}
           title="데이터 새로고침"
         >
-          <RefreshCw size={14} />
+          <RefreshCw size={14} className={updateMap.isLoading ? "spin" : ""} />
         </button>
       </div>
     </div>
@@ -158,6 +219,11 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     });
 
     setIsProjectModalOpen(false); // 프로젝트 팝업 닫기
+
+    // 프로젝트 선택 후 데이터 정보(시간) 조회
+    if (project.merge_pn) {
+      fetchDataInfo(project.merge_pn);
+    }
 
     // 2. 대시보드 목록 조회
     try {
@@ -221,31 +287,9 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       loadingSpinner.show();
       // 대시보드 메타데이터 조회 API 호출
       const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
-
-      if (metadataResult?.success === "777") {
-        const { resultjson } = metadataResult;
-        if (resultjson) {
-          // 처리 일시 포맷팅 (YYYY-MM-DD HH:mm:ss)
-          const rawDate = resultjson?.dataset?.processedAt;
-          let formattedDate = "-";
-          if (rawDate) {
-            const d = new Date(rawDate);
-            if (!isNaN(d.getTime())) {
-              const pad = (n) => String(n).padStart(2, '0');
-              formattedDate = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-            } else {
-              formattedDate = rawDate;
-            }
-          }
-
-          setPageInfo(prev => ({
-            ...prev,
-            processedAt: formattedDate
-          }));
-        }
-      } else {
-        modal.showErrorAlert("에러", metadataResult?.message || "메타데이터 조회 실패");
-      }
+      console.log(metadataResult)
+      // 페이지 메타데이터 조회 성공 시 로그만 출력하고, 
+      // 사이드바의 '마지막 업데이트' 시간은 /d/data/info API 연동을 유지하기 위해 여기서 업데이트하지 않음
       loadingSpinner.hide();
     } catch (error) {
       console.error("API Error:", error);

@@ -8,7 +8,19 @@ export function MenuBarApi() {
         async (data) => await api.post(data, "/pages/get", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 데이터 정보 조회 (최종 업데이트 시간 포함) */
+    const getDataInfo = useMutation(
+        async (data) => await api.post(data, "/data/info", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
+    /** 데이터 맵 업데이트 (새로고침) */
+    const updateMap = useMutation(
+        async (data) => await api.post(data, "/update-map", "API_BASE_URL_DATAMANAGEMENT")
+    );
+
     return {
-        getPageMetadata
+        getPageMetadata,
+        getDataInfo,
+        updateMap
     };
 }
