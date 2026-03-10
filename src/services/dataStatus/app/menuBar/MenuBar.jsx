@@ -60,7 +60,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const loadingSpinner = useContext(loadingSpinnerContext);
   const auth = useSelector((store) => store.auth);
   const navigate = useNavigate();
-  const { getPageMetadata, getDataInfo, updateMap } = MenuBarApi();
+  const { getPageMetadata, getDataInfo, syncMap } = MenuBarApi();
   const { pageList } = VariablePageApi(); // Use VariablePageApi for page list
 
   const [isNewDataModalOpen, setIsNewDataModalOpen] = useState(false);
@@ -161,7 +161,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     try {
       loadingSpinner.show();
-      const result = await updateMap.mutateAsync({ user: userId, pn });
+      const result = await syncMap.mutateAsync({ user: userId, pn });
 
       if (result) {
         modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
@@ -189,7 +189,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           onClick={handleRefresh}
           title="데이터 새로고침"
         >
-          <RefreshCw size={14} className={updateMap.isLoading ? "spin" : ""} />
+          <RefreshCw size={14} className={syncMap.isLoading ? "spin" : ""} />
         </button>
       </div>
     </div>

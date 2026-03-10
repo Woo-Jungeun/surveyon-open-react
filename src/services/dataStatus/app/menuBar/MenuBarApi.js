@@ -13,14 +13,14 @@ export function MenuBarApi() {
         async (data) => await api.post(data, "/data/info", "API_BASE_URL_DATAMANAGEMENT")
     );
 
-    /** 데이터 맵 업데이트 (새로고침) */
-    const updateMap = useMutation(
-        async (data) => await api.post(data, "/update-map", "API_BASE_URL_DATAMANAGEMENT")
+    /** 데이터 맵 새로고침 */
+    const syncMap = useMutation(
+        async (data) => await api.post(data, "/data/sync", "API_BASE_URL_DATAMANAGEMENT")
     );
 
     return {
         getPageMetadata,
         getDataInfo,
-        updateMap
+        syncMap
     };
 }
