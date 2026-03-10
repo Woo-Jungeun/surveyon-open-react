@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
-import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy } from 'lucide-react';
+import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy, ChevronDown, Check } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -7,7 +7,7 @@ import Toast from '../../../../components/common/Toast';
 import DataHeader from '../../components/DataHeader';
 import SideBar from '../../components/SideBar';
 import KendoChart from '../../components/KendoChart';
-import LogicEditPopup from '../../../dataManagement/app/mapManagement/LogicEditPopup';
+import AdvancedFilterPopup from './AdvancedFilterPopup';
 import './FrequencyAnalysisPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
 import { useSelector } from 'react-redux';
@@ -464,6 +464,11 @@ const FrequencyAnalysisPage = () => {
     const [isTotalFilterOpen, setIsTotalFilterOpen] = useState(false);
     const totalFilterRef = useRef(null);
 
+    // 신규 고급 필터 선택 드롭다운 상태
+    const [isVariableDropdownOpen, setIsVariableDropdownOpen] = useState(false);
+    const [selectedVariableId, setSelectedVariableId] = useState(null);
+    const variableDropdownRef = useRef(null);
+
     // Overview 변수 관련 상태
     const [isOverviewPopupOpen, setIsOverviewPopupOpen] = useState(false);
     const [overviewVariables, setOverviewVariables] = useState([]);
@@ -512,6 +517,9 @@ const FrequencyAnalysisPage = () => {
             }
             if (totalFilterRef.current && !totalFilterRef.current.contains(event.target)) {
                 setIsTotalFilterOpen(false);
+            }
+            if (variableDropdownRef.current && !variableDropdownRef.current.contains(event.target)) {
+                setIsVariableDropdownOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -842,13 +850,59 @@ const FrequencyAnalysisPage = () => {
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
             <DataHeader title="빈도분석">
+                {/* 고급 필터 선택 드롭다운 */}
+                <div className="custom-filter-wrapper" ref={variableDropdownRef} style={{ marginLeft: '12px' }}>
+                    <div
+                        className={`custom-filter-trigger ${isVariableDropdownOpen ? 'open' : ''}`}
+                        onClick={() => setIsVariableDropdownOpen(!isVariableDropdownOpen)}
+                        style={{ width: '180px' }}
+                    >
+                        <span className="trigger-text">
+                            {selectedVariableId ? selectedVariableId : '고급 필터 선택'}
+                        </span>
+                        <ChevronDown size={14} className="trigger-icon" />
+                    </div>
+                    {isVariableDropdownOpen && (
+                        <div className="custom-filter-menu" style={{ width: '180px' }}>
+                            <div
+                                className={`custom-filter-item ${!selectedVariableId ? 'selected' : ''}`}
+                                onClick={() => {
+                                    setSelectedVariableId(null);
+                                    setIsVariableDropdownOpen(false);
+                                }}
+                                style={{ justifyContent: 'flex-start', color: '#64748b' }}
+                            >
+                                선택 안함
+                            </div>
+                            {overviewVariables.map(v => (
+                                <div
+                                    key={v.id}
+                                    className={`custom-filter-item ${selectedVariableId === v.id ? 'selected' : ''}`}
+                                    onClick={() => {
+                                        setSelectedVariableId(v.id);
+                                        setIsVariableDropdownOpen(false);
+                                    }}
+                                >
+                                    <span className="filter-text">{v.id} {v.label ? `(${v.label})` : ''}</span>
+                                </div>
+                            ))}
+                            {overviewVariables.length === 0 && (
+                                <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
+                                    조회된 변수가 없습니다.
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
                 {/* 고급 필터 버튼 - LogicEditPopup 오픈 */}
                 <button
                     onClick={() => setIsFilterPopupOpen(true)}
-                    className={`advanced-filter-btn ${filterLogic ? 'active' : ''}`}
+                    className={`advanced-filter-btn`}
+                    style={{ marginLeft: '12px' }}
                 >
                     <Filter size={15} />
-                    고급 필터{filterLogic ? ' ✓' : ''}
+                    고급 필터 생성
                 </button>
 
                 <button
@@ -922,17 +976,22 @@ const FrequencyAnalysisPage = () => {
                 </div>
             </div>
 
-            {/* 고급 필터 LogicEditPopup */}
+            {/* 고급 필터 팝업 */}
+            {/* 고급 필터 팝업 */}
             {isFilterPopupOpen && (
-                <LogicEditPopup
-                    variable={{ id: 'filter', logic: filterLogic }}
+                <AdvancedFilterPopup
                     variablesList={questions.map(q => ({ sysName: q.id, label: q.label }))}
+                    initialVariables={overviewVariables}
                     onClose={() => setIsFilterPopupOpen(false)}
-                    onSave={(_, logicStr) => {
+                    onSave={(varId, logicStr, label) => {
                         setFilterLogic(logicStr);
+                        setSelectedVariableId(varId); // 선택된 변수로 자동 변경
                         setIsFilterPopupOpen(false);
+                        fetchOverviewVars(); // 팝업 닫힐 때 목록 최신화
                     }}
-                    theme="data-dashboard"
+                    auth={auth}
+                    pageId={sessionStorage.getItem("pageId")}
+                    onSaved={fetchOverviewVars}
                 />
             )}
 
