@@ -67,7 +67,7 @@ const Section = ({ id, title, first, open, onToggle, headerAddon, children }) =>
     </div>
 );
 
-const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, onDuplicateRemoveDateLoaded, project_lock, onAnalysisComplete, onFetchIn, onSaveIn }) => {
+const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, projectnum, qnum, userPerm, lv3Options, responseCount, fetchLv3Options, onQidLoaded, onDuplicateRemoveDateLoaded, project_lock, onAnalysisComplete, onFetchIn, onSaveIn, onSaveLb }) => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -151,16 +151,61 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                             } else {
                                 // 번역, 보기분석 등은 in 저장 없이 조회만 수행
                                 try {
-                                    // 1. in 조회
-                                    await onFetchIn?.();
+                                    if (curType === "classified") {
+                                        // 1. 분석 결과 반영된 최신 lb 데이터 조회
+                                        const resLb = await optionEditData.mutateAsync({
+                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "lb", skipSpinner: true }
+                                        });
+                                        const freshRows = resLb?.resultjson || [];
 
-                                    // 2. popupcheck 조회
-                                    await optionEditData.mutateAsync({
-                                        params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
-                                    });
+                                        // 2. 저장(export) 페이로드 생성 (빈값 방지)
+                                        const cleaned = freshRows.map((r) => ({
+                                            lv1: String(r.lv1 ?? ""),
+                                            lv2: String(r.lv2 ?? ""),
+                                            lv3: String(r.lv3 ?? ""),
+                                            qnum: String(qnum ?? ""),
+                                            lv1code: String(r.lv1code ?? ""),
+                                            lv2code: String(r.lv2code ?? ""),
+                                            lv321code: String(r.lv321code ?? ""),
+                                            summary: String(r.summary ?? ""),
+                                            ex_gubun: String(r.ex_gubun ?? "분석(수정가능)"),
+                                            lv23code: String(r.lv23code ?? ""),
+                                            lv123code: String(r.lv123code ?? ""),
+                                            representative_response: String(r.representative_response ?? ""),
+                                        }));
 
-                                    // 3. lb 조회
-                                    await fetchLv3Options?.();
+                                        // 3. 분석완료 직후 gb=lb 저장 API 태우기
+                                        await optionSaveData.mutateAsync({
+                                            user: auth?.user?.userId || "",
+                                            projectnum: sessionStorage.getItem("projectnum") || projectnum || "",
+                                            qnum: sessionStorage.getItem("qnum") || qnum || "",
+                                            gb: "lb",
+                                            data: cleaned,
+                                            lvcode: "1" // 기본값 설정
+                                        });
+
+                                        // 1. in 조회
+                                        await onFetchIn?.();
+
+                                        // 2. popupcheck 조회
+                                        await optionEditData.mutateAsync({
+                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
+                                        });
+
+                                        // 3. fetchLv3Options 는 freshRows를 넘겨주어 또 조회하지 않도록 함 (조회 횟수 단축)
+                                        await fetchLv3Options?.(true, freshRows);
+                                    } else {
+                                        // 1. in 조회
+                                        await onFetchIn?.();
+
+                                        // 2. popupcheck 조회
+                                        await optionEditData.mutateAsync({
+                                            params: { user: auth?.user?.userId || "", projectnum, qnum, gb: "popupcheck", checkyn: 1 }
+                                        });
+
+                                        // 3. lb 조회
+                                        await fetchLv3Options?.();
+                                    }
                                 } catch (e) {
                                     console.error("[OptionSettingInfo] 분석 완료 후 프로세스 에러:", e);
                                 }

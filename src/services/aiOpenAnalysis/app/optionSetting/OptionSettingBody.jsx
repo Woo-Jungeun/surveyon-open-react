@@ -213,22 +213,28 @@ const OptionSettingBody = () => {
   }, [modal]);
 
   //-----------------소분류 코드 중앙 관리-----------------
-  const fetchLv3Options = useCallback(async (skipSpinner = false) => {
+  const fetchLv3Options = useCallback(async (skipSpinner = false, preData = null) => {
     try {
-      const res = await optionEditData.mutateAsync({
-        params: {
-          user: auth?.user?.userId || "",
-          projectnum: sessionStorage.getItem("projectnum") ?? "",
-          qnum: sessionStorage.getItem("qnum") ?? "",
-          gb: "lb",
-          skipSpinner,
-        },
-      });
+      let resultjson = preData;
 
-      if (res.success === "777") {
-        if (!skipSpinner) loadingSpinner.hide();  // 로딩바 닫기 
+      if (!resultjson) {
+        const res = await optionEditData.mutateAsync({
+          params: {
+            user: auth?.user?.userId || "",
+            projectnum: sessionStorage.getItem("projectnum") ?? "",
+            qnum: sessionStorage.getItem("qnum") ?? "",
+            gb: "lb",
+            skipSpinner,
+          },
+        });
+
+        if (res.success === "777" && !skipSpinner) {
+          loadingSpinner.hide();  // 로딩바 닫기 
+        }
+        resultjson = res?.resultjson;
       }
-      const list = (res?.resultjson ?? []).reduce((acc, r) => {
+
+      const list = (resultjson ?? []).reduce((acc, r) => {
         const lv3 = (r?.lv3 ?? "").trim();
         const lv123code = (r?.lv123code ?? "").trim();
         if (!lv3) return acc;
@@ -250,7 +256,7 @@ const OptionSettingBody = () => {
       console.error("lv3 fetch error", err);
       throw err;
     }
-  }, [optionEditData, projectnum, qnum]);
+  }, [optionEditData, projectnum, qnum, loadingSpinner]);
 
   // 현재 탭 저장 실행 => 성공(true)만 이동 허용
   const saveTab = useCallback(async (tab) => {
@@ -732,6 +738,9 @@ const OptionSettingBody = () => {
               }}
               onSaveIn={async (skipReload) => {
                 try { await tab1Ref.current?.saveChanges?.(skipReload); } catch (e) { }
+              }}
+              onSaveLb={async () => {
+                try { await tab2Ref.current?.saveChanges?.(); } catch (e) { }
               }}
             />
           </div>
