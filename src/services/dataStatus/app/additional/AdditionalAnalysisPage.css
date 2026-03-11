@@ -664,24 +664,18 @@
 .stats-toggle-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
+    gap: 6px;
+    padding: 6px 12px;
     border-radius: 8px;
     border: 1px solid #e2e8f0;
-    background: #f1f5f9;
-    color: #475569;
+    background: #fff;
+    color: #1e293b;
     font-size: 13px;
-    font-weight: 700;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
     outline: none;
     margin-left: 12px;
-    padding: 6px 12px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid #e2e8f0;
 }
 
 .stats-toggle-btn:hover {
@@ -2053,29 +2047,6 @@
     border: 1.5px solid #3b82f6;
     background: #eff6ff;
     color: #3b82f6;
-}
-
-.stats-toggle-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    background: #fff;
-    font-size: 13px;
-    font-weight: 700;
-    color: #2563eb;
-    cursor: pointer;
-    transition: all 0.2s;
-    margin-left: 8px;
-}
-
-.stats-toggle-btn:hover,
-.stats-toggle-btn.active {
-    background: #f0f7ff;
-    border-color: #2563eb;
-    color: #2563eb;
 }
 
 /* New UI refinements */
