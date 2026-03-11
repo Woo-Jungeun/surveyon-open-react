@@ -333,7 +333,7 @@ const AggregationCard = memo(({ q }) => {
                         <button className={`view-option-btn ${showChart && chartMode === 'pie' ? 'active' : ''}`} onClick={() => { setChartMode('pie'); setShowChart(true); }} title="원형 차트"><PieChart size={18} /></button>
                         <button className={`view-option-btn ${showChart && chartMode === 'donut' ? 'active' : ''}`} onClick={() => { setChartMode('donut'); setShowChart(true); }} title="도넛형 차트"><Donut size={18} /></button>
                         <button className={`view-option-btn ${showChart && chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => { setChartMode('radarArea'); setShowChart(true); }} title="방사형 차트"><Aperture size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'funnel' ? 'active' : ''}`} onClick={() => { setChartMode('funnel'); setShowChart(true); }} title="깔때기 차트"><Filter size={18} /></button>
+                        {/* <button className={`view-option-btn ${showChart && chartMode === 'funnel' ? 'active' : ''}`} onClick={() => { setChartMode('funnel'); setShowChart(true); }} title="깔때기 차트"><Filter size={18} /></button> */}
                         <button className={`view-option-btn ${showChart && chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => { setChartMode('scatterPoint'); setShowChart(true); }} title="점 도표"><MoreHorizontal size={18} /></button>
                         <button className={`view-option-btn ${showChart && chartMode === 'area' ? 'active' : ''}`} onClick={() => { setChartMode('area'); setShowChart(true); }} title="영역형 차트"><AreaChart size={18} /></button>
                         <button className={`view-option-btn ${showChart && chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => { setChartMode('heatmap'); setShowChart(true); }} title="히트맵"><LayoutGrid size={18} /></button>
@@ -405,34 +405,36 @@ const AggregationCard = memo(({ q }) => {
                         ) : q.data.length === 0 ? (
                             <div style={{ color: '#888', fontSize: '13px' }}>조회된 데이터가 없습니다.</div>
                         ) : (() => {
-                            // 차트는 무조건 퍼센트 데이터(_pct)를 보도록 고유 매핑
+                            // ─── 차트 데이터 기준 (최종) ───────────────────────────────────
+                            // 도넛(Donut) / 깔때기(Funnel) → 퍼센트(_pct)
+                            // 그 외 모든 차트 (원형 포함)  → 사례수(count)
+                            // ────────────────────────────────────────────────────────────────
+                            const usePercentFields = ['donut', 'funnel'].includes(chartMode);
+
                             const chartSeries = q.columns
                                 ? q.columns.map(col => ({
-                                    field: `${col.key}_pct`,
+                                    field: usePercentFields ? `${col.key}_pct` : col.key,
                                     name: col.label
                                 }))
-                                : [{ field: 'total_pct', name: '백분율' }];
+                                : [{ field: usePercentFields ? 'total_pct' : 'total', name: '전체' }];
+
+                            // 차트별 허용 타입 (토글 제한)
+                            let allowedTypes = [chartMode];
+                            if (chartMode === 'column' || chartMode === 'bar') {
+                                allowedTypes = ['column', 'bar'];
+                            } else if (chartMode === 'stackedColumn' || chartMode === 'stacked100Column') {
+                                allowedTypes = ['stackedColumn', 'stacked100Column'];
+                            }
 
                             return (
                                 <KendoChart
+                                    key={`${q.id}-${chartMode}`}
                                     data={q.data}
                                     seriesNames={chartSeries}
                                     initialType={chartMode}
                                     labelLimit={10}
-                                    allowedTypes={
-                                        chartMode === 'column' || chartMode === 'bar' ? ['column', 'bar'] :
-                                            chartMode === 'wordCloud' ? ['wordCloud'] :
-                                                chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? ['stackedColumn', 'stacked100Column'] :
-                                                    chartMode === 'line' ? ['line'] :
-                                                        chartMode === 'pie' ? ['pie'] :
-                                                            chartMode === 'donut' ? ['donut'] :
-                                                                chartMode === 'area' ? ['area'] :
-                                                                    chartMode === 'heatmap' ? ['heatmap'] :
-                                                                        chartMode === 'radarLine' ? ['radarLine'] :
-                                                                            chartMode === 'funnel' ? ['funnel'] :
-                                                                                chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                                    chartMode === 'radarArea' ? ['radarArea'] : []
-                                    }
+                                    suffix={usePercentFields ? "%" : ""}
+                                    allowedTypes={allowedTypes}
                                 />
                             );
                         })()}

@@ -108,21 +108,30 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     const isScatterPoint = chartType === 'scatterPoint';
 
 
+    // 전체/합계 집계 행은 모든 차트에서 제외 (차트 왜곡 방지)
+    const AGGREGATE_LABELS = new Set(['전체', '합계', 'total', 'Total', '전체(명)']);
+    const filteredData = Array.isArray(data)
+        ? data.filter(row => !AGGREGATE_LABELS.has(row.name))
+        : data;
+
     const renderSeries = () => {
         if (isPieOrDonut) {
+            // 파이/도넛: 각 행(row)를 조각으로, total count를 값으로 사용
+            // Kendo가 자동으로 전체 합계 대비 비율(%) 계산
+            const pieData = filteredData
+                .map((row, index) => ({
+                    name: row.name,
+                    pieValue: Number(row['total'] || 0),
+                    color: CHART_COLORS[index % CHART_COLORS.length]
+                }));
             return (
                 <ChartSeriesItem
                     type={chartType}
-                    data={data}
+                    data={pieData}
                     categoryField="name"
-                    field={(seriesNames && seriesNames[0]?.field) || "total"}
-                    name={(seriesNames && seriesNames[0]?.name) || "Total"}
-                    labels={{
-                        visible: true,
-                        content: (e) => `${e.category}: ${e.value}${suffix}`,
-                        position: "outsideEnd",
-                        background: "none"
-                    }}
+                    field="pieValue"
+                    colorField="color"
+                    labels={{ visible: false }}
                 />
             );
         }
@@ -134,7 +143,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             targetSeries.forEach(s => {
                 const field = typeof s === 'string' ? s : s.field;
                 const label = typeof s === 'string' ? s : s.name;
-                data.forEach(item => {
+                filteredData.forEach(item => {
                     heatmapData.push({
                         x: item.name,
                         y: label,
@@ -163,22 +172,20 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         }
 
         if (chartType === 'funnel') {
-            const coloredData = data.map((item, index) => ({
-                ...item,
+            // 퍼널: 각 행(row)를 단계로, total count를 값으로 사용 (파이/도넛과 동일)
+            const funnelData = filteredData.map((item, index) => ({
+                name: item.name,
+                funnelValue: Number(item['total'] || 0),
                 color: CHART_COLORS[index % CHART_COLORS.length]
             }));
-
-            const field = (seriesNames && seriesNames[0]?.field) || "total";
-            const name = (seriesNames && seriesNames[0]?.name) || "Total";
 
             return (
                 <ChartSeriesItem
                     type="funnel"
-                    data={coloredData}
+                    data={funnelData}
                     categoryField="name"
-                    field={field}
+                    field="funnelValue"
                     colorField="color"
-                    name={name}
                     labels={{
                         visible: false,
                         content: () => "",
@@ -200,7 +207,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     key={field}
                     type={isRadar ? (chartType === 'radarArea' ? 'radarArea' : 'radarLine') : (isStacked ? "column" : (isScatterPoint ? "line" : chartType))}
                     stack={chartType === 'stacked100Column' ? { type: '100%' } : (chartType === 'stackedColumn' ? true : undefined)}
-                    data={data}
+                    data={filteredData}
                     field={field}
                     name={label}
                     color={colors[index % colors.length]}
@@ -209,7 +216,16 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     opacity={chartType === 'radarArea' ? 0.3 : undefined}
                     width={isScatterPoint ? 0 : undefined}
                     markers={isScatterPoint ? { visible: true, size: 10, type: "circle" } : undefined}
-                    labels={isStacked ? { visible: true, content: (e) => chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : `${e.value}${suffix}`, position: "center", background: "none", color: "#fff" } : undefined}
+                    labels={isStacked ? {
+                        visible: true,
+                        content: (e) => {
+                            if (!e.value || Number(e.value) === 0) return "";
+                            return chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : `${e.value}${suffix}`;
+                        },
+                        position: "center",
+                        background: "none",
+                        color: "#fff"
+                    } : undefined}
                 />
             );
         });
@@ -233,10 +249,14 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     // 워드 클라우드 렌더링
     if (isWordCloud) {
         // Transform data for WordCloud: { text: string, value: number }
-        const wordData = data.map(item => ({
+        // Use filteredData to exclude aggregate rows (Total, etc.)
+        const wordData = filteredData.map(item => ({
             text: item.name,
-            value: item.total ? item.total : (item.count || 10) // fallback value
+            value: Number(item.total || 0)
         }));
+
+        const minVal = Math.min(...wordData.map(d => d.value)) || 0;
+        const maxVal = Math.max(...wordData.map(d => d.value)) || 1;
 
         return (
             <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', position: 'relative' }}>
@@ -267,7 +287,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     </div>
                 )}
                 <div ref={containerRef} style={{ flex: 1, width: '100%', height: '100%', overflow: 'hidden' }}>
-                    {dimensions.width > 0 && dimensions.height > 0 && (
+                    {dimensions.width > 0 && dimensions.height > 0 && wordData.length > 0 && (
                         <WordCloud
                             data={wordData}
                             width={dimensions.width}
@@ -275,10 +295,14 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             font="Pretendard, sans-serif"
                             fontStyle="normal"
                             fontWeight="bold"
-                            fontSize={(word) => word.value / 5 + 12}
+                            fontSize={(word) => {
+                                // Linear scaling between 16px and 64px
+                                if (maxVal === minVal) return 32;
+                                return 16 + ((word.value - minVal) / (maxVal - minVal)) * 48;
+                            }}
                             spiral="archimedean"
-                            rotate={(word) => (word.value % 2 === 0 ? 0 : 90)}
-                            padding={2}
+                            rotate={() => 0} // Keep labels horizontal for better readability
+                            padding={4}
                             fill={(d, i) => CHART_COLORS[i % CHART_COLORS.length]}
                         />
                     )}
@@ -296,29 +320,31 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
             <style>{tooltipGlobalStyle}</style>
             <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '10px', flexShrink: 0 }}>
-                <button
-                    onClick={() => setShowLegend(!showLegend)}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '6px 12px',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '6px',
-                        backgroundColor: showLegend ? '#eff6ff' : 'white',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        color: showLegend ? '#2563eb' : '#475569',
-                        borderIColor: showLegend ? '#bfdbfe' : '#e2e8f0',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                    }}
-                    onMouseEnter={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = '#f8fafc' }}
-                    onMouseLeave={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = 'white' }}
-                >
-                    <span>범례 {showLegend ? '숨기기' : '보기'}</span>
-                    <LayoutList size={14} />
-                </button>
+                {!isHeatmap && (
+                    <button
+                        onClick={() => setShowLegend(!showLegend)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 12px',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            backgroundColor: showLegend ? '#eff6ff' : 'white',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            color: showLegend ? '#2563eb' : '#475569',
+                            borderIColor: showLegend ? '#bfdbfe' : '#e2e8f0',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = '#f8fafc' }}
+                        onMouseLeave={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = 'white' }}
+                    >
+                        <span>범례 {showLegend ? '숨기기' : '보기'}</span>
+                        <LayoutList size={14} />
+                    </button>
+                )}
 
                 {showDropdown && (
                     <button
@@ -368,9 +394,9 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             !isPieOrDonut && !isHeatmap && !isRadar && (
                                 <ChartCategoryAxis>
                                     <ChartCategoryAxisItem
-                                        categories={data.map(d => d.name)}
+                                        categories={filteredData.map(d => d.name)}
                                         labels={{
-                                            rotation: data.length > 5 ? -45 : 0,
+                                            rotation: filteredData.length > 5 ? -45 : 0,
                                             padding: { top: 10 },
                                             content: (e) => (labelLimit > 0 && e.value && e.value.length > labelLimit) ? e.value.substring(0, labelLimit) + '...' : e.value
                                         }}
@@ -381,7 +407,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                         {
                             isRadar && (
                                 <ChartCategoryAxis>
-                                    <ChartCategoryAxisItem categories={data.map(d => d.name)} />
+                                    <ChartCategoryAxisItem categories={filteredData.map(d => d.name)} />
                                 </ChartCategoryAxis>
                             )
                         }
@@ -389,10 +415,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             !isPieOrDonut && !isHeatmap && !isRadar && (
                                 <ChartValueAxis>
                                     <ChartValueAxisItem
-                                        labels={{ format: `{0}${suffix}` }}
+                                        labels={{
+                                            format: chartType === 'stacked100Column' ? '{0:P0}' : (suffix ? `{0}${suffix}` : '{0}')
+                                        }}
                                         min={0}
-                                        max={100}
-                                        majorUnit={20}
+                                        max={chartType === 'stacked100Column' ? 1 : (suffix === '%' ? 110 : undefined)}
+                                        majorUnit={chartType === 'stacked100Column' ? 0.2 : (suffix === '%' ? 20 : undefined)}
                                         reverse={false}
                                     />
                                 </ChartValueAxis>
@@ -402,10 +430,10 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             isRadar && (
                                 <ChartValueAxis>
                                     <ChartValueAxisItem
-                                        labels={{ format: `{0}${suffix}` }}
+                                        labels={{ format: suffix ? `{0}${suffix}` : '{0}' }}
                                         min={0}
-                                        max={100}
-                                        majorUnit={20}
+                                        max={suffix === '%' ? 110 : undefined}
+                                        majorUnit={suffix === '%' ? 20 : undefined}
                                     />
                                 </ChartValueAxis>
                             )
@@ -418,9 +446,9 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                     <ChartXAxis>
                                         <ChartXAxisItem
                                             name="xAxis"
-                                            categories={data.map(d => typeof d === 'string' ? d : (d.name || d.category || ''))}
+                                            categories={filteredData.map(d => typeof d === 'string' ? d : (d.name || d.category || ''))}
                                             labels={{
-                                                rotation: data.length > 5 ? -45 : 0,
+                                                rotation: filteredData.length > 5 ? -45 : 0,
                                                 padding: { top: 10 },
                                                 content: (e) => (labelLimit > 0 && e.value && e.value.length > labelLimit) ? e.value.substring(0, labelLimit) + '...' : e.value
                                             }}
@@ -451,7 +479,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                 const value = e.point ? e.point.value : e.value;
 
                                 const seriesName = e.series?.name || e.point?.series?.name || e.series?.field || "";
-                                const seriesColor = e.series?.color || e.point?.color || (e.point?.series?.color);
+                                const seriesColor = e.point?.dataItem?.color || e.point?.options?.color || e.point?.color || e.series?.color || (e.point?.series?.color) || '#334155';
 
                                 // 히트맵용 심플 스타일
                                 if (isHeatmap) {
@@ -465,9 +493,13 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
 
                                 // 파이/도넛/퍼널용 심플 스타일
                                 if (isPieOrDonut || chartType === 'funnel') {
+                                    const pctValue = e.point?.percentage ? (e.point.percentage * 100).toFixed(1) : "";
                                     return (
                                         <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500' }}>
-                                            <strong>{category}: {value}{suffix}</strong>
+                                            <strong>
+                                                {category}: {value}{suffix}
+                                                {chartType === 'pie' && ` (${pctValue}%)`}
+                                            </strong>
                                         </div>
                                     );
                                 }
