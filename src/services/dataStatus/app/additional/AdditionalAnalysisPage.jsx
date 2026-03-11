@@ -20,6 +20,105 @@ import LogicEditPopup from '../../../dataManagement/app/mapManagement/LogicEditP
 // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
+const parseTableData = (newData) => {
+    const columnsList = newData.columns || [];
+    const rowsList = newData.rows || [];
+    const columnLabels = columnsList.map(c => ({
+        label: c.label,
+        label2: c.label2 || '',
+        var_label: c.var_label || c.variable_label || ''
+    }));
+    const columnKeys = columnsList.map(c => c.key);
+
+    const parsedRows = rowsList.map(r => {
+        const processedValues = columnKeys.map(k => {
+            const cell = r.cells?.[k];
+            return {
+                count: cell?.count || 0,
+                percent: cell?.percent || "0.0"
+            };
+        });
+        const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
+        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
+    });
+
+    const statsMap = newData.stats || {};
+    const parsedStats = {
+        mean: columnsList.map(c => statsMap[c.key]?.mean ?? (c.mean !== undefined && c.mean !== null ? c.mean : '-')),
+        median: columnsList.map(c => statsMap[c.key]?.median ?? statsMap[c.key]?.med ?? (c.median !== undefined && c.median !== null ? c.median : ((c.med !== undefined && c.med !== null) ? c.med : '-'))),
+        mode: columnsList.map(c => statsMap[c.key]?.mode ?? statsMap[c.key]?.mod ?? (c.mode !== undefined && c.mode !== null ? c.mode : ((c.mod !== undefined && c.mod !== null) ? c.mod : '-'))),
+        std: columnsList.map(c => statsMap[c.key]?.std ?? (c.std !== undefined && c.std !== null ? c.std : '-')),
+        min: columnsList.map(c => statsMap[c.key]?.min ?? (c.min !== undefined && c.min !== null ? c.min : '-')),
+        max: columnsList.map(c => statsMap[c.key]?.max ?? (c.max !== undefined && c.max !== null ? c.max : '-')),
+        n: columnsList.map(c => statsMap[c.key]?.n ?? (c.n !== undefined && c.n !== null ? c.n : 0)),
+        rse: columnsList.map(c => statsMap[c.key]?.rse ?? (c.rse !== undefined && c.rse !== null ? c.rse : '-')),
+        chi2: columnsList.map(c => statsMap[c.key]?.chi2 ?? (c.chi2 !== undefined && c.chi2 !== null ? c.chi2 : '-')),
+        df: columnsList.map(c => statsMap[c.key]?.df ?? (c.df !== undefined && c.df !== null ? c.df : '-')),
+        p_value: columnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined && c.p_value !== null ? c.p_value : '-')),
+    };
+
+    const groupedRows = (() => {
+        const order = [];
+        const map = new Map();
+        parsedRows.forEach(r => {
+            const k = r.label2 || r.var_label || '';
+            if (!map.has(k)) {
+                map.set(k, []);
+                order.push(k);
+            }
+            map.get(k).push(r);
+        });
+        const res = [];
+        order.forEach(k => res.push(...map.get(k)));
+        return res;
+    })();
+
+    return {
+        columns: columnLabels,
+        rows: groupedRows,
+        stats: parsedStats,
+        table_id: newData.table_id || 'T1',
+        title: newData.title || ''
+    };
+};
+
+const processResults = (evalResultData) => {
+    if (evalResultData.results && Array.isArray(evalResultData.results)) {
+        return evalResultData.results.map(r => parseTableData(r.result || r));
+    } else {
+        return [parseTableData(evalResultData)];
+    }
+};
+
+const computeLocalVars = (dataItem) => {
+    if (!dataItem) return {};
+    const chartData = dataItem.columns.map((colObj, colIndex) => {
+        const colName = colObj.label || colObj;
+        const dataPoint = { name: colName };
+        dataItem.rows.forEach(row => {
+            if (row.label === '합계' || row.label === '전체') {
+                dataPoint.total = row.values[colIndex]?.count || 0;
+            } else {
+                const pct = row.values[colIndex]?.percent;
+                dataPoint[row.label] = pct ? parseFloat(pct) : 0;
+            }
+        });
+        return dataPoint;
+    });
+
+    const seriesNames = dataItem.rows
+        .filter(row => row.label !== '합계' && row.label !== '전체')
+        .map(row => row.label);
+
+    return {
+        chartData,
+        seriesNames,
+        hasColLabel2: dataItem.columns?.some(c => c.label2),
+        hasVarLabel: dataItem.columns?.some(c => c.var_label),
+        hasRowLabel2: dataItem.rows?.some(r => r.label2 || r.var_label)
+    };
+};
+
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
@@ -48,7 +147,7 @@ const AdditionalAnalysisPage = () => {
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const tableListRef = useRef(null);
-    const [fullscreenModal, setFullscreenModal] = useState({ open: false, type: null }); // 'table', 'stats', 'chart'
+    const [fullscreenModal, setFullscreenModal] = useState({ open: false, type: null, dataItem: null, chartData: null, seriesNames: null }); // 'table', 'stats', 'chart'
 
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([]);
@@ -350,43 +449,7 @@ const AdditionalAnalysisPage = () => {
                                     }
                                 }
 
-                                const columnsList = tData.columns || [];
-                                const rowsList = tData.rows || [];
-
-                                const columnLabels = columnsList.map(c => c.label);
-                                const columnKeys = columnsList.map(c => c.key);
-
-                                const parsedRows = rowsList.map(r => {
-                                    const processedValues = columnKeys.map(k => {
-                                        const cell = r.cells?.[k];
-                                        return {
-                                            count: cell?.count || 0,
-                                            percent: cell?.percent || "0.0"
-                                        };
-                                    });
-                                    // Total calculation might still be useful for reference but display uses Api values
-                                    const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                                    return {
-                                        label: r.label,
-                                        values: processedValues, // Now detailed objects
-                                        total: total,
-                                        var_label: r.var_label || r.variable_label || ''
-                                    };
-                                });
-
-                                const parsedStats = {
-                                    mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                                    std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
-                                    min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
-                                    max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
-                                    n: columnsList.map(c => c.n || 0)
-                                };
-
-                                setResultData({
-                                    columns: columnLabels,
-                                    rows: parsedRows,
-                                    stats: parsedStats
-                                });
+                                setResultDataList(processResults(tData));
 
                                 // Auto-run analysis for the first table
                                 try {
@@ -452,51 +515,7 @@ const AdditionalAnalysisPage = () => {
                                     const evalResult = await evaluateTable.mutateAsync(payload);
 
                                     if (evalResult?.success === "777" && evalResult.resultjson) {
-                                        let newData = evalResult.resultjson;
-
-                                        // array result unpacking block removed
-
-                                        const newColumnsList = newData.columns || [];
-                                        const newRowsList = newData.rows || [];
-                                        const newColumnLabels = newColumnsList.map(c => ({
-                                            label: c.label,
-                                            label2: c.label2 || '',
-                                            var_label: c.var_label || c.variable_label || ''
-                                        }));
-                                        const newColumnKeys = newColumnsList.map(c => c.key);
-
-                                        const newParsedRows = newRowsList.map(r => {
-                                            const processedValues = newColumnKeys.map(k => {
-                                                const cell = r.cells?.[k];
-                                                return {
-                                                    count: cell?.count || 0,
-                                                    percent: cell?.percent || "0.0"
-                                                };
-                                            });
-                                            const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                                            return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
-                                        });
-
-                                        const statsMap = newData.stats || {};
-                                        const newParsedStats = {
-                                            mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? (c.mean !== undefined ? c.mean : '-')),
-                                            median: newColumnsList.map(c => statsMap[c.key]?.median ?? statsMap[c.key]?.med ?? (c.median !== undefined ? c.median : (c.med !== undefined ? c.med : '-'))),
-                                            mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? statsMap[c.key]?.mod ?? (c.mode !== undefined ? c.mode : (c.mod !== undefined ? c.mod : '-'))),
-                                            std: newColumnsList.map(c => statsMap[c.key]?.std ?? (c.std !== undefined ? c.std : '-')),
-                                            min: newColumnsList.map(c => statsMap[c.key]?.min ?? (c.min !== undefined ? c.min : '-')),
-                                            max: newColumnsList.map(c => statsMap[c.key]?.max ?? (c.max !== undefined ? c.max : '-')),
-                                            n: newColumnsList.map(c => statsMap[c.key]?.n ?? (c.n !== undefined ? c.n : 0)),
-                                            rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? (c.rse !== undefined ? c.rse : '-')),
-                                            chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? (c.chi2 !== undefined ? c.chi2 : '-')),
-                                            df: newColumnsList.map(c => statsMap[c.key]?.df ?? (c.df !== undefined ? c.df : '-')),
-                                            p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined ? c.p_value : '-')),
-                                        };
-
-                                        setResultData({
-                                            columns: newColumnLabels,
-                                            rows: newParsedRows,
-                                            stats: newParsedStats
-                                        });
+                                        setResultDataList(processResults(evalResult.resultjson));
                                     }
                                 } catch (autoEvalError) {
                                     console.error("Initial auto evaluation failed:", autoEvalError);
@@ -817,38 +836,18 @@ const AdditionalAnalysisPage = () => {
         variable?.label?.toLowerCase().includes(variableSearchTerm.toLowerCase())
     );
 
-    // Result Data State
-    const [resultData, setResultData] = useState(null);
+    // Result Data List State
+    const [resultDataList, setResultDataList] = useState([]);
 
-    const chartData = resultData ? resultData.columns.map((colObj, colIndex) => {
-        const colName = colObj.label || colObj;
-        const dataPoint = { name: colName };
-        resultData.rows.forEach(row => {
-            if (row.label === '합계' || row.label === '전체') {
-                dataPoint.total = row.values[colIndex]?.count || 0;
-            } else {
-                const pct = row.values[colIndex]?.percent;
-                dataPoint[row.label] = pct ? parseFloat(pct) : 0;
-            }
-        });
-        return dataPoint;
-    }) : [];
+    // Utilities defined outside
 
-    const seriesNames = resultData ? resultData.rows
-        .filter(row => row.label !== '합계' && row.label !== '전체')
-        .map(row => row.label) : [];
-
-    const hasColLabel2 = resultData?.columns?.some(c => c.label2);
-    const hasVarLabel = resultData?.columns?.some(c => c.var_label);
-    const hasRowLabel2 = resultData?.rows?.some(r => r.label2 || r.var_label);
-
-    const handleCopyTable = async () => {
+    const handleCopyTable = async (dataItem, hasColLabel2, hasRowLabel2) => {
         try {
             let clipboardText = "";
             if (hasColLabel2 || hasRowLabel2) {
-                const headerPart1 = [(hasRowLabel2 ? '대분류' : ''), '문항', ...resultData.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].filter(Boolean).join('\t');
-                const headerPart2 = [(hasRowLabel2 ? '' : ''), '', ...resultData.columns.map(c => c.label || c)].filter(Boolean).join('\t');
-                const rows = resultData.rows.map(row =>
+                const headerPart1 = [(hasRowLabel2 ? '대분류' : ''), '문항', ...dataItem.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].filter(Boolean).join('\t');
+                const headerPart2 = [(hasRowLabel2 ? '' : ''), '', ...dataItem.columns.map(c => c.label || c)].filter(Boolean).join('\t');
+                const rows = dataItem.rows.map(row =>
                     [(hasRowLabel2 ? (row.label2 || '') : ''), row.label, ...row.values.map(v => {
                         if (displayMode === 'value') return v.count;
                         if (displayMode === 'percent') return `${v.percent}%`;
@@ -857,8 +856,8 @@ const AdditionalAnalysisPage = () => {
                 ).join('\n');
                 clipboardText = hasColLabel2 ? `${headerPart1}\n${headerPart2}\n${rows}` : `${headerPart1}\n${rows}`;
             } else {
-                const headers = ['문항', ...resultData.columns.map(c => c.label || c)].join('\t');
-                const rows = resultData.rows.map(row =>
+                const headers = ['문항', ...dataItem.columns.map(c => c.label || c)].join('\t');
+                const rows = dataItem.rows.map(row =>
                     [row.label, ...row.values.map(v => {
                         if (displayMode === 'value') return v.count;
                         if (displayMode === 'percent') return `${v.percent}%`;
@@ -875,23 +874,23 @@ const AdditionalAnalysisPage = () => {
         }
     };
 
-    const handleCopyStats = async () => {
+    const handleCopyStats = async (dataItem, hasColLabel2, hasRowLabel2) => {
         try {
             let clipboardText = "";
             if (hasColLabel2 || hasRowLabel2) {
-                const headerPart1 = ['통계분류', '통계항목', ...resultData.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].join('\t');
-                const headerPart2 = ['', '', ...resultData.columns.map(c => c.label || c)].join('\t');
+                const headerPart1 = ['통계분류', '통계항목', ...dataItem.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].join('\t');
+                const headerPart2 = ['', '', ...dataItem.columns.map(c => c.label || c)].join('\t');
                 const rows = statsOptions.filter(opt => opt.checked).map(stat => {
                     const statKey = stat.id.toLowerCase();
-                    const statValues = resultData.stats[statKey] || [];
+                    const statValues = dataItem.stats[statKey] || [];
                     return [stat.label, '', ...statValues].join('\t');
                 }).join('\n');
                 clipboardText = hasColLabel2 ? `${headerPart1}\n${headerPart2}\n${rows}` : `${headerPart1}\n${rows}`;
             } else {
-                const headers = ['통계', ...resultData.columns.map(c => c.label || c)].join('\t');
+                const headers = ['통계', ...dataItem.columns.map(c => c.label || c)].join('\t');
                 const rows = statsOptions.filter(opt => opt.checked).map(stat => {
                     const statKey = stat.id.toLowerCase();
-                    const statValues = resultData.stats[statKey] || [];
+                    const statValues = dataItem.stats[statKey] || [];
                     return [stat.label, ...statValues].join('\t');
                 }).join('\n');
                 clipboardText = `${headers}\n${rows}`;
@@ -994,41 +993,7 @@ const AdditionalAnalysisPage = () => {
                         }
                     }
 
-                    const columnsList = data.columns || [];
-                    const rowsList = data.rows || [];
-
-                    const columnLabels = columnsList.map(c => ({
-                        label: c.label,
-                        label2: c.label2 || '',
-                        var_label: c.var_label || c.variable_label || ''
-                    }));
-                    const columnKeys = columnsList.map(c => c.key);
-
-                    const parsedRows = rowsList.map(r => {
-                        const processedValues = columnKeys.map(k => {
-                            const cell = r.cells?.[k];
-                            return {
-                                count: cell?.count || 0,
-                                percent: cell?.percent || "0.0"
-                            };
-                        });
-                        const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
-                    });
-
-                    const parsedStats = {
-                        mean: columnsList.map(c => c.mean !== undefined ? c.mean : '-'),
-                        std: columnsList.map(c => c.std !== undefined ? c.std : '-'),
-                        min: columnsList.map(c => c.min !== undefined ? c.min : '-'),
-                        max: columnsList.map(c => c.max !== undefined ? c.max : '-'),
-                        n: columnsList.map(c => c.n || 0)
-                    };
-
-                    setResultData({
-                        columns: columnLabels,
-                        rows: parsedRows,
-                        stats: parsedStats
-                    });
+                    setResultDataList(processResults(data));
 
                     try {
                         const config = data.config || {};
@@ -1096,64 +1061,7 @@ const AdditionalAnalysisPage = () => {
                         const evalResult = await evaluateTable.mutateAsync(runPayload);
 
                         if (evalResult?.success === "777" && evalResult.resultjson) {
-                            const newData = evalResult.resultjson;
-                            const newColumnsList = newData.columns || [];
-                            const newRowsList = newData.rows || [];
-                            const newColumnLabels = newColumnsList.map(c => ({
-                                label: c.label,
-                                label2: c.label2 || '',
-                                var_label: c.var_label || c.variable_label || ''
-                            }));
-                            const newColumnKeys = newColumnsList.map(c => c.key);
-
-                            const newParsedRows = newRowsList.map(r => {
-                                const processedValues = newColumnKeys.map(k => {
-                                    const cell = r.cells?.[k];
-                                    return {
-                                        count: cell?.count || 0,
-                                        percent: cell?.percent || "0.0"
-                                    };
-                                });
-                                const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                                return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
-                            });
-
-                            const statsMap = newData.stats || {};
-                            const newParsedStats = {
-                                mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? '-'),
-                                median: newColumnsList.map(c => statsMap[c.key]?.median ?? '-'),
-                                mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? '-'),
-                                std: newColumnsList.map(c => statsMap[c.key]?.std ?? '-'),
-                                min: newColumnsList.map(c => statsMap[c.key]?.min ?? '-'),
-                                max: newColumnsList.map(c => statsMap[c.key]?.max ?? '-'),
-                                n: newColumnsList.map(c => statsMap[c.key]?.n ?? 0),
-                                rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? '-'),
-                                chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? '-'),
-                                df: newColumnsList.map(c => statsMap[c.key]?.df ?? '-'),
-                                p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? '-'),
-                            };
-
-                            const groupedRows = (() => {
-                                const order = [];
-                                const map = new Map();
-                                newParsedRows.forEach(r => {
-                                    const k = r.label2 || r.var_label || '';
-                                    if (!map.has(k)) {
-                                        map.set(k, []);
-                                        order.push(k);
-                                    }
-                                    map.get(k).push(r);
-                                });
-                                const res = [];
-                                order.forEach(k => res.push(...map.get(k)));
-                                return res;
-                            })();
-
-                            setResultData({
-                                columns: newColumnLabels,
-                                rows: groupedRows,
-                                stats: newParsedStats
-                            });
+                            setResultDataList(processResults(evalResult.resultjson));
                         }
 
                     } catch (evalError) {
@@ -1425,39 +1333,7 @@ const AdditionalAnalysisPage = () => {
                     });
 
                     if (refreshedData?.success === "777" && refreshedData.resultjson) {
-                        const data = refreshedData.resultjson;
-                        const columnsList = data.columns || [];
-                        const rowsList = data.rows || [];
-
-                        const columnLabels = columnsList.map(c => c.label);
-                        const columnKeys = columnsList.map(c => c.key);
-
-                        const parsedRows = rowsList.map(r => {
-                            const values = columnKeys.map(k => r.cells?.[k]?.count || 0);
-                            const total = values.reduce((a, b) => a + Number(b), 0);
-                            return {
-                                label: r.label,
-                                values: values,
-                                total: total
-                            };
-                        });
-
-                        const statsMap = data.stats || {};
-                        const parsedStats = {
-                            mean: columnsList.map(c => statsMap[c.key]?.mean ?? '-'),
-                            med: columnsList.map(c => statsMap[c.key]?.median ?? '-'),
-                            mod: columnsList.map(c => statsMap[c.key]?.mode ?? '-'),
-                            std: columnsList.map(c => statsMap[c.key]?.std ?? '-'),
-                            min: columnsList.map(c => statsMap[c.key]?.min ?? '-'),
-                            max: columnsList.map(c => statsMap[c.key]?.max ?? '-'),
-                            n: columnsList.map(c => statsMap[c.key]?.n ?? 0)
-                        };
-
-                        setResultData({
-                            columns: columnLabels,
-                            rows: parsedRows,
-                            stats: parsedStats
-                        });
+                        setResultDataList(processResults(refreshedData.resultjson));
                     }
                 } catch (refreshError) {
                     console.error("Data refresh error:", refreshError);
@@ -1605,63 +1481,7 @@ const AdditionalAnalysisPage = () => {
                     let newData = evalResult.resultjson;
 
                     const newColumnsList = newData.columns || [];
-                    const newRowsList = newData.rows || [];
-
-                    const newColumnLabels = newColumnsList.map(c => ({
-                        label: c.label,
-                        label2: c.label2 || '',
-                        var_label: c.var_label || c.variable_label || ''
-                    }));
-                    const newColumnKeys = newColumnsList.map(c => c.key);
-
-                    const newParsedRows = newRowsList.map(r => {
-                        const processedValues = newColumnKeys.map(k => {
-                            const cell = r.cells?.[k];
-                            return {
-                                count: cell?.count || 0,
-                                percent: cell?.percent || "0.0"
-                            };
-                        });
-                        const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
-                    });
-
-                    const statsMap = newData.stats || {};
-                    const newParsedStats = {
-                        mean: newColumnsList.map(c => statsMap[c.key]?.mean ?? (c.mean !== undefined ? c.mean : '-')),
-                        median: newColumnsList.map(c => statsMap[c.key]?.median ?? statsMap[c.key]?.med ?? (c.median !== undefined ? c.median : (c.med !== undefined ? c.med : '-'))),
-                        mode: newColumnsList.map(c => statsMap[c.key]?.mode ?? statsMap[c.key]?.mod ?? (c.mode !== undefined ? c.mode : (c.mod !== undefined ? c.mod : '-'))),
-                        std: newColumnsList.map(c => statsMap[c.key]?.std ?? (c.std !== undefined ? c.std : '-')),
-                        min: newColumnsList.map(c => statsMap[c.key]?.min ?? (c.min !== undefined ? c.min : '-')),
-                        max: newColumnsList.map(c => statsMap[c.key]?.max ?? (c.max !== undefined ? c.max : '-')),
-                        n: newColumnsList.map(c => statsMap[c.key]?.n ?? (c.n !== undefined ? c.n : 0)),
-                        rse: newColumnsList.map(c => statsMap[c.key]?.rse ?? (c.rse !== undefined ? c.rse : '-')),
-                        chi2: newColumnsList.map(c => statsMap[c.key]?.chi2 ?? (c.chi2 !== undefined ? c.chi2 : '-')),
-                        df: newColumnsList.map(c => statsMap[c.key]?.df ?? (c.df !== undefined ? c.df : '-')),
-                        p_value: newColumnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined ? c.p_value : '-')),
-                    };
-
-                    const groupedRows = (() => {
-                        const order = [];
-                        const map = new Map();
-                        newParsedRows.forEach(r => {
-                            const k = r.label2 || r.var_label || '';
-                            if (!map.has(k)) {
-                                map.set(k, []);
-                                order.push(k);
-                            }
-                            map.get(k).push(r);
-                        });
-                        const res = [];
-                        order.forEach(k => res.push(...map.get(k)));
-                        return res;
-                    })();
-
-                    setResultData({
-                        columns: newColumnLabels,
-                        rows: groupedRows,
-                        stats: newParsedStats
-                    });
+                    setResultDataList(processResults(newData));
 
                     // Success - Close config
                     setIsConfigOpen(false);
@@ -1800,71 +1620,7 @@ const AdditionalAnalysisPage = () => {
                 : await evaluateTable.mutateAsync(payload);
 
             if (result?.success === "777" && result.resultjson) {
-                let data = result.resultjson;
-
-                // 표 분리 모드일 경우 첫 번째 테이블 결과 추출
-                if (tableMode === 'separated' && data.results && Array.isArray(data.results) && data.results.length > 0) {
-                    data = data.results[0].result || data.results[0];
-                }
-
-                const columnsList = data.columns || [];
-                const rowsList = data.rows || [];
-
-                const columnLabels = columnsList.map(c => ({
-                    label: c.label,
-                    label2: c.label2 || '',
-                    var_label: c.var_label || c.variable_label || ''
-                }));
-                const columnKeys = columnsList.map(c => c.key);
-
-                const parsedRows = rowsList.map(r => {
-                    const processedValues = columnKeys.map(k => {
-                        const cell = r.cells?.[k];
-                        return {
-                            count: cell?.count || 0,
-                            percent: cell?.percent || "0.0"
-                        };
-                    });
-                    const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-                    return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
-                });
-
-                const statsMap = data.stats || {};
-                const parsedStats = {
-                    mean: columnsList.map(c => statsMap[c.key]?.mean ?? (c.mean !== undefined && c.mean !== null ? c.mean : '-')),
-                    median: columnsList.map(c => statsMap[c.key]?.median ?? statsMap[c.key]?.med ?? (c.median !== undefined && c.median !== null ? c.median : ((c.med !== undefined && c.med !== null) ? c.med : '-'))),
-                    mode: columnsList.map(c => statsMap[c.key]?.mode ?? statsMap[c.key]?.mod ?? (c.mode !== undefined && c.mode !== null ? c.mode : ((c.mod !== undefined && c.mod !== null) ? c.mod : '-'))),
-                    std: columnsList.map(c => statsMap[c.key]?.std ?? (c.std !== undefined && c.std !== null ? c.std : '-')),
-                    min: columnsList.map(c => statsMap[c.key]?.min ?? (c.min !== undefined && c.min !== null ? c.min : '-')),
-                    max: columnsList.map(c => statsMap[c.key]?.max ?? (c.max !== undefined && c.max !== null ? c.max : '-')),
-                    n: columnsList.map(c => statsMap[c.key]?.n ?? (c.n !== undefined && c.n !== null ? c.n : 0)),
-                    rse: columnsList.map(c => statsMap[c.key]?.rse ?? (c.rse !== undefined && c.rse !== null ? c.rse : '-')),
-                    chi2: columnsList.map(c => statsMap[c.key]?.chi2 ?? (c.chi2 !== undefined && c.chi2 !== null ? c.chi2 : '-')),
-                    df: columnsList.map(c => statsMap[c.key]?.df ?? (c.df !== undefined && c.df !== null ? c.df : '-')),
-                    p_value: columnsList.map(c => statsMap[c.key]?.p_value ?? (c.p_value !== undefined && c.p_value !== null ? c.p_value : '-')),
-                };
-
-                const groupedRows = (() => {
-                    const order = [];
-                    const map = new Map();
-                    parsedRows.forEach(r => {
-                        const k = r.label2 || r.var_label || '';
-                        if (!map.has(k)) {
-                            map.set(k, []);
-                            order.push(k);
-                        }
-                        map.get(k).push(r);
-                    });
-                    const res = [];
-                    order.forEach(k => res.push(...map.get(k)));
-                    return res;
-                })();
-
-                setResultData({
-                    columns: columnLabels,
-                    rows: groupedRows,
-                    stats: parsedStats
-                });
+                setResultDataList(processResults(result.resultjson));
 
                 setIsConfigOpen(false);
             }
@@ -2271,285 +2027,169 @@ const AdditionalAnalysisPage = () => {
                     </div>
 
                     {/* Result Section */}
-                    <div className="result-section" style={{
-                        flex: isConfigOpen ? '0 0 auto' : 1,
-                        transition: 'all 0.3s ease',
-                        minHeight: 0,
-                        overflow: 'hidden'
-                    }}>
-                        <div
-                            className="result-header"
-                            onClick={() => isConfigOpen && setIsConfigOpen(false)}
-                            style={{ cursor: isConfigOpen ? 'pointer' : 'default' }}
-                        >
-                            <div className="result-tabs">
-                                <div className="result-tab">결과</div>
-                                {!isConfigOpen && (
-                                    <button
-                                        onClick={() => setIsStatsOptionsOpen(!isStatsOptionsOpen)}
-                                        className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}
-                                    >
-                                        <Settings size={14} />
-                                        <span>옵션 설정</span>
-                                    </button>
-                                )}
-                            </div>
-                            <div className="view-options">
-                                {!isConfigOpen && layoutOptions.find(opt => opt.id === 'chart')?.checked && (
-                                    <>
-                                        {/* Download Button */}
-                                        <div className="download-menu-container" ref={downloadMenuRef}>
+                    {resultDataList.map((resultData, dataIndex) => {
+                        const { chartData, seriesNames, hasColLabel2, hasVarLabel, hasRowLabel2 } = computeLocalVars(resultData);
+                        return (
+                            <div key={dataIndex} className="result-section" style={{
+                                flex: isConfigOpen ? '0 0 auto' : 1,
+                                transition: 'all 0.3s ease',
+                                minHeight: 0,
+                                overflow: 'hidden',
+                                marginTop: dataIndex > 0 ? '20px' : '0'
+                            }}>
+                                <div
+                                    className="result-header"
+                                    onClick={() => isConfigOpen && setIsConfigOpen(false)}
+                                    style={{ cursor: isConfigOpen ? 'pointer' : 'default' }}
+                                >
+                                    <div className="result-tabs">
+                                        <div className="result-tab">결과</div>
+                                        {!isConfigOpen && (
                                             <button
-                                                className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
-                                                onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                                                title="차트 다운로드"
+                                                onClick={() => setIsStatsOptionsOpen(!isStatsOptionsOpen)}
+                                                className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}
                                             >
-                                                <Download size={18} />
+                                                <Settings size={14} />
+                                                <span>옵션 설정</span>
                                             </button>
-                                            {showDownloadMenu && (
-                                                <div className="download-dropdown">
-                                                    <button onClick={() => handleDownload('png')}>
-                                                        PNG (이미지)
+                                        )}
+                                    </div>
+                                    <div className="view-options">
+                                        {!isConfigOpen && layoutOptions.find(opt => opt.id === 'chart')?.checked && (
+                                            <>
+                                                {/* Download Button */}
+                                                <div className="download-menu-container" ref={downloadMenuRef}>
+                                                    <button
+                                                        className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
+                                                        onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                                                        title="차트 다운로드"
+                                                    >
+                                                        <Download size={18} />
                                                     </button>
-                                                    <button onClick={() => handleDownload('svg')}>
-                                                        SVG (PPT용)
-                                                    </button>
+                                                    {showDownloadMenu && (
+                                                        <div className="download-dropdown">
+                                                            <button onClick={() => handleDownload('png')}>
+                                                                PNG (이미지)
+                                                            </button>
+                                                            <button onClick={() => handleDownload('svg')}>
+                                                                SVG (PPT용)
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
 
-                                        <button className={`view-option-btn ${!chartMode || chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
-                                        {/* <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={18} /></button> */}
-                                        <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><MapIcon size={18} /></button>
-                                        <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-
-
-
-                        {isStatsOptionsOpen && (
-                            <div className="stats-controls">
-                                <div className="stats-controls__title-group">
-                                    <span className="stats-controls__title">옵션 설정</span>
-                                    <span className="stats-controls__subtitle">드래그 순서 변경 및 표출 선택</span>
-                                </div>
-
-                                <div className="stats-controls__section">
-                                    <span className="stats-controls__section-label">배치 옵션</span>
-                                    <div className="sortable-list">
-                                        {/* todo 임시 주석 */}
-                                        {/* {layoutOptions.map((item, index) => ( */}
-                                        {layoutOptions.map((item, index) => (
-                                            <div
-                                                key={item.id}
-                                                //      className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                // draggable
-                                                // onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
-                                                // onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                // onDrop={(e) => handleSortDrop(e, index, 'layout')}
-                                                // onClick={() => toggleLayoutOption(item.id)}
-                                                className={`sortable-item ${item.checked ? 'checked' : ''} ${item.id === 'ai' ? 'disabled' : ''}`}
-                                                draggable={item.id !== 'ai'}
-                                                onDragStart={(e) => item.id !== 'ai' && handleSortDragStart(e, index, 'layout')}
-                                                onDragOver={(e) => { if (item.id !== 'ai') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
-                                                onDrop={(e) => item.id !== 'ai' && handleSortDrop(e, index, 'layout')}
-                                                onClick={() => item.id !== 'ai' && toggleLayoutOption(item.id)}
-                                                style={item.id === 'ai' ? { opacity: 1, cursor: 'default', backgroundColor: '#f9f9f9', color: '#ccc' } : {}}
-                                            >
-                                                {/* <GripVertical size={14} className="drag-handle"/> */}
-                                                <GripVertical size={14} className="drag-handle" style={item.id === 'ai' ? { display: 'none' } : {}} />
-                                                <span>{item.label}</span>
-                                            </div>
-                                        ))}
+                                                <button className={`view-option-btn ${!chartMode || chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
+                                                {/* <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={18} /></button> */}
+                                                <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><MapIcon size={18} /></button>
+                                                <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
 
-                                {layoutOptions.find(opt => opt.id === 'stats')?.checked && (
-                                    <>
-                                        <div className="stats-controls__divider"></div>
+
+
+                                {isStatsOptionsOpen && (
+                                    <div className="stats-controls">
+                                        <div className="stats-controls__title-group">
+                                            <span className="stats-controls__title">옵션 설정</span>
+                                            <span className="stats-controls__subtitle">드래그 순서 변경 및 표출 선택</span>
+                                        </div>
+
                                         <div className="stats-controls__section">
-                                            <span className="stats-controls__section-label">통계 옵션</span>
+                                            <span className="stats-controls__section-label">배치 옵션</span>
                                             <div className="sortable-list">
-                                                {statsOptions.map((item, index) => {
-                                                    const isMainOrChecked = ['mean', 'median', 'mode'].includes(item.id) || item.checked;
-                                                    if (!isMainOrChecked) return null;
-                                                    return (
-                                                        <div
-                                                            key={item.id}
-                                                            className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                            draggable
-                                                            onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
-                                                            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                            onDrop={(e) => handleSortDrop(e, index, 'stats')}
-                                                            onClick={() => toggleStatOption(item.id)}
-                                                        >
-                                                            <GripVertical size={14} className="drag-handle" />
-                                                            <span>{item.label}</span>
-                                                        </div>
-                                                    );
-                                                })}
-                                                {statsOptions.some(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked) && (
-                                                    <div style={{ position: 'relative' }} ref={moreStatsRef}>
-                                                        <div
-                                                            className="sortable-item"
-                                                            style={{ padding: '0 8px', cursor: 'pointer', background: 'transparent', height: '100%', border: 'none', boxShadow: 'none' }}
-                                                            onClick={() => setIsMoreStatsOpen(!isMoreStatsOpen)}
-                                                        >
-                                                            <div className="more-btn" style={{
-                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                width: '28px', height: '28px', borderRadius: '4px',
-                                                                background: isMoreStatsOpen ? '#e2e8f0' : '#f1f5f9', color: '#64748b', transition: 'background 0.2s'
-                                                            }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = isMoreStatsOpen ? '#e2e8f0' : '#f1f5f9'}>
-                                                                <MoreHorizontal size={14} />
-                                                            </div>
-                                                        </div>
-                                                        {isMoreStatsOpen && (
-                                                            <div style={{
-                                                                position: 'absolute', top: '100%', left: '0', marginTop: '6px',
-                                                                background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px',
-                                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-                                                                zIndex: 100, display: 'flex', flexDirection: 'column', padding: '4px', minWidth: '90px'
-                                                            }}>
-                                                                {statsOptions.filter(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked).map(item => (
-                                                                    <div
-                                                                        key={item.id}
-                                                                        style={{
-                                                                            padding: '8px 12px', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-                                                                            color: '#475569', borderRadius: '4px', transition: 'all 0.1s'
-                                                                        }}
-                                                                        onClick={() => { toggleStatOption(item.id); setIsMoreStatsOpen(false); }}
-                                                                        onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#3b82f6'; }}
-                                                                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#475569'; }}
-                                                                    >
-                                                                        {item.label}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                        )}
+                                                {/* todo 임시 주석 */}
+                                                {/* {layoutOptions.map((item, index) => ( */}
+                                                {layoutOptions.map((item, index) => (
+                                                    <div
+                                                        key={item.id}
+                                                        //      className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                        // draggable
+                                                        // onDragStart={(e) => handleSortDragStart(e, index, 'layout')}
+                                                        // onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                        // onDrop={(e) => handleSortDrop(e, index, 'layout')}
+                                                        // onClick={() => toggleLayoutOption(item.id)}
+                                                        className={`sortable-item ${item.checked ? 'checked' : ''} ${item.id === 'ai' ? 'disabled' : ''}`}
+                                                        draggable={item.id !== 'ai'}
+                                                        onDragStart={(e) => item.id !== 'ai' && handleSortDragStart(e, index, 'layout')}
+                                                        onDragOver={(e) => { if (item.id !== 'ai') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                                                        onDrop={(e) => item.id !== 'ai' && handleSortDrop(e, index, 'layout')}
+                                                        onClick={() => item.id !== 'ai' && toggleLayoutOption(item.id)}
+                                                        style={item.id === 'ai' ? { opacity: 1, cursor: 'default', backgroundColor: '#f9f9f9', color: '#ccc' } : {}}
+                                                    >
+                                                        {/* <GripVertical size={14} className="drag-handle"/> */}
+                                                        <GripVertical size={14} className="drag-handle" style={item.id === 'ai' ? { display: 'none' } : {}} />
+                                                        <span>{item.label}</span>
                                                     </div>
-                                                )}
+                                                ))}
                                             </div>
                                         </div>
-                                    </>
-                                )}
 
-                                <div className="stats-controls__divider"></div>
-                                <div className="stats-controls__section">
-                                    <span className="stats-controls__section-label">단 설정</span>
-                                    <div className="options-list" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                        <div className="toggle-group" style={{ display: 'flex', gap: '4px' }}>
-                                            <button
-                                                className={`toggle-chip ${columnLayout === 'single' ? 'active' : ''}`}
-                                                onClick={() => setColumnLayout('single')}
-                                            >
-                                                1단
-                                            </button>
-                                            <button
-                                                className={`toggle-chip ${columnLayout === 'double' ? 'active' : ''}`}
-                                                onClick={() => setColumnLayout('double')}
-                                            >
-                                                2단
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {!isConfigOpen && (
-                            <div className="result-content">
-
-                                {/* Dynamic Result Rendering */}
-                                <div className="cross-table-container" style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: columnLayout === 'single' ? '1fr' : 'repeat(2, 1fr)',
-                                    gap: '12px',
-                                    alignItems: 'stretch'
-                                }}>
-                                    {resultData && layoutOptions.map(option => {
-                                        if (!option.checked) return null;
-
-                                        if (option.id === 'table') {
-                                            return (
-                                                <div key="table" className="result-block">
-                                                    <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div className="blue-bar"></div>
-                                                            <span className="section-title">표</span>
-                                                        </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }}>
+                                        {layoutOptions.find(opt => opt.id === 'stats')?.checked && (
+                                            <>
+                                                <div className="stats-controls__divider"></div>
+                                                <div className="stats-controls__section">
+                                                    <span className="stats-controls__section-label">통계 옵션</span>
+                                                    <div className="sortable-list">
+                                                        {statsOptions.map((item, index) => {
+                                                            const isMainOrChecked = ['mean', 'median', 'mode'].includes(item.id) || item.checked;
+                                                            if (!isMainOrChecked) return null;
+                                                            return (
                                                                 <div
-                                                                    className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
-                                                                    onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
-                                                                    style={{
-                                                                        height: '36px',
-                                                                        padding: '0 8px 0 10px',
-                                                                        gap: '4px',
-                                                                        background: '#fff',
-                                                                        border: '1px solid #e9ecef',
-                                                                        borderRadius: '6px',
-                                                                        fontSize: '13px',
-                                                                        fontWeight: '500',
-                                                                        color: '#495057',
-                                                                        cursor: 'pointer',
-                                                                        display: 'flex',
-                                                                        alignItems: 'center',
-                                                                        justifyContent: 'space-between',
-                                                                        userSelect: 'none'
-                                                                    }}
+                                                                    key={item.id}
+                                                                    className={`sortable-item ${item.checked ? 'checked' : ''}`}
+                                                                    draggable
+                                                                    onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
+                                                                    onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
+                                                                    onDrop={(e) => handleSortDrop(e, index, 'stats')}
+                                                                    onClick={() => toggleStatOption(item.id)}
                                                                 >
-                                                                    <span className="trigger-text">
-                                                                        {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
-                                                                    </span>
-                                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
-                                                                        <polyline points="6 9 12 15 18 9"></polyline>
-                                                                    </svg>
+                                                                    <GripVertical size={14} className="drag-handle" />
+                                                                    <span>{item.label}</span>
                                                                 </div>
-
-                                                                {isDisplayMenuOpen && (
-                                                                    <div className="custom-filter-menu" style={{
-                                                                        position: 'absolute', top: 'calc(100% + 4px)', left: 0,
-                                                                        width: '100%',
-                                                                        padding: '4px',
-                                                                        background: '#fff', border: '1px solid #e2e8f0',
-                                                                        borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                                                                        zIndex: 1000, overflow: 'hidden'
+                                                            );
+                                                        })}
+                                                        {statsOptions.some(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked) && (
+                                                            <div style={{ position: 'relative' }} ref={moreStatsRef}>
+                                                                <div
+                                                                    className="sortable-item"
+                                                                    style={{ padding: '0 8px', cursor: 'pointer', background: 'transparent', height: '100%', border: 'none', boxShadow: 'none' }}
+                                                                    onClick={() => setIsMoreStatsOpen(!isMoreStatsOpen)}
+                                                                >
+                                                                    <div className="more-btn" style={{
+                                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                        width: '28px', height: '28px', borderRadius: '4px',
+                                                                        background: isMoreStatsOpen ? '#e2e8f0' : '#f1f5f9', color: '#64748b', transition: 'background 0.2s'
+                                                                    }} onMouseEnter={e => e.currentTarget.style.background = '#e2e8f0'} onMouseLeave={e => e.currentTarget.style.background = isMoreStatsOpen ? '#e2e8f0' : '#f1f5f9'}>
+                                                                        <MoreHorizontal size={14} />
+                                                                    </div>
+                                                                </div>
+                                                                {isMoreStatsOpen && (
+                                                                    <div style={{
+                                                                        position: 'absolute', top: '100%', left: '0', marginTop: '6px',
+                                                                        background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '6px',
+                                                                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                                                        zIndex: 100, display: 'flex', flexDirection: 'column', padding: '4px', minWidth: '90px'
                                                                     }}>
-                                                                        {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
+                                                                        {statsOptions.filter(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked).map(item => (
                                                                             <div
-                                                                                key={item.value}
-                                                                                onClick={() => {
-                                                                                    setDisplayMode(item.value);
-                                                                                    setIsDisplayMenuOpen(false);
-                                                                                }}
+                                                                                key={item.id}
                                                                                 style={{
-                                                                                    padding: '6px 8px',
-                                                                                    cursor: 'pointer',
-                                                                                    fontSize: '13px',
-                                                                                    color: displayMode === item.value ? '#3b82f6' : '#495057',
-                                                                                    background: displayMode === item.value ? '#eff6ff' : 'transparent',
-                                                                                    transition: 'background 0.1s',
-                                                                                    textAlign: 'center',
-                                                                                    borderRadius: '4px',
-                                                                                    userSelect: 'none'
+                                                                                    padding: '8px 12px', cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+                                                                                    color: '#475569', borderRadius: '4px', transition: 'all 0.1s'
                                                                                 }}
-                                                                                onMouseEnter={(e) => {
-                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
-                                                                                }}
-                                                                                onMouseLeave={(e) => {
-                                                                                    if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
-                                                                                }}
+                                                                                onClick={() => { toggleStatOption(item.id); setIsMoreStatsOpen(false); }}
+                                                                                onMouseEnter={e => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = '#3b82f6'; }}
+                                                                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#475569'; }}
                                                                             >
                                                                                 {item.label}
                                                                             </div>
@@ -2557,166 +2197,471 @@ const AdditionalAnalysisPage = () => {
                                                                     </div>
                                                                 )}
                                                             </div>
-                                                            <button
-                                                                onClick={handleCopyTable}
-                                                                style={{
-                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                    padding: '6px 12px', background: '#f8f9fa',
-                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                    cursor: 'pointer', flexShrink: 0, height: '36px'
-                                                                }}
-                                                            >
-                                                                <Copy size={14} /> 복사
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setFullscreenModal({ open: true, type: 'table' })}
-                                                                style={{
-                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                    padding: '6px 12px', background: '#f8f9fa',
-                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                    cursor: 'pointer', flexShrink: 0
-                                                                }}
-                                                            >
-                                                                <Maximize size={14} /> 전체화면
-                                                            </button>
-                                                        </div>
+                                                        )}
                                                     </div>
-                                                    <div className="table-chart-wrapper" style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
-                                                        <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
-                                                            <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed', minWidth: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
-                                                                <colgroup>
-                                                                    {hasRowLabel2 ? (
-                                                                        <>
-                                                                            <col style={{ width: '150px' }} />
-                                                                            <col style={{ width: '150px' }} />
-                                                                        </>
-                                                                    ) : (
-                                                                        <col style={{ width: '150px' }} />
-                                                                    )}
-                                                                    {resultData.columns.map((_, i) => (
-                                                                        <col key={`col-group-${i}`} style={{ width: '200px' }} />
-                                                                    ))}
-                                                                </colgroup>
-                                                                <thead>
-                                                                    <tr>
-                                                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} style={{
-                                                                            position: 'sticky', left: 0, top: 0, zIndex: 30,
-                                                                            height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36,
-                                                                            background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
-                                                                            fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                            textAlign: 'center', verticalAlign: 'middle', padding: '4px'
-                                                                        }}>
-                                                                            {resultData?.rows?.[0]?.var_label || '문항'}
-                                                                        </th>
-                                                                        {hasVarLabel && (() => {
-                                                                            const varGroups = [];
-                                                                            resultData.columns.forEach(col => {
-                                                                                const var_label = col.var_label || '';
-                                                                                const label2 = col.label2 || '';
-                                                                                const isSame = var_label === label2;
-                                                                                if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
-                                                                                    varGroups[varGroups.length - 1].colspan += 1;
-                                                                                    // 모든 항목이 label2와 같을 때만 merge 가능하지만, 보통 그룹 단위로 일치함
-                                                                                    if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
-                                                                                } else {
-                                                                                    varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
-                                                                                }
-                                                                            });
-                                                                            return varGroups.map((group, i) => (
-                                                                                <th key={`var-group-${i}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} style={{
-                                                                                    position: 'sticky', top: 0, zIndex: 20,
-                                                                                    height: group.canMerge ? '50px' : '25px', background: '#dbeafe', borderBottom: '1px solid #cbd5e1',
-                                                                                    borderRight: '1px solid #cbd5e1',
-                                                                                    fontSize: '11px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box',
-                                                                                    textAlign: 'center', padding: '2px 4px', whiteSpace: 'normal', wordBreak: 'keep-all',
-                                                                                    verticalAlign: 'middle'
-                                                                                }}>
-                                                                                    {group.var_label}
-                                                                                </th>
-                                                                            ));
-                                                                        })()}
-                                                                        {!hasVarLabel && hasColLabel2 && (() => {
-                                                                            const colGroups = [];
-                                                                            resultData.columns.forEach(col => {
-                                                                                const label2 = col.label2 || '';
-                                                                                if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
-                                                                                    colGroups[colGroups.length - 1].colspan += 1;
-                                                                                } else {
-                                                                                    colGroups.push({ label2, colspan: 1 });
-                                                                                }
-                                                                            });
-                                                                            return colGroups.map((group, i) => (
-                                                                                <th key={`group-${i}`} colSpan={group.colspan} style={{
-                                                                                    position: 'sticky', top: 0, zIndex: 20,
-                                                                                    height: '25px',
-                                                                                    background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
-                                                                                    borderRight: i === colGroups.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                                    fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                                    textAlign: 'center', padding: '4px',
-                                                                                    whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                                    verticalAlign: 'middle'
-                                                                                }}>
-                                                                                    {group.label2}
-                                                                                </th>
-                                                                            ));
-                                                                        })()}
-                                                                        {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, i) => (
-                                                                            <th key={`col-${i}`} style={{
-                                                                                position: 'sticky', top: 0, zIndex: 20,
-                                                                                width: '180px', minWidth: '180px', height: '36px',
-                                                                                background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
-                                                                                borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                                fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
-                                                                                textAlign: 'center', padding: '4px',
-                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                                verticalAlign: 'middle'
+                                                </div>
+                                            </>
+                                        )}
+
+                                        <div className="stats-controls__divider"></div>
+                                        <div className="stats-controls__section">
+                                            <span className="stats-controls__section-label">단 설정</span>
+                                            <div className="options-list" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                <div className="toggle-group" style={{ display: 'flex', gap: '4px' }}>
+                                                    <button
+                                                        className={`toggle-chip ${columnLayout === 'single' ? 'active' : ''}`}
+                                                        onClick={() => setColumnLayout('single')}
+                                                    >
+                                                        1단
+                                                    </button>
+                                                    <button
+                                                        className={`toggle-chip ${columnLayout === 'double' ? 'active' : ''}`}
+                                                        onClick={() => setColumnLayout('double')}
+                                                    >
+                                                        2단
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!isConfigOpen && (
+                                    <div className="result-content">
+
+                                        {/* Dynamic Result Rendering */}
+                                        <div className="cross-table-container" style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: columnLayout === 'single' ? '1fr' : 'repeat(2, 1fr)',
+                                            gap: '12px',
+                                            alignItems: 'stretch'
+                                        }}>
+                                            {resultData && layoutOptions.map(option => {
+                                                if (!option.checked) return null;
+
+                                                if (option.id === 'table') {
+                                                    return (
+                                                        <div key="table" className="result-block">
+                                                            <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div className="blue-bar"></div>
+                                                                    <span className="section-title">표</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div className="custom-filter-wrapper" ref={displayMenuRef} style={{ position: 'relative', width: '85px' }}>
+                                                                        <div
+                                                                            className={`custom-filter-trigger ${isDisplayMenuOpen ? 'open' : ''}`}
+                                                                            onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}
+                                                                            style={{
+                                                                                height: '36px',
+                                                                                padding: '0 8px 0 10px',
+                                                                                gap: '4px',
+                                                                                background: '#fff',
+                                                                                border: '1px solid #e9ecef',
+                                                                                borderRadius: '6px',
+                                                                                fontSize: '13px',
+                                                                                fontWeight: '500',
+                                                                                color: '#495057',
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'space-between',
+                                                                                userSelect: 'none'
+                                                                            }}
+                                                                        >
+                                                                            <span className="trigger-text">
+                                                                                {displayMode === 'all' ? '전체' : displayMode === 'value' ? '사례수' : '퍼센트'}
+                                                                            </span>
+                                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="trigger-icon" style={{ flexShrink: 0 }}>
+                                                                                <polyline points="6 9 12 15 18 9"></polyline>
+                                                                            </svg>
+                                                                        </div>
+
+                                                                        {isDisplayMenuOpen && (
+                                                                            <div className="custom-filter-menu" style={{
+                                                                                position: 'absolute', top: 'calc(100% + 4px)', left: 0,
+                                                                                width: '100%',
+                                                                                padding: '4px',
+                                                                                background: '#fff', border: '1px solid #e2e8f0',
+                                                                                borderRadius: '6px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+                                                                                zIndex: 1000, overflow: 'hidden'
                                                                             }}>
-                                                                                {col.label || col}
-                                                                            </th>
-                                                                        ))}
-                                                                    </tr>
-                                                                    {hasVarLabel && hasColLabel2 && (
-                                                                        <tr>
-                                                                            {(() => {
-                                                                                const colGroups = [];
-                                                                                resultData.columns.forEach(col => {
-                                                                                    const label2 = col.label2 || '';
-                                                                                    const var_label = col.var_label || '';
-                                                                                    const isSame = label2 === var_label;
-                                                                                    if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
-                                                                                        colGroups[colGroups.length - 1].colspan += 1;
-                                                                                    } else {
-                                                                                        colGroups.push({ label2, colspan: 1, isSame });
-                                                                                    }
-                                                                                });
-                                                                                return colGroups.map((group, i) => {
-                                                                                    if (group.isSame) return null;
-                                                                                    return (
-                                                                                        <th key={`group2-${i}`} colSpan={group.colspan} style={{
-                                                                                            position: 'sticky', top: '25px', zIndex: 20,
-                                                                                            height: '25px', background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
+                                                                                {[{ label: '전체', value: 'all' }, { label: '사례수', value: 'value' }, { label: '퍼센트', value: 'percent' }].map((item) => (
+                                                                                    <div
+                                                                                        key={item.value}
+                                                                                        onClick={() => {
+                                                                                            setDisplayMode(item.value);
+                                                                                            setIsDisplayMenuOpen(false);
+                                                                                        }}
+                                                                                        style={{
+                                                                                            padding: '6px 8px',
+                                                                                            cursor: 'pointer',
+                                                                                            fontSize: '13px',
+                                                                                            color: displayMode === item.value ? '#3b82f6' : '#495057',
+                                                                                            background: displayMode === item.value ? '#eff6ff' : 'transparent',
+                                                                                            transition: 'background 0.1s',
+                                                                                            textAlign: 'center',
+                                                                                            borderRadius: '4px',
+                                                                                            userSelect: 'none'
+                                                                                        }}
+                                                                                        onMouseEnter={(e) => {
+                                                                                            if (displayMode !== item.value) e.currentTarget.style.background = '#f1f5f9';
+                                                                                        }}
+                                                                                        onMouseLeave={(e) => {
+                                                                                            if (displayMode !== item.value) e.currentTarget.style.background = 'transparent';
+                                                                                        }}
+                                                                                    >
+                                                                                        {item.label}
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <button
+                                                                        onClick={() => handleCopyTable(resultData, hasColLabel2, hasRowLabel2)}
+                                                                        style={{
+                                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                            padding: '6px 12px', background: '#f8f9fa',
+                                                                            border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                            cursor: 'pointer', flexShrink: 0, height: '36px'
+                                                                        }}
+                                                                    >
+                                                                        <Copy size={14} /> 복사
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setFullscreenModal({ open: true, type: 'table', dataItem: resultData, chartData, seriesNames })}
+                                                                        style={{
+                                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                            padding: '6px 12px', background: '#f8f9fa',
+                                                                            border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                            cursor: 'pointer', flexShrink: 0
+                                                                        }}
+                                                                    >
+                                                                        <Maximize size={14} /> 전체화면
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="table-chart-wrapper" style={{ display: 'flex', gap: '12px', alignItems: 'stretch', flex: 1, minHeight: 0 }}>
+                                                                <div className="table-wrapper" style={{ flex: 1, minWidth: 0, background: '#fff', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', overflow: 'auto' }}>
+                                                                    <table className="cross-table" style={{ width: 'max-content', tableLayout: 'fixed', minWidth: '100%', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                                        <colgroup>
+                                                                            {hasRowLabel2 ? (
+                                                                                <>
+                                                                                    <col style={{ width: '150px' }} />
+                                                                                    <col style={{ width: '150px' }} />
+                                                                                </>
+                                                                            ) : (
+                                                                                <col style={{ width: '150px' }} />
+                                                                            )}
+                                                                            {resultData.columns.map((_, i) => (
+                                                                                <col key={`col-group-${i}`} style={{ width: '200px' }} />
+                                                                            ))}
+                                                                        </colgroup>
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} style={{
+                                                                                    position: 'sticky', left: 0, top: 0, zIndex: 30,
+                                                                                    height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36,
+                                                                                    background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
+                                                                                    fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                    textAlign: 'center', verticalAlign: 'middle', padding: '4px'
+                                                                                }}>
+                                                                                    {resultData?.rows?.[0]?.var_label || '문항'}
+                                                                                </th>
+                                                                                {hasVarLabel && (() => {
+                                                                                    const varGroups = [];
+                                                                                    resultData.columns.forEach(col => {
+                                                                                        const var_label = col.var_label || '';
+                                                                                        const label2 = col.label2 || '';
+                                                                                        const isSame = var_label === label2;
+                                                                                        if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
+                                                                                            varGroups[varGroups.length - 1].colspan += 1;
+                                                                                            // 모든 항목이 label2와 같을 때만 merge 가능하지만, 보통 그룹 단위로 일치함
+                                                                                            if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                                                        } else {
+                                                                                            varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                                                        }
+                                                                                    });
+                                                                                    return varGroups.map((group, i) => (
+                                                                                        <th key={`var-group-${i}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} style={{
+                                                                                            position: 'sticky', top: 0, zIndex: 20,
+                                                                                            height: group.canMerge ? '50px' : '25px', background: '#dbeafe', borderBottom: '1px solid #cbd5e1',
                                                                                             borderRight: '1px solid #cbd5e1',
+                                                                                            fontSize: '11px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box',
+                                                                                            textAlign: 'center', padding: '2px 4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                            verticalAlign: 'middle'
+                                                                                        }}>
+                                                                                            {group.var_label}
+                                                                                        </th>
+                                                                                    ));
+                                                                                })()}
+                                                                                {!hasVarLabel && hasColLabel2 && (() => {
+                                                                                    const colGroups = [];
+                                                                                    resultData.columns.forEach(col => {
+                                                                                        const label2 = col.label2 || '';
+                                                                                        if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                            colGroups[colGroups.length - 1].colspan += 1;
+                                                                                        } else {
+                                                                                            colGroups.push({ label2, colspan: 1 });
+                                                                                        }
+                                                                                    });
+                                                                                    return colGroups.map((group, i) => (
+                                                                                        <th key={`group-${i}`} colSpan={group.colspan} style={{
+                                                                                            position: 'sticky', top: 0, zIndex: 20,
+                                                                                            height: '25px',
+                                                                                            background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                            borderRight: i === colGroups.length - 1 ? 'none' : '1px solid #e2e8f0',
                                                                                             fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                                            textAlign: 'center', padding: '4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                            textAlign: 'center', padding: '4px',
+                                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
                                                                                             verticalAlign: 'middle'
                                                                                         }}>
                                                                                             {group.label2}
                                                                                         </th>
+                                                                                    ));
+                                                                                })()}
+                                                                                {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, i) => (
+                                                                                    <th key={`col-${i}`} style={{
+                                                                                        position: 'sticky', top: 0, zIndex: 20,
+                                                                                        width: '180px', minWidth: '180px', height: '36px',
+                                                                                        background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                        borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                                        fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                                        textAlign: 'center', padding: '4px',
+                                                                                        whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                        verticalAlign: 'middle'
+                                                                                    }}>
+                                                                                        {col.label || col}
+                                                                                    </th>
+                                                                                ))}
+                                                                            </tr>
+                                                                            {hasVarLabel && hasColLabel2 && (
+                                                                                <tr>
+                                                                                    {(() => {
+                                                                                        const colGroups = [];
+                                                                                        resultData.columns.forEach(col => {
+                                                                                            const label2 = col.label2 || '';
+                                                                                            const var_label = col.var_label || '';
+                                                                                            const isSame = label2 === var_label;
+                                                                                            if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                                colGroups[colGroups.length - 1].colspan += 1;
+                                                                                            } else {
+                                                                                                colGroups.push({ label2, colspan: 1, isSame });
+                                                                                            }
+                                                                                        });
+                                                                                        return colGroups.map((group, i) => {
+                                                                                            if (group.isSame) return null;
+                                                                                            return (
+                                                                                                <th key={`group2-${i}`} colSpan={group.colspan} style={{
+                                                                                                    position: 'sticky', top: '25px', zIndex: 20,
+                                                                                                    height: '25px', background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
+                                                                                                    borderRight: '1px solid #cbd5e1',
+                                                                                                    fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                                    textAlign: 'center', padding: '4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                                    verticalAlign: 'middle'
+                                                                                                }}>
+                                                                                                    {group.label2}
+                                                                                                </th>
+                                                                                            );
+                                                                                        });
+                                                                                    })()}
+                                                                                </tr>
+                                                                            )}
+                                                                            {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
+                                                                                <tr>
+                                                                                    {resultData.columns.map((col, i) => (
+                                                                                        <th key={`col-sub-${i}`} style={{
+                                                                                            position: 'sticky', top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', zIndex: 20,
+                                                                                            width: '180px', minWidth: '180px', height: '25px',
+                                                                                            background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
+                                                                                            borderRight: '1px solid #cbd5e1',
+                                                                                            fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                                            textAlign: 'center', padding: '4px',
+                                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                            verticalAlign: 'middle'
+                                                                                        }}>
+                                                                                            {col.label || col}
+                                                                                        </th>
+                                                                                    ))}
+                                                                                </tr>
+                                                                            )}
+                                                                        </thead>
+                                                                        <tbody>
+                                                                            {(() => {
+                                                                                return resultData.rows.map((row, i) => {
+                                                                                    let rowSpan = 1;
+                                                                                    const isFirstInGroup = hasRowLabel2 && (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label));
+                                                                                    if (isFirstInGroup) {
+                                                                                        let count = 1;
+                                                                                        while (i + count < resultData.rows.length && (resultData.rows[i + count].label2 || resultData.rows[i + count].var_label) === (row.label2 || row.var_label)) {
+                                                                                            count++;
+                                                                                        }
+                                                                                        rowSpan = count;
+                                                                                    }
+                                                                                    return (
+                                                                                        <tr key={i}>
+                                                                                            {hasRowLabel2 && isFirstInGroup && (
+                                                                                                <td rowSpan={rowSpan} style={{
+                                                                                                    position: 'sticky', left: 0, zIndex: 10,
+                                                                                                    background: '#dbeafe', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
+                                                                                                    padding: '0 8px', boxSizing: 'border-box',
+                                                                                                    fontSize: '12px', fontWeight: 'bold', color: '#1e40af',
+                                                                                                    verticalAlign: 'middle', textAlign: 'center',
+                                                                                                    whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
+                                                                                                }}>
+                                                                                                    {row.label2 || row.var_label}
+                                                                                                </td>
+                                                                                            )}
+                                                                                            <td style={{
+                                                                                                position: 'sticky', left: hasRowLabel2 ? '150px' : 0, zIndex: 10,
+                                                                                                height: '36px',
+                                                                                                background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
+                                                                                                padding: '0 8px', boxSizing: 'border-box',
+                                                                                                fontSize: '12px', fontWeight: '500', color: '#334155',
+                                                                                                verticalAlign: 'middle',
+                                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
+                                                                                            }}>
+                                                                                                {row.label}
+                                                                                            </td>
+                                                                                            {row.values.map((val, j) => (
+                                                                                                <td key={j} className="data-cell" style={{
+                                                                                                    height: '36px',
+                                                                                                    background: '#fff', borderBottom: '1px solid #e2e8f0',
+                                                                                                    borderRight: '1px solid #e2e8f0',
+                                                                                                    padding: '0 8px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
+                                                                                                }}>
+                                                                                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                                                                                                        {displayMode === 'all' && (
+                                                                                                            <>
+                                                                                                                <div className="cell-value">{val.count}</div>
+                                                                                                                <div className="cell-pct" style={{ color: '#888', fontSize: '0.9em' }}>{val.percent}%</div>
+                                                                                                            </>
+                                                                                                        )}
+                                                                                                        {displayMode === 'value' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.count}</div>}
+                                                                                                        {displayMode === 'percent' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.percent !== undefined ? `${val.percent}%` : '-'}</div>}
+                                                                                                    </div>
+                                                                                                </td>
+                                                                                            ))}
+                                                                                        </tr>
                                                                                     );
                                                                                 });
                                                                             })()}
-                                                                        </tr>
-                                                                    )}
-                                                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                if (option.id === 'stats') {
+                                                    return (
+                                                        <div key="stats" className="result-block">
+                                                            <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div className="blue-bar"></div>
+                                                                    <span className="section-title">통계</span>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <button
+                                                                        onClick={() => handleCopyStats(resultData, hasColLabel2, hasRowLabel2)}
+                                                                        style={{
+                                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                            padding: '6px 12px', background: '#f8f9fa',
+                                                                            border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                            cursor: 'pointer', flexShrink: 0
+                                                                        }}
+                                                                    >
+                                                                        <Copy size={14} /> 복사
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setFullscreenModal({ open: true, type: 'stats' })}
+                                                                        style={{
+                                                                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                            padding: '6px 12px', background: '#f8f9fa',
+                                                                            border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                            fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                            cursor: 'pointer', flexShrink: 0
+                                                                        }}
+                                                                    >
+                                                                        <Maximize size={14} /> 전체화면
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="stats-table-container" style={{ width: '100%', overflowX: 'auto' }}>
+                                                                <table className="cross-table stats-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 0 }}>
+                                                                    <thead>
                                                                         <tr>
-                                                                            {resultData.columns.map((col, i) => (
-                                                                                <th key={`col-sub-${i}`} style={{
-                                                                                    position: 'sticky', top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', zIndex: 20,
-                                                                                    width: '180px', minWidth: '180px', height: '25px',
-                                                                                    background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
-                                                                                    borderRight: '1px solid #cbd5e1',
+                                                                            <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="stats-th-label" style={{
+                                                                                position: 'sticky', left: 0, top: 0, zIndex: 30, width: '120px', minWidth: '120px',
+                                                                                background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
+                                                                                fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                textAlign: 'center', verticalAlign: 'middle', padding: '4px',
+                                                                                height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36
+                                                                            }}>
+                                                                                통계
+                                                                            </th>
+                                                                            {hasVarLabel && (() => {
+                                                                                const varGroups = [];
+                                                                                resultData.columns.forEach(col => {
+                                                                                    const var_label = col.var_label || '';
+                                                                                    const label2 = col.label2 || '';
+                                                                                    const isSame = var_label === label2;
+                                                                                    if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
+                                                                                        varGroups[varGroups.length - 1].colspan += 1;
+                                                                                        if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                                                    } else {
+                                                                                        varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                                                    }
+                                                                                });
+                                                                                return varGroups.map((group, i) => (
+                                                                                    <th key={`stat-var-group-${i}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} style={{
+                                                                                        position: 'sticky', top: 0, zIndex: 20,
+                                                                                        height: group.canMerge ? '50px' : '25px', background: '#dbeafe', borderBottom: '1px solid #cbd5e1',
+                                                                                        borderRight: '1px solid #cbd5e1',
+                                                                                        fontSize: '11px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box',
+                                                                                        textAlign: 'center', padding: '2px 4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                        verticalAlign: 'middle'
+                                                                                    }}>
+                                                                                        {group.var_label}
+                                                                                    </th>
+                                                                                ));
+                                                                            })()}
+                                                                            {!hasVarLabel && hasColLabel2 && (() => {
+                                                                                const colGroups = [];
+                                                                                resultData.columns.forEach(col => {
+                                                                                    const label2 = col.label2 || '';
+                                                                                    if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                        colGroups[colGroups.length - 1].colspan += 1;
+                                                                                    } else {
+                                                                                        colGroups.push({ label2, colspan: 1 });
+                                                                                    }
+                                                                                });
+                                                                                return colGroups.map((group, i) => (
+                                                                                    <th key={`stat-group-${i}`} colSpan={group.colspan} style={{
+                                                                                        position: 'sticky', top: 0, zIndex: 20,
+                                                                                        height: '25px',
+                                                                                        background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                        borderRight: i === colGroups.length - 1 ? 'none' : '1px solid #e2e8f0',
+                                                                                        fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                        textAlign: 'center', padding: '4px',
+                                                                                        whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                        verticalAlign: 'middle'
+                                                                                    }}>
+                                                                                        {group.label2}
+                                                                                    </th>
+                                                                                ));
+                                                                            })()}
+                                                                            {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, i) => (
+                                                                                <th key={`stat-col-${i}`} style={{
+                                                                                    position: 'sticky', top: 0, zIndex: 20,
+                                                                                    width: '180px', minWidth: '180px', height: '36px',
+                                                                                    background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
+                                                                                    borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
                                                                                     fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
                                                                                     textAlign: 'center', padding: '4px',
                                                                                     whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
@@ -2726,385 +2671,202 @@ const AdditionalAnalysisPage = () => {
                                                                                 </th>
                                                                             ))}
                                                                         </tr>
-                                                                    )}
-                                                                </thead>
-                                                                <tbody>
-                                                                    {(() => {
-                                                                        return resultData.rows.map((row, i) => {
-                                                                            let rowSpan = 1;
-                                                                            const isFirstInGroup = hasRowLabel2 && (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label));
-                                                                            if (isFirstInGroup) {
-                                                                                let count = 1;
-                                                                                while (i + count < resultData.rows.length && (resultData.rows[i + count].label2 || resultData.rows[i + count].var_label) === (row.label2 || row.var_label)) {
-                                                                                    count++;
-                                                                                }
-                                                                                rowSpan = count;
-                                                                            }
-                                                                            return (
-                                                                                <tr key={i}>
-                                                                                    {hasRowLabel2 && isFirstInGroup && (
-                                                                                        <td rowSpan={rowSpan} style={{
-                                                                                            position: 'sticky', left: 0, zIndex: 10,
-                                                                                            background: '#dbeafe', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
-                                                                                            padding: '0 8px', boxSizing: 'border-box',
-                                                                                            fontSize: '12px', fontWeight: 'bold', color: '#1e40af',
-                                                                                            verticalAlign: 'middle', textAlign: 'center',
-                                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
-                                                                                        }}>
-                                                                                            {row.label2 || row.var_label}
-                                                                                        </td>
-                                                                                    )}
-                                                                                    <td style={{
-                                                                                        position: 'sticky', left: hasRowLabel2 ? '150px' : 0, zIndex: 10,
-                                                                                        height: '36px',
+                                                                        {hasVarLabel && hasColLabel2 && (
+                                                                            <tr>
+                                                                                {(() => {
+                                                                                    const colGroups = [];
+                                                                                    resultData.columns.forEach(col => {
+                                                                                        const label2 = col.label2 || '';
+                                                                                        const var_label = col.var_label || '';
+                                                                                        const isSame = label2 === var_label;
+                                                                                        if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
+                                                                                            colGroups[colGroups.length - 1].colspan += 1;
+                                                                                        } else {
+                                                                                            colGroups.push({ label2, colspan: 1, isSame });
+                                                                                        }
+                                                                                    });
+                                                                                    return colGroups.map((group, i) => {
+                                                                                        if (group.isSame) return null;
+                                                                                        return (
+                                                                                            <th key={`stat-group2-${i}`} colSpan={group.colspan} style={{
+                                                                                                position: 'sticky', top: '25px', zIndex: 20,
+                                                                                                height: '25px', background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
+                                                                                                borderRight: '1px solid #cbd5e1',
+                                                                                                fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
+                                                                                                textAlign: 'center', padding: '4px', whiteSpace: 'normal', wordBreak: 'keep-all',
+                                                                                                verticalAlign: 'middle'
+                                                                                            }}>
+                                                                                                {group.label2}
+                                                                                            </th>
+                                                                                        );
+                                                                                    });
+                                                                                })()}
+                                                                            </tr>
+                                                                        )}
+                                                                        {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
+                                                                            <tr>
+                                                                                {resultData.columns.map((col, i) => (
+                                                                                    <th key={`stat-label-${i}`} style={{
+                                                                                        position: 'sticky', top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', zIndex: 20,
+                                                                                        width: '180px', minWidth: '180px', height: '36px',
                                                                                         background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
-                                                                                        padding: '0 8px', boxSizing: 'border-box',
-                                                                                        fontSize: '12px', fontWeight: '500', color: '#334155',
-                                                                                        verticalAlign: 'middle',
-                                                                                        whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word'
+                                                                                        fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
+                                                                                        textAlign: 'center', padding: '4px',
+                                                                                        whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
+                                                                                        verticalAlign: 'middle'
                                                                                     }}>
-                                                                                        {row.label}
+                                                                                        {col.label || col}
+                                                                                    </th>
+                                                                                ))}
+                                                                            </tr>
+                                                                        )}
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        {statsOptions.filter(opt => opt.checked).map((stat) => {
+                                                                            const statKey = stat.id;
+                                                                            const statValues = (resultData.stats && resultData.stats[statKey]) ||
+                                                                                new Array(resultData.columns.length).fill('-');
+
+                                                                            return (
+                                                                                <tr key={stat.id} className="stats-row">
+                                                                                    <td colSpan={hasRowLabel2 ? 2 : 1} className="stats-td-label" style={{ position: 'sticky', left: 0, zIndex: 10, width: '120px', minWidth: '120px', background: '#eff6ff', boxSizing: 'border-box' }}>
+                                                                                        {stat.label}
                                                                                     </td>
-                                                                                    {row.values.map((val, j) => (
-                                                                                        <td key={j} className="data-cell" style={{
-                                                                                            height: '36px',
-                                                                                            background: '#fff', borderBottom: '1px solid #e2e8f0',
-                                                                                            borderRight: '1px solid #e2e8f0',
-                                                                                            padding: '0 8px', boxSizing: 'border-box', textAlign: 'right', verticalAlign: 'middle'
-                                                                                        }}>
-                                                                                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
-                                                                                                {displayMode === 'all' && (
-                                                                                                    <>
-                                                                                                        <div className="cell-value">{val.count}</div>
-                                                                                                        <div className="cell-pct" style={{ color: '#888', fontSize: '0.9em' }}>{val.percent}%</div>
-                                                                                                    </>
-                                                                                                )}
-                                                                                                {displayMode === 'value' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.count}</div>}
-                                                                                                {displayMode === 'percent' && <div className="cell-value" style={{ lineHeight: 'normal' }}>{val.percent !== undefined ? `${val.percent}%` : '-'}</div>}
-                                                                                            </div>
+                                                                                    {statValues.map((v, i) => (
+                                                                                        <td key={i} className="stats-td-data" style={{ width: '180px', minWidth: '180px', boxSizing: 'border-box', textAlign: 'center' }}>
+                                                                                            {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
                                                                                         </td>
                                                                                     ))}
                                                                                 </tr>
                                                                             );
-                                                                        });
-                                                                    })()}
-                                                                </tbody>
-                                                            </table>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
-
-                                        if (option.id === 'stats') {
-                                            return (
-                                                <div key="stats" className="result-block">
-                                                    <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div className="blue-bar"></div>
-                                                            <span className="section-title">통계</span>
-                                                        </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <button
-                                                                onClick={handleCopyStats}
-                                                                style={{
-                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                    padding: '6px 12px', background: '#f8f9fa',
-                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                    cursor: 'pointer', flexShrink: 0
-                                                                }}
-                                                            >
-                                                                <Copy size={14} /> 복사
-                                                            </button>
-                                                            <button
-                                                                onClick={() => setFullscreenModal({ open: true, type: 'stats' })}
-                                                                style={{
-                                                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                    padding: '6px 12px', background: '#f8f9fa',
-                                                                    border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                    fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                    cursor: 'pointer', flexShrink: 0
-                                                                }}
-                                                            >
-                                                                <Maximize size={14} /> 전체화면
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="stats-table-container" style={{ width: '100%', overflowX: 'auto' }}>
-                                                        <table className="cross-table stats-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed', borderCollapse: 'separate', borderSpacing: 0 }}>
-                                                            <thead>
-                                                                <tr>
-                                                                    <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="stats-th-label" style={{
-                                                                        position: 'sticky', left: 0, top: 0, zIndex: 30, width: '120px', minWidth: '120px',
-                                                                        background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
-                                                                        fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                        textAlign: 'center', verticalAlign: 'middle', padding: '4px',
-                                                                        height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36
-                                                                    }}>
-                                                                        통계
-                                                                    </th>
-                                                                    {hasVarLabel && (() => {
-                                                                        const varGroups = [];
-                                                                        resultData.columns.forEach(col => {
-                                                                            const var_label = col.var_label || '';
-                                                                            const label2 = col.label2 || '';
-                                                                            const isSame = var_label === label2;
-                                                                            if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
-                                                                                varGroups[varGroups.length - 1].colspan += 1;
-                                                                                if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
-                                                                            } else {
-                                                                                varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
-                                                                            }
-                                                                        });
-                                                                        return varGroups.map((group, i) => (
-                                                                            <th key={`stat-var-group-${i}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} style={{
-                                                                                position: 'sticky', top: 0, zIndex: 20,
-                                                                                height: group.canMerge ? '50px' : '25px', background: '#dbeafe', borderBottom: '1px solid #cbd5e1',
-                                                                                borderRight: '1px solid #cbd5e1',
-                                                                                fontSize: '11px', fontWeight: 'bold', color: '#1e40af', boxSizing: 'border-box',
-                                                                                textAlign: 'center', padding: '2px 4px', whiteSpace: 'normal', wordBreak: 'keep-all',
-                                                                                verticalAlign: 'middle'
-                                                                            }}>
-                                                                                {group.var_label}
-                                                                            </th>
-                                                                        ));
-                                                                    })()}
-                                                                    {!hasVarLabel && hasColLabel2 && (() => {
-                                                                        const colGroups = [];
-                                                                        resultData.columns.forEach(col => {
-                                                                            const label2 = col.label2 || '';
-                                                                            if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
-                                                                                colGroups[colGroups.length - 1].colspan += 1;
-                                                                            } else {
-                                                                                colGroups.push({ label2, colspan: 1 });
-                                                                            }
-                                                                        });
-                                                                        return colGroups.map((group, i) => (
-                                                                            <th key={`stat-group-${i}`} colSpan={group.colspan} style={{
-                                                                                position: 'sticky', top: 0, zIndex: 20,
-                                                                                height: '25px',
-                                                                                background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
-                                                                                borderRight: i === colGroups.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                                fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                                textAlign: 'center', padding: '4px',
-                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                                verticalAlign: 'middle'
-                                                                            }}>
-                                                                                {group.label2}
-                                                                            </th>
-                                                                        ));
-                                                                    })()}
-                                                                    {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, i) => (
-                                                                        <th key={`stat-col-${i}`} style={{
-                                                                            position: 'sticky', top: 0, zIndex: 20,
-                                                                            width: '180px', minWidth: '180px', height: '36px',
-                                                                            background: '#eff6ff', borderBottom: '1px solid #e2e8f0',
-                                                                            borderRight: i === resultData.columns.length - 1 ? 'none' : '1px solid #e2e8f0',
-                                                                            fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
-                                                                            textAlign: 'center', padding: '4px',
-                                                                            whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                            verticalAlign: 'middle'
-                                                                        }}>
-                                                                            {col.label || col}
-                                                                        </th>
-                                                                    ))}
-                                                                </tr>
-                                                                {hasVarLabel && hasColLabel2 && (
-                                                                    <tr>
-                                                                        {(() => {
-                                                                            const colGroups = [];
-                                                                            resultData.columns.forEach(col => {
-                                                                                const label2 = col.label2 || '';
-                                                                                const var_label = col.var_label || '';
-                                                                                const isSame = label2 === var_label;
-                                                                                if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
-                                                                                    colGroups[colGroups.length - 1].colspan += 1;
-                                                                                } else {
-                                                                                    colGroups.push({ label2, colspan: 1, isSame });
-                                                                                }
-                                                                            });
-                                                                            return colGroups.map((group, i) => {
-                                                                                if (group.isSame) return null;
-                                                                                return (
-                                                                                    <th key={`stat-group2-${i}`} colSpan={group.colspan} style={{
-                                                                                        position: 'sticky', top: '25px', zIndex: 20,
-                                                                                        height: '25px', background: '#eff6ff', borderBottom: '1px solid #cbd5e1',
-                                                                                        borderRight: '1px solid #cbd5e1',
-                                                                                        fontSize: '12px', fontWeight: 'bold', color: '#334155', boxSizing: 'border-box',
-                                                                                        textAlign: 'center', padding: '4px', whiteSpace: 'normal', wordBreak: 'keep-all',
-                                                                                        verticalAlign: 'middle'
-                                                                                    }}>
-                                                                                        {group.label2}
-                                                                                    </th>
-                                                                                );
-                                                                            });
-                                                                        })()}
-                                                                    </tr>
-                                                                )}
-                                                                {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
-                                                                    <tr>
-                                                                        {resultData.columns.map((col, i) => (
-                                                                            <th key={`stat-label-${i}`} style={{
-                                                                                position: 'sticky', top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', zIndex: 20,
-                                                                                width: '180px', minWidth: '180px', height: '36px',
-                                                                                background: '#eff6ff', borderBottom: '1px solid #cbd5e1', borderRight: '1px solid #cbd5e1',
-                                                                                fontSize: '12px', fontWeight: '600', color: '#334155', boxSizing: 'border-box',
-                                                                                textAlign: 'center', padding: '4px',
-                                                                                whiteSpace: 'normal', wordBreak: 'keep-all', overflowWrap: 'break-word',
-                                                                                verticalAlign: 'middle'
-                                                                            }}>
-                                                                                {col.label || col}
-                                                                            </th>
-                                                                        ))}
-                                                                    </tr>
-                                                                )}
-                                                            </thead>
-                                                            <tbody>
-                                                                {statsOptions.filter(opt => opt.checked).map((stat) => {
-                                                                    const statKey = stat.id;
-                                                                    const statValues = (resultData.stats && resultData.stats[statKey]) ||
-                                                                        new Array(resultData.columns.length).fill('-');
-
-                                                                    return (
-                                                                        <tr key={stat.id} className="stats-row">
-                                                                            <td colSpan={hasRowLabel2 ? 2 : 1} className="stats-td-label" style={{ position: 'sticky', left: 0, zIndex: 10, width: '120px', minWidth: '120px', background: '#eff6ff', boxSizing: 'border-box' }}>
-                                                                                {stat.label}
-                                                                            </td>
-                                                                            {statValues.map((v, i) => (
-                                                                                <td key={i} className="stats-td-data" style={{ width: '180px', minWidth: '180px', boxSizing: 'border-box', textAlign: 'center' }}>
-                                                                                    {v === null || v === undefined || v === '' ? '-' : (typeof v === 'number' ? (Number.isInteger(v) ? v : v.toFixed(2)) : v)}
-                                                                                </td>
-                                                                            ))}
-                                                                        </tr>
-                                                                    );
-                                                                })}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
-
-                                        if (option.id === 'chart') {
-                                            return (
-                                                <div key="chart" className="result-block">
-                                                    <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div className="blue-bar"></div>
-                                                            <span className="section-title">차트</span>
-                                                        </div>
-                                                        <button
-                                                            onClick={() => setFullscreenModal({ open: true, type: 'chart' })}
-                                                            style={{
-                                                                display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                                                padding: '6px 12px', background: '#f8f9fa',
-                                                                border: '1px solid #e9ecef', borderRadius: '6px',
-                                                                fontSize: '13px', fontWeight: '500', color: '#495057',
-                                                                cursor: 'pointer', flexShrink: 0
-                                                            }}
-                                                        >
-                                                            <Maximize size={14} /> 전체화면
-                                                        </button>
-                                                    </div>
-                                                    <div ref={chartContainerRef} className="cross-tab-chart-container">
-                                                        {chartData && chartData.length > 0 ? (
-                                                            <div className="chart-scroll-wrapper" style={{
-                                                                width: `${Math.max(100, chartData.length * 120)}px`
-                                                            }}>
-                                                                <KendoChart
-                                                                    data={chartData}
-                                                                    seriesNames={seriesNames}
-                                                                    allowedTypes={
-                                                                        (!chartMode || chartMode === 'column' || chartMode === 'bar') ? ['column', 'bar'] :
-                                                                            chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
-                                                                                chartMode === 'line' ? ['line'] :
-                                                                                    chartMode === 'pie' ? ['pie'] :
-                                                                                        chartMode === 'donut' ? ['donut'] :
-                                                                                            chartMode === 'radarArea' ? ['radarArea'] :
-                                                                                                chartMode === 'funnel' ? ['funnel'] :
-                                                                                                    chartMode === 'scatterPoint' ? ['scatterPoint'] :
-                                                                                                        chartMode === 'area' ? ['area'] :
-                                                                                                            chartMode === 'map' ? ['map'] :
-                                                                                                                chartMode === 'heatmap' ? ['heatmap'] : []
-                                                                    }
-                                                                    initialType={
-                                                                        (!chartMode || chartMode === 'column') ? 'column' :
-                                                                            chartMode === 'stackedColumn' ? 'stackedColumn' :
-                                                                                chartMode === 'line' ? 'line' :
-                                                                                    chartMode === 'pie' ? 'pie' :
-                                                                                        chartMode === 'donut' ? 'donut' :
-                                                                                            chartMode === 'radarArea' ? 'radarArea' :
-                                                                                                chartMode === 'funnel' ? 'funnel' :
-                                                                                                    chartMode === 'scatterPoint' ? 'scatterPoint' :
-                                                                                                        chartMode === 'area' ? 'area' :
-                                                                                                            chartMode === 'map' ? 'map' :
-                                                                                                                chartMode === 'heatmap' ? 'heatmap' : 'column'
-                                                                    }
-                                                                />
+                                                                        })}
+                                                                    </tbody>
+                                                                </table>
                                                             </div>
-                                                        ) : (
-                                                            <div style={{ color: '#aaa', fontSize: '14px' }}>차트를 표시할 데이터가 없습니다.</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            )
-                                        }
+                                                        </div>
+                                                    );
+                                                }
 
-
-                                        if (option.id === 'ai') {
-                                            return (
-                                                <div key="ai" className="result-block">
-                                                    <div className="section-header">
-                                                        <div className="blue-bar"></div>
-                                                        <span className="section-title">AI 분석</span>
-                                                    </div>
-                                                    <div className="ai-analysis-container" style={{ flex: 1, minHeight: 0 }}>
-                                                        {!aiResult && !isAiLoading && (
-                                                            <button className="btn-ai-analysis" onClick={handleRunAiAnalysis}>
-                                                                <Bot size={18} />
-                                                                <span>AI 분석 실행</span>
-                                                            </button>
-                                                        )}
-
-                                                        {isAiLoading && (
-                                                            <div className="ai-loading">
-                                                                <Loader2 size={32} className="spin-icon" />
-                                                                <span>AI가 데이터를 분석하고 있습니다...</span>
-                                                            </div>
-                                                        )}
-
-                                                        {aiResult && (
-                                                            <div className="ai-result-box">
-                                                                <div className="ai-result-header">
-                                                                    <Bot size={18} className="sparkle-icon" />
-                                                                    <span>분석 결과 요약</span>
+                                                if (option.id === 'chart') {
+                                                    return (
+                                                        <div key="chart" className="result-block">
+                                                            <div className="section-header" style={{ justifyContent: 'space-between', display: 'flex', alignItems: 'center' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div className="blue-bar"></div>
+                                                                    <span className="section-title">차트</span>
                                                                 </div>
-                                                                <div className="ai-result-content">
-                                                                    {aiResult.map((text, idx) => (
-                                                                        <div key={idx} className="ai-result-item" style={{ animationDelay: `${idx * 0.1}s` }}>
-                                                                            <CheckCircle2 size={16} className="check-icon" />
-                                                                            <p>{text}</p>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                                <button className="btn-ai-reset" onClick={() => setAiResult(null)}>
-                                                                    다시 분석하기
+                                                                <button
+                                                                    onClick={() => setFullscreenModal({ open: true, type: 'chart', dataItem: resultData, chartData, seriesNames })}
+                                                                    style={{
+                                                                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                                                        padding: '6px 12px', background: '#f8f9fa',
+                                                                        border: '1px solid #e9ecef', borderRadius: '6px',
+                                                                        fontSize: '13px', fontWeight: '500', color: '#495057',
+                                                                        cursor: 'pointer', flexShrink: 0
+                                                                    }}
+                                                                >
+                                                                    <Maximize size={14} /> 전체화면
                                                                 </button>
                                                             </div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            );
-                                        }
+                                                            <div ref={chartContainerRef} className="cross-tab-chart-container">
+                                                                {chartData && chartData.length > 0 ? (
+                                                                    <div className="chart-scroll-wrapper" style={{
+                                                                        width: `${Math.max(100, chartData.length * 120)}px`
+                                                                    }}>
+                                                                        <KendoChart
+                                                                            data={chartData}
+                                                                            seriesNames={seriesNames}
+                                                                            allowedTypes={
+                                                                                (!chartMode || chartMode === 'column' || chartMode === 'bar') ? ['column', 'bar'] :
+                                                                                    chartMode === 'stackedColumn' ? ['stackedColumn', 'stacked100Column'] :
+                                                                                        chartMode === 'line' ? ['line'] :
+                                                                                            chartMode === 'pie' ? ['pie'] :
+                                                                                                chartMode === 'donut' ? ['donut'] :
+                                                                                                    chartMode === 'radarArea' ? ['radarArea'] :
+                                                                                                        chartMode === 'funnel' ? ['funnel'] :
+                                                                                                            chartMode === 'scatterPoint' ? ['scatterPoint'] :
+                                                                                                                chartMode === 'area' ? ['area'] :
+                                                                                                                    chartMode === 'map' ? ['map'] :
+                                                                                                                        chartMode === 'heatmap' ? ['heatmap'] : []
+                                                                            }
+                                                                            initialType={
+                                                                                (!chartMode || chartMode === 'column') ? 'column' :
+                                                                                    chartMode === 'stackedColumn' ? 'stackedColumn' :
+                                                                                        chartMode === 'line' ? 'line' :
+                                                                                            chartMode === 'pie' ? 'pie' :
+                                                                                                chartMode === 'donut' ? 'donut' :
+                                                                                                    chartMode === 'radarArea' ? 'radarArea' :
+                                                                                                        chartMode === 'funnel' ? 'funnel' :
+                                                                                                            chartMode === 'scatterPoint' ? 'scatterPoint' :
+                                                                                                                chartMode === 'area' ? 'area' :
+                                                                                                                    chartMode === 'map' ? 'map' :
+                                                                                                                        chartMode === 'heatmap' ? 'heatmap' : 'column'
+                                                                            }
+                                                                        />
+                                                                    </div>
+                                                                ) : (
+                                                                    <div style={{ color: '#aaa', fontSize: '14px' }}>차트를 표시할 데이터가 없습니다.</div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                }
 
-                                        return null;
-                                    })}
-                                </div>
+
+                                                if (option.id === 'ai') {
+                                                    return (
+                                                        <div key="ai" className="result-block">
+                                                            <div className="section-header">
+                                                                <div className="blue-bar"></div>
+                                                                <span className="section-title">AI 분석</span>
+                                                            </div>
+                                                            <div className="ai-analysis-container" style={{ flex: 1, minHeight: 0 }}>
+                                                                {!aiResult && !isAiLoading && (
+                                                                    <button className="btn-ai-analysis" onClick={handleRunAiAnalysis}>
+                                                                        <Bot size={18} />
+                                                                        <span>AI 분석 실행</span>
+                                                                    </button>
+                                                                )}
+
+                                                                {isAiLoading && (
+                                                                    <div className="ai-loading">
+                                                                        <Loader2 size={32} className="spin-icon" />
+                                                                        <span>AI가 데이터를 분석하고 있습니다...</span>
+                                                                    </div>
+                                                                )}
+
+                                                                {aiResult && (
+                                                                    <div className="ai-result-box">
+                                                                        <div className="ai-result-header">
+                                                                            <Bot size={18} className="sparkle-icon" />
+                                                                            <span>분석 결과 요약</span>
+                                                                        </div>
+                                                                        <div className="ai-result-content">
+                                                                            {aiResult.map((text, idx) => (
+                                                                                <div key={idx} className="ai-result-item" style={{ animationDelay: `${idx * 0.1}s` }}>
+                                                                                    <CheckCircle2 size={16} className="check-icon" />
+                                                                                    <p>{text}</p>
+                                                                                </div>
+                                                                            ))}
+                                                                        </div>
+                                                                        <button className="btn-ai-reset" onClick={() => setAiResult(null)}>
+                                                                            다시 분석하기
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                return null;
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
+                        );
+                    })}
                 </div>
             </div >
 
@@ -3112,11 +2874,11 @@ const AdditionalAnalysisPage = () => {
             <FullscreenModal
                 isOpen={fullscreenModal.open}
                 type={fullscreenModal.type}
-                onClose={() => setFullscreenModal({ open: false, type: null })}
-                resultData={resultData}
+                onClose={() => setFullscreenModal({ open: false, type: null, dataItem: null, chartData: null, seriesNames: null })}
+                resultData={fullscreenModal.dataItem}
                 statsOptions={statsOptions}
-                chartData={chartData}
-                seriesNames={seriesNames}
+                chartData={fullscreenModal.chartData}
+                seriesNames={fullscreenModal.seriesNames}
                 chartMode={chartMode}
             />
 
