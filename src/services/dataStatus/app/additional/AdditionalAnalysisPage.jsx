@@ -534,7 +534,12 @@ const AdditionalAnalysisPage = () => {
         };
     }, [rowVars, colVars, variables]);
 
-    // Update Result Data from Preview
+    useEffect(() => {
+        if (isConfigOpen) {
+            setExpandedIndex(null);
+        }
+    }, [isConfigOpen]);
+
     // Update Result Data from Preview
     useEffect(() => {
         // Clear result data resultData manually handled to avoid race conditions
@@ -1394,329 +1399,332 @@ const AdditionalAnalysisPage = () => {
                 onClose={() => setToast({ ...toast, show: false })}
             />
 
-            <div className="cross-tab-layout">
-                {/* Sidebar */}
-                <SideBar
-                    title="테이블 목록"
-                    items={filteredTables}
-                    selectedId={selectedTableId}
-                    onItemClick={handleTableSelect}
-                    onSearch={setTableSearchTerm}
-                    onDelete={handleDeleteTable}
-                    displayField="name"
-                    searchPlaceholder="테이블을 검색하세요."
-                    listRef={tableListRef}
-                />
+            {PAGE_ID && (
+                <div className="cross-tab-layout">
+                    {/* Sidebar */}
+                    <SideBar
+                        title="테이블 목록"
+                        items={filteredTables}
+                        selectedId={selectedTableId}
+                        onItemClick={handleTableSelect}
+                        onSearch={setTableSearchTerm}
+                        onDelete={handleDeleteTable}
+                        displayField="name"
+                        searchPlaceholder="테이블을 검색하세요."
+                        listRef={tableListRef}
+                    />
 
-                {/* Main Content */}
-                <div className="cross-tab-main" style={{ gap: isConfigOpen ? '8px' : '16px' }}>
-                    {/* Config Section */}
-                    <div className="config-section" style={{
-                        flex: isConfigOpen ? 1 : '0 0 auto',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        minHeight: 0,
-                        transition: 'all 0.3s ease'
-                    }}>
-                        <div className="config-header" style={{ padding: isConfigOpen ? '20px 24px' : '8px 24px', transition: 'all 0.2s' }}>
-                            <div className="config-header__left-group">
-                                <div
-                                    onClick={() => setIsConfigOpen(!isConfigOpen)}
-                                    style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                >
-                                    {isConfigOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                    {/* Main Content */}
+                    <div className="cross-tab-main" style={{ gap: isConfigOpen ? '8px' : '16px' }}>
+                        {/* Config Section */}
+                        <div className="config-section" style={{
+                            height: isConfigOpen ? '600px' : '54px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            minHeight: isConfigOpen ? '400px' : '54px',
+                            transition: 'all 0.3s ease'
+                        }}>
+                            <div className="config-header" style={{ padding: isConfigOpen ? '20px 24px' : '8px 24px', transition: 'all 0.2s' }}>
+                                <div className="config-header__left-group">
+                                    <div
+                                        onClick={() => setIsConfigOpen(!isConfigOpen)}
+                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        {isConfigOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                    </div>
+
+                                    <div className="config-header__title-group">
+                                        <span className="config-header__title-label">테이블 명</span>
+                                        <input
+                                            type="text"
+                                            className="config-title-input"
+                                            value={tableName}
+                                            onChange={(e) => setTableName(e.target.value)}
+                                            placeholder="테이블 명을 입력하세요"
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className="config-header__title-group">
-                                    <span className="config-header__title-label">테이블 명</span>
-                                    <input
-                                        type="text"
-                                        className="config-title-input"
-                                        value={tableName}
-                                        onChange={(e) => setTableName(e.target.value)}
-                                        placeholder="테이블 명을 입력하세요"
-                                    />
-                                </div>
+                                {/* Table Mode Switch */}
+                                {isConfigOpen && (
+                                    <>
+                                        {/* Table Mode Switch */}
+                                        <div className="table-mode-switch">
+                                            <button
+                                                className={`mode-option-btn ${tableMode === 'separated' ? 'active' : ''}`}
+                                                onClick={() => setTableMode('separated')}
+                                            >
+                                                표 분리
+                                            </button>
+                                            <button
+                                                className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
+                                                onClick={() => setTableMode('merged')}
+                                            >
+                                                표 병합
+                                            </button>
+                                        </div>
+
+                                        <div className="action-buttons">
+                                            <button className="btn-run" onClick={handleSaveAndRun}>
+                                                <Play size={16} fill="white" /> 저장 후 실행
+                                            </button>
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
-                            {/* Table Mode Switch */}
                             {isConfigOpen && (
-                                <>
-                                    {/* Table Mode Switch */}
-                                    <div className="table-mode-switch">
-                                        <button
-                                            className={`mode-option-btn ${tableMode === 'separated' ? 'active' : ''}`}
-                                            onClick={() => setTableMode('separated')}
-                                        >
-                                            표 분리
-                                        </button>
-                                        <button
-                                            className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
-                                            onClick={() => setTableMode('merged')}
-                                        >
-                                            표 병합
-                                        </button>
+                                <div className="config-body" style={{
+                                    flex: 1,
+                                    height: 'auto',
+                                    overflow: 'hidden'
+                                }}>
+                                    {/* Variable Panel */}
+                                    <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
+                                        <div className="variable-panel-header" style={{ justifyContent: isVariablePanelOpen ? 'space-between' : 'center', gap: '8px', padding: '16px' }}>
+                                            {isVariablePanelOpen && (
+                                                <div className="search-input-wrapper" style={{ flex: 1 }}>
+                                                    <Search size={14} className="search-icon" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="문항을 검색하세요."
+                                                        value={variableSearchTerm}
+                                                        onChange={(e) => setVariableSearchTerm(e.target.value)}
+                                                        className="search-input"
+                                                        style={{ width: '100%' }}
+                                                    />
+                                                </div>
+                                            )}
+                                            <button
+                                                className="toggle-button"
+                                                onClick={() => setIsVariablePanelOpen(!isVariablePanelOpen)}
+                                                style={{ flexShrink: 0, padding: 0 }}
+                                            >
+                                                {isVariablePanelOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+                                            </button>
+                                        </div>
+
+                                        {isVariablePanelOpen && (
+                                            <div className="variable-list">
+                                                {filteredVariables.map(v => (
+                                                    <div
+                                                        key={v.id}
+                                                        className="variable-item"
+                                                        draggable
+                                                        onDragStart={(e) => handleDragStart(e, v)}
+                                                    >
+                                                        <div className="variable-item__name">{v.id}</div>
+                                                        <div className="variable-item__label">{v.label}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
 
-                                    <div className="action-buttons">
-                                        <button className="btn-run" onClick={handleSaveAndRun}>
-                                            <Play size={16} fill="white" /> 저장 후 실행
-                                        </button>
+                                    {/* Drop Zones Container */}
+                                    <div className="drop-zones-container">
+                                        {/* Top Row: Axis Info & Column Drop Zone */}
+                                        <div className="drop-zones-top">
+                                            <div className="corner-label">
+                                                세로 × 가로
+                                            </div>
+                                            <div className="col-drop-zone">
+                                                <span className="drop-zone-label">가로축 (열)</span>
+                                                <div className="drop-zone-area" style={{ padding: '8px', overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                    {colVars.map((group, groupIndex) => (
+                                                        <div
+                                                            key={`group-${groupIndex}`}
+                                                            className="col-group"
+                                                            draggable
+                                                            onDragStart={(e) => handleDragStart(e, { type: 'COL_GROUP', groupIndex })}
+                                                            onDragOver={handleDragOver}
+                                                            onDrop={(e) => handleDrop(e, 'col', groupIndex)}
+                                                        >
+                                                            <div className="group-drag-handle" title="그룹 이동">
+                                                                <GripVertical size={16} />
+                                                            </div>
+                                                            <div className="col-group-items">
+                                                                {group.map((v, itemIndex) => (
+                                                                    <div
+                                                                        key={v.id}
+                                                                        className="dropped-tag grouped"
+                                                                        draggable
+                                                                        onDragStart={(e) => handleDragStart(e, { type: 'COL_ITEM', groupIndex, itemIndex, item: v })}
+                                                                        onDragOver={handleDragOver}
+                                                                        onDrop={(e) => handleDrop(e, 'col_item', groupIndex, itemIndex)}
+                                                                    >
+                                                                        <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
+                                                                        <span className="tag-text">{v.id}</span>
+                                                                        <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'col', groupIndex); }} />
+                                                                    </div>
+                                                                ))}
+                                                                {group.length < 2 && Array.from({ length: 2 - group.length }).map((_, i) => (
+                                                                    <div key={`empty-${i}`} className="empty-slot"></div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                    {colVars.length < 10 && (
+                                                        <div
+                                                            className="col-group new-group"
+                                                            onDragOver={handleDragOver}
+                                                            onDrop={(e) => handleDrop(e, 'new_col_group')}
+                                                        >
+                                                            {colVars.length === 0 && (
+                                                                <div className="drop-zone-placeholder" style={{ position: 'absolute', width: '100%', textAlign: 'center', margin: 'auto', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)' }}>
+                                                                    문항을 여기로 드래그하세요
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Bottom Row: Row Drop Zone & Center Content */}
+                                        <div className="drop-zones-bottom">
+                                            <div
+                                                className="row-drop-zone"
+                                                onDragOver={handleDragOver}
+                                                onDrop={(e) => handleDrop(e, 'row')}
+                                            >
+                                                <span className="drop-zone-label">세로축 (행)</span>
+                                                <div className="drop-zone-area vertical">
+                                                    {rowVars.length === 0 ? (
+                                                        <div className="drop-zone-placeholder vertical">문항을 여기로<br />드래그하세요</div>
+                                                    ) : (
+                                                        rowVars.map((v, itemIndex) => (
+                                                            <div
+                                                                key={v.id}
+                                                                className="dropped-tag row-tag"
+                                                                draggable
+                                                                onDragStart={(e) => handleDragStart(e, { type: 'ROW_ITEM', itemIndex, item: v })}
+                                                                onDragOver={handleDragOver}
+                                                                onDrop={(e) => handleDrop(e, 'row_item', null, itemIndex)}
+                                                            >
+                                                                <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
+                                                                <span className="tag-text">{v.id}</span>
+                                                                <X size={14} className="remove" style={{ flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'row'); }} />
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Center Content: Filter & Weight */}
+                                            <div className="center-content">
+                                                {previewData && (
+                                                    <div className="preview-table-wrapper">
+                                                        <table className="preview-table">
+                                                            <thead>
+                                                                {previewData.colHeaderRows.map((rowCells, rIndex) => (
+                                                                    <tr key={`col-header-row-${rIndex}`}>
+                                                                        {rIndex === 0 && (
+                                                                            <th
+                                                                                rowSpan={previewData.maxColLevels + 1}
+                                                                                colSpan={previewData.maxRowLevels}
+                                                                                className="preview-th corner-header"
+                                                                                style={{ top: 0 }}
+                                                                            ></th>
+                                                                        )}
+                                                                        {rowCells.map((cell, cIndex) => (
+                                                                            <th
+                                                                                key={`col-header-cell-${cIndex}`}
+                                                                                colSpan={cell.colspan}
+                                                                                rowSpan={cell.rowspan}
+                                                                                className={`preview-th ${cell.isGroupHeader ? 'group-header' : 'col-header'}`}
+                                                                                style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4', top: `${rIndex * 40}px` }}
+                                                                            >
+                                                                                {cell.label}
+                                                                            </th>
+                                                                        ))}
+                                                                    </tr>
+                                                                ))}
+                                                            </thead>
+                                                            <tbody>
+                                                                {previewData.rowGroups.map((group, groupIdx) => (
+                                                                    group.labels.map((label, labelIdx) => (
+                                                                        <tr key={`${groupIdx}-${labelIdx}`}>
+                                                                            {group.name === '' ? (
+                                                                                <td colSpan={2} className="preview-td row-head sticky-left" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                                                                    {label}
+                                                                                </td>
+                                                                            ) : (
+                                                                                <>
+                                                                                    {labelIdx === 0 && (
+                                                                                        <td rowSpan={group.labels.length} className="preview-td row-group-head sticky-left">
+                                                                                            {group.name}
+                                                                                        </td>
+                                                                                    )}
+                                                                                    <td className="preview-td row-head sticky-left-indent" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                                                                        {label}
+                                                                                    </td>
+                                                                                </>
+                                                                            )}
+                                                                            {Array.from({ length: previewData.totalDataCols }).map((_, colIdx) => (
+                                                                                <td key={colIdx} className="preview-td data-cell">
+                                                                                    <span className="data-placeholder">-</span>
+                                                                                </td>
+                                                                            ))}
+                                                                        </tr>
+                                                                    ))
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                )}
+
+                                                <div className="filter-weight-row" style={{ display: 'flex', gap: '20px', position: 'sticky', bottom: 0, background: '#f8f9fa', zIndex: 10, padding: '8px 12px', borderTop: '1px solid #e0e0e0', alignItems: 'center', boxShadow: '0 -2px 5px rgba(0,0,0,0.05)' }}>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터</span>
+                                                        <input
+                                                            type="text"
+                                                            className="center-content__input"
+                                                            placeholder="예: age >= 20"
+                                                            style={{ flex: 1, height: '34px', fontSize: '13px' }}
+                                                            value={filterExpression}
+                                                            onChange={(e) => setFilterExpression(e.target.value)}
+                                                        />
+                                                    </div>
+                                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>가중치 문항</span>
+                                                        <DropDownList
+                                                            data={weightVariableOptions}
+                                                            value={selectedWeight}
+                                                            onChange={(e) => setSelectedWeight(e.target.value)}
+                                                            style={{ flex: 1, height: '34px' }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </>
+                                </div>
                             )}
                         </div>
 
-                        {isConfigOpen && (
-                            <div className="config-body" style={{
-                                flex: 1,
-                                height: 'auto',
-                                overflow: 'hidden'
-                            }}>
-                                {/* Variable Panel */}
-                                <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
-                                    <div className="variable-panel-header" style={{ justifyContent: isVariablePanelOpen ? 'space-between' : 'center', gap: '8px', padding: '16px' }}>
-                                        {isVariablePanelOpen && (
-                                            <div className="search-input-wrapper" style={{ flex: 1 }}>
-                                                <Search size={14} className="search-icon" />
-                                                <input
-                                                    type="text"
-                                                    placeholder="문항을 검색하세요."
-                                                    value={variableSearchTerm}
-                                                    onChange={(e) => setVariableSearchTerm(e.target.value)}
-                                                    className="search-input"
-                                                    style={{ width: '100%' }}
-                                                />
-                                            </div>
-                                        )}
-                                        <button
-                                            className="toggle-button"
-                                            onClick={() => setIsVariablePanelOpen(!isVariablePanelOpen)}
-                                            style={{ flexShrink: 0, padding: 0 }}
-                                        >
-                                            {isVariablePanelOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-                                        </button>
-                                    </div>
-
-                                    {isVariablePanelOpen && (
-                                        <div className="variable-list">
-                                            {filteredVariables.map(v => (
-                                                <div
-                                                    key={v.id}
-                                                    className="variable-item"
-                                                    draggable
-                                                    onDragStart={(e) => handleDragStart(e, v)}
-                                                >
-                                                    <div className="variable-item__name">{v.id}</div>
-                                                    <div className="variable-item__label">{v.label}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Drop Zones Container */}
-                                <div className="drop-zones-container">
-                                    {/* Top Row: Axis Info & Column Drop Zone */}
-                                    <div className="drop-zones-top">
-                                        <div className="corner-label">
-                                            세로 × 가로
-                                        </div>
-                                        <div className="col-drop-zone">
-                                            <span className="drop-zone-label">가로축 (열)</span>
-                                            <div className="drop-zone-area" style={{ padding: '8px', overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                {colVars.map((group, groupIndex) => (
-                                                    <div
-                                                        key={`group-${groupIndex}`}
-                                                        className="col-group"
-                                                        draggable
-                                                        onDragStart={(e) => handleDragStart(e, { type: 'COL_GROUP', groupIndex })}
-                                                        onDragOver={handleDragOver}
-                                                        onDrop={(e) => handleDrop(e, 'col', groupIndex)}
-                                                    >
-                                                        <div className="group-drag-handle" title="그룹 이동">
-                                                            <GripVertical size={16} />
-                                                        </div>
-                                                        <div className="col-group-items">
-                                                            {group.map((v, itemIndex) => (
-                                                                <div
-                                                                    key={v.id}
-                                                                    className="dropped-tag grouped"
-                                                                    draggable
-                                                                    onDragStart={(e) => handleDragStart(e, { type: 'COL_ITEM', groupIndex, itemIndex, item: v })}
-                                                                    onDragOver={handleDragOver}
-                                                                    onDrop={(e) => handleDrop(e, 'col_item', groupIndex, itemIndex)}
-                                                                >
-                                                                    <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
-                                                                    <span className="tag-text">{v.id}</span>
-                                                                    <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'col', groupIndex); }} />
-                                                                </div>
-                                                            ))}
-                                                            {group.length < 2 && Array.from({ length: 2 - group.length }).map((_, i) => (
-                                                                <div key={`empty-${i}`} className="empty-slot"></div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {colVars.length < 10 && (
-                                                    <div
-                                                        className="col-group new-group"
-                                                        onDragOver={handleDragOver}
-                                                        onDrop={(e) => handleDrop(e, 'new_col_group')}
-                                                    >
-                                                        {colVars.length === 0 && (
-                                                            <div className="drop-zone-placeholder" style={{ position: 'absolute', width: '100%', textAlign: 'center', margin: 'auto', left: 0, right: 0, top: '50%', transform: 'translateY(-50%)' }}>
-                                                                문항을 여기로 드래그하세요
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Bottom Row: Row Drop Zone & Center Content */}
-                                    <div className="drop-zones-bottom">
-                                        <div
-                                            className="row-drop-zone"
-                                            onDragOver={handleDragOver}
-                                            onDrop={(e) => handleDrop(e, 'row')}
-                                        >
-                                            <span className="drop-zone-label">세로축 (행)</span>
-                                            <div className="drop-zone-area vertical">
-                                                {rowVars.length === 0 ? (
-                                                    <div className="drop-zone-placeholder vertical">문항을 여기로<br />드래그하세요</div>
-                                                ) : (
-                                                    rowVars.map((v, itemIndex) => (
-                                                        <div
-                                                            key={v.id}
-                                                            className="dropped-tag row-tag"
-                                                            draggable
-                                                            onDragStart={(e) => handleDragStart(e, { type: 'ROW_ITEM', itemIndex, item: v })}
-                                                            onDragOver={handleDragOver}
-                                                            onDrop={(e) => handleDrop(e, 'row_item', null, itemIndex)}
-                                                        >
-                                                            <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
-                                                            <span className="tag-text">{v.id}</span>
-                                                            <X size={14} className="remove" style={{ flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'row'); }} />
-                                                        </div>
-                                                    ))
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Center Content: Filter & Weight */}
-                                        <div className="center-content" style={{ display: 'flex', flexDirection: 'column', height: '100%', minWidth: 0, overflow: 'hidden' }}>
-                                            {previewData && (
-                                                <div className="preview-table-wrapper">
-                                                    <table className="preview-table">
-                                                        <thead>
-                                                            {previewData.colHeaderRows.map((rowCells, rIndex) => (
-                                                                <tr key={`col-header-row-${rIndex}`}>
-                                                                    {rIndex === 0 && (
-                                                                        <th
-                                                                            rowSpan={previewData.maxColLevels + 1}
-                                                                            colSpan={previewData.maxRowLevels}
-                                                                            className="preview-th corner-header"
-                                                                            style={{ top: 0 }}
-                                                                        ></th>
-                                                                    )}
-                                                                    {rowCells.map((cell, cIndex) => (
-                                                                        <th
-                                                                            key={`col-header-cell-${cIndex}`}
-                                                                            colSpan={cell.colspan}
-                                                                            rowSpan={cell.rowspan}
-                                                                            className={`preview-th ${cell.isGroupHeader ? 'group-header' : 'col-header'}`}
-                                                                            style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4', top: `${rIndex * 40}px` }}
-                                                                        >
-                                                                            {cell.label}
-                                                                        </th>
-                                                                    ))}
-                                                                </tr>
-                                                            ))}
-                                                        </thead>
-                                                        <tbody>
-                                                            {previewData.rowGroups.map((group, groupIdx) => (
-                                                                group.labels.map((label, labelIdx) => (
-                                                                    <tr key={`${groupIdx}-${labelIdx}`}>
-                                                                        {group.name === '' ? (
-                                                                            <td colSpan={2} className="preview-td row-head sticky-left" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
-                                                                                {label}
-                                                                            </td>
-                                                                        ) : (
-                                                                            <>
-                                                                                {labelIdx === 0 && (
-                                                                                    <td rowSpan={group.labels.length} className="preview-td row-group-head sticky-left">
-                                                                                        {group.name}
-                                                                                    </td>
-                                                                                )}
-                                                                                <td className="preview-td row-head sticky-left-indent" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
-                                                                                    {label}
-                                                                                </td>
-                                                                            </>
-                                                                        )}
-                                                                        {Array.from({ length: previewData.totalDataCols }).map((_, colIdx) => (
-                                                                            <td key={colIdx} className="preview-td data-cell">
-                                                                                <span className="data-placeholder">-</span>
-                                                                            </td>
-                                                                        ))}
-                                                                    </tr>
-                                                                ))
-                                                            ))}
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            )}
-
-                                            <div className="filter-weight-row" style={{ display: 'flex', gap: '20px', position: 'sticky', bottom: 0, background: '#f8f9fa', zIndex: 10, padding: '8px 12px', borderTop: '1px solid #e0e0e0', alignItems: 'center', boxShadow: '0 -2px 5px rgba(0,0,0,0.05)' }}>
-                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터</span>
-                                                    <input
-                                                        type="text"
-                                                        className="center-content__input"
-                                                        placeholder="예: age >= 20"
-                                                        style={{ flex: 1, height: '34px', fontSize: '13px' }}
-                                                        value={filterExpression}
-                                                        onChange={(e) => setFilterExpression(e.target.value)}
-                                                    />
-                                                </div>
-                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>가중치 문항</span>
-                                                    <DropDownList
-                                                        data={weightVariableOptions}
-                                                        value={selectedWeight}
-                                                        onChange={(e) => setSelectedWeight(e.target.value)}
-                                                        style={{ flex: 1, height: '34px' }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                        {/* Result Section (Scroll Area) */}
+                        <div className="results-scroll-container">
+                            {resultDataList.map((resultData, dataIndex) => (
+                                <ResultSectionBlock
+                                    key={resultData.table_id || dataIndex}
+                                    resultData={resultData}
+                                    dataIndex={dataIndex}
+                                    isConfigOpen={isConfigOpen}
+                                    setIsConfigOpen={setIsConfigOpen}
+                                    setToast={setToast}
+                                    setFullscreenModal={setFullscreenModal}
+                                    tableName={tableName}
+                                    isExpanded={expandedIndex === dataIndex}
+                                    onToggleExpand={() => setExpandedIndex(expandedIndex === dataIndex ? null : dataIndex)}
+                                    isAnyExpanded={expandedIndex !== null}
+                                    tableMode={tableMode}
+                                />
+                            ))}
+                        </div>
                     </div>
-
-                    {/* Result Section */}
-                    {/* Result Section */}
-                    {resultDataList.map((resultData, dataIndex) => (
-                        <ResultSectionBlock
-                            key={resultData.table_id || dataIndex}
-                            resultData={resultData}
-                            dataIndex={dataIndex}
-                            isConfigOpen={isConfigOpen}
-                            setIsConfigOpen={setIsConfigOpen}
-                            setToast={setToast}
-                            setFullscreenModal={setFullscreenModal}
-                            tableName={tableName}
-                            isExpanded={expandedIndex === dataIndex}
-                            onToggleExpand={() => setExpandedIndex(expandedIndex === dataIndex ? null : dataIndex)}
-                            isAnyExpanded={expandedIndex !== null}
-                            tableMode={tableMode}
-                        />
-                    ))}
                 </div>
-            </div >
+            )}
 
             {/* Fullscreen Modal */}
             <FullscreenModal

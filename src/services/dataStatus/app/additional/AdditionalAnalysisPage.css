@@ -3,14 +3,20 @@
 .cross-tab-page {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 100vh;
+    /* Lock height to viewport */
     background: #f5f5f5;
+    overflow: hidden;
+    /* Prevent entire page from scrolling */
 }
 
 .cross-tab-layout {
     display: flex;
     flex: 1;
     overflow: hidden;
+    gap: 16px;
+    min-height: 0;
+    /* Important: allow flex to shrink */
 }
 
 /* Sidebar (Table List) */
@@ -67,18 +73,41 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    padding: 24px;
+    padding: 16px 20px;
     overflow: hidden;
-    gap: 16px;
-    /* Floating Style Matching Sidebar */
+    /* Lock the main box */
+    gap: 12px;
     height: calc(100% - 32px);
-    margin: 16px;
+    /* Sync with sidebar height */
+    min-height: 0;
+    /* Important for children scrolling */
+    margin: 16px 16px 16px 0;
+    /* Sync with sidebar margins */
     background: #f8fafc;
-    /* Light Gray Background for Separation */
     border: 1px solid var(--ds-border);
     border-radius: 16px;
     box-shadow: var(--ds-shadow);
     box-sizing: border-box;
+}
+
+.results-scroll-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    /* Reduced gap */
+    padding: 2px;
+    min-height: 0;
+}
+
+.results-scroll-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.results-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
 }
 
 /* Config Section */
@@ -90,6 +119,10 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
+    height: 600px;
+    /* Consistently set to 600px */
+    min-height: 400px;
 }
 
 .config-header {
@@ -429,12 +462,15 @@
 /* Center Content */
 .center-content {
     flex: 1;
-    padding: 10px;
+    padding: 0;
+    /* Removed padding to maximize grid space */
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 24px;
     background: #fff;
+    min-width: 0;
+    min-height: 0;
+    /* Required for flex children to scroll */
+    overflow: hidden;
 }
 
 .center-content__label {
@@ -606,13 +642,18 @@
 
 .result-section.is-expanded {
     flex: 1 1 0% !important;
+    min-height: 600px !important;
     z-index: 10;
 }
 
 .result-section.is-narrow {
-    flex: 0 0 54px !important;
-    min-height: 54px !important;
-    opacity: 0.7;
+    flex: 0 0 50px !important;
+    min-height: 50px !important;
+    opacity: 0.8;
+}
+
+.result-section.is-expanded.is-config-open {
+    min-height: 200px !important;
 }
 
 .result-section.is-narrow:hover {
@@ -629,13 +670,15 @@
 }
 
 .result-header {
-    padding: 8px 24px;
+    padding: 4px 20px;
+    /* Reduced padding */
     background: #fff;
     border-bottom: 1px solid #f1f5f9;
     display: flex;
     align-items: center;
     justify-content: space-between;
     user-select: none;
+    min-height: 50px;
 }
 
 .result-tabs {
@@ -646,7 +689,8 @@
 
 .result-tab {
     font-weight: 700;
-    font-size: 18px;
+    font-size: 14px;
+    /* Reduced from 18px */
     color: #1e293b;
     margin: 0;
     user-select: none;
@@ -1559,11 +1603,10 @@
     overflow: auto;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    min-height: 250px;
-    max-height: calc(100vh - 350px);
+    min-height: 0;
+    /* Allow it to shrink and scroll */
     width: 100%;
-    margin-bottom: 5px;
-    margin-top: 45px;
+    margin: 0;
     background: #fff;
     box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.02);
 }

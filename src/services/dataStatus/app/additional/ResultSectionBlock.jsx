@@ -314,9 +314,9 @@ export const ResultSectionBlock = ({
     return (
         <div
             key={dataIndex}
-            className={`result-section ${isExpanded ? 'is-expanded' : ''} ${(isAnyExpanded && !isExpanded) || isConfigOpen ? 'is-narrow' : ''}`}
+            className={`result-section ${tableMode === 'merged' || isExpanded ? 'is-expanded' : 'is-narrow'} ${isConfigOpen ? 'is-config-open' : ''}`}
             style={{
-                marginTop: dataIndex > 0 ? (isConfigOpen ? '0px' : '20px') : '0'
+                marginTop: dataIndex > 0 ? (tableMode === 'merged' || isExpanded ? '20px' : '8px') : '0'
             }}
         >
             <div className="result-header" onClick={() => isConfigOpen && setIsConfigOpen(false)} style={{ cursor: isConfigOpen ? 'pointer' : 'default' }}>
@@ -332,7 +332,7 @@ export const ResultSectionBlock = ({
                     )}
                 </div>
                 <div>
-                    {tableMode !== 'merged' && (
+                    {tableMode !== 'merged' && !isConfigOpen && (
                         <button
                             className={`wide-view-toggle-btn ${isExpanded ? 'active' : ''}`}
                             onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
