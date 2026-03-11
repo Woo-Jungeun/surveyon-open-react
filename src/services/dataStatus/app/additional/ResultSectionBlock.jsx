@@ -332,7 +332,7 @@ export const ResultSectionBlock = ({
             >
                 <div className="result-tabs">
                     <div className="result-tab">
-                        결과 {resultData.y_info ? `(${resultData.y_info})` : ""}
+                        결과 {resultData.y_info && <span className="y-info-label">{resultData.y_info}</span>}
                     </div>
                     {!isConfigOpen && (tableMode === 'merged' || isExpanded) && (
                         <button onClick={(e) => { e.stopPropagation(); setIsStatsOptionsOpen(!isStatsOptionsOpen); }} className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}>
