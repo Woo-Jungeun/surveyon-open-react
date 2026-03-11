@@ -324,7 +324,7 @@ export const ResultSectionBlock = ({
                     <div className="result-tab">
                         결과 {resultData.y_info ? `(${resultData.y_info})` : ""}
                     </div>
-                    {!isConfigOpen && (
+                    {!isConfigOpen && (tableMode === 'merged' || isExpanded) && (
                         <button onClick={(e) => { e.stopPropagation(); setIsStatsOptionsOpen(!isStatsOptionsOpen); }} className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}>
                             <Settings size={14} />
                             <span>옵션 설정</span>
