@@ -1707,7 +1707,7 @@ const AdditionalAnalysisPage = () => {
                         <div className="results-scroll-container">
                             {resultDataList.map((resultData, dataIndex) => (
                                 <ResultSectionBlock
-                                    key={resultData.table_id || dataIndex}
+                                    key={`${resultData.table_id || 'T1'}_${dataIndex}`}
                                     resultData={resultData}
                                     dataIndex={dataIndex}
                                     isConfigOpen={isConfigOpen}
