@@ -341,7 +341,7 @@ export const ResultSectionBlock = ({
                         </button>
                     )}
                 </div>
-                <div>
+                <div className="result-actions">
                     {tableMode !== 'merged' && !isConfigOpen && (
                         <button
                             className={`wide-view-toggle-btn ${isExpanded ? 'active' : ''}`}
@@ -350,25 +350,6 @@ export const ResultSectionBlock = ({
                         >
                             {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                         </button>
-                    )}
-                    {!isConfigOpen && layoutOptions.find(opt => opt.id === 'chart')?.checked && (
-                        <>
-                            <div className="download-menu-container" ref={downloadMenuRef}>
-                                <button className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }}>
-                                    <Download size={18} />
-                                </button>
-                                {showDownloadMenu && (
-                                    <div className="download-dropdown">
-                                        <button onClick={() => handleDownload('png')}>PNG (이미지)</button>
-                                        <button onClick={() => handleDownload('svg')}>SVG (PPT용)</button>
-                                    </div>
-                                )}
-                            </div>
-                            <button className={`view-option-btn ${!chartMode || chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')}><BarChart2 size={18} /></button>
-                            <button className={`view-option-btn ${chartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')}><Layers size={18} /></button>
-                            <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')}><LineChart size={18} /></button>
-                            <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')}><PieChart size={18} /></button>
-                        </>
                     )}
                 </div>
             </div>
@@ -826,7 +807,34 @@ export const ResultSectionBlock = ({
                                                 <div className="blue-bar"></div>
                                                 <span className="section-title">차트</span>
                                             </div>
-                                            <button onClick={() => setFullscreenModal({ open: true, type: 'chart', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode })}><Maximize size={14} /> 전체화면</button>
+                                            <div className="section-actions">
+                                                <div className="chart-type-toolbar">
+                                                    <div className="download-menu-container" ref={downloadMenuRef} style={{ marginRight: '4px' }}>
+                                                        <button className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }}>
+                                                            <Download size={16} />
+                                                        </button>
+                                                        {showDownloadMenu && (
+                                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto' }}>
+                                                                <button onClick={() => handleDownload('png')}>PNG (이미지)</button>
+                                                                <button onClick={() => handleDownload('svg')}>SVG (PPT용)</button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <button className={`view-option-btn ${!chartMode || chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={16} /></button>
+                                                    <button className={`view-option-btn ${chartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
+                                                    <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형"><LineChart size={16} /></button>
+                                                    <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형"><PieChart size={16} /></button>
+                                                    <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형"><Donut size={16} /></button>
+                                                    <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형"><AreaChart size={16} /></button>
+                                                </div>
+                                                <button
+                                                    onClick={() => setFullscreenModal({ open: true, type: 'chart', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode })}
+                                                    className="action-btn"
+                                                >
+                                                    <Maximize size={16} />
+                                                    <span>전체화면</span>
+                                                </button>
+                                            </div>
                                         </div>
                                         <div ref={chartContainerRef} className="cross-tab-chart-container">
                                             <KendoChart data={chartData} seriesNames={seriesNames} initialType={chartMode || 'column'} />
