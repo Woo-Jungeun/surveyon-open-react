@@ -319,7 +319,17 @@ export const ResultSectionBlock = ({
                 marginTop: dataIndex > 0 ? (tableMode === 'merged' || isExpanded ? '20px' : '8px') : '0'
             }}
         >
-            <div className="result-header" onClick={() => isConfigOpen && setIsConfigOpen(false)} style={{ cursor: isConfigOpen ? 'pointer' : 'default' }}>
+            <div
+                className="result-header"
+                onClick={() => {
+                    if (isConfigOpen) {
+                        setIsConfigOpen(false);
+                    } else if (tableMode !== 'merged') {
+                        onToggleExpand();
+                    }
+                }}
+                style={{ cursor: (isConfigOpen || tableMode !== 'merged') ? 'pointer' : 'default' }}
+            >
                 <div className="result-tabs">
                     <div className="result-tab">
                         결과 {resultData.y_info ? `(${resultData.y_info})` : ""}
