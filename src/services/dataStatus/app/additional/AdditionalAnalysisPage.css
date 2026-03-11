@@ -723,11 +723,15 @@
 }
 
 .cross-table {
-    width: 100%;
-    border-collapse: collapse;
+    min-width: 100%;
+    width: max-content;
+    border-collapse: separate;
+    /* Changed to separate for sticky borders */
     border-spacing: 0;
-    font-size: 13px;
+    font-size: 11px;
+    /* Smaller font size */
     border: 1px solid #e2e8f0;
+    table-layout: auto;
 }
 
 .cross-table th {
@@ -740,25 +744,65 @@
 }
 
 .cross-table td {
-    padding: 8px 12px;
-    border: 1px solid #e2e8f0;
+    padding: 6px 10px;
+    border-bottom: 1px solid #e2e8f0;
+    border-right: 1px solid #e2e8f0;
     color: #334155;
     line-height: 1.4;
-    text-align: center;
+    text-align: right;
+    /* Values right aligned */
+    white-space: normal;
+    word-break: break-all;
 }
 
 .cross-table td.label-cell {
     background: #f8fafc;
     font-weight: 600;
-    color: #475569;
+    color: #1e3a8a;
     text-align: left;
-    min-width: 140px;
+}
+
+.cross-table .sticky-col {
+    position: sticky;
+    z-index: 20;
+}
+
+.cross-table .sticky-l0 {
+    left: 0;
+    min-width: 200px;
+    max-width: 200px;
+    width: 200px;
+}
+
+.cross-table .sticky-l1 {
+    left: 200px;
+    /* Offset matches width of sticky-l0 */
+    min-width: 180px;
+    max-width: 180px;
+    width: 180px;
+}
+
+/* Ensure sticky columns have background to hide scrolling content */
+.cross-table thead .sticky-col {
+    z-index: 30;
+}
+
+.cross-table td.sticky-l0 {
+    background: #eff6ff !important;
+}
+
+.cross-table td.sticky-l1 {
+    background: #f8fafc !important;
+}
+
+.cross-table th.sticky-col {
+    background: #f8fafc !important;
 }
 
 .cell-value {
     font-weight: 700;
     color: #1e293b;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .cell-pct {

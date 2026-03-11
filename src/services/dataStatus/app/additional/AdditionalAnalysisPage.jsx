@@ -1712,6 +1712,7 @@ const AdditionalAnalysisPage = () => {
                             isExpanded={expandedIndex === dataIndex}
                             onToggleExpand={() => setExpandedIndex(expandedIndex === dataIndex ? null : dataIndex)}
                             isAnyExpanded={expandedIndex !== null}
+                            tableMode={tableMode}
                         />
                     ))}
                 </div>

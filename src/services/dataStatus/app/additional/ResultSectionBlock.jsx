@@ -44,7 +44,8 @@ export const ResultSectionBlock = ({
     tableName,
     isExpanded,
     onToggleExpand,
-    isAnyExpanded
+    isAnyExpanded,
+    tableMode
 }) => {
     const { chartData, seriesNames, hasColLabel2, hasVarLabel, hasRowLabel2 } = useMemo(() => computeLocalVars(resultData), [resultData]);
 
@@ -69,6 +70,26 @@ export const ResultSectionBlock = ({
         { id: 'chart', label: '차트', checked: false },
         { id: 'ai', label: 'AI 분석', checked: false }
     ]);
+
+    const colGroups = useMemo(() => {
+        if (!resultData?.columns) return [];
+        const groups = [];
+        let currentGroup = null;
+        resultData.columns.forEach((col, idx) => {
+            const l2 = col.label2 || '';
+            if (!currentGroup || currentGroup.label2 !== l2) {
+                currentGroup = { label2: l2, count: 1 };
+                groups.push(currentGroup);
+            } else {
+                currentGroup.count++;
+            }
+        });
+        return groups;
+    }, [resultData?.columns]);
+
+    const colVarLabel = useMemo(() => {
+        return resultData?.columns?.find(c => c.var_label)?.var_label || '';
+    }, [resultData?.columns]);
 
     const [statsOptions, setStatsOptions] = useState([
         { id: 'mean', label: '평균', checked: true },
@@ -276,13 +297,15 @@ export const ResultSectionBlock = ({
                     )}
                 </div>
                 <div>
-                    <button
-                        className={`wide-view-toggle-btn ${isExpanded ? 'active' : ''}`}
-                        onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
-                        title={isExpanded ? "원래대로 보기" : "넓게 보기"}
-                    >
-                        {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    </button>
+                    {tableMode !== 'merged' && (
+                        <button
+                            className={`wide-view-toggle-btn ${isExpanded ? 'active' : ''}`}
+                            onClick={(e) => { e.stopPropagation(); onToggleExpand(); }}
+                            title={isExpanded ? "원래대로 보기" : "넓게 보기"}
+                        >
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </button>
+                    )}
                     {!isConfigOpen && layoutOptions.find(opt => opt.id === 'chart')?.checked && (
                         <>
                             <div className="download-menu-container" ref={downloadMenuRef}>
@@ -436,16 +459,120 @@ export const ResultSectionBlock = ({
                                         <div className="table-wrapper">
                                             <table className="cross-table">
                                                 <thead>
-                                                    <tr>
-                                                        <th colSpan={hasRowLabel2 ? 2 : 1}>{resultData?.rows?.[0]?.var_label || '문항'}</th>
-                                                        {resultData.columns.map((col, i) => <th key={i}>{col.label || col}</th>)}
-                                                    </tr>
+                                                    {(() => {
+                                                        const headerRows = [];
+                                                        const totalRows = (colVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1;
+
+                                                        if (colVarLabel) {
+                                                            headerRows.push(
+                                                                <tr key="var-label-row">
+                                                                    <th
+                                                                        rowSpan={totalRows}
+                                                                        colSpan={hasRowLabel2 ? 2 : 1}
+                                                                        className="sticky-col sticky-l0"
+                                                                        style={{
+                                                                            background: '#f8fafc',
+                                                                            borderRight: '1px solid #e2e8f0',
+                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            fontWeight: '700',
+                                                                            color: '#1e3a8a',
+                                                                            fontSize: '11px',
+                                                                            textAlign: 'center',
+                                                                            verticalAlign: 'middle'
+                                                                        }}
+                                                                    >
+                                                                        문항
+                                                                    </th>
+                                                                    <th colSpan={resultData.columns.length} style={{ background: '#eff6ff', color: '#1e3a8a', fontSize: '11px', textAlign: 'center', padding: '4px 12px', borderBottom: '1px solid #dbeafe', whiteSpace: 'normal', wordBreak: 'break-all' }}>
+                                                                        {colVarLabel}
+                                                                    </th>
+                                                                </tr>
+                                                            );
+                                                        }
+
+                                                        if (hasColLabel2) {
+                                                            headerRows.push(
+                                                                <tr key="col-label2-row">
+                                                                    {!colVarLabel && (
+                                                                        <th
+                                                                            rowSpan={totalRows}
+                                                                            colSpan={hasRowLabel2 ? 2 : 1}
+                                                                            className="sticky-col sticky-l0"
+                                                                            style={{
+                                                                                background: '#f8fafc',
+                                                                                borderRight: '1px solid #e2e8f0',
+                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                fontWeight: '700',
+                                                                                color: '#1e3a8a',
+                                                                                fontSize: '11px',
+                                                                                textAlign: 'center',
+                                                                                verticalAlign: 'middle'
+                                                                            }}
+                                                                        >
+                                                                            문항
+                                                                        </th>
+                                                                    )}
+                                                                    {colGroups.map((group, i) => (
+                                                                        <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            {group.label2}
+                                                                        </th>
+                                                                    ))}
+                                                                </tr>
+                                                            );
+                                                        }
+
+                                                        headerRows.push(
+                                                            <tr key="base-labels-row">
+                                                                {(!colVarLabel && !hasColLabel2) && (
+                                                                    <th
+                                                                        className="sticky-col sticky-l0"
+                                                                        style={{
+                                                                            background: '#f8fafc',
+                                                                            borderRight: '1px solid #e2e8f0',
+                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            fontWeight: '700',
+                                                                            color: '#1e3a8a',
+                                                                            fontSize: '11px',
+                                                                            textAlign: 'center'
+                                                                        }}
+                                                                    >
+                                                                        문항
+                                                                    </th>
+                                                                )}
+                                                                {resultData.columns.map((col, i) => (
+                                                                    <th key={i} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                        {col.label || col}
+                                                                    </th>
+                                                                ))}
+                                                            </tr>
+                                                        );
+                                                        return headerRows;
+                                                    })()}
                                                 </thead>
                                                 <tbody>
                                                     {resultData.rows.map((row, i) => (
                                                         <tr key={i}>
-                                                            {hasRowLabel2 && <td style={{ display: (i === 0 || (resultData.rows[i - 1].label2 !== row.label2)) ? 'table-cell' : 'none' }} rowSpan={resultData.rows.filter(r => r.label2 === row.label2).length}>{row.label2}</td>}
-                                                            <td>{row.label}</td>
+                                                            {hasRowLabel2 && (
+                                                                <td
+                                                                    className="label-cell row-group-label sticky-col sticky-l0"
+                                                                    style={{
+                                                                        display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
+                                                                        verticalAlign: 'middle',
+                                                                        background: '#eff6ff',
+                                                                        color: '#1e3a8a',
+                                                                        fontSize: '11px',
+                                                                        fontWeight: '700',
+                                                                        textAlign: 'center',
+                                                                        borderRight: '1px solid #dbeafe',
+                                                                        whiteSpace: 'normal',
+                                                                        wordBreak: 'break-all'
+                                                                    }}
+                                                                    rowSpan={resultData.rows.filter(r => (r.label2 || r.var_label) === (row.label2 || row.var_label)).length}
+                                                                >
+                                                                    {row.label2 || row.var_label}
+                                                                </td>
+                                                            )}
+                                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px' }}>{row.label}</td>
                                                             {row.values.map((v, j) => (
                                                                 <td key={j} style={{ textAlign: 'right' }}>
                                                                     {displayMode === 'all' ? (
