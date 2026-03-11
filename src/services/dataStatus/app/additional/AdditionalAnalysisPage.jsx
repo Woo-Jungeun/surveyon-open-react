@@ -440,6 +440,7 @@ const AdditionalAnalysisPage = () => {
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
                                         include_stats: ALL_STATS,
+                                        row_eval_mode: tData.config?.row_eval_mode ? tData.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined'),
                                         table: {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
@@ -1081,6 +1082,7 @@ const AdditionalAnalysisPage = () => {
                             weight_col: weightId,
                             filter_expression: filterExpr,
                             include_stats: ALL_STATS,
+                            row_eval_mode: data.config?.row_eval_mode ? data.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined')
                             // sort: { group_by: "label2_label3" }
                         };
 
@@ -1586,6 +1588,7 @@ const AdditionalAnalysisPage = () => {
                     weight_col: weightId,
                     filter_expression: filterExpression,
                     include_stats: ALL_STATS,
+                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
                     // sort: { group_by: "label2_label3" }
                 };
 
