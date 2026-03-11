@@ -616,12 +616,50 @@ export const ResultSectionBlock = ({
                                             </div>
                                         </div>
                                         <div className="stats-table-container">
-                                            <table className="cross-table">
+                                            <table className="stats-table">
+                                                <thead>
+                                                    {(() => {
+                                                        const statsTotalRows = (colVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1;
+                                                        const rows = [];
+
+                                                        if (colVarLabel) {
+                                                            rows.push(
+                                                                <tr key="stats-var-row">
+                                                                    <th className="stats-th-label" rowSpan={statsTotalRows}>통계</th>
+                                                                    <th className="stats-th-data" colSpan={resultData.columns.length} style={{ background: '#eff6ff', color: '#1e3a8a' }}>{colVarLabel}</th>
+                                                                </tr>
+                                                            );
+                                                        }
+
+                                                        if (hasColLabel2) {
+                                                            rows.push(
+                                                                <tr key="stats-group-row">
+                                                                    {!colVarLabel && <th className="stats-th-label" rowSpan={statsTotalRows}>통계</th>}
+                                                                    {colGroups.map((group, i) => (
+                                                                        <th key={i} className="stats-th-data" colSpan={group.count} style={{ background: '#eff6ff', color: '#1e3a8a' }}>{group.label2}</th>
+                                                                    ))}
+                                                                </tr>
+                                                            );
+                                                        }
+
+                                                        rows.push(
+                                                            <tr key="stats-base-row">
+                                                                {(!colVarLabel && !hasColLabel2) && <th className="stats-th-label">통계</th>}
+                                                                {resultData.columns.map((col, i) => (
+                                                                    <th key={i} className="stats-th-data" style={{ background: '#eff6ff', color: '#1e3a8a' }}>{col.label || col}</th>
+                                                                ))}
+                                                            </tr>
+                                                        );
+                                                        return rows;
+                                                    })()}
+                                                </thead>
                                                 <tbody>
                                                     {statsOptions.filter(opt => opt.checked).map(stat => (
                                                         <tr key={stat.id}>
-                                                            <td>{stat.label}</td>
-                                                            {(resultData.stats[stat.id] || []).map((v, i) => <td key={i}>{v}</td>)}
+                                                            <td className="stats-td-label" style={{ color: '#1e3a8a', fontWeight: '700', textAlign: 'center' }}>{stat.label}</td>
+                                                            {(resultData.stats[stat.id] || []).map((v, i) => (
+                                                                <td key={i} className="stats-td-data">{v}</td>
+                                                            ))}
                                                         </tr>
                                                     ))}
                                                 </tbody>
