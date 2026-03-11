@@ -149,6 +149,31 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   }, [auth?.user?.userId]);
 
+  // 프로젝트는 있지만 대시보드가 선택되지 않은 경우 (대시보드 수정가능 상태) 자동 조회 및 한 개일 때 선택
+  useEffect(() => {
+    const checkAndAutoSelectPage = async () => {
+      const user = auth?.user?.userId;
+      const mergePn = sessionStorage.getItem("merge_pn");
+      const currentPageId = sessionStorage.getItem("pageId");
+
+      if (user && mergePn && (!currentPageId || currentPageId === "null" || currentPageId === "undefined")) {
+        try {
+          const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
+          if (pageRes?.success === "777") {
+            const pages = pageRes.resultjson || [];
+            if (pages.length === 1) {
+              handlePageSelect(pages[0]);
+            }
+          }
+        } catch (e) {
+          console.warn("Auto-select page error", e);
+        }
+      }
+    };
+
+    checkAndAutoSelectPage();
+  }, [auth?.user?.userId, pageList.mutateAsync]);
+
   // 데이터 새로고침 (update-map)
   const handleRefresh = async () => {
     const userId = auth?.user?.userId;
@@ -197,6 +222,38 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     </div>
   );
 
+  // 대시보드 선택 처리
+  const handlePageSelect = async (selectedPage) => {
+    setIsPageListPopupOpen(false);
+    const userId = auth?.user?.userId;
+    const pageId = selectedPage.id || selectedPage.pageid;
+    const pageTitle = selectedPage.title || selectedPage.name || "제목 없음";
+
+    if (!userId || !pageId) return;
+
+    // Save pageId and pagetitle to session storage
+    sessionStorage.setItem("pageId", pageId);
+    sessionStorage.setItem("pagetitle", pageTitle);
+    window.dispatchEvent(new Event("pageSelected"));
+
+    setPageState({
+      title: pageTitle,
+      merge_pn: sessionStorage.getItem("merge_pn") || "-"
+    });
+
+    try {
+      loadingSpinner.show();
+      // 대시보드 메타데이터 조회 API 호출
+      const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
+      console.log(metadataResult)
+      loadingSpinner.hide();
+    } catch (error) {
+      console.error("API Error:", error);
+      loadingSpinner.hide();
+      modal.showErrorAlert("오류", "메타데이터 조회 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleProjectSelect = async (project) => {
     // 1. 세션 스토리지 저장
     sessionStorage.setItem("projectnum", project.projectnum || "");
@@ -238,9 +295,16 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
       const pageRes = await pageList.mutateAsync({ user: user, pn: mergePn });
 
-      if (pageRes?.success === "777" && pageRes.resultjson?.length > 0) {
-        setPageListData(pageRes.resultjson);
-        setIsPageListPopupOpen(true); // 대시보드 목록 팝업 열기
+      if (pageRes?.success === "777") {
+        const pages = pageRes.resultjson || [];
+        if (pages.length === 1) {
+          // 한 개일 때 바로 선택 (자동 저장)
+          handlePageSelect(pages[0]);
+        } else if (pages.length > 1) {
+          // 여러 개일 때 팝업
+          setPageListData(pages);
+          setIsPageListPopupOpen(true);
+        }
       }
     } catch (e) {
       modal.showErrorAlert("오류", "대시보드 목록 조회 중 오류가 발생했습니다.");
@@ -264,41 +328,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     window.addEventListener("pageSelected", handlePageUpdate);
     return () => window.removeEventListener("pageSelected", handlePageUpdate);
   }, []);
-
-  // ... (existing code)
-
-  const handlePageSelect = async (selectedPage) => {
-    setIsPageListPopupOpen(false);
-    const userId = auth?.user?.userId;
-    const pageId = selectedPage.id || selectedPage.pageid;
-    const pageTitle = selectedPage.title || selectedPage.name || "제목 없음";
-
-    if (!userId || !pageId) return;
-
-    // Save pageId and pagetitle to session storage
-    sessionStorage.setItem("pageId", pageId);
-    sessionStorage.setItem("pagetitle", pageTitle);
-    window.dispatchEvent(new Event("pageSelected"));
-
-    setPageState({
-      title: pageTitle,
-      merge_pn: sessionStorage.getItem("merge_pn") || "-"
-    });
-
-    try {
-      loadingSpinner.show();
-      // 대시보드 메타데이터 조회 API 호출
-      const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
-      console.log(metadataResult)
-      // 페이지 메타데이터 조회 성공 시 로그만 출력하고, 
-      // 사이드바의 '마지막 업데이트' 시간은 /d/data/info API 연동을 유지하기 위해 여기서 업데이트하지 않음
-      loadingSpinner.hide();
-    } catch (error) {
-      console.error("API Error:", error);
-      loadingSpinner.hide();
-      modal.showErrorAlert("오류", "메타데이터 조회 중 오류가 발생했습니다.");
-    }
-  };
 
   // 사이드바에 전달할 대시보드 정보
   const sidebarPageInfo = {
