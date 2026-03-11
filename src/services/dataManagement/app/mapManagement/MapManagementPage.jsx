@@ -73,8 +73,8 @@ const MapManagementPage = () => {
             loadingSpinner.show();
             const result = await getMapVariables.mutateAsync({ user: userId, pn });
 
-            if (result?.variables) {
-                const transformedData = result.variables.map(item => {
+            if (result?.success === "777" && result?.resultjson?.variables) {
+                const transformedData = result.resultjson.variables.map(item => {
                     const categoryStr = (item.labels || [])
                         .map(l => `${l.code}=${l.label}`)
                         .join(', ');
@@ -111,7 +111,7 @@ const MapManagementPage = () => {
 
                 setVariables(finalData);
                 setOriginalVariables(JSON.parse(JSON.stringify(finalData)));
-            } else if (result?.success === false || result?.status === 404 || result?.status === 400 || result?.status === 500) {
+            } else if (result?.success !== "777") {
                 modal.showErrorAlert("에러", result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.");
             } else {
                 setVariables([]);
@@ -422,9 +422,9 @@ const MapManagementPage = () => {
                     variables: newRows.map(v => toPayload(v, true)),
                 };
                 const createResult = await createMapVariables.mutateAsync(createPayload);
-                //if (!(createResult?.success === '777' || createResult?.success === true)) {
-                createSuccess = false;
-                // }
+                if (createResult?.success !== '777') {
+                    createSuccess = false;
+                }
             }
 
             // 수정된 기존 행 + 삭제: update API 호출

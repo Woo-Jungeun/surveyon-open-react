@@ -130,10 +130,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     if (!userId || !pn) return;
     try {
       const result = await getDataInfo.mutateAsync({ user: userId, pn });
-      if (result?.parquetBakedAt) {
+      if (result?.success === "777" && result?.resultjson?.parquetBakedAt) {
         setPageInfo(prev => ({
           ...prev,
-          processedAt: formatDate(result.parquetBakedAt)
+          processedAt: formatDate(result.resultjson.parquetBakedAt)
         }));
       }
     } catch (err) {
@@ -163,10 +163,12 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       loadingSpinner.show();
       const result = await syncMap.mutateAsync({ user: userId, pn });
 
-      if (result) {
+      if (result?.success === "777") {
         modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
         // 새로고침 후 시간 정보 다시 가져오기
         await fetchDataInfo(pn);
+      } else {
+        modal.showErrorAlert("오류", result?.message || "데이터 새로고침에 실패했습니다.");
       }
     } catch (err) {
       console.error("Refresh error", err);
