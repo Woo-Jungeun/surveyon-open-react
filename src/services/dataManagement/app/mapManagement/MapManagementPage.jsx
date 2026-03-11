@@ -112,7 +112,8 @@ const MapManagementPage = () => {
                 setVariables(finalData);
                 setOriginalVariables(JSON.parse(JSON.stringify(finalData)));
             } else if (result?.success !== "777") {
-                modal.showErrorAlert("에러", result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.");
+                const errorMsg = result?.errortext || result?.errorcontent || result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.";
+                modal.showErrorAlert("에러", errorMsg);
             } else {
                 setVariables([]);
                 setOriginalVariables([]);
@@ -344,6 +345,11 @@ const MapManagementPage = () => {
                         const saveResult = await updateMapLabels.mutateAsync(payload);
                         if (!(saveResult?.success === '777' || saveResult?.success === true)) {
                             allSuccess = false;
+                            const errorMsg = saveResult?.errortext || saveResult?.errorcontent || saveResult?.message;
+                            if (errorMsg) {
+                                modal.showErrorAlert("에러", errorMsg);
+                                return false;
+                            }
                         }
                     }
 
@@ -357,6 +363,11 @@ const MapManagementPage = () => {
                         const createResult = await createMapLabels.mutateAsync(createPayload);
                         if (!(createResult?.success === '777' || createResult?.success === true)) {
                             allSuccess = false;
+                            const errorMsg = createResult?.errortext || createResult?.errorcontent || createResult?.message;
+                            if (errorMsg) {
+                                modal.showErrorAlert("에러", errorMsg);
+                                return false;
+                            }
                         }
                     }
                 }
@@ -424,6 +435,11 @@ const MapManagementPage = () => {
                 const createResult = await createMapVariables.mutateAsync(createPayload);
                 if (createResult?.success !== '777') {
                     createSuccess = false;
+                    const errorMsg = createResult?.errortext || createResult?.errorcontent || createResult?.message;
+                    if (errorMsg) {
+                        modal.showErrorAlert("에러", errorMsg);
+                        return false;
+                    }
                 }
             }
 
@@ -438,6 +454,11 @@ const MapManagementPage = () => {
                 const updateResult = await updateMapVariables.mutateAsync(updatePayload);
                 if (!(updateResult?.success === '777' || updateResult?.success === true)) {
                     updateSuccess = false;
+                    const errorMsg = updateResult?.errortext || updateResult?.errorcontent || updateResult?.message;
+                    if (errorMsg) {
+                        modal.showErrorAlert("에러", errorMsg);
+                        return false;
+                    }
                 }
             }
 
