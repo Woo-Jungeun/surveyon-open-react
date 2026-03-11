@@ -211,24 +211,25 @@ const WeightPage = () => {
                             }, {});
                             setRawVariables(rawVarsObj);
                             const transformedData = result.resultjson.variables.map(item => {
-                                let typeLabel = item.type || 'categorical';
+                                const originalType = item.type || 'Single';
+                                const rawType = String(originalType).toLowerCase();
+
                                 let color = 'gray';
-                                if (typeLabel === 'categorical') {
-                                    typeLabel = '범주형';
-                                    color = 'purple';
-                                } else if (typeLabel === 'continuous') {
-                                    typeLabel = '연속형';
-                                    color = 'orange';
-                                } else if (typeLabel === 'text') {
-                                    typeLabel = '텍스트';
-                                    color = 'blue';
+                                if (rawType === 'single') {
+                                    color = 'single';
+                                } else if (rawType === 'multi') {
+                                    color = 'multi';
+                                } else if (rawType === 'dummy') {
+                                    color = 'dummy';
+                                } else if (rawType === 'open') {
+                                    color = 'open';
                                 }
 
                                 return {
                                     id: item.id,
                                     title: item.id || '',
                                     desc: item.label || '',
-                                    type: typeLabel,
+                                    type: originalType,
                                     count: '',
                                     color: color
                                 };
