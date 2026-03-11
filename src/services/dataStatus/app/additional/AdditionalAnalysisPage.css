@@ -94,7 +94,6 @@
     flex-direction: column;
     gap: 8px;
     padding: 2px 20px 2px 0;
-    /* Add right padding here for content spacing */
     min-height: 0;
 }
 
@@ -639,9 +638,19 @@
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.result-section .result-content {
+    flex: 1;
+    overflow: visible;
+    min-height: 0;
+}
+
+.result-section.is-narrow .result-content {
+    overflow: hidden;
+}
+
 .result-section.is-expanded {
-    flex: 1 1 0% !important;
-    min-height: 600px !important;
+    flex: 0 0 auto !important;
+    min-height: 650px !important;
     z-index: 10;
 }
 
