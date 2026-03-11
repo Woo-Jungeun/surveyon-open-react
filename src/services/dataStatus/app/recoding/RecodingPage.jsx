@@ -4,7 +4,7 @@ import { RecodingPageApi } from './RecodingPageApi';
 import DataHeader from '../../components/DataHeader';
 import Toast from '../../../../components/common/Toast';
 import SideBar from '../../components/SideBar';
-import { Play, Plus, Trash2, ChevronDown, ChevronUp, Copy } from 'lucide-react';
+import { Play, Plus, Trash2, ChevronDown, ChevronUp, Copy, Zap } from 'lucide-react';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
@@ -85,7 +85,7 @@ const CustomCell = (props) => {
 
 const RecodingPage = () => {
     const auth = useSelector((store) => store.auth);
-    const { getRecodedVariables, setRecodedVariable, deleteRecodedVariable, verifyRecodeLogic } = RecodingPageApi();
+    const { getRecodedVariables, setRecodedVariable, deleteRecodedVariable, verifyRecodeLogic, autoRecode } = RecodingPageApi();
     const modal = useContext(modalContext);
 
     const [variables, setVariables] = useState([]);
@@ -128,48 +128,47 @@ const RecodingPage = () => {
     };
 
     const isInitialized = useRef(false);
+    const fetchVariables = async () => {
+        if (auth?.user?.userId) {
+            const userId = auth.user.userId;
+            const pageId = sessionStorage.getItem("pageId");
+
+            if (!pageId) {
+                modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+                return;
+            }
+
+            try {
+                const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
+                if (result?.success === "777" && result.resultjson) {
+                    const transformedData = Object.values(result.resultjson).map(item => ({
+                        id: item.id,
+                        label: item.label,
+                        type: item.type,
+                        info: item.info || [] // info 배열 포함
+                    }));
+                    setVariables(transformedData);
+
+                    // 1. 초기 로드 시 첫 번째 자동 선택
+                    if (!isInitialized.current) {
+                        if (transformedData.length > 0) {
+                            setSelectedVar(transformedData[0]);
+                        }
+                        isInitialized.current = true;
+                    }
+                    // 2. 초기화 이후: 추가 모드가 아닐 때 선택 동기화
+                    else if (!isAddMode && selectedVar.id !== null && transformedData.length > 0) {
+                        const found = transformedData.find(v => v.id === selectedVar.id);
+                        if (found) setSelectedVar(found);
+                    }
+                }
+            } catch (error) {
+                console.error("API Error:", error);
+            }
+        }
+    };
 
     useEffect(() => {
-        const fetchVariables = async () => {
-            if (auth?.user?.userId) {
-                const userId = auth.user.userId;
-                const pageId = sessionStorage.getItem("pageId");
-
-                if (!pageId) {
-                    modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
-                    return;
-                }
-
-                try {
-                    const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
-                    if (result?.success === "777" && result.resultjson) {
-                        const transformedData = Object.values(result.resultjson).map(item => ({
-                            id: item.id,
-                            label: item.label,
-                            type: item.type,
-                            info: item.info || [] // info 배열 포함
-                        }));
-                        setVariables(transformedData);
-
-                        // 1. 초기 로드 시 첫 번째 자동 선택
-                        if (!isInitialized.current) {
-                            if (transformedData.length > 0) {
-                                setSelectedVar(transformedData[0]);
-                            }
-                            isInitialized.current = true;
-                        }
-                        // 2. 초기화 이후: 추가 모드가 아닐 때 선택 동기화
-                        else if (!isAddMode && selectedVar.id !== null && transformedData.length > 0) {
-                            const found = transformedData.find(v => v.id === selectedVar.id);
-                            if (found) setSelectedVar(found);
-                        }
-                    }
-                } catch (error) {
-                    console.error("API Error:", error);
-                }
-            }
-        };
-
         fetchVariables();
     }, [auth?.user?.userId]);
 
@@ -611,6 +610,29 @@ const RecodingPage = () => {
         });
     };
 
+    const handleAutoRecode = async () => {
+        const userId = auth?.user?.userId;
+        const pageId = sessionStorage.getItem("pageId");
+
+        if (!userId || !pageId) {
+            modal.showErrorAlert("알림", "정보가 부족합니다.");
+            return;
+        }
+
+        try {
+            const result = await autoRecode.mutateAsync({ user: userId, pageid: pageId });
+            if (result?.success === "777") {
+                modal.showAlert("알림", "자동 리코딩이 완료되었습니다.");
+                // fetchVariables();
+            } else {
+                modal.showErrorAlert("알림", result?.message || "자동 리코딩에 실패했습니다.");
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("오류", "자동 리코딩 요청 중 오류가 발생했습니다.");
+        }
+    };
+
     return (
         <div className="recoding-page" data-theme="data-dashboard">
             <DataHeader
@@ -620,7 +642,17 @@ const RecodingPage = () => {
                 saveButtonLabel={isAddMode ? "추가 문항 저장" : "변경사항 저장"}
                 onSave={handleSave}
                 saveButtonDisabled={!isDirty}
-            />
+            >
+                {!isAddMode && (
+                    <button
+                        onClick={handleAutoRecode}
+                        className="data-header-btn"
+                    >
+                        <Zap size={16} />
+                        <span>자동 리코딩</span>
+                    </button>
+                )}
+            </DataHeader>
 
             <Toast
                 show={toast.show}

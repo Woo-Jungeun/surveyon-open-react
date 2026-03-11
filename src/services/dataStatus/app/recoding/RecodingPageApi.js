@@ -40,11 +40,21 @@ export function RecodingPageApi() {
         }
     );
 
+    /** 자동 리코딩 */
+    const autoRecode = useMutation(
+        async (data) => await api.post(data, "/recoded/auto-recode", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide()
+        }
+    );
+
     return {
         getRecodedVariables,
         getRecodedList,
         setRecodedVariable,
         deleteRecodedVariable,
-        verifyRecodeLogic
+        verifyRecodeLogic,
+        autoRecode
     };
 }
