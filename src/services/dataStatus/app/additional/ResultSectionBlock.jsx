@@ -71,25 +71,60 @@ export const ResultSectionBlock = ({
         { id: 'ai', label: 'AI 분석', checked: false }
     ]);
 
-    const colGroups = useMemo(() => {
-        if (!resultData?.columns) return [];
-        const groups = [];
-        let currentGroup = null;
+    const headerGroups = useMemo(() => {
+        if (!resultData?.columns) return { row1: [], row2: [], showRow2: false };
+
+        // Row 1 (var_label) grouping
+        const row1 = [];
         resultData.columns.forEach((col, idx) => {
-            const l2 = col.label2 || '';
-            if (!currentGroup || currentGroup.label2 !== l2) {
-                currentGroup = { label2: l2, count: 1 };
-                groups.push(currentGroup);
+            const v = col.var_label || "";
+            if (row1.length === 0 || row1[row1.length - 1].label !== v) {
+                row1.push({ label: v, count: 1, startIndex: idx });
             } else {
-                currentGroup.count++;
+                row1[row1.length - 1].count++;
             }
         });
-        return groups;
-    }, [resultData?.columns]);
 
-    const colVarLabel = useMemo(() => {
-        return resultData?.columns?.find(c => c.var_label)?.var_label || '';
-    }, [resultData?.columns]);
+        // Row 2 (label2) grouping
+        const row2 = [];
+        resultData.columns.forEach((col, idx) => {
+            const v = col.label2 || "";
+            if (row2.length === 0 || row2[row2.length - 1].label !== v) {
+                row2.push({ label: v, count: 1, startIndex: idx });
+            } else {
+                row2[row2.length - 1].count++;
+            }
+        });
+
+        // Determine if each cell in Row 1 should span 2 rows
+        row1.forEach(g1 => {
+            if (!g1.label) {
+                g1.shouldSpan = false;
+                return;
+            }
+            const rangeStart = g1.startIndex;
+            const rangeEnd = g1.startIndex + g1.count;
+
+            // Check if all columns in this range have the SAME label2 and it matches group1
+            const matchingRow2Groups = row2.filter(g2 => g2.startIndex >= rangeStart && (g2.startIndex + g2.count) <= rangeEnd);
+
+            if (matchingRow2Groups.length === 1) {
+                const l1 = String(g1.label).replace(/[\r\n\t\s]+/g, ' ').trim();
+                const l2 = String(matchingRow2Groups[0].label).replace(/[\r\n\t\s]+/g, ' ').trim();
+                g1.shouldSpan = l1 === l2 && l2 !== "";
+            } else {
+                g1.shouldSpan = false;
+            }
+        });
+
+        // Decide if Row 2 should be rendered at all (only if there's non-spanned content)
+        const hasUnspannedRow2 = row2.some(g2 => {
+            if (!g2.label) return false;
+            return !row1.some(g1 => g1.shouldSpan && g1.startIndex <= g2.startIndex && (g1.startIndex + g1.count) >= (g2.startIndex + g2.count));
+        });
+
+        return { row1, row2, showRow2: hasUnspannedRow2 || row1.some(g1 => !g1.shouldSpan && hasColLabel2) };
+    }, [resultData?.columns, hasVarLabel, hasColLabel2]);
 
     const [statsOptions, setStatsOptions] = useState([
         { id: 'mean', label: '평균', checked: true },
@@ -461,9 +496,9 @@ export const ResultSectionBlock = ({
                                                 <thead>
                                                     {(() => {
                                                         const headerRows = [];
-                                                        const totalRows = (colVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1;
+                                                        const totalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + 1;
 
-                                                        if (colVarLabel) {
+                                                        if (hasVarLabel) {
                                                             headerRows.push(
                                                                 <tr key="var-label-row">
                                                                     <th
@@ -483,17 +518,34 @@ export const ResultSectionBlock = ({
                                                                     >
                                                                         문항
                                                                     </th>
-                                                                    <th colSpan={resultData.columns.length} style={{ background: '#eff6ff', color: '#1e3a8a', fontSize: '11px', textAlign: 'center', padding: '4px 12px', borderBottom: '1px solid #dbeafe', whiteSpace: 'normal', wordBreak: 'break-all' }}>
-                                                                        {colVarLabel}
-                                                                    </th>
+                                                                    {headerGroups.row1.map((group, i) => (
+                                                                        <th key={i}
+                                                                            colSpan={group.count}
+                                                                            rowSpan={group.shouldSpan ? 2 : 1}
+                                                                            style={{
+                                                                                background: '#eff6ff',
+                                                                                color: '#1e3a8a',
+                                                                                fontSize: '11px',
+                                                                                textAlign: 'center',
+                                                                                padding: '4px 12px',
+                                                                                borderBottom: '1px solid #dbeafe',
+                                                                                borderRight: i < headerGroups.row1.length - 1 ? '1px solid #dbeafe' : 'none',
+                                                                                whiteSpace: 'normal',
+                                                                                wordBreak: 'break-all',
+                                                                                verticalAlign: 'middle'
+                                                                            }}
+                                                                        >
+                                                                            {group.label}
+                                                                        </th>
+                                                                    ))}
                                                                 </tr>
                                                             );
                                                         }
 
-                                                        if (hasColLabel2) {
+                                                        if (headerGroups.showRow2) {
                                                             headerRows.push(
                                                                 <tr key="col-label2-row">
-                                                                    {!colVarLabel && (
+                                                                    {!hasVarLabel && (
                                                                         <th
                                                                             rowSpan={totalRows}
                                                                             colSpan={hasRowLabel2 ? 2 : 1}
@@ -512,19 +564,27 @@ export const ResultSectionBlock = ({
                                                                             문항
                                                                         </th>
                                                                     )}
-                                                                    {colGroups.map((group, i) => (
-                                                                        <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
-                                                                            {group.label2}
-                                                                        </th>
-                                                                    ))}
+                                                                    {headerGroups.row2.map((group, i) => {
+                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.shouldSpan && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                        if (isSpanned) return null;
+
+                                                                        return (
+                                                                            <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                                {group.label}
+                                                                            </th>
+                                                                        );
+                                                                    })}
                                                                 </tr>
                                                             );
                                                         }
 
+                                                        // 마지막 라벨 행
                                                         headerRows.push(
-                                                            <tr key="base-labels-row">
-                                                                {(!colVarLabel && !hasColLabel2) && (
+                                                            <tr key="label-row">
+                                                                {(!hasVarLabel && !headerGroups.showRow2) && (
                                                                     <th
+                                                                        rowSpan={totalRows}
+                                                                        colSpan={hasRowLabel2 ? 2 : 1}
                                                                         className="sticky-col sticky-l0"
                                                                         style={{
                                                                             background: '#f8fafc',
@@ -533,19 +593,21 @@ export const ResultSectionBlock = ({
                                                                             fontWeight: '700',
                                                                             color: '#1e3a8a',
                                                                             fontSize: '11px',
-                                                                            textAlign: 'center'
+                                                                            textAlign: 'center',
+                                                                            verticalAlign: 'middle'
                                                                         }}
                                                                     >
                                                                         문항
                                                                     </th>
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                    <th key={i} style={{ minWidth: '80px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: '600' }}>
                                                                         {col.label || col}
                                                                     </th>
                                                                 ))}
                                                             </tr>
                                                         );
+
                                                         return headerRows;
                                                     })()}
                                                 </thead>
@@ -619,37 +681,115 @@ export const ResultSectionBlock = ({
                                             <table className="stats-table">
                                                 <thead>
                                                     {(() => {
-                                                        const statsTotalRows = (colVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1;
+                                                        const statsTotalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + 1;
                                                         const rows = [];
 
-                                                        if (colVarLabel) {
+                                                        if (hasVarLabel) {
                                                             rows.push(
-                                                                <tr key="stats-var-row">
-                                                                    <th className="stats-th-label" rowSpan={statsTotalRows}>통계</th>
-                                                                    <th className="stats-th-data" colSpan={resultData.columns.length} style={{ background: '#eff6ff', color: '#1e3a8a' }}>{colVarLabel}</th>
-                                                                </tr>
-                                                            );
-                                                        }
-
-                                                        if (hasColLabel2) {
-                                                            rows.push(
-                                                                <tr key="stats-group-row">
-                                                                    {!colVarLabel && <th className="stats-th-label" rowSpan={statsTotalRows}>통계</th>}
-                                                                    {colGroups.map((group, i) => (
-                                                                        <th key={i} className="stats-th-data" colSpan={group.count} style={{ background: '#eff6ff', color: '#1e3a8a' }}>{group.label2}</th>
+                                                                <tr key="stats-var-label-row">
+                                                                    <th
+                                                                        rowSpan={statsTotalRows}
+                                                                        className="stats-th-label"
+                                                                        style={{
+                                                                            background: '#f8fafc',
+                                                                            borderRight: '1px solid #e2e8f0',
+                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            fontWeight: '700',
+                                                                            color: '#1e3a8a',
+                                                                            fontSize: '11px',
+                                                                            textAlign: 'center',
+                                                                            verticalAlign: 'middle'
+                                                                        }}
+                                                                    >
+                                                                        통계
+                                                                    </th>
+                                                                    {headerGroups.row1.map((group, i) => (
+                                                                        <th key={i}
+                                                                            colSpan={group.count}
+                                                                            rowSpan={group.shouldSpan ? 2 : 1}
+                                                                            style={{
+                                                                                background: '#eff6ff',
+                                                                                color: '#1e3a8a',
+                                                                                fontSize: '11px',
+                                                                                textAlign: 'center',
+                                                                                padding: '4px 12px',
+                                                                                borderBottom: '1px solid #dbeafe',
+                                                                                borderRight: i < headerGroups.row1.length - 1 ? '1px solid #dbeafe' : 'none',
+                                                                                whiteSpace: 'normal',
+                                                                                wordBreak: 'break-all',
+                                                                                verticalAlign: 'middle'
+                                                                            }}
+                                                                        >
+                                                                            {group.label}
+                                                                        </th>
                                                                     ))}
                                                                 </tr>
                                                             );
                                                         }
 
+                                                        if (headerGroups.showRow2) {
+                                                            rows.push(
+                                                                <tr key="stats-col-label2-row">
+                                                                    {!hasVarLabel && (
+                                                                        <th
+                                                                            rowSpan={statsTotalRows}
+                                                                            className="stats-th-label"
+                                                                            style={{
+                                                                                background: '#f8fafc',
+                                                                                borderRight: '1px solid #e2e8f0',
+                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                fontWeight: '700',
+                                                                                color: '#1e3a8a',
+                                                                                fontSize: '11px',
+                                                                                textAlign: 'center',
+                                                                                verticalAlign: 'middle'
+                                                                            }}
+                                                                        >
+                                                                            통계
+                                                                        </th>
+                                                                    )}
+                                                                    {headerGroups.row2.map((group, i) => {
+                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.shouldSpan && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                        if (isSpanned) return null;
+
+                                                                        return (
+                                                                            <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                                {group.label}
+                                                                            </th>
+                                                                        );
+                                                                    })}
+                                                                </tr>
+                                                            );
+                                                        }
+
                                                         rows.push(
-                                                            <tr key="stats-base-row">
-                                                                {(!colVarLabel && !hasColLabel2) && <th className="stats-th-label">통계</th>}
+                                                            <tr key="stats-label-row">
+                                                                {(!hasVarLabel && !headerGroups.showRow2) && (
+                                                                    <th
+                                                                        rowSpan={statsTotalRows}
+                                                                        className="stats-th-label"
+                                                                        style={{
+                                                                            background: '#f8fafc',
+                                                                            borderRight: '1px solid #e2e8f0',
+                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            fontWeight: '700',
+                                                                            color: '#1e3a8a',
+                                                                            fontSize: '11px',
+                                                                            textAlign: 'center',
+                                                                            verticalAlign: 'middle'
+                                                                        }}
+                                                                    >
+                                                                        통계
+                                                                    </th>
+                                                                )}
                                                                 {resultData.columns.map((col, i) => (
-                                                                    <th key={i} className="stats-th-data" style={{ background: '#eff6ff', color: '#1e3a8a' }}>{col.label || col}</th>
+                                                                    <th key={i} style={{ minWidth: '80px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: '600' }}>
+                                                                        {col.label || col}
+                                                                    </th>
                                                                 ))}
                                                             </tr>
                                                         );
+
                                                         return rows;
                                                     })()}
                                                 </thead>
