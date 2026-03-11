@@ -23,7 +23,7 @@ const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, evaluateTables } = AdditionalAnalysisPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = AdditionalAnalysisPageApi();
     const { getRecodedList } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const PAGE_ID = sessionStorage.getItem("pageId");
@@ -327,7 +327,9 @@ const AdditionalAnalysisPage = () => {
                                         } else {
                                             mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
                                         }
-                                        if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
+                                        if (tData.config.row_eval_mode) {
+                                            setTableMode(tData.config.row_eval_mode === 'split' ? 'separated' : 'merged');
+                                        } else if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
                                             setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
                                         } else if (yIds.length > 1) {
                                             setTableMode('separated');
@@ -451,10 +453,7 @@ const AdditionalAnalysisPage = () => {
                                     if (evalResult?.success === "777" && evalResult.resultjson) {
                                         let newData = evalResult.resultjson;
 
-                                        // Handle separated mode results if returned as array
-                                        if (newData.results && Array.isArray(newData.results) && newData.results.length > 0) {
-                                            newData = newData.results[0].result || newData.results[0];
-                                        }
+                                        // array result unpacking block removed
 
                                         const newColumnsList = newData.columns || [];
                                         const newRowsList = newData.rows || [];
@@ -975,6 +974,13 @@ const AdditionalAnalysisPage = () => {
                             } else {
                                 mappedRows = yIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
                             }
+                            if (data.config.row_eval_mode) {
+                                setTableMode(data.config.row_eval_mode === 'split' ? 'separated' : 'merged');
+                            } else if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
+                                setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
+                            } else if (yIds.length > 1) {
+                                setTableMode('separated');
+                            }
                             setRowVars(mappedRows);
                         }
                         // Filter Expression
@@ -1078,27 +1084,14 @@ const AdditionalAnalysisPage = () => {
                             // sort: { group_by: "label2_label3" }
                         };
 
-                        const localIsSeparated = yInfo.length > 1 || (yInfo.length === 1 && !yInfo[0].includes('+') && tableMode === 'separated');
+                        runPayload.table = {
+                            id: item.id,
+                            name: item.name || "Untitled Table",
+                            x_info: xInfo,
+                            y_info: yInfo
+                        };
 
-                        if (localIsSeparated) {
-                            runPayload.tables = yInfo.map((yId, idx) => ({
-                                id: `${item.id}_${idx + 1}`,
-                                name: `${item.name || "Untitled Table"} - ${yId}`,
-                                x_info: xInfo,
-                                y_info: [yId]
-                            }));
-                        } else {
-                            runPayload.table = {
-                                id: item.id,
-                                name: item.name || "Untitled Table",
-                                x_info: xInfo,
-                                y_info: yInfo
-                            };
-                        }
-
-                        const evalResult = localIsSeparated
-                            ? await evaluateTables.mutateAsync(runPayload)
-                            : await evaluateTable.mutateAsync(runPayload);
+                        const evalResult = await evaluateTable.mutateAsync(runPayload);
 
                         if (evalResult?.success === "777" && evalResult.resultjson) {
                             const newData = evalResult.resultjson;
@@ -1405,7 +1398,8 @@ const AdditionalAnalysisPage = () => {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
                     filter_expression: filterExpression,
-                    weight_col: selectedWeight === "없음" ? "" : selectedWeight
+                    weight_col: selectedWeight === "없음" ? "" : selectedWeight,
+                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
                 }
             };
 
@@ -1508,7 +1502,8 @@ const AdditionalAnalysisPage = () => {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
                     filter_expression: filterExpression,
-                    weight_col: weightId
+                    weight_col: weightId,
+                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
                 }
             };
 
@@ -1594,33 +1589,17 @@ const AdditionalAnalysisPage = () => {
                     // sort: { group_by: "label2_label3" }
                 };
 
-                if (tableMode === 'separated') {
-                    runPayload.tables = rowVars.map((v, idx) => ({
-                        id: `${selectedTableId || 'T1'}_${idx + 1}`,
-                        name: `${baseTableName} - ${v.label || v.name || v.id}`,
-                        x_info: xInfo,
-                        y_info: [v.id || v.name]
-                    }));
-                } else {
-                    runPayload.table = {
-                        id: selectedTableId || 'T1',
-                        name: baseTableName,
-                        x_info: xInfo,
-                        y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join(' + ')] : []
-                    };
-                }
+                runPayload.table = {
+                    id: selectedTableId || 'T1',
+                    name: baseTableName,
+                    x_info: xInfo,
+                    y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : []
+                };
 
-                const evalResult = tableMode === 'separated'
-                    ? await evaluateTables.mutateAsync(runPayload)
-                    : await evaluateTable.mutateAsync(runPayload);
+                const evalResult = await evaluateTable.mutateAsync(runPayload);
 
                 if (evalResult?.success === "777" && evalResult.resultjson) {
                     let newData = evalResult.resultjson;
-
-                    // 표 분리 모드일 경우 첫 번째 테이블 결과 추출
-                    if (tableMode === 'separated' && newData.results && Array.isArray(newData.results) && newData.results.length > 0) {
-                        newData = newData.results[0].result || newData.results[0];
-                    }
 
                     const newColumnsList = newData.columns || [];
                     const newRowsList = newData.rows || [];
