@@ -116,12 +116,16 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
 
     const renderSeries = () => {
         if (isPieOrDonut) {
-            // 파이/도넛: 각 행(row)를 조각으로, total count를 값으로 사용
-            // Kendo가 자동으로 전체 합계 대비 비율(%) 계산
+            // 기준 필드 찾기 (전달받은 seriesNames의 첫 번째 필드 우선 사용)
+            const defaultField = suffix === '%' ? 'total_pct' : 'total';
+            const targetField = (seriesNames && seriesNames.length > 0)
+                ? (typeof seriesNames[0] === 'string' ? seriesNames[0] : seriesNames[0].field)
+                : defaultField;
+
             const pieData = filteredData
                 .map((row, index) => ({
                     name: row.name,
-                    pieValue: Number(row['total'] || 0),
+                    pieValue: Number(row[targetField] || 0),
                     color: CHART_COLORS[index % CHART_COLORS.length]
                 }));
             return (
@@ -249,43 +253,42 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     // 워드 클라우드 렌더링
     if (isWordCloud) {
         // Transform data for WordCloud: { text: string, value: number }
-        // Use filteredData to exclude aggregate rows (Total, etc.)
-        const wordData = filteredData.map(item => ({
-            text: item.name,
-            value: Number(item.total || 0)
-        }));
+        let wordData = [];
 
-        const minVal = Math.min(...wordData.map(d => d.value)) || 0;
-        const maxVal = Math.max(...wordData.map(d => d.value)) || 1;
+        // case A: seriesNames가 있는 경우 (추가분석 - 각 열의 데이터를 항목별로 합산하거나 특정 열 기준)
+        if (seriesNames && seriesNames.length > 0) {
+            // 모든 항목(rows)에 대해 각 시리즈(columns)의 값을 합산하여 중요도 판단
+            wordData = filteredData.map(item => {
+                let totalVal = 0;
+                seriesNames.forEach(s => {
+                    const field = typeof s === 'string' ? s : s.field;
+                    totalVal += Number(item[field] || 0);
+                });
+                return {
+                    text: item.name,
+                    value: totalVal
+                };
+            });
+        } else {
+            // case B: 일반적인 name/total 구조
+            wordData = filteredData.map(item => ({
+                text: item.name,
+                value: Number(item.total || 0)
+            }));
+        }
+
+        // 값이 0인 데이터 제외 및 상위 N개 제한 (너무 많으면 렌더링 지저분함)
+        wordData = wordData.filter(d => d.value > 0).sort((a, b) => b.value - a.value).slice(0, 50);
+
+        if (wordData.length === 0) {
+            return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>표시할 데이터가 없습니다.</div>
+        }
+
+        const minVal = Math.min(...wordData.map(d => d.value));
+        const maxVal = Math.max(...wordData.map(d => d.value));
 
         return (
             <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', position: 'relative' }}>
-                {showDropdown && (
-                    <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
-                        <button
-                            onClick={toggleChartType}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '6px 12px',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '6px',
-                                backgroundColor: 'white',
-                                fontSize: '13px',
-                                fontWeight: '500',
-                                color: '#475569',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                        >
-                            <span>워드클라우드</span>
-                            <ArrowLeftRight size={14} />
-                        </button>
-                    </div>
-                )}
                 <div ref={containerRef} style={{ flex: 1, width: '100%', height: '100%', overflow: 'hidden' }}>
                     {dimensions.width > 0 && dimensions.height > 0 && wordData.length > 0 && (
                         <WordCloud
@@ -493,12 +496,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
 
                                 // 파이/도넛/퍼널용 심플 스타일
                                 if (isPieOrDonut || chartType === 'funnel') {
-                                    const pctValue = e.point?.percentage ? (e.point.percentage * 100).toFixed(1) : "";
+                                    const pctValue = e.point?.percentage ? (e.point.percentage * 100).toFixed(1) : value;
                                     return (
                                         <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500' }}>
                                             <strong>
                                                 {category}: {value}{suffix}
-                                                {chartType === 'pie' && ` (${pctValue}%)`}
+                                                {chartType === 'pie' && suffix !== '%' && ` (${pctValue}%)`}
                                             </strong>
                                         </div>
                                     );

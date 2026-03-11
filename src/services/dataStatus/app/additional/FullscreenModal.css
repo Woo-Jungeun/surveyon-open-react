@@ -235,9 +235,11 @@
 }
 
 .view-option-btn.active {
-    background: #e0f2fe;
-    color: #0284c7;
-    border-color: #bae6fd;
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
 }
 
 /* Download Dropdown */

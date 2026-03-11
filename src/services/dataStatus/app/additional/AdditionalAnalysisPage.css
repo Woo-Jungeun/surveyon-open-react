@@ -2224,8 +2224,10 @@
 }
 
 .chart-type-toolbar .view-option-btn.active {
-    background: #fff;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15);
     color: #2563eb;
 }
 

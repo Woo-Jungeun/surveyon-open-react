@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { saveAs } from '@progress/kendo-file-saver';
-import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download } from 'lucide-react';
+import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
 
@@ -12,12 +12,49 @@ const FullscreenModal = ({
     statsOptions,
     chartData,
     seriesNames,
-    chartMode
+    chartMode,
+    suffix,
+    displayMode
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
+
+    // [Standard Logic] Recompute chart variables based on resultData and localChartMode
+    const { localComputedChartData, localComputedSeriesNames, localComputedSuffix } = useMemo(() => {
+        if (!resultData) return {};
+
+        // Donut and Funnel use Percentages, others use Counts
+        const usePercent = localChartMode === 'donut' || localChartMode === 'funnel';
+
+        const computedChartData = resultData.columns.map((colObj, colIndex) => {
+            const colName = colObj.label || colObj;
+            const dataPoint = { name: colName };
+            resultData.rows.forEach(row => {
+                const isAggregate = row.label && ['합계', '전체', 'total', 'Total'].includes(row.label);
+                if (isAggregate) {
+                    dataPoint.total = Number(row.values[colIndex]?.count || 0);
+                } else {
+                    const val = usePercent
+                        ? parseFloat(row.values[colIndex]?.percent || 0)
+                        : Number(row.values[colIndex]?.count || 0);
+                    dataPoint[row.label] = val;
+                }
+            });
+            return dataPoint;
+        });
+
+        const computedSeriesNames = resultData.rows
+            .filter(row => !(row.label && ['합계', '전체', 'total', 'Total'].includes(row.label)))
+            .map(row => row.label);
+
+        return {
+            localComputedChartData: computedChartData,
+            localComputedSeriesNames: computedSeriesNames,
+            localComputedSuffix: usePercent ? "%" : ""
+        };
+    }, [resultData, localChartMode]);
 
     useEffect(() => {
         if (isOpen) {
@@ -41,7 +78,7 @@ const FullscreenModal = ({
         const map = {
             'column': '막대형', 'stackedColumn': '누적막대형', 'stacked100Column': '100%누적막대형',
             'line': '선형', 'pie': '원형', 'donut': '도넛형', 'radarArea': '방사형',
-            'funnel': '깔때기', 'scatterPoint': '점도표', 'area': '영역형', 'map': '지도', 'heatmap': '트리맵'
+            'funnel': '깔때기', 'scatterPoint': '점도표', 'area': '영역형', 'map': '지도', 'heatmap': '트리맵', 'wordCloud': '워드클라우드'
         };
         return map[mode] || '차트';
     };
@@ -136,7 +173,8 @@ const FullscreenModal = ({
             'scatterPoint': 'scatterPoint',
             'area': 'area',
             'map': 'map',
-            'heatmap': 'heatmap'
+            'heatmap': 'heatmap',
+            'wordCloud': 'wordCloud'
         };
         return typeMap[localChartMode] || 'column';
     };
@@ -179,18 +217,20 @@ const FullscreenModal = ({
                                     </div>
                                 )}
                             </div>
+                            <button className="view-option-btn" onClick={onClose} title="차트 닫기"><X size={18} /></button>
+                            <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 4px' }}></div>
                             <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
-                            {/* <button className={`view-option-btn ${localChartMode === 'bar' ? 'active' : ''}`} onClick={() => setLocalChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={18} /></button> */}
                             <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'line' ? 'active' : ''}`} onClick={() => setLocalChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'pie' ? 'active' : ''}`} onClick={() => setLocalChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'donut' ? 'active' : ''}`} onClick={() => setLocalChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setLocalChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'funnel' ? 'active' : ''}`} onClick={() => setLocalChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button>
+                            {/* <button className={`view-option-btn ${localChartMode === 'funnel' ? 'active' : ''}`} onClick={() => setLocalChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button> */}
                             <button className={`view-option-btn ${localChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setLocalChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'area' ? 'active' : ''}`} onClick={() => setLocalChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'map' ? 'active' : ''}`} onClick={() => setLocalChartMode('map')} title="지도"><MapIcon size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setLocalChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
+                            <button className={`view-option-btn ${localChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setLocalChartMode('wordCloud')} title="워드클라우드"><Cloud size={18} /></button>
                         </div>
                     )}
                     <button className="fullscreen-modal-close-btn" onClick={onClose}>
@@ -306,11 +346,19 @@ const FullscreenModal = ({
                                                         {row.label}
                                                     </td>
                                                     {row.values.map((val, colIdx) => (
-                                                        <td key={colIdx} className="fullscreen-table-cell" style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0' }}>
-                                                            <div className="fullscreen-cell-content">
-                                                                <div className="cell-value">{val.count}</div>
-                                                                <div className="cell-pct">{val.percent}%</div>
-                                                            </div>
+                                                        <td key={colIdx} className="fullscreen-table-cell" style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'right' }}>
+                                                            {displayMode === 'all' ? (
+                                                                <div className="fullscreen-cell-content">
+                                                                    <div className="cell-value">{val.count}</div>
+                                                                    <div className="cell-pct">{val.percent}%</div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="fullscreen-cell-content">
+                                                                    <div className="cell-value">
+                                                                        {displayMode === 'value' ? val.count : `${val.percent}%`}
+                                                                    </div>
+                                                                </div>
+                                                            )}
                                                         </td>
                                                     ))}
                                                 </tr>
@@ -440,10 +488,11 @@ const FullscreenModal = ({
                                 height: '100%'
                             }}>
                                 <KendoChart
-                                    data={chartData}
-                                    seriesNames={seriesNames}
+                                    data={localComputedChartData}
+                                    seriesNames={localComputedSeriesNames}
                                     allowedTypes={getChartAllowedTypes()}
                                     initialType={getChartInitialType()}
+                                    suffix={localComputedSuffix}
                                 />
                             </div>
                         </div>

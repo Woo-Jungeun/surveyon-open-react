@@ -1,36 +1,49 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Bot, Loader2, CheckCircle2, GripVertical, ChevronLeft, ChevronRight, Maximize2, ChevronDown, ChevronsUpDown, ChevronUp } from 'lucide-react';
+import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Bot, Loader2, CheckCircle2, GripVertical, ChevronLeft, ChevronRight, Maximize2, ChevronDown, ChevronsUpDown, ChevronUp, X, Cloud } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
 
-const computeLocalVars = (dataItem) => {
+const computeLocalVars = (dataItem, chartMode) => {
     if (!dataItem) return {};
+
+    // 최종 기준: 도넛형(Donut)만 퍼센트(_pct) 사용
+    // 그 외 원형(Pie) 포함 모든 차트는 사례수(count) 사용
+    const usePercent = chartMode === 'donut' || chartMode === 'funnel';
+
     const chartData = dataItem.columns.map((colObj, colIndex) => {
         const colName = colObj.label || colObj;
         const dataPoint = { name: colName };
         dataItem.rows.forEach(row => {
-            if (row.label === '합계' || row.label === '전체') {
-                dataPoint.total = row.values[colIndex]?.count || 0;
+            const isAggregate = row.label && ['합계', '전체', 'total', 'Total'].includes(row.label);
+            if (isAggregate) {
+                dataPoint.total = Number(row.values[colIndex]?.count || 0);
             } else {
-                const pct = row.values[colIndex]?.percent;
-                dataPoint[row.label] = pct ? parseFloat(pct) : 0;
+                const val = usePercent
+                    ? parseFloat(row.values[colIndex]?.percent || 0)
+                    : Number(row.values[colIndex]?.count || 0);
+                dataPoint[row.label] = val;
             }
         });
         return dataPoint;
     });
 
     const seriesNames = dataItem.rows
-        .filter(row => row.label !== '합계' && row.label !== '전체')
+        .filter(row => !(row.label && ['합계', '전체', 'total', 'Total'].includes(row.label)))
         .map(row => row.label);
+
+    const hasColLabel2 = dataItem.columns?.some(c => c.label2);
+    const hasVarLabel = dataItem.columns?.some(c => c.var_label);
+    const hasRowLabel2 = dataItem.rows?.some(r => r.label2 || r.var_label);
 
     return {
         chartData,
         seriesNames,
-        hasColLabel2: dataItem.columns?.some(c => c.label2),
-        hasVarLabel: dataItem.columns?.some(c => c.var_label),
-        hasRowLabel2: dataItem.rows?.some(r => r.label2 || r.var_label)
+        suffix: usePercent ? "%" : "",
+        hasColLabel2,
+        hasVarLabel,
+        hasRowLabel2
     };
 };
 
@@ -47,14 +60,9 @@ export const ResultSectionBlock = ({
     isAnyExpanded,
     tableMode
 }) => {
-    const { chartData, seriesNames, hasColLabel2, hasVarLabel, hasRowLabel2 } = useMemo(() => computeLocalVars(resultData), [resultData]);
-
-    const chartContainerRef = useRef(null);
-    const displayMenuRef = useRef(null);
-    const downloadMenuRef = useRef(null);
-    const moreStatsRef = useRef(null);
-
     const [chartMode, setChartMode] = useState(null);
+    const activeChartMode = chartMode || 'column';
+
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(false);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
@@ -63,6 +71,16 @@ export const ResultSectionBlock = ({
     const [isMoreStatsOpen, setIsMoreStatsOpen] = useState(false);
     const [aiResult, setAiResult] = useState(null);
     const [isAiLoading, setIsAiLoading] = useState(false);
+
+    const { chartData, seriesNames, hasColLabel2, hasVarLabel, hasRowLabel2, suffix } = useMemo(() =>
+        computeLocalVars(resultData, activeChartMode),
+        [resultData, activeChartMode]
+    );
+
+    const chartContainerRef = useRef(null);
+    const displayMenuRef = useRef(null);
+    const downloadMenuRef = useRef(null);
+    const moreStatsRef = useRef(null);
 
     const [layoutOptions, setLayoutOptions] = useState([
         { id: 'table', label: '표', checked: true },
@@ -474,7 +492,7 @@ export const ResultSectionBlock = ({
                                                     <span>복사</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => setFullscreenModal({ open: true, type: 'table', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode })}
+                                                    onClick={() => setFullscreenModal({ open: true, type: 'table', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode })}
                                                     className="action-btn"
                                                 >
                                                     <Maximize size={16} />
@@ -660,7 +678,7 @@ export const ResultSectionBlock = ({
                                                     <span>복사</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => setFullscreenModal({ open: true, type: 'stats', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode })}
+                                                    onClick={() => setFullscreenModal({ open: true, type: 'stats', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode })}
                                                     className="action-btn"
                                                 >
                                                     <Maximize size={16} />
@@ -810,7 +828,7 @@ export const ResultSectionBlock = ({
                                             <div className="section-actions">
                                                 <div className="chart-type-toolbar">
                                                     <div className="download-menu-container" ref={downloadMenuRef} style={{ marginRight: '4px' }}>
-                                                        <button className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }}>
+                                                        <button className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }} title="다운로드">
                                                             <Download size={16} />
                                                         </button>
                                                         {showDownloadMenu && (
@@ -820,15 +838,33 @@ export const ResultSectionBlock = ({
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <button className={`view-option-btn ${!chartMode || chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={16} /></button>
-                                                    <button className={`view-option-btn ${chartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
-                                                    <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형"><LineChart size={16} /></button>
-                                                    <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형"><PieChart size={16} /></button>
-                                                    <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형"><Donut size={16} /></button>
-                                                    <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형"><AreaChart size={16} /></button>
+                                                    <button className="view-option-btn" onClick={() => toggleLayoutOption('chart')} title="차트 닫기"><X size={16} /></button>
+                                                    <div style={{ width: '1px', height: '16px', background: '#e2e8f0', margin: '0 4px' }}></div>
+                                                    <button className={`view-option-btn ${activeChartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형"><LineChart size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형"><PieChart size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형"><Donut size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode('radarArea')} title="방사형"><Aperture size={16} /></button>
+                                                    {/* <button className={`view-option-btn ${activeChartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기"><Filter size={16} /></button> */}
+                                                    <button className={`view-option-btn ${activeChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점도표"><MoreHorizontal size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형"><AreaChart size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><MapIcon size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setChartMode('wordCloud')} title="워드클라우드"><Cloud size={16} /></button>
                                                 </div>
                                                 <button
-                                                    onClick={() => setFullscreenModal({ open: true, type: 'chart', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode })}
+                                                    onClick={() => setFullscreenModal({
+                                                        open: true,
+                                                        type: 'chart',
+                                                        dataItem: resultData,
+                                                        chartData,
+                                                        seriesNames,
+                                                        statsOptions,
+                                                        chartMode: activeChartMode,
+                                                        suffix,
+                                                        displayMode
+                                                    })}
                                                     className="action-btn"
                                                 >
                                                     <Maximize size={16} />
@@ -837,7 +873,18 @@ export const ResultSectionBlock = ({
                                             </div>
                                         </div>
                                         <div ref={chartContainerRef} className="cross-tab-chart-container">
-                                            <KendoChart data={chartData} seriesNames={seriesNames} initialType={chartMode || 'column'} />
+                                            <KendoChart
+                                                key={`${activeChartMode}`}
+                                                data={chartData}
+                                                seriesNames={seriesNames}
+                                                initialType={activeChartMode}
+                                                suffix={suffix}
+                                                allowedTypes={(() => {
+                                                    if (activeChartMode === 'column' || activeChartMode === 'bar') return ['column', 'bar'];
+                                                    if (activeChartMode === 'stackedColumn' || activeChartMode === 'stacked100Column') return ['stackedColumn', 'stacked100Column'];
+                                                    return [activeChartMode];
+                                                })()}
+                                            />
                                         </div>
                                     </div>
                                 );
