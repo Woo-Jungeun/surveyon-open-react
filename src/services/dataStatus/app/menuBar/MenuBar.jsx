@@ -245,7 +245,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       loadingSpinner.show();
       // 대시보드 메타데이터 조회 API 호출
       const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
-      console.log(metadataResult)
       loadingSpinner.hide();
     } catch (error) {
       console.error("API Error:", error);
