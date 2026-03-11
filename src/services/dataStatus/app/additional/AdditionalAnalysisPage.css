@@ -661,7 +661,11 @@
 }
 
 .result-section.is-expanded.is-config-open {
-    min-height: 200px !important;
+    min-height: 50px !important;
+}
+
+.result-section.is-merged {
+    min-height: 500px !important;
 }
 
 .result-section.is-narrow:hover {
