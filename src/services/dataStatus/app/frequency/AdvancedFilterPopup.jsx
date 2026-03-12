@@ -83,9 +83,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     if (op === '=') op = '==';
 
                     let val = match[3].trim();
-                    // in, not in인 경우 괄호/대괄호 제거 후 표출
+                    // in, not in인 경우 괄호/대괄호 완벽히 제거 후 표출
                     if (op === 'in' || op === 'not in') {
-                        if ((val.startsWith('(') && val.endsWith(')')) || (val.startsWith('[') && val.endsWith(']'))) {
+                        while ((val.startsWith('(') && val.endsWith(')')) || (val.startsWith('[') && val.endsWith(']'))) {
                             val = val.slice(1, -1).trim();
                         }
                     } else {
@@ -370,8 +370,11 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                     let val = c.value.trim();
                                     // in, not in인 경우 대괄호 감싸기
                                     if (opLower === 'in' || opLower === 'not in') {
-                                        if (!val.startsWith('[')) val = `[${val}`;
-                                        if (!val.endsWith(']')) val = `${val}]`;
+                                        let cleanVal = val;
+                                        while ((cleanVal.startsWith('(') && cleanVal.endsWith(')')) || (cleanVal.startsWith('[') && cleanVal.endsWith(']'))) {
+                                            cleanVal = cleanVal.slice(1, -1).trim();
+                                        }
+                                        val = `[${cleanVal}]`;
                                     }
                                     return `${c.varName} ${opLower} ${val}`;
                                 });
@@ -384,13 +387,31 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                     categoryLogic = setStr;
                                 } else {
                                     const connector = (set.connectorOp || 'AND').toLowerCase();
+
+                                    // If we are combining condition sets, wrap the entire expression in ()
+                                    // only if the leftPart isn't ALREADY fully wrapped, or if we want to build a flat list
+                                    // The user requested: ((q20 not in [10] and q35 == 70) or (q55 <= 70 or q40 == 140)) and q50 == 20
+                                    // Let's create `(A connector B)`
                                     categoryLogic = `(${categoryLogic} ${connector} ${setStr})`;
                                 }
                             }
                         });
 
                         let finalLogic = categoryLogic.trim();
+                        let unwrap = false;
                         if (finalLogic.startsWith('(') && finalLogic.endsWith(')')) {
+                            let openCount = 0;
+                            unwrap = true;
+                            for (let i = 0; i < finalLogic.length - 1; i++) {
+                                if (finalLogic[i] === '(') openCount++;
+                                else if (finalLogic[i] === ')') openCount--;
+                                if (openCount === 0) {
+                                    unwrap = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (unwrap) {
                             finalLogic = finalLogic.slice(1, -1).trim();
                         }
 
@@ -425,8 +446,11 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                     const opLower = c.operator.toLowerCase();
                                     let val = c.value.trim();
                                     if (opLower === 'in' || opLower === 'not in') {
-                                        if (!val.startsWith('[')) val = `[${val}`;
-                                        if (!val.endsWith(']')) val = `${val}]`;
+                                        let cleanVal = val;
+                                        while ((cleanVal.startsWith('(') && cleanVal.endsWith(')')) || (cleanVal.startsWith('[') && cleanVal.endsWith(']'))) {
+                                            cleanVal = cleanVal.slice(1, -1).trim();
+                                        }
+                                        val = `[${cleanVal}]`;
                                     }
                                     return `${c.varName} ${opLower} ${val}`;
                                 });
@@ -437,11 +461,30 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                     categoryLogic = setStr;
                                 } else {
                                     const connector = (set.connectorOp || 'AND').toLowerCase();
+
                                     categoryLogic = `(${categoryLogic} ${connector} ${setStr})`;
                                 }
                             }
                         });
-                        return categoryLogic.trim();
+
+                        let finalCategoryLogic = categoryLogic.trim();
+                        let unwrap = false;
+                        if (finalCategoryLogic.startsWith('(') && finalCategoryLogic.endsWith(')')) {
+                            let openCount = 0;
+                            unwrap = true;
+                            for (let i = 0; i < finalCategoryLogic.length - 1; i++) {
+                                if (finalCategoryLogic[i] === '(') openCount++;
+                                else if (finalCategoryLogic[i] === ')') openCount--;
+                                if (openCount === 0) {
+                                    unwrap = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (unwrap) {
+                            finalCategoryLogic = finalCategoryLogic.slice(1, -1).trim();
+                        }
+                        return finalCategoryLogic;
                     })
                     .filter(logic => logic !== '')
                     .map(logic => `(${logic})`)
