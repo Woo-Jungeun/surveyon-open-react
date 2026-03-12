@@ -84,7 +84,7 @@ const MapManagementPage = () => {
                         sysName: item.cQuestionVariable || '',
                         name: item.cQuestionVariable || '',
                         label: item.label || '',
-                        type: item.type || 'Single',
+                        type: (item.type || 'single').toLowerCase(),
                         startPos: item.startPos || 0,
                         valLen: item.codeLen || 0,
                         valCnt: item.optCount || 0,
@@ -102,7 +102,7 @@ const MapManagementPage = () => {
                         category: categoryStr,
                         labels: item.labels || [],
                         ranking: item.ranking || 0,
-                        isBaked: !!item.isBaked
+                        isBaked: (item.type || '').toLowerCase() === 'custom' ? false : !!item.isBaked
                     };
                 });
 

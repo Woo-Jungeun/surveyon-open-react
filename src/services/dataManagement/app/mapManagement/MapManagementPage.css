@@ -1136,10 +1136,32 @@ input:checked+.slider:before {
 }
 
 /* Custom Dropdown Popup List Styles */
-.logic-dropdown-popup {
+.logic-dropdown-popup,
+.dm-dropdown-popup {
     border-radius: 6px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     border: 1px solid #e2e8f0;
+    z-index: 10001;
+}
+
+.dm-dropdown-popup .k-list-item {
+    font-size: 13px;
+    color: #334155;
+    padding: 8px 12px;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+
+.dm-dropdown-popup .k-list-item:hover,
+.dm-dropdown-popup .k-list-item.k-focus {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.dm-dropdown-popup .k-list-item.k-selected,
+.dm-dropdown-popup .k-list-item.k-state-selected {
+    background-color: #f0fdf4 !important;
+    color: #16a34a !important;
+    font-weight: 600;
 }
 
 /* Popup Theme Variables (Popups often render outside the main overlay) */

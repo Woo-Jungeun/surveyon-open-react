@@ -48,6 +48,7 @@ const KendoGrid = ({ parentProps, children }) => {
     const onProcessedDataUpdate = parentProps?.onProcessedDataUpdate;
     const scrollable = parentProps?.scrollable ?? "scrollable";
     const rowHeight = parentProps?.rowHeight;
+    const isItemSelectable = parentProps?.isItemSelectable;
 
     /** ---------- key resolver ---------- */
     const idGetter = useCallback(
@@ -274,13 +275,26 @@ const KendoGrid = ({ parentProps, children }) => {
     }, [rawData, sort, filter, parentProps?.pinnedBottomPredicate]);
 
     /** ---------- 선택(행/체크박스) 처리 ---------- */
-    // 체크박스에서 발생한 이벤트인지 판별
-    const isFromCheckbox = (evt) => !!evt?.syntheticEvent?.target?.closest?.('input[type="checkbox"]');
+    // 체크박스에서 발생한 이벤트인지 판별 (custom dm-checkbox 대응)
+    const isFromCheckbox = (evt) => {
+        const target = evt?.syntheticEvent?.target;
+        return !!(
+            target?.closest?.('input[type="checkbox"]') ||
+            target?.closest?.('.dm-checkbox-box') ||
+            target?.closest?.('.dm-checkbox-label')
+        );
+    };
 
     // linkRowClickToSelection=false면 체크박스 클릭에만 반응
     const onSelectionChange = (event) => {
-        if (!linkRowClickToSelection && !isFromCheckbox(event)) return;
+        // 체크박스에서 발생한 이벤트는 SelectionCell에서 직접 처리하므로 무시
+        if (isFromCheckbox(event)) return;
+
+        if (!linkRowClickToSelection) return;
         if (typeof setSelectedState !== "function") return; // 내부에서 setSelectedState가 없으면 호출하지 않게 막기
+
+        if (isItemSelectable && !isItemSelectable(event.dataItem)) return;
+
         const newSelectedState = getSelectedState({
             event,
             selectedState,
@@ -305,10 +319,16 @@ const KendoGrid = ({ parentProps, children }) => {
             : (event.dataItems?.data ?? []);
         items.forEach((item) => {
             const key = idGetter(item);
-            if (key !== undefined) newSelectedState[key] = checked;
+            if (key !== undefined) {
+                if (isItemSelectable && !isItemSelectable(item)) {
+                    // 선택 가능하지 않은 항목은 건너뜀
+                } else {
+                    newSelectedState[key] = checked;
+                }
+            }
         });
         setSelectedState(newSelectedState);
-    }, [setSelectedState, idGetter, parentHeaderSelectionChange]);
+    }, [setSelectedState, idGetter, parentHeaderSelectionChange, isItemSelectable]);
 
     // 체크박스 클릭이면 onRowClick은 항상 무시 (편집/활성 충돌 방지)
     const onRowClickWrapper = (event) => {
@@ -316,16 +336,17 @@ const KendoGrid = ({ parentProps, children }) => {
         parentProps?.onRowClick?.(event);
     };
 
-    // 헤더 체크박스 계산
-    const validItems = useMemo(
-        () => (viewData ?? []).filter((item) => !item.isDuplicate),
-        [viewData]
+    // 체크박스 계산 - 중복 제외 및 선택 가능 항목만
+    const selectableItems = useMemo(
+        () => (viewData ?? []).filter((item) => !item.isDuplicate && (!isItemSelectable || isItemSelectable(item))),
+        [viewData, isItemSelectable]
     );
+
     const allChecked =
-        validItems.length > 0 &&
-        validItems.every((item) => selectedState[idGetter(item)]);
+        selectableItems.length > 0 &&
+        selectableItems.every((item) => selectedState[idGetter(item)]);
     const someChecked =
-        validItems.some((item) => selectedState[idGetter(item)]) && !allChecked;
+        selectableItems.some((item) => selectedState[idGetter(item)]) && !allChecked;
 
     // 컬럼 key 안정화 로직 유지
     const addKeysRecursively = (nodes) =>
@@ -339,6 +360,43 @@ const KendoGrid = ({ parentProps, children }) => {
                 node.props?.children ? addKeysRecursively(node.props.children) : undefined
             );
         });
+
+    /** ---------- 커스텀 선택 셀 ---------- */
+    const SelectionCell = (props) => {
+        const { dataItem } = props;
+        if (!dataItem) return <td />;
+
+        const key = idGetter(dataItem);
+        const checked = !!selectedState[key];
+        const selectable = isItemSelectable ? isItemSelectable(dataItem) : true;
+
+        const handleChange = (e) => {
+            if (!selectable || typeof setSelectedState !== 'function') return;
+            const next = { ...selectedState };
+            if (next[key]) {
+                delete next[key];
+            } else {
+                next[key] = true;
+            }
+            setSelectedState(next);
+        };
+
+        return (
+            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                <label className={`dm-checkbox-label ${selectable ? '' : 'dm-checkbox-disabled'}`}>
+                    <input
+                        type="checkbox"
+                        className="dm-checkbox-input"
+                        checked={checked}
+                        disabled={!selectable}
+                        onChange={handleChange}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} />
+                </label>
+            </td>
+        );
+    };
 
     let childColsTree = addKeysRecursively(children);
     // 멀티 선택 헤더
@@ -368,18 +426,18 @@ const KendoGrid = ({ parentProps, children }) => {
                             {selectionHeaderTitle}
                         </span>
                     )}
-                    <div className="k-checkbox-wrap" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <label className="dm-checkbox-label">
                         <input
                             ref={ref}
                             type="checkbox"
-                            className="k-checkbox"
+                            className="dm-checkbox-input"
                             checked={allChecked}
                             onChange={(e) => {
                                 const checked = e.target.checked;
                                 if (typeof parentProps?.onHeaderSelectionChange === "function") {
                                     parentProps.onHeaderSelectionChange({
                                         syntheticEvent: { target: { checked } },
-                                        dataItems: validItems,
+                                        dataItems: selectableItems,
                                     });
                                     return;
                                 }
@@ -389,14 +447,17 @@ const KendoGrid = ({ parentProps, children }) => {
                                 (viewData || []).forEach((item) => {
                                     const key = idGetter(item);
                                     if (!key) return;
-                                    if (item.isDuplicate) next[key] = false;
-                                    else next[key] = checked;
+                                    if (item.isDuplicate || (isItemSelectable && !isItemSelectable(item))) {
+                                        next[idGetter(item)] = false;
+                                    } else {
+                                        next[key] = checked;
+                                    }
                                 });
                                 setSelectedState(next);
                             }}
-                            aria-label="Select all rows"
                         />
-                    </div>
+                        <span className="dm-checkbox-box" />
+                    </label>
                 </div >
             );
         };
@@ -406,6 +467,7 @@ const KendoGrid = ({ parentProps, children }) => {
                 key="__selection_col"
                 field={selectedField}
                 width={parentProps?.selectionColumnWidth ?? "120px"}
+                cell={SelectionCell}
                 headerCell={SelectionHeaderCell}
                 headerClassName="k-header-center variable-column-header"
                 sortable={false}

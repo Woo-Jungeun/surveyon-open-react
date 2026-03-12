@@ -182,11 +182,20 @@ const TypeCell = (props) => {
     const { dataItem, style, className } = props;
 
     const handleChange = (e) => {
-        const newType = e.target.value;
-        setVariables(prev => prev.map(v => v.id === dataItem.id ? { ...v, type: newType } : v));
+        const newType = String(e.target.value).toLowerCase();
+        setVariables(prev => prev.map(v => {
+            if (v.id === dataItem.id) {
+                const updated = { ...v, type: newType };
+                if (newType === 'custom') {
+                    updated.isBaked = false;
+                }
+                return updated;
+            }
+            return v;
+        }));
     };
 
-    const typeOptions = ["Single", "Multi", "multi", "Dummy", "OPEN", "Open", "CUSTOM", "string", "numeric"];
+    const typeOptions = ["single", "multi", "dummy", "custom", "open(문자)", "open(숫자)"];
     const isEditing = dataItem.id === editingRowId || dataItem.isNew;
 
     if (!isEditing) {
@@ -206,6 +215,7 @@ const TypeCell = (props) => {
                 value={dataItem.type}
                 onChange={handleChange}
                 style={{ width: '100%' }}
+                popupSettings={{ className: 'dm-dropdown-popup' }}
             />
         </td>
     );
@@ -423,9 +433,9 @@ const MapConfigTab = ({
             { field: 'label', title: '레이블', minWidth: 50 },
             { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
             { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
-            { field: 'type', title: '변수\n유형', width: '95px' },
+            { field: 'type', title: '변수\n유형', width: '140px' },
             { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
-            { field: 'memo', title: '메모', minWidth: 50 },
+            // { field: 'memo', title: '메모', minWidth: 50 },
             { field: 'delete', title: '삭제', width: '50px' }
         ], [isDetailed, variables]);
 
@@ -505,16 +515,14 @@ const MapConfigTab = ({
                             selectedState: (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: !!v.isBaked }), {}),
                             setSelectedState: (state) => {
                                 setVariables(prev => prev.map(v => {
-                                    if (v.id in state) {
-                                        return { ...v, isBaked: !!state[v.id] };
-                                    }
-                                    return v;
+                                    return { ...v, isBaked: !!state[v.id] };
                                 }));
                             },
                             linkRowClickToSelection: false,
                             selectionHeaderTitle: "H-SRT\n이관",
                             selectionColumnAfterField: "label",
-                            selectionColumnWidth: "110px"
+                            selectionColumnWidth: "110px",
+                            isItemSelectable: (item) => String(item.type).toLowerCase() !== 'custom'
                         }}
                     >
                         {mappingColumns.filter(c => !c.isCheckbox).map((c) => {
