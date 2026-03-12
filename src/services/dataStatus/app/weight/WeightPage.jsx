@@ -949,7 +949,17 @@ const WeightPage = () => {
                                             minWidth: 0
                                         }}
                                     >
-                                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>가로축 (열)</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#555', display: 'block' }}>가로축 (열)</span>
+                                            <button
+                                                onClick={() => { setColItems([]); setIsCalculated(false); }}
+                                                className="axis-clear-btn"
+                                                title="전체 삭제"
+                                            >
+                                                <X size={12} />
+
+                                            </button>
+                                        </div>
                                         <div style={{
                                             flex: 1,
                                             border: '2px dashed #d0d7de',
@@ -1031,7 +1041,17 @@ const WeightPage = () => {
                                             flexDirection: 'column'
                                         }}
                                     >
-                                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#555', marginBottom: '8px', display: 'block' }}>세로축 (행)</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#555', display: 'block' }}>세로축 (행)</span>
+                                            <button
+                                                onClick={() => { setRowItems([]); setIsCalculated(false); }}
+                                                className="axis-clear-btn"
+                                                title="전체 삭제"
+                                            >
+                                                <X size={12} />
+
+                                            </button>
+                                        </div>
                                         <div style={{
                                             flex: 1,
                                             border: '2px dashed #d0d7de',

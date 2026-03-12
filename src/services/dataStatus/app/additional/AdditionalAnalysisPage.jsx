@@ -1634,7 +1634,16 @@ const AdditionalAnalysisPage = () => {
                                                 세로 × 가로
                                             </div>
                                             <div className="col-drop-zone">
-                                                <span className="drop-zone-label">가로축 (열)</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <span className="drop-zone-label" style={{ marginBottom: 0 }}>가로축 (열)</span>
+                                                    <button
+                                                        onClick={() => setColVars([])}
+                                                        className="axis-clear-btn"
+                                                        title="전체 삭제"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
                                                 <div className="drop-zone-area" style={{ padding: '8px', overflowX: 'auto', overflowY: 'hidden', display: 'flex', gap: '8px', alignItems: 'center' }}>
                                                     {colVars.map((group, groupIndex) => (
                                                         <div
@@ -1693,7 +1702,16 @@ const AdditionalAnalysisPage = () => {
                                                 onDragOver={handleDragOver}
                                                 onDrop={(e) => handleDrop(e, 'row')}
                                             >
-                                                <span className="drop-zone-label">세로축 (행)</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                    <span className="drop-zone-label" style={{ marginBottom: 0 }}>세로축 (행)</span>
+                                                    <button
+                                                        onClick={() => setRowVars([])}
+                                                        className="axis-clear-btn"
+                                                        title="전체 삭제"
+                                                    >
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
                                                 <div className="drop-zone-area vertical">
                                                     {rowVars.length === 0 ? (
                                                         <div className="drop-zone-placeholder vertical">문항을 여기로<br />드래그하세요</div>
