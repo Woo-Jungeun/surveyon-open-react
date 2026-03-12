@@ -16,7 +16,8 @@ const FullscreenModal = ({
     chartMode,
     suffix,
     displayMode,
-    paletteId
+    paletteId,
+    setPaletteId
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
     const [localPaletteId, setLocalPaletteId] = useState(paletteId || 'default');
@@ -232,14 +233,30 @@ const FullscreenModal = ({
                                     onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }}
                                     title="색상 테마 설정"
                                 >
-                                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'conic-gradient(#60a5fa, #fb923c, #34d399, #a78bfa, #fb7185, #22d3ee)' }}></div>
+                                    {(() => {
+                                        const theme = CHART_THEME_OPTIONS.find(opt => opt.id === localPaletteId) || CHART_THEME_OPTIONS[0];
+                                        const colors = theme.preview;
+                                        return (
+                                            <div style={{
+                                                width: '18px',
+                                                height: '18px',
+                                                borderRadius: '50%',
+                                                background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`,
+                                                border: '1px solid #e2e8f0'
+                                            }}></div>
+                                        );
+                                    })()}
                                 </button>
                                 {isPaletteMenuOpen && (
                                     <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100 }}>
                                         {CHART_THEME_OPTIONS.map((option) => (
                                             <button
                                                 key={option.id}
-                                                onClick={() => { setLocalPaletteId(option.id); setIsPaletteMenuOpen(false); }}
+                                                onClick={() => {
+                                                    setLocalPaletteId(option.id);
+                                                    setPaletteId(option.id);
+                                                    setIsPaletteMenuOpen(false);
+                                                }}
                                                 className={localPaletteId === option.id ? 'active' : ''}
                                                 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
                                             >

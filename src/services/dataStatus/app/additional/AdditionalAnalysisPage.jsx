@@ -118,6 +118,7 @@ const AdditionalAnalysisPage = () => {
     const [tableName, setTableName] = useState('Banner by Q1'); // Added table name state
     const [filterExpression, setFilterExpression] = useState(''); // Added filter expression state
     const [tableMode, setTableMode] = useState('merged'); // 'merged' | 'separated'
+    const [globalPaletteId, setGlobalPaletteId] = useState('default');
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [expandedIndex, setExpandedIndex] = useState(null);
     const [toast, setToast] = useState({ show: false, message: '' });
@@ -1719,6 +1720,8 @@ const AdditionalAnalysisPage = () => {
                                     onToggleExpand={() => setExpandedIndex(expandedIndex === dataIndex ? null : dataIndex)}
                                     isAnyExpanded={expandedIndex !== null}
                                     tableMode={tableMode}
+                                    paletteId={globalPaletteId}
+                                    setPaletteId={setGlobalPaletteId}
                                 />
                             ))}
                         </div>
@@ -1736,7 +1739,8 @@ const AdditionalAnalysisPage = () => {
                 chartData={fullscreenModal.chartData}
                 seriesNames={fullscreenModal.seriesNames}
                 chartMode={fullscreenModal.chartMode}
-                paletteId={fullscreenModal.paletteId}
+                paletteId={globalPaletteId}
+                setPaletteId={setGlobalPaletteId}
             />
 
             <CreateTablePopup
