@@ -135,6 +135,11 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           ...prev,
           processedAt: formatDate(result.resultjson.parquetBakedAt)
         }));
+      } else {
+        const errorMsg = result?.errortext || result?.errorcontent || result?.message;
+        if (errorMsg) {
+          modal.showErrorAlert("에러", errorMsg || "데이터 정보 조회에 실패했습니다.");
+        }
       }
     } catch (err) {
       console.warn("fetchDataInfo error", err);
@@ -193,7 +198,10 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         // 새로고침 후 시간 정보 다시 가져오기
         await fetchDataInfo(pn);
       } else {
-        modal.showErrorAlert("오류", result?.message || "데이터 새로고침에 실패했습니다.");
+        const errorMsg = result?.errortext || result?.errorcontent || result?.message;
+        if (errorMsg) {
+          modal.showErrorAlert("에러", errorMsg || "데이터 새로고침에 실패했습니다.");
+        }
       }
     } catch (err) {
       console.error("Refresh error", err);
