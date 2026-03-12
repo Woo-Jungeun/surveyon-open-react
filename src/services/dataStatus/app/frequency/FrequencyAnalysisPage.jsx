@@ -18,14 +18,14 @@ import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { Settings } from 'lucide-react';
 import { VariablePageApi } from '../variable/VariablePageApi';
 
-const AggregationCard = memo(({ q }) => {
+const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const [chartMode, setChartMode] = useState('column');
     const [showChart, setShowChart] = useState(true);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [displayMode, setDisplayMode] = useState('all');
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
-    const [paletteId, setPaletteId] = useState('default');
+    // const [paletteId, setPaletteId] = useState('default'); // Moved to parent
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
@@ -510,6 +510,7 @@ const FrequencyAnalysisPage = () => {
     const [isVariableDropdownOpen, setIsVariableDropdownOpen] = useState(false);
     const [selectedVariableId, setSelectedVariableId] = useState(null);
     const variableDropdownRef = useRef(null);
+    const [globalPaletteId, setGlobalPaletteId] = useState('default');
 
     // Overview 변수 관련 상태
     const [isOverviewPopupOpen, setIsOverviewPopupOpen] = useState(false);
@@ -1039,7 +1040,7 @@ const FrequencyAnalysisPage = () => {
                 <div className="agg-main" ref={mainRef}>
                     {questions.length > 0 ? (
                         questions.map(q => (
-                            <AggregationCard key={q.id} q={q} />
+                            <AggregationCard key={q.id} q={q} paletteId={globalPaletteId} setPaletteId={setGlobalPaletteId} />
                         ))
                     ) : (
                         <div style={{
