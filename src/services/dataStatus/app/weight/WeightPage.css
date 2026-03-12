@@ -165,6 +165,12 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+.question-item.active {
+    background: #f0f9ff !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
 .question-item-header {
     display: flex;
     justify-content: space-between;

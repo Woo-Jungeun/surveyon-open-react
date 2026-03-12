@@ -195,6 +195,10 @@ const WeightPage = () => {
     const [questions, setQuestions] = useState([]);
     const [rawVariables, setRawVariables] = useState({});
 
+    // 문항 선택 상태
+    const [selectedQIds, setSelectedQIds] = useState([]);
+    const draggedItemRef = useRef(null);
+
     useEffect(() => {
         const fetchQuestions = async () => {
             if (auth?.user?.userId) {
@@ -250,6 +254,26 @@ const WeightPage = () => {
     const [rowItems, setRowItems] = useState([]);
     const [colItems, setColItems] = useState([]);
 
+    const handleQuestionClick = (e, qId) => {
+        // Shift key multi-selection
+        if (e.shiftKey && selectedQIds.length > 0) {
+            const lastId = selectedQIds[selectedQIds.length - 1];
+            const allIds = filteredQuestions.map(q => q.id);
+            const startIdx = allIds.indexOf(lastId);
+            const endIdx = allIds.indexOf(qId);
+            if (startIdx > -1 && endIdx > -1) {
+                const range = allIds.slice(Math.min(startIdx, endIdx), Math.max(startIdx, endIdx) + 1);
+                setSelectedQIds(prev => Array.from(new Set([...prev, ...range])));
+                return;
+            }
+        }
+
+        // Multi-selection (Add/Remove)
+        setSelectedQIds(prev =>
+            prev.includes(qId) ? prev.filter(id => id !== qId) : [...prev, qId]
+        );
+    };
+
     const handleDeleteWeight = (id) => {
         modal.showConfirm("알림", '정말 삭제하시겠습니까?', {
             btns: [{
@@ -284,8 +308,42 @@ const WeightPage = () => {
         });
     };
 
-    const handleDragStart = (e, item) => {
-        e.dataTransfer.setData('application/json', JSON.stringify(item));
+    const handleDragStart = (e, dragData) => {
+        const isDragZoneItem = ['ROW_ITEM', 'COL_ITEM'].includes(dragData.dragType);
+
+        let payload;
+        if (isDragZoneItem) {
+            payload = dragData;
+        } else {
+            // 변수 목록 드래그
+            if (selectedQIds.includes(dragData.id)) {
+                // 선택된 여러 개 드래그
+                const items = selectedQIds.map(id => questions.find(q => q.id === id)).filter(Boolean);
+                payload = { type: 'NEW_MULTI', items };
+
+                // UI: 드래그 고스트 엘리먼트
+                const dragGhost = document.createElement('div');
+                dragGhost.style.padding = '8px 16px';
+                dragGhost.style.background = '#3b82f6';
+                dragGhost.style.color = 'white';
+                dragGhost.style.borderRadius = '20px';
+                dragGhost.style.fontSize = '14px';
+                dragGhost.style.fontWeight = 'bold';
+                dragGhost.style.position = 'absolute';
+                dragGhost.style.top = '-1000px';
+                dragGhost.innerText = `${items.length}개 문항 이동 중`;
+                document.body.appendChild(dragGhost);
+
+                e.dataTransfer.setDragImage(dragGhost, 0, 0);
+                setTimeout(() => document.body.removeChild(dragGhost), 0);
+            } else {
+                // 단일 드래그
+                payload = { ...dragData, type: 'NEW_SINGLE' };
+            }
+        }
+
+        draggedItemRef.current = payload;
+        e.dataTransfer.setData('application/json', JSON.stringify(payload));
         e.dataTransfer.effectAllowed = 'copy';
     };
 
@@ -296,60 +354,101 @@ const WeightPage = () => {
 
     const handleDrop = (e, target, targetIndex = null) => {
         e.preventDefault();
-        const data = e.dataTransfer.getData('application/json');
-        if (data) {
-            const item = JSON.parse(data);
 
-            if (target === 'row' || target === 'row_item') {
-                const newRowItems = [...rowItems];
-                if (item.dragType !== 'ROW_ITEM' && newRowItems.length >= 10 && !newRowItems.find(i => i.id === item.id)) {
-                    modal.showAlert('알림', '세로축은 최대 10개까지만 추가할 수 있습니다.');
-                    return;
-                }
-                if (item.dragType === 'ROW_ITEM') {
-                    const [moved] = newRowItems.splice(item.srcIndex, 1);
-                    if (targetIndex !== null) {
-                        newRowItems.splice(targetIndex, 0, moved);
-                    } else {
-                        newRowItems.push(moved);
-                    }
-                    setRowItems(newRowItems);
-                    setIsCalculated(false);
-                } else if (!rowItems.find(i => i.id === item.id)) {
-                    if (targetIndex !== null) {
-                        newRowItems.splice(targetIndex, 0, item);
-                    } else {
-                        newRowItems.push(item);
-                    }
-                    setRowItems(newRowItems);
-                    setIsCalculated(false);
-                }
-            } else if (target === 'col' || target === 'col_item') {
-                const newColItems = [...colItems];
-                if (item.dragType !== 'COL_ITEM' && newColItems.length >= 10 && !newColItems.find(i => i.id === item.id)) {
-                    modal.showAlert('알림', '가로축은 최대 10개까지만 추가할 수 있습니다.');
-                    return;
-                }
-                if (item.dragType === 'COL_ITEM') {
-                    const [moved] = newColItems.splice(item.srcIndex, 1);
-                    if (targetIndex !== null) {
-                        newColItems.splice(targetIndex, 0, moved);
-                    } else {
-                        newColItems.push(moved);
-                    }
-                    setColItems(newColItems);
-                    setIsCalculated(false);
-                } else if (!colItems.find(i => i.id === item.id)) {
-                    if (targetIndex !== null) {
-                        newColItems.splice(targetIndex, 0, item);
-                    } else {
-                        newColItems.push(item);
-                    }
-                    setColItems(newColItems);
-                    setIsCalculated(false);
-                }
+        // Use Ref primary, fall back to dataTransfer
+        let payload = draggedItemRef.current;
+        if (!payload) {
+            const dataStr = e.dataTransfer.getData('application/json');
+            if (dataStr) {
+                payload = JSON.parse(dataStr);
             }
         }
+
+        if (!payload) return;
+
+        // 1. 드롭할 아이템들 리스트화
+        let itemsToDrop = [];
+        if (payload.type === 'NEW_MULTI') {
+            itemsToDrop = payload.items;
+        } else if (payload.type === 'NEW_SINGLE') {
+            itemsToDrop = [payload];
+        } else if (['ROW_ITEM', 'COL_ITEM'].includes(payload.dragType)) {
+            // 내부 이동 (단일 아이템)
+            itemsToDrop = [payload];
+        }
+
+        if (itemsToDrop.length === 0) return;
+
+        // 2. 타겟 영역(행/열) 처리
+        if (target === 'row' || target === 'row_item') {
+            const newRowItems = [...rowItems];
+
+            // 내부 이동 스페셜 처리
+            const dragItem = itemsToDrop[0];
+            if (dragItem.dragType === 'ROW_ITEM') {
+                const [moved] = newRowItems.splice(dragItem.srcIndex, 1);
+                if (targetIndex !== null) {
+                    newRowItems.splice(targetIndex, 0, moved);
+                } else {
+                    newRowItems.push(moved);
+                }
+                setRowItems(newRowItems);
+                setIsCalculated(false);
+                draggedItemRef.current = null;
+                return;
+            }
+
+            // 신규 아이템 추가 (멀티 포함)
+            itemsToDrop.forEach(item => {
+                if (newRowItems.length < 10 && !newRowItems.find(i => i.id === item.id)) {
+                    const newItem = { id: item.id, title: item.title, type: item.type, color: item.color };
+                    if (targetIndex !== null) {
+                        newRowItems.splice(targetIndex, 0, newItem);
+                        targetIndex++;
+                    } else {
+                        newRowItems.push(newItem);
+                    }
+                }
+            });
+            setRowItems(newRowItems);
+            setSelectedQIds([]);
+            setIsCalculated(false);
+        } else if (target === 'col' || target === 'col_item') {
+            const newColItems = [...colItems];
+
+            // 내부 이동 스페셜 처리
+            const dragItem = itemsToDrop[0];
+            if (dragItem.dragType === 'COL_ITEM') {
+                const [moved] = newColItems.splice(dragItem.srcIndex, 1);
+                if (targetIndex !== null) {
+                    newColItems.splice(targetIndex, 0, moved);
+                } else {
+                    newColItems.push(moved);
+                }
+                setColItems(newColItems);
+                setIsCalculated(false);
+                draggedItemRef.current = null;
+                return;
+            }
+
+            // 신규 아이템 추가 (멀티 포함)
+            itemsToDrop.forEach(item => {
+                if (newColItems.length < 10 && !newColItems.find(i => i.id === item.id)) {
+                    const newItem = { id: item.id, title: item.title, type: item.type, color: item.color };
+                    if (targetIndex !== null) {
+                        newColItems.splice(targetIndex, 0, newItem);
+                        targetIndex++;
+                    } else {
+                        newColItems.push(newItem);
+                    }
+                }
+            });
+            setColItems(newColItems);
+            setSelectedQIds([]);
+            setIsCalculated(false);
+        }
+
+        draggedItemRef.current = null;
     };
 
     const removeDroppedItem = (id, target) => {
@@ -808,7 +907,8 @@ const WeightPage = () => {
                                                 key={q.id}
                                                 draggable
                                                 onDragStart={(e) => handleDragStart(e, q)}
-                                                className="question-item"
+                                                onClick={(e) => handleQuestionClick(e, q.id)}
+                                                className={`question-item ${selectedQIds.includes(q.id) ? 'active' : ''}`}
                                             >
                                                 <div className="question-item-header" style={{ marginBottom: q.desc && q.desc !== q.title ? '4px' : '0' }}>
                                                     <span className="question-title">{q.title}</span>

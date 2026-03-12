@@ -37,7 +37,8 @@ const parseTableData = (newData) => {
             const cell = r.cells?.[k];
             return {
                 count: cell?.count || 0,
-                percent: cell?.percent || "0.0"
+                percent: cell?.percent || "0.0",
+                sig_vs_total: cell?.sig_vs_total || null
             };
         });
         const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
@@ -141,6 +142,7 @@ const AdditionalAnalysisPage = () => {
 
     const [rowVars, setRowVars] = useState([]);
     const [colVars, setColVars] = useState([]); // Array of arrays: [[v1, v2], [v3]]
+    const [selectedVarIds, setSelectedVarIds] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
     const draggedItemRef = useRef(null); // stale closure 방지용 동기 ref
 
@@ -793,12 +795,65 @@ const AdditionalAnalysisPage = () => {
         }, 0);
     };
 
+    const handleVariableClick = (e, varId) => {
+        // Shift key multi-selection
+        if (e.shiftKey && selectedVarIds.length > 0) {
+            const lastId = selectedVarIds[selectedVarIds.length - 1];
+            const allIds = filteredVariables.map(v => v.id);
+            const startIdx = allIds.indexOf(lastId);
+            const endIdx = allIds.indexOf(varId);
+            if (startIdx > -1 && endIdx > -1) {
+                const range = allIds.slice(Math.min(startIdx, endIdx), Math.max(startIdx, endIdx) + 1);
+                setSelectedVarIds(prev => Array.from(new Set([...prev, ...range])));
+                return;
+            }
+        }
+
+        // Multi-selection (Add/Remove)
+        setSelectedVarIds(prev =>
+            prev.includes(varId) ? prev.filter(id => id !== varId) : [...prev, varId]
+        );
+    };
+
     const handleDragStart = (e, dragData) => {
         // dragData가 드롭존 내부 아이템인지 확인 (ROW_ITEM, COL_ITEM, COL_GROUP만 내부 이동용)
         const isDragZoneItem = ['ROW_ITEM', 'COL_ITEM', 'COL_GROUP'].includes(dragData.type);
-        const payload = isDragZoneItem
-            ? dragData
-            : { type: 'NEW', item: dragData };
+
+        let payload;
+        if (isDragZoneItem) {
+            payload = dragData;
+        } else {
+            // 변수 목록 드래그
+            if (selectedVarIds.includes(dragData.id)) {
+                // 선택된 여러 개 드래그
+                const items = selectedVarIds.map(id => variables.find(v => v.id === id)).filter(Boolean);
+                payload = { type: 'NEW', items };
+
+                // UI: 드래그할 때 여러 개가 선택되었음을 보여주기 위한 고스트 엘리먼트 생성
+                const dragGhost = document.createElement('div');
+                dragGhost.style.padding = '8px 16px';
+                dragGhost.style.background = '#3b82f6';
+                dragGhost.style.color = 'white';
+                dragGhost.style.borderRadius = '20px';
+                dragGhost.style.fontSize = '14px';
+                dragGhost.style.fontWeight = 'bold';
+                dragGhost.style.position = 'absolute';
+                dragGhost.style.top = '-1000px';
+                dragGhost.innerText = `${items.length}개 문항 이동 중`;
+                document.body.appendChild(dragGhost);
+
+                e.dataTransfer.setDragImage(dragGhost, 0, 0);
+
+                // 드래그 종료 시 엘리먼트 삭제
+                setTimeout(() => {
+                    document.body.removeChild(dragGhost);
+                }, 0);
+            } else {
+                // 단일 드래그
+                payload = { type: 'NEW', item: dragData };
+            }
+        }
+
         draggedItemRef.current = payload;
         setDraggedItem(payload);
         e.stopPropagation();
@@ -816,6 +871,38 @@ const AdditionalAnalysisPage = () => {
         // ref를 우선 사용 (state의 stale closure 문제 방지)
         const currentDraggedItem = draggedItemRef.current || draggedItem;
         if (!currentDraggedItem) return;
+
+        // 다중 항목 드롭 처리
+        if (currentDraggedItem.type === 'NEW' && currentDraggedItem.items) {
+            const items = currentDraggedItem.items;
+            if (targetType === 'row' || targetType === 'row_item') {
+                const newRowVars = [...rowVars];
+                items.forEach(item => {
+                    if (newRowVars.length < 10 && !newRowVars.find(v => v.id === item.id)) {
+                        const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [] };
+                        if (targetType === 'row_item') {
+                            newRowVars.splice(targetItemIndex, 0, newItem);
+                        } else {
+                            newRowVars.push(newItem);
+                        }
+                    }
+                });
+                setRowVars(newRowVars);
+            } else if (targetType === 'col' || targetType === 'new_col_group' || targetType === 'col_item') {
+                const newColVars = [...colVars];
+                items.forEach(item => {
+                    if (newColVars.length < 10) {
+                        const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [] };
+                        newColVars.push([newItem]);
+                    }
+                });
+                setColVars(newColVars);
+            }
+            setSelectedVarIds([]);
+            setDraggedItem(null);
+            draggedItemRef.current = null;
+            return;
+        }
 
         const dragType = currentDraggedItem.type || 'NEW';
         const item = currentDraggedItem.item || (dragType === 'NEW' ? currentDraggedItem : null);
@@ -1526,9 +1613,10 @@ const AdditionalAnalysisPage = () => {
                                                 {filteredVariables.map(v => (
                                                     <div
                                                         key={v.id}
-                                                        className="variable-item"
+                                                        className={`variable-item ${selectedVarIds.includes(v.id) ? 'active' : ''}`}
                                                         draggable
                                                         onDragStart={(e) => handleDragStart(e, v)}
+                                                        onClick={(e) => handleVariableClick(e, v.id)}
                                                     >
                                                         <div className="variable-item__name">{v.id}</div>
                                                         <div className="variable-item__label">{v.label}</div>
