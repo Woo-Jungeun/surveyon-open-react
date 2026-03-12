@@ -265,7 +265,7 @@ const FullscreenModal = ({
                             {/* <button className={`view-option-btn ${localChartMode === 'funnel' ? 'active' : ''}`} onClick={() => setLocalChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button> */}
                             <button className={`view-option-btn ${localChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setLocalChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'area' ? 'active' : ''}`} onClick={() => setLocalChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'map' ? 'active' : ''}`} onClick={() => setLocalChartMode('map')} title="지도"><MapIcon size={18} /></button>
+                            {/* <button className={`view-option-btn ${localChartMode === 'map' ? 'active' : ''}`} onClick={() => setLocalChartMode('map')} title="지도"><MapIcon size={18} /></button> */}
                             <button className={`view-option-btn ${localChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setLocalChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setLocalChartMode('wordCloud')} title="워드클라우드"><Cloud size={18} /></button>
                         </div>

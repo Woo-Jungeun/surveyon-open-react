@@ -891,7 +891,7 @@ export const ResultSectionBlock = ({
                                                     {/* <button className={`view-option-btn ${activeChartMode === 'funnel' ? 'active' : ''}`} onClick={() => setChartMode('funnel')} title="깔때기"><Filter size={16} /></button> */}
                                                     <button className={`view-option-btn ${activeChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점도표"><MoreHorizontal size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형"><AreaChart size={16} /></button>
-                                                    <button className={`view-option-btn ${activeChartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><MapIcon size={16} /></button>
+                                                    {/* <button className={`view-option-btn ${activeChartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><MapIcon size={16} /></button> */}
                                                     <button className={`view-option-btn ${activeChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setChartMode('wordCloud')} title="워드클라우드"><Cloud size={16} /></button>
                                                 </div>
