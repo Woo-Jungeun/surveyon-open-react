@@ -16,16 +16,18 @@ const FullscreenModal = ({
     chartMode,
     suffix,
     displayMode,
+    setDisplayMode,
     paletteId,
     setPaletteId
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
+    const [localDisplayMode, setLocalDisplayMode] = useState(displayMode);
     const [localPaletteId, setLocalPaletteId] = useState(paletteId || 'default');
-    const [showDownloadMenu, setShowDownloadMenu] = useState(false);
-    const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
+    const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const paletteMenuRef = useRef(null);
+    const displayMenuRef = useRef(null);
 
     // [Standard Logic] Recompute chart variables based on resultData and localChartMode
     const { localComputedChartData, localComputedSeriesNames, localComputedSuffix } = useMemo(() => {
@@ -65,9 +67,10 @@ const FullscreenModal = ({
     useEffect(() => {
         if (isOpen) {
             setLocalChartMode(chartMode);
+            setLocalDisplayMode(displayMode);
             setLocalPaletteId(paletteId || 'default');
         }
-    }, [isOpen, chartMode, paletteId]);
+    }, [isOpen, chartMode, displayMode, paletteId]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -77,6 +80,9 @@ const FullscreenModal = ({
             }
             if (paletteMenuRef.current && !paletteMenuRef.current.contains(event.target)) {
                 setIsPaletteMenuOpen(false);
+            }
+            if (displayMenuRef.current && !displayMenuRef.current.contains(event.target)) {
+                setIsDisplayMenuOpen(false);
             }
         };
 
@@ -202,94 +208,118 @@ const FullscreenModal = ({
                         <div className="fullscreen-modal-title-bar"></div>
                         <h3 className="fullscreen-modal-title">{getTitle()}</h3>
                     </div>
-                    {type === 'chart' && (
-                        <div className="fullscreen-chart-toolbar" style={{
-                            display: 'flex',
-                            gap: '2px',
-                            marginRight: '16px',
-                            background: '#f1f5f9',
-                            padding: '4px',
-                            borderRadius: '8px',
-                            border: '1px solid #e2e8f0'
-                        }}>
-                            <div className="download-menu-container" ref={downloadMenuRef} style={{ marginRight: '8px' }}>
-                                <button
-                                    className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
-                                    onClick={() => setShowDownloadMenu(!showDownloadMenu)}
-                                    title="차트 다운로드"
-                                >
-                                    <Download size={18} />
-                                </button>
-                                {showDownloadMenu && (
-                                    <div className="download-dropdown">
-                                        <button onClick={() => handleDownload('png')}>PNG (이미지)</button>
-                                        <button onClick={() => handleDownload('svg')}>SVG (PPT 용)</button>
-                                    </div>
-                                )}
+                    <div className="fullscreen-modal-actions">
+                        {type === 'chart' && (
+                            <div className="fullscreen-chart-toolbar">
+                                <div className="download-menu-container" ref={downloadMenuRef}>
+                                    <button
+                                        className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
+                                        onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                                        title="차트 다운로드"
+                                    >
+                                        <Download size={18} />
+                                    </button>
+                                    {showDownloadMenu && (
+                                        <div className="download-dropdown">
+                                            <button onClick={() => handleDownload('png')}>PNG (이미지)</button>
+                                            <button onClick={() => handleDownload('svg')}>SVG (PPT 용)</button>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="download-menu-container" ref={paletteMenuRef}>
+                                    <button
+                                        className={`view-option-btn ${isPaletteMenuOpen ? 'active' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }}
+                                        title="색상 테마 설정"
+                                    >
+                                        {(() => {
+                                            const theme = CHART_THEME_OPTIONS.find(opt => opt.id === localPaletteId) || CHART_THEME_OPTIONS[0];
+                                            const colors = theme.preview;
+                                            return (
+                                                <div style={{
+                                                    width: '18px',
+                                                    height: '18px',
+                                                    borderRadius: '50%',
+                                                    background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`,
+                                                    border: '1px solid #e2e8f0'
+                                                }}></div>
+                                            );
+                                        })()}
+                                    </button>
+                                    {isPaletteMenuOpen && (
+                                        <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100 }}>
+                                            {CHART_THEME_OPTIONS.map((option) => (
+                                                <button
+                                                    key={option.id}
+                                                    onClick={() => {
+                                                        setLocalPaletteId(option.id);
+                                                        setPaletteId(option.id);
+                                                        setIsPaletteMenuOpen(false);
+                                                    }}
+                                                    className={localPaletteId === option.id ? 'active' : ''}
+                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                                >
+                                                    <div style={{ display: 'flex', gap: '2px' }}>
+                                                        {option.preview.map((color, idx) => (
+                                                            <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '1px', background: color }}></div>
+                                                        ))}
+                                                    </div>
+                                                    {option.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="toolbar-divider"></div>
+                                <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'line' ? 'active' : ''}`} onClick={() => setLocalChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'pie' ? 'active' : ''}`} onClick={() => setLocalChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'donut' ? 'active' : ''}`} onClick={() => setLocalChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setLocalChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setLocalChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'area' ? 'active' : ''}`} onClick={() => setLocalChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setLocalChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setLocalChartMode('wordCloud')} title="워드클라우드"><Cloud size={18} /></button>
                             </div>
-                            <div className="download-menu-container" ref={paletteMenuRef} style={{ marginRight: '8px' }}>
-                                <button
-                                    className={`view-option-btn ${isPaletteMenuOpen ? 'active' : ''}`}
-                                    onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }}
-                                    title="색상 테마 설정"
-                                >
-                                    {(() => {
-                                        const theme = CHART_THEME_OPTIONS.find(opt => opt.id === localPaletteId) || CHART_THEME_OPTIONS[0];
-                                        const colors = theme.preview;
-                                        return (
-                                            <div style={{
-                                                width: '18px',
-                                                height: '18px',
-                                                borderRadius: '50%',
-                                                background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`,
-                                                border: '1px solid #e2e8f0'
-                                            }}></div>
-                                        );
-                                    })()}
-                                </button>
-                                {isPaletteMenuOpen && (
-                                    <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100 }}>
-                                        {CHART_THEME_OPTIONS.map((option) => (
-                                            <button
-                                                key={option.id}
-                                                onClick={() => {
-                                                    setLocalPaletteId(option.id);
-                                                    setPaletteId(option.id);
-                                                    setIsPaletteMenuOpen(false);
-                                                }}
-                                                className={localPaletteId === option.id ? 'active' : ''}
-                                                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                                            >
-                                                <div style={{ display: 'flex', gap: '2px' }}>
-                                                    {option.preview.map((color, idx) => (
-                                                        <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '1px', background: color }}></div>
-                                                    ))}
-                                                </div>
-                                                {option.name}
-                                            </button>
-                                        ))}
+                        )}
+
+                        {type === 'table' && (
+                            <div className="fullscreen-table-toolbar">
+                                <div className="display-mode-select">
+                                    <div className="custom-filter-wrapper" ref={displayMenuRef}>
+                                        <div className="custom-filter-trigger modal-trigger" onClick={() => setIsDisplayMenuOpen(!isDisplayMenuOpen)}>
+                                            <span className="trigger-text">
+                                                {localDisplayMode === 'all' ? '전체' : localDisplayMode === 'value' ? '사례수' : '퍼센트'}
+                                            </span>
+                                            <ChevronDown size={14} className="trigger-icon" />
+                                        </div>
+                                        {isDisplayMenuOpen && (
+                                            <div className="custom-filter-menu modal-menu">
+                                                {['all', 'value', 'percent'].map(m => (
+                                                    <div
+                                                        key={m}
+                                                        className={`custom-filter-item ${localDisplayMode === m ? 'selected' : ''}`}
+                                                        onClick={() => {
+                                                            if (setDisplayMode) setDisplayMode(m);
+                                                            setLocalDisplayMode(m);
+                                                            setIsDisplayMenuOpen(false);
+                                                        }}
+                                                    >
+                                                        <span className="filter-text">{m === 'all' ? '전체' : m === 'value' ? '사례수' : '퍼센트'}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
                             </div>
-                            {/* <button className="view-option-btn" onClick={onClose} title="차트 닫기"><X size={18} /></button> */}
-                            <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 4px' }}></div>
-                            <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'line' ? 'active' : ''}`} onClick={() => setLocalChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'pie' ? 'active' : ''}`} onClick={() => setLocalChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'donut' ? 'active' : ''}`} onClick={() => setLocalChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setLocalChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
-                            {/* <button className={`view-option-btn ${localChartMode === 'funnel' ? 'active' : ''}`} onClick={() => setLocalChartMode('funnel')} title="깔때기 차트"><Filter size={18} /></button> */}
-                            <button className={`view-option-btn ${localChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setLocalChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'area' ? 'active' : ''}`} onClick={() => setLocalChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
-                            {/* <button className={`view-option-btn ${localChartMode === 'map' ? 'active' : ''}`} onClick={() => setLocalChartMode('map')} title="지도"><MapIcon size={18} /></button> */}
-                            <button className={`view-option-btn ${localChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setLocalChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
-                            <button className={`view-option-btn ${localChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setLocalChartMode('wordCloud')} title="워드클라우드"><Cloud size={18} /></button>
-                        </div>
-                    )}
-                    <button className="fullscreen-modal-close-btn" onClick={onClose}>
-                        <X size={18} />
-                    </button>
+                        )}
+
+                        <button className="fullscreen-modal-close-btn" onClick={onClose} title="닫기">
+                            <X size={18} />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Modal Content */}
@@ -406,7 +436,7 @@ const FullscreenModal = ({
                                                             style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'right' }}
                                                         >
                                                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%' }}>
-                                                                {displayMode === 'all' ? (
+                                                                {localDisplayMode === 'all' ? (
                                                                     <div className="fullscreen-cell-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                                                                         <div className="cell-value">{val.count}</div>
                                                                         <div className="cell-pct">{val.percent}%</div>
@@ -414,7 +444,7 @@ const FullscreenModal = ({
                                                                 ) : (
                                                                     <div className="fullscreen-cell-content">
                                                                         <div className="cell-value">
-                                                                            {displayMode === 'value' ? val.count : `${val.percent}%`}
+                                                                            {localDisplayMode === 'value' ? val.count : `${val.percent}%`}
                                                                         </div>
                                                                     </div>
                                                                 )}

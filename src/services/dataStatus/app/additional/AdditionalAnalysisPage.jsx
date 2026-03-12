@@ -1872,6 +1872,7 @@ const AdditionalAnalysisPage = () => {
                 seriesNames={fullscreenModal.seriesNames}
                 chartMode={fullscreenModal.chartMode}
                 displayMode={fullscreenModal.displayMode}
+                setDisplayMode={fullscreenModal.setDisplayMode}
                 paletteId={globalPaletteId}
                 setPaletteId={setGlobalPaletteId}
             />

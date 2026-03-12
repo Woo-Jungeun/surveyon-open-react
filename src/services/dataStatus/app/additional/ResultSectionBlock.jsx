@@ -507,7 +507,18 @@ export const ResultSectionBlock = ({
                                                     <span>복사</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => setFullscreenModal({ open: true, type: 'table', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode, paletteId })}
+                                                    onClick={() => setFullscreenModal({
+                                                        open: true,
+                                                        type: 'table',
+                                                        dataItem: resultData,
+                                                        chartData,
+                                                        seriesNames,
+                                                        statsOptions,
+                                                        chartMode,
+                                                        displayMode,
+                                                        setDisplayMode, // Pass the setter
+                                                        paletteId
+                                                    })}
                                                     className="action-btn"
                                                 >
                                                     <Maximize size={16} />
@@ -701,7 +712,18 @@ export const ResultSectionBlock = ({
                                                     <span>복사</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => setFullscreenModal({ open: true, type: 'stats', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode, paletteId })}
+                                                    onClick={() => setFullscreenModal({
+                                                        open: true,
+                                                        type: 'stats',
+                                                        dataItem: resultData,
+                                                        chartData,
+                                                        seriesNames,
+                                                        statsOptions,
+                                                        chartMode,
+                                                        displayMode,
+                                                        setDisplayMode, // Pass the setter
+                                                        paletteId
+                                                    })}
                                                     className="action-btn"
                                                 >
                                                     <Maximize size={16} />
