@@ -87,7 +87,7 @@ const WeightPage = () => {
                 alertTimerRef.current = setTimeout(() => {
                     const finalPid = sessionStorage.getItem("pageId");
                     const userIdCurrent = auth?.user?.userId;
-                    if (!finalPid && userIdCurrent) {
+                    if (sessionStorage.getItem("merge_pn") && !finalPid && userIdCurrent) {
                         modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                     }
                 }, 1000);

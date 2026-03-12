@@ -144,7 +144,7 @@ const RecodingPage = () => {
                 if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
                 alertTimerRef.current = setTimeout(() => {
                     const finalPid = sessionStorage.getItem("pageId");
-                    if (!finalPid && auth?.user?.userId) {
+                    if (sessionStorage.getItem("merge_pn") && !finalPid && auth?.user?.userId) {
                         modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                     }
                 }, 1000);
@@ -329,7 +329,7 @@ const RecodingPage = () => {
         const pageId = sessionStorage.getItem("pageId");
 
         if (!pageId) {
-            modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+            if (sessionStorage.getItem("merge_pn")) handleOpenPageList();
             return;
         }
 
@@ -494,7 +494,7 @@ const RecodingPage = () => {
         const pageId = sessionStorage.getItem("pageId");
 
         if (!pageId) {
-            modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+            if (sessionStorage.getItem("merge_pn")) handleOpenPageList();
             return;
         }
 
@@ -590,7 +590,7 @@ const RecodingPage = () => {
                         const pageId = sessionStorage.getItem("pageId");
 
                         if (!pageId) {
-                            modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+                            if (sessionStorage.getItem("merge_pn")) handleOpenPageList();
                             return;
                         }
 

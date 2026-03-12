@@ -217,7 +217,7 @@ const AdditionalAnalysisPage = () => {
                 if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
                 alertTimerRef.current = setTimeout(() => {
                     const finalPid = sessionStorage.getItem("pageId");
-                    if (!finalPid) {
+                    if (sessionStorage.getItem("merge_pn") && !finalPid) {
                         modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                     }
                 }, 1000);

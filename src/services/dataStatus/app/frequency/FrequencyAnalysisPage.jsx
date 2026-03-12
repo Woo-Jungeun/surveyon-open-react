@@ -629,7 +629,7 @@ const FrequencyAnalysisPage = () => {
                 alertTimerRef.current = setTimeout(() => {
                     const finalPid = sessionStorage.getItem("pageId");
                     setCurrentPageId(finalPid);
-                    if (!finalPid) {
+                    if (sessionStorage.getItem("merge_pn") && !finalPid) {
                         setQuestions([]); // Clear stale questions
                         setActiveId(null);
                         modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
