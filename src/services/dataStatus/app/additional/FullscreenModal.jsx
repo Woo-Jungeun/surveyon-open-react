@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { saveAs } from '@progress/kendo-file-saver';
-import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud } from 'lucide-react';
+import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud, ChevronDown, ChevronUp } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
@@ -400,19 +400,25 @@ const FullscreenModal = ({
                                                         {row.label}
                                                     </td>
                                                     {row.values.map((val, colIdx) => (
-                                                        <td key={colIdx} className="fullscreen-table-cell" style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'right' }}>
-                                                            {displayMode === 'all' ? (
-                                                                <div className="fullscreen-cell-content">
-                                                                    <div className="cell-value">{val.count}</div>
-                                                                    <div className="cell-pct">{val.percent}%</div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="fullscreen-cell-content">
-                                                                    <div className="cell-value">
-                                                                        {displayMode === 'value' ? val.count : `${val.percent}%`}
+                                                        <td
+                                                            key={colIdx}
+                                                            className={`fullscreen-table-cell ${val.sig_vs_total === 'up' ? 'sig-highlight-up' : val.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
+                                                            style={{ borderRight: '1px solid #e2e8f0', borderBottom: '1px solid #e2e8f0', textAlign: 'right' }}
+                                                        >
+                                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%' }}>
+                                                                {displayMode === 'all' ? (
+                                                                    <div className="fullscreen-cell-content" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                                                        <div className="cell-value">{val.count}</div>
+                                                                        <div className="cell-pct">{val.percent}%</div>
                                                                     </div>
-                                                                </div>
-                                                            )}
+                                                                ) : (
+                                                                    <div className="fullscreen-cell-content">
+                                                                        <div className="cell-value">
+                                                                            {displayMode === 'value' ? val.count : `${val.percent}%`}
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                     ))}
                                                 </tr>

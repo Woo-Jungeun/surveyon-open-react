@@ -286,3 +286,26 @@
     color: #2563eb;
     font-weight: 700;
 }
+
+/* Significance Highlighting */
+.sig-highlight-up {
+    background-color: #fef2f2 !important;
+    color: #b91c1c !important;
+}
+
+.sig-highlight-up .cell-pct,
+.sig-highlight-up .cell-value {
+    color: inherit !important;
+    font-weight: 700 !important;
+}
+
+.sig-highlight-down {
+    background-color: #eff6ff !important;
+    color: #1d4ed8 !important;
+}
+
+.sig-highlight-down .cell-pct,
+.sig-highlight-down .cell-value {
+    color: inherit !important;
+    font-weight: 700 !important;
+}

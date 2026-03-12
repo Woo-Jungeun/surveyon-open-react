@@ -20,6 +20,33 @@
     background: #fef2f2;
 }
 
+/* Significance Highlighting */
+.sig-highlight-up {
+    background-color: #fef2f2 !important;
+    /* Crimson 50 */
+    color: #b91c1c !important;
+    /* Crimson 700 */
+}
+
+.sig-highlight-up .cell-pct,
+.sig-highlight-up .cell-value {
+    color: inherit !important;
+    font-weight: 700;
+}
+
+.sig-highlight-down {
+    background-color: #eff6ff !important;
+    /* Blue 50 */
+    color: #1d4ed8 !important;
+    /* Blue 700 */
+}
+
+.sig-highlight-down .cell-pct,
+.sig-highlight-down .cell-value {
+    color: inherit !important;
+    font-weight: 700;
+}
+
 .cross-tab-page {
     display: flex;
     flex-direction: column;

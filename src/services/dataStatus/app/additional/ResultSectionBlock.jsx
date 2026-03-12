@@ -660,15 +660,23 @@ export const ResultSectionBlock = ({
                                                             )}
                                                             <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px' }}>{row.label}</td>
                                                             {row.values.map((v, j) => (
-                                                                <td key={j} style={{ textAlign: 'right' }}>
-                                                                    {displayMode === 'all' ? (
-                                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                                                            <span className="cell-value">{v.count}</span>
-                                                                            <span className="cell-pct">{v.percent}%</span>
-                                                                        </div>
-                                                                    ) : (
-                                                                        displayMode === 'value' ? v.count : `${v.percent}%`
-                                                                    )}
+                                                                <td
+                                                                    key={j}
+                                                                    className={`${v.sig_vs_total === 'up' ? 'sig-highlight-up' : v.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
+                                                                    style={{ textAlign: 'right', position: 'relative' }}
+                                                                >
+                                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%' }}>
+                                                                        {displayMode === 'all' ? (
+                                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                                                                <span className="cell-value">{v.count}</span>
+                                                                                <span className="cell-pct">{v.percent}%</span>
+                                                                            </div>
+                                                                        ) : (
+                                                                            <span className="cell-value-single">
+                                                                                {displayMode === 'value' ? v.count : `${v.percent}%`}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
                                                                 </td>
                                                             ))}
                                                         </tr>
