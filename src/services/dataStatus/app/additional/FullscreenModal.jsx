@@ -271,7 +271,7 @@ const FullscreenModal = ({
                                     </div>
                                 )}
                             </div>
-                            <button className="view-option-btn" onClick={onClose} title="차트 닫기"><X size={18} /></button>
+                            {/* <button className="view-option-btn" onClick={onClose} title="차트 닫기"><X size={18} /></button> */}
                             <div style={{ width: '1px', height: '18px', background: '#e2e8f0', margin: '0 4px' }}></div>
                             <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
                             <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
