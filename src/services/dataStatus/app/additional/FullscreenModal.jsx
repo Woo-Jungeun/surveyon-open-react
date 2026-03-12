@@ -3,6 +3,7 @@ import { saveAs } from '@progress/kendo-file-saver';
 import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
+import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
 
 const FullscreenModal = ({
     isOpen,
@@ -14,12 +15,16 @@ const FullscreenModal = ({
     seriesNames,
     chartMode,
     suffix,
-    displayMode
+    displayMode,
+    paletteId
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
+    const [localPaletteId, setLocalPaletteId] = useState(paletteId || 'default');
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
+    const paletteMenuRef = useRef(null);
 
     // [Standard Logic] Recompute chart variables based on resultData and localChartMode
     const { localComputedChartData, localComputedSeriesNames, localComputedSuffix } = useMemo(() => {
@@ -59,14 +64,18 @@ const FullscreenModal = ({
     useEffect(() => {
         if (isOpen) {
             setLocalChartMode(chartMode);
+            setLocalPaletteId(paletteId || 'default');
         }
-    }, [isOpen, chartMode]);
+    }, [isOpen, chartMode, paletteId]);
 
     // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
                 setShowDownloadMenu(false);
+            }
+            if (paletteMenuRef.current && !paletteMenuRef.current.contains(event.target)) {
+                setIsPaletteMenuOpen(false);
             }
         };
 
@@ -214,6 +223,34 @@ const FullscreenModal = ({
                                     <div className="download-dropdown">
                                         <button onClick={() => handleDownload('png')}>PNG (이미지)</button>
                                         <button onClick={() => handleDownload('svg')}>SVG (PPT 용)</button>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="download-menu-container" ref={paletteMenuRef} style={{ marginRight: '8px' }}>
+                                <button
+                                    className={`view-option-btn ${isPaletteMenuOpen ? 'active' : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }}
+                                    title="색상 테마 설정"
+                                >
+                                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'conic-gradient(#60a5fa, #fb923c, #34d399, #a78bfa, #fb7185, #22d3ee)' }}></div>
+                                </button>
+                                {isPaletteMenuOpen && (
+                                    <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100 }}>
+                                        {CHART_THEME_OPTIONS.map((option) => (
+                                            <button
+                                                key={option.id}
+                                                onClick={() => { setLocalPaletteId(option.id); setIsPaletteMenuOpen(false); }}
+                                                className={localPaletteId === option.id ? 'active' : ''}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                            >
+                                                <div style={{ display: 'flex', gap: '2px' }}>
+                                                    {option.preview.map((color, idx) => (
+                                                        <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '1px', background: color }}></div>
+                                                    ))}
+                                                </div>
+                                                {option.name}
+                                            </button>
+                                        ))}
                                     </div>
                                 )}
                             </div>
@@ -493,13 +530,14 @@ const FullscreenModal = ({
                                     allowedTypes={getChartAllowedTypes()}
                                     initialType={getChartInitialType()}
                                     suffix={localComputedSuffix}
+                                    paletteId={localPaletteId}
                                 />
                             </div>
                         </div>
                     )}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

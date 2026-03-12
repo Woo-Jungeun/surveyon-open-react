@@ -4,6 +4,7 @@ import { Copy, Maximize, Settings, Download, BarChart2, Layers, LineChart, PieCh
 import KendoChart from '../../components/KendoChart';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
+import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
 
 const computeLocalVars = (dataItem, chartMode) => {
     if (!dataItem) return {};
@@ -62,6 +63,7 @@ export const ResultSectionBlock = ({
 }) => {
     const [chartMode, setChartMode] = useState(null);
     const activeChartMode = chartMode || 'column';
+    const [paletteId, setPaletteId] = useState('default');
 
     const [isStatsOptionsOpen, setIsStatsOptionsOpen] = useState(false);
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
@@ -71,6 +73,8 @@ export const ResultSectionBlock = ({
     const [isMoreStatsOpen, setIsMoreStatsOpen] = useState(false);
     const [aiResult, setAiResult] = useState(null);
     const [isAiLoading, setIsAiLoading] = useState(false);
+    const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
+    const paletteMenuRef = useRef(null);
 
     const { chartData, seriesNames, hasColLabel2, hasVarLabel, hasRowLabel2, suffix } = useMemo(() =>
         computeLocalVars(resultData, activeChartMode),
@@ -81,6 +85,16 @@ export const ResultSectionBlock = ({
     const displayMenuRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const moreStatsRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (paletteMenuRef.current && !paletteMenuRef.current.contains(e.target)) {
+                setIsPaletteMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const [layoutOptions, setLayoutOptions] = useState([
         { id: 'table', label: '표', checked: true },
@@ -492,7 +506,7 @@ export const ResultSectionBlock = ({
                                                     <span>복사</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => setFullscreenModal({ open: true, type: 'table', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode })}
+                                                    onClick={() => setFullscreenModal({ open: true, type: 'table', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode, paletteId })}
                                                     className="action-btn"
                                                 >
                                                     <Maximize size={16} />
@@ -678,7 +692,7 @@ export const ResultSectionBlock = ({
                                                     <span>복사</span>
                                                 </button>
                                                 <button
-                                                    onClick={() => setFullscreenModal({ open: true, type: 'stats', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode })}
+                                                    onClick={() => setFullscreenModal({ open: true, type: 'stats', dataItem: resultData, chartData, seriesNames, statsOptions, chartMode, displayMode, paletteId })}
                                                     className="action-btn"
                                                 >
                                                     <Maximize size={16} />
@@ -827,6 +841,34 @@ export const ResultSectionBlock = ({
                                             </div>
                                             <div className="section-actions">
                                                 <div className="chart-type-toolbar">
+                                                    <div className="download-menu-container" ref={paletteMenuRef} style={{ marginRight: '4px' }}>
+                                                        <button
+                                                            className={`view-option-btn ${isPaletteMenuOpen ? 'active' : ''}`}
+                                                            onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }}
+                                                            title="색상 테마 설정"
+                                                        >
+                                                            <div style={{ width: '16px', height: '16px', borderRadius: '50%', background: 'conic-gradient(#60a5fa, #fb923c, #34d399, #a78bfa, #fb7185, #22d3ee)' }}></div>
+                                                        </button>
+                                                        {isPaletteMenuOpen && (
+                                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px' }}>
+                                                                {CHART_THEME_OPTIONS.map((option) => (
+                                                                    <button
+                                                                        key={option.id}
+                                                                        onClick={() => { setPaletteId(option.id); setIsPaletteMenuOpen(false); }}
+                                                                        className={paletteId === option.id ? 'active' : ''}
+                                                                        style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                                                    >
+                                                                        <div style={{ display: 'flex', gap: '2px' }}>
+                                                                            {option.preview.map((color, idx) => (
+                                                                                <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '1px', background: color }}></div>
+                                                                            ))}
+                                                                        </div>
+                                                                        {option.name}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <div className="download-menu-container" ref={downloadMenuRef} style={{ marginRight: '4px' }}>
                                                         <button className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }} title="다운로드">
                                                             <Download size={16} />
@@ -863,7 +905,8 @@ export const ResultSectionBlock = ({
                                                         statsOptions,
                                                         chartMode: activeChartMode,
                                                         suffix,
-                                                        displayMode
+                                                        displayMode,
+                                                        paletteId
                                                     })}
                                                     className="action-btn"
                                                 >
@@ -874,11 +917,12 @@ export const ResultSectionBlock = ({
                                         </div>
                                         <div ref={chartContainerRef} className="cross-tab-chart-container">
                                             <KendoChart
-                                                key={`${activeChartMode}`}
+                                                key={`${activeChartMode}-${paletteId}`}
                                                 data={chartData}
                                                 seriesNames={seriesNames}
                                                 initialType={activeChartMode}
                                                 suffix={suffix}
+                                                paletteId={paletteId}
                                                 allowedTypes={(() => {
                                                     if (activeChartMode === 'column' || activeChartMode === 'bar') return ['column', 'bar'];
                                                     if (activeChartMode === 'stackedColumn' || activeChartMode === 'stacked100Column') return ['stackedColumn', 'stacked100Column'];

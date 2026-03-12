@@ -10,6 +10,7 @@ import KendoChart from '../../components/KendoChart';
 import AdvancedFilterPopup from './AdvancedFilterPopup';
 import './FrequencyAnalysisPage.css';
 import '@progress/kendo-theme-default/dist/all.css';
+import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
 import { useSelector } from 'react-redux';
 import { FrequencyAnalysisPageApi } from './FrequencyAnalysisPageApi';
 import OverviewVariablePopup from './OverviewVariablePopup';
@@ -24,9 +25,12 @@ const AggregationCard = memo(({ q }) => {
     const [displayMode, setDisplayMode] = useState('all');
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
+    const [paletteId, setPaletteId] = useState('default');
+    const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const displayMenuRef = useRef(null);
+    const paletteMenuRef = useRef(null);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -36,6 +40,9 @@ const AggregationCard = memo(({ q }) => {
             }
             if (displayMenuRef.current && !displayMenuRef.current.contains(event.target)) {
                 setIsDisplayMenuOpen(false);
+            }
+            if (paletteMenuRef.current && !paletteMenuRef.current.contains(event.target)) {
+                setIsPaletteMenuOpen(false);
             }
         };
 
@@ -320,6 +327,37 @@ const AggregationCard = memo(({ q }) => {
                             </div>
                         )}
 
+                        {showChart && (
+                            <div className="download-menu-container" ref={paletteMenuRef} style={{ marginRight: '0' }}>
+                                <button
+                                    className={`view-option-btn ${isPaletteMenuOpen ? 'active' : ''}`}
+                                    onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }}
+                                    title="색상 테마 설정"
+                                >
+                                    <div style={{ width: '18px', height: '18px', borderRadius: '50%', background: 'conic-gradient(#60a5fa, #fb923c, #34d399, #a78bfa, #fb7185, #22d3ee)' }}></div>
+                                </button>
+                                {isPaletteMenuOpen && (
+                                    <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100 }}>
+                                        {CHART_THEME_OPTIONS.map((option) => (
+                                            <button
+                                                key={option.id}
+                                                onClick={() => { setPaletteId(option.id); setIsPaletteMenuOpen(false); }}
+                                                className={paletteId === option.id ? 'active' : ''}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                            >
+                                                <div style={{ display: 'flex', gap: '2px' }}>
+                                                    {option.preview.map((color, idx) => (
+                                                        <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '1px', background: color }}></div>
+                                                    ))}
+                                                </div>
+                                                {option.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         <button
                             className={`view-option-btn close-chart-btn ${!showChart ? 'active' : ''}`}
                             onClick={() => setShowChart(false)}
@@ -428,12 +466,13 @@ const AggregationCard = memo(({ q }) => {
 
                             return (
                                 <KendoChart
-                                    key={`${q.id}-${chartMode}`}
+                                    key={`${q.id}-${chartMode}-${paletteId}`}
                                     data={q.data}
                                     seriesNames={chartSeries}
                                     initialType={chartMode}
                                     labelLimit={10}
                                     suffix={usePercentFields ? "%" : ""}
+                                    paletteId={paletteId}
                                     allowedTypes={allowedTypes}
                                 />
                             );

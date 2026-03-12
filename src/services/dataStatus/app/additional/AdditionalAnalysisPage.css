@@ -1583,6 +1583,12 @@
     color: #2563eb;
 }
 
+.download-dropdown button.active {
+    background: #eff6ff;
+    color: #2563eb;
+    font-weight: 700;
+}
+
 .download-dropdown button:active {
     background: #dbeafe;
 }

@@ -30,12 +30,13 @@ const tooltipGlobalStyle = `
     }
 `;
 
-const CHART_COLORS = [
-    "#60a5fa", "#fb923c", "#34d399", "#a78bfa", "#fb7185", "#22d3ee",
-    "#facc15", "#f472b6", "#818cf8", "#a3e635", "#2dd4bf", "#f87171"
-];
+import { CHART_PALETTES } from '../constants/chartThemes';
 
-const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0 }) => {
+// Legacy support for single constant
+const CHART_COLORS = CHART_PALETTES.default;
+
+const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default' }) => {
+    const activePalette = CHART_PALETTES[paletteId] || CHART_PALETTES.default;
     const [chartType, setChartType] = useState(initialType || 'column');
     const [showLegend, setShowLegend] = useState(false);
     const containerRef = useRef(null);
@@ -126,7 +127,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                 .map((row, index) => ({
                     name: row.name,
                     pieValue: Number(row[targetField] || 0),
-                    color: CHART_COLORS[index % CHART_COLORS.length]
+                    color: activePalette[index % activePalette.length]
                 }));
             return (
                 <ChartSeriesItem
@@ -170,7 +171,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                         content: (e) => `${e.value}${suffix}`,
                         color: '#fff'
                     }}
-                    color="#5c9aff"
+                    color={activePalette[0]}
                 />
             );
         }
@@ -180,7 +181,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             const funnelData = filteredData.map((item, index) => ({
                 name: item.name,
                 funnelValue: Number(item['total'] || 0),
-                color: CHART_COLORS[index % CHART_COLORS.length]
+                color: activePalette[index % activePalette.length]
             }));
 
             return (
@@ -201,7 +202,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         const targetSeries = seriesNames || ["완료", "선정탈락", "쿼터오버"];
 
         // Sophisticated, modern palette matching the theme (Blue/Slate/Teal based with accents)
-        const colors = CHART_COLORS;
+        const colors = activePalette;
 
         return targetSeries.map((s, index) => {
             const field = typeof s === 'string' ? s : s.field;
@@ -306,7 +307,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             spiral="archimedean"
                             rotate={() => 0} // Keep labels horizontal for better readability
                             padding={4}
-                            fill={(d, i) => CHART_COLORS[i % CHART_COLORS.length]}
+                            fill={(d, i) => activePalette[i % activePalette.length]}
                         />
                     )}
                 </div>

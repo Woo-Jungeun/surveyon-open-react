@@ -1736,6 +1736,7 @@ const AdditionalAnalysisPage = () => {
                 chartData={fullscreenModal.chartData}
                 seriesNames={fullscreenModal.seriesNames}
                 chartMode={fullscreenModal.chartMode}
+                paletteId={fullscreenModal.paletteId}
             />
 
             <CreateTablePopup
