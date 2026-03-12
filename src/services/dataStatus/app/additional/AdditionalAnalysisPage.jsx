@@ -17,6 +17,7 @@ import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
 import LogicEditPopup from '../../../dataManagement/app/mapManagement/LogicEditPopup';
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
 import { ResultSectionBlock } from './ResultSectionBlock';
@@ -102,9 +103,10 @@ const processResults = (evalResultData) => {
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
-    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = AdditionalAnalysisPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, evaluateTables } = AdditionalAnalysisPageApi();
     const { getRecodedList } = RecodingPageApi();
     const modal = React.useContext(modalContext);
+    const loadingSpinner = React.useContext(loadingSpinnerContext);
     const PAGE_ID = sessionStorage.getItem("pageId");
 
     // Data State
@@ -202,6 +204,8 @@ const AdditionalAnalysisPage = () => {
                 modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                 return;
             }
+
+            loadingSpinner.show();
 
             let loadedVariables = [];
 
@@ -447,6 +451,8 @@ const AdditionalAnalysisPage = () => {
                 }
             } catch (error) {
                 console.error("Failed to fetch cross tab list:", error);
+            } finally {
+                loadingSpinner.hide();
             }
         };
 
@@ -582,6 +588,7 @@ const AdditionalAnalysisPage = () => {
         setSelectedTableId(item.id);
         setTableName(item.name || "");
         setIsConfigOpen(false);
+        loadingSpinner.show();
 
 
         // Load table configuration
@@ -749,6 +756,8 @@ const AdditionalAnalysisPage = () => {
             } catch (error) {
                 console.error("Error fetching table data:", error);
                 setToast({ show: true, message: "테이블 데이터 조회 실패" });
+            } finally {
+                loadingSpinner.hide();
             }
         }
     };
@@ -1060,6 +1069,8 @@ const AdditionalAnalysisPage = () => {
                 }
             };
 
+            loadingSpinner.show();
+
             const saveResult = await saveCrossTable.mutateAsync(savePayload);
 
             if (saveResult?.success === "777") {
@@ -1173,6 +1184,8 @@ const AdditionalAnalysisPage = () => {
         } catch (error) {
             console.error("Save & Run error:", error);
             modal.showAlert('오류', '오류가 발생했습니다.');
+        } finally {
+            loadingSpinner.hide();
         }
     };
 
@@ -1290,6 +1303,7 @@ const AdditionalAnalysisPage = () => {
         }
 
         try {
+            loadingSpinner.show();
             const result = tableMode === 'separated'
                 ? await evaluateTables.mutateAsync(payload)
                 : await evaluateTable.mutateAsync(payload);
@@ -1305,6 +1319,8 @@ const AdditionalAnalysisPage = () => {
         } catch (error) {
             console.error("Evaluate error:", error);
             modal.showAlert('오류', '분석 실행 중 오류가 발생했습니다.');
+        } finally {
+            loadingSpinner.hide();
         }
     };
 
