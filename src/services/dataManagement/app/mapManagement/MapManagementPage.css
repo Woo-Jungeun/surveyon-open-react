@@ -717,7 +717,10 @@ input:checked+.slider:before {
 }
 
 /* === Custom Checkbox for Data Management (dm-checkbox) === */
-.dm-checkbox-label {
+/* 데이터 관리 전용 커스텀 체크박스 스타일 (테마 스코핑 대응) */
+.variable-page .dm-checkbox-label,
+[data-theme="data-management"] .dm-checkbox-label,
+[data-theme="data-dashboard"] .dm-checkbox-label {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -725,14 +728,18 @@ input:checked+.slider:before {
     line-height: 1;
 }
 
-.dm-checkbox-label.dm-checkbox-disabled {
+.variable-page .dm-checkbox-label.dm-checkbox-disabled,
+[data-theme="data-management"] .dm-checkbox-label.dm-checkbox-disabled,
+[data-theme="data-dashboard"] .dm-checkbox-label.dm-checkbox-disabled {
     cursor: default;
     opacity: 0.35;
     pointer-events: none;
 }
 
 /* 실제 input은 완전히 숨김 */
-.dm-checkbox-input {
+.variable-page .dm-checkbox-input,
+[data-theme="data-management"] .dm-checkbox-input,
+[data-theme="data-dashboard"] .dm-checkbox-input {
     position: absolute;
     opacity: 0;
     width: 0;
@@ -743,7 +750,9 @@ input:checked+.slider:before {
 }
 
 /* 커스텀 박스 */
-.dm-checkbox-box {
+.variable-page .dm-checkbox-box,
+[data-theme="data-management"] .dm-checkbox-box,
+[data-theme="data-dashboard"] .dm-checkbox-box {
     display: inline-block;
     width: 20px;
     height: 20px;
@@ -756,14 +765,18 @@ input:checked+.slider:before {
 }
 
 /* 체크됐을 때 박스 - 배경 없이 테두리만 색상 */
-.dm-checkbox-input:checked+.dm-checkbox-box {
+.variable-page .dm-checkbox-input:checked+.dm-checkbox-box,
+[data-theme="data-management"] .dm-checkbox-input:checked+.dm-checkbox-box,
+[data-theme="data-dashboard"] .dm-checkbox-input:checked+.dm-checkbox-box {
     background: #fff;
     border-color: var(--dm-primary);
     border-width: 1px;
 }
 
 /* 체크 아이콘 - 컬러 체크마크 */
-.dm-checkbox-input:checked+.dm-checkbox-box::after {
+.variable-page .dm-checkbox-input:checked+.dm-checkbox-box::after,
+[data-theme="data-management"] .dm-checkbox-input:checked+.dm-checkbox-box::after,
+[data-theme="data-dashboard"] .dm-checkbox-input:checked+.dm-checkbox-box::after {
     content: "";
     position: absolute;
     left: 50%;
@@ -777,12 +790,16 @@ input:checked+.slider:before {
 }
 
 /* 호버 효과 */
-.dm-checkbox-label:hover .dm-checkbox-box {
+.variable-page .dm-checkbox-label:hover .dm-checkbox-box,
+[data-theme="data-management"] .dm-checkbox-label:hover .dm-checkbox-box,
+[data-theme="data-dashboard"] .dm-checkbox-label:hover .dm-checkbox-box {
     border-color: var(--dm-primary);
 }
 
 /* 포커스 효과 */
-.dm-checkbox-input:focus+.dm-checkbox-box {
+.variable-page .dm-checkbox-input:focus+.dm-checkbox-box,
+[data-theme="data-management"] .dm-checkbox-input:focus+.dm-checkbox-box,
+[data-theme="data-dashboard"] .dm-checkbox-input:focus+.dm-checkbox-box {
     box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.25);
     border-color: var(--dm-primary);
 }

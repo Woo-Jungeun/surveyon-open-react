@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useEffect, useCallback, useMemo, useState } from 'react';
+import React, { useContext, useRef, useEffect, useCallback, useMemo, memo } from 'react';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
@@ -113,7 +113,7 @@ const InputCell = (props) => {
 };
 
 /** 보기(카테고리) 셀 - 편집 중이면 '변경' 버튼 표시 */
-const CategoryCell = (props) => {
+const CategoryCell = memo((props) => {
     const { SetEditingCategoryPopupOpen, editingRowId } = useContext(MapManagementContext);
     const isEditing = props.dataItem.id === editingRowId || props.dataItem.isNew;
 
@@ -141,7 +141,7 @@ const CategoryCell = (props) => {
             </div>
         </td>
     );
-};
+});
 
 const LogicCell = (props) => {
     const { setEditingLogicPopupOpen, editingRowId } = useContext(MapManagementContext);
@@ -177,7 +177,7 @@ const LogicCell = (props) => {
 };
 
 /** 변수 유형 셀 - 편집 중이면 드롭다운, 아니면 읽기 전용 */
-const TypeCell = (props) => {
+const TypeCell = memo((props) => {
     const { setVariables, editingRowId } = useContext(MapManagementContext);
     const { dataItem, style, className } = props;
 
@@ -219,10 +219,10 @@ const TypeCell = (props) => {
             />
         </td>
     );
-};
+});
 
 /** 체크박스 셀 - 상세 설정 ON이거나 편집 행이면 활성화 */
-const CheckboxCell = (props) => {
+const CheckboxCell = memo((props) => {
     const { setVariables, editingRowId, isDetailed } = useContext(MapManagementContext);
     const { dataItem, field, style, className } = props;
 
@@ -249,7 +249,7 @@ const CheckboxCell = (props) => {
             </label>
         </td>
     );
-};
+});
 
 /** 멀티라인 컬럼 헤더 (줄바꿈 지원) */
 const multilineHeader = (props) => (
@@ -397,47 +397,19 @@ const MapConfigTab = ({
     pageChange,
     setEditingRowId
 }) => {
-    // ── 컬럼 구성 ──
-    const { variables: ctxVars, setVariables } = useContext(MapManagementContext);
+    const { variables: ctxVars, setVariables, editingRowId } = useContext(MapManagementContext);
     const allIds = useMemo(() => (ctxVars || []).map(v => v.id), [ctxVars]);
 
-    const mappingColumns = useMemo(() => isDetailed
-        ? [
-            { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
-            { field: 'add', title: '추가', width: '50px' },
-            { field: 'id', title: 'no', width: '50px' },
-            { field: 'sysName', title: '변수명', width: '120px' },
-            { field: 'logic', title: '로직체크', width: '100px' },
-            { field: 'label', title: '레이블', width: '180px' },
-            { field: 'decimal', title: '소수점\n자리수', width: '100px', headerCell: multilineHeader },
-            { field: 'spssName', title: 'SPSS\n변수명', width: '120px', headerCell: multilineHeader },
-            { field: 'type', title: '변수 유형', width: '120px' },
-            { field: 'memo', title: '메모', minWidth: 200 },
-            { field: 'multiValChange', title: '멀티값\n변경', width: '90px' },
-            { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '100px' },
-            { field: 'verificationVar', title: '검증\n문항', width: '80px' },
-            { field: 'excludeOutput', title: '출력\n제외', width: '80px' },
-            { field: 'delete', title: '삭제', width: '50px' }
-        ]
-        : [
-            { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
-            { field: 'add', title: '추가', width: '50px' },
-            { field: 'id', title: 'no', width: '50px' },
-            { field: 'sysName', title: '변수명', width: '85px' },
-            { field: 'startPos', title: '시작\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'valLen', title: '보기\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'valCnt', title: '보기\n갯수', width: '85px', headerCell: multilineHeader },
-            { field: 'totalLen', title: '총\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'etcOpen', title: '기타\n오픈정의', width: '100px', headerCell: multilineHeader },
-            { field: 'logic', title: '로직체크', width: '100px' },
-            { field: 'label', title: '레이블', minWidth: 50 },
-            { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
-            { field: 'type', title: '변수\n유형', width: '140px' },
-            { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
-            // { field: 'memo', title: '메모', minWidth: 50 },
-            { field: 'delete', title: '삭제', width: '50px' }
-        ], [isDetailed, variables]);
+    // ── Grid Props & 상태 최적화 ──
+    const bakedSelectedState = useMemo(() =>
+        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: !!v.isBaked }), {}),
+        [ctxVars]);
+
+    const handleBakedSelectedChange = useCallback((state) => {
+        setVariables(prev => prev.map(v => ({ ...v, isBaked: !!state[v.id] })));
+    }, [setVariables]);
+
+    const isItemSelectable = useCallback((item) => String(item?.type || '').toLowerCase() !== 'custom', []);
 
     const columnMenu = useCallback((props) => (
         <ExcelColumnMenu
@@ -448,14 +420,11 @@ const MapConfigTab = ({
         />
     ), [filter, setFilter, setSort]);
 
-    // ── Context Provider에서 사용하는 editingRowId/newRow 관리를 위한 rowRender ──
-    const { editingRowId } = useContext(MapManagementContext);
-    const rowRender = (trElement, props) => {
+    const rowRender = useCallback((trElement, props) => {
         const { dataItem } = props;
         const isEditing = dataItem.id === editingRowId;
         const isNew = dataItem.isNew;
 
-        // 선택 강조(k-selected) 클래스 제거
         const baseClass = (trElement.props.className || "")
             .replace(/\bk-selected\b/g, "")
             .replace(/\bk-state-selected\b/g, "");
@@ -469,11 +438,84 @@ const MapConfigTab = ({
             }
         };
         return React.cloneElement(trElement, { ...trProps }, trElement.props.children);
-    };
+    }, [editingRowId]);
+
+    const gridProps = useMemo(() => ({
+        data: variables,
+        dataItemKey: "id",
+        sort,
+        filter,
+        sortChange: ({ sort }) => setSort(sort),
+        filterChange: ({ filter }) => setFilter(filter),
+        height: "100%",
+        rowRender,
+        pageable: true,
+        total: variables.length,
+        skip,
+        pageSize,
+        onPageChange: pageChange,
+        onRowClick: (e) => setEditingRowId(e.dataItem.id),
+        reorderable: true,
+        multiSelect: true,
+        selectedField: "isBaked",
+        selectedState: bakedSelectedState,
+        setSelectedState: handleBakedSelectedChange,
+        linkRowClickToSelection: false,
+        selectionHeaderTitle: "H-SRT\n이관",
+        selectionColumnAfterField: "label",
+        selectionColumnWidth: "110px",
+        isItemSelectable,
+        useCustomCheckbox: true
+    }), [
+        variables, sort, filter, setSort, setFilter, rowRender,
+        skip, pageSize, pageChange, setEditingRowId,
+        bakedSelectedState, handleBakedSelectedChange, isItemSelectable
+    ]);
+
+    const mappingColumns = useMemo(() => {
+        const commonPrefix = [
+            { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
+            { field: 'add', title: '추가', width: '50px' },
+            { field: 'id', title: 'no', width: '50px' },
+            { field: 'sysName', title: '변수명', width: isDetailed ? '120px' : '85px' },
+        ];
+
+        if (isDetailed) {
+            return [
+                ...commonPrefix,
+                { field: 'logic', title: '로직체크', width: '100px' },
+                { field: 'label', title: '레이블', width: '180px' },
+                { field: 'decimal', title: '소수점\n자리수', width: '100px', headerCell: multilineHeader },
+                { field: 'spssName', title: 'SPSS\n변수명', width: '120px', headerCell: multilineHeader },
+                { field: 'type', title: '변수 유형', width: '120px' },
+                { field: 'memo', title: '메모', minWidth: 200 },
+                { field: 'multiValChange', title: '멀티값\n변경', width: '90px' },
+                { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '100px' },
+                { field: 'verificationVar', title: '검증\n문항', width: '80px' },
+                { field: 'excludeOutput', title: '출력\n제외', width: '80px' },
+                { field: 'delete', title: '삭제', width: '50px' }
+            ];
+        }
+
+        return [
+            ...commonPrefix,
+            { field: 'startPos', title: '시작\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'valLen', title: '보기\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'valCnt', title: '보기\n갯수', width: '85px', headerCell: multilineHeader },
+            { field: 'totalLen', title: '총\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'etcOpen', title: '기타\n오픈정의', width: '100px', headerCell: multilineHeader },
+            { field: 'logic', title: '로직체크', width: '100px' },
+            { field: 'label', title: '레이블', minWidth: 50 },
+            { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
+            { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
+            { field: 'type', title: '변수\n유형', width: '140px' },
+            { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
+            { field: 'delete', title: '삭제', width: '50px' }
+        ];
+    }, [isDetailed]);
 
     return (
         <>
-            {/* 서브헤더: 전체 건수 + 상세 설정 토글 */}
             <div className="map-subheader">
                 <div className="map-stats">
                     <span className="stat-item">전체 <strong>{variables.length}</strong> 건</span>
@@ -490,42 +532,10 @@ const MapConfigTab = ({
                 </div>
             </div>
 
-            {/* MAP 구성 그리드 */}
             <div className="variable-page-card">
                 <div className="cmn_grid singlehead">
-                    <KendoGrid
-                        parentProps={{
-                            data: variables,
-                            dataItemKey: "id",
-                            sort,
-                            filter,
-                            sortChange: ({ sort }) => setSort(sort),
-                            filterChange: ({ filter }) => setFilter(filter),
-                            height: "100%",
-                            rowRender,
-                            pageable: true,
-                            total: variables.length,
-                            skip,
-                            pageSize,
-                            onPageChange: pageChange,
-                            onRowClick: (e) => setEditingRowId(e.dataItem.id),
-                            reorderable: true, // 행 이동 작동 
-                            multiSelect: true,
-                            selectedField: "isBaked",
-                            selectedState: (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: !!v.isBaked }), {}),
-                            setSelectedState: (state) => {
-                                setVariables(prev => prev.map(v => {
-                                    return { ...v, isBaked: !!state[v.id] };
-                                }));
-                            },
-                            linkRowClickToSelection: false,
-                            selectionHeaderTitle: "H-SRT\n이관",
-                            selectionColumnAfterField: "label",
-                            selectionColumnWidth: "110px",
-                            isItemSelectable: (item) => String(item.type).toLowerCase() !== 'custom'
-                        }}
-                    >
-                        {mappingColumns.filter(c => !c.isCheckbox).map((c) => {
+                    <KendoGrid parentProps={gridProps}>
+                        {mappingColumns.map((c) => {
                             const isUtilityColumn = ['drag', 'add', 'logic', 'delete'].includes(c.field);
                             return (
                                 <Column
@@ -534,15 +544,12 @@ const MapConfigTab = ({
                                     title={c.title}
                                     width={c.width}
                                     minWidth={c.minWidth}
-                                    columnMenu={isUtilityColumn || c.isCheckbox ? undefined : columnMenu}
+                                    columnMenu={isUtilityColumn ? undefined : columnMenu}
                                     cell={getCell(c.field)}
-                                    headerCell={c.isCheckbox
-                                        ? (props) => <HeaderCheckboxCell {...props} allIds={allIds} />
-                                        : c.headerCell
-                                    }
+                                    headerCell={c.headerCell}
                                     headerClassName="k-header-center variable-column-header"
-                                    sortable={!isUtilityColumn && !c.isCheckbox}
-                                    filterable={!isUtilityColumn && !c.isCheckbox}
+                                    sortable={!isUtilityColumn}
+                                    filterable={!isUtilityColumn}
                                 />
                             );
                         })}

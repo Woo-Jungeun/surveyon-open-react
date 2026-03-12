@@ -46,19 +46,26 @@ const MapManagementPage = () => {
     const [skip, setSkip] = useState(0);
     const [pageSize, setPageSize] = useState(100);
 
-    // ── 변경 감지 ──
+    // ── 변경 감지 최적화 ──
+    const originalMap = useMemo(() => {
+        return new Map(originalVariables.map(v => [v.id, v]));
+    }, [originalVariables]);
+
     const hasChanges = useMemo(() => {
         if (!isDataLoaded) return false;
         if (deletedIds.length > 0) return true;
         if (variables.some(v => v.isNew)) return true;
 
-        const originalMap = new Map(originalVariables.map(v => [v.id, v]));
+        // variables와 originalVariables의 개수가 다르면 (신규 추가 등) 변경 있음
+        if (variables.length !== originalVariables.length) return true;
+
         return variables.some(v => {
             const orig = originalMap.get(v.id);
             if (!orig) return true;
+            // 필드 비교 (최적화: 루프 대신 명시적 비교가 빠를 수 있으나, 가독성을 위해 maintain)
             return EDITABLE_FIELDS.some(f => v[f] !== orig[f]);
         });
-    }, [variables, originalVariables, deletedIds, isDataLoaded]);
+    }, [variables, originalMap, deletedIds, isDataLoaded]);
 
     const loadData = async () => {
         if (!auth?.user?.userId) return;
@@ -505,7 +512,7 @@ const MapManagementPage = () => {
                 return;
             } else if (action === "go") {
                 // 변경 무시: 원본 데이터로 되돌림
-                setVariables(JSON.parse(JSON.stringify(originalVariables)));
+                setVariables(originalVariables.map(v => ({ ...v })));
                 setDeletedIds([]);
                 setSelectedVariableId(null);
                 setSidebarSearchQuery('');

@@ -361,6 +361,8 @@ const KendoGrid = ({ parentProps, children }) => {
             );
         });
 
+    const useCustomCheckbox = parentProps?.useCustomCheckbox;
+
     /** ---------- 커스텀 선택 셀 ---------- */
     const SelectionCell = (props) => {
         const { dataItem } = props;
@@ -381,19 +383,36 @@ const KendoGrid = ({ parentProps, children }) => {
             setSelectedState(next);
         };
 
+        if (useCustomCheckbox) {
+            return (
+                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                    <label className={`dm-checkbox-label ${selectable ? '' : 'dm-checkbox-disabled'}`}>
+                        <input
+                            type="checkbox"
+                            className="dm-checkbox-input"
+                            checked={checked}
+                            disabled={!selectable}
+                            onChange={handleChange}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} />
+                    </label>
+                </td>
+            );
+        }
+
         return (
-            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                <label className={`dm-checkbox-label ${selectable ? '' : 'dm-checkbox-disabled'}`}>
+            <td className="k-checkbox-cell" style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                <span className="k-checkbox-wrap">
                     <input
                         type="checkbox"
-                        className="dm-checkbox-input"
+                        className="k-checkbox k-checkbox-md k-rounded-md"
                         checked={checked}
                         disabled={!selectable}
                         onChange={handleChange}
                         onClick={(e) => e.stopPropagation()}
                     />
-                    <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} />
-                </label>
+                </span>
             </td>
         );
     };
@@ -408,6 +427,61 @@ const KendoGrid = ({ parentProps, children }) => {
             }, [someChecked]);
             const stop = (e) => e.stopPropagation();
 
+            const onHeaderChange = (e) => {
+                const checked = e.target.checked;
+                if (typeof parentProps?.onHeaderSelectionChange === "function") {
+                    parentProps.onHeaderSelectionChange({
+                        syntheticEvent: { target: { checked } },
+                        dataItems: selectableItems,
+                    });
+                    return;
+                }
+                const next = { ...selectedState };
+                (viewData || []).forEach((item) => {
+                    const key = idGetter(item);
+                    if (!key) return;
+                    if (item.isDuplicate || (isItemSelectable && !isItemSelectable(item))) {
+                        next[idGetter(item)] = false;
+                    } else {
+                        next[key] = checked;
+                    }
+                });
+                setSelectedState(next);
+            };
+
+            if (useCustomCheckbox) {
+                return (
+                    <div
+                        onClick={stop}
+                        style={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '8px',
+                            width: '100%',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        {selectionHeaderTitle && (
+                            <span>
+                                {selectionHeaderTitle}
+                            </span>
+                        )}
+                        <label className="dm-checkbox-label">
+                            <input
+                                ref={ref}
+                                type="checkbox"
+                                className="dm-checkbox-input"
+                                checked={allChecked}
+                                onChange={onHeaderChange}
+                            />
+                            <span className="dm-checkbox-box" />
+                        </label>
+                    </div>
+                );
+            }
+
             return (
                 <div
                     onClick={stop}
@@ -416,49 +490,24 @@ const KendoGrid = ({ parentProps, children }) => {
                         flexDirection: 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        gap: '8px',
+                        gap: '4px',
                         width: '100%',
                         cursor: 'pointer'
                     }}
                 >
                     {selectionHeaderTitle && (
-                        <span>
-                            {selectionHeaderTitle}
-                        </span>
+                        <span>{selectionHeaderTitle}</span>
                     )}
-                    <label className="dm-checkbox-label">
+                    <span className="k-checkbox-wrap">
                         <input
                             ref={ref}
                             type="checkbox"
-                            className="dm-checkbox-input"
+                            className="k-checkbox k-checkbox-md k-rounded-md"
                             checked={allChecked}
-                            onChange={(e) => {
-                                const checked = e.target.checked;
-                                if (typeof parentProps?.onHeaderSelectionChange === "function") {
-                                    parentProps.onHeaderSelectionChange({
-                                        syntheticEvent: { target: { checked } },
-                                        dataItems: selectableItems,
-                                    });
-                                    return;
-                                }
-                                // 이전 선택 상태 유지하면서 현재 페이지만 업데이트
-                                const next = { ...selectedState };
-                                // viewData는 이미 현재 페이지 데이터만 포함
-                                (viewData || []).forEach((item) => {
-                                    const key = idGetter(item);
-                                    if (!key) return;
-                                    if (item.isDuplicate || (isItemSelectable && !isItemSelectable(item))) {
-                                        next[idGetter(item)] = false;
-                                    } else {
-                                        next[key] = checked;
-                                    }
-                                });
-                                setSelectedState(next);
-                            }}
+                            onChange={onHeaderChange}
                         />
-                        <span className="dm-checkbox-box" />
-                    </label>
-                </div >
+                    </span>
+                </div>
             );
         };
 
