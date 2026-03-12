@@ -623,7 +623,7 @@ const RecodingPage = () => {
             const result = await autoRecode.mutateAsync({ user: userId, pageid: pageId });
             if (result?.success === "777") {
                 modal.showAlert("알림", "자동 리코딩이 완료되었습니다.");
-                // fetchVariables();
+                fetchVariables(); //재조회
             } else {
                 modal.showErrorAlert("알림", result?.message || "자동 리코딩에 실패했습니다.");
             }
