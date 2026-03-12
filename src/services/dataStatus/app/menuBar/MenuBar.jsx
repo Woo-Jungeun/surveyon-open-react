@@ -84,7 +84,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-    { label: "데이터현황", icon: <BarChart3 size={16} />, path: "/data_status/analysis/frequency", highlight: true },
+    { label: "H-SRT", icon: <BarChart3 size={16} />, path: "/data_status/analysis/frequency", highlight: true },
     {
       label: "데이터관리",
       icon: <Database size={16} />,
@@ -283,6 +283,9 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       fetchDataInfo(project.merge_pn);
     }
 
+    // 프로젝트/대시보드 관련 상태가 변경되었음을 알림
+    window.dispatchEvent(new Event("pageSelected"));
+
     // 2. 대시보드 목록 조회
     try {
       const user = auth?.user?.userId;
@@ -351,7 +354,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       <Sidebar
         brand={{
           title: "데이터 현황",
-          logoText: "SRT",
+          logoText: "H-SRT",
           logoClass: "menu-bar-logo",
           onClick: () => navigate("/data_status/analysis/frequency")
         }}

@@ -19,7 +19,7 @@ const menuItems = [
   },
   {
     id: "data-dashboard",
-    title: "데이터현황",
+    title: "H-SRT",
     path: "/data_status",
     description:
       "문항집계, 교차분석, AI 분석, AI 보고서를 통해 수집된 데이터를 종합적으로 분석합니다.",

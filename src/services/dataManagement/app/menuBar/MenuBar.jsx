@@ -47,7 +47,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const moduleItems = [
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
     {
-      label: "데이터현황",
+      label: "H-SRT",
       icon: <BarChart3 size={16} />,
       path: "/data_status/analysis/frequency",
       onClick: () => { navigate("/data_status/analysis/frequency"); }
@@ -114,7 +114,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       <Sidebar
         brand={{
           title: "데이터 관리",
-          // logoText: "SRT",
+          // logoText: "H-SRT",
           logoClass: "menu-bar-logo",
           onClick: () => navigate("/data_management/setting/map")
         }}

@@ -61,10 +61,10 @@ export const manualData = [
     },
     {
         id: "dataadmin",
-        title: "2. SRT 데이터 현황",
+        title: "2. H-SRT 데이터 현황",
         icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
         content: `
-            <h2>2. SRT 데이터 현황(Statistical Reporting Tool)</h2>
+            <h2>2. H-SRT 데이터 현황(Statistical Reporting Tool)</h2>
             <p>문항별 결과 AI분석 보고 가능 표, 시각화, 요약</p>
             <p>기대효과 : 한눈에 분석되는 결과와 시각화 도출로 보고서 활용 시 유용한 자료로 제공<br>고객 제공용 (로그인, 기간설정 등의 권한)</p>
             <ul>

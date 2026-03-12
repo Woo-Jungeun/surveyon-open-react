@@ -22,7 +22,7 @@ const InquiryList = () => {
 
     const itemsPerPage = 5;
 
-    const categories = ['전체', '설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
+    const categories = ['전체', '설문제작', 'H-SRT', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
 
     const { inquiryList } = InquiryApi();
     const [serverData, setServerData] = useState([]);

@@ -143,7 +143,7 @@ const AiSidebar = ({ onOpenProjectModal }) => {
     const moduleItems = [
         { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
         {
-            label: "데이터현황",
+            label: "H-SRT",
             icon: <BarChart3 size={16} />,
             path: "/data_status/analysis/frequency",
             onClick: () => { navigate("/data_status/analysis/frequency"); }

@@ -17,7 +17,7 @@ import "./Sidebar.css";
  * @param {Object} brand - { title, logoText, logoClass, onClick, icon }
  * @param {Array} menuGroups - [{ label, items: [{ label, path, icon, isPending, children }] }]
  * @param {Object} projectInfo - { title, lastUpdated } (상단 프로젝트 정보 표시용)
- * @param {string} theme - "purple" (기본) | "blue" (데이터현황용)
+ * @param {string} theme - "purple" (기본) | "blue" (H-SRT용)
  * @param {Array} moduleItems - 모듈 스위처 메뉴 아이템
  * @param {ReactNode} extraActions - 헤더와 메뉴 사이 추가 컨텐츠
  * @param {ReactNode} bottomActions - 푸터 상단에 추가할 컨텐츠

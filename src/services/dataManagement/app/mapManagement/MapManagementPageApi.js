@@ -17,7 +17,7 @@ export function MapManagementPageApi() {
         }
     );
 
-    /** SRT 이관 - Parquet 파일 생성 후 다운로드 */
+    /** H-SRT 이관 */
     const srtTransfer = useMutation(
         async (data) => await api.file(data, "/map/variables/bake-parquet", "API_BASE_URL_DATAMANAGEMENT"),
         {

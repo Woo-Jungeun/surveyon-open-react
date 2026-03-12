@@ -33,7 +33,7 @@
     background-size: 12px 10px;
 }
 
-/* Blue - 데이터현황 */
+/* Blue - H-SRT */
 [data-theme="data-dashboard"] input[type='checkbox']:checked+label::before {
     background: url('../images/checkbox_on_blue.png') no-repeat center #fff;
     background-size: 12px 10px;

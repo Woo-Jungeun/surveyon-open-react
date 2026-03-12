@@ -208,7 +208,7 @@ const InfoSection = () => {
 
             <div
               className="hp-feature-item"
-              // todo 데이터현황 임시 주석 
+              // todo H-SRT 임시 주석 
               onClick={() => {
                 if (!isLoggedIn) {
                   navigate("/login", { state: { from: "/data_status/analysis/frequency", originalState: { from: "data_status" } } });
@@ -219,7 +219,7 @@ const InfoSection = () => {
               style={{ cursor: "pointer" }}
             >
               <BarChart3 className="hp-feature-icon" />
-              <span>데이터현황</span>
+              <span>H-SRT</span>
             </div>
 
             <div

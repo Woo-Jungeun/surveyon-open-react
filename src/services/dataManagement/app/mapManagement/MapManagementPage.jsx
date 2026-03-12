@@ -581,7 +581,7 @@ const MapManagementPage = () => {
                             onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
                         >
-                            SRT 이관
+                            H-SRT 이관
                         </button>
                     )} */}
                 </DataHeader>

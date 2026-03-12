@@ -31,7 +31,7 @@ const InquiryWrite = () => {
     // API 초기화
     const { inquiryTransaction, inquiryDetail } = InquiryApi();
 
-    const categories = ['설문제작', '데이터현황', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
+    const categories = ['설문제작', 'H-SRT', '데이터관리', 'AI오픈분석', '응답자관리', '기타'];
     const [category, setCategory] = useState(isReply ? parentCategory : categories[0]);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);

@@ -512,7 +512,7 @@ const MapConfigTab = ({
                                 }));
                             },
                             linkRowClickToSelection: false,
-                            selectionHeaderTitle: "SRT 이관",
+                            selectionHeaderTitle: "H-SRT\n이관",
                             selectionColumnAfterField: "label",
                             selectionColumnWidth: "110px"
                         }}

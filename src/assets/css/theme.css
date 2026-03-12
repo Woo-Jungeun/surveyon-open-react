@@ -70,7 +70,7 @@
     --header-bg-gradient: linear-gradient(to right, #F5F3FF, #EDE9FE);
 }
 
-/* Theme: 데이터현황 (Blue) */
+/* Theme: H-SRT (Blue) */
 [data-theme="data-dashboard"] {
     /* Custom Blue #4EA3FF */
     --primary-color: #4EA3FF;
