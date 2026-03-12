@@ -53,15 +53,15 @@ const AggregationCard = memo(({ q }) => {
     // Chart type name mapping
     const handleCopyTable = React.useCallback(async () => {
         try {
-            let headersText = "항목\t";
+            let headersText = "코드\t항목\t";
             if (q.columns) {
                 headersText += q.columns.map(c => c.label).join('\t') + "\t합계";
             } else {
-                headersText += "완료\t선정탈락\t쿼터오버\t합계";
+                headersText += "사례수\t합계";
             }
 
             let rowsText = q.data.map(row => {
-                let rowText = `${row.name}\t`;
+                let rowText = `${row.value ?? '-'}\t${row.name}\t`;
                 if (q.columns) {
                     const rowValues = q.columns.map(col => {
                         const count = row[col.key] ?? 0;
@@ -72,7 +72,7 @@ const AggregationCard = memo(({ q }) => {
                     });
                     rowText += rowValues.join('\t') + `\t${row.total}`;
                 } else {
-                    rowText += `${row['완료'] || 0}\t${row['선정탈락'] || 0}\t${row['쿼터오버'] || 0}\t${row.total || 0}`;
+                    rowText += `${row.total || 0}\t${row.total || 0}`;
                 }
                 return rowText;
             }).join('\n');
@@ -385,30 +385,30 @@ const AggregationCard = memo(({ q }) => {
                     <table className="agg-table">
                         <thead>
                             <tr>
-                                <th>항목</th>
-                                {q.columns ? q.columns.map(col => <th key={col.key}>{col.label}</th>) : (
-                                    <th>사례수</th>
-                                )}
+                                <th style={{ width: '50px' }}>코드</th>
+                                <th style={{ minWidth: '180px' }}>항목</th>
+                                {q.columns && q.columns.map(col => <th key={col.key}>{col.label}</th>)}
                                 <th>합계</th>
                             </tr>
                         </thead>
                         <tbody>
                             {!q.isLoaded ? (
                                 <tr>
-                                    <td colSpan={(q.columns?.length || 1) + 2} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                                    <td colSpan={(q.columns?.length || 1) + 3} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
                                         데이터를 불러오는 중입니다...
                                     </td>
                                 </tr>
                             ) : q.data.length === 0 ? (
                                 <tr>
-                                    <td colSpan={(q.columns?.length || 1) + 2} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
+                                    <td colSpan={(q.columns?.length || 1) + 3} style={{ textAlign: 'center', padding: '40px', color: '#888' }}>
                                         조회된 데이터가 없습니다.
                                     </td>
                                 </tr>
                             ) : (
                                 q.data.map((row, i) => (
                                     <tr key={i}>
-                                        <td>{row.name}</td>
+                                        <td style={{ textAlign: 'center', color: '#64748b', fontSize: '11px', background: '#f8fafc' }}>{row.value || '-'}</td>
+                                        <td style={{ textAlign: 'left', fontSize: '12px', paddingLeft: '12px', fontWeight: '600', color: '#334155' }}>{row.name}</td>
                                         {q.columns ? q.columns.map(col => {
                                             const count = row[col.key] ?? 0;
                                             const pct = row[`${col.key}_pct`];
@@ -807,7 +807,7 @@ const FrequencyAnalysisPage = () => {
                         const updatedData = optionRows.map(row => {
                             let rowData = {
                                 name: row.label || row.var_label || row.name || row.key,
-                                value: row.key
+                                value: row.key === 'total' ? '' : (row.value ?? row.key)
                             };
                             let totalCount = 0;
                             if (tableColumns.length > 0) {

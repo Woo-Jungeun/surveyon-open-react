@@ -128,12 +128,12 @@
 }
 
 .agg-table th {
-    text-align: right;
-    padding: 16px 24px;
+    text-align: center;
+    padding: 10px 12px;
     background: #f8fafc;
     color: #64748b;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 13px;
     border-bottom: 2px solid #e2e8f0;
     white-space: nowrap;
     position: sticky;
@@ -143,8 +143,7 @@
 }
 
 .agg-table th:first-child {
-    text-align: center;
-    padding-left: 24px;
+    padding-left: 12px;
 }
 
 /* 
@@ -156,20 +155,18 @@
 } */
 
 .agg-table td {
-    text-align: right;
-    padding: 16px 24px;
+    text-align: center;
+    padding: 10px 12px;
     border-bottom: 1px solid #f1f5f9;
     color: #334155;
     font-variant-numeric: tabular-nums;
     transition: all 0.2s ease;
     border-right: 1px solid #e2e8f0;
+    font-size: 13px;
 }
 
 .agg-table td:first-child {
     text-align: center;
-    padding-left: 24px;
-    font-weight: 600;
-    color: #0f172a;
 }
 
 .agg-table tbody tr {
