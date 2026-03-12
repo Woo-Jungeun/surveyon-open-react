@@ -92,6 +92,9 @@ const DataViewerPage = () => {
                 const pageId = sessionStorage.getItem("pageId");
 
                 if (!pageId) {
+                    setData([]);
+                    setColumns([]);
+                    setIsDataLoaded(false);
                     modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                     loadingSpinner.hide();
                     return;

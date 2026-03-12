@@ -10,6 +10,7 @@ import { useSelector } from 'react-redux';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { WeightPageApi } from './WeightPageApi';
 import { VariablePageApi } from '../variable/VariablePageApi';
+import PageListPopup from '../variable/PageListPopup';
 import { modalContext } from "@/components/common/Modal";
 
 // 초기 데이터 (렌더링 시 재생성 방지)
@@ -25,8 +26,43 @@ const INITIAL_GRID_DATA = [
 const WeightPage = () => {
     const auth = useSelector((store) => store.auth);
     const modal = useContext(modalContext);
+    const alertTimerRef = useRef(null);
     const { getRecodedVariables } = RecodingPageApi();
     const { getWeightVariable, evaluateTable, deleteWeight, setWeight, getEligibleVariable } = WeightPageApi();
+
+    const { pageList: getPageList } = VariablePageApi();
+    const [isPageListOpen, setIsPageListOpen] = useState(false);
+    const [pageListData, setPageListData] = useState([]);
+
+    const handleOpenPageList = async () => {
+        const userId = auth?.user?.userId;
+        const mergePn = sessionStorage.getItem("merge_pn");
+
+        if (!userId || !mergePn) {
+            modal.showErrorAlert("알림", "프로젝트 정보가 없습니다.");
+            return;
+        }
+
+        try {
+            const result = await getPageList.mutateAsync({ user: userId, pn: mergePn });
+            if (result?.success === "777" && result.resultjson) {
+                setPageListData(result.resultjson);
+                setIsPageListOpen(true);
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("오류", "대시보드 목록 조회 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handlePageSelectedPopup = (page) => {
+        const pageId = page.pageid || page.id;
+        const pageTitle = page.title || page.name;
+        sessionStorage.setItem("pageId", pageId);
+        sessionStorage.setItem("pagetitle", pageTitle);
+        setIsPageListOpen(false);
+        window.location.reload();
+    };
 
     // 가중치 목록 상태
     const [weights, setWeights] = useState([]);
@@ -38,6 +74,27 @@ const WeightPage = () => {
             const userId = auth.user.userId;
             const pageId = sessionStorage.getItem("pageId");
 
+            if (!pageId) {
+                setWeights([]);
+                setRawVariables([]);
+                setQuestions([]);
+                setSelectedWeight(null);
+                setGridData([]);
+                setTargetGridData([]);
+                setGridColumns([]);
+
+                if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+                alertTimerRef.current = setTimeout(() => {
+                    const finalPid = sessionStorage.getItem("pageId");
+                    const userIdCurrent = auth?.user?.userId;
+                    if (!finalPid && userIdCurrent) {
+                        modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+                    }
+                }, 1000);
+                return;
+            }
+
+            if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
             if (pageId) {
                 try {
                     const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
@@ -69,6 +126,16 @@ const WeightPage = () => {
 
     useEffect(() => {
         fetchWeights();
+
+        const handlePageSelected = () => {
+            fetchWeights();
+        };
+        window.addEventListener("pageSelected", handlePageSelected);
+
+        return () => {
+            window.removeEventListener("pageSelected", handlePageSelected);
+            if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+        };
     }, [fetchWeights]);
 
     const filteredWeights = weights.filter(item =>
@@ -205,49 +272,56 @@ const WeightPage = () => {
                 const userId = auth.user.userId;
                 const pageId = sessionStorage.getItem("pageId");
 
-                if (pageId) {
-                    try {
-                        const result = await getEligibleVariable.mutateAsync({ user: userId, pageid: pageId, include_variables: true });
-                        if (result?.success === "777" && result.resultjson && result.resultjson.variables) {
-                            const rawVarsObj = result.resultjson.variables.reduce((acc, v) => {
-                                acc[v.id] = v.variable; // 새 API 형식에서는 v.variable 내부에 원본(info, id, label 포함)이 들어있습니다.
-                                return acc;
-                            }, {});
-                            setRawVariables(rawVarsObj);
-                            const transformedData = result.resultjson.variables.map(item => {
-                                const originalType = item.type || 'Single';
-                                const rawType = String(originalType).toLowerCase();
+                if (!pageId) {
+                    setQuestions([]);
+                    setRawVariables({});
+                    return;
+                }
+                try {
+                    const result = await getEligibleVariable.mutateAsync({ user: userId, pageid: pageId, include_variables: true });
+                    if (result?.success === "777" && result.resultjson && result.resultjson.variables) {
+                        const rawVarsObj = result.resultjson.variables.reduce((acc, v) => {
+                            acc[v.id] = v.variable; // 새 API 형식에서는 v.variable 내부에 원본(info, id, label 포함)이 들어있습니다.
+                            return acc;
+                        }, {});
+                        setRawVariables(rawVarsObj);
+                        const transformedData = result.resultjson.variables.map(item => {
+                            const originalType = item.type || 'Single';
+                            const rawType = String(originalType).toLowerCase();
 
-                                let color = 'gray';
-                                if (rawType === 'single') {
-                                    color = 'single';
-                                } else if (rawType === 'multi') {
-                                    color = 'multi';
-                                } else if (rawType === 'dummy') {
-                                    color = 'dummy';
-                                } else if (rawType === 'open') {
-                                    color = 'open';
-                                }
+                            let color = 'gray';
+                            if (rawType === 'single') {
+                                color = 'single';
+                            } else if (rawType === 'multi') {
+                                color = 'multi';
+                            } else if (rawType === 'dummy') {
+                                color = 'dummy';
+                            } else if (rawType === 'open') {
+                                color = 'open';
+                            }
 
-                                return {
-                                    id: item.id,
-                                    title: item.id || '',
-                                    desc: item.label || '',
-                                    type: originalType,
-                                    count: '',
-                                    color: color
-                                };
-                            });
-                            setQuestions(transformedData);
-                        }
-                    } catch (error) {
-                        console.error("Variable Fetch Error:", error);
+                            return {
+                                id: item.id,
+                                title: item.id || '',
+                                desc: item.label || '',
+                                type: originalType,
+                                count: '',
+                                color: color
+                            };
+                        });
+                        setQuestions(transformedData);
                     }
+                } catch (error) {
+                    console.error("Variable Fetch Error:", error);
                 }
             }
         };
 
         fetchQuestions();
+
+        const handlePageSelected = () => fetchQuestions();
+        window.addEventListener("pageSelected", handlePageSelected);
+        return () => window.removeEventListener("pageSelected", handlePageSelected);
     }, [auth?.user?.userId]);
 
     // 드래그 앤 드롭 상태
@@ -1323,6 +1397,13 @@ const WeightPage = () => {
                     to { opacity: 1; }
                 }
             `}</style>
+            {/* PageListPopup */}
+            <PageListPopup
+                isOpen={isPageListOpen}
+                onClose={() => setIsPageListOpen(false)}
+                data={pageListData}
+                onSelect={handlePageSelectedPopup}
+            />
         </div>
     );
 };

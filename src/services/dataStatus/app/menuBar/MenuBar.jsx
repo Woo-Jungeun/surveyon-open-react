@@ -130,7 +130,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     if (!userId || !pn) return;
     try {
       const result = await getDataInfo.mutateAsync({ user: userId, pn });
-      if (result?.success === "777" && result?.resultjson?.parquetBakedAt) {
+      if (result?.success === "777") {
         setPageInfo(prev => ({
           ...prev,
           processedAt: formatDate(result.resultjson.parquetBakedAt)

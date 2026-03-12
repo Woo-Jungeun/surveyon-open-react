@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, memo, useMemo } from 'react';
+import React, { useState, useEffect, useRef, memo, useMemo, useContext } from 'react';
 import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy, ChevronDown, Check } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
@@ -17,6 +17,9 @@ import OverviewVariablePopup from './OverviewVariablePopup';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { Settings } from 'lucide-react';
 import { VariablePageApi } from '../variable/VariablePageApi';
+import PageListPopup from '../variable/PageListPopup';
+import { modalContext } from "@/components/common/Modal.jsx";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const [chartMode, setChartMode] = useState('column');
@@ -506,6 +509,46 @@ const FrequencyAnalysisPage = () => {
     const [totalQuestions, setTotalQuestions] = useState(0);
     const SIDEBAR_PAGE_SIZE = 20;
 
+    const [currentPageId, setCurrentPageId] = useState(sessionStorage.getItem("pageId"));
+
+    const modal = useContext(modalContext);
+    const loadingSpinner = useContext(loadingSpinnerContext);
+    const alertTimerRef = useRef(null);
+
+    const { pageList: getPageList } = VariablePageApi();
+    const [isPageListOpen, setIsPageListOpen] = useState(false);
+    const [pageListData, setPageListData] = useState([]);
+
+    const handleOpenPageList = async () => {
+        const userId = auth?.user?.userId;
+        const mergePn = sessionStorage.getItem("merge_pn");
+
+        if (!userId || !mergePn) {
+            modal.showErrorAlert("알림", "프로젝트 정보가 없습니다.");
+            return;
+        }
+
+        try {
+            const result = await getPageList.mutateAsync({ user: userId, pn: mergePn });
+            if (result?.success === "777" && result.resultjson) {
+                setPageListData(result.resultjson);
+                setIsPageListOpen(true);
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showErrorAlert("오류", "대시보드 목록 조회 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handlePageSelectedPopup = (page) => {
+        const pageId = page.pageid || page.id;
+        const pageTitle = page.title || page.name;
+        sessionStorage.setItem("pageId", pageId);
+        sessionStorage.setItem("pagetitle", pageTitle);
+        setIsPageListOpen(false);
+        window.location.reload();
+    };
+
     // 고급 필터 팝업 상태
     const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
     const [filterLogic, setFilterLogic] = useState('');
@@ -574,26 +617,32 @@ const FrequencyAnalysisPage = () => {
     useEffect(() => {
         if (!auth?.user?.userId) return;
 
-        const initialPageId = sessionStorage.getItem("pageId");
-        if (initialPageId) {
-            fetchOverviewVars();
-            fetchOriginalVars();
-            return; // 이미 로드했으면 여기서 종료
-        }
-
-        // pageId가 아직 없는 경우에만 주기적으로 체크
-        let retryCount = 0;
-        const interval = setInterval(() => {
+        const checkPid = () => {
             const pid = sessionStorage.getItem("pageId");
+            setCurrentPageId(pid);
             if (pid) {
                 fetchOverviewVars();
                 fetchOriginalVars();
-                clearInterval(interval);
+                if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+            } else {
+                if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+                alertTimerRef.current = setTimeout(() => {
+                    const finalPid = sessionStorage.getItem("pageId");
+                    setCurrentPageId(finalPid);
+                    if (!finalPid) {
+                        setQuestions([]); // Clear stale questions
+                        setActiveId(null);
+                        modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+                    }
+                }, 1000);
             }
-            if (retryCount++ > 10) clearInterval(interval);
-        }, 500);
+        };
 
-        return () => clearInterval(interval);
+        checkPid();
+
+        return () => {
+            if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+        };
     }, [auth?.user?.userId]);
 
     const filterRef = useRef(null);
@@ -738,6 +787,7 @@ const FrequencyAnalysisPage = () => {
     useEffect(() => {
         const handlePageSelected = () => {
             if (!auth?.user?.userId) return;
+            setCurrentPageId(sessionStorage.getItem("pageId"));
             setQuestions([]);
             setSidebarPage(1);
             setTotalQuestions(0);
@@ -1035,45 +1085,47 @@ const FrequencyAnalysisPage = () => {
                     엑셀 다운로드
                 </button> */}
             </DataHeader>
-            <div className="aggregation-layout">
-                <SideBar
-                    // title="문항 목록"
-                    items={sidebarItems}
-                    selectedId={activeId}
-                    onItemClick={(item) => scrollToId(item.id)}
-                    onSearch={setSearchTerm}
-                    searchPlaceholder="문항을 검색하세요."
-                    onScrollEnd={handleSidebarScrollEnd}
-                    currentPage={sidebarPage}
-                    totalPages={totalSidebarPages}
-                    onPageChange={handlePageChange}
-                />
+            {currentPageId && (
+                <div className="aggregation-layout">
+                    <SideBar
+                        // title="문항 목록"
+                        items={sidebarItems}
+                        selectedId={activeId}
+                        onItemClick={(item) => scrollToId(item.id)}
+                        onSearch={setSearchTerm}
+                        searchPlaceholder="문항을 검색하세요."
+                        onScrollEnd={handleSidebarScrollEnd}
+                        currentPage={sidebarPage}
+                        totalPages={totalSidebarPages}
+                        onPageChange={handlePageChange}
+                    />
 
-                <div className="agg-main" ref={mainRef}>
-                    {questions.length > 0 ? (
-                        questions.map(q => (
-                            <AggregationCard key={q.id} q={q} paletteId={globalPaletteId} setPaletteId={setGlobalPaletteId} />
-                        ))
-                    ) : (
-                        <div style={{
-                            flex: 1,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '12px',
-                            color: '#94a3b8',
-                            fontSize: '15px',
-                            background: '#fff',
-                            borderRadius: '16px',
-                            border: '1px dashed #e2e8f0'
-                        }}>
-                            <div style={{ fontSize: '40px' }}>🔍</div>
-                            조회된 데이터가 없습니다.
-                        </div>
-                    )}
+                    <div className="agg-main" ref={mainRef}>
+                        {questions.length > 0 ? (
+                            questions.map(q => (
+                                <AggregationCard key={q.id} q={q} paletteId={globalPaletteId} setPaletteId={setGlobalPaletteId} />
+                            ))
+                        ) : (
+                            <div style={{
+                                flex: 1,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '12px',
+                                color: '#94a3b8',
+                                fontSize: '15px',
+                                background: '#fff',
+                                borderRadius: '16px',
+                                border: '1px dashed #e2e8f0'
+                            }}>
+                                <div style={{ fontSize: '40px' }}>🔍</div>
+                                조회된 데이터가 없습니다.
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* 고급 필터 팝업 */}
             {isFilterPopupOpen && (
@@ -1100,6 +1152,13 @@ const FrequencyAnalysisPage = () => {
                 auth={auth}
                 pageId={sessionStorage.getItem("pageId")}
                 onSaved={fetchOverviewVars}
+            />
+
+            <PageListPopup
+                isOpen={isPageListOpen}
+                onClose={() => setIsPageListOpen(false)}
+                data={pageListData}
+                onSelect={handlePageSelectedPopup}
             />
         </div>
     );

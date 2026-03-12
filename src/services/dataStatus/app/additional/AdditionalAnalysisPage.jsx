@@ -108,7 +108,8 @@ const AdditionalAnalysisPage = () => {
     const { getRecodedList } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
-    const PAGE_ID = sessionStorage.getItem("pageId");
+    const alertTimerRef = useRef(null);
+    const [currentPageId, setCurrentPageId] = useState(sessionStorage.getItem("pageId"));
 
     // Data State
     const [tables, setTables] = useState([]);
@@ -202,11 +203,28 @@ const AdditionalAnalysisPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             if (!auth?.user?.userId) return;
-            if (!PAGE_ID) {
-                modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+            const currentPid = sessionStorage.getItem("pageId");
+            setCurrentPageId(currentPid);
+
+            if (!currentPid) {
+                setVariables([]);
+                setTables([]);
+                setSelectedTableId(null);
+                setResultDataList([]);
+                setRowVars([]);
+                setColVars([]);
+
+                if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+                alertTimerRef.current = setTimeout(() => {
+                    const finalPid = sessionStorage.getItem("pageId");
+                    if (!finalPid) {
+                        modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+                    }
+                }, 1000);
                 return;
             }
 
+            if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
             loadingSpinner.show();
 
             let loadedVariables = [];
@@ -215,7 +233,7 @@ const AdditionalAnalysisPage = () => {
             try {
                 const varResult = await getOriginalVariables.mutateAsync({
                     user: auth.user.userId,
-                    pageid: PAGE_ID
+                    pageid: currentPid
                 });
 
                 if (varResult?.success === "777" && varResult.resultjson) {
@@ -232,7 +250,7 @@ const AdditionalAnalysisPage = () => {
                 // Fetch Recoded Variables (including Banner)
                 const recodedResult = await getRecodedList.mutateAsync({
                     user: auth.user.userId,
-                    pageid: PAGE_ID
+                    pageid: currentPid
                 });
 
                 if (recodedResult?.success === "777" && recodedResult.resultjson) {
@@ -264,7 +282,7 @@ const AdditionalAnalysisPage = () => {
             try {
                 const result = await getCrossTabList.mutateAsync({
                     user: auth.user.userId,
-                    pageid: PAGE_ID
+                    pageid: currentPid
                 });
 
                 if (result?.success === "777") {
@@ -423,7 +441,7 @@ const AdditionalAnalysisPage = () => {
 
                                     const payload = {
                                         user: auth.user.userId,
-                                        pageid: PAGE_ID,
+                                        pageid: currentPid,
                                         variables: variablesMap,
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
@@ -459,7 +477,15 @@ const AdditionalAnalysisPage = () => {
         };
 
         fetchData();
-    }, [auth?.user?.userId, PAGE_ID]);
+
+        const handlePageSelectedEvent = () => fetchData();
+        window.addEventListener("pageSelected", handlePageSelectedEvent);
+
+        return () => {
+            window.removeEventListener("pageSelected", handlePageSelectedEvent);
+            if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+        };
+    }, [auth?.user?.userId]);
 
     // Preview Data Calculation
     const previewData = useMemo(() => {
@@ -726,7 +752,7 @@ const AdditionalAnalysisPage = () => {
 
                         let runPayload = {
                             user: auth.user.userId,
-                            pageid: PAGE_ID,
+                            pageid: currentPageId,
                             variables: variablesMap,
                             weight_col: weightId,
                             filter_expression: filterExpr,
@@ -1073,7 +1099,7 @@ const AdditionalAnalysisPage = () => {
             const payload = {
                 user: auth.user.userId,
                 tableid: selectedTableId,
-                pageid: PAGE_ID,
+                pageid: currentPageId,
                 name: tableName || "Untitled Table",
                 config: {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
@@ -1145,7 +1171,7 @@ const AdditionalAnalysisPage = () => {
             const savePayload = {
                 user: auth.user.userId,
                 tableid: selectedTableId,
-                pageid: PAGE_ID,
+                pageid: currentPageId,
                 name: tableName || "Untitled Table",
                 config: {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
@@ -1232,7 +1258,7 @@ const AdditionalAnalysisPage = () => {
 
                 let runPayload = {
                     user: auth.user.userId,
-                    pageid: PAGE_ID,
+                    pageid: currentPageId,
                     variables: variablesMap,
                     weight_col: weightId,
                     filter_expression: filterExpression,
@@ -1365,7 +1391,7 @@ const AdditionalAnalysisPage = () => {
 
         let payload = {
             user: auth.user.userId,
-            pageid: PAGE_ID,
+            pageid: currentPageId,
             variables: variablesMap,
             weight_col: weightId,
             filter_expression: currentFilter,
@@ -1503,7 +1529,7 @@ const AdditionalAnalysisPage = () => {
                 onClose={() => setToast({ ...toast, show: false })}
             />
 
-            {PAGE_ID && (
+            {currentPageId && (
                 <div className="cross-tab-layout">
                     {/* Sidebar */}
                     <SideBar

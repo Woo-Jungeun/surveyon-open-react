@@ -81,12 +81,9 @@ const VariablePage = () => {
                 if (pageId) {
                     try {
                         loadingSpinner.show();
-                        // ... existing logic ...
                         const result = await getOriginalVariables.mutateAsync({ user: userId, pageid: pageId });
-                        // ...
                         if (result.success === "777") {
                             if (result.resultjson) {
-                                // ... transformation logic ...
                                 const transformedData = Object.values(result.resultjson).map(item => {
                                     let typeLabel = item.type;
                                     if (item.type === 'categorical') typeLabel = '범주형';
@@ -117,6 +114,10 @@ const VariablePage = () => {
                         modal.showErrorAlert("에러", "변수 목록 조회 중 오류가 발생했습니다.");
                         loadingSpinner.hide();
                     }
+                } else {
+                    setVariables([]);
+                    setOriginalVariables([]);
+                    setIsDataLoaded(false);
                 }
             }
         };

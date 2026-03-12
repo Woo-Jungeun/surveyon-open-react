@@ -128,16 +128,30 @@ const RecodingPage = () => {
     };
 
     const isInitialized = useRef(false);
+    const alertTimerRef = useRef(null);
+
     const fetchVariables = async () => {
         if (auth?.user?.userId) {
             const userId = auth.user.userId;
             const pageId = sessionStorage.getItem("pageId");
 
             if (!pageId) {
-                modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+                setVariables([]);
+                setSelectedVar({ id: null, label: '', type: 'categorical', info: [] });
+                setCategories([{ value: '', label: '', logic: '' }]);
+                isInitialized.current = false;
+
+                if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+                alertTimerRef.current = setTimeout(() => {
+                    const finalPid = sessionStorage.getItem("pageId");
+                    if (!finalPid && auth?.user?.userId) {
+                        modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
+                    }
+                }, 1000);
                 return;
             }
 
+            if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
             try {
                 const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
                 if (result?.success === "777" && result.resultjson) {
@@ -170,6 +184,14 @@ const RecodingPage = () => {
 
     useEffect(() => {
         fetchVariables();
+
+        const handlePageSelected = () => fetchVariables();
+        window.addEventListener("pageSelected", handlePageSelected);
+
+        return () => {
+            window.removeEventListener("pageSelected", handlePageSelected);
+            if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
+        };
     }, [auth?.user?.userId]);
 
     const [categories, setCategories] = useState([]);
