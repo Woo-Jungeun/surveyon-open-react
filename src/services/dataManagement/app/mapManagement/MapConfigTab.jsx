@@ -440,6 +440,17 @@ const MapConfigTab = ({
         return React.cloneElement(trElement, { ...trProps }, trElement.props.children);
     }, [editingRowId]);
 
+    const handlePageChange = useCallback((e) => {
+        if (pageChange) {
+            pageChange(e);
+        }
+        // 페이지 변경 시 스크롤 맨 위로 이동
+        const gridContent = document.querySelector('.variable-page-card .k-grid-content');
+        if (gridContent) {
+            gridContent.scrollTop = 0;
+        }
+    }, [pageChange]);
+
     const gridProps = useMemo(() => ({
         data: variables,
         dataItemKey: "id",
@@ -453,7 +464,7 @@ const MapConfigTab = ({
         total: variables.length,
         skip,
         pageSize,
-        onPageChange: pageChange,
+        onPageChange: handlePageChange,
         onRowClick: (e) => setEditingRowId(e.dataItem.id),
         reorderable: true,
         multiSelect: true,
@@ -468,7 +479,7 @@ const MapConfigTab = ({
         useCustomCheckbox: true
     }), [
         variables, sort, filter, setSort, setFilter, rowRender,
-        skip, pageSize, pageChange, setEditingRowId,
+        skip, pageSize, handlePageChange, setEditingRowId,
         bakedSelectedState, handleBakedSelectedChange, isItemSelectable
     ]);
 
