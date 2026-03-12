@@ -180,6 +180,12 @@ const LogicCell = (props) => {
 const TypeCell = memo((props) => {
     const { setVariables, editingRowId } = useContext(MapManagementContext);
     const { dataItem, style, className } = props;
+    const isCustom = String(dataItem.type || '').toLowerCase() === 'custom';
+    const cellStyle = {
+        ...style,
+        verticalAlign: 'middle',
+        backgroundColor: isCustom ? '#FFF9C4' : undefined
+    };
 
     const handleChange = (e) => {
         const newType = String(e.target.value).toLowerCase();
@@ -200,7 +206,7 @@ const TypeCell = memo((props) => {
 
     if (!isEditing) {
         return (
-            <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
+            <td style={cellStyle} className={className}>
                 <div className="variable-text-readonly" style={{ background: 'transparent', border: 'none', pointerEvents: 'none' }}>
                     {dataItem.type}
                 </div>
@@ -209,7 +215,7 @@ const TypeCell = memo((props) => {
     }
 
     return (
-        <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
+        <td style={cellStyle} className={className}>
             <DropDownList
                 data={typeOptions}
                 value={dataItem.type}

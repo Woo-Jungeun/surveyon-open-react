@@ -691,6 +691,7 @@ input:checked+.slider:before {
     transition: background-color 0.1s ease;
 }
 
+
 .variable-page .k-grid tr.k-selected,
 .variable-page .k-grid td.k-selected {
     background-color: #f0faf5 !important;
