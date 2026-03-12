@@ -120,7 +120,7 @@ const AdditionalAnalysisPage = () => {
     const [tableMode, setTableMode] = useState('merged'); // 'merged' | 'separated'
     const [globalPaletteId, setGlobalPaletteId] = useState('default');
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
-    const [expandedIndex, setExpandedIndex] = useState(null);
+    const [collapsedIndices, setCollapsedIndices] = useState(new Set());
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isFilterPopupOpen, setIsFilterPopupOpen] = useState(false);
     const tableListRef = useRef(null);
@@ -537,7 +537,7 @@ const AdditionalAnalysisPage = () => {
 
     useEffect(() => {
         if (isConfigOpen) {
-            setExpandedIndex(null);
+            setCollapsedIndices(new Set());
         }
     }, [isConfigOpen]);
 
@@ -1716,9 +1716,19 @@ const AdditionalAnalysisPage = () => {
                                     setToast={setToast}
                                     setFullscreenModal={setFullscreenModal}
                                     tableName={tableName}
-                                    isExpanded={expandedIndex === dataIndex}
-                                    onToggleExpand={() => setExpandedIndex(expandedIndex === dataIndex ? null : dataIndex)}
-                                    isAnyExpanded={expandedIndex !== null}
+                                    isExpanded={!collapsedIndices.has(dataIndex)}
+                                    onToggleExpand={() => {
+                                        setCollapsedIndices(prev => {
+                                            const next = new Set(prev);
+                                            if (next.has(dataIndex)) {
+                                                next.delete(dataIndex);
+                                            } else {
+                                                next.add(dataIndex);
+                                            }
+                                            return next;
+                                        });
+                                    }}
+                                    isAnyExpanded={collapsedIndices.size < resultDataList.length}
                                     tableMode={tableMode}
                                     paletteId={globalPaletteId}
                                     setPaletteId={setGlobalPaletteId}
