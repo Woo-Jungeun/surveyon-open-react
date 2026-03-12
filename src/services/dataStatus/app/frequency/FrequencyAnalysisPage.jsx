@@ -1018,6 +1018,7 @@ const FrequencyAnalysisPage = () => {
                                 className={`custom-filter-item ${!selectedVariableId ? 'selected' : ''}`}
                                 onClick={() => {
                                     setSelectedVariableId(null);
+                                    setFilterLogic('');
                                     setIsVariableDropdownOpen(false);
                                 }}
                                 style={{ justifyContent: 'flex-start', color: '#64748b' }}
@@ -1030,6 +1031,7 @@ const FrequencyAnalysisPage = () => {
                                     className={`custom-filter-item ${selectedVariableId === v.id ? 'selected' : ''}`}
                                     onClick={() => {
                                         setSelectedVariableId(v.id);
+                                        setFilterLogic(v.logic || '');
                                         setIsVariableDropdownOpen(false);
                                     }}
                                 >
@@ -1142,6 +1144,13 @@ const FrequencyAnalysisPage = () => {
                     auth={auth}
                     pageId={sessionStorage.getItem("pageId")}
                     onSaved={fetchOverviewVars}
+                    activeVariableId={selectedVariableId}
+                    onDeleteActive={() => {
+                        setSelectedVariableId(null);
+                        setFilterLogic('');
+                        setIsFilterPopupOpen(false);
+                        fetchOverviewVars();
+                    }}
                 />
             )}
 

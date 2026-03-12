@@ -5,7 +5,7 @@ import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import './AdvancedFilterPopup.css';
 
-const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved }) => {
+const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive }) => {
     const modal = React.useContext(modalContext);
     const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
 
@@ -112,7 +112,35 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                 conditions: parsedConditions
             });
         }
-        return newSets.length > 0 ? newSets : defaultState;
+
+        if (newSets.length === 0) return defaultState;
+
+        const mergedSets = [];
+        for (let i = 0; i < newSets.length; i++) {
+            const currentSet = newSets[i];
+            let merged = false;
+
+            if (mergedSets.length > 0) {
+                const prevSet = mergedSets[mergedSets.length - 1];
+                if (currentSet.conditions.length === 1 &&
+                    (prevSet.conditions.length === 1 || prevSet.logicOp === currentSet.connectorOp)) {
+
+                    if (prevSet.conditions.length === 1) {
+                        prevSet.logicOp = currentSet.connectorOp;
+                    }
+
+                    if (prevSet.logicOp === currentSet.connectorOp) {
+                        prevSet.conditions.push(currentSet.conditions[0]);
+                        merged = true;
+                    }
+                }
+            }
+            if (!merged) {
+                mergedSets.push(currentSet);
+            }
+        }
+
+        return mergedSets.length > 0 ? mergedSets : defaultState;
     };
 
     // Fetch variables list for sidebar
@@ -217,6 +245,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                 modal.showAlert("성공", "삭제되었습니다.");
                                 if (onSaved) onSaved();
                                 if (selectedVarId === varId) handleAddNew();
+                                if (activeVariableId === varId && onDeleteActive) {
+                                    onDeleteActive();
+                                }
                             } else {
                                 modal.showAlert("오류", result?.message || "삭제 실패");
                             }
@@ -308,6 +339,17 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             modal.showAlert("알림", "변수 이름을 입력해주세요.");
             return;
         }
+
+        const hasValidCondition = categories.some(cat =>
+            cat.conditionSets.some(set =>
+                set.conditions.some(c => c.varName && c.value)
+            )
+        );
+        if (!hasValidCondition) {
+            modal.showAlert("알림", "설정된 조건이 없습니다.");
+            return;
+        }
+
         const fullId = `overview_${varName.trim()}`;
 
         const payload = {
@@ -371,7 +413,45 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             if (result?.success === "777") {
                 modal.showAlert("알림", "저장되었습니다.");
                 setSelectedVarId(fullId); // 신규 저장 후 해당 변수 선택 상태로 변경
-                if (onSaved) onSaved();
+
+                // Calculate total logic by joining all category logics with OR
+                const totalLogic = categories
+                    .map((cat, idx) => {
+                        let categoryLogic = '';
+                        cat.conditionSets.forEach((set) => {
+                            const validConds = set.conditions
+                                .filter(c => c.varName && c.value)
+                                .map(c => {
+                                    const opLower = c.operator.toLowerCase();
+                                    let val = c.value.trim();
+                                    if (opLower === 'in' || opLower === 'not in') {
+                                        if (!val.startsWith('[')) val = `[${val}`;
+                                        if (!val.endsWith(']')) val = `${val}]`;
+                                    }
+                                    return `${c.varName} ${opLower} ${val}`;
+                                });
+                            if (validConds.length > 0) {
+                                const logicOpLower = (set.logicOp || 'AND').toLowerCase();
+                                let setStr = validConds.length === 1 ? validConds[0] : `(${validConds.join(` ${logicOpLower} `).trim()})`;
+                                if (categoryLogic === '') {
+                                    categoryLogic = setStr;
+                                } else {
+                                    const connector = (set.connectorOp || 'AND').toLowerCase();
+                                    categoryLogic = `(${categoryLogic} ${connector} ${setStr})`;
+                                }
+                            }
+                        });
+                        return categoryLogic.trim();
+                    })
+                    .filter(logic => logic !== '')
+                    .map(logic => `(${logic})`)
+                    .join(' OR ');
+
+                if (onSave) {
+                    onSave(fullId, totalLogic, varLabel);
+                } else if (onSaved) {
+                    onSaved();
+                }
             } else {
                 modal.showAlert("알림", result?.message || "저장 실패");
             }
