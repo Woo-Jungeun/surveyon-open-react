@@ -915,26 +915,40 @@ const AdditionalAnalysisPage = () => {
             const items = currentDraggedItem.items;
             if (targetType === 'row' || targetType === 'row_item') {
                 const newRowVars = [...rowVars];
+                let skipped = false;
                 items.forEach(item => {
-                    if (newRowVars.length < 10 && !newRowVars.find(v => v.id === item.id)) {
-                        const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [] };
-                        if (targetType === 'row_item') {
-                            newRowVars.splice(targetItemIndex, 0, newItem);
-                        } else {
-                            newRowVars.push(newItem);
+                    if (newRowVars.length < 10) {
+                        if (!newRowVars.find(v => v.id === item.id)) {
+                            const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [] };
+                            if (targetType === 'row_item') {
+                                newRowVars.splice(targetItemIndex, 0, newItem);
+                            } else {
+                                newRowVars.push(newItem);
+                            }
                         }
+                    } else {
+                        skipped = true;
                     }
                 });
                 setRowVars(newRowVars);
+                if (skipped) {
+                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)');
+                }
             } else if (targetType === 'col' || targetType === 'new_col_group' || targetType === 'col_item') {
                 const newColVars = [...colVars];
+                let skipped = false;
                 items.forEach(item => {
                     if (newColVars.length < 10) {
                         const newItem = { id: item.id, name: item.name, label: item.label, info: item.info || [] };
                         newColVars.push([newItem]);
+                    } else {
+                        skipped = true;
                     }
                 });
                 setColVars(newColVars);
+                if (skipped) {
+                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)');
+                }
             }
             setSelectedVarIds([]);
             setDraggedItem(null);
@@ -971,7 +985,7 @@ const AdditionalAnalysisPage = () => {
                     removeVar(newItem.id, 'col', srcGroupIndex);
                 }
                 if (rowVars.length >= 10 && !rowVars.find(v => v.id === newItem.id)) {
-                    modal.showAlert('알림', '세로축(행)은 최대 10개까지만 등록할 수 있습니다.');
+                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.');
                 } else if (!rowVars.find(v => v.id === newItem.id)) {
                     if (targetType === 'row_item') {
                         newRowVars.splice(targetItemIndex, 0, newItem);

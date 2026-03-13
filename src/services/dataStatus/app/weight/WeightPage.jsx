@@ -473,18 +473,32 @@ const WeightPage = () => {
             }
 
             // 신규 아이템 추가 (멀티 포함)
+            let skipped = false;
             itemsToDrop.forEach(item => {
-                if (newRowItems.length < 10 && !newRowItems.find(i => i.id === item.id)) {
-                    const newItem = { id: item.id, title: item.title, type: item.type, color: item.color };
-                    if (targetIndex !== null) {
-                        newRowItems.splice(targetIndex, 0, newItem);
-                        targetIndex++;
-                    } else {
-                        newRowItems.push(newItem);
+                if (newRowItems.length < 10) {
+                    if (!newRowItems.find(i => i.id === item.id)) {
+                        const newItem = { id: item.id, title: item.title, type: item.type, color: item.color };
+                        if (targetIndex !== null) {
+                            newRowItems.splice(targetIndex, 0, newItem);
+                            targetIndex++;
+                        } else {
+                            newRowItems.push(newItem);
+                        }
+                    }
+                } else {
+                    if (!newRowItems.find(i => i.id === item.id)) {
+                        skipped = true;
                     }
                 }
             });
             setRowItems(newRowItems);
+            if (skipped) {
+                if (itemsToDrop.length > 1) {
+                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)');
+                } else {
+                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.');
+                }
+            }
             setSelectedQIds([]);
             setIsCalculated(false);
         } else if (target === 'col' || target === 'col_item') {
@@ -506,18 +520,32 @@ const WeightPage = () => {
             }
 
             // 신규 아이템 추가 (멀티 포함)
+            let skipped = false;
             itemsToDrop.forEach(item => {
-                if (newColItems.length < 10 && !newColItems.find(i => i.id === item.id)) {
-                    const newItem = { id: item.id, title: item.title, type: item.type, color: item.color };
-                    if (targetIndex !== null) {
-                        newColItems.splice(targetIndex, 0, newItem);
-                        targetIndex++;
-                    } else {
-                        newColItems.push(newItem);
+                if (newColItems.length < 10) {
+                    if (!newColItems.find(i => i.id === item.id)) {
+                        const newItem = { id: item.id, title: item.title, type: item.type, color: item.color };
+                        if (targetIndex !== null) {
+                            newColItems.splice(targetIndex, 0, newItem);
+                            targetIndex++;
+                        } else {
+                            newColItems.push(newItem);
+                        }
+                    }
+                } else {
+                    if (!newColItems.find(i => i.id === item.id)) {
+                        skipped = true;
                     }
                 }
             });
             setColItems(newColItems);
+            if (skipped) {
+                if (itemsToDrop.length > 1) {
+                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)');
+                } else {
+                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.');
+                }
+            }
             setSelectedQIds([]);
             setIsCalculated(false);
         }
