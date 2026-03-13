@@ -238,16 +238,20 @@ input:checked+.slider:before {
 .map-variable-list {
     flex: 1;
     overflow-y: auto;
-    padding: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .map-variable-item {
-    padding: 10px 14px;
+    padding: 12px 14px;
     border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     cursor: pointer;
-    margin-bottom: 3px;
     transition: all 0.15s ease;
-    border: 1.5px solid transparent;
 }
 
 .map-variable-item:hover {
@@ -276,7 +280,10 @@ input:checked+.slider:before {
     font-size: 12px;
     color: var(--dm-text-sub);
     line-height: 1.4;
-    word-break: break-all;
+    word-break: break-keep-all;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
 }
 
 .map-variable-item.active .v-label {
