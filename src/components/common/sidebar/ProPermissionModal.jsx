@@ -28,7 +28,6 @@ const ProPermissionModal = ({ open, onClose }) => {
     const [loading, setLoading] = useState(false);
     const [gridData, setGridData] = useState([]);
     const [userOptions, setUserOptions] = useState([]);
-    const [filteredUsers, setFilteredUsers] = useState([]);
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
 
@@ -54,19 +53,22 @@ const ProPermissionModal = ({ open, onClose }) => {
         } catch { }
     };
 
-    const fetchUserList = async () => {
+    const fetchUserList = async (searchText = "") => {
         try {
             const res = await proPermissionData.mutateAsync({
-                params: { gb: "worker_search", user: auth?.user?.userId || "" }
+                params: { gb: "worker_search", user: auth?.user?.userId || "", worker_name: searchText }
             });
             if (res?.success === "777") {
                 const list = res.resultjson.map((u) => ({
                     text: `${u.Name}(${u.Position})`, value: u.Id, position: u.Position, name: u.Name,
                 }));
                 setUserOptions(list);
-                setFilteredUsers(list);
+            } else {
+                setUserOptions([]);
             }
-        } catch { }
+        } catch {
+            setUserOptions([]);
+        }
     };
 
     useEffect(() => {
@@ -74,8 +76,8 @@ const ProPermissionModal = ({ open, onClose }) => {
     }, [open]);
 
     const handleUserFilterChange = (e) => {
-        const v = (e.filter?.value || "").toLowerCase();
-        setFilteredUsers(userOptions.filter((u) => u.text.toLowerCase().includes(v)));
+        const v = e.filter?.value || "";
+        fetchUserList(v);
     };
 
     const handleSubmit = async (e) => {
@@ -244,7 +246,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                 <div className="pp-form-field">
                                     <label className="pp-form-label">작업자 선택 <span className="pp-required">*</span></label>
                                     <DropDownList
-                                        data={filteredUsers}
+                                        data={userOptions}
                                         textField="text"
                                         dataItemKey="value"
                                         filterable
@@ -254,7 +256,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                             if (s) setFormData((prev) => ({ ...prev, worker_id: s.value, worker_name: s.name, worker_position: s.position }));
                                             else setFormData((prev) => ({ ...prev, worker_id: "", worker_name: "", worker_position: "" }));
                                         }}
-                                        value={filteredUsers.find((u) => u.value === formData.worker_id) || null}
+                                        value={userOptions.find((u) => u.value === formData.worker_id) || null}
                                         disabled={loading}
                                         placeholder="작업자를 선택해 주세요"
                                     />

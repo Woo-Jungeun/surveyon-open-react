@@ -17,10 +17,10 @@ export function ProPermissionApi() {
         async (data) => await api.post(data?.params, "/pro_permission_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
-                loadingSpinner.show();
+                // loadingSpinner.show();
             },
             onSettled: (data, error, vars) => {
-                loadingSpinner.hide();
+                // loadingSpinner.hide();
             },
         }
     );
