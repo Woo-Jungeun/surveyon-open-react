@@ -83,7 +83,7 @@ const DownloadModal = ({ isOpen, onClose }) => {
                             borderRadius: '4px',
                             marginRight: '8px'
                         }}></div>
-                        <h3 className="variable-modal-title">데이터 다운로드</h3>
+                        <h3 className="variable-modal-title">다운로드</h3>
                     </div>
                     <button onClick={onClose} className="variable-modal-close"><X size={20} /></button>
                 </div>
