@@ -6,7 +6,7 @@ import { VariablePageApi } from '../variable/VariablePageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import './AdvancedFilterPopup.css';
 
-const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placeholder = '선택...', isSingle = false }) => {
+const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placeholder = '선택 안함', isSingle = false }) => {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = React.useRef(null);
 
@@ -37,6 +37,15 @@ const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placehol
             } else {
                 newValues = [...selectedValues, val];
             }
+            // 오름차순 정렬 (숫자형 문자열일 경우 숫자 크기대로, 아닐 경우 사전순)
+            newValues.sort((a, b) => {
+                const numA = Number(a);
+                const numB = Number(b);
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return numA - numB;
+                }
+                return String(a).localeCompare(String(b));
+            });
             onChange(newValues.join(','));
         }
     };
@@ -355,6 +364,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         setSelectedVarId(null);
         setVarName('');
         setVarLabel('');
+        setSelectedCatIndex(0);
         setCategories([{
             id: Date.now(),
             label: '',
@@ -378,7 +388,15 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                             if (result?.success === "777") {
                                 modal.showAlert("성공", "삭제되었습니다.");
                                 if (onSaved) onSaved();
-                                if (selectedVarId === varId) handleAddNew();
+
+                                const remainingVars = variables.filter(v => v.id !== varId);
+                                setVariables(remainingVars);
+                                if (remainingVars.length > 0) {
+                                    handleSelectVariable(remainingVars[0].id);
+                                } else {
+                                    handleAddNew();
+                                }
+
                                 if (activeVariableId === varId && onDeleteActive) {
                                     onDeleteActive();
                                 }
@@ -401,12 +419,12 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
     const handleAddCategory = () => {
         setCategories([...categories, { id: Date.now(), label: '', conditionSets: [{ id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }] }]);
+        setSelectedCatIndex(categories.length);
     };
 
     const handleRemoveCategory = (catId) => {
-        if (categories.length > 1) {
-            setCategories(categories.filter(c => c.id !== catId));
-        }
+        setCategories(categories.filter(c => c.id !== catId));
+        setSelectedCatIndex(0);
     };
 
     const handleUpdateCategoryLabel = (catIndex, label) => {
@@ -860,7 +878,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                                         value={varLabel}
                                                         onChange={e => setVarLabel(e.target.value)}
                                                         onClick={e => e.stopPropagation()}
-                                                        item-title-v5placeholder="필터명 입력"
+                                                        placeholder="필터명 입력"
                                                     />
                                                 </>
                                             ) : (
@@ -941,11 +959,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                             )}
                                             <div className="item-info-v5" style={{ color: selectedCatIndex === idx ? '#3b82f6' : '#64748b' }}>{cat.conditionSets.reduce((acc, set) => acc + set.conditions.length, 0)}개</div>
                                         </div>
-                                        {categories.length > 1 && (
-                                            <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleRemoveCategory(cat.id); }}>
-                                                <X size={14} color="#94a3b8" />
-                                            </button>
-                                        )}
+                                        <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleRemoveCategory(cat.id); }}>
+                                            <X size={14} color="#94a3b8" />
+                                        </button>
                                     </div>
                                 ))
                             )}

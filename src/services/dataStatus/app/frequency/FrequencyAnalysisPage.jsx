@@ -1189,7 +1189,6 @@ const FrequencyAnalysisPage = () => {
                     onDeleteActive={() => {
                         setSelectedVariableIds([]);
                         setFilterLogic('');
-                        setIsFilterPopupOpen(false);
                         fetchOverviewVars();
                     }}
                 />
