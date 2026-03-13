@@ -1055,14 +1055,14 @@ const FrequencyAnalysisPage = () => {
                     <Filter size={15} />
                     고급 필터 생성
                 </button>
-
+                {/* 
                 <button
                     className="overview-settings-btn"
                     onClick={() => setIsOverviewPopupOpen(true)}
                 >
                     <Settings size={15} />
                     배너 설정
-                </button>
+                </button> */}
                 {/*todo 엑셀다운로드 임시 주석 */}
                 {/* <button
                     style={{
