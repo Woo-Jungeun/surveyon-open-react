@@ -257,12 +257,6 @@ const CheckboxCell = memo((props) => {
     );
 });
 
-/** 멀티라인 컬럼 헤더 (줄바꿈 지원) */
-const multilineHeader = (props) => (
-    <span style={{ display: 'block', textAlign: 'center', whiteSpace: 'pre-line', lineHeight: '1.2', width: '100%' }}>
-        {props.title}
-    </span>
-);
 
 /** 읽기 전용 셀 - 박스 없이 텍스트만 표시 */
 const ReadOnlyCell = (props) => (
@@ -503,9 +497,11 @@ const MapConfigTab = ({
                 ...commonPrefix,
                 { field: 'logic', title: '로직체크', width: '100px' },
                 { field: 'label', title: '레이블', width: '180px' },
-                { field: 'decimal', title: '소수점\n자리수', width: '100px', headerCell: multilineHeader },
-                { field: 'spssName', title: 'SPSS\n변수명', width: '120px', headerCell: multilineHeader },
+                { field: 'decimal', title: '소수점\n자리수', width: '100px' },
+                { field: 'spssName', title: 'SPSS\n변수명', width: '120px' },
                 { field: 'type', title: '변수 유형', width: '120px' },
+                { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
+                { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
                 { field: 'memo', title: '메모', minWidth: 200 },
                 { field: 'multiValChange', title: '멀티값\n변경', width: '90px' },
                 { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '100px' },
@@ -517,17 +513,17 @@ const MapConfigTab = ({
 
         return [
             ...commonPrefix,
-            { field: 'startPos', title: '시작\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'valLen', title: '보기\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'valCnt', title: '보기\n갯수', width: '85px', headerCell: multilineHeader },
-            { field: 'totalLen', title: '총\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'etcOpen', title: '기타\n오픈정의', width: '100px', headerCell: multilineHeader },
+            { field: 'startPos', title: '시작\n자리수', width: '90px' },
+            { field: 'valLen', title: '보기\n자리수', width: '90px' },
+            { field: 'valCnt', title: '보기\n갯수', width: '85px' },
+            { field: 'totalLen', title: '총\n자리수', width: '90px' },
+            { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
             { field: 'logic', title: '로직체크', width: '150px' },
             { field: 'label', title: '레이블', minWidth: 50 },
-            { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
-            // { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
+            { field: 'decimal', title: '소수점\n자리수', width: '90px' },
+            // { field: 'spssName', title: 'SPSS\n변수명', width: '100px' },
             { field: 'type', title: '변수\n유형', width: '140px' },
-            { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
+            { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
             { field: 'delete', title: '삭제', width: '50px' }
         ];
     }, [isDetailed]);
