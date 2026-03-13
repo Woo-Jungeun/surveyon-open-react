@@ -561,7 +561,7 @@ const FrequencyAnalysisPage = () => {
     const [isTotalFilterOpen, setIsTotalFilterOpen] = useState(false);
     const totalFilterRef = useRef(null);
 
-    // 신규 고급 필터 선택 드롭다운 상태
+    // 신규 필터 문항 선택 드롭다운 상태
     const [isVariableDropdownOpen, setIsVariableDropdownOpen] = useState(false);
     const [selectedVariableId, setSelectedVariableId] = useState(null);
     const variableDropdownRef = useRef(null);
@@ -706,13 +706,22 @@ const FrequencyAnalysisPage = () => {
                 }))
                 : [];
 
+            const rawType = (item.type || '').toLowerCase();
+            let color = 'default';
+            if (rawType.includes('single')) color = 'single';
+            else if (rawType.includes('multi')) color = 'multi';
+            else if (rawType.includes('dummy')) color = 'dummy';
+            else if (rawType.includes('open')) color = 'open';
+
             return {
                 id: item.table_id || item.id,
                 target_id: item.id || item.table_id,
                 label: item.title || item.label || item.name || item.table_id || item.id,
                 n: 0,
                 data: initialData,
-                isLoaded: false
+                isLoaded: false,
+                type: item.type,
+                color: color
             };
         });
 
@@ -926,7 +935,9 @@ const FrequencyAnalysisPage = () => {
         return questions.map(q => ({
             id: q.id,
             name: q.id,
-            label: q.label
+            label: q.label,
+            type: q.type,
+            color: q.color
         }));
     }, [questions]);
 
@@ -1000,7 +1011,7 @@ const FrequencyAnalysisPage = () => {
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
             <DataHeader title="빈도분석">
-                {/* 고급 필터 선택 드롭다운 */}
+                {/* 필터 문항 선택 드롭다운 */}
                 <div className="custom-filter-wrapper" ref={variableDropdownRef}>
                     <div
                         className={`custom-filter-trigger ${isVariableDropdownOpen ? 'open' : ''}`}
@@ -1008,7 +1019,11 @@ const FrequencyAnalysisPage = () => {
                         style={{ width: '240px' }}
                     >
                         <span className="trigger-text">
-                            {selectedVariableId ? selectedVariableId : '고급 필터 선택'}
+                            {(() => {
+                                if (!selectedVariableId) return '필터 문항 선택';
+                                const selectedVar = overviewVariables.find(v => v.id === selectedVariableId);
+                                return selectedVar ? (selectedVar.label || selectedVar.id) : selectedVariableId;
+                            })()}
                         </span>
                         <ChevronDown size={14} className="trigger-icon" />
                     </div>
@@ -1035,7 +1050,7 @@ const FrequencyAnalysisPage = () => {
                                         setIsVariableDropdownOpen(false);
                                     }}
                                 >
-                                    <span className="filter-text">{v.id} {v.label ? `(${v.label})` : ''}</span>
+                                    <span className="filter-text">{v.label || v.id}</span>
                                 </div>
                             ))}
                             {overviewVariables.length === 0 && (
@@ -1053,7 +1068,7 @@ const FrequencyAnalysisPage = () => {
                     className={`advanced-filter-btn`}
                 >
                     <Filter size={15} />
-                    고급 필터 생성
+                    필터 문항 설정
                 </button>
                 {/* 
                 <button

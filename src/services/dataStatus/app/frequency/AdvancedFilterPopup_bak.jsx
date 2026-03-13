@@ -1,26 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, X, HelpCircle, Filter, Check } from 'lucide-react';
+import { Trash2, Plus, X, HelpCircle } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
-import { VariablePageApi } from '../variable/VariablePageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
-import './AdvancedFilterPopup.css';
+import './AdvancedFilterPopup_bak.css';
 
-const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive }) => {
+const AdvancedFilterPopup_bak = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive }) => {
     const modal = React.useContext(modalContext);
     const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
-    const { getOriginalVariables } = VariablePageApi();
 
     const [variables, setVariables] = useState(initialVariables);
-    const [originalVars, setOriginalVars] = useState(variablesList);
     const [selectedVarId, setSelectedVarId] = useState(null);
     const [varName, setVarName] = useState('');
     const [varLabel, setVarLabel] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isFirstLoad, setIsFirstLoad] = useState(true);
-    const [showGuide, setShowGuide] = useState(false);
-    const [selectedCatIndex, setSelectedCatIndex] = useState(0);
+    const [showGuide, setShowGuide] = useState(false); // 가이드 노출 상태
 
+    // Categories structure: [{ id, label, conditionSets: [{ id, logicOp, conditions: [...] }] }]
     const [categories, setCategories] = useState([
         {
             id: Date.now(),
@@ -28,7 +25,6 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             conditionSets: [{ id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }]
         }
     ]);
-    const [categoryLogicOp, setCategoryLogicOp] = useState('OR');
 
     const parseLogicString = (logicStr) => {
         const defaultState = [
@@ -178,7 +174,6 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
     const handleSelectVariable = async (id) => {
         if (!id || id === 'new') return;
-        if (selectedVarId === id) return; // Prevent resetting ongoing edits
         setSelectedVarId(id);
 
         // Find in local state first to see if we already have the information (to avoid redundant API calls)
@@ -340,10 +335,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
     };
 
     const handleSave = async () => {
-        let currentVarName = varName;
-        if (!currentVarName.trim()) {
-            currentVarName = `var_${Date.now()}`;
-            setVarName(currentVarName);
+        if (!varName.trim()) {
+            modal.showAlert("알림", "변수 이름을 입력해주세요.");
+            return;
         }
 
         const hasValidCondition = categories.some(cat =>
@@ -356,7 +350,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             return;
         }
 
-        const fullId = `overview_${currentVarName.trim()}`;
+        const fullId = `overview_${varName.trim()}`;
 
         const payload = {
             user: auth.user.userId,
@@ -494,7 +488,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     })
                     .filter(logic => logic !== '')
                     .map(logic => `(${logic})`)
-                    .join(` ${categoryLogicOp} `);
+                    .join(' OR ');
 
                 if (onSave) {
                     onSave(fullId, totalLogic, varLabel);
@@ -510,43 +504,10 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         }
     };
 
-    useEffect(() => {
-        const fetchOriginal = async () => {
-            if (!auth?.user?.userId || !pageId) return;
-            try {
-                const result = await getOriginalVariables.mutateAsync({ user: auth.user.userId, pageid: pageId });
-                if (result?.success === "777" && result.resultjson) {
-                    const vars = Object.values(result.resultjson).map(item => ({
-                        sysName: item.id,
-                        label: item.label,
-                        type: item.type
-                    }));
-                    setOriginalVars(vars);
-                }
-            } catch (error) {
-                console.error("Failed to fetch original variables for dropdown:", error);
-            }
-        };
-        fetchOriginal();
-    }, [auth?.user?.userId, pageId]);
-
-    const activeList = originalVars.length > 0 ? originalVars : variablesList;
-    const kendoVarOptions = activeList.map(v => {
-        const rawType = (v.type || '').toLowerCase();
-        let color = v.color || 'default';
-        if (!v.color && v.type) {
-            if (rawType.includes('single')) color = 'single';
-            else if (rawType.includes('multi')) color = 'multi';
-            else if (rawType.includes('dummy')) color = 'dummy';
-            else if (rawType.includes('open')) color = 'open';
-        }
-        return {
-            text: v.label ? `${v.sysName || v.id} (${v.label})` : (v.sysName || v.id),
-            value: v.sysName || v.id,
-            type: v.type,
-            color: color
-        };
-    });
+    const kendoVarOptions = variablesList.map(v => ({
+        text: v.label ? `${v.sysName} (${v.label})` : v.sysName,
+        value: v.sysName
+    }));
 
     const operatorOptions = [
         { text: '== (같음)', value: '==' },
@@ -559,301 +520,262 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         { text: 'not in (미포함)', value: 'not in' },
     ];
 
-    const DropDownItemRender = (li, itemProps) => {
-        const itemChildren = (
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
-                <span style={{ flex: 1, wordBreak: 'keep-all', lineHeight: '1.4' }} title={itemProps.dataItem.text}>
-                    {itemProps.dataItem.text}
-                </span>
-                {itemProps.dataItem.type && (
-                    <span className={`question-type-badge ${itemProps.dataItem.color || 'default'}`} style={{ flexShrink: 0 }}>
-                        {itemProps.dataItem.type}
-                    </span>
-                )}
-            </div>
-        );
-        return React.cloneElement(li, li.props, itemChildren);
-    };
-
-    const DropDownValueRender = (element, value) => {
-        if (!value) return element;
-        const children = (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: '4px' }}>
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }} title={value.text}>
-                    {value.text}
-                </span>
-                {value.type && (
-                    <span className={`question-type-badge ${value.color || 'default'}`} style={{ flexShrink: 0 }}>
-                        {value.type}
-                    </span>
-                )}
-            </div>
-        );
-        return React.cloneElement(element, { ...element.props, style: { ...element.props.style, display: 'flex', flex: 1, minWidth: 0 } }, children);
-    };
-
     return (
-        <div className="advanced-filter-overlay-v5">
-            <div className="advanced-filter-content-v5" onClick={(e) => e.stopPropagation()}>
-                <div className="filter-popup-header-v5">
-                    <div className="header-title-v5">
-                        <h3>필터 문항 설정</h3>
+        <div className="advanced-filter-overlay-v4">
+            <div className="advanced-filter-content-v4" onClick={(e) => e.stopPropagation()}>
+                <div className="filter-popup-header-v4">
+                    <div className="header-title-v4">
+                        <h3>고급 필터 설정</h3>
                         <p>이곳에서 만드는 변수 ID는 항상 overview_* 형태로 저장됩니다. 저장 후 필터 문항 선택에서 바로 선택할 수 있습니다.</p>
                     </div>
-                    <div className="header-actions-v5">
-                        {/* <button className={`guide-btn-v5 ${showGuide ? 'active' : ''}`} onClick={handleToggleGuide}>
+                    <div className="header-actions-v4">
+                        <button className={`guide-btn-v4 ${showGuide ? 'active' : ''}`} onClick={handleToggleGuide}>
                             <HelpCircle size={16} /> {showGuide ? '가이드 닫기' : '가이드 보기'}
-                        </button> */}
-                        <button onClick={onClose} className="close-btn-v5"><X size={20} /></button>
+                        </button>
+                        <button onClick={onClose} className="close-btn-v4"><X size={20} /></button>
                     </div>
                 </div>
 
-                {showGuide && (
-                    <div className="guide-section-wrap-v5">
-                        <div className="guide-section-v5">
-                            <div className="guide-card-v5">
-                                <h5>조건 설정</h5>
-                                <p>각 조건은 <strong>변수 + 연산자 + 값</strong>으로 구성됩니다.</p>
-                                <p>조건 세트 내에서 <strong>AND</strong> 또는 <strong>OR</strong>로 연결할 수 있습니다.</p>
-                                <p className="guide-tip-v5">AND: 모든 조건 만족 | OR: 하나 이상 만족</p>
-                            </div>
-                            <div className="guide-card-v5">
-                                <h5>조건 세트</h5>
-                                <p>복잡한 로직을 위해 여러 조건 세트를 생성 가능합니다.</p>
-                                <p>조건 세트 간에도 <strong>AND</strong> 또는 <strong>OR</strong>로 연결됩니다.</p>
-                                <p className="guide-tip-v5">예시: (Q1=1 OR Q2=2) AND (Q3&gt;5 OR Q4&lt;10)</p>
-                            </div>
-                            <div className="guide-card-v5">
-                                <h5>연산자</h5>
-                                <p><strong>==</strong>: 같음 | <strong>!=</strong>: 같지 않음</p>
-                                <p><strong>&gt;, &gt;=, &lt;, &lt;=</strong>: 크기 비교 (숫자)</p>
-                                <p><strong>in / not in</strong>: 여러 값 포함/제외 (예: 1,2,3)</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div className="filter-popup-container-v5">
-                    {/* Column 1: 필터문항목록 (Variables) */}
-                    <div className="col-v5 col-vars">
-                        <div className="col-header-v5">
-                            <span>필터 문항 목록</span>
-                            <button className="add-btn-v5" onClick={handleAddNew}><Plus size={16} /></button>
-                        </div>
-                        <div className="col-list-v5">
-                            {variables.map(v => {
-                                const infoLength = v.info ? v.info.length : 1;
-                                const isSelected = selectedVarId === v.id;
-                                const displayLabel = isSelected && varLabel ? varLabel : (v.label || v.id);
-                                const displayGroupsCount = isSelected ? categories.length : infoLength;
-
-                                return (
-                                    <div
-                                        key={v.id}
-                                        className={`list-item-v5 ${isSelected ? 'active' : ''}`}
-                                        onClick={() => handleSelectVariable(v.id)}
-                                    >
-                                        <div className="item-text-v5">
-                                            {isSelected ? (
-                                                <>
-                                                    <div className="item-title-v5" style={{ fontSize: '11px', color: '#64748b', fontWeight: '500', marginBottom: '4px' }}>
-                                                        {/* {v.id || '새 변수'} */}
-                                                    </div>
-                                                    <input
-                                                        className="inline-input-v5"
-                                                        value={varLabel}
-                                                        onChange={e => setVarLabel(e.target.value)}
-                                                        onClick={e => e.stopPropagation()}
-                                                        item-title-v5placeholder="필터명 입력"
-                                                    />
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <div className="item-title-v5" style={{ fontSize: '11px', color: '#64748b', fontWeight: '500', marginBottom: '2px' }}>
-                                                        {/* {v.id} */}
-                                                    </div>
-                                                    <div className="item-title-v5">{v.label}</div>
-                                                </>
-                                            )}
-                                            <div className="item-info-v5">{displayGroupsCount}개 그룹</div>
-                                        </div>
-                                        <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleDeleteVariable(v.id); }}><X size={14} color="#94a3b8" /></button>
-                                    </div>
-                                );
-                            })}
-                            {!selectedVarId && (
-                                <div className="list-item-v5 active">
-                                    <div className="item-text-v5">
-                                        <input
-                                            autoFocus
-                                            className="inline-input-v5"
-                                            value={varLabel}
-                                            onChange={e => setVarLabel(e.target.value)}
-                                            placeholder="필터명 입력"
-                                        />
-                                        <div className="item-info-v5">{categories.length}개 그룹</div>
-                                    </div>
-                                    <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleAddNew(); }}><X size={14} color="#ef4444" /></button>
-                                </div>
-                            )}
-                        </div>
-                        {/* <div className="col-footer-v5">
-                            <button className="dash-add-btn-v5" onClick={handleAddNew}>
-                                <Plus size={14} /> 그룹 추가 ({variables.length}/10)
+                <div className="filter-popup-container-v4">
+                    {/* Sidebar */}
+                    <div className="filter-sidebar-v4">
+                        <div className="sidebar-header-v4">
+                            <span>overview 변수 <span className="var-count-badge-v4">{variables.length}개</span></span>
+                            <button className="add-new-btn-v4" onClick={handleAddNew}>
+                                <Plus size={14} /> 새 변수
                             </button>
-                        </div> */}
-                    </div>
-
-                    {/* Column 2: 필터 그룹 (Categories) */}
-                    <div className="col-v5 col-cats">
-                        <div className="col-header-v5 cats-header-v5">
-                            <span>필터 그룹</span>
-                            <div className="cats-header-actions-v5">
-                                <div className="cond-logic-toggle-v5 mini">
-                                    <button
-                                        className={categoryLogicOp === 'AND' ? 'active' : ''}
-                                        onClick={() => setCategoryLogicOp('AND')}
-                                    >AND</button>
-                                    <button
-                                        className={categoryLogicOp === 'OR' ? 'active' : ''}
-                                        onClick={() => setCategoryLogicOp('OR')}
-                                    >OR</button>
-                                </div>
-                                <button className="add-btn-v5" onClick={handleAddCategory}><Plus size={16} /></button>
-                            </div>
                         </div>
-                        <div className="col-list-v5 pad-inside">
-                            {isLoading ? (
-                                <div className="loading-v5">데이터를 불러오는 중...</div>
-                            ) : (
-                                categories.map((cat, idx) => (
-                                    <div
-                                        key={cat.id}
-                                        className={`list-item-v5 cat-item-v5 ${selectedCatIndex === idx ? 'active' : ''}`}
-                                        onClick={() => setSelectedCatIndex(idx)}
-                                    >
-                                        <div className="item-text-v5">
-                                            {selectedCatIndex === idx ? (
-                                                <input
-                                                    className="inline-input-v5"
-                                                    value={cat.label}
-                                                    onChange={e => handleUpdateCategoryLabel(idx, e.target.value)}
-                                                    placeholder="그룹명 입력"
-                                                />
-                                            ) : (
-                                                <div className="item-title-v5">{cat.label || `새 그룹 ${idx + 1}`}</div>
-                                            )}
-                                            <div className="item-info-v5" style={{ color: selectedCatIndex === idx ? '#3b82f6' : '#64748b' }}>1개</div>
-                                        </div>
-                                        {categories.length > 1 && (
-                                            <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleRemoveCategory(cat.id); }}>
-                                                <X size={14} color="#94a3b8" />
-                                            </button>
-                                        )}
+                        <div className="variable-list-v4">
+                            {!selectedVarId && (
+                                <div className="variable-item-v4 active is-new">
+                                    <div className="v-item-info">
+                                        <div className="v-id">{varName ? `overview_${varName}` : '(새 변수)'}</div>
+                                        <div className="v-label">{varLabel || (varName ? '라벨 입력 중...' : '이름 입력 중...')}</div>
                                     </div>
-                                ))
+                                </div>
                             )}
+                            {variables.map(v => (
+                                <div
+                                    key={v.id}
+                                    className={`variable-item-v4 ${selectedVarId === v.id ? 'active' : ''}`}
+                                    onClick={() => handleSelectVariable(v.id)}
+                                >
+                                    <div className="v-item-info">
+                                        <div className="v-id">{v.id}</div>
+                                        <div className="v-label">{v.label}</div>
+                                    </div>
+                                    <button
+                                        className="v-del-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteVariable(v.id);
+                                        }}
+                                        title="변수 삭제"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     </div>
 
-                    {/* Column 3: 조건 설정 (Condition Sets) */}
-                    <div className="col-v5 col-conds">
+                    {/* Content Area */}
+                    <div className="filter-main-v4">
+                        {showGuide && (
+                            <div className="guide-section-v4">
+                                <div className="guide-card-v4">
+                                    <h5>조건 설정</h5>
+                                    <p>각 조건은 <strong>변수 + 연산자 + 값</strong>으로 구성됩니다.</p>
+                                    <p>조건 세트 내에서 <strong>AND</strong> 또는 <strong>OR</strong>로 연결할 수 있습니다.</p>
+                                    <p className="guide-tip-v4">AND: 모든 조건 만족 | OR: 하나 이상 만족</p>
+                                </div>
+                                <div className="guide-card-v4">
+                                    <h5>조건 세트</h5>
+                                    <p>복잡한 로직을 위해 여러 조건 세트를 생성 가능합니다.</p>
+                                    <p>조건 세트 간에도 <strong>AND</strong> 또는 <strong>OR</strong>로 연결됩니다.</p>
+                                    <p className="guide-tip-v4">예시: (Q1=1 OR Q2=2) AND (Q3&gt;5 OR Q4&lt;10)</p>
+                                </div>
+                                <div className="guide-card-v4">
+                                    <h5>연산자</h5>
+                                    <p><strong>==</strong>: 같음 | <strong>!=</strong>: 같지 않음</p>
+                                    <p><strong>&gt;, &gt;=, &lt;, &lt;=</strong>: 크기 비교 (숫자)</p>
+                                    <p><strong>in / not in</strong>: 여러 값 포함/제외 (예: 1,2,3)</p>
+                                </div>
+                            </div>
+                        )}
                         {isLoading ? (
-                            <div className="loading-v5">데이터를 불러오는 중...</div>
-                        ) : categories[selectedCatIndex] ? (
+                            <div className="filter-loading-v4">데이터를 불러오는 중...</div>
+                        ) : (
                             <>
-                                <div className="cond-header-v5">
-                                    <div className="cond-title-v5">
-                                        <h3>{categories[selectedCatIndex].label || `새 그룹 ${selectedCatIndex + 1}`}</h3>
-                                        <p>조건을 입력하여 데이터를 필터링합니다.</p>
+                                {/* Meta Fields */}
+                                <div className="meta-config-v4">
+                                    <div className="meta-input-group-v4">
+                                        <label>변수 이름</label>
+                                        <div className="id-input-v4">
+                                            <span className="prefix">overview_</span>
+                                            <input
+                                                type="text"
+                                                value={varName}
+                                                onChange={(e) => setVarName(e.target.value)}
+                                                placeholder="변수명"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="cond-logic-toggle-v5">
-                                        <button
-                                            className={categories[selectedCatIndex].conditionSets[0]?.logicOp === 'AND' ? 'active' : ''}
-                                            onClick={() => handleChangeSetLogicOp(selectedCatIndex, 0, 'AND')}
-                                        >AND</button>
-                                        <button
-                                            className={categories[selectedCatIndex].conditionSets[0]?.logicOp === 'OR' ? 'active' : ''}
-                                            onClick={() => handleChangeSetLogicOp(selectedCatIndex, 0, 'OR')}
-                                        >OR</button>
+                                    <div className="meta-input-group-v4">
+                                        <label>라벨</label>
+                                        <input
+                                            type="text"
+                                            className="full-input-v4"
+                                            value={varLabel}
+                                            onChange={(e) => setVarLabel(e.target.value)}
+                                            placeholder="라벨 입력"
+                                        />
                                     </div>
                                 </div>
 
-                                <div className="cond-body-v5">
-                                    {categories[selectedCatIndex].conditionSets.map((set, setIndex) => (
-                                        <div key={set.id} className="cond-set-box-v5">
-                                            {setIndex > 0 && (
-                                                <div className="set-connector-v5">
-                                                    <div className="connector-toggle-v5">
-                                                        <span className={set.connectorOp === 'AND' ? 'active' : ''} onClick={() => handleChangeConnectorOp(selectedCatIndex, setIndex, 'AND')}>AND</span>
-                                                        <span className={set.connectorOp === 'OR' ? 'active' : ''} onClick={() => handleChangeConnectorOp(selectedCatIndex, setIndex, 'OR')}>OR</span>
-                                                    </div>
-                                                </div>
-                                            )}
-                                            <div className="cond-wrapper-v5">
-                                                {set.conditions.map((cond, condIndex) => (
-                                                    <div key={condIndex} className="cond-row-v5">
-                                                        <div className="cond-var">
-                                                            <DropDownList
-                                                                data={kendoVarOptions}
-                                                                textField="text"
-                                                                dataItemKey="value"
-                                                                placeholder="문항 선택"
-                                                                itemRender={DropDownItemRender}
-                                                                valueRender={DropDownValueRender}
-                                                                value={cond.varName ? (kendoVarOptions.find(item => item.value === cond.varName) || { text: cond.varName, value: cond.varName }) : null}
-                                                                onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'varName', e.value ? e.value.value : "")}
-                                                            />
-                                                        </div>
-                                                        <div className="cond-op">
-                                                            <DropDownList
-                                                                data={operatorOptions}
-                                                                textField="text"
-                                                                dataItemKey="value"
-                                                                placeholder="연산자"
-                                                                value={cond.operator ? (operatorOptions.find(op => op.value === cond.operator) || { text: cond.operator, value: cond.operator }) : null}
-                                                                onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'operator', e.value ? e.value.value : "")}
-                                                            />
-                                                        </div>
-                                                        <div className="cond-val">
+                                {/* Filter Section */}
+                                <div className="filter-card-v4">
+                                    <div className="card-header-v4">
+                                        <span className="card-title-v4">필터</span>
+                                        <p className="card-desc-v4">필터 라벨과 조건을 입력하세요. 값은 저장 시 자동으로 순번이 부여됩니다.</p>
+                                    </div>
+
+                                    <div className="categories-list-area-v4">
+                                        {categories.map((cat, catIndex) => (
+                                            <div key={cat.id} className="filter-category-block-v4">
+                                                <div className="category-meta-row-v4">
+                                                    <div className="category-label-group-v4">
+                                                        <label>필터 라벨</label>
+                                                        <div className="category-input-wrapper-v4">
                                                             <input
                                                                 type="text"
-                                                                value={cond.value}
-                                                                onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'value', e.target.value)}
-                                                                placeholder="값 입력"
+                                                                value={cat.label}
+                                                                onChange={(e) => handleUpdateCategoryLabel(catIndex, e.target.value)}
+                                                                placeholder="카테고리 라벨"
                                                             />
-                                                        </div>
-                                                        <div className="cond-actions">
-                                                            <button className="icon-btn-v5 add" onClick={() => handleAddCondition(selectedCatIndex, setIndex, condIndex)}>
-                                                                <Plus size={14} color="#3b82f6" strokeWidth={3} />
-                                                            </button>
-                                                            <button className="icon-btn-v5 delete" onClick={() => handleDeleteCondition(selectedCatIndex, setIndex, condIndex)}>
-                                                                <X size={14} color="#ef4444" strokeWidth={3} />
+                                                            <button className="category-del-btn-v4" onClick={() => handleRemoveCategory(cat.id)}>
+                                                                <Trash2 size={16} />
                                                             </button>
                                                         </div>
                                                     </div>
-                                                ))}
+                                                </div>
+
+                                                <div className="filter-logic-area-v4">
+                                                    {cat.conditionSets.map((set, setIndex) => (
+                                                        <React.Fragment key={set.id}>
+                                                            {setIndex > 0 && (
+                                                                <div className="set-connector-v4">
+                                                                    <div className="connector-box-v4">
+                                                                        <div className="logic-toggle-v4">
+                                                                            <button
+                                                                                className={set.connectorOp === 'AND' || !set.connectorOp ? 'active' : ''}
+                                                                                onClick={() => handleChangeConnectorOp(catIndex, setIndex, 'AND')}
+                                                                            >AND</button>
+                                                                            <button
+                                                                                className={set.connectorOp === 'OR' ? 'active' : ''}
+                                                                                onClick={() => handleChangeConnectorOp(catIndex, setIndex, 'OR')}
+                                                                            >OR</button>
+                                                                        </div>
+                                                                        <div className="connector-text-v4">
+                                                                            모든 조건 세트는 {(set.connectorOp || 'AND')}로 연결됩니다.
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            <div className="logic-set-box-v4">
+                                                                <div className="set-header-v4">
+                                                                    <div className="logic-toggle-v4">
+                                                                        <button
+                                                                            className={set.logicOp === 'AND' ? 'active' : ''}
+                                                                            onClick={() => handleChangeSetLogicOp(catIndex, setIndex, 'AND')}
+                                                                        >AND</button>
+                                                                        <button
+                                                                            className={set.logicOp === 'OR' ? 'active' : ''}
+                                                                            onClick={() => handleChangeSetLogicOp(catIndex, setIndex, 'OR')}
+                                                                        >OR</button>
+                                                                    </div>
+                                                                    <div className="set-actions-v4">
+                                                                        {cat.conditionSets.length > 1 && (
+                                                                            <button className="set-del-btn-v4" onClick={() => handleDeleteSet(catIndex, setIndex)}>
+                                                                                <Trash2 size={16} />
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="set-rules-v4">
+                                                                    {set.conditions.map((cond, condIndex) => (
+                                                                        <div key={condIndex} className="condition-row-v4">
+                                                                            <div className="field-var-v4">
+                                                                                <DropDownList
+                                                                                    data={kendoVarOptions}
+                                                                                    textField="text"
+                                                                                    dataItemKey="value"
+                                                                                    placeholder="문항 선택"
+                                                                                    value={cond.varName ? (kendoVarOptions.find(item => item.value === cond.varName) || { text: cond.varName, value: cond.varName }) : null}
+                                                                                    onChange={(e) => handleConditionChange(catIndex, setIndex, condIndex, 'varName', e.value ? e.value.value : "")}
+                                                                                />
+                                                                            </div>
+                                                                            <div className="field-op-v4">
+                                                                                <DropDownList
+                                                                                    data={operatorOptions}
+                                                                                    textField="text"
+                                                                                    dataItemKey="value"
+                                                                                    placeholder="연산자"
+                                                                                    value={cond.operator ? (operatorOptions.find(op => op.value === cond.operator) || { text: cond.operator, value: cond.operator }) : null}
+                                                                                    onChange={(e) => handleConditionChange(catIndex, setIndex, condIndex, 'operator', e.value ? e.value.value : "")}
+                                                                                />
+                                                                            </div>
+                                                                            <div className="field-val-v4">
+                                                                                <input
+                                                                                    type="text"
+                                                                                    value={cond.value}
+                                                                                    onChange={(e) => handleConditionChange(catIndex, setIndex, condIndex, 'value', e.target.value)}
+                                                                                    placeholder="값 입력"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="row-actions-v4">
+                                                                                <button className="icon-btn-v4 add" onClick={() => handleAddCondition(catIndex, setIndex, condIndex)}>
+                                                                                    <Plus size={16} />
+                                                                                </button>
+                                                                                <button className="icon-btn-v4 delete" onClick={() => handleDeleteCondition(catIndex, setIndex, condIndex)}>
+                                                                                    <Trash2 size={16} />
+                                                                                </button>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        </React.Fragment>
+                                                    ))}
+                                                    <div className="add-set-row-v4">
+                                                        <button className="add-set-btn-v4" onClick={() => handleAddSet(catIndex)}>
+                                                            <Plus size={14} /> 조건 세트 추가
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
+
+                                    <div className="add-category-footer-v4">
+                                        <button className="add-category-btn-v4" onClick={handleAddCategory}>
+                                            <Plus size={16} /> 필터(카테고리) 추가
+                                        </button>
+                                    </div>
                                 </div>
                             </>
-                        ) : (
-                            <div className="empty-cond-v5">필터 그룹을 선택해주세요.</div>
                         )}
                     </div>
                 </div>
 
-                <div className="filter-popup-footer-v5">
-                    {/* <button className="btn-delete-all-v5" onClick={() => selectedVarId && handleDeleteVariable(selectedVarId)}>전체 삭제</button> */}
-                    <div className="footer-right-v5">
-                        <button className="btn-cancel-v5" onClick={onClose}>취소</button>
-                        <button className="btn-apply-v5" onClick={handleSave}>저장</button>
-                    </div>
+                <div className="filter-popup-footer-v4">
+                    <button onClick={onClose} className="btn-cancel-v4">취소</button>
+                    <button onClick={handleSave} className="btn-apply-v4">저장</button>
                 </div>
             </div>
         </div>
     );
 };
 
-export default AdvancedFilterPopup;
+export default AdvancedFilterPopup_bak;
