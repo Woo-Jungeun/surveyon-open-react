@@ -54,7 +54,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                             >
                                 <div className="sidebar-item-content">
                                     <div className="sidebar-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', gap: '8px' }}>
-                                        <div className="sidebar-item-name" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 0 }}>
+                                        <div className="sidebar-item-name" style={{ flex: 1, minWidth: 0, wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
                                             {item[displayField]}
                                         </div>
                                         {item.type && (
