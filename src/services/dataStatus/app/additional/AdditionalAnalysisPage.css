@@ -750,6 +750,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
+    flex: 1;
+    min-width: 0;
 }
 
 .result-tab {
@@ -759,21 +761,34 @@
     color: #1e293b;
     margin: 0;
     user-select: none;
+    display: flex;
+    align-items: center;
+    min-width: 0;
 }
 
 .y-info-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: #475569;
     background: #f8fafc;
-    padding: 1px 10px;
+    padding: 2px 12px;
     border-radius: 20px;
     border: 1px solid #e2e8f0;
     margin-left: 8px;
-    display: inline-flex;
-    align-items: center;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    display: inline-block;
     vertical-align: middle;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+    max-width: 900px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+}
+
+@media (max-width: 1400px) {
+    .y-info-label {
+        max-width: 250px;
+    }
 }
 
 .stats-toggle-btn {

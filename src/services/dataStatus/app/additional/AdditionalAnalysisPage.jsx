@@ -122,7 +122,7 @@ const AdditionalAnalysisPage = () => {
     const [selectedWeight, setSelectedWeight] = useState("없음");
     const [tableName, setTableName] = useState('Banner by Q1'); // Added table name state
     const [filterExpression, setFilterExpression] = useState(''); // Added filter expression state
-    const [tableMode, setTableMode] = useState('merged'); // 'merged' | 'separated'
+    const [tableMode, setTableMode] = useState('separated'); // 'merged' | 'separated' (Force default to separated)
     const [globalPaletteId, setGlobalPaletteId] = useState('default');
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [collapsedIndices, setCollapsedIndices] = useState(new Set());
@@ -371,9 +371,11 @@ const AdditionalAnalysisPage = () => {
                                             mappedRows = yIds.map(id => loadedVariables.find(v => v.name === id || v.id === id) || { id, name: id });
                                         }
                                         if (tData.config.row_eval_mode) {
-                                            setTableMode(tData.config.row_eval_mode === 'split' ? 'separated' : 'merged');
+                                            setTableMode('separated');
+                                            // setTableMode(tData.config.row_eval_mode === 'split' ? 'separated' : 'merged');
                                         } else if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
-                                            setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
+                                            setTableMode('separated');
+                                            // setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
                                         } else if (yIds.length > 1) {
                                             setTableMode('separated');
                                         }
@@ -447,7 +449,7 @@ const AdditionalAnalysisPage = () => {
                                         weight_col: weightCol === "없음" ? "" : weightCol,
                                         filter_expression: filterExpr,
                                         include_stats: ALL_STATS,
-                                        row_eval_mode: tData.config?.row_eval_mode ? tData.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined'),
+                                        row_eval_mode: 'split', // tData.config?.row_eval_mode ? tData.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined'),
                                         table: {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
@@ -701,9 +703,11 @@ const AdditionalAnalysisPage = () => {
                                 mappedRows = yIds.map(id => variables.find(v => v.name === id || v.id === id) || { id, name: id });
                             }
                             if (data.config.row_eval_mode) {
-                                setTableMode(data.config.row_eval_mode === 'split' ? 'separated' : 'merged');
+                                setTableMode('separated');
+                                // setTableMode(data.config.row_eval_mode === 'split' ? 'separated' : 'merged');
                             } else if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
-                                setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
+                                setTableMode('separated');
+                                // setTableMode(yIds[0].includes('+') ? 'merged' : 'separated');
                             } else if (yIds.length > 1) {
                                 setTableMode('separated');
                             }
@@ -773,7 +777,7 @@ const AdditionalAnalysisPage = () => {
                             weight_col: weightId,
                             filter_expression: filterExpr,
                             include_stats: ALL_STATS,
-                            row_eval_mode: data.config?.row_eval_mode ? data.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined')
+                            row_eval_mode: 'split', // data.config?.row_eval_mode ? data.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined')
                             // sort: { group_by: "label2_label3" }
                         };
 
@@ -1292,7 +1296,7 @@ const AdditionalAnalysisPage = () => {
                     weight_col: weightId,
                     filter_expression: filterExpression,
                     include_stats: ALL_STATS,
-                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
+                    row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
                     // sort: { group_by: "label2_label3" }
                 };
 
@@ -1425,6 +1429,7 @@ const AdditionalAnalysisPage = () => {
             weight_col: weightId,
             filter_expression: currentFilter,
             include_stats: ALL_STATS,
+            row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
             // sort: { group_by: "label2_label3" }
         };
 
@@ -1616,12 +1621,12 @@ const AdditionalAnalysisPage = () => {
                                             >
                                                 표 분리
                                             </button>
-                                            <button
+                                            {/* <button
                                                 className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
                                                 onClick={() => setTableMode('merged')}
                                             >
                                                 표 병합
-                                            </button>
+                                            </button> */}
                                         </div>
 
                                         <div className="action-buttons">
