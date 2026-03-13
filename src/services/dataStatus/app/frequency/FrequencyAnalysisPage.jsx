@@ -216,8 +216,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
             <div className="agg-card-header" style={{ gap: '32px' }}>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', minWidth: 0, gap: '16px' }}>
                     <div className="agg-card-title-group" style={{ flex: 1, minWidth: 0 }}>
-                        <div className="agg-card-id">{q.id}</div>
-                        <div className="agg-card-label" style={{ whiteSpace: 'pre-wrap', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.4' }}>{q.label}</div>
+                        <div className="agg-card-id">{q.label}</div>
+                        <div className="agg-card-label" style={{ whiteSpace: 'pre-wrap', wordBreak: 'keep-all', overflowWrap: 'break-word', lineHeight: '1.4' }}>{q.id}</div>
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1178,16 +1178,16 @@ const FrequencyAnalysisPage = () => {
                     onClose={() => setIsFilterPopupOpen(false)}
                     onSave={(varId, logicStr, label) => {
                         setFilterLogic(logicStr);
-                        setSelectedVariableId(varId); // 선택된 변수로 자동 변경
+                        setSelectedVariableIds((prev) => prev.includes(varId) ? prev : [...prev, varId]); // 저장된 변수를 선택 목록에 추가
                         setIsFilterPopupOpen(false);
                         fetchOverviewVars(); // 팝업 닫힐 때 목록 최신화
                     }}
                     auth={auth}
                     pageId={sessionStorage.getItem("pageId")}
                     onSaved={fetchOverviewVars}
-                    activeVariableId={selectedVariableId}
+                    activeVariableId={selectedVariableIds.length === 1 ? selectedVariableIds[0] : null}
                     onDeleteActive={() => {
-                        setSelectedVariableId(null);
+                        setSelectedVariableIds([]);
                         setFilterLogic('');
                         setIsFilterPopupOpen(false);
                         fetchOverviewVars();

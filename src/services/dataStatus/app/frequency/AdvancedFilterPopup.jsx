@@ -362,8 +362,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         }]);
     };
 
-    const handleDeleteVariable = (varId) => {
-        modal.showConfirm("삭제", `변수 '${varId}'를 삭제하시겠습니까?`, {
+    const handleDeleteVariable = (varId, filterLabel) => {
+        const displayName = filterLabel || varId;
+        modal.showConfirm("삭제", `'${displayName}' 필터를 삭제하시겠습니까?`, {
             btns: [
                 { title: "취소", click: () => { } },
                 {
@@ -495,6 +496,17 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
     };
 
     const handleSave = async () => {
+        if (!varLabel.trim()) {
+            modal.showAlert("알림", "필터명을 입력해 주세요.");
+            return;
+        }
+
+        const missingCatLabel = categories.some(cat => !cat.label.trim());
+        if (missingCatLabel) {
+            modal.showAlert("알림", "모든 그룹명을 입력해 주세요.");
+            return;
+        }
+
         let currentVarName = varName;
         if (!currentVarName.trim()) {
             currentVarName = `var_${Date.now()}`;
@@ -861,7 +873,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                             )}
                                             <div className="item-info-v5">{displayGroupsCount}개 그룹</div>
                                         </div>
-                                        <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleDeleteVariable(v.id); }}><X size={14} color="#94a3b8" /></button>
+                                        <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleDeleteVariable(v.id, v.label); }}><X size={14} color="#94a3b8" /></button>
                                     </div>
                                 );
                             })}
