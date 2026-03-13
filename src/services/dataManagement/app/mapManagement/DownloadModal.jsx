@@ -15,10 +15,12 @@ const DownloadModal = ({ isOpen, onClose }) => {
 
     const downloadList = [
         { id: 'sav', label: 'SPS (.sav) 다운로드', icon: <FileText size={24} className="download-icon-sps" /> },
-        { id: 'crd', label: 'CRD (.zip) 다운로드', icon: <FileCode size={24} className="download-icon-crd" /> },
+        { id: 'crd', label: 'CRD (.zip) 다운로드', icon: <FileCode size={24} className="download-icon-crd" />, disabled: true },
     ];
 
-    const handleDownload = async (type) => {
+    const handleDownload = async (item) => {
+        if (item.disabled) return;
+        const { id: type } = item;
         try {
             const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
             const userId = auth?.user?.userId || '';
@@ -94,8 +96,9 @@ const DownloadModal = ({ isOpen, onClose }) => {
                         {downloadList.map((item) => (
                             <div
                                 key={item.id}
-                                className="download-option-item"
-                                onClick={() => handleDownload(item.id)}
+                                className={`download-option-item ${item.disabled ? 'disabled' : ''}`}
+                                onClick={() => handleDownload(item)}
+                                style={item.disabled ? { opacity: 0.5, cursor: 'not-allowed', pointerEvents: 'none' } : {}}
                             >
                                 <div className="download-option-left">
                                     <div className="download-icon-wrapper">
