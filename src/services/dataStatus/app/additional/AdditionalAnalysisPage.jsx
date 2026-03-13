@@ -558,29 +558,41 @@ const AdditionalAnalysisPage = () => {
             }
         });
 
-        let rowGroups = rowVars.length > 0 ? getGroupDefinitions(rowVars) : [{ name: '', labels: [''] }];
+        // 표분리 모드에서는 각 행변수를 독립적인 테이블처럼 표현
+        // (실제 결과도 row_eval_mode=split 이라 각 행변수 별로 별도 표가 생김)
+        let rowGroups;
+        if (tableMode === 'separated' && rowVars.length > 1) {
+            // 각 개별 변수를 배너 안에 넣어서 분리된 것처럼 보이게
+            rowGroups = rowVars.map(v => {
+                const variable = variables.find(existing => existing.id === v.id || existing.name === v.id || existing.name === v.name);
+                let labels = [];
+                if (!variable || !variable.info) {
+                    labels = [v.id || v.name];
+                } else {
+                    labels = variable.info.filter(i => i.type !== 'config').map(i => i.label);
+                    if (labels.length === 0) labels = [v.id || v.name];
+                }
+                return { name: v.id || v.name, labels: labels.map(String) };
+            });
+        } else {
+            rowGroups = rowVars.length > 0 ? getGroupDefinitions(rowVars) : [{ name: '', labels: [''] }];
+        }
 
         return {
             colHeaderRows,
             rowGroups,
             totalDataCols,
             maxColLevels,
-            maxRowLevels: 2
+            maxRowLevels: 2,
+            isSeparated: tableMode === 'separated'
         };
-    }, [rowVars, colVars, variables]);
+    }, [rowVars, colVars, variables, tableMode]);
 
     useEffect(() => {
         if (isConfigOpen) {
             setCollapsedIndices(new Set());
         }
     }, [isConfigOpen]);
-
-    // Update Result Data from Preview
-    useEffect(() => {
-        // Clear result data resultData manually handled to avoid race conditions
-        // setResultData(null); 
-        // setIsStatsOptionsOpen(false);
-    }, [previewData]);
 
     // Reset horizontal scroll position when colVars changes
     useEffect(() => {
@@ -1782,7 +1794,7 @@ const AdditionalAnalysisPage = () => {
                                                                                 colSpan={cell.colspan}
                                                                                 rowSpan={cell.rowspan}
                                                                                 className={`preview-th ${cell.isGroupHeader ? 'group-header' : 'col-header'}`}
-                                                                                style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4', top: `${rIndex * 40}px` }}
+                                                                                style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4', top: `${rIndex * 24}px` }}
                                                                             >
                                                                                 {cell.label}
                                                                             </th>
@@ -1792,31 +1804,43 @@ const AdditionalAnalysisPage = () => {
                                                             </thead>
                                                             <tbody>
                                                                 {previewData.rowGroups.map((group, groupIdx) => (
-                                                                    group.labels.map((label, labelIdx) => (
-                                                                        <tr key={`${groupIdx}-${labelIdx}`}>
-                                                                            {group.name === '' ? (
-                                                                                <td colSpan={2} className="preview-td row-head sticky-left" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
-                                                                                    {label}
+                                                                    <React.Fragment key={groupIdx}>
+                                                                        {previewData.isSeparated && groupIdx > 0 && (
+                                                                            <tr>
+                                                                                <td
+                                                                                    colSpan={previewData.maxRowLevels + previewData.totalDataCols}
+                                                                                    className="preview-td preview-separator-row"
+                                                                                >
+                                                                                    <span className="preview-separator-label">── 표 분리 ──</span>
                                                                                 </td>
-                                                                            ) : (
-                                                                                <>
-                                                                                    {labelIdx === 0 && (
-                                                                                        <td rowSpan={group.labels.length} className="preview-td row-group-head sticky-left">
-                                                                                            {group.name}
-                                                                                        </td>
-                                                                                    )}
-                                                                                    <td className="preview-td row-head sticky-left-indent" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                                                            </tr>
+                                                                        )}
+                                                                        {group.labels.map((label, labelIdx) => (
+                                                                            <tr key={`${groupIdx}-${labelIdx}`}>
+                                                                                {group.name === '' ? (
+                                                                                    <td colSpan={2} className="preview-td row-head sticky-left" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
                                                                                         {label}
                                                                                     </td>
-                                                                                </>
-                                                                            )}
-                                                                            {Array.from({ length: previewData.totalDataCols }).map((_, colIdx) => (
-                                                                                <td key={colIdx} className="preview-td data-cell">
-                                                                                    <span className="data-placeholder">-</span>
-                                                                                </td>
-                                                                            ))}
-                                                                        </tr>
-                                                                    ))
+                                                                                ) : (
+                                                                                    <>
+                                                                                        {labelIdx === 0 && (
+                                                                                            <td rowSpan={group.labels.length} className={`preview-td row-group-head sticky-left${previewData.isSeparated ? ' separated-group-head' : ''}`}>
+                                                                                                {group.name}
+                                                                                            </td>
+                                                                                        )}
+                                                                                        <td className="preview-td row-head sticky-left-indent" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>
+                                                                                            {label}
+                                                                                        </td>
+                                                                                    </>
+                                                                                )}
+                                                                                {Array.from({ length: previewData.totalDataCols }).map((_, colIdx) => (
+                                                                                    <td key={colIdx} className="preview-td data-cell">
+                                                                                        <span className="data-placeholder">-</span>
+                                                                                    </td>
+                                                                                ))}
+                                                                            </tr>
+                                                                        ))}
+                                                                    </React.Fragment>
                                                                 ))}
                                                             </tbody>
                                                         </table>

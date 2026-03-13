@@ -294,7 +294,7 @@
 
 /* Variable Panel in Config */
 .variable-panel {
-    width: 300px;
+    width: 250px;
     border-right: 1px solid #e0e0e0;
     display: flex;
     flex-direction: column;
@@ -430,7 +430,7 @@
 
 .cross-tab-page .drop-zones-top {
     display: flex;
-    height: 190px;
+    height: 170px;
 }
 
 .corner-label {
@@ -449,7 +449,7 @@
     flex: 1;
     min-width: 0;
     background: #eff6ff;
-    padding: 16px;
+    padding: 8px 12px;
     display: flex;
     flex-direction: column;
     border-bottom: 1px solid #e0e0e0;
@@ -504,7 +504,7 @@
 .row-drop-zone {
     width: 200px;
     background: #f0fdf4;
-    padding: 16px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     border-right: 1px solid #e0e0e0;
@@ -583,7 +583,7 @@
     position: relative;
     flex: 1;
     min-width: 150px;
-    min-height: 96px;
+    min-height: 120px;
 }
 
 .cross-tab-page .dropped-tag.grouped {
@@ -1718,12 +1718,12 @@
 
 /* Vertical Scrollbar: Offset by header height (80px) */
 .preview-table-wrapper::-webkit-scrollbar-track:vertical {
-    margin-top: 80px;
+    margin-top: 50px;
 }
 
 /* Horizontal Scrollbar: Offset by sidebar width (240px) */
 .preview-table-wrapper::-webkit-scrollbar-track:horizontal {
-    margin-left: 240px;
+    margin-left: 280px;
 }
 
 /* Corner between scrollbars */
@@ -1737,7 +1737,7 @@
     width: max-content;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 12px;
+    font-size: 10px;
 }
 
 .preview-table thead {
@@ -1755,7 +1755,7 @@
 
 .preview-th {
     background: #f8fafc;
-    padding: 8px 12px;
+    padding: 2px 5px;
     border-bottom: 1px solid #e2e8f0;
     border-right: 1px solid #e2e8f0;
     color: #475569;
@@ -1765,7 +1765,7 @@
     white-space: nowrap;
     position: sticky;
     z-index: 10;
-    height: 40px;
+    height: 24px;
     /* Fixed height to prevent sticky jump */
     box-sizing: border-box;
 }
@@ -1776,7 +1776,8 @@
     top: 0;
     left: 0;
     z-index: 30;
-    min-width: 100px;
+    min-width: 280px;
+    max-width: 280px;
     border-right: 1px solid #cbd5e1;
     border-bottom: 1px solid #cbd5e1;
 }
@@ -1791,16 +1792,16 @@
 }
 
 .preview-th.col-header {
-    top: 40px;
+    top: 24px;
     /* Matches fixed height of row 1 */
     z-index: 15;
     background: #f8fafc;
-    min-width: 80px;
+    min-width: 60px;
     border-bottom: 1px solid #cbd5e1;
 }
 
 .preview-td {
-    padding: 6px 8px;
+    padding: 2px 5px;
     border-bottom: 1px solid #f1f5f9;
     border-right: 1px solid #f1f5f9;
     color: #334155;
@@ -1813,12 +1814,12 @@
     text-align: center;
     color: #475569;
     border-right: 1px solid #e2e8f0;
-    min-width: 100px;
+    min-width: 110px;
     /* Fixed Width */
-    max-width: 100px;
+    max-width: 110px;
+    word-break: break-all;
     /* Fixed Width */
     white-space: normal;
-    word-break: keep-all;
 }
 
 .preview-td.row-head {
@@ -1826,12 +1827,12 @@
     font-weight: 500;
     color: #475569;
     border-right: 1px solid #e2e8f0;
-    min-width: 140px;
+    min-width: 170px;
     /* Fixed Width */
-    max-width: 140px;
+    max-width: 170px;
+    word-break: break-all;
     /* Fixed Width */
     white-space: normal;
-    word-break: keep-all;
 }
 
 /* Sticky Rows */
@@ -1846,7 +1847,7 @@
 
 .sticky-left-indent {
     position: sticky;
-    left: 100px;
+    left: 110px;
     /* Matches fixed width of group head */
     z-index: 5;
     background: #fff;
@@ -1877,6 +1878,30 @@
 .preview-table tbody tr:hover td.sticky-left,
 .preview-table tbody tr:hover td.sticky-left-indent {
     background-color: #f1f5f9;
+}
+
+/* 표분리 구분선 */
+.preview-separator-row {
+    background: #f0f4ff !important;
+    border-top: 2px dashed #93c5fd !important;
+    border-bottom: 2px dashed #93c5fd !important;
+    text-align: center;
+    padding: 3px 0 !important;
+    height: 20px !important;
+}
+
+.preview-separator-label {
+    font-size: 10px;
+    color: #6b96d6;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+/* 표분리 모드 그룹 헤더 강조 */
+.preview-td.separated-group-head {
+    background: #e8f0fe !important;
+    color: #1a56b0 !important;
+    font-weight: 700 !important;
 }
 
 /* Cross Tab Chart Styles */
