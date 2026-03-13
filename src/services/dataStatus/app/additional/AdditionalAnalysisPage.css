@@ -430,7 +430,7 @@
 
 .cross-tab-page .drop-zones-top {
     display: flex;
-    height: 170px;
+    height: 200px;
 }
 
 .corner-label {
@@ -470,7 +470,7 @@
     display: flex;
     align-items: center;
     padding: 8px;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
 }
 
@@ -560,8 +560,8 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    gap: 8px;
-    padding: 8px;
+    gap: 6px;
+    padding: 6px;
     border: 1px dashed #93c5fd;
     border-radius: 8px;
     background: #eff6ff;
@@ -573,7 +573,7 @@
 .cross-tab-page .col-group-items {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 5px;
     flex: 1;
 }
 
@@ -583,7 +583,7 @@
     position: relative;
     flex: 1;
     min-width: 150px;
-    min-height: 120px;
+    min-height: 150px;
 }
 
 .cross-tab-page .dropped-tag.grouped {
@@ -643,7 +643,7 @@
 }
 
 .empty-slot {
-    height: 36px;
+    height: 34px;
     border-radius: 6px;
     background: #dae3f3;
     /* empty slot shadow */

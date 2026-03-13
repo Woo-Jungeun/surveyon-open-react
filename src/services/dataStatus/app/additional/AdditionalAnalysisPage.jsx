@@ -628,6 +628,9 @@ const AdditionalAnalysisPage = () => {
         setSelectedTableId(item.id);
         setTableName(item.name || "");
         setIsConfigOpen(false);
+        setResultDataList([]);
+        setFilterExpression('');
+        setSelectedWeight("없음");
         loadingSpinner.show();
 
 
@@ -823,6 +826,9 @@ const AdditionalAnalysisPage = () => {
         // Reset current config for new table and open config
         setRowVars([]);
         setColVars([]);
+        setResultDataList([]);
+        setFilterExpression('');
+        setSelectedWeight("없음");
         setIsConfigOpen(true);
 
         // 다음 렌더 후 사이드바 목록을 맨 아래로 스크롤
@@ -1030,7 +1036,7 @@ const AdditionalAnalysisPage = () => {
                         }
                         setColVars(newColVars);
                     } else {
-                        if (newColVars[targetGroupIndex].length < 2 && !newColVars[targetGroupIndex].find(v => v.id === newItem.id)) {
+                        if (newColVars[targetGroupIndex].length < 3 && !newColVars[targetGroupIndex].find(v => v.id === newItem.id)) {
                             newColVars[srcGroupIndex].splice(srcItemIndex, 1);
                             if (newColVars[srcGroupIndex].length === 0) {
                                 newColVars.splice(srcGroupIndex, 1);
@@ -1064,7 +1070,7 @@ const AdditionalAnalysisPage = () => {
                 }
             } else { // NEW or ROW_ITEM
                 if (targetType === 'col' || targetType === 'col_item') {
-                    if (newColVars[targetGroupIndex].length < 2 && !newColVars[targetGroupIndex].find(v => v.id === newItem.id)) {
+                    if (newColVars[targetGroupIndex].length < 3 && !newColVars[targetGroupIndex].find(v => v.id === newItem.id)) {
                         if (dragType === 'ROW_ITEM') {
                             setRowVars(rowVars.filter(v => v.id !== newItem.id));
                         }
@@ -1141,12 +1147,10 @@ const AdditionalAnalysisPage = () => {
                 modal.showAlert('성공', '저장되었습니다.');
                 setIsConfigOpen(false); // Close config panel after save
 
-                // If it was a new table, mark it as not new anymore
-                if (isNewTable) {
-                    setTables(tables.map(t =>
-                        t.id === selectedTableId ? { ...t, isNew: false } : t
-                    ));
-                }
+                // Update table list with new name and isNew status
+                setTables(tables.map(t =>
+                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false } : t
+                ));
 
                 // Refresh data after save
                 try {
@@ -1213,12 +1217,10 @@ const AdditionalAnalysisPage = () => {
             const saveResult = await saveCrossTable.mutateAsync(savePayload);
 
             if (saveResult?.success === "777") {
-                // Update new table status
-                if (isNewTable) {
-                    setTables(tables.map(t =>
-                        t.id === selectedTableId ? { ...t, isNew: false } : t
-                    ));
-                }
+                // Update table list with new name and isNew status
+                setTables(tables.map(t =>
+                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false } : t
+                ));
 
                 // Run Analysis
                 const variablesMap = {};
@@ -1574,7 +1576,8 @@ const AdditionalAnalysisPage = () => {
                     <div className="cross-tab-main" style={{ gap: isConfigOpen ? '8px' : '16px' }}>
                         {/* Config Section */}
                         <div className="config-section" style={{
-                            height: isConfigOpen ? '600px' : '54px',
+                            height: (isConfigOpen && resultDataList.length === 0) ? '100%' : (isConfigOpen ? '600px' : '54px'),
+                            flex: (isConfigOpen && resultDataList.length === 0) ? 1 : 'none',
                             display: 'flex',
                             flexDirection: 'column',
                             minHeight: isConfigOpen ? '400px' : '54px',
@@ -1724,7 +1727,7 @@ const AdditionalAnalysisPage = () => {
                                                                         <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'col', groupIndex); }} />
                                                                     </div>
                                                                 ))}
-                                                                {group.length < 2 && Array.from({ length: 2 - group.length }).map((_, i) => (
+                                                                {group.length < 3 && Array.from({ length: 3 - group.length }).map((_, i) => (
                                                                     <div key={`empty-${i}`} className="empty-slot"></div>
                                                                 ))}
                                                             </div>
@@ -1891,7 +1894,7 @@ const AdditionalAnalysisPage = () => {
                         </div>
 
                         {/* Result Section (Scroll Area) */}
-                        <div className="results-scroll-container">
+                        <div className="results-scroll-container" style={{ display: resultDataList.length === 0 ? 'none' : 'flex' }}>
                             {resultDataList.map((resultData, dataIndex) => (
                                 <ResultSectionBlock
                                     key={`${resultData.table_id || 'T1'}_${dataIndex}`}
