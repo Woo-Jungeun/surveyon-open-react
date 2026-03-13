@@ -895,7 +895,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                     </div>
                                 );
                             })}
-                            {!selectedVarId && (
+                            {(!selectedVarId && (!isFirstLoad || variables.length === 0)) && (
                                 <div className="list-item-v5 active">
                                     <div className="item-text-v5">
                                         <input
@@ -907,7 +907,14 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                         />
                                         <div className="item-info-v5">{categories.length}개 그룹</div>
                                     </div>
-                                    <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleAddNew(); }}><X size={14} color="#ef4444" /></button>
+                                    <button className="del-btn-v5" onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (variables.length > 0) {
+                                            handleSelectVariable(variables[0].id);
+                                        } else {
+                                            handleAddNew();
+                                        }
+                                    }}><X size={14} color="#ef4444" /></button>
                                 </div>
                             )}
                         </div>
