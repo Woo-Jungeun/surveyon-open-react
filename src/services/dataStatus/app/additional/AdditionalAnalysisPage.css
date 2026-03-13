@@ -420,6 +420,40 @@
     font-size: 12px;
 }
 
+/* Question Type Badges */
+.question-type-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.question-type-badge.single {
+    background: #FFEDD5;
+    color: #C2410C;
+}
+
+.question-type-badge.multi {
+    background: #E0F2FE;
+    color: #0369A1;
+}
+
+.question-type-badge.dummy {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.question-type-badge.open {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+.question-type-badge.custom {
+    background: #F3E8FF;
+    color: #7E22CE;
+}
+
 /* Drop Zones in Config */
 .drop-zones-container {
     flex: 1;

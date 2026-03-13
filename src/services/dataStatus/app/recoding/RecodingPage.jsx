@@ -155,12 +155,27 @@ const RecodingPage = () => {
             try {
                 const result = await getRecodedVariables.mutateAsync({ user: userId, pageid: pageId });
                 if (result?.success === "777" && result.resultjson) {
-                    const transformedData = Object.values(result.resultjson).map(item => ({
-                        id: item.id,
-                        label: item.label,
-                        type: item.type,
-                        info: item.info || [] // info 배열 포함
-                    }));
+                    const transformedData = Object.values(result.resultjson).map(item => {
+                        const rawType = (item.type || '').toLowerCase();
+                        let color = 'gray';
+                        let displayType = rawType;
+
+                        if (rawType.includes('single')) { color = 'single'; displayType = 'single'; }
+                        else if (rawType.includes('multi')) { color = 'multi'; displayType = 'multi'; }
+                        else if (rawType.includes('dummy')) { color = 'dummy'; displayType = 'dummy'; }
+                        else if (rawType.includes('custom')) { color = 'custom'; displayType = 'custom'; }
+                        else if (rawType.includes('문자')) { color = 'open'; displayType = 'open(문자)'; }
+                        else if (rawType.includes('숫자')) { color = 'open'; displayType = 'open(숫자)'; }
+                        else if (rawType.includes('open')) { color = 'open'; displayType = 'open'; }
+
+                        return {
+                            id: item.id,
+                            label: item.label,
+                            type: displayType,
+                            color: color,
+                            info: item.info || []
+                        };
+                    });
                     setVariables(transformedData);
 
                     // 1. 초기 로드 시 첫 번째 자동 선택

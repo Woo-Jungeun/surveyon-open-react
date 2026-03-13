@@ -209,7 +209,6 @@
     font-weight: 600;
     padding: 2px 6px;
     border-radius: 4px;
-    text-transform: capitalize;
 }
 
 .question-type-badge.single {
@@ -234,6 +233,12 @@
     background: #FEE2E2;
     /* Soft Red/Pink */
     color: #B91C1C;
+}
+
+.question-type-badge.custom {
+    background: #F3E8FF;
+    /* Soft Purple */
+    color: #7E22CE;
 }
 
 .question-desc {

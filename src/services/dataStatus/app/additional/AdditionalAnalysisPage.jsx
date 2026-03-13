@@ -237,15 +237,32 @@ const AdditionalAnalysisPage = () => {
                     pageid: currentPid
                 });
 
+                // Create a Map for deduplication by ID
+                const variablesMap = new Map();
+
                 if (varResult?.success === "777" && varResult.resultjson) {
-                    const originalVars = Object.values(varResult.resultjson).map(item => ({
-                        id: item.id,
-                        name: item.id,
-                        label: item.label,
-                        type: item.type,
-                        info: item.info || []
-                    }));
-                    loadedVariables = [...originalVars];
+                    Object.values(varResult.resultjson).forEach(item => {
+                        const rawType = (item.type || '').toLowerCase();
+                        let color = 'gray';
+                        let displayType = rawType;
+
+                        if (rawType === 'single') { color = 'single'; }
+                        else if (rawType === 'multi') { color = 'multi'; }
+                        else if (rawType === 'dummy') { color = 'dummy'; }
+                        else if (rawType === 'custom') { color = 'custom'; }
+                        else if (rawType.includes('문자')) { color = 'open'; displayType = 'open(문자)'; }
+                        else if (rawType.includes('숫자')) { color = 'open'; displayType = 'open(숫자)'; }
+                        else if (rawType.includes('open')) { color = 'open'; displayType = 'open'; }
+
+                        variablesMap.set(item.id, {
+                            id: item.id,
+                            name: item.id,
+                            label: item.label,
+                            type: displayType,
+                            color: color,
+                            info: item.info || []
+                        });
+                    });
                 }
 
                 // Fetch Recoded Variables (including Banner)
@@ -255,25 +272,31 @@ const AdditionalAnalysisPage = () => {
                 });
 
                 if (recodedResult?.success === "777" && recodedResult.resultjson) {
-                    const recodedVars = Object.values(recodedResult.resultjson).map(item => ({
-                        id: item.id,
-                        name: item.id,
-                        label: item.label,
-                        type: item.type || "categorical",
-                        info: item.info || []
-                    }));
+                    Object.values(recodedResult.resultjson).forEach(item => {
+                        const rawType = (item.type || '').toLowerCase();
+                        let color = 'gray';
+                        let displayType = rawType || 'categorical';
 
-                    // Merge recoded variables, avoiding duplicates if any
-                    recodedVars.forEach(rv => {
-                        const idx = loadedVariables.findIndex(v => v.id === rv.id);
-                        if (idx >= 0) {
-                            loadedVariables[idx] = rv;
-                        } else {
-                            loadedVariables.push(rv);
-                        }
+                        if (rawType === 'single') { color = 'single'; }
+                        else if (rawType === 'multi') { color = 'multi'; }
+                        else if (rawType === 'dummy') { color = 'dummy'; }
+                        else if (rawType === 'custom') { color = 'custom'; }
+                        else if (rawType.includes('문자')) { color = 'open'; displayType = 'open(문자)'; }
+                        else if (rawType.includes('숫자')) { color = 'open'; displayType = 'open(숫자)'; }
+                        else if (rawType.includes('open')) { color = 'open'; displayType = 'open'; }
+
+                        variablesMap.set(item.id, {
+                            id: item.id,
+                            name: item.id,
+                            label: item.label,
+                            type: displayType,
+                            color: color,
+                            info: item.info || []
+                        });
                     });
                 }
 
+                loadedVariables = Array.from(variablesMap.values());
                 setVariables(loadedVariables);
             } catch (error) {
                 console.error("Failed to fetch variables:", error);
@@ -291,12 +314,17 @@ const AdditionalAnalysisPage = () => {
                         ? result.resultjson
                         : Object.values(result.resultjson || {});
 
-                    const mappedTables = data.map(item => ({
-                        id: item.id,
-                        name: item.name || item.TABLE_TITLE || item.id || `Table ${item.id}`,
-                        row: item.row || item.rows || [],
-                        col: item.col || item.cols || []
-                    }));
+                    const tableMap = new Map();
+                    data.forEach(item => {
+                        tableMap.set(item.id, {
+                            id: item.id,
+                            name: item.name || item.TABLE_TITLE || item.id || `Table ${item.id}`,
+                            row: item.row || item.rows || [],
+                            col: item.col || item.cols || []
+                        });
+                    });
+
+                    const mappedTables = Array.from(tableMap.values());
 
                     if (mappedTables.length > 0) {
                         setTables(mappedTables);
@@ -1671,15 +1699,22 @@ const AdditionalAnalysisPage = () => {
 
                                         {isVariablePanelOpen && (
                                             <div className="variable-list">
-                                                {filteredVariables.map(v => (
+                                                {filteredVariables.map((v, idx) => (
                                                     <div
-                                                        key={v.id}
+                                                        key={`${v.id}-${idx}`}
                                                         className={`variable-item ${selectedVarIds.includes(v.id) ? 'active' : ''}`}
                                                         draggable
                                                         onDragStart={(e) => handleDragStart(e, v)}
                                                         onClick={(e) => handleVariableClick(e, v.id)}
                                                     >
-                                                        <div className="variable-item__name">{v.id}</div>
+                                                        <div className="variable-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                                                            <div className="variable-item__name">{v.id}</div>
+                                                            {v.type && (
+                                                                <span className={`question-type-badge ${v.color}`}>
+                                                                    {v.type}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                         <div className="variable-item__label">{v.label}</div>
                                                     </div>
                                                 ))}
@@ -1721,7 +1756,7 @@ const AdditionalAnalysisPage = () => {
                                                             <div className="col-group-items">
                                                                 {group.map((v, itemIndex) => (
                                                                     <div
-                                                                        key={v.id}
+                                                                        key={`${v.id}-${itemIndex}`}
                                                                         className="dropped-tag grouped"
                                                                         draggable
                                                                         onDragStart={(e) => handleDragStart(e, { type: 'COL_ITEM', groupIndex, itemIndex, item: v })}
@@ -1779,7 +1814,7 @@ const AdditionalAnalysisPage = () => {
                                                     ) : (
                                                         rowVars.map((v, itemIndex) => (
                                                             <div
-                                                                key={v.id}
+                                                                key={`${v.id}-${itemIndex}`}
                                                                 className="dropped-tag row-tag"
                                                                 draggable
                                                                 onDragStart={(e) => handleDragStart(e, { type: 'ROW_ITEM', itemIndex, item: v })}

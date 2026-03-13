@@ -286,25 +286,34 @@ const WeightPage = () => {
                         }, {});
                         setRawVariables(rawVarsObj);
                         const transformedData = result.resultjson.variables.map(item => {
-                            const originalType = item.type || 'Single';
-                            const rawType = String(originalType).toLowerCase();
-
+                            const rawType = String(item.type || '').toLowerCase();
                             let color = 'gray';
+                            let displayType = rawType;
+
                             if (rawType === 'single') {
                                 color = 'single';
                             } else if (rawType === 'multi') {
                                 color = 'multi';
                             } else if (rawType === 'dummy') {
                                 color = 'dummy';
-                            } else if (rawType === 'open') {
+                            } else if (rawType === 'custom') {
+                                color = 'custom';
+                            } else if (rawType.includes('문자')) {
                                 color = 'open';
+                                displayType = 'open(문자)';
+                            } else if (rawType.includes('숫자')) {
+                                color = 'open';
+                                displayType = 'open(숫자)';
+                            } else if (rawType.includes('open')) {
+                                color = 'open';
+                                displayType = 'open';
                             }
 
                             return {
                                 id: item.id,
                                 title: item.id || '',
                                 desc: item.label || '',
-                                type: originalType,
+                                type: displayType,
                                 count: '',
                                 color: color
                             };

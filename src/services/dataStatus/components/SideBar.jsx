@@ -53,8 +53,15 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                                 className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
                             >
                                 <div className="sidebar-item-content">
-                                    <div className="sidebar-item-name">
-                                        {item[displayField]}
+                                    <div className="sidebar-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', gap: '8px' }}>
+                                        <div className="sidebar-item-name" style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 0 }}>
+                                            {item[displayField]}
+                                        </div>
+                                        {item.type && (
+                                            <span className={`question-type-badge ${item.color || 'gray'}`}>
+                                                {item.type}
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="sidebar-item-label">
                                         {item.label}
