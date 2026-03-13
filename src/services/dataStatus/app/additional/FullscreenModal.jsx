@@ -196,6 +196,7 @@ const FullscreenModal = ({
     };
 
     const hasColLabel2 = resultData?.columns?.some(c => c.label2);
+    const hasColLabel3 = resultData?.columns?.some(c => c.label3);
     const hasVarLabel = resultData?.columns?.some(c => c.var_label);
     const hasRowLabel2 = resultData?.rows?.some(r => r.label2 || r.var_label);
 
@@ -329,27 +330,61 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', verticalAlign: 'middle', textAlign: 'center' }}>{resultData?.rows?.[0]?.var_label || '문항'}</th>
+                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + (hasColLabel3 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + (hasColLabel3 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', verticalAlign: 'middle', textAlign: 'center' }}>{resultData?.rows?.[0]?.var_label || '문항'}</th>
                                         {hasVarLabel && (() => {
                                             const varGroups = [];
                                             resultData.columns.forEach(col => {
                                                 const var_label = col.var_label || '';
+                                                const label3 = col.label3 || '';
                                                 const label2 = col.label2 || '';
-                                                const isSame = var_label === label2;
+
+                                                let rowSpan = 1;
+                                                if (var_label) {
+                                                    const matchL3 = hasColLabel3 && (var_label === label3);
+                                                    const matchL2 = hasColLabel2 && (var_label === label2);
+                                                    const emptyL3 = hasColLabel3 && (label3 === "" || label3 === null);
+
+                                                    if (hasColLabel3 && hasColLabel2) {
+                                                        if (matchL3 && matchL2) rowSpan = 3;
+                                                        else if (matchL3) rowSpan = 2;
+                                                        else if (matchL2 && emptyL3) rowSpan = 3;
+                                                    } else if (hasColLabel3) {
+                                                        if (matchL3) rowSpan = 2;
+                                                    } else if (hasColLabel2) {
+                                                        if (matchL2) rowSpan = 2;
+                                                    }
+                                                }
+
                                                 if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
                                                     varGroups[varGroups.length - 1].colspan += 1;
-                                                    if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                    varGroups[varGroups.length - 1].rowSpan = Math.min(varGroups[varGroups.length - 1].rowSpan, rowSpan);
                                                 } else {
-                                                    varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                    varGroups.push({ var_label, colspan: 1, rowSpan });
                                                 }
                                             });
                                             return varGroups.map((group, idx) => (
-                                                <th key={`fs-var-group-${idx}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: group.canMerge ? '50px' : '25px', zIndex: 20, background: '#dbeafe', color: '#1e40af', fontSize: '11px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                                <th key={group.var_label || idx} colSpan={group.colspan} rowSpan={group.rowSpan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: `${group.rowSpan * 25}px`, zIndex: 20, background: '#dbeafe', color: '#1e40af', fontSize: '11px', borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                     {group.var_label}
                                                 </th>
                                             ));
                                         })()}
-                                        {!hasVarLabel && hasColLabel2 && (() => {
+                                        {!hasVarLabel && hasColLabel3 && (() => {
+                                            const colGroups3 = [];
+                                            resultData.columns.forEach(col => {
+                                                const label3 = col.label3 || '';
+                                                if (colGroups3.length > 0 && colGroups3[colGroups3.length - 1].label3 === label3) {
+                                                    colGroups3[colGroups3.length - 1].colspan += 1;
+                                                } else {
+                                                    colGroups3.push({ label3, colspan: 1 });
+                                                }
+                                            });
+                                            return colGroups3.map((group, idx) => (
+                                                <th key={`fs-group3-top-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: '30px', zIndex: 20, background: '#f0f9ff' }}>
+                                                    {group.label3}
+                                                </th>
+                                            ));
+                                        })()}
+                                        {!hasVarLabel && !hasColLabel3 && hasColLabel2 && (() => {
                                             const colGroups = [];
                                             resultData.columns.forEach(col => {
                                                 const label2 = col.label2 || '';
@@ -365,30 +400,69 @@ const FullscreenModal = ({
                                                 </th>
                                             ));
                                         })()}
-                                        {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, idx) => (
+                                        {!hasVarLabel && !hasColLabel3 && !hasColLabel2 && resultData.columns.map((col, idx) => (
                                             <th key={idx} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20 }}>
                                                 {col.label || col}
                                             </th>
                                         ))}
                                     </tr>
-                                    {hasVarLabel && hasColLabel2 && (
+                                    {hasColLabel3 && (
+                                        <tr>
+                                            {(() => {
+                                                const colGroups3 = [];
+                                                resultData.columns.forEach(col => {
+                                                    const label3 = col.label3 || '';
+                                                    const label2 = col.label2 || '';
+                                                    const var_label = col.var_label || '';
+
+                                                    const isSpannedByVar = (hasVarLabel && (var_label === label3 || (var_label === label2 && (label3 === "" || label3 === null) && hasColLabel2)));
+                                                    let rowSpan = 1;
+                                                    if (!isSpannedByVar && label3 === label2 && label3 !== "" && hasColLabel2) {
+                                                        rowSpan = 2;
+                                                    }
+
+                                                    if (colGroups3.length > 0 && colGroups3[colGroups3.length - 1].label3 === label3) {
+                                                        colGroups3[colGroups3.length - 1].colspan += 1;
+                                                        colGroups3[colGroups3.length - 1].rowSpan = Math.min(colGroups3[colGroups3.length - 1].rowSpan, rowSpan);
+                                                    } else {
+                                                        colGroups3.push({ label3, colspan: 1, rowSpan, isSpannedByVar });
+                                                    }
+                                                });
+                                                return colGroups3.map((group, idx) => {
+                                                    if (group.isSpannedByVar) return null;
+                                                    return (
+                                                        <th key={`fs-group3-${idx}`} colSpan={group.colspan} rowSpan={group.rowSpan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: '25px', height: `${group.rowSpan * 25}px`, zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#f0f9ff' }}>
+                                                            {group.label3}
+                                                        </th>
+                                                    );
+                                                });
+                                            })()}
+                                        </tr>
+                                    )}
+                                    {hasColLabel2 && (
                                         <tr>
                                             {(() => {
                                                 const colGroups = [];
                                                 resultData.columns.forEach(col => {
                                                     const label2 = col.label2 || '';
+                                                    const label3 = col.label3 || '';
                                                     const var_label = col.var_label || '';
-                                                    const isSame = label2 === var_label;
+
+                                                    // Check if covered by Row 1 (var_label) or Row 2 (label3)
+                                                    const coveredByVar = (hasVarLabel && var_label === label2 && (!hasColLabel3 || var_label === label3 || label3 === "" || label3 === null));
+                                                    const coveredByLabel3 = (hasColLabel3 && label3 === label2 && label3 !== "");
+                                                    const isSpanned = coveredByVar || coveredByLabel3;
+
                                                     if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
                                                         colGroups[colGroups.length - 1].colspan += 1;
                                                     } else {
-                                                        colGroups.push({ label2, colspan: 1, isSame });
+                                                        colGroups.push({ label2, colspan: 1, isSpanned });
                                                     }
                                                 });
                                                 return colGroups.map((group, idx) => {
-                                                    if (group.isSame) return null;
+                                                    if (group.isSpanned) return null;
                                                     return (
-                                                        <th key={`fs-group2-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: '25px', height: '25px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                                        <th key={`fs-group2-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: (hasVarLabel && hasColLabel3) ? '50px' : (hasVarLabel || hasColLabel3) ? '25px' : '0', height: '25px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                             {group.label2}
                                                         </th>
                                                     );
@@ -396,10 +470,10 @@ const FullscreenModal = ({
                                             })()}
                                         </tr>
                                     )}
-                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
+                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2) || hasColLabel3) && (
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
-                                                <th key={idx} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', height: '30px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
+                                                <th key={idx} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel3 && hasColLabel2) ? '75px' : ((hasVarLabel && hasColLabel3) || (hasVarLabel && hasColLabel2) || (hasColLabel3 && hasColLabel2)) ? '50px' : (hasVarLabel || hasColLabel3 || hasColLabel2) ? '25px' : '0', height: '30px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                     {col.label || col}
                                                 </th>
                                             ))}
@@ -465,27 +539,61 @@ const FullscreenModal = ({
                             <table className="cross-table fullscreen-table" style={{ width: 'max-content', minWidth: '100%', tableLayout: 'fixed' }}>
                                 <thead>
                                     <tr>
-                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', verticalAlign: 'middle', textAlign: 'center' }}>통계</th>
+                                        <th rowSpan={(hasVarLabel ? 1 : 0) + (hasColLabel2 ? 1 : 0) + (hasColLabel3 ? 1 : 0) + 1} colSpan={hasRowLabel2 ? 2 : 1} className="fullscreen-table-header-sticky" style={{ zIndex: 40, top: 0, left: 0, height: (hasVarLabel ? 25 : 0) + (hasColLabel2 ? 25 : 0) + (hasColLabel3 ? 25 : 0) + 36, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', verticalAlign: 'middle', textAlign: 'center' }}>통계</th>
                                         {hasVarLabel && (() => {
                                             const varGroups = [];
                                             resultData.columns.forEach(col => {
                                                 const var_label = col.var_label || '';
+                                                const label3 = col.label3 || '';
                                                 const label2 = col.label2 || '';
-                                                const isSame = var_label === label2;
+
+                                                let rowSpan = 1;
+                                                if (var_label) {
+                                                    const matchL3 = hasColLabel3 && (var_label === label3);
+                                                    const matchL2 = hasColLabel2 && (var_label === label2);
+                                                    const emptyL3 = hasColLabel3 && (label3 === "" || label3 === null);
+
+                                                    if (hasColLabel3 && hasColLabel2) {
+                                                        if (matchL3 && matchL2) rowSpan = 3;
+                                                        else if (matchL3) rowSpan = 2;
+                                                        else if (matchL2 && emptyL3) rowSpan = 3;
+                                                    } else if (hasColLabel3) {
+                                                        if (matchL3) rowSpan = 2;
+                                                    } else if (hasColLabel2) {
+                                                        if (matchL2) rowSpan = 2;
+                                                    }
+                                                }
+
                                                 if (varGroups.length > 0 && varGroups[varGroups.length - 1].var_label === var_label) {
                                                     varGroups[varGroups.length - 1].colspan += 1;
-                                                    if (!isSame) varGroups[varGroups.length - 1].canMerge = false;
+                                                    varGroups[varGroups.length - 1].rowSpan = Math.min(varGroups[varGroups.length - 1].rowSpan, rowSpan);
                                                 } else {
-                                                    varGroups.push({ var_label, colspan: 1, canMerge: isSame && hasColLabel2 });
+                                                    varGroups.push({ var_label, colspan: 1, rowSpan });
                                                 }
                                             });
                                             return varGroups.map((group, idx) => (
-                                                <th key={`fs-stat-var-group-${idx}`} colSpan={group.colspan} rowSpan={group.canMerge ? 2 : 1} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: group.canMerge ? '50px' : '25px', zIndex: 20, background: '#dbeafe', color: '#1e40af', fontSize: '11px' }}>
+                                                <th key={`fs-stat-var-group-${idx}`} colSpan={group.colspan} rowSpan={group.rowSpan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: `${group.rowSpan * 25}px`, zIndex: 20, background: '#dbeafe', color: '#1e40af', fontSize: '11px' }}>
                                                     {group.var_label}
                                                 </th>
                                             ));
                                         })()}
-                                        {!hasVarLabel && hasColLabel2 && (() => {
+                                        {!hasVarLabel && hasColLabel3 && (() => {
+                                            const colGroups3 = [];
+                                            resultData.columns.forEach(col => {
+                                                const label3 = col.label3 || '';
+                                                if (colGroups3.length > 0 && colGroups3[colGroups3.length - 1].label3 === label3) {
+                                                    colGroups3[colGroups3.length - 1].colspan += 1;
+                                                } else {
+                                                    colGroups3.push({ label3, colspan: 1 });
+                                                }
+                                            });
+                                            return colGroups3.map((group, idx) => (
+                                                <th key={`fs-stat-group3-top-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: 0, height: '30px', zIndex: 20 }}>
+                                                    {group.label3}
+                                                </th>
+                                            ));
+                                        })()}
+                                        {!hasVarLabel && !hasColLabel3 && hasColLabel2 && (() => {
                                             const colGroups = [];
                                             resultData.columns.forEach(col => {
                                                 const label2 = col.label2 || '';
@@ -501,7 +609,7 @@ const FullscreenModal = ({
                                                 </th>
                                             ));
                                         })()}
-                                        {!hasVarLabel && !hasColLabel2 && resultData.columns.map((col, idx) => (
+                                        {!hasVarLabel && !hasColLabel3 && !hasColLabel2 && resultData.columns.map((col, idx) => (
                                             <th key={`fs-stat-col-${idx}`} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
                                                 <div>{col.label || col}</div>
                                                 <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
@@ -510,24 +618,62 @@ const FullscreenModal = ({
                                             </th>
                                         ))}
                                     </tr>
-                                    {hasVarLabel && hasColLabel2 && (
+                                    {hasColLabel3 && (
+                                        <tr>
+                                            {(() => {
+                                                const colGroups3 = [];
+                                                resultData.columns.forEach(col => {
+                                                    const label3 = col.label3 || '';
+                                                    const label2 = col.label2 || '';
+                                                    const var_label = col.var_label || '';
+
+                                                    const isSpannedByVar = (hasVarLabel && (var_label === label3 || (var_label === label2 && (label3 === "" || label3 === null) && hasColLabel2)));
+                                                    let rowSpan = 1;
+                                                    if (!isSpannedByVar && label3 === label2 && label3 !== "" && hasColLabel2) {
+                                                        rowSpan = 2;
+                                                    }
+
+                                                    if (colGroups3.length > 0 && colGroups3[colGroups3.length - 1].label3 === label3) {
+                                                        colGroups3[colGroups3.length - 1].colspan += 1;
+                                                        colGroups3[colGroups3.length - 1].rowSpan = Math.min(colGroups3[colGroups3.length - 1].rowSpan, rowSpan);
+                                                    } else {
+                                                        colGroups3.push({ label3, colspan: 1, rowSpan, isSpannedByVar });
+                                                    }
+                                                });
+                                                return colGroups3.map((group, idx) => {
+                                                    if (group.isSpannedByVar) return null;
+                                                    return (
+                                                        <th key={`fs-stat-group3-${idx}`} colSpan={group.colspan} rowSpan={group.rowSpan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: '25px', height: `${group.rowSpan * 25}px`, zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#f0f9ff' }}>
+                                                            {group.label3}
+                                                        </th>
+                                                    );
+                                                });
+                                            })()}
+                                        </tr>
+                                    )}
+                                    {hasColLabel2 && (
                                         <tr>
                                             {(() => {
                                                 const colGroups = [];
                                                 resultData.columns.forEach(col => {
                                                     const label2 = col.label2 || '';
+                                                    const label3 = col.label3 || '';
                                                     const var_label = col.var_label || '';
-                                                    const isSame = label2 === var_label;
+
+                                                    const coveredByVar = (hasVarLabel && var_label === label2 && (!hasColLabel3 || var_label === label3 || label3 === "" || label3 === null));
+                                                    const coveredByLabel3 = (hasColLabel3 && label3 === label2 && label3 !== "");
+                                                    const isSpanned = coveredByVar || coveredByLabel3;
+
                                                     if (colGroups.length > 0 && colGroups[colGroups.length - 1].label2 === label2) {
                                                         colGroups[colGroups.length - 1].colspan += 1;
                                                     } else {
-                                                        colGroups.push({ label2, colspan: 1, isSame });
+                                                        colGroups.push({ label2, colspan: 1, isSpanned });
                                                     }
                                                 });
                                                 return colGroups.map((group, idx) => {
-                                                    if (group.isSame) return null;
+                                                    if (group.isSpanned) return null;
                                                     return (
-                                                        <th key={`fs-stat-group2-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: '25px', height: '25px', zIndex: 20 }}>
+                                                        <th key={`fs-stat-group2-${idx}`} colSpan={group.colspan} className="fullscreen-table-header" style={{ fontWeight: 'bold', top: (hasVarLabel && hasColLabel3) ? '50px' : (hasVarLabel || hasColLabel3) ? '25px' : '0', height: '25px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
                                                             {group.label2}
                                                         </th>
                                                     );
@@ -535,10 +681,10 @@ const FullscreenModal = ({
                                             })()}
                                         </tr>
                                     )}
-                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2)) && (
+                                    {((hasVarLabel && !hasColLabel2) || (hasVarLabel && hasColLabel2) || (!hasVarLabel && hasColLabel2) || hasColLabel3) && (
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
-                                                <th key={`fs-stat-label-${idx}`} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel2) ? '50px' : '25px', height: '50px', zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
+                                                <th key={`fs-stat-label-${idx}`} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel3 && hasColLabel2) ? '75px' : ((hasVarLabel && hasColLabel3) || (hasVarLabel && hasColLabel2) || (hasColLabel3 && hasColLabel2)) ? '50px' : (hasVarLabel || hasColLabel3 || hasColLabel2) ? '25px' : '0', height: '50px', zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
                                                     <div style={{ wordBreak: 'break-all' }}>{col.label || col}</div>
                                                     <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
                                                         N={resultData.stats.n?.[idx] || 0}

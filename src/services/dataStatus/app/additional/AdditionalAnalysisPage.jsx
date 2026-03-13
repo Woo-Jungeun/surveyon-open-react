@@ -28,6 +28,7 @@ const parseTableData = (newData) => {
     const columnLabels = columnsList.map(c => ({
         label: c.label,
         label2: c.label2 || '',
+        label3: c.label3 || '',
         var_label: c.var_label || c.variable_label || ''
     }));
     const columnKeys = columnsList.map(c => c.key);

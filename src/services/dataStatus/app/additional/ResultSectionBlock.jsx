@@ -35,6 +35,7 @@ const computeLocalVars = (dataItem, chartMode) => {
         .map(row => row.label);
 
     const hasColLabel2 = dataItem.columns?.some(c => c.label2);
+    const hasColLabel3 = dataItem.columns?.some(c => c.label3);
     const hasVarLabel = dataItem.columns?.some(c => c.var_label);
     const hasRowLabel2 = dataItem.rows?.some(r => r.label2 || r.var_label);
 
@@ -43,6 +44,7 @@ const computeLocalVars = (dataItem, chartMode) => {
         seriesNames,
         suffix: usePercent ? "%" : "",
         hasColLabel2,
+        hasColLabel3,
         hasVarLabel,
         hasRowLabel2
     };
@@ -77,7 +79,7 @@ export const ResultSectionBlock = ({
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
     const paletteMenuRef = useRef(null);
 
-    const { chartData, seriesNames, hasColLabel2, hasVarLabel, hasRowLabel2, suffix } = useMemo(() =>
+    const { chartData, seriesNames, hasColLabel2, hasColLabel3, hasVarLabel, hasRowLabel2, suffix } = useMemo(() =>
         computeLocalVars(resultData, activeChartMode),
         [resultData, activeChartMode]
     );
@@ -105,7 +107,7 @@ export const ResultSectionBlock = ({
     ]);
 
     const headerGroups = useMemo(() => {
-        if (!resultData?.columns) return { row1: [], row2: [], showRow2: false };
+        if (!resultData?.columns) return { row1: [], row2: [], row3: [], showRow2: false, showRow3: false };
 
         // Row 1 (var_label) grouping
         const row1 = [];
@@ -129,35 +131,88 @@ export const ResultSectionBlock = ({
             }
         });
 
-        // Determine if each cell in Row 1 should span 2 rows
-        row1.forEach(g1 => {
-            if (!g1.label) {
-                g1.shouldSpan = false;
-                return;
+        // Row 3 (label3) grouping
+        const row3 = [];
+        resultData.columns.forEach((col, idx) => {
+            const v = col.label3 || "";
+            if (row3.length === 0 || row3[row3.length - 1].label !== v) {
+                row3.push({ label: v, count: 1, startIndex: idx });
+            } else {
+                row3[row3.length - 1].count++;
             }
+        });
+
+        // Initialize rowSpan
+        row1.forEach(g => g.rowSpan = 1);
+        row3.forEach(g => g.rowSpan = 1);
+        row2.forEach(g => g.rowSpan = 1);
+
+        // Row 1 (var_label) spans into Row 3 (label3) and potentially Row 2 (label2)
+        row1.forEach(g1 => {
+            if (!g1.label) return;
             const rangeStart = g1.startIndex;
             const rangeEnd = g1.startIndex + g1.count;
 
-            // Check if all columns in this range have the SAME label2 and it matches group1
+            const matchingRow3Groups = row3.filter(g3 => g3.startIndex >= rangeStart && (g3.startIndex + g3.count) <= rangeEnd);
             const matchingRow2Groups = row2.filter(g2 => g2.startIndex >= rangeStart && (g2.startIndex + g2.count) <= rangeEnd);
 
-            if (matchingRow2Groups.length === 1) {
+            if (matchingRow3Groups.length === 1 && matchingRow2Groups.length === 1) {
                 const l1 = String(g1.label).replace(/[\r\n\t\s]+/g, ' ').trim();
+                const l3 = String(matchingRow3Groups[0].label).replace(/[\r\n\t\s]+/g, ' ').trim();
                 const l2 = String(matchingRow2Groups[0].label).replace(/[\r\n\t\s]+/g, ' ').trim();
-                g1.shouldSpan = l1 === l2 && l2 !== "";
-            } else {
-                g1.shouldSpan = false;
+
+                if (l1 !== "") {
+                    if (hasColLabel3 && hasColLabel2) {
+                        if (l1 === l3) {
+                            g1.rowSpan = 2;
+                            if (l1 === l2) g1.rowSpan = 3;
+                        } else if (l1 === l2 && (l3 === "")) {
+                            g1.rowSpan = 3;
+                        }
+                    } else if (hasColLabel3) {
+                        if (l1 === l3) g1.rowSpan = 2;
+                    } else if (hasColLabel2) {
+                        if (l1 === l2) g1.rowSpan = 2;
+                    }
+                }
             }
         });
 
-        // Decide if Row 2 should be rendered at all (only if there's non-spanned content)
-        const hasUnspannedRow2 = row2.some(g2 => {
-            if (!g2.label) return false;
-            return !row1.some(g1 => g1.shouldSpan && g1.startIndex <= g2.startIndex && (g1.startIndex + g1.count) >= (g2.startIndex + g2.count));
+        // Row 3 (label3) spans into Row 2 (label2)
+        row3.forEach(g3 => {
+            if (!g3.label) return;
+            const rangeStart = g3.startIndex;
+            const rangeEnd = g3.startIndex + g3.count;
+
+            const matchingRow2Groups = row2.filter(g2 => g2.startIndex >= rangeStart && (g2.startIndex + g2.count) <= rangeEnd);
+            if (matchingRow2Groups.length === 1) {
+                const l3 = String(g3.label).replace(/[\r\n\t\s]+/g, ' ').trim();
+                const l2 = String(matchingRow2Groups[0].label).replace(/[\r\n\t\s]+/g, ' ').trim();
+                if (l3 === l2 && l2 !== "" && hasColLabel2) {
+                    g3.rowSpan = 2;
+                }
+            }
         });
 
-        return { row1, row2, showRow2: hasUnspannedRow2 || row1.some(g1 => !g1.shouldSpan && hasColLabel2) };
-    }, [resultData?.columns, hasVarLabel, hasColLabel2]);
+        // Determine if Row 3 and Row 2 should be rendered based on non-spanned content
+        const hasUnspannedRow3 = row3.some(g3 => {
+            if (!g3.label) return false;
+            return !row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= g3.startIndex && (g1.startIndex + g1.count) >= (g3.startIndex + g3.count));
+        });
+
+        const hasUnspannedRow2 = row2.some(g2 => {
+            if (!g2.label) return false;
+            // Check if Row 1 spans Row 2 OR Row 3 spans Row 2
+            const coveredByRow1 = row1.some(g1 => g1.rowSpan >= 3 && g1.startIndex <= g2.startIndex && (g1.startIndex + g1.count) >= (g2.startIndex + g2.count));
+            const coveredByRow3 = row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= g2.startIndex && (g3.startIndex + g3.count) >= (g2.startIndex + g2.count));
+            return !coveredByRow1 && !coveredByRow3;
+        });
+
+        const showRow3 = hasUnspannedRow3 || row1.some(g1 => g1.rowSpan === 1 && hasColLabel3);
+        const showRow2 = hasUnspannedRow2 || row3.some(g3 => g3.rowSpan === 1 && hasColLabel2) || row1.some(g1 => g1.rowSpan < 3 && hasColLabel2 && !hasColLabel3);
+
+        return { row1, row2, row3, showRow2, showRow3 };
+    }, [resultData?.columns, hasVarLabel, hasColLabel2, hasColLabel3]);
 
     const [statsOptions, setStatsOptions] = useState([
         { id: 'mean', label: '평균', checked: true },
@@ -207,20 +262,24 @@ export const ResultSectionBlock = ({
         }
     };
 
-    const handleCopyTable = async (dataItem, hasColLabel2, hasRowLabel2) => {
+    const handleCopyTable = async (dataItem, hasColLabel2, hasColLabel3, hasRowLabel2) => {
         try {
             let clipboardText = "";
-            if (hasColLabel2 || hasRowLabel2) {
-                const headerPart1 = [(hasRowLabel2 ? '대분류' : ''), '문항', ...dataItem.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].filter(Boolean).join('\t');
-                const headerPart2 = [(hasRowLabel2 ? '' : ''), '', ...dataItem.columns.map(c => c.label || c)].filter(Boolean).join('\t');
+            if (hasColLabel2 || hasColLabel3 || hasRowLabel2) {
+                const headerRows = [];
+                if (hasColLabel3) headerRows.push([(hasRowLabel2 ? '대분류' : ''), '문항', ...dataItem.columns.map(c => c.label3 || '')].filter(Boolean).join('\t'));
+                if (hasColLabel2) headerRows.push([(hasRowLabel2 ? '' : ''), '', ...dataItem.columns.map(c => c.label2 || '')].filter(Boolean).join('\t'));
+                headerRows.push([(hasRowLabel2 ? '' : ''), '', ...dataItem.columns.map(c => c.label || c)].filter(Boolean).join('\t'));
+
                 const rows = dataItem.rows.map(row =>
-                    [(hasRowLabel2 ? (row.label2 || '') : ''), row.label, ...row.values.map(v => {
+                    [(hasRowLabel2 ? (row.label2 || row.var_label || '') : ''), row.label, ...row.values.map(v => {
                         if (displayMode === 'value') return v.count;
                         if (displayMode === 'percent') return `${v.percent}%`;
                         return `${v.count} (${v.percent}%)`;
-                    })].filter(val => val !== '').join('\t')
+                    })].join('\t')
                 ).join('\n');
-                clipboardText = hasColLabel2 ? `${headerPart1}\n${headerPart2}\n${rows}` : `${headerPart1}\n${rows}`;
+
+                clipboardText = `${headerRows.join('\n')}\n${rows}`;
             } else {
                 const headers = ['문항', ...dataItem.columns.map(c => c.label || c)].join('\t');
                 const rows = dataItem.rows.map(row =>
@@ -240,18 +299,21 @@ export const ResultSectionBlock = ({
         }
     };
 
-    const handleCopyStats = async (dataItem, hasColLabel2, hasRowLabel2) => {
+    const handleCopyStats = async (dataItem, hasColLabel2, hasColLabel3, hasRowLabel2) => {
         try {
             let clipboardText = "";
-            if (hasColLabel2 || hasRowLabel2) {
-                const headerPart1 = ['통계분류', '통계항목', ...dataItem.columns.map(c => hasColLabel2 ? (c.label2 || '') : (c.label || c))].join('\t');
-                const headerPart2 = ['', '', ...dataItem.columns.map(c => c.label || c)].join('\t');
+            if (hasColLabel2 || hasColLabel3 || hasRowLabel2) {
+                const headerRows = [];
+                if (hasColLabel3) headerRows.push(['통계분류', '통계항목', ...dataItem.columns.map(c => c.label3 || '')].join('\t'));
+                if (hasColLabel2) headerRows.push(['', '', ...dataItem.columns.map(c => c.label2 || '')].join('\t'));
+                headerRows.push(['', '', ...dataItem.columns.map(c => c.label || c)].join('\t'));
+
                 const rows = statsOptions.filter(opt => opt.checked).map(stat => {
                     const statKey = stat.id.toLowerCase();
                     const statValues = dataItem.stats[statKey] || [];
                     return [stat.label, '', ...statValues].join('\t');
                 }).join('\n');
-                clipboardText = hasColLabel2 ? `${headerPart1}\n${headerPart2}\n${rows}` : `${headerPart1}\n${rows}`;
+                clipboardText = `${headerRows.join('\n')}\n${rows}`;
             } else {
                 const headers = ['통계', ...dataItem.columns.map(c => c.label || c)].join('\t');
                 const rows = statsOptions.filter(opt => opt.checked).map(stat => {
@@ -502,7 +564,7 @@ export const ResultSectionBlock = ({
                                                         )}
                                                     </div>
                                                 </div>
-                                                <button onClick={() => handleCopyTable(resultData, hasColLabel2, hasRowLabel2)} className="action-btn">
+                                                <button onClick={() => handleCopyTable(resultData, hasColLabel2, hasColLabel3, hasRowLabel2)} className="action-btn">
                                                     <Copy size={16} />
                                                     <span>복사</span>
                                                 </button>
@@ -531,7 +593,7 @@ export const ResultSectionBlock = ({
                                                 <thead>
                                                     {(() => {
                                                         const headerRows = [];
-                                                        const totalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + 1;
+                                                        const totalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + (headerGroups.showRow3 ? 1 : 0) + 1;
 
                                                         if (hasVarLabel) {
                                                             headerRows.push(
@@ -556,7 +618,7 @@ export const ResultSectionBlock = ({
                                                                     {headerGroups.row1.map((group, i) => (
                                                                         <th key={i}
                                                                             colSpan={group.count}
-                                                                            rowSpan={group.shouldSpan ? 2 : 1}
+                                                                            rowSpan={group.rowSpan}
                                                                             style={{
                                                                                 background: '#eff6ff',
                                                                                 color: '#1e3a8a',
@@ -577,9 +639,9 @@ export const ResultSectionBlock = ({
                                                             );
                                                         }
 
-                                                        if (headerGroups.showRow2) {
+                                                        if (headerGroups.showRow3) {
                                                             headerRows.push(
-                                                                <tr key="col-label2-row">
+                                                                <tr key="col-label3-row">
                                                                     {!hasVarLabel && (
                                                                         <th
                                                                             rowSpan={totalRows}
@@ -599,9 +661,47 @@ export const ResultSectionBlock = ({
                                                                             문항
                                                                         </th>
                                                                     )}
-                                                                    {headerGroups.row2.map((group, i) => {
-                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.shouldSpan && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                    {headerGroups.row3.map((group, i) => {
+                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
                                                                         if (isSpanned) return null;
+
+                                                                        return (
+                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: '#f0f9ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                                {group.label}
+                                                                            </th>
+                                                                        );
+                                                                    })}
+                                                                </tr>
+                                                            );
+                                                        }
+
+                                                        if (headerGroups.showRow2) {
+                                                            headerRows.push(
+                                                                <tr key="col-label2-row">
+                                                                    {(!hasVarLabel && !headerGroups.showRow3) && (
+                                                                        <th
+                                                                            rowSpan={totalRows}
+                                                                            colSpan={hasRowLabel2 ? 2 : 1}
+                                                                            className="sticky-col sticky-l0"
+                                                                            style={{
+                                                                                background: '#f8fafc',
+                                                                                borderRight: '1px solid #e2e8f0',
+                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                fontWeight: '700',
+                                                                                color: '#1e3a8a',
+                                                                                fontSize: '11px',
+                                                                                textAlign: 'center',
+                                                                                verticalAlign: 'middle'
+                                                                            }}
+                                                                        >
+                                                                            문항
+                                                                        </th>
+                                                                    )}
+                                                                    {headerGroups.row2.map((group, i) => {
+                                                                        // Check if spanning from row1 (rowSpan >= 3) OR row3 (rowSpan >= 2)
+                                                                        const coveredByRow1 = headerGroups.row1.some(g1 => g1.rowSpan >= 3 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                        const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
+                                                                        if (coveredByRow1 || coveredByRow3) return null;
 
                                                                         return (
                                                                             <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
@@ -616,7 +716,7 @@ export const ResultSectionBlock = ({
                                                         // 마지막 라벨 행
                                                         headerRows.push(
                                                             <tr key="label-row">
-                                                                {(!hasVarLabel && !headerGroups.showRow2) && (
+                                                                {(!hasVarLabel && !headerGroups.showRow2 && !headerGroups.showRow3) && (
                                                                     <th
                                                                         rowSpan={totalRows}
                                                                         colSpan={hasRowLabel2 ? 2 : 1}
@@ -707,7 +807,7 @@ export const ResultSectionBlock = ({
                                                 <span className="section-title">통계</span>
                                             </div>
                                             <div className="section-actions">
-                                                <button onClick={() => handleCopyStats(resultData, hasColLabel2, hasRowLabel2)} className="action-btn">
+                                                <button onClick={() => handleCopyStats(resultData, hasColLabel2, hasColLabel3, hasRowLabel2)} className="action-btn">
                                                     <Copy size={16} />
                                                     <span>복사</span>
                                                 </button>
@@ -735,7 +835,7 @@ export const ResultSectionBlock = ({
                                             <table className="stats-table">
                                                 <thead>
                                                     {(() => {
-                                                        const statsTotalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + 1;
+                                                        const statsTotalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + (headerGroups.showRow3 ? 1 : 0) + 1;
                                                         const rows = [];
 
                                                         if (hasVarLabel) {
@@ -760,7 +860,7 @@ export const ResultSectionBlock = ({
                                                                     {headerGroups.row1.map((group, i) => (
                                                                         <th key={i}
                                                                             colSpan={group.count}
-                                                                            rowSpan={group.shouldSpan ? 2 : 1}
+                                                                            rowSpan={group.rowSpan}
                                                                             style={{
                                                                                 background: '#eff6ff',
                                                                                 color: '#1e3a8a',
@@ -781,9 +881,9 @@ export const ResultSectionBlock = ({
                                                             );
                                                         }
 
-                                                        if (headerGroups.showRow2) {
+                                                        if (headerGroups.showRow3) {
                                                             rows.push(
-                                                                <tr key="stats-col-label2-row">
+                                                                <tr key="stats-col-label3-row">
                                                                     {!hasVarLabel && (
                                                                         <th
                                                                             rowSpan={statsTotalRows}
@@ -802,10 +902,44 @@ export const ResultSectionBlock = ({
                                                                             통계
                                                                         </th>
                                                                     )}
-                                                                    {headerGroups.row2.map((group, i) => {
-                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.shouldSpan && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                    {headerGroups.row3.map((group, i) => {
+                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
                                                                         if (isSpanned) return null;
+                                                                        return (
+                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: '#f0f9ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                                {group.label}
+                                                                            </th>
+                                                                        );
+                                                                    })}
+                                                                </tr>
+                                                            );
+                                                        }
 
+                                                        if (headerGroups.showRow2) {
+                                                            rows.push(
+                                                                <tr key="stats-col-label2-row">
+                                                                    {(!hasVarLabel && !headerGroups.showRow3) && (
+                                                                        <th
+                                                                            rowSpan={statsTotalRows}
+                                                                            className="stats-th-label"
+                                                                            style={{
+                                                                                background: '#f8fafc',
+                                                                                borderRight: '1px solid #e2e8f0',
+                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                fontWeight: '700',
+                                                                                color: '#1e3a8a',
+                                                                                fontSize: '11px',
+                                                                                textAlign: 'center',
+                                                                                verticalAlign: 'middle'
+                                                                            }}
+                                                                        >
+                                                                            통계
+                                                                        </th>
+                                                                    )}
+                                                                    {headerGroups.row2.map((group, i) => {
+                                                                        const coveredByRow1 = headerGroups.row1.some(g1 => g1.rowSpan >= 3 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                                        const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
+                                                                        if (coveredByRow1 || coveredByRow3) return null;
                                                                         return (
                                                                             <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
                                                                                 {group.label}
@@ -818,7 +952,7 @@ export const ResultSectionBlock = ({
 
                                                         rows.push(
                                                             <tr key="stats-label-row">
-                                                                {(!hasVarLabel && !headerGroups.showRow2) && (
+                                                                {(!hasVarLabel && !headerGroups.showRow2 && !headerGroups.showRow3) && (
                                                                     <th
                                                                         rowSpan={statsTotalRows}
                                                                         className="stats-th-label"
