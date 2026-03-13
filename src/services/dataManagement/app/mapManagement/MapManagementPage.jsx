@@ -10,6 +10,8 @@ import MapConfigTab from './MapConfigTab';
 import ViewLabelTab from './ViewLabelTab';
 import AddLabelPopup from './AddLabelPopup';
 import LogicEditPopup from './LogicEditPopup';
+import DownloadModal from './DownloadModal';
+import { Download } from 'lucide-react';
 
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
@@ -39,7 +41,8 @@ const MapManagementPage = () => {
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
     const [editingLogicPopupOpen, setEditingLogicPopupOpen] = useState(null);       // 로직 변경 팝업
-    const [addValueModalOpen, setAddValueModalOpen] = useState(false);        // 레이블 추가 팝업 상태
+    const [downloadModalOpen, setDownloadModalOpen] = useState(false);              // 다운로드 모달 상태
+    const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
 
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
@@ -568,29 +571,24 @@ const MapManagementPage = () => {
                     saveButtonDisabled={!hasChanges}
                 >
                     {/* {activeTab === 'mapping' && (
-                        <button
-                            onClick={handleSrtTransfer}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '6px 20px',
-                                borderRadius: '6px',
-                                border: '1.5px solid #16a34a',
-                                background: '#fff',
-                                color: '#16a34a',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                cursor: 'pointer',
-                                transition: 'all 0.2s',
-                                whiteSpace: 'nowrap',
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                        >
-                            H-SRT 이관
-                        </button>
+                        ...
                     )} */}
+                    <button
+                        className="data-header-btn"
+                        onClick={() => setDownloadModalOpen(true)}
+                        style={{
+                            height: '38px',
+                            padding: '0 20px',
+                            border: '1px solid #16a34a',
+                            background: '#fff',
+                            color: '#16a34a',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                    >
+                        <Download size={16} />
+                        다운로드
+                    </button>
                 </DataHeader>
 
 
@@ -665,6 +663,12 @@ const MapManagementPage = () => {
                     onClose={() => setAddValueModalOpen(false)}
                     onSave={handleAddValueSave}
                     initialLabels={selectedVariable?.labels}
+                />
+
+                {/* 다운로드 모달 */}
+                <DownloadModal
+                    isOpen={downloadModalOpen}
+                    onClose={() => setDownloadModalOpen(false)}
                 />
             </div>
         </MapManagementContext.Provider>

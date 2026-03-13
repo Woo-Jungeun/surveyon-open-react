@@ -660,6 +660,116 @@ input:checked+.slider:before {
     color: #64748b !important;
 }
 
+/* Download Modal Styles */
+.download-modal-content {
+    width: 520px !important;
+}
+
+.download-modal-content .variable-modal-header {
+    padding: 24px 32px;
+}
+
+.download-modal-content .variable-modal-body {
+    padding: 32px 32px 10px;
+}
+
+.download-modal-content .variable-modal-footer .btn-save {
+    padding: 14px 20px;
+    font-size: 15px;
+    border-radius: 12px;
+}
+
+.download-modal-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+    padding-left: 2px;
+}
+
+.download-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.download-option-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.download-option-item:hover {
+    background: #fff;
+    border-color: var(--dm-primary);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.1);
+    transform: translateY(-2px);
+}
+
+.download-option-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.download-icon-wrapper {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.download-option-item:hover .download-icon-wrapper {
+    background: var(--dm-primary-light);
+    border-color: var(--dm-primary-border);
+}
+
+.download-icon-sps {
+    color: #3b82f6;
+}
+
+.download-icon-crd {
+    color: #8b5cf6;
+}
+
+.download-option-label {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.download-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    background: #fff;
+    padding: 8px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+
+.download-option-item:hover .download-action-btn {
+    background: var(--dm-primary);
+    color: #fff;
+    border-color: var(--dm-primary);
+}
+
 /* Center Pagination */
 .variable-page .k-pager {
     display: flex;
