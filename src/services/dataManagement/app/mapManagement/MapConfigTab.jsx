@@ -374,6 +374,7 @@ const getCell = (field) => {
         case 'memo':
         case 'valLen':
         case 'valCnt':
+        case 'decimal':
         case 'etcOpen':
         case 'spssName': return InputCell;
         case 'category': return CategoryCell;
@@ -478,9 +479,9 @@ const MapConfigTab = ({
         selectedState: bakedSelectedState,
         setSelectedState: handleBakedSelectedChange,
         linkRowClickToSelection: false,
-        selectionHeaderTitle: "H-SRT\n이관",
+        selectionHeaderTitle: "SRT\n이관",
         selectionColumnAfterField: "label",
-        selectionColumnWidth: "110px",
+        selectionColumnWidth: "90px",
         isItemSelectable,
         useCustomCheckbox: true
     }), [
@@ -493,7 +494,7 @@ const MapConfigTab = ({
         const commonPrefix = [
             { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
             { field: 'add', title: '추가', width: '50px' },
-            { field: 'id', title: 'no', width: '50px' },
+            // { field: 'id', title: 'no', width: '50px' },
             { field: 'sysName', title: '변수명', width: isDetailed ? '120px' : '85px' },
         ];
 
@@ -521,10 +522,10 @@ const MapConfigTab = ({
             { field: 'valCnt', title: '보기\n갯수', width: '85px', headerCell: multilineHeader },
             { field: 'totalLen', title: '총\n자리수', width: '90px', headerCell: multilineHeader },
             { field: 'etcOpen', title: '기타\n오픈정의', width: '100px', headerCell: multilineHeader },
-            { field: 'logic', title: '로직체크', width: '100px' },
+            { field: 'logic', title: '로직체크', width: '150px' },
             { field: 'label', title: '레이블', minWidth: 50 },
             { field: 'decimal', title: '소수점\n자리수', width: '90px', headerCell: multilineHeader },
-            { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
+            // { field: 'spssName', title: 'SPSS\n변수명', width: '100px', headerCell: multilineHeader },
             { field: 'type', title: '변수\n유형', width: '140px' },
             { field: 'minQuestions', title: '문항\n최소갯수', width: '100px', headerCell: multilineHeader },
             { field: 'delete', title: '삭제', width: '50px' }
