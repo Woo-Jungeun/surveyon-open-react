@@ -1,10 +1,103 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Plus, X, HelpCircle, Filter, Check } from 'lucide-react';
+import { Trash2, Plus, X, HelpCircle, Filter, Check, ChevronDown } from 'lucide-react';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import './AdvancedFilterPopup.css';
+
+const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placeholder = '선택...', isSingle = false }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = React.useRef(null);
+
+    const selectedValues = valueStr ? valueStr.split(',').map(s => s.trim()).filter(s => s) : [];
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleToggle = (val) => {
+        if (isSingle) {
+            if (selectedValues.includes(val)) {
+                onChange('');
+            } else {
+                onChange(val);
+                setIsOpen(false);
+            }
+        } else {
+            let newValues;
+            if (selectedValues.includes(val)) {
+                newValues = selectedValues.filter(v => v !== val);
+            } else {
+                newValues = [...selectedValues, val];
+            }
+            onChange(newValues.join(','));
+        }
+    };
+
+    const handleToggleAll = (e) => {
+        e.stopPropagation();
+        if (selectedValues.length === options.length) {
+            onChange('');
+        } else {
+            onChange(options.map(o => String(o.value)).join(','));
+        }
+    };
+
+    let displayText = placeholder;
+    if (selectedValues.length > 0) {
+        if (selectedValues.length === options.length && options.length > 0) {
+            displayText = '전체 선택됨';
+        } else {
+            displayText = selectedValues.join(', ');
+        }
+    }
+
+    return (
+        <div ref={dropdownRef} style={{ position: 'relative', flex: 1, minWidth: '120px' }}>
+            <div
+                className={`multi-drop-trigger-v5 ${isOpen ? 'open' : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+            >
+                <div className="multi-drop-val-v5" style={{ color: selectedValues.length > 0 ? '#424242' : '#9ca3af' }} title={displayText}>{displayText}</div>
+                <ChevronDown size={14} color="#64748b" style={{ flexShrink: 0, marginLeft: '4px' }} />
+            </div>
+            {isOpen && (
+                <div className="multi-drop-menu-v5">
+                    {!isSingle && (
+                        <div className="multi-drop-item-v5 all" onClick={handleToggleAll}>
+                            <div className={`multi-drop-checkbox-custom ${(selectedValues.length === options.length && options.length > 0) ? 'checked' : ''}`}>
+                                {(selectedValues.length === options.length && options.length > 0) && <Check size={12} color="#fff" strokeWidth={3} />}
+                            </div>
+                            <span className="multi-drop-item-text-v5">전체 선택</span>
+                        </div>
+                    )}
+                    {options.length === 0 ? (
+                        <div style={{ padding: '8px 14px', fontSize: '13px', color: '#9ca3af' }}>옵션이 없습니다.</div>
+                    ) : (
+                        options.map(o => {
+                            const isChecked = selectedValues.includes(String(o.value));
+                            return (
+                                <div key={String(o.value)} className="multi-drop-item-v5" onClick={(e) => { e.stopPropagation(); handleToggle(String(o.value)); }}>
+                                    <div className={`multi-drop-checkbox-custom ${isChecked ? 'checked' : ''}`}>
+                                        {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
+                                    </div>
+                                    <span className="multi-drop-item-text-v5" title={`${o.value}. ${o.label}`}>{`${o.value}. ${o.label}`}</span>
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive }) => {
     const modal = React.useContext(modalContext);
@@ -81,6 +174,28 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
             const parsedConditions = conditionStrs.map(cStr => {
                 const t = cStr.trim();
+                const matchNull = t.match(/^(.+?)\s+(IS\s+NOT\s+NULL|IS\s+NULL)$/i);
+                if (matchNull) {
+                    const op = matchNull[2].toLowerCase().replace(/\s+/g, ' ');
+                    let rawVarName = matchNull[1].replace(/[()]/g, '').trim();
+                    let ranks = [];
+                    const rankMatch = rawVarName.match(/\[(.*?)\]$/);
+
+                    if (rankMatch) {
+                        const innerRanks = rankMatch[1].split(',').map(r => r.trim()).filter(r => r);
+                        if (innerRanks.length > 0) {
+                            ranks = innerRanks.map(r => `[${r}]`);
+                            rawVarName = rawVarName.replace(/\[.*?\]$/, '');
+                        }
+                    }
+                    return {
+                        varName: rawVarName,
+                        operator: op,
+                        value: '',
+                        ranks: ranks.length > 0 ? ranks : undefined
+                    };
+                }
+
                 const match = t.match(/^(.+?)\s*(>=|<=|!=|==|=|>|<|IN|NOT\s+IN)\s*(.+)$/i);
                 if (match) {
                     let op = match[2].toLowerCase().trim();
@@ -96,10 +211,23 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                         val = val.replace(/\)+$/, '').replace(/\]+$/, '').trim();
                     }
 
+                    let rawVarName = match[1].replace(/[()]/g, '').trim();
+                    let ranks = [];
+                    const rankMatch = rawVarName.match(/\[(.*?)\]$/);
+
+                    if (rankMatch) {
+                        const innerRanks = rankMatch[1].split(',').map(r => r.trim()).filter(r => r);
+                        if (innerRanks.length > 0) {
+                            ranks = innerRanks.map(r => `[${r}]`);
+                            rawVarName = rawVarName.replace(/\[.*?\]$/, '');
+                        }
+                    }
+
                     return {
-                        varName: match[1].replace(/[()]/g, '').trim(),
+                        varName: rawVarName,
                         operator: op,
-                        value: val
+                        value: val,
+                        ranks: ranks.length > 0 ? ranks : undefined
                     };
                 }
                 return { varName: t.replace(/[()]/g, '').trim(), operator: '==', value: '' };
@@ -288,7 +416,34 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
     const handleConditionChange = (catIndex, setIndex, condIndex, field, value) => {
         const newCats = [...categories];
+        if (field === 'operator' && newCats[catIndex].conditionSets[setIndex].conditions[condIndex].operator !== value) {
+            newCats[catIndex].conditionSets[setIndex].conditions[condIndex].value = '';
+        }
         newCats[catIndex].conditionSets[setIndex].conditions[condIndex][field] = value;
+        setCategories(newCats);
+    };
+
+    const handleToggleRank = (catIndex, setIndex, condIndex, rankVal) => {
+        const newCats = [...categories];
+        const cond = newCats[catIndex].conditionSets[setIndex].conditions[condIndex];
+
+        let baseName = cond.varName;
+        if (!cond.ranks) {
+            cond.ranks = [];
+            const match = cond.varName.match(/\[.*\]$/);
+            if (match) {
+                cond.ranks.push(match[0]);
+                baseName = cond.varName.replace(/\[.*\]$/, '');
+                cond.varName = baseName;
+            }
+        }
+
+        if (cond.ranks.includes(rankVal)) {
+            cond.ranks = cond.ranks.filter(r => r !== rankVal);
+        } else {
+            cond.ranks.push(rankVal);
+            cond.ranks.sort();
+        }
         setCategories(newCats);
     };
 
@@ -348,7 +503,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
         const hasValidCondition = categories.some(cat =>
             cat.conditionSets.some(set =>
-                set.conditions.some(c => c.varName && c.value)
+                set.conditions.some(c => c.varName && (c.value || c.operator.toLowerCase().includes('null')))
             )
         );
         if (!hasValidCondition) {
@@ -370,10 +525,10 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                         let categoryLogic = '';
                         cat.conditionSets.forEach((set, setIndex) => {
                             const validConds = set.conditions
-                                .filter(c => c.varName && c.value)
+                                .filter(c => c.varName && (c.value || c.operator.toLowerCase().includes('null')))
                                 .map(c => {
                                     const opLower = c.operator.toLowerCase();
-                                    let val = c.value.trim();
+                                    let val = (c.value || '').trim();
                                     // in, not in인 경우 대괄호 감싸기
                                     if (opLower === 'in' || opLower === 'not in') {
                                         let cleanVal = val;
@@ -382,7 +537,28 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                         }
                                         val = `[${cleanVal}]`;
                                     }
-                                    return `${c.varName} ${opLower} ${val}`;
+
+                                    let currentRanks = c.ranks;
+                                    let baseName = c.varName;
+                                    if (!currentRanks) {
+                                        const match = c.varName.match(/\[.*\]$/);
+                                        if (match) {
+                                            currentRanks = [match[0]];
+                                            baseName = c.varName.replace(/\[.*\]$/, '');
+                                        } else {
+                                            currentRanks = [];
+                                        }
+                                    } else {
+                                        baseName = c.varName.replace(/\[.*\]$/, '');
+                                    }
+
+                                    if (currentRanks && currentRanks.length > 0) {
+                                        // "q70[0,1] in [10]" 형태로 포맷
+                                        const combinedRanks = currentRanks.map(r => r.replace('[', '').replace(']', '')).join(',');
+                                        return `${baseName}[${combinedRanks}] ${opLower}${val ? ` ${val}` : ''}`;
+                                    }
+
+                                    return `${baseName} ${opLower}${val ? ` ${val}` : ''}`;
                                 });
 
                             if (validConds.length > 0) {
@@ -435,79 +611,42 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             }
         };
 
-        try {
-            const result = await setRecodedVariable.mutateAsync(payload);
-            if (result?.success === "777") {
-                modal.showAlert("알림", "저장되었습니다.");
-                setSelectedVarId(fullId); // 신규 저장 후 해당 변수 선택 상태로 변경
+        const totalLogic = payload.variables[fullId].info
+            .map(item => item.logic)
+            .filter(logic => logic !== '')
+            .map(logic => `(${logic})`)
+            .join(` ${categoryLogicOp.toLowerCase()} `);
 
-                // Calculate total logic by joining all category logics with OR
-                const totalLogic = categories
-                    .map((cat, idx) => {
-                        let categoryLogic = '';
-                        cat.conditionSets.forEach((set) => {
-                            const validConds = set.conditions
-                                .filter(c => c.varName && c.value)
-                                .map(c => {
-                                    const opLower = c.operator.toLowerCase();
-                                    let val = c.value.trim();
-                                    if (opLower === 'in' || opLower === 'not in') {
-                                        let cleanVal = val;
-                                        while ((cleanVal.startsWith('(') && cleanVal.endsWith(')')) || (cleanVal.startsWith('[') && cleanVal.endsWith(']'))) {
-                                            cleanVal = cleanVal.slice(1, -1).trim();
-                                        }
-                                        val = `[${cleanVal}]`;
+        modal.showConfirm("확인",
+            `다음 로직으로 저장하시겠습니까?\n\n${totalLogic || "조건 없음"}`,
+            {
+                btns: [
+                    { title: "취소", click: () => { } },
+                    {
+                        title: "저장", click: async () => {
+                            try {
+                                const result = await setRecodedVariable.mutateAsync(payload);
+                                if (result?.success === "777") {
+                                    modal.showAlert("알림", "저장되었습니다.");
+                                    setSelectedVarId(fullId); // 신규 저장 후 해당 변수 선택 상태로 변경
+
+                                    if (onSave) {
+                                        onSave(fullId, totalLogic, varLabel);
+                                    } else if (onSaved) {
+                                        onSaved();
                                     }
-                                    return `${c.varName} ${opLower} ${val}`;
-                                });
-                            if (validConds.length > 0) {
-                                const logicOpLower = (set.logicOp || 'AND').toLowerCase();
-                                let setStr = validConds.length === 1 ? validConds[0] : `(${validConds.join(` ${logicOpLower} `).trim()})`;
-                                if (categoryLogic === '') {
-                                    categoryLogic = setStr;
                                 } else {
-                                    const connector = (set.connectorOp || 'AND').toLowerCase();
-
-                                    categoryLogic = `(${categoryLogic} ${connector} ${setStr})`;
+                                    modal.showAlert("알림", result?.message || "저장 실패");
                                 }
-                            }
-                        });
-
-                        let finalCategoryLogic = categoryLogic.trim();
-                        let unwrap = false;
-                        if (finalCategoryLogic.startsWith('(') && finalCategoryLogic.endsWith(')')) {
-                            let openCount = 0;
-                            unwrap = true;
-                            for (let i = 0; i < finalCategoryLogic.length - 1; i++) {
-                                if (finalCategoryLogic[i] === '(') openCount++;
-                                else if (finalCategoryLogic[i] === ')') openCount--;
-                                if (openCount === 0) {
-                                    unwrap = false;
-                                    break;
-                                }
+                            } catch (error) {
+                                console.error("Save error:", error);
+                                modal.showAlert("알림", "저장 중 오류가 발생했습니다.");
                             }
                         }
-                        if (unwrap) {
-                            finalCategoryLogic = finalCategoryLogic.slice(1, -1).trim();
-                        }
-                        return finalCategoryLogic;
-                    })
-                    .filter(logic => logic !== '')
-                    .map(logic => `(${logic})`)
-                    .join(` ${categoryLogicOp} `);
-
-                if (onSave) {
-                    onSave(fullId, totalLogic, varLabel);
-                } else if (onSaved) {
-                    onSaved();
-                }
-            } else {
-                modal.showAlert("알림", result?.message || "저장 실패");
+                    }
+                ]
             }
-        } catch (error) {
-            console.error("Save error:", error);
-            modal.showAlert("알림", "저장 중 오류가 발생했습니다.");
-        }
+        );
     };
 
     useEffect(() => {
@@ -519,7 +658,8 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     const vars = Object.values(result.resultjson).map(item => ({
                         sysName: item.id,
                         label: item.label,
-                        type: item.type
+                        type: item.type,
+                        info: item.info
                     }));
                     setOriginalVars(vars);
                 }
@@ -531,7 +671,8 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
     }, [auth?.user?.userId, pageId]);
 
     const activeList = originalVars.length > 0 ? originalVars : variablesList;
-    const kendoVarOptions = activeList.map(v => {
+    const kendoVarOptions = [];
+    activeList.forEach(v => {
         const rawType = (v.type || '').toLowerCase();
         let color = v.color || 'default';
         if (!v.color && v.type) {
@@ -540,24 +681,67 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             else if (rawType.includes('dummy')) color = 'dummy';
             else if (rawType.includes('open')) color = 'open';
         }
-        return {
+
+        kendoVarOptions.push({
             text: v.label ? `${v.sysName || v.id} (${v.label})` : (v.sysName || v.id),
             value: v.sysName || v.id,
             type: v.type,
-            color: color
-        };
+            color: color,
+            info: v.info
+        });
     });
 
-    const operatorOptions = [
-        { text: '== (같음)', value: '==' },
-        { text: '!= (같지 않음)', value: '!=' },
-        { text: '> (초과)', value: '>' },
-        { text: '>= (이상)', value: '>=' },
-        { text: '< (미만)', value: '<' },
-        { text: '<= (이하)', value: '<=' },
-        { text: 'in (포함)', value: 'in' },
-        { text: 'not in (미포함)', value: 'not in' },
-    ];
+    const getOperatorOptions = (varName) => {
+        const defaultOps = [
+            { text: '== (같음)', value: '==' },
+            { text: '!= (같지 않음)', value: '!=' },
+            { text: '> (초과)', value: '>' },
+            { text: '>= (이상)', value: '>=' },
+            { text: '< (미만)', value: '<' },
+            { text: '<= (이하)', value: '<=' },
+            { text: 'in (포함)', value: 'in' },
+            { text: 'not in (미포함)', value: 'not in' },
+            { text: 'is not null (응답있음)', value: 'is not null' },
+            { text: 'is null (응답없음)', value: 'is null' },
+        ];
+
+        if (!varName) return defaultOps;
+
+        const matchedVar = kendoVarOptions.find(item => item.value === varName);
+        if (!matchedVar) return defaultOps;
+
+        const rawType = (matchedVar.type || '').toLowerCase();
+
+        if (rawType.includes('single') || rawType.includes('dummy')) {
+            return [
+                { text: 'in (포함)', value: 'in' },
+                { text: 'not in (미포함)', value: 'not in' },
+                { text: '>= (이상)', value: '>=' },
+                { text: '<= (이하)', value: '<=' },
+                { text: '== (같다)', value: '==' },
+                { text: 'is not null (응답있음)', value: 'is not null' },
+                { text: 'is null (응답없음)', value: 'is null' },
+            ];
+        } else if (rawType.includes('multi') || rawType.includes('rank')) {
+            return [
+                { text: 'in (포함)', value: 'in' },
+                { text: 'not in (미포함)', value: 'not in' },
+                { text: 'is not null (응답있음)', value: 'is not null' },
+                { text: 'is null (응답없음)', value: 'is null' },
+            ];
+        } else if (rawType.includes('open')) {
+            return [
+                { text: '== (같음)', value: '==' },
+                { text: '!= (같지 않음)', value: '!=' },
+                { text: '>= (이상)', value: '>=' },
+                { text: '<= (이하)', value: '<=' },
+                { text: 'is not null (응답있음)', value: 'is not null' },
+                { text: 'is null (응답없음)', value: 'is null' },
+            ];
+        }
+
+        return defaultOps;
+    };
 
     const DropDownItemRender = (li, itemProps) => {
         const itemChildren = (
@@ -743,7 +927,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                             ) : (
                                                 <div className="item-title-v5">{cat.label || `새 그룹 ${idx + 1}`}</div>
                                             )}
-                                            <div className="item-info-v5" style={{ color: selectedCatIndex === idx ? '#3b82f6' : '#64748b' }}>1개</div>
+                                            <div className="item-info-v5" style={{ color: selectedCatIndex === idx ? '#3b82f6' : '#64748b' }}>{cat.conditionSets.reduce((acc, set) => acc + set.conditions.length, 0)}개</div>
                                         </div>
                                         {categories.length > 1 && (
                                             <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleRemoveCategory(cat.id); }}>
@@ -793,44 +977,129 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                             <div className="cond-wrapper-v5">
                                                 {set.conditions.map((cond, condIndex) => (
                                                     <div key={condIndex} className="cond-row-v5">
-                                                        <div className="cond-var">
-                                                            <DropDownList
-                                                                data={kendoVarOptions}
-                                                                textField="text"
-                                                                dataItemKey="value"
-                                                                placeholder="문항 선택"
-                                                                itemRender={DropDownItemRender}
-                                                                valueRender={DropDownValueRender}
-                                                                value={cond.varName ? (kendoVarOptions.find(item => item.value === cond.varName) || { text: cond.varName, value: cond.varName }) : null}
-                                                                onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'varName', e.value ? e.value.value : "")}
-                                                            />
-                                                        </div>
-                                                        <div className="cond-op">
-                                                            <DropDownList
-                                                                data={operatorOptions}
-                                                                textField="text"
-                                                                dataItemKey="value"
-                                                                placeholder="연산자"
-                                                                value={cond.operator ? (operatorOptions.find(op => op.value === cond.operator) || { text: cond.operator, value: cond.operator }) : null}
-                                                                onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'operator', e.value ? e.value.value : "")}
-                                                            />
-                                                        </div>
-                                                        <div className="cond-val">
-                                                            <input
-                                                                type="text"
-                                                                value={cond.value}
-                                                                onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'value', e.target.value)}
-                                                                placeholder="값 입력"
-                                                            />
-                                                        </div>
-                                                        <div className="cond-actions">
-                                                            <button className="icon-btn-v5 add" onClick={() => handleAddCondition(selectedCatIndex, setIndex, condIndex)}>
-                                                                <Plus size={14} color="#3b82f6" strokeWidth={3} />
-                                                            </button>
-                                                            <button className="icon-btn-v5 delete" onClick={() => handleDeleteCondition(selectedCatIndex, setIndex, condIndex)}>
-                                                                <X size={14} color="#ef4444" strokeWidth={3} />
-                                                            </button>
-                                                        </div>
+                                                        {(() => {
+                                                            const matchedVar = kendoVarOptions.find(item => item.value === cond.varName);
+                                                            let showRankToggles = false;
+                                                            let isOpenVar = false;
+                                                            let opts = [];
+                                                            if (matchedVar) {
+                                                                const rawType = (matchedVar.type || '').toLowerCase();
+                                                                if ((rawType.includes('multi') || rawType.includes('rank')) && ['in', 'not in'].includes(cond.operator)) {
+                                                                    showRankToggles = true;
+                                                                }
+                                                                if (rawType.includes('open')) {
+                                                                    isOpenVar = true;
+                                                                }
+                                                                if (matchedVar.info && Array.isArray(matchedVar.info)) {
+                                                                    opts = matchedVar.info.filter(o => o.label).map(o => ({ value: o.value, label: o.label }));
+                                                                }
+                                                            }
+                                                            return (
+                                                                <>
+                                                                    <div className="cond-var">
+                                                                        <DropDownList
+                                                                            data={kendoVarOptions}
+                                                                            textField="text"
+                                                                            dataItemKey="value"
+                                                                            placeholder="문항 선택"
+                                                                            itemRender={DropDownItemRender}
+                                                                            valueRender={DropDownValueRender}
+                                                                            value={cond.varName ? (kendoVarOptions.find(item => item.value === cond.varName) || { text: cond.varName, value: cond.varName }) : null}
+                                                                            onChange={(e) => {
+                                                                                const newVarName = e.value ? e.value.value : "";
+                                                                                const newCats = [...categories];
+                                                                                newCats[selectedCatIndex].conditionSets[setIndex].conditions[condIndex].varName = newVarName;
+
+                                                                                const currentOp = cond.operator;
+                                                                                const validOps = getOperatorOptions(newVarName);
+                                                                                if (newVarName && currentOp && !validOps.find(op => op.value === currentOp)) {
+                                                                                    newCats[selectedCatIndex].conditionSets[setIndex].conditions[condIndex].operator = validOps.length > 0 ? validOps[0].value : "";
+                                                                                }
+                                                                                setCategories(newCats);
+                                                                            }}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="cond-op" style={{ flex: showRankToggles ? 1.7 : 2, minWidth: showRankToggles ? '120px' : '160px', transition: 'all 0.2s' }}>
+                                                                        <DropDownList
+                                                                            data={getOperatorOptions(cond.varName)}
+                                                                            textField="text"
+                                                                            dataItemKey="value"
+                                                                            placeholder="연산자"
+                                                                            value={cond.operator ? (getOperatorOptions(cond.varName).find(op => op.value === cond.operator) || { text: cond.operator, value: cond.operator }) : null}
+                                                                            onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'operator', e.value ? e.value.value : "")}
+                                                                        />
+                                                                    </div>
+                                                                    <div className="cond-val" style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: showRankToggles ? 3.5 : 2, transition: 'all 0.2s' }}>
+                                                                        {!['is null', 'is not null'].includes(cond.operator) && (
+                                                                            <>
+                                                                                {(!isOpenVar && opts.length > 0) ? (
+                                                                                    <MultiCheckboxDropdown
+                                                                                        options={opts}
+                                                                                        valueStr={cond.value}
+                                                                                        isSingle={cond.operator && !['in', 'not in'].includes(cond.operator)}
+                                                                                        onChange={(val) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'value', val)}
+                                                                                    />
+                                                                                ) : (
+                                                                                    <input
+                                                                                        type="text"
+                                                                                        style={{ flex: 1, minWidth: '80px', border: '1px solid #cbd5e1', borderRadius: '4px', padding: '0 8px', height: '36px', boxSizing: 'border-box', outline: 'none' }}
+                                                                                        value={cond.value}
+                                                                                        onChange={(e) => {
+                                                                                            let val = e.target.value;
+                                                                                            if (cond.operator && !['in', 'not in'].includes(cond.operator)) {
+                                                                                                val = val.replace(/,/g, '');
+                                                                                            }
+                                                                                            handleConditionChange(selectedCatIndex, setIndex, condIndex, 'value', val);
+                                                                                        }}
+                                                                                        placeholder="값 입력"
+                                                                                    />
+                                                                                )}
+                                                                                {showRankToggles && (() => {
+                                                                                    let currentRanks = cond.ranks || [];
+                                                                                    if (!cond.ranks) {
+                                                                                        const match = cond.varName.match(/\[.*\]$/);
+                                                                                        if (match) currentRanks = [match[0]];
+                                                                                    }
+                                                                                    return (
+                                                                                        <div className="rank-toggles-v5" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f0f9ff', padding: '4px 8px 4px 12px', borderRadius: '20px', border: '1px solid #bae6fd', flexShrink: 0 }}>
+                                                                                            <span style={{ fontSize: '11px', fontWeight: '700', color: '#0369a1' }}>순위</span>
+                                                                                            <div style={{ display: 'flex', gap: '4px' }}>
+                                                                                                <button
+                                                                                                    className={`rank-circle-btn-v5 ${currentRanks.includes('[0]') ? 'active' : ''}`}
+                                                                                                    onClick={() => handleToggleRank(selectedCatIndex, setIndex, condIndex, '[0]')}
+                                                                                                >1</button>
+                                                                                                <button
+                                                                                                    className={`rank-circle-btn-v5 ${currentRanks.includes('[1]') ? 'active' : ''}`}
+                                                                                                    onClick={() => handleToggleRank(selectedCatIndex, setIndex, condIndex, '[1]')}
+                                                                                                >2</button>
+                                                                                                <button
+                                                                                                    className={`rank-circle-btn-v5 ${currentRanks.includes('[2]') ? 'active' : ''}`}
+                                                                                                    onClick={() => handleToggleRank(selectedCatIndex, setIndex, condIndex, '[2]')}
+                                                                                                >3</button>
+                                                                                                <button
+                                                                                                    className={`rank-circle-btn-v5 ${currentRanks.includes('[-1]') ? 'active' : ''}`}
+                                                                                                    style={{ width: 'auto', padding: '0 8px', borderRadius: '12px' }}
+                                                                                                    onClick={() => handleToggleRank(selectedCatIndex, setIndex, condIndex, '[-1]')}
+                                                                                                >마지막</button>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    );
+                                                                                })()}
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="cond-actions">
+                                                                        <button className="icon-btn-v5 add" onClick={() => handleAddCondition(selectedCatIndex, setIndex, condIndex)}>
+                                                                            <Plus size={14} color="#3b82f6" strokeWidth={3} />
+                                                                        </button>
+                                                                        <button className="icon-btn-v5 delete" onClick={() => handleDeleteCondition(selectedCatIndex, setIndex, condIndex)}>
+                                                                            <X size={14} color="#ef4444" strokeWidth={3} />
+                                                                        </button>
+                                                                    </div>
+                                                                </>
+                                                            );
+                                                        })()
+                                                        }
                                                     </div>
                                                 ))}
                                             </div>

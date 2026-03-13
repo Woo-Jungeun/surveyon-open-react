@@ -563,7 +563,7 @@ const FrequencyAnalysisPage = () => {
 
     // 신규 필터 문항 선택 드롭다운 상태
     const [isVariableDropdownOpen, setIsVariableDropdownOpen] = useState(false);
-    const [selectedVariableId, setSelectedVariableId] = useState(null);
+    const [selectedVariableIds, setSelectedVariableIds] = useState([]);
     const variableDropdownRef = useRef(null);
     const [globalPaletteId, setGlobalPaletteId] = useState('default');
 
@@ -815,7 +815,7 @@ const FrequencyAnalysisPage = () => {
         if (questions.length > 0) {
             setQuestions(prev => prev.map(q => ({ ...q, isLoaded: false })));
         }
-    }, [filterLogic, selectedFilters, selectedVariableId]);
+    }, [filterLogic, selectedFilters, selectedVariableIds]);
 
 
     // 활성 아이템 기준 5개씩 데이터 분할 조회
@@ -850,7 +850,7 @@ const FrequencyAnalysisPage = () => {
                 const payload = {
                     pageid: pageId,
                     user: userId,
-                    x_info: selectedVariableId ? [selectedVariableId] : (selectedFilters.includes('전체') ? [] : selectedFilters), // 고급 필터 또는 배너 필터 적용
+                    x_info: selectedVariableIds.length > 0 ? selectedVariableIds : (selectedFilters.includes('전체') ? [] : selectedFilters), // 고급 필터 또는 배너 필터 적용
                     start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,  // 전체 순번에 해당하는 인덱스
                     limit: limit, // 가져올 갯수
                     weight_col: "",
@@ -927,7 +927,7 @@ const FrequencyAnalysisPage = () => {
             }
         };
         fetchChunkData();
-    }, [activeId, questions, sidebarPage, auth?.user?.userId, selectedVariableId]);
+    }, [activeId, questions, sidebarPage, auth?.user?.userId, selectedVariableIds]);
 
     const totalSidebarPages = Math.ceil(totalQuestions / SIDEBAR_PAGE_SIZE);
 
@@ -1020,9 +1020,13 @@ const FrequencyAnalysisPage = () => {
                     >
                         <span className="trigger-text">
                             {(() => {
-                                if (!selectedVariableId) return '필터 문항 선택';
-                                const selectedVar = overviewVariables.find(v => v.id === selectedVariableId);
-                                return selectedVar ? (selectedVar.label || selectedVar.id) : selectedVariableId;
+                                if (overviewVariables.length === 0) return '필터 문항 선택';
+                                if (selectedVariableIds.length === 0) return '선택 안함';
+                                if (selectedVariableIds.length === overviewVariables.length) return '전체';
+                                return selectedVariableIds.map(id => {
+                                    const v = overviewVariables.find(ov => ov.id === id);
+                                    return v ? (v.label || v.id) : id;
+                                }).join(', ');
                             })()}
                         </span>
                         <ChevronDown size={14} className="trigger-icon" />
@@ -1030,29 +1034,51 @@ const FrequencyAnalysisPage = () => {
                     {isVariableDropdownOpen && (
                         <div className="custom-filter-menu" style={{ width: '240px' }}>
                             <div
-                                className={`custom-filter-item ${!selectedVariableId ? 'selected' : ''}`}
-                                onClick={() => {
-                                    setSelectedVariableId(null);
-                                    setFilterLogic('');
-                                    setIsVariableDropdownOpen(false);
+                                className="custom-filter-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (selectedVariableIds.length === overviewVariables.length && overviewVariables.length > 0) {
+                                        setSelectedVariableIds([]);
+                                        setFilterLogic('');
+                                    } else {
+                                        const allIds = overviewVariables.map(v => v.id);
+                                        setSelectedVariableIds(allIds);
+                                        const totalLogic = allIds.map(id => overviewVariables.find(v => v.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                        setFilterLogic(totalLogic);
+                                    }
                                 }}
-                                style={{ justifyContent: 'flex-start', color: '#64748b' }}
                             >
-                                선택 안함
-                            </div>
-                            {overviewVariables.map(v => (
-                                <div
-                                    key={v.id}
-                                    className={`custom-filter-item ${selectedVariableId === v.id ? 'selected' : ''}`}
-                                    onClick={() => {
-                                        setSelectedVariableId(v.id);
-                                        setFilterLogic(v.logic || '');
-                                        setIsVariableDropdownOpen(false);
-                                    }}
-                                >
-                                    <span className="filter-text">{v.label || v.id}</span>
+                                <div className={`checkbox-custom ${(selectedVariableIds.length === overviewVariables.length && overviewVariables.length > 0) ? 'checked' : ''}`}>
+                                    {(selectedVariableIds.length === overviewVariables.length && overviewVariables.length > 0) && <Check size={12} color="#fff" strokeWidth={3} />}
                                 </div>
-                            ))}
+                                <span className="filter-text" style={{ fontWeight: '600' }}>전체</span>
+                            </div>
+                            {overviewVariables.map(v => {
+                                const isChecked = selectedVariableIds.includes(v.id);
+                                return (
+                                    <div
+                                        key={v.id}
+                                        className="custom-filter-item"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            let newIds;
+                                            if (isChecked) {
+                                                newIds = selectedVariableIds.filter(id => id !== v.id);
+                                            } else {
+                                                newIds = [...selectedVariableIds, v.id];
+                                            }
+                                            setSelectedVariableIds(newIds);
+                                            const totalLogic = newIds.map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                            setFilterLogic(totalLogic);
+                                        }}
+                                    >
+                                        <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
+                                            {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
+                                        </div>
+                                        <span className="filter-text">{v.label || v.id}</span>
+                                    </div>
+                                );
+                            })}
                             {overviewVariables.length === 0 && (
                                 <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
                                     조회된 변수가 없습니다.
