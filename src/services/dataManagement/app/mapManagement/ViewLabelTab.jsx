@@ -85,7 +85,7 @@ const ViewLabelTab = ({
                                     id: idx + 1
                                 })) || [],
                                 dataItemKey: "id",
-                                height: "100%",
+                                height: "590px",
                                 filterable: false,
                             }}
                         >
