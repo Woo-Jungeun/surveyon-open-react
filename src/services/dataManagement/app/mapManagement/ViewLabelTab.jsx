@@ -29,7 +29,7 @@ const ViewLabelTab = ({
                         />
                     </div>
                 </div>
-                <div className="variable-list">
+                <div className="map-variable-list">
                     {variables
                         .filter(v => {
                             if (!sidebarSearchQuery.trim()) return true;
@@ -42,7 +42,7 @@ const ViewLabelTab = ({
                         .map(v => (
                             <div
                                 key={v.id}
-                                className={`variable-item ${selectedVariableId === v.id ? 'active' : ''}`}
+                                className={`map-variable-item ${selectedVariableId === v.id ? 'active' : ''}`}
                                 onClick={() => setSelectedVariableId(v.id)}
                             >
                                 <div className="v-name">{v.sysName}</div>
