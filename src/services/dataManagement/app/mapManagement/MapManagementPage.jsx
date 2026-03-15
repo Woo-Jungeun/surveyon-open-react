@@ -10,6 +10,7 @@ import MapConfigTab from './MapConfigTab';
 import ViewLabelTab from './ViewLabelTab';
 import AddLabelPopup from './AddLabelPopup';
 import LogicEditPopup from './LogicEditPopup';
+import MapConfigFilterPopup from '../../../../components/common/popup/MapConfigFilterPopup';
 import DownloadModal from './DownloadModal';
 import { Download } from 'lucide-react';
 
@@ -649,11 +650,17 @@ const MapManagementPage = () => {
 
                 {/* 로직 편집 팝업 */}
                 {editingLogicPopupOpen && (
-                    <LogicEditPopup
-                        variable={editingLogicPopupOpen}
+                    <MapConfigFilterPopup
+                        auth={auth}
+                        pageId={sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum')}
+                        initialVariables={[]}
                         variablesList={variables}
+                        initialLogic={editingLogicPopupOpen.logic}
+                        title={`로직 검수 설정 - ${editingLogicPopupOpen?.sysName || editingLogicPopupOpen?.title || editingLogicPopupOpen?.id}`}
                         onClose={() => setEditingLogicPopupOpen(null)}
-                        onSave={handleLogicSave}
+                        onSave={(varId, logicStr, varLabel) => {
+                            handleLogicSave(editingLogicPopupOpen.id, logicStr);
+                        }}
                     />
                 )}
 

@@ -1,0 +1,120 @@
+/* Green Theme Specific Overrides */
+.theme-green .header-title-cbp h3::before {
+    background: #16a34a;
+}
+
+.theme-green .guide-btn-cbp {
+    border-color: #16a34a;
+    color: #16a34a;
+}
+
+.theme-green .guide-btn-cbp:hover {
+    background: #16a34a;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.theme-green .add-btn-cbp {
+    color: #16a34a;
+}
+
+.theme-green .list-item-cbp.active,
+.theme-green .cat-item-cbp.active {
+    background: #f0fdf4;
+    border-color: #16a34a;
+}
+
+.theme-green .list-item-cbp.active .item-info-cbp,
+.theme-green .cat-item-cbp.active .item-info-cbp {
+    color: #16a34a;
+}
+
+.theme-green .col-conds {
+    background: #f4fbf6;
+}
+
+.theme-green .cond-wrapper-cbp {
+    background: #ebf8f0;
+}
+
+.theme-green .inline-input-cbp:focus {
+    border-color: #16a34a;
+}
+
+.theme-green .dash-add-btn-cbp {
+    border-color: #16a34a;
+    color: #16a34a;
+}
+
+.theme-green .dash-add-btn-cbp:hover {
+    background: #f0fdf4;
+}
+
+.theme-green .cond-logic-toggle-cbp button.active,
+.theme-green .cond-logic-toggle-cbp.mini button.active {
+    background: #16a34a;
+    color: #fff;
+}
+
+.theme-green .cond-row-cbp .k-dropdownlist.k-focus,
+.theme-green .cond-row-cbp .k-dropdownlist:focus-within {
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+}
+
+.theme-green .cond-val input:focus {
+    border-color: #16a34a;
+}
+
+.theme-green .rank-circle-btn-cbp {
+    border-color: #bbf7d0;
+    color: #16a34a;
+}
+
+.theme-green .rank-circle-btn-cbp:hover {
+    background: #dcfce7;
+}
+
+.theme-green .rank-circle-btn-cbp.active {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #fff;
+    box-shadow: 0 2px 4px rgba(22, 163, 74, 0.3);
+}
+
+.theme-green .icon-btn-cbp.add {
+    border-color: #16a34a;
+}
+
+.theme-green .icon-btn-cbp.add:hover {
+    background: #f0fdf4;
+}
+
+.theme-green .btn-apply-cbp {
+    background: #16a34a;
+    border-color: #16a34a;
+    color: #fff;
+}
+
+.theme-green .btn-apply-cbp:hover {
+    background: #15803d;
+    border-color: #15803d;
+}
+
+.theme-green .multi-drop-trigger-cbp.open {
+    border-color: #16a34a !important;
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2) !important;
+}
+
+.theme-green .multi-drop-item-cbp:hover {
+    background: #f0fdf4;
+}
+
+.theme-green .multi-drop-checkbox-custom.checked {
+    background-color: #16a34a;
+    border-color: #16a34a;
+}
+
+.theme-green .multi-drop-checkbox-custom:hover {
+    border-color: #16a34a;
+}

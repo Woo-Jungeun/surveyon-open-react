@@ -16,7 +16,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
-import LogicEditPopup from '../../../dataManagement/app/mapManagement/LogicEditPopup';
+import AdditionalAnalysisFilterPopup from '../../../../components/common/popup/AdditionalAnalysisFilterPopup';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
@@ -1550,14 +1550,16 @@ const AdditionalAnalysisPage = () => {
                 title="추가분석"
             >
 
-                {/* 고급 필터 버튼 - LogicEditPopup 오픈 */}
-                <button
-                    onClick={() => setIsFilterPopupOpen(true)}
-                    className={`advanced-filter-btn ${filterExpression ? 'active' : ''}`}
-                >
-                    <Filter size={15} />
-                    고급 필터{filterExpression ? ' ✓' : ''}
-                </button>
+                {/* 고급 필터 버튼 - AdditionalAnalysisFilterPopup 오픈 */}
+                <div style={{ marginLeft: '12px' }}>
+                    <button
+                        onClick={() => setIsFilterPopupOpen(true)}
+                        className={`advanced-filter-btn ${filterExpression ? 'active' : ''}`}
+                    >
+                        <Filter size={15} />
+                        고급 필터{filterExpression ? ' ✓' : ''}
+                    </button>
+                </div>
 
                 <button
                     onClick={() => setIsModalOpen(true)}
@@ -1997,18 +1999,22 @@ const AdditionalAnalysisPage = () => {
                 data={pageListData}
                 onSelect={handlePageSelected}
             />
-            {/* 고급 필터 LogicEditPopup */}
+
+            {/* 고급 필터 AdditionalAnalysisFilterPopup */}
             {isFilterPopupOpen && (
-                <LogicEditPopup
-                    variable={{ id: 'filter', logic: filterExpression }}
-                    variablesList={variables.map(v => ({ sysName: v.id, label: v.label }))}
+                <AdditionalAnalysisFilterPopup
+                    auth={auth}
+                    pageId={currentPageId}
+                    initialVariables={[]}
+                    variablesList={variables}
+                    initialLogic={filterExpression}
+                    title="고급 필터"
                     onClose={() => setIsFilterPopupOpen(false)}
-                    onSave={(_, logicStr) => {
+                    onSave={(varId, logicStr, varLabel) => {
                         setFilterExpression(logicStr);
                         setIsFilterPopupOpen(false);
                         handleRun(logicStr);
                     }}
-                    theme="data-dashboard"
                 />
             )}
         </div >
