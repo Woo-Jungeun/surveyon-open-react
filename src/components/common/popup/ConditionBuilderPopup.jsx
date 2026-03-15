@@ -719,28 +719,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
         );
     };
 
-    useEffect(() => {
-        const fetchOriginal = async () => {
-            if (!auth?.user?.userId || !pageId) return;
-            try {
-                const result = await getOriginalVariables.mutateAsync({ user: auth.user.userId, pageid: pageId });
-                if (result?.success === "777" && result.resultjson) {
-                    const vars = Object.values(result.resultjson).map(item => ({
-                        sysName: item.id,
-                        label: item.label,
-                        type: item.type,
-                        info: item.info
-                    }));
-                    setOriginalVars(vars);
-                }
-            } catch (error) {
-                console.error("Failed to fetch original variables for dropdown:", error);
-            }
-        };
-        fetchOriginal();
-    }, [auth?.user?.userId, pageId]);
-
-    const activeList = originalVars.length > 0 ? originalVars : variablesList;
+    const activeList = variablesList;
     const kendoVarOptions = [];
     activeList.forEach(v => {
         const rawType = (v.type || '').toLowerCase();
