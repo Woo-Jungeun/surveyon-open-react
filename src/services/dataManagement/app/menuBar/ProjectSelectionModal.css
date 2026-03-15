@@ -328,6 +328,29 @@
     box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
 }
 
+/* Override Data Management theme leaking into inner inputs and causing green inner borders */
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container input[type="text"],
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container input[type="text"]:focus,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-inner,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-inner:focus {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-solid,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-combobox,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-dropdown {
+    border-color: #ddd !important;
+}
+
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-input-solid:focus-within,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-combobox:focus-within,
+[data-theme="data-management"] .ps-modal-container .pro-enter-new-container .k-dropdown:focus-within {
+    border-color: #7C3AED !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2) !important;
+}
+
 /* Buttons */
 .ps-modal-container .data-header-btn-primary,
 .ps-modal-container .k-button-solid-primary,
