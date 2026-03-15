@@ -197,6 +197,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         modal.showAlert("알림", "데이터 새로고침이 성공적으로 완료되었습니다.");
         // 새로고침 후 시간 정보 다시 가져오기
         await fetchDataInfo(pn);
+        // 연관된 페이지들(예: SRT) 다시 조회하도록 이벤트 발생
+        window.dispatchEvent(new Event("pageSelected"));
       } else {
         const errorMsg = result?.errortext || result?.errorcontent || result?.message;
         if (errorMsg) {
