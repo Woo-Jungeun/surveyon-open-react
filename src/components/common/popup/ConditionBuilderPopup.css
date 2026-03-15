@@ -562,6 +562,15 @@
     border-color: #3b82f6;
 }
 
+.rank-toggles-cbp {
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+}
+
+.rank-toggles-label-cbp {
+    color: #0369a1;
+}
+
 .rank-circle-btn-cbp {
     background: #fff;
     border: 1px solid #bae6fd;

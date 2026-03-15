@@ -130,7 +130,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
             conditionSets: [{ id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }]
         }
     ]);
-    const [categoryLogicOp, setCategoryLogicOp] = useState('OR');
+    const [categoryLogicOp, setCategoryLogicOp] = useState('AND');
 
     const parseLogicString = (logicStr) => {
         const defaultState = [
@@ -313,11 +313,28 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
         } else if (hideSidebar && isFirstLoad && initialLogic !== undefined) {
             setSelectedVarId('local_logic');
             setVarName('filter');
-            setCategories([{
-                id: Date.now(),
-                label: '필터 조건',
-                conditionSets: parseLogicString(initialLogic || '')
-            }]);
+
+            const parsedSets = parseLogicString(initialLogic || '');
+            let initialCategories = [];
+            let initLogicOp = 'AND';
+
+            if (parsedSets.length > 0) {
+                if (parsedSets.length > 1) initLogicOp = parsedSets[1].connectorOp || 'AND';
+                initialCategories = parsedSets.map((set, idx) => ({
+                    id: Date.now() + idx + Math.random(),
+                    label: parsedSets.length > 1 ? `필터 조건 ${idx + 1}` : '필터 조건',
+                    conditionSets: [set]
+                }));
+            } else {
+                initialCategories = [{
+                    id: Date.now(),
+                    label: '필터 조건',
+                    conditionSets: [{ id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }]
+                }];
+            }
+
+            setCategoryLogicOp(initLogicOp);
+            setCategories(initialCategories);
             setIsFirstLoad(false);
         }
     }, [variables, isFirstLoad, hideSidebar, initialLogic]);
@@ -740,7 +757,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
             value: v.sysName || v.id,
             type: v.type,
             color: color,
-            info: v.info
+            info: v.info || v.labels
         });
     });
 
@@ -1051,7 +1068,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                                                     isOpenVar = true;
                                                                 }
                                                                 if (matchedVar.info && Array.isArray(matchedVar.info)) {
-                                                                    opts = matchedVar.info.filter(o => o.label).map(o => ({ value: o.value, label: o.label }));
+                                                                    opts = matchedVar.info.filter(o => o.label).map(o => ({ value: o.value || o.code, label: o.label }));
                                                                 }
                                                             }
                                                             return (
@@ -1121,8 +1138,8 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                                                                         if (match) currentRanks = [match[0]];
                                                                                     }
                                                                                     return (
-                                                                                        <div className="rank-toggles-cbp" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f0f9ff', padding: '4px 8px 4px 12px', borderRadius: '20px', border: '1px solid #bae6fd', flexShrink: 0 }}>
-                                                                                            <span style={{ fontSize: '11px', fontWeight: '700', color: '#0369a1' }}>순위</span>
+                                                                                        <div className="rank-toggles-cbp" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px 4px 12px', borderRadius: '20px', flexShrink: 0 }}>
+                                                                                            <span className="rank-toggles-label-cbp" style={{ fontSize: '11px', fontWeight: '700' }}>순위</span>
                                                                                             <div style={{ display: 'flex', gap: '4px' }}>
                                                                                                 <button
                                                                                                     className={`rank-circle-btn-cbp ${currentRanks.includes('[0]') ? 'active' : ''}`}
