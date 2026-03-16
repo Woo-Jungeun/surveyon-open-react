@@ -59,7 +59,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                                         </div>
                                         {item.type && (
                                             <span className={`question-type-badge ${item.color || 'gray'}`}>
-                                                {item.type}
+                                                {String(item.type).toLowerCase()}
                                             </span>
                                         )}
                                     </div>

@@ -781,7 +781,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                 </span>
                 {itemProps.dataItem.type && (
                     <span className={`question-type-badge ${itemProps.dataItem.color || 'default'}`} style={{ flexShrink: 0 }}>
-                        {itemProps.dataItem.type}
+                        {String(itemProps.dataItem.type).toLowerCase()}
                     </span>
                 )}
             </div>
@@ -798,12 +798,16 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                 </span>
                 {value.type && (
                     <span className={`question-type-badge ${value.color || 'default'}`} style={{ flexShrink: 0 }}>
-                        {value.type}
+                        {String(value.type).toLowerCase()}
                     </span>
                 )}
             </div>
         );
-        return React.cloneElement(element, { ...element.props, style: { ...element.props.style, display: 'flex', flex: 1, minWidth: 0 } }, children);
+
+        let textColor = 'inherit';
+        if (value.value === "") textColor = '#9ca3af';
+
+        return React.cloneElement(element, { ...element.props, style: { ...element.props.style, display: 'flex', flex: 1, minWidth: 0, color: textColor } }, children);
     };
 
     return (
@@ -1036,10 +1040,10 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                                                             data={kendoVarOptions}
                                                                             textField="text"
                                                                             dataItemKey="value"
-                                                                            placeholder="문항 선택"
                                                                             itemRender={DropDownItemRender}
                                                                             valueRender={DropDownValueRender}
-                                                                            value={cond.varName ? (kendoVarOptions.find(item => item.value === cond.varName) || { text: cond.varName, value: cond.varName }) : null}
+                                                                            defaultItem={{ text: "문항 선택", value: "" }}
+                                                                            value={cond.varName ? (kendoVarOptions.find(item => item.value === cond.varName) || { text: cond.varName, value: cond.varName }) : { text: "문항 선택", value: "" }}
                                                                             onChange={(e) => {
                                                                                 const newVarName = e.value ? e.value.value : "";
                                                                                 const newCats = [...categories];
@@ -1059,8 +1063,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                                                             data={getOperatorOptions(cond.varName)}
                                                                             textField="text"
                                                                             dataItemKey="value"
-                                                                            placeholder="연산자"
-                                                                            value={cond.operator ? (getOperatorOptions(cond.varName).find(op => op.value === cond.operator) || { text: cond.operator, value: cond.operator }) : null}
+                                                                            defaultItem={{ text: "연산자", value: "" }}
+                                                                            valueRender={DropDownValueRender}
+                                                                            value={cond.operator ? (getOperatorOptions(cond.varName).find(op => op.value === cond.operator) || { text: cond.operator, value: cond.operator }) : { text: "연산자", value: "" }}
                                                                             onChange={(e) => handleConditionChange(selectedCatIndex, setIndex, condIndex, 'operator', e.value ? e.value.value : "")}
                                                                         />
                                                                     </div>

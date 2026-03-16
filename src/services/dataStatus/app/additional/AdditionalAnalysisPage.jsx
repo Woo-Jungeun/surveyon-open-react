@@ -1721,7 +1721,7 @@ const AdditionalAnalysisPage = () => {
                                                             <div className="variable-item__name">{v.id}</div>
                                                             {v.type && (
                                                                 <span className={`question-type-badge ${v.color}`}>
-                                                                    {v.type}
+                                                                    {String(v.type).toLowerCase()}
                                                                 </span>
                                                             )}
                                                         </div>

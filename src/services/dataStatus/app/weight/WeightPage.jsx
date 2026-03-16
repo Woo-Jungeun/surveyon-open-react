@@ -1024,7 +1024,7 @@ const WeightPage = () => {
                                                 <div className="question-item-header" style={{ marginBottom: q.desc && q.desc !== q.title ? '4px' : '0' }}>
                                                     <span className="question-title">{q.title}</span>
                                                     <span className={`question-type-badge ${q.color}`}>
-                                                        {q.type}
+                                                        {String(q.type).toLowerCase()}
                                                     </span>
                                                 </div>
                                                 {q.desc && q.desc !== q.title && (
