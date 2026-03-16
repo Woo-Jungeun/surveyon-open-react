@@ -108,7 +108,7 @@ const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placehol
     );
 };
 
-const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive, hideSidebar = false, theme = 'default', title, initialLogic, saveMode = 'api' }) => {
+const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive, hideSidebar = false, theme = 'default', title, initialLogic, saveMode = 'api', initialInfo }) => {
     const modal = React.useContext(modalContext);
     const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
@@ -310,34 +310,48 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
         if (isFirstLoad && variables.length > 0) {
             handleSelectVariable(variables[0].id);
             setIsFirstLoad(false);
-        } else if (hideSidebar && isFirstLoad && initialLogic !== undefined) {
+        } else if (hideSidebar && isFirstLoad && (initialLogic !== undefined || initialInfo !== undefined)) {
             setSelectedVarId('local_logic');
             setVarName('filter');
 
-            const parsedSets = parseLogicString(initialLogic || '');
             let initialCategories = [];
             let initLogicOp = 'AND';
 
-            if (parsedSets.length > 0) {
-                if (parsedSets.length > 1) initLogicOp = parsedSets[1].connectorOp || 'AND';
-                initialCategories = parsedSets.map((set, idx) => ({
+            if (initialLogic && typeof initialLogic === 'string') {
+                if (initialLogic.includes(') or (') || initialLogic.includes(') OR (')) {
+                    initLogicOp = 'OR';
+                }
+            }
+
+            if (initialInfo && initialInfo.length > 0) {
+                initialCategories = initialInfo.map((item, idx) => ({
                     id: Date.now() + idx + Math.random(),
-                    label: parsedSets.length > 1 ? `필터 조건 ${idx + 1}` : '필터 조건',
-                    conditionSets: [set]
+                    label: item.label || '',
+                    conditionSets: parseLogicString(item.logic || '')
                 }));
             } else {
-                initialCategories = [{
-                    id: Date.now(),
-                    label: '필터 조건',
-                    conditionSets: [{ id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }]
-                }];
+                const parsedSets = parseLogicString(initialLogic || '');
+                if (parsedSets.length > 0) {
+                    if (parsedSets.length > 1) initLogicOp = parsedSets[1].connectorOp || 'AND';
+                    initialCategories = parsedSets.map((set, idx) => ({
+                        id: Date.now() + idx + Math.random(),
+                        label: parsedSets.length > 1 ? `필터 조건 ${idx + 1}` : '필터 조건',
+                        conditionSets: [set]
+                    }));
+                } else {
+                    initialCategories = [{
+                        id: Date.now(),
+                        label: '필터 조건',
+                        conditionSets: [{ id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }]
+                    }];
+                }
             }
 
             setCategoryLogicOp(initLogicOp);
             setCategories(initialCategories);
             setIsFirstLoad(false);
         }
-    }, [variables, isFirstLoad, hideSidebar, initialLogic]);
+    }, [variables, isFirstLoad, hideSidebar, initialLogic, initialInfo]);
 
     const handleSelectVariable = async (id) => {
         if (!id || id === 'new') return;
@@ -691,7 +705,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                     {
                         title: saveMode === 'callback' ? "적용" : "저장", click: async () => {
                             if (saveMode === 'callback') {
-                                if (onSave) onSave('filter', totalLogic, varLabel);
+                                if (onSave) onSave('filter', totalLogic, varLabel, payload.variables[fullId].info);
                                 return;
                             }
                             try {

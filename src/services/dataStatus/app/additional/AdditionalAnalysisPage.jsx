@@ -122,6 +122,7 @@ const AdditionalAnalysisPage = () => {
     const [selectedWeight, setSelectedWeight] = useState("없음");
     const [tableName, setTableName] = useState('Banner by Q1'); // Added table name state
     const [filterExpression, setFilterExpression] = useState(''); // Added filter expression state
+    const [filterInfo, setFilterInfo] = useState(null); // Added filter info state
     const [tableMode, setTableMode] = useState('separated'); // 'merged' | 'separated' (Force default to separated)
     const [globalPaletteId, setGlobalPaletteId] = useState('default');
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
@@ -745,6 +746,11 @@ const AdditionalAnalysisPage = () => {
                         if (data.config.filter_expression !== undefined) {
                             setFilterExpression(data.config.filter_expression);
                         }
+                        if (data.config.filter_info !== undefined) {
+                            setFilterInfo(data.config.filter_info);
+                        } else {
+                            setFilterInfo(null);
+                        }
                         // Weight Column
                         if (data.config.weight_col !== undefined) {
                             setSelectedWeight(data.config.weight_col || "없음");
@@ -1170,6 +1176,7 @@ const AdditionalAnalysisPage = () => {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
                     filter_expression: filterExpression,
+                    filter_info: filterInfo,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight,
                     row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
                 }
@@ -1240,6 +1247,7 @@ const AdditionalAnalysisPage = () => {
                     x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
                     y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
                     filter_expression: filterExpression,
+                    filter_info: filterInfo,
                     weight_col: weightId,
                     row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
                 }
@@ -2008,10 +2016,12 @@ const AdditionalAnalysisPage = () => {
                     initialVariables={[]}
                     variablesList={variables}
                     initialLogic={filterExpression}
+                    initialInfo={filterInfo}
                     title="고급 필터"
                     onClose={() => setIsFilterPopupOpen(false)}
-                    onSave={(varId, logicStr, varLabel) => {
+                    onSave={(varId, logicStr, varLabel, info) => {
                         setFilterExpression(logicStr);
+                        setFilterInfo(info);
                         setIsFilterPopupOpen(false);
                         handleRun(logicStr);
                     }}

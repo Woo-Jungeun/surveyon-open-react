@@ -179,8 +179,8 @@ const MapManagementPage = () => {
         SetEditingCategoryPopupOpen(null);
     };
 
-    const handleLogicSave = (id, newLogicStr) => {
-        setVariables(variables.map(v => v.id === id ? { ...v, logic: newLogicStr } : v));
+    const handleLogicSave = (id, newLogicStr, info) => {
+        setVariables(variables.map(v => v.id === id ? { ...v, logic: newLogicStr, logicInfo: info } : v));
         setEditingLogicPopupOpen(null);
     };
 
@@ -656,10 +656,11 @@ const MapManagementPage = () => {
                         initialVariables={[]}
                         variablesList={variables}
                         initialLogic={editingLogicPopupOpen.logic}
+                        initialInfo={editingLogicPopupOpen.logicInfo}
                         title={`로직 검수 설정 - ${editingLogicPopupOpen?.sysName || editingLogicPopupOpen?.title || editingLogicPopupOpen?.id}`}
                         onClose={() => setEditingLogicPopupOpen(null)}
-                        onSave={(varId, logicStr, varLabel) => {
-                            handleLogicSave(editingLogicPopupOpen.id, logicStr);
+                        onSave={(varId, logicStr, varLabel, info) => {
+                            handleLogicSave(editingLogicPopupOpen.id, logicStr, info);
                         }}
                     />
                 )}
