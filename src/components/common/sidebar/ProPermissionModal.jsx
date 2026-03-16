@@ -92,7 +92,7 @@ const ProPermissionModal = ({ open, onClose }) => {
         } else {
             if (!formData.worker_name.trim()) errs.push("작업자 이름을 입력해 주세요.");
         }
-        if (errs.length) { modal.showErrorAlert("알림", errs.join("\n")); return; }
+        if (errs.length) { modal.showErrorAlert("알림", errs.join("\n"), { themeClass: "purple-theme" }); return; }
 
         try {
             setLoading(true);
@@ -112,6 +112,7 @@ const ProPermissionModal = ({ open, onClose }) => {
             });
             if (res?.success === "777") {
                 modal.showConfirm("알림", "프로젝트 권한이 등록되었습니다.", {
+                    themeClass: "purple-theme",
                     btns: [
                         {
                             title: "확인",
@@ -138,16 +139,17 @@ const ProPermissionModal = ({ open, onClose }) => {
                     ],
                 });
             } else if (res?.success === "773") {
-                modal.showErrorAlert("에러", res?.message);
+                modal.showErrorAlert("에러", res?.message, { themeClass: "purple-theme" });
             } else {
-                modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.");
+                modal.showErrorAlert("에러", res?.message || "등록 중 오류가 발생했습니다.", { themeClass: "purple-theme" });
             }
-        } catch { modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다."); }
+        } catch { modal.showErrorAlert("알림", "네트워크 오류로 등록에 실패했습니다.", { themeClass: "purple-theme" }); }
         finally { setLoading(false); }
     };
 
     const handleDeleteProject = () => {
         modal.showConfirm("알림", "프로젝트를 삭제하시겠습니까?\n삭제된 데이터는 복구할 수 없습니다.", {
+            themeClass: "purple-theme",
             btns: [
                 { title: "취소" },
                 {
@@ -159,6 +161,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                             });
                             if (res?.success === "777") {
                                 modal.showConfirm("알림", "프로젝트가 삭제되었습니다.", {
+                                    themeClass: "purple-theme",
                                     btns: [{
                                         title: "확인", click: () => {
                                             ["projectnum", "projectname", "servername", "projectpof", "merge_pn", "merge_pn_text"]
@@ -168,8 +171,8 @@ const ProPermissionModal = ({ open, onClose }) => {
                                         }
                                     }]
                                 });
-                            } else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다."); }
-                        } catch { modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다."); }
+                            } else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
+                        } catch { modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
                     }
                 }
             ]
@@ -178,6 +181,7 @@ const ProPermissionModal = ({ open, onClose }) => {
 
     const handleDeleteWorker = (id) => {
         modal.showConfirm("알림", "선택한 사용자를 삭제하시겠습니까?", {
+            themeClass: "purple-theme",
             btns: [
                 { title: "취소" },
                 {
@@ -187,9 +191,9 @@ const ProPermissionModal = ({ open, onClose }) => {
                             const res = await proPermissionData.mutateAsync({
                                 params: { gb: "worker_del", user: auth?.user?.userId || "", projectnum, id }
                             });
-                            if (res?.success === "777") { modal.showAlert("알림", "사용자가 삭제되었습니다."); await fetchData(); }
-                            else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다."); }
-                        } catch { modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다."); }
+                            if (res?.success === "777") { modal.showAlert("알림", "사용자가 삭제되었습니다.", { themeClass: "purple-theme" }); await fetchData(); }
+                            else { modal.showErrorAlert("에러", res?.message || "삭제 중 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
+                        } catch { modal.showErrorAlert("오류", "삭제 요청 중 네트워크 오류가 발생했습니다.", { themeClass: "purple-theme" }); }
                     }
                 }
             ]
