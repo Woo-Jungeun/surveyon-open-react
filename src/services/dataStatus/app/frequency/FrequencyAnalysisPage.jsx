@@ -400,8 +400,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                     <table className="agg-table">
                         <thead>
                             <tr>
-                                <th style={{ width: '50px' }}>코드</th>
-                                <th style={{ minWidth: '180px' }}>항목</th>
+                                <th className="sticky-col1">코드</th>
+                                <th className="sticky-col2">항목</th>
                                 {q.columns && q.columns.map(col => <th key={col.key}>{col.label}</th>)}
                                 <th>합계</th>
                             </tr>
@@ -422,8 +422,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                             ) : (
                                 q.data.map((row, i) => (
                                     <tr key={i}>
-                                        <td style={{ textAlign: 'center', color: '#64748b', fontSize: '11px', background: '#f8fafc' }}>{row.value || '-'}</td>
-                                        <td style={{ textAlign: 'left', fontSize: '12px', paddingLeft: '12px', fontWeight: '600', color: '#334155' }}>{row.name}</td>
+                                        <td className="sticky-col1" style={{ textAlign: 'center', color: '#64748b', fontSize: '11px', background: '#f8fafc' }}>{row.value || '-'}</td>
+                                        <td className="sticky-col2" style={{ textAlign: 'left', fontSize: '12px', paddingLeft: '12px', fontWeight: '600', color: '#334155' }}>{row.name}</td>
                                         {q.columns ? q.columns.map(col => {
                                             const count = row[col.key] ?? 0;
                                             const pct = row[`${col.key}_pct`];
@@ -563,7 +563,7 @@ const FrequencyAnalysisPage = () => {
 
     // 신규 필터 문항 선택 드롭다운 상태
     const [isVariableDropdownOpen, setIsVariableDropdownOpen] = useState(false);
-    const [selectedVariableIds, setSelectedVariableIds] = useState([]);
+    const [selectedVariableIds, setSelectedVariableIds] = useState(['answerStateCode']);
     const variableDropdownRef = useRef(null);
     const [globalPaletteId, setGlobalPaletteId] = useState('default');
 
@@ -588,9 +588,9 @@ const FrequencyAnalysisPage = () => {
                 setOverviewVariables(overviewVars);
 
                 setSelectedVariableIds(prev => {
-                    const validIds = prev.filter(id => overviewVars.some(v => v.id === id));
+                    const validIds = prev.filter(id => id === 'answerStateCode' || overviewVars.some(v => v.id === id));
                     if (validIds.length !== prev.length) {
-                        const totalLogic = validIds.map(id => overviewVars.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                        const totalLogic = validIds.filter(id => id !== 'answerStateCode').map(id => overviewVars.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
                         setFilterLogic(totalLogic);
                     }
                     return validIds;
@@ -859,7 +859,14 @@ const FrequencyAnalysisPage = () => {
                 const payload = {
                     pageid: pageId,
                     user: userId,
-                    x_info: selectedVariableIds.length > 0 ? selectedVariableIds : (selectedFilters.includes('전체') ? [] : selectedFilters), // 고급 필터 또는 배너 필터 적용
+                    x_info: (() => {
+                        const baseInfo = selectedVariableIds.length > 0 ? selectedVariableIds : (selectedFilters.includes('전체') ? [] : selectedFilters);
+                        const displayIds = baseInfo.filter(id => id !== 'answerStateCode');
+                        if (baseInfo.includes('answerStateCode')) {
+                            displayIds.push('answerStateCode');
+                        }
+                        return displayIds;
+                    })(), // 고급 필터 또는 배너 필터 적용
                     start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,  // 전체 순번에 해당하는 인덱스
                     limit: limit, // 가져올 갯수
                     weight_col: "",
@@ -1029,13 +1036,21 @@ const FrequencyAnalysisPage = () => {
                     >
                         <span className="trigger-text">
                             {(() => {
-                                if (overviewVariables.length === 0) return '필터 문항 선택';
+                                if (overviewVariables.length === 0 && selectedVariableIds.length === 1 && selectedVariableIds[0] === 'answerStateCode') return 'answerStateCode';
+                                if (overviewVariables.length === 0 && selectedVariableIds.length === 0) return '필터 문항 선택';
                                 if (selectedVariableIds.length === 0) return '선택 안함';
-                                if (selectedVariableIds.length === overviewVariables.length) return '전체';
-                                return selectedVariableIds.map(id => {
-                                    const v = overviewVariables.find(ov => ov.id === id);
-                                    return v ? (v.label || v.id) : id;
-                                }).join(', ');
+                                if (selectedVariableIds.length === overviewVariables.length + 1) return '전체';
+                                const displayNames = [];
+                                selectedVariableIds.forEach(id => {
+                                    if (id !== 'answerStateCode') {
+                                        const v = overviewVariables.find(ov => ov.id === id);
+                                        displayNames.push(v ? (v.label || v.id) : id);
+                                    }
+                                });
+                                if (selectedVariableIds.includes('answerStateCode')) {
+                                    displayNames.push('answerStateCode');
+                                }
+                                return displayNames.join(', ');
                             })()}
                         </span>
                         <ChevronDown size={14} className="trigger-icon" />
@@ -1044,21 +1059,22 @@ const FrequencyAnalysisPage = () => {
                         <div className="custom-filter-menu" style={{ width: '240px' }}>
                             <div
                                 className="custom-filter-item"
+
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    if (selectedVariableIds.length === overviewVariables.length && overviewVariables.length > 0) {
+                                    if (selectedVariableIds.length === overviewVariables.length + 1) {
                                         setSelectedVariableIds([]);
                                         setFilterLogic('');
                                     } else {
-                                        const allIds = overviewVariables.map(v => v.id);
+                                        const allIds = [...overviewVariables.map(v => v.id), 'answerStateCode'];
                                         setSelectedVariableIds(allIds);
-                                        const totalLogic = allIds.map(id => overviewVariables.find(v => v.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                        const totalLogic = overviewVariables.map(v => v.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
                                         setFilterLogic(totalLogic);
                                     }
                                 }}
                             >
-                                <div className={`checkbox-custom ${(selectedVariableIds.length === overviewVariables.length && overviewVariables.length > 0) ? 'checked' : ''}`}>
-                                    {(selectedVariableIds.length === overviewVariables.length && overviewVariables.length > 0) && <Check size={12} color="#fff" strokeWidth={3} />}
+                                <div className={`checkbox-custom ${(selectedVariableIds.length === overviewVariables.length + 1) ? 'checked' : ''}`}>
+                                    {(selectedVariableIds.length === overviewVariables.length + 1) && <Check size={12} color="#fff" strokeWidth={3} />}
                                 </div>
                                 <span className="filter-text" style={{ fontWeight: '600' }}>전체</span>
                             </div>
@@ -1077,7 +1093,7 @@ const FrequencyAnalysisPage = () => {
                                                 newIds = [...selectedVariableIds, v.id];
                                             }
                                             setSelectedVariableIds(newIds);
-                                            const totalLogic = newIds.map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                            const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
                                             setFilterLogic(totalLogic);
                                         }}
                                     >
@@ -1088,6 +1104,28 @@ const FrequencyAnalysisPage = () => {
                                     </div>
                                 );
                             })}
+                            <div
+                                className="custom-filter-item"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    let newIds;
+                                    const isAnswerCodeChecked = selectedVariableIds.includes('answerStateCode');
+                                    if (isAnswerCodeChecked) {
+                                        newIds = selectedVariableIds.filter(id => id !== 'answerStateCode');
+                                    } else {
+                                        newIds = [...selectedVariableIds, 'answerStateCode'];
+                                    }
+                                    setSelectedVariableIds(newIds);
+                                    // filterLogic does not need answerStateCode logic string, keeps existing logic
+                                    const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                    setFilterLogic(totalLogic);
+                                }}
+                            >
+                                <div className={`checkbox-custom ${selectedVariableIds.includes('answerStateCode') ? 'checked' : ''}`}>
+                                    {selectedVariableIds.includes('answerStateCode') && <Check size={12} color="#fff" strokeWidth={3} />}
+                                </div>
+                                <span className="filter-text">answerStateCode</span>
+                            </div>
                             {overviewVariables.length === 0 && (
                                 <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
                                     조회된 변수가 없습니다.
@@ -1198,7 +1236,7 @@ const FrequencyAnalysisPage = () => {
                     onDeleteActive={(deletedVarId) => {
                         setSelectedVariableIds(prev => {
                             const newIds = prev.filter(id => id !== deletedVarId);
-                            const totalLogic = newIds.map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                            const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
                             setFilterLogic(totalLogic);
                             return newIds;
                         });

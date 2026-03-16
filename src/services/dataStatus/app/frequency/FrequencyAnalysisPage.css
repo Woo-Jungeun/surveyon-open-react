@@ -146,6 +146,46 @@
     padding-left: 12px;
 }
 
+/* Sticky first two columns */
+.agg-table th.sticky-col1,
+.agg-table td.sticky-col1 {
+    position: sticky;
+    left: 0;
+    z-index: 11;
+    min-width: 60px;
+    box-sizing: border-box;
+}
+
+.agg-table th.sticky-col2,
+.agg-table td.sticky-col2 {
+    position: sticky;
+    left: 60px;
+    z-index: 11;
+    min-width: 120px;
+    max-width: 200px;
+    box-sizing: border-box;
+}
+
+.agg-table th.sticky-col1,
+.agg-table th.sticky-col2 {
+    z-index: 12;
+    background: #f8fafc;
+}
+
+.agg-table td.sticky-col1 {
+    background: #f8fafc;
+}
+
+.agg-table td.sticky-col2 {
+    background: #ffffff;
+}
+
+/* Hover state for sticky cells */
+.agg-table tbody tr:hover td.sticky-col1,
+.agg-table tbody tr:hover td.sticky-col2 {
+    background-color: #f8fafc;
+}
+
 /* 
 .agg-table th:last-child {
     border-right: none;
