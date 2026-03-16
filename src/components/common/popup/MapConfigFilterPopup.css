@@ -119,6 +119,10 @@
     background: #f0fdf4;
 }
 
+.theme-green .multi-drop-item-cbp:hover .multi-drop-item-text-cbp {
+    color: #16a34a;
+}
+
 .theme-green .multi-drop-checkbox-custom.checked {
     background-color: #16a34a;
     border-color: #16a34a;

@@ -849,7 +849,9 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                 <div className="filter-popup-header-cbp">
                     <div className="header-title-cbp">
                         <h3>{title || '필터 문항 설정'}</h3>
-                        <p>이곳에서 만드는 변수 ID는 항상 overview_* 형태로 저장됩니다. 저장 후 필터 문항 선택에서 바로 선택할 수 있습니다.</p>
+                        {saveMode === 'api' && (
+                            <p>이곳에서 만드는 변수 ID는 항상 overview_* 형태로 저장됩니다. 저장 후 필터 문항 선택에서 바로 선택할 수 있습니다.</p>
+                        )}
                     </div>
                     <div className="header-actions-cbp">
                         {/* <button className={`guide-btn-cbp ${showGuide ? 'active' : ''}`} onClick={handleToggleGuide}>
