@@ -215,7 +215,6 @@ const AiSidebar = ({ onOpenProjectModal }) => {
 
     if (adminItems.length > 0) {
         menuGroups.push({
-            label: "관리 및 지원",
             items: adminItems
         });
     }
