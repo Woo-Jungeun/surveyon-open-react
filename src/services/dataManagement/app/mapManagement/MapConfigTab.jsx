@@ -496,9 +496,9 @@ const MapConfigTab = ({
             return [
                 ...commonPrefix,
                 { field: 'logic', title: '로직체크', width: '100px' },
-                { field: 'label', title: '레이블', width: '180px' },
+                { field: 'label', title: '레이블', width: '150px' },
                 { field: 'decimal', title: '소수점\n자리수', width: '100px' },
-                { field: 'spssName', title: 'SPSS\n변수명', width: '120px' },
+                { field: 'spssName', title: 'SPSS\n변수명', width: '100px' },
                 { field: 'type', title: '변수 유형', width: '120px' },
                 { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
                 { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
