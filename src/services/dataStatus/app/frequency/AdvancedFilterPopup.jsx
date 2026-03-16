@@ -934,7 +934,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                         <div className="col-header-v5 cats-header-v5">
                             <span>필터 그룹</span>
                             <div className="cats-header-actions-v5">
-                                <div className="cond-logic-toggle-v5 mini">
+                                {/* <div className="cond-logic-toggle-v5 mini">
                                     <button
                                         className={categoryLogicOp === 'AND' ? 'active' : ''}
                                         onClick={() => setCategoryLogicOp('AND')}
@@ -943,7 +943,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                         className={categoryLogicOp === 'OR' ? 'active' : ''}
                                         onClick={() => setCategoryLogicOp('OR')}
                                     >OR</button>
-                                </div>
+                                </div> */}
                                 <button className="add-btn-v5" onClick={handleAddCategory}><Plus size={16} /></button>
                             </div>
                         </div>
