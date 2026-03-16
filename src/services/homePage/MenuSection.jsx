@@ -24,10 +24,10 @@ const menuItems = [
     description:
       "문항집계, 교차분석, AI 분석, AI 보고서를 통해 수집된 데이터를 종합적으로 분석합니다.",
     icon: BarChart3,
-    status: "개발중",
+    status: "1차오픈",
     color: "#4EA3FF",
     bg: "rgba(78,163,255,0.12)",
-    statusColor: "#F8B400"
+    statusColor: "#2DB670"
   },
   {
     id: "data-management",
@@ -36,10 +36,10 @@ const menuItems = [
     description:
       "설문 응답 데이터를 효율적으로 관리하고 필터링, 정제, 내보내기 작업을 수행합니다.",
     icon: Database,
-    status: "개발중",
+    status: "1차오픈",
     color: "#23C6A3",
     bg: "rgba(35,198,163,0.12)",
-    statusColor: "#F8B400"
+    statusColor: "#2DB670"
   },
   {
     id: "ai-open-analysis",
