@@ -586,6 +586,15 @@ const FrequencyAnalysisPage = () => {
                     .filter(v => v.id.startsWith('overview_'))
                     .map(v => ({ ...v, label: v.label || v.id }));
                 setOverviewVariables(overviewVars);
+
+                setSelectedVariableIds(prev => {
+                    const validIds = prev.filter(id => overviewVars.some(v => v.id === id));
+                    if (validIds.length !== prev.length) {
+                        const totalLogic = validIds.map(id => overviewVars.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                        setFilterLogic(totalLogic);
+                    }
+                    return validIds;
+                });
             }
         } catch (error) {
             console.error("Failed to fetch overview variables:", error);
@@ -1186,9 +1195,13 @@ const FrequencyAnalysisPage = () => {
                     pageId={sessionStorage.getItem("pageId")}
                     onSaved={fetchOverviewVars}
                     activeVariableId={selectedVariableIds.length === 1 ? selectedVariableIds[0] : null}
-                    onDeleteActive={() => {
-                        setSelectedVariableIds([]);
-                        setFilterLogic('');
+                    onDeleteActive={(deletedVarId) => {
+                        setSelectedVariableIds(prev => {
+                            const newIds = prev.filter(id => id !== deletedVarId);
+                            const totalLogic = newIds.map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                            setFilterLogic(totalLogic);
+                            return newIds;
+                        });
                         fetchOverviewVars();
                     }}
                 />

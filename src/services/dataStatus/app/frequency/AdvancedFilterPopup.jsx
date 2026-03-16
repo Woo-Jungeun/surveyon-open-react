@@ -397,8 +397,8 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                     handleAddNew();
                                 }
 
-                                if (activeVariableId === varId && onDeleteActive) {
-                                    onDeleteActive();
+                                if (onDeleteActive) {
+                                    onDeleteActive(varId);
                                 }
                             } else {
                                 modal.showAlert("오류", result?.message || "삭제 실패");

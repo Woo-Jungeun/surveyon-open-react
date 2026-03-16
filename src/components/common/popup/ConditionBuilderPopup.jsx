@@ -130,7 +130,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
             conditionSets: [{ id: Date.now(), logicOp: 'AND', conditions: [{ varName: '', operator: '==', value: '' }] }]
         }
     ]);
-    const [categoryLogicOp, setCategoryLogicOp] = useState('AND');
+    const [categoryLogicOp, setCategoryLogicOp] = useState('OR');
 
     const parseLogicString = (logicStr) => {
         const defaultState = [
@@ -437,8 +437,8 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                     handleAddNew();
                                 }
 
-                                if (activeVariableId === varId && onDeleteActive) {
-                                    onDeleteActive();
+                                if (onDeleteActive) {
+                                    onDeleteActive(varId);
                                 }
                             } else {
                                 modal.showAlert("오류", result?.message || "삭제 실패");
@@ -971,7 +971,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                         <div className="col-header-cbp cats-header-cbp">
                             <span>필터 그룹</span>
                             <div className="cats-header-actions-cbp">
-                                <div className="cond-logic-toggle-cbp mini">
+                                {/* <div className="cond-logic-toggle-cbp mini">
                                     <button
                                         className={categoryLogicOp === 'AND' ? 'active' : ''}
                                         onClick={() => setCategoryLogicOp('AND')}
@@ -980,7 +980,7 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                                         className={categoryLogicOp === 'OR' ? 'active' : ''}
                                         onClick={() => setCategoryLogicOp('OR')}
                                     >OR</button>
-                                </div>
+                                </div> */}
                                 <button className="add-btn-cbp" onClick={handleAddCategory}><Plus size={16} /></button>
                             </div>
                         </div>
