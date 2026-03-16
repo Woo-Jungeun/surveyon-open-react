@@ -25,7 +25,21 @@ export function ProPermissionApi() {
         }
     );
 
+    const pagesMembersSet = useMutation(
+        async (data) => await api.post(data?.params, "/pages/members/set", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: (vars) => {
+                // loadingSpinner.show();
+            },
+            onSettled: (data, error, vars) => {
+                // loadingSpinner.hide();
+            },
+        }
+    );
+
+
     return {
         proPermissionData,
+        pagesMembersSet
     };
 }

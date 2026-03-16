@@ -19,7 +19,7 @@ const ProPermissionModal = ({ open, onClose }) => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
     const navigate = useNavigate();
-    const { proPermissionData } = ProPermissionApi();
+    const { proPermissionData, pagesMembersSet } = ProPermissionApi();
 
     const projectnum = sessionStorage.getItem("projectnum");
     const projectname = sessionStorage.getItem("projectname");
@@ -112,7 +112,30 @@ const ProPermissionModal = ({ open, onClose }) => {
             });
             if (res?.success === "777") {
                 modal.showConfirm("알림", "프로젝트 권한이 등록되었습니다.", {
-                    btns: [{ title: "확인", click: async () => { await fetchData(); setFormData(initForm()); } }],
+                    btns: [
+                        {
+                            title: "확인",
+                            click: async () => {
+                                const pageId = sessionStorage.getItem("pageId");
+                                if (pageId) {
+                                    try {
+                                        await pagesMembersSet.mutateAsync({
+                                            params: {
+                                                pageid: pageId,
+                                                user_id: formData.worker_id,
+                                                role: "admin",
+                                                user: auth?.user?.userId || ""
+                                            }
+                                        });
+                                    } catch (e) {
+                                        console.error("pagesMembersSet API 호출 실패: ", e);
+                                    }
+                                }
+                                await fetchData();
+                                setFormData(initForm());
+                            }
+                        }
+                    ],
                 });
             } else if (res?.success === "773") {
                 modal.showErrorAlert("에러", res?.message);
@@ -345,7 +368,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                         const parts = val.split(" ");
                                         return (
                                             <td className={props.className} style={{ textAlign: "center" }}>
-                                                <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                <div style={{ fontSize: "1ㄹpx", lineHeight: "1.4" }}>
                                                     {parts[0]}
                                                     {parts[1] && <><br />{parts[1]}</>}
                                                 </div>
