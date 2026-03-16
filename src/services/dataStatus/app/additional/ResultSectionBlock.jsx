@@ -1057,7 +1057,7 @@ export const ResultSectionBlock = ({
                                                             </div>
                                                         )}
                                                     </div>
-                                                    <button className="view-option-btn" onClick={() => toggleLayoutOption('chart')} title="차트 닫기"><X size={16} /></button>
+                                                    {/* <button className="view-option-btn" onClick={() => toggleLayoutOption('chart')} title="차트 닫기"><X size={16} /></button> */}
                                                     <div style={{ width: '1px', height: '16px', background: '#e2e8f0', margin: '0 4px' }}></div>
                                                     <button className={`view-option-btn ${activeChartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
