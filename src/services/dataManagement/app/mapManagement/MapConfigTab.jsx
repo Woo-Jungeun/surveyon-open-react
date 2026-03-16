@@ -403,14 +403,14 @@ const MapConfigTab = ({
 
     // ── Grid Props & 상태 최적화 ──
     const bakedSelectedState = useMemo(() =>
-        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: !!v.isBaked }), {}),
+        (ctxVars || []).reduce((obj, v) => ({ ...obj, [v.id]: v.sysName === 'pid' ? true : !!v.isBaked }), {}),
         [ctxVars]);
 
     const handleBakedSelectedChange = useCallback((state) => {
-        setVariables(prev => prev.map(v => ({ ...v, isBaked: !!state[v.id] })));
+        setVariables(prev => prev.map(v => ({ ...v, isBaked: v.sysName === 'pid' ? true : !!state[v.id] })));
     }, [setVariables]);
 
-    const isItemSelectable = useCallback((item) => String(item?.type || '').toLowerCase() !== 'custom', []);
+    const isItemSelectable = useCallback((item) => item?.sysName !== 'pid' && String(item?.type || '').toLowerCase() !== 'custom', []);
 
     const columnMenu = useCallback((props) => (
         <ExcelColumnMenu
@@ -489,7 +489,7 @@ const MapConfigTab = ({
             { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
             { field: 'add', title: '추가', width: '50px' },
             // { field: 'id', title: 'no', width: '50px' },
-            { field: 'sysName', title: '변수명', width: isDetailed ? '120px' : '85px' },
+            { field: 'sysName', title: '변수명', width: isDetailed ? '120px' : '100px' },
         ];
 
         if (isDetailed) {
