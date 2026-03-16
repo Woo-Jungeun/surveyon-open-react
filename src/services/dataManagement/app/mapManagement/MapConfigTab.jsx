@@ -535,7 +535,7 @@ const MapConfigTab = ({
                     <span className="stat-item">전체 <strong>{variables.length}</strong> 건</span>
                 </div>
                 <div className="map-controls">
-                    <span className="grid-guide"><span className="guide-icon">💡</span> 셀 클릭 편집 | '+': 행 추가 | 'Trash': 삭제 | 가로/세로 스크롤 시 고정</span>
+                    {/* <span className="grid-guide"><span className="guide-icon">💡</span> 셀 클릭 편집 | '+': 행 추가 | 'Trash': 삭제 | 가로/세로 스크롤 시 고정</span> */}
                     <div className="toggle-wrapper">
                         <span className="toggle-label">상세 설정</span>
                         <label className="switch">
