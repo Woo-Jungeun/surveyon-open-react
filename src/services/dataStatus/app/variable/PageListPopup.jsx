@@ -269,7 +269,19 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
             title: "제목",
             cell: (props) => <TitleEditCell {...props} editingRowId={editingRowId} onTitleChange={handleTitleChange} />
         },
-        { field: "created_at", title: "생성일", width: "150px" },
+        {
+            field: "created_at",
+            title: "생성일",
+            width: "170px",
+            cell: (props) => {
+                const val = props.dataItem[props.field];
+                if (!val || val === "-") return <td className={props.className}>-</td>;
+                let displayVal = String(val);
+                if (displayVal.includes('T')) displayVal = displayVal.replace('T', ' ');
+                if (displayVal.includes('.')) displayVal = displayVal.split('.')[0];
+                return <td className={props.className} style={props.style}>{displayVal}</td>;
+            }
+        },
         {
             title: "편집",
             width: "120px",
