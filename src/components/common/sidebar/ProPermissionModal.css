@@ -605,3 +605,9 @@ body:has(.pp-modal-overlay) #nprogress .spinner-icon {
 .pp-grid-wrap .k-grid tbody tr:hover {
     background-color: #F3F1FF !important;
 }
+
+/* Kendo 그리드 셀 말줄임표 방지 및 텍스트 래핑 허용 */
+.pp-grid-wrap .k-grid td {
+    white-space: normal !important;
+    word-break: break-word !important;
+}

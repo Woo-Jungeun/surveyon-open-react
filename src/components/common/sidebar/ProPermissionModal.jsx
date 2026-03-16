@@ -319,8 +319,40 @@ const ProPermissionModal = ({ open, onClose }) => {
                                 <Column field="worker_name" title="이름" />
                                 <Column field="permission_gubun" title="권한" width="180px" />
                                 <Column field="worker_id" title="ID" />
-                                <Column field="register_date" title="등록일" width="150px" />
-                                <Column field="worker_expired" title="만료일" width="150px" />
+                                <Column
+                                    field="register_date"
+                                    title="등록일"
+                                    width="105px"
+                                    cell={(props) => {
+                                        const val = props.dataItem.register_date || "";
+                                        const parts = val.split(" ");
+                                        return (
+                                            <td className={props.className} style={{ textAlign: "center" }}>
+                                                <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                    {parts[0]}
+                                                    {parts[1] && <><br />{parts[1]}</>}
+                                                </div>
+                                            </td>
+                                        );
+                                    }}
+                                />
+                                <Column
+                                    field="worker_expired"
+                                    title="만료일"
+                                    width="105px"
+                                    cell={(props) => {
+                                        const val = props.dataItem.worker_expired || "";
+                                        const parts = val.split(" ");
+                                        return (
+                                            <td className={props.className} style={{ textAlign: "center" }}>
+                                                <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
+                                                    {parts[0]}
+                                                    {parts[1] && <><br />{parts[1]}</>}
+                                                </div>
+                                            </td>
+                                        );
+                                    }}
+                                />
                                 <Column
                                     title="삭제"
                                     width="80px"
