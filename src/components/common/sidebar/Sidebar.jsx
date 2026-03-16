@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import {
-    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings, ShieldCheck
+    Home, ChevronRight, ChevronLeft, User, LogOut, Menu, Clock, ChevronDown, Settings, ShieldCheck, BookOpen
 } from "lucide-react";
 import { useNavigate, useLocation, NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -332,6 +332,10 @@ const Sidebar = ({
                     <div className="user-wrap">
                         {userOpen && (
                             <div className="user-dropdown">
+                                <button className="permission-btn" onClick={() => window.open("/manual", "manual", "width=1280,height=900,scrollbars=yes")}>
+                                    <BookOpen size={16} />
+                                    <span>매뉴얼</span>
+                                </button>
                                 {hasMergePn && (
                                     <button className="permission-btn" onClick={handleGoPermission}>
                                         <ShieldCheck size={16} />

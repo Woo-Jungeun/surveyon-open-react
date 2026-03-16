@@ -203,11 +203,11 @@ const AiSidebar = ({ onOpenProjectModal }) => {
     // }
 
     // Always add Manual
-    adminItems.push({
-        label: "매뉴얼",
-        icon: BookOpen,
-        onClick: () => window.open("/manual", "manual", "width=1280,height=900,scrollbars=yes")
-    });
+    // adminItems.push({
+    //     label: "매뉴얼",
+    //     icon: BookOpen,
+    //     onClick: () => window.open("/manual", "manual", "width=1280,height=900,scrollbars=yes")
+    // });
 
     if (isAiSolutionTeam) {
         adminItems.push({ label: "토큰 사용 내역", path: "/ai_open_analysis/token_usage", icon: BarChart3 });
