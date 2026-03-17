@@ -680,7 +680,7 @@ const RecodingPage = () => {
                 onSave={handleSave}
                 saveButtonDisabled={!isDirty}
             >
-                {!isAddMode && (
+                {/* {!isAddMode && (
                     <button
                         onClick={handleAutoRecode}
                         className="data-header-btn"
@@ -688,7 +688,7 @@ const RecodingPage = () => {
                         <Zap size={16} />
                         <span>자동 리코딩</span>
                     </button>
-                )}
+                )} */}
             </DataHeader>
 
             <Toast
