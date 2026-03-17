@@ -558,7 +558,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                             const chartSeries = q.columns
                                 ? q.columns.map(col => ({
                                     field: usePercentFields ? `${col.key}_pct` : col.key,
-                                    name: col.label
+                                    name: col.label2 ? `${col.label2} - ${col.label}` : col.label
                                 }))
                                 : [{ field: usePercentFields ? 'total_pct' : 'total', name: '전체' }];
 
