@@ -110,6 +110,10 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     // 미확인 데이터 보기 필터 상태 (GridRenderer가 리마운트되어도 유지되도록 상위로 이동)
     const [showUnverifiedOnly, setShowUnverifiedOnly] = useState(false);
 
+    // GridRenderer 클로저 이슈 우회용 ref
+    const duplicateAnswerCheckedTab1Ref = useRef(duplicateAnswerChecked);
+    useEffect(() => { duplicateAnswerCheckedTab1Ref.current = duplicateAnswerChecked; }, [duplicateAnswerChecked]);
+
     const saveChangesRef = useRef(async () => false);   // 저장 로직 노출용
     const lv3AnchorElRef = useRef(null);   // 현재 드롭다운이 붙을 td 엘리먼트
     const lastCellElRef = useRef(null);    // 마지막으로 진입/클릭한 lv3 셀(td)
@@ -1123,7 +1127,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
             };
         };
 
-        // saveChanges 의존성 제거를 위한 ref 처리 
+        // saveChanges 의존성 제거를 위한 ref 처리
         const selectedStateRef = useRef(selectedState);
         useEffect(() => { selectedStateRef.current = selectedState; }, [selectedState]);
         const onSavedRef = useRef(onSaved);
@@ -1137,8 +1141,8 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 projectnum: projectnum,
                 qnum: qnum,
                 gb: "in",
-                duplicateAnswerChecked,
-            }, { getKey, selectedState });
+                duplicateAnswerChecked: duplicateAnswerCheckedTab1Ref.current,
+            }, { getKey, selectedState: selectedStateRef.current });
 
             // 저장 API 호출
             try {
