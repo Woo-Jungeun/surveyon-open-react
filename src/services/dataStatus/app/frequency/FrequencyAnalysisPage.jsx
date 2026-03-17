@@ -56,11 +56,37 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     // Chart type name mapping
     const handleCopyTable = React.useCallback(async () => {
         try {
-            let headersText = "코드\t항목\t";
+            let headersText;
             if (q.columns) {
-                headersText += q.columns.map(c => c.label).join('\t') + "\t합계";
+                const hasLabel2 = q.columns.some(col => col.label2);
+                if (hasLabel2) {
+                    let row1 = "코드\t항목\t";
+                    let row2 = "\t\t";
+                    let prevLabel2 = null;
+
+                    q.columns.forEach((col) => {
+                        const label2 = col.label2;
+                        if (label2) {
+                            if (label2 === prevLabel2) {
+                                row1 += "\t"; // empty cell to continue span
+                            } else {
+                                row1 += `${label2}\t`;
+                                prevLabel2 = label2;
+                            }
+                            row2 += `${col.label}\t`;
+                        } else {
+                            row1 += `${col.label}\t`;
+                            row2 += `\t`;
+                            prevLabel2 = null;
+                        }
+                    });
+                    row1 += "합계";
+                    headersText = `${row1}\n${row2}`;
+                } else {
+                    headersText = "코드\t항목\t" + q.columns.map(c => c.label).join('\t') + "\t합계";
+                }
             } else {
-                headersText += "사례수\t합계";
+                headersText = "코드\t항목\t사례수\t합계";
             }
 
             let rowsText = q.data.map(row => {
@@ -205,6 +231,37 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
             alert('차트 다운로드 중 오류가 발생했습니다.');
         }
     };
+
+    const { hasLabel2, headerGroups } = useMemo(() => {
+        if (!q.columns) return { hasLabel2: false, headerGroups: [] };
+        const hasL2 = q.columns.some(col => col.label2);
+        if (!hasL2) return { hasLabel2: false, headerGroups: [] };
+
+        const groups = [];
+        let currentGroup = null;
+
+        q.columns.forEach((col) => {
+            const label2 = col.label2;
+            if (label2) {
+                if (currentGroup && currentGroup.label2 === label2 && currentGroup.isGroup) {
+                    currentGroup.span += 1;
+                    currentGroup.cols.push(col);
+                } else {
+                    if (currentGroup) groups.push(currentGroup);
+                    currentGroup = { isGroup: true, label2, span: 1, cols: [col] };
+                }
+            } else {
+                if (currentGroup) {
+                    groups.push(currentGroup);
+                    currentGroup = null;
+                }
+                groups.push({ isGroup: false, span: 1, cols: [col] });
+            }
+        });
+        if (currentGroup) groups.push(currentGroup);
+
+        return { hasLabel2: true, headerGroups: groups };
+    }, [q.columns]);
 
     return (
         <div id={q.id} className="agg-card">
@@ -399,12 +456,46 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 <div className="agg-table-container">
                     <table className="agg-table">
                         <thead>
-                            <tr>
-                                <th className="sticky-col1">코드</th>
-                                <th className="sticky-col2">항목</th>
-                                {q.columns && q.columns.map(col => <th key={col.key}>{col.label}</th>)}
-                                <th>합계</th>
-                            </tr>
+                            {!q.columns ? (
+                                <tr>
+                                    <th className="sticky-col1">코드</th>
+                                    <th className="sticky-col2">항목</th>
+                                    <th>합계</th>
+                                </tr>
+                            ) : !hasLabel2 ? (
+                                <tr>
+                                    <th className="sticky-col1">코드</th>
+                                    <th className="sticky-col2">항목</th>
+                                    {q.columns.map(col => <th key={col.key}>{col.label}</th>)}
+                                    <th>합계</th>
+                                </tr>
+                            ) : (
+                                <>
+                                    <tr>
+                                        <th className="sticky-col1" rowSpan={2} style={{ verticalAlign: 'middle' }}>코드</th>
+                                        <th className="sticky-col2" rowSpan={2} style={{ verticalAlign: 'middle' }}>항목</th>
+                                        {headerGroups.map((g, i) => (
+                                            g.isGroup ? (
+                                                <th key={`group-${i}`} colSpan={g.span} style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc', height: '39px' }}>
+                                                    {g.label2}
+                                                </th>
+                                            ) : (
+                                                <th key={`group-${i}`} rowSpan={2} style={{ background: '#f8fafc', verticalAlign: 'middle' }}>
+                                                    {g.cols[0].label}
+                                                </th>
+                                            )
+                                        ))}
+                                        <th rowSpan={2} style={{ verticalAlign: 'middle' }}>합계</th>
+                                    </tr>
+                                    <tr>
+                                        {headerGroups.flatMap((g) =>
+                                            g.isGroup ? g.cols.map(col => (
+                                                <th key={col.key} style={{ top: '39px', zIndex: 9 }}>{col.label}</th>
+                                            )) : []
+                                        )}
+                                    </tr>
+                                </>
+                            )}
                         </thead>
                         <tbody>
                             {!q.isLoaded ? (
@@ -937,7 +1028,8 @@ const FrequencyAnalysisPage = () => {
                         const aggInfoCols = tableInfo.result.columns || [];
                         const tableColumns = aggInfoCols.map(c => ({
                             key: c.key,
-                            label: c.label || c.var_label || c.name || c.key
+                            label: c.label || c.var_label || c.name || c.key,
+                            label2: c.label2
                         }));
 
                         let optionRows = aggInfoRows;
