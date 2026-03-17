@@ -24,6 +24,8 @@ const FullscreenModal = ({
     const [localDisplayMode, setLocalDisplayMode] = useState(displayMode);
     const [localPaletteId, setLocalPaletteId] = useState(paletteId || 'default');
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
+    const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const paletteMenuRef = useRef(null);
@@ -37,7 +39,16 @@ const FullscreenModal = ({
         const usePercent = localChartMode === 'donut' || localChartMode === 'funnel';
 
         const computedChartData = resultData.columns.map((colObj, colIndex) => {
-            const colName = colObj.label || colObj;
+            let colName = colObj.label || colObj;
+            if (typeof colObj === 'object') {
+                const parts = [];
+                // if (colObj.var_label) parts.push(colObj.var_label);
+                if (colObj.label3) parts.push(colObj.label3);
+                if (colObj.label2) parts.push(colObj.label2);
+                if (colObj.label) parts.push(colObj.label);
+                else if (colObj.name) parts.push(colObj.name);
+                colName = parts.length > 0 ? parts.filter(Boolean).join('\n') : (colObj.label || colObj.name || String(colObj));
+            }
             const dataPoint = { name: colName };
             resultData.rows.forEach(row => {
                 const isAggregate = row.label && ['합계', '전체', 'total', 'Total'].includes(row.label);
