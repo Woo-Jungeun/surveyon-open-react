@@ -1028,111 +1028,114 @@ const FrequencyAnalysisPage = () => {
         <div className="aggregation-page" data-theme="data-dashboard">
             <DataHeader title="빈도분석">
                 {/* 필터 문항 선택 드롭다운 */}
-                <div className="custom-filter-wrapper" ref={variableDropdownRef}>
-                    <div
-                        className={`custom-filter-trigger ${isVariableDropdownOpen ? 'open' : ''}`}
-                        onClick={() => setIsVariableDropdownOpen(!isVariableDropdownOpen)}
-                        style={{ width: '240px' }}
-                    >
-                        <span className="trigger-text">
-                            {(() => {
-                                if (overviewVariables.length === 0 && selectedVariableIds.length === 1 && selectedVariableIds[0] === 'answerStateCode') return 'answerStateCode';
-                                if (overviewVariables.length === 0 && selectedVariableIds.length === 0) return '필터 문항 선택';
-                                if (selectedVariableIds.length === 0) return '선택 안함';
-                                if (selectedVariableIds.length === overviewVariables.length + 1) return '전체';
-                                const displayNames = [];
-                                selectedVariableIds.forEach(id => {
-                                    if (id !== 'answerStateCode') {
-                                        const v = overviewVariables.find(ov => ov.id === id);
-                                        displayNames.push(v ? (v.label || v.id) : id);
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터 선택</span>
+                    <div className="custom-filter-wrapper" ref={variableDropdownRef}>
+                        <div
+                            className={`custom-filter-trigger ${isVariableDropdownOpen ? 'open' : ''}`}
+                            onClick={() => setIsVariableDropdownOpen(!isVariableDropdownOpen)}
+                            style={{ width: '240px' }}
+                        >
+                            <span className="trigger-text">
+                                {(() => {
+                                    if (overviewVariables.length === 0 && selectedVariableIds.length === 1 && selectedVariableIds[0] === 'answerStateCode') return 'answerStateCode';
+                                    if (overviewVariables.length === 0 && selectedVariableIds.length === 0) return '필터 문항 선택';
+                                    if (selectedVariableIds.length === 0) return '선택 안함';
+                                    if (selectedVariableIds.length === overviewVariables.length + 1) return '전체';
+                                    const displayNames = [];
+                                    selectedVariableIds.forEach(id => {
+                                        if (id !== 'answerStateCode') {
+                                            const v = overviewVariables.find(ov => ov.id === id);
+                                            displayNames.push(v ? (v.label || v.id) : id);
+                                        }
+                                    });
+                                    if (selectedVariableIds.includes('answerStateCode')) {
+                                        displayNames.push('answerStateCode');
                                     }
-                                });
-                                if (selectedVariableIds.includes('answerStateCode')) {
-                                    displayNames.push('answerStateCode');
-                                }
-                                return displayNames.join(', ');
-                            })()}
-                        </span>
-                        <ChevronDown size={14} className="trigger-icon" />
-                    </div>
-                    {isVariableDropdownOpen && (
-                        <div className="custom-filter-menu" style={{ width: '240px' }}>
-                            <div
-                                className="custom-filter-item"
-
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (selectedVariableIds.length === overviewVariables.length + 1) {
-                                        setSelectedVariableIds([]);
-                                        setFilterLogic('');
-                                    } else {
-                                        const allIds = [...overviewVariables.map(v => v.id), 'answerStateCode'];
-                                        setSelectedVariableIds(allIds);
-                                        const totalLogic = overviewVariables.map(v => v.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
-                                        setFilterLogic(totalLogic);
-                                    }
-                                }}
-                            >
-                                <div className={`checkbox-custom ${(selectedVariableIds.length === overviewVariables.length + 1) ? 'checked' : ''}`}>
-                                    {(selectedVariableIds.length === overviewVariables.length + 1) && <Check size={12} color="#fff" strokeWidth={3} />}
-                                </div>
-                                <span className="filter-text" style={{ fontWeight: '600' }}>전체</span>
-                            </div>
-                            {overviewVariables.map(v => {
-                                const isChecked = selectedVariableIds.includes(v.id);
-                                return (
-                                    <div
-                                        key={v.id}
-                                        className="custom-filter-item"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            let newIds;
-                                            if (isChecked) {
-                                                newIds = selectedVariableIds.filter(id => id !== v.id);
-                                            } else {
-                                                newIds = [...selectedVariableIds, v.id];
-                                            }
-                                            setSelectedVariableIds(newIds);
-                                            const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
-                                            setFilterLogic(totalLogic);
-                                        }}
-                                    >
-                                        <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
-                                            {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
-                                        </div>
-                                        <span className="filter-text">{v.label || v.id}</span>
-                                    </div>
-                                );
-                            })}
-                            <div
-                                className="custom-filter-item"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    let newIds;
-                                    const isAnswerCodeChecked = selectedVariableIds.includes('answerStateCode');
-                                    if (isAnswerCodeChecked) {
-                                        newIds = selectedVariableIds.filter(id => id !== 'answerStateCode');
-                                    } else {
-                                        newIds = [...selectedVariableIds, 'answerStateCode'];
-                                    }
-                                    setSelectedVariableIds(newIds);
-                                    // filterLogic does not need answerStateCode logic string, keeps existing logic
-                                    const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
-                                    setFilterLogic(totalLogic);
-                                }}
-                            >
-                                <div className={`checkbox-custom ${selectedVariableIds.includes('answerStateCode') ? 'checked' : ''}`}>
-                                    {selectedVariableIds.includes('answerStateCode') && <Check size={12} color="#fff" strokeWidth={3} />}
-                                </div>
-                                <span className="filter-text">answerStateCode</span>
-                            </div>
-                            {overviewVariables.length === 0 && (
-                                <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
-                                    조회된 변수가 없습니다.
-                                </div>
-                            )}
+                                    return displayNames.join(', ');
+                                })()}
+                            </span>
+                            <ChevronDown size={14} className="trigger-icon" />
                         </div>
-                    )}
+                        {isVariableDropdownOpen && (
+                            <div className="custom-filter-menu" style={{ width: '240px' }}>
+                                <div
+                                    className="custom-filter-item"
+
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (selectedVariableIds.length === overviewVariables.length + 1) {
+                                            setSelectedVariableIds([]);
+                                            setFilterLogic('');
+                                        } else {
+                                            const allIds = [...overviewVariables.map(v => v.id), 'answerStateCode'];
+                                            setSelectedVariableIds(allIds);
+                                            const totalLogic = overviewVariables.map(v => v.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                            setFilterLogic(totalLogic);
+                                        }
+                                    }}
+                                >
+                                    <div className={`checkbox-custom ${(selectedVariableIds.length === overviewVariables.length + 1) ? 'checked' : ''}`}>
+                                        {(selectedVariableIds.length === overviewVariables.length + 1) && <Check size={12} color="#fff" strokeWidth={3} />}
+                                    </div>
+                                    <span className="filter-text" style={{ fontWeight: '600' }}>전체</span>
+                                </div>
+                                {overviewVariables.map(v => {
+                                    const isChecked = selectedVariableIds.includes(v.id);
+                                    return (
+                                        <div
+                                            key={v.id}
+                                            className="custom-filter-item"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                let newIds;
+                                                if (isChecked) {
+                                                    newIds = selectedVariableIds.filter(id => id !== v.id);
+                                                } else {
+                                                    newIds = [...selectedVariableIds, v.id];
+                                                }
+                                                setSelectedVariableIds(newIds);
+                                                const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                                setFilterLogic(totalLogic);
+                                            }}
+                                        >
+                                            <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
+                                                {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
+                                            </div>
+                                            <span className="filter-text">{v.label || v.id}</span>
+                                        </div>
+                                    );
+                                })}
+                                <div
+                                    className="custom-filter-item"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        let newIds;
+                                        const isAnswerCodeChecked = selectedVariableIds.includes('answerStateCode');
+                                        if (isAnswerCodeChecked) {
+                                            newIds = selectedVariableIds.filter(id => id !== 'answerStateCode');
+                                        } else {
+                                            newIds = [...selectedVariableIds, 'answerStateCode'];
+                                        }
+                                        setSelectedVariableIds(newIds);
+                                        // filterLogic does not need answerStateCode logic string, keeps existing logic
+                                        const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                        setFilterLogic(totalLogic);
+                                    }}
+                                >
+                                    <div className={`checkbox-custom ${selectedVariableIds.includes('answerStateCode') ? 'checked' : ''}`}>
+                                        {selectedVariableIds.includes('answerStateCode') && <Check size={12} color="#fff" strokeWidth={3} />}
+                                    </div>
+                                    <span className="filter-text">answerStateCode</span>
+                                </div>
+                                {overviewVariables.length === 0 && (
+                                    <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
+                                        조회된 변수가 없습니다.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* 고급 필터 버튼 - LogicEditPopup 오픈 */}
@@ -1143,6 +1146,116 @@ const FrequencyAnalysisPage = () => {
                     <Filter size={15} />
                     필터 문항 설정
                 </button>
+                {/* 배너 선택 드롭다운 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>배너 선택</span>
+                    <div className="custom-filter-wrapper" ref={variableDropdownRef}>
+                        <div
+                            className={`custom-filter-trigger ${isVariableDropdownOpen ? 'open' : ''}`}
+                            onClick={() => setIsVariableDropdownOpen(!isVariableDropdownOpen)}
+                            style={{ width: '240px' }}
+                        >
+                            <span className="trigger-text">
+                                {(() => {
+                                    if (overviewVariables.length === 0 && selectedVariableIds.length === 1 && selectedVariableIds[0] === 'answerStateCode') return 'answerStateCode';
+                                    if (overviewVariables.length === 0 && selectedVariableIds.length === 0) return '필터 문항 선택';
+                                    if (selectedVariableIds.length === 0) return '선택 안함';
+                                    if (selectedVariableIds.length === overviewVariables.length + 1) return '전체';
+                                    const displayNames = [];
+                                    selectedVariableIds.forEach(id => {
+                                        if (id !== 'answerStateCode') {
+                                            const v = overviewVariables.find(ov => ov.id === id);
+                                            displayNames.push(v ? (v.label || v.id) : id);
+                                        }
+                                    });
+                                    if (selectedVariableIds.includes('answerStateCode')) {
+                                        displayNames.push('answerStateCode');
+                                    }
+                                    return displayNames.join(', ');
+                                })()}
+                            </span>
+                            <ChevronDown size={14} className="trigger-icon" />
+                        </div>
+                        {isVariableDropdownOpen && (
+                            <div className="custom-filter-menu" style={{ width: '240px' }}>
+                                <div
+                                    className="custom-filter-item"
+
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (selectedVariableIds.length === overviewVariables.length + 1) {
+                                            setSelectedVariableIds([]);
+                                            setFilterLogic('');
+                                        } else {
+                                            const allIds = [...overviewVariables.map(v => v.id), 'answerStateCode'];
+                                            setSelectedVariableIds(allIds);
+                                            const totalLogic = overviewVariables.map(v => v.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                            setFilterLogic(totalLogic);
+                                        }
+                                    }}
+                                >
+                                    <div className={`checkbox-custom ${(selectedVariableIds.length === overviewVariables.length + 1) ? 'checked' : ''}`}>
+                                        {(selectedVariableIds.length === overviewVariables.length + 1) && <Check size={12} color="#fff" strokeWidth={3} />}
+                                    </div>
+                                    <span className="filter-text" style={{ fontWeight: '600' }}>전체</span>
+                                </div>
+                                {overviewVariables.map(v => {
+                                    const isChecked = selectedVariableIds.includes(v.id);
+                                    return (
+                                        <div
+                                            key={v.id}
+                                            className="custom-filter-item"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                let newIds;
+                                                if (isChecked) {
+                                                    newIds = selectedVariableIds.filter(id => id !== v.id);
+                                                } else {
+                                                    newIds = [...selectedVariableIds, v.id];
+                                                }
+                                                setSelectedVariableIds(newIds);
+                                                const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                                setFilterLogic(totalLogic);
+                                            }}
+                                        >
+                                            <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
+                                                {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
+                                            </div>
+                                            <span className="filter-text">{v.label || v.id}</span>
+                                        </div>
+                                    );
+                                })}
+                                <div
+                                    className="custom-filter-item"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        let newIds;
+                                        const isAnswerCodeChecked = selectedVariableIds.includes('answerStateCode');
+                                        if (isAnswerCodeChecked) {
+                                            newIds = selectedVariableIds.filter(id => id !== 'answerStateCode');
+                                        } else {
+                                            newIds = [...selectedVariableIds, 'answerStateCode'];
+                                        }
+                                        setSelectedVariableIds(newIds);
+                                        // filterLogic does not need answerStateCode logic string, keeps existing logic
+                                        const totalLogic = newIds.filter(id => id !== 'answerStateCode').map(id => overviewVariables.find(ov => ov.id === id)?.logic).filter(Boolean).map(l => `(${l})`).join(' and ');
+                                        setFilterLogic(totalLogic);
+                                    }}
+                                >
+                                    <div className={`checkbox-custom ${selectedVariableIds.includes('answerStateCode') ? 'checked' : ''}`}>
+                                        {selectedVariableIds.includes('answerStateCode') && <Check size={12} color="#fff" strokeWidth={3} />}
+                                    </div>
+                                    <span className="filter-text">answerStateCode</span>
+                                </div>
+                                {overviewVariables.length === 0 && (
+                                    <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
+                                        조회된 변수가 없습니다.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
                 {/* 
                 <button
                     className="overview-settings-btn"

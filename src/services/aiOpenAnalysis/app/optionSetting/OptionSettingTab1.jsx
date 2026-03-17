@@ -101,7 +101,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
     const lvCode = String(props.lvCode); // 분류 단계 코드
     const { onInitLvCode, onUnsavedChange, onSaved, persistedPrefs, onPrefsChange
         , onInitialAnalysisCount, onHasEditLogChange, projectnum, qnum, onOpenLv3Panel
-        , lv3Options, onRequestLv3Refresh, onResponseCountChange, isLeftOpen, onDuplicateRemoveDateLoaded } = props;
+        , lv3Options, onRequestLv3Refresh, onResponseCountChange, isLeftOpen, onDuplicateRemoveDateLoaded, duplicateAnswerChecked } = props;
     const modal = useContext(modalContext);
     const DATA_ITEM_KEY = "__rowKey";
     const SELECTED_FIELD = "selected";
@@ -1091,6 +1091,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 projectnum = "",
                 qnum = "",
                 gb = "in",               // 호출 구분자
+                duplicateAnswerChecked,
             } = opts || {};
 
             const now = formatNow();
@@ -1117,6 +1118,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 qnum,
                 gb,
                 lvcode: String(lvCode ?? ""),
+                duplicate_answer: duplicateAnswerChecked ? "y" : "n",
                 data,
             };
         };
@@ -1135,6 +1137,7 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
                 projectnum: projectnum,
                 qnum: qnum,
                 gb: "in",
+                duplicateAnswerChecked,
             }, { getKey, selectedState });
 
             // 저장 API 호출

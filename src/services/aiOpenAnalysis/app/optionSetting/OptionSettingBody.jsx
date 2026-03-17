@@ -119,6 +119,7 @@ const OptionSettingBody = () => {
   const [responseCount, setResponseCount] = useState(0);  // 탭1 데이터 갯수
   const [qid, setQid] = useState(""); // qid 상태 추가
   const [duplicateRemoveDate, setDuplicateRemoveDate] = useState(""); // 중복제거일시 상태 추가
+  const [duplicateAnswerChecked, setDuplicateAnswerChecked] = useState(false);
 
   // 오른쪽 패널 관련 state
   const [isLv3PanelOpen, setIsLv3PanelOpen] = useState(false);
@@ -126,6 +127,11 @@ const OptionSettingBody = () => {
   const [lv3Targets, setLv3Targets] = useState(new Set());
   const [isLv3PanelPinned, setIsLv3PanelPinned] = useState(false);
   const handleToggleLv3PanelPin = useCallback(() => setIsLv3PanelPinned(v => !v), []);
+
+  const handleDuplicateRemoveDateLoaded = useCallback((date) => {
+    setDuplicateRemoveDate(date);
+    setDuplicateAnswerChecked(date !== "");
+  }, []);
 
   // Tab1 → 패널 열기 요청
   const handleOpenLv3Panel = useCallback((targetRows, codeIds) => {
@@ -634,61 +640,21 @@ const OptionSettingBody = () => {
           {tabDivision === "1" && (
             <>
               <button
-                className="ai-data-header-btn-secondary"
-                disabled={canSave["1"]}
-                onClick={async () => {
-                  modal.showConfirm("알림", "중복코드를 제거하시겠습니까?", {
-                    btns: [
-                      { title: "취소" },
-                      {
-                        title: "확인",
-                        click: async () => {
-                          try {
-                            loadingSpinner.show();
-                            const res = await optionSaveData.mutateAsync({
-                              user: auth?.user?.userId || "",
-                              projectnum: sessionStorage.getItem("projectnum") ?? "",
-                              qnum: sessionStorage.getItem("qnum") ?? "",
-                              gb: "duplicate_answer",
-                            });
-
-                            if (res?.success === "777") {
-                              modal.showAlert("알림", "중복코드가 제거되었습니다.");
-                              if (res?.duplicateRemoveDate) {
-                                setDuplicateRemoveDate(res.duplicateRemoveDate);
-                              }
-                              tab1Ref.current?.reload?.();
-                              fetchLv3Options(true);
-                            } else if (res?.success === "771") {
-                              modal.showAlert("알림", "중복코드가 존재하지 않습니다.");
-                            } else {
-                              modal.showErrorAlert("오류", "중복코드 제거에 실패했습니다.");
-                            }
-                          } catch (e) {
-                            console.error(e);
-                            modal.showErrorAlert("오류", "요청 중 오류가 발생했습니다.");
-                          } finally {
-                            loadingSpinner.hide();
-                          }
-                        }
-                      }
-                    ]
-                  });
+                className={`filter-toggle-btn duplicate-toggle-btn ${duplicateAnswerChecked ? 'active' : ''}`}
+                onClick={() => {
+                  const nextChecked = !duplicateAnswerChecked;
+                  setDuplicateAnswerChecked(nextChecked);
+                  setCanSave(prev => ({ ...prev, "1": true }));
+                  markUnsaved("1", true);
                 }}
-                style={{ height: "auto", minHeight: "40px", fontSize: "14px", padding: "6px 15px", borderRadius: "8px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "2px" }}
+                style={{ height: "40px", fontSize: "14px", padding: "0 15px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "6px" }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  중복코드 제거(DB, Excel)
-                  <span
-                    className="info-icon"
-                    data-tooltip={`중복코드 제거(DB, Excel)|문항 머지된 변수를 기준으로 조사 DB(큐마)에 코드가 업데이트되며, \n이 과정에서 중복 데이터는 제거됨.\n 예를 들어, ‘최초상기+비보조상기’ 변수를 하나로 머지하여 코드 설정 후 중복을 제거하면, 해당 머지된 변수 기준으로 중복이 제거된 상태로 조사 DB에 반영.`}
-                  ></span>
-                </div>
-                {duplicateRemoveDate !== "" && (
-                  <span style={{ fontSize: "11px", color: "#8b94a6", fontWeight: "normal" }}>
-                    {duplicateRemoveDate}
-                  </span>
-                )}
+                <span className="check-icon">{duplicateAnswerChecked ? '☑' : '☐'}</span>
+                중복코드 제거(DB, Excel)
+                <span
+                  className="info-icon"
+                  data-tooltip={`중복코드 제거(DB, Excel)|문항 머지된 변수를 기준으로 조사 DB(큐마)에 코드가 업데이트되며, \n이 과정에서 중복 데이터는 제거됨.\n 예를 들어, ‘최초상기+비보조상기’ 변수를 하나로 머지하여 코드 설정 후 중복을 제거하면, 해당 머지된 변수 기준으로 중복이 제거된 상태로 조사 DB에 반영.`}
+                ></span>
               </button>
 
               <GridHeaderBtnPrimary
@@ -728,7 +694,7 @@ const OptionSettingBody = () => {
               responseCount={responseCount}
               fetchLv3Options={fetchLv3Options}
               onQidLoaded={setQid}
-              onDuplicateRemoveDateLoaded={setDuplicateRemoveDate}
+              onDuplicateRemoveDateLoaded={handleDuplicateRemoveDateLoaded}
               onAnalysisComplete={async () => {
                 // 분석이 다 완료되고서 분석이 완료되었습니다 팝업 확인 누르면 Tab1의 저장 API 실행 (이후 popupcheck 등 타기 위함)
                 await tab1Ref.current?.saveChanges?.();
@@ -833,7 +799,8 @@ const OptionSettingBody = () => {
                   }}
                   onResponseCountChange={setResponseCount}
                   isLeftOpen={isLeftOpen}
-                  onDuplicateRemoveDateLoaded={setDuplicateRemoveDate}
+                  duplicateAnswerChecked={duplicateAnswerChecked}
+                  onDuplicateRemoveDateLoaded={handleDuplicateRemoveDateLoaded}
                 />
               ) : tabDivision === "2" ? (
                 <OptionSettingTab2
