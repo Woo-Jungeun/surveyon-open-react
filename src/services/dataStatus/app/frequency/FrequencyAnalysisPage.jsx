@@ -35,7 +35,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const displayMenuRef = useRef(null);
     const paletteMenuRef = useRef(null);
 
-    // Close dropdown when clicking outside
+    // 외부 영역 클릭 시 드롭다운 닫기
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
@@ -53,7 +53,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Chart type name mapping
+    // 차트 타입명 매핑
     const handleCopyTable = React.useCallback(async () => {
         try {
             let headersText;
@@ -146,7 +146,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
         }
 
         try {
-            // Find the chart element first
+            // 차트 DOM 요소 찾기
             const chartElement = chartContainerRef.current.querySelector('.k-chart');
 
             if (!chartElement) {
@@ -154,7 +154,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 return;
             }
 
-            // Find the SVG element within the chart
+            // 차트 내 SVG 요소 찾기
             const svgElement = chartElement.querySelector('svg');
 
             if (!svgElement) {
@@ -162,7 +162,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 return;
             }
 
-            // Get SVG dimensions
+            // SVG 해상도 추출
             const bbox = svgElement.getBBox();
             const viewBox = svgElement.getAttribute('viewBox');
             let width, height;
@@ -176,7 +176,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 height = bbox.height || svgElement.height.baseVal.value || 600;
             }
 
-            // Clone and prepare SVG
+            // SVG 복제 및 설정
             const clonedSvg = svgElement.cloneNode(true);
             clonedSvg.setAttribute('width', width);
             clonedSvg.setAttribute('height', height);
@@ -187,7 +187,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
             const svgString = new XMLSerializer().serializeToString(clonedSvg);
 
             if (format === 'svg') {
-                // Direct SVG download
+                // SVG 파일 다운로드
                 const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
                 const chartTypeName = getChartTypeName(chartMode);
                 const url = URL.createObjectURL(blob);
@@ -199,21 +199,21 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 document.body.removeChild(link);
                 URL.revokeObjectURL(url);
             } else if (format === 'png') {
-                // Convert SVG to PNG with proper dimensions
+                // PNG 다운로드를 위해 캔버스 변환
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
 
                 img.onload = () => {
-                    // Use SVG dimensions for canvas
-                    canvas.width = width * 2; // 2x for better quality
+                    // 캔버스를 SVG 크기에 맞춤
+                    canvas.width = width * 2; // 화질 저하 방지를 위해 2배 확대
                     canvas.height = height * 2;
 
-                    // Fill white background
+                    // 흰색 배경 채우기
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // Draw image scaled
+                    // 이미지 그리기
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
                     canvas.toBlob((blob) => {
@@ -364,7 +364,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
 
                 <div style={{ width: showChart ? 'calc(50% - 16px)' : 'auto', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
                     <div className="view-options">
-                        {/* Download Button */}
+                        {/* 다운로드 버튼 */}
                         {showChart && (
                             <div className="download-menu-container" ref={downloadMenuRef}>
                                 <button
@@ -452,7 +452,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 </div>
             </div>
             <div className="agg-card-body">
-                {/* Table */}
+                {/* 데이터 테이블 */}
                 <div className="agg-table-container">
                     <table className="agg-table">
                         <thead>
@@ -541,7 +541,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                     </table>
                 </div>
 
-                {/* Chart */}
+                {/* 차트 영역 */}
                 {showChart && (
                     <div className="agg-chart-container" ref={chartContainerRef}>
                         {!q.isLoaded ? (
@@ -647,7 +647,7 @@ const FrequencyAnalysisPage = () => {
     const [selectedFilters, setSelectedFilters] = useState(['전체']);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-    // Total Filter States (이제 팝업으로 대체)
+    // 필터 상태 (이제 팝업으로 대체)
     const [selectedTotalFilters, setSelectedTotalFilters] = useState(['전체']);
     const [isTotalFilterOpen, setIsTotalFilterOpen] = useState(false);
     const totalFilterRef = useRef(null);
@@ -666,7 +666,7 @@ const FrequencyAnalysisPage = () => {
 
     const [globalPaletteId, setGlobalPaletteId] = useState('default');
 
-    // Overview 변수 관련 상태
+    // 개요(Overview) 변수 관련 상태
     const [isOverviewPopupOpen, setIsOverviewPopupOpen] = useState(false);
     const [overviewVariables, setOverviewVariables] = useState([]);
     const [bannerVariables, setBannerVariables] = useState([]);
@@ -776,7 +776,7 @@ const FrequencyAnalysisPage = () => {
                     const finalPid = sessionStorage.getItem("pageId");
                     setCurrentPageId(finalPid);
                     if (sessionStorage.getItem("merge_pn") && !finalPid) {
-                        setQuestions([]); // Clear stale questions
+                        setQuestions([]); // 이전 문항 데이터 초기화
                         setActiveId(null);
                         modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                     }
@@ -802,7 +802,7 @@ const FrequencyAnalysisPage = () => {
         setSidebarPage(1);
     }, [searchTerm]);
 
-    // Close filter dropdown when clicking outside
+    // 외부 영역 클릭 시 필터 드롭다운 닫기
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (filterRef.current && !filterRef.current.contains(event.target)) {
@@ -1281,7 +1281,7 @@ const FrequencyAnalysisPage = () => {
                         </div>
                     </div>
 
-                    {/* 고급 필터 버튼 - LogicEditPopup 오픈 */}
+                    {/* 고급 필터 버튼 - 로직 편집 팝업 열기 */}
                     <button
                         onClick={() => setIsFilterPopupOpen(true)}
                         className={`advanced-filter-btn`}
