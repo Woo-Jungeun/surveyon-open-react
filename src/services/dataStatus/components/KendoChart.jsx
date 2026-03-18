@@ -306,9 +306,20 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             fontStyle="normal"
                             fontWeight="bold"
                             fontSize={(word) => {
-                                // Linear scaling between 16px and 64px
-                                if (maxVal === minVal) return 32;
-                                return 16 + ((word.value - minVal) / (maxVal - minVal)) * 48;
+                                // Scale dynamically based on container size
+                                const isFullscreen = dimensions.width > 1200;
+                                const scale = Math.min(dimensions.width / 1000, dimensions.height / 600);
+                                const clampedScale = Math.max(0.4, Math.min(isFullscreen ? 2.0 : 1.0, scale));
+
+                                // 긴 문장일수록 폰트를 더 줄이는 패널티 적용 (전체화면일 때는 패널티 완화)
+                                const textLen = word.text ? String(word.text).length : 10;
+                                const lenPenalty = Math.max(isFullscreen ? 0.6 : 0.5, 1 - (textLen / (isFullscreen ? 120 : 60)));
+
+                                const minFs = Math.max(10, Math.round((isFullscreen ? 18 : 14) * clampedScale * lenPenalty));
+                                const maxFs = Math.max(14, Math.round((isFullscreen ? 64 : 48) * clampedScale * lenPenalty));
+
+                                if (maxVal === minVal) return (minFs + maxFs) / 2;
+                                return minFs + ((word.value - minVal) / (maxVal - minVal)) * (maxFs - minFs);
                             }}
                             spiral="archimedean"
                             rotate={() => 0} // Keep labels horizontal for better readability
