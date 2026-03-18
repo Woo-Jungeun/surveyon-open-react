@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
     Chart,
     ChartSeries,
@@ -34,6 +34,51 @@ import { CHART_PALETTES } from '../constants/chartThemes';
 
 // Legacy support for single constant
 const CHART_COLORS = CHART_PALETTES.default;
+
+const WordCloudFixer = ({ wordData, dimensions, activePalette, minVal, maxVal }) => {
+    const wordDataStr = JSON.stringify(wordData);
+    const seedRef = useRef(1);
+
+    const MemoizedWordCloud = useMemo(() => {
+        seedRef.current = 1; // 렌더링 될 때마다 시드 초기화
+        const seededRandom = () => {
+            const x = Math.sin(seedRef.current++) * 10000;
+            return x - Math.floor(x);
+        };
+
+        return (
+            <WordCloud
+                data={wordData}
+                width={dimensions.width}
+                height={dimensions.height}
+                font="Pretendard, sans-serif"
+                fontStyle="normal"
+                fontWeight="bold"
+                fontSize={(word) => {
+                    const isFullscreen = dimensions.width > 1200;
+                    const scale = Math.min(dimensions.width / 1000, dimensions.height / 600);
+                    const clampedScale = Math.max(0.4, Math.min(isFullscreen ? 2.0 : 1.0, scale));
+
+                    const textLen = word.text ? String(word.text).length : 10;
+                    const lenPenalty = Math.max(isFullscreen ? 0.6 : 0.5, 1 - (textLen / (isFullscreen ? 120 : 60)));
+
+                    const minFs = Math.max(10, Math.round((isFullscreen ? 18 : 14) * clampedScale * lenPenalty));
+                    const maxFs = Math.max(14, Math.round((isFullscreen ? 64 : 48) * clampedScale * lenPenalty));
+
+                    if (maxVal === minVal) return (minFs + maxFs) / 2;
+                    return minFs + ((word.value - minVal) / (maxVal - minVal)) * (maxFs - minFs);
+                }}
+                spiral="archimedean"
+                rotate={() => 0}
+                padding={4}
+                random={seededRandom}
+                fill={(d, i) => activePalette[i % activePalette.length]}
+            />
+        );
+    }, [wordDataStr, dimensions.width, dimensions.height, activePalette, maxVal, minVal]);
+
+    return MemoizedWordCloud;
+};
 
 const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default' }) => {
     const activePalette = CHART_PALETTES[paletteId] || CHART_PALETTES.default;
@@ -298,33 +343,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', position: 'relative' }}>
                 <div ref={containerRef} style={{ flex: 1, width: '100%', height: '100%', overflow: 'hidden' }}>
                     {dimensions.width > 0 && dimensions.height > 0 && wordData.length > 0 && (
-                        <WordCloud
-                            data={wordData}
-                            width={dimensions.width}
-                            height={dimensions.height}
-                            font="Pretendard, sans-serif"
-                            fontStyle="normal"
-                            fontWeight="bold"
-                            fontSize={(word) => {
-                                // Scale dynamically based on container size
-                                const isFullscreen = dimensions.width > 1200;
-                                const scale = Math.min(dimensions.width / 1000, dimensions.height / 600);
-                                const clampedScale = Math.max(0.4, Math.min(isFullscreen ? 2.0 : 1.0, scale));
-
-                                // 긴 문장일수록 폰트를 더 줄이는 패널티 적용 (전체화면일 때는 패널티 완화)
-                                const textLen = word.text ? String(word.text).length : 10;
-                                const lenPenalty = Math.max(isFullscreen ? 0.6 : 0.5, 1 - (textLen / (isFullscreen ? 120 : 60)));
-
-                                const minFs = Math.max(10, Math.round((isFullscreen ? 18 : 14) * clampedScale * lenPenalty));
-                                const maxFs = Math.max(14, Math.round((isFullscreen ? 64 : 48) * clampedScale * lenPenalty));
-
-                                if (maxVal === minVal) return (minFs + maxFs) / 2;
-                                return minFs + ((word.value - minVal) / (maxVal - minVal)) * (maxFs - minFs);
-                            }}
-                            spiral="archimedean"
-                            rotate={() => 0} // Keep labels horizontal for better readability
-                            padding={4}
-                            fill={(d, i) => activePalette[i % activePalette.length]}
+                        <WordCloudFixer
+                            wordData={wordData}
+                            dimensions={dimensions}
+                            activePalette={activePalette}
+                            minVal={minVal}
+                            maxVal={maxVal}
                         />
                     )}
                 </div>
