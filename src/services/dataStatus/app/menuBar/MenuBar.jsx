@@ -2,7 +2,7 @@
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
-  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit
+  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
@@ -52,7 +52,15 @@ const MENU_ITEMS = [
       { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
       { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
     ]
-  },
+  }
+  /*
+  ,{
+    label: "시스템 관리",
+    items: [
+      { label: "메뉴 권한 설정", path: "/data_status/system/menu_permission", icon: ShieldCheck },
+    ]
+  }
+  */
 ];
 
 const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
