@@ -13,11 +13,12 @@ import './RecodingPage.css';
 import { modalContext } from '../../../../components/common/Modal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
+import AdditionalAnalysisFilterPopup from '../../../../components/common/popup/AdditionalAnalysisFilterPopup';
 // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
 const EditableCell = (props) => {
-    const { dataItem, field, columns, onUpdate, onPaste } = props;
+    const { dataItem, field, columns, onUpdate, onPaste, onLogicSettingsClick } = props;
     const isEditable = columns.find(c => c.field === field)?.editable;
 
     if (!isEditable) {
@@ -25,6 +26,39 @@ const EditableCell = (props) => {
             <td className={props.className} style={props.style}>
                 <div className="recoding-cell-readonly">
                     {dataItem[field]}
+                </div>
+            </td>
+        );
+    }
+
+    if (field === 'logic') {
+        return (
+            <td className={props.className} style={{ ...props.style, verticalAlign: 'middle', padding: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', width: '100%', height: '100%', boxSizing: 'border-box' }}>
+                    <div style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#4b5563', fontSize: '13px', lineHeight: '1.4' }} title={dataItem[field]}>
+                        {dataItem[field]}
+                    </div>
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            if (onLogicSettingsClick) {
+                                onLogicSettingsClick(dataItem.id, dataItem[field] || '');
+                            }
+                        }}
+                        style={{
+                            backgroundColor: '#fff',
+                            color: '#3b82f6',
+                            border: '1px solid #3b82f6',
+                            borderRadius: '4px',
+                            padding: '4px 12px',
+                            fontSize: '13px',
+                            fontWeight: '500',
+                            cursor: 'pointer',
+                            flexShrink: 0
+                        }}
+                    >
+                        설정
+                    </button>
                 </div>
             </td>
         );
@@ -77,10 +111,10 @@ const DeleteCell = (props) => {
 };
 
 const CustomCell = (props) => {
-    const { field, columns, checkedLogics, onUpdate, onDelete, onPaste } = props;
+    const { field, columns, checkedLogics, onUpdate, onDelete, onPaste, onLogicSettingsClick } = props;
     if (field === 'check') return <CheckCell {...props} checkedLogics={checkedLogics} />;
     if (field === 'delete') return <DeleteCell {...props} onDelete={onDelete} />;
-    return <EditableCell {...props} columns={columns} onUpdate={onUpdate} onPaste={onPaste} />;
+    return <EditableCell {...props} columns={columns} onUpdate={onUpdate} onPaste={onPaste} onLogicSettingsClick={onLogicSettingsClick} />;
 };
 
 const RecodingPage = () => {
@@ -215,6 +249,7 @@ const RecodingPage = () => {
     const [isEvaluationOpen, setIsEvaluationOpen] = useState(true);
     const [toast, setToast] = useState({ show: false, message: '' });
     const [gridKey, setGridKey] = useState(0);
+    const [logicPopupState, setLogicPopupState] = useState({ open: false, rowId: null, initialLogic: '' });
 
     // 변경 및 초기 상태 관리 (저장 버튼 활성화용)
     const [isDirty, setIsDirty] = useState(false);
@@ -330,8 +365,8 @@ const RecodingPage = () => {
     const [filter, setFilter] = useState(null);
     const [columns, setColumns] = useState([
         { field: 'id', title: '코드', show: true, width: '80px', editable: false },
-        { field: 'category', title: '보기', show: true, minWidth: 200, editable: true },
-        { field: 'val', title: '새코드', show: true, width: '120px', editable: true },
+        { field: 'category', title: '보기', show: true, width: '250px', editable: true },
+        { field: 'val', title: '새코드', show: true, width: '100px', editable: true },
         { field: 'logic', title: '로직', show: true, minWidth: 200, editable: true },
         { field: 'check', title: '로직체크', show: true, width: '120px', editable: false },
         { field: 'delete', title: '삭제', show: true, width: '100px', editable: false },
@@ -484,6 +519,10 @@ const RecodingPage = () => {
             onSortChange={setSort}
         />
     );
+
+    const handleLogicSettingsClick = (rowId, initialLogic) => {
+        setLogicPopupState({ open: true, rowId, initialLogic });
+    };
 
     const handleUpdate = (id, field, value) => {
         setCategories(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
@@ -843,6 +882,7 @@ const RecodingPage = () => {
                                                 onUpdate={handleUpdate}
                                                 onDelete={handleDelete}
                                                 onPaste={handlePaste}
+                                                onLogicSettingsClick={handleLogicSettingsClick}
                                             />
                                         );
 
@@ -902,6 +942,24 @@ const RecodingPage = () => {
                     </div>
                 </div>
             </div>
+
+            {logicPopupState.open && (
+                <AdditionalAnalysisFilterPopup
+                    auth={auth}
+                    pageId={sessionStorage.getItem("pageId")}
+                    initialVariables={[]}
+                    variablesList={variables}
+                    initialLogic={logicPopupState.initialLogic}
+                    initialInfo={[]}
+                    title="로직 생성"
+                    hideGroupSidebar={true}
+                    onClose={() => setLogicPopupState({ open: false, rowId: null, initialLogic: '' })}
+                    onSave={(varId, logicStr, varLabel, info) => {
+                        handleUpdate(logicPopupState.rowId, 'logic', logicStr);
+                        setLogicPopupState({ open: false, rowId: null, initialLogic: '' });
+                    }}
+                />
+            )}
         </div>
     );
 };

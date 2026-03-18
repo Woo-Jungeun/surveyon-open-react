@@ -108,7 +108,7 @@ const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placehol
     );
 };
 
-const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive, hideSidebar = false, theme = 'default', title, initialLogic, saveMode = 'api', initialInfo }) => {
+const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive, hideSidebar = false, hideGroupSidebar = false, theme = 'default', title, initialLogic, saveMode = 'api', initialInfo }) => {
     const modal = React.useContext(modalContext);
     const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
@@ -967,54 +967,56 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
                     )}
 
                     {/* Column 2: 필터 그룹 (Categories) */}
-                    <div className="col-cbp col-cats">
-                        <div className="col-header-cbp cats-header-cbp">
-                            <span>필터 그룹</span>
-                            <div className="cats-header-actions-cbp">
-                                {/* <div className="cond-logic-toggle-cbp mini">
-                                    <button
-                                        className={categoryLogicOp === 'AND' ? 'active' : ''}
-                                        onClick={() => setCategoryLogicOp('AND')}
-                                    >AND</button>
-                                    <button
-                                        className={categoryLogicOp === 'OR' ? 'active' : ''}
-                                        onClick={() => setCategoryLogicOp('OR')}
-                                    >OR</button>
-                                </div> */}
-                                <button className="add-btn-cbp" onClick={handleAddCategory}><Plus size={16} /></button>
+                    {!hideGroupSidebar && (
+                        <div className="col-cbp col-cats">
+                            <div className="col-header-cbp cats-header-cbp">
+                                <span>필터 그룹</span>
+                                <div className="cats-header-actions-cbp">
+                                    {/* <div className="cond-logic-toggle-cbp mini">
+                                        <button
+                                            className={categoryLogicOp === 'AND' ? 'active' : ''}
+                                            onClick={() => setCategoryLogicOp('AND')}
+                                        >AND</button>
+                                        <button
+                                            className={categoryLogicOp === 'OR' ? 'active' : ''}
+                                            onClick={() => setCategoryLogicOp('OR')}
+                                        >OR</button>
+                                    </div> */}
+                                    <button className="add-btn-cbp" onClick={handleAddCategory}><Plus size={16} /></button>
+                                </div>
+                            </div>
+                            <div className="col-list-cbp pad-inside">
+                                {isLoading ? (
+                                    <div className="loading-cbp">데이터를 불러오는 중...</div>
+                                ) : (
+                                    categories.map((cat, idx) => (
+                                        <div
+                                            key={cat.id}
+                                            className={`list-item-cbp cat-item-cbp ${selectedCatIndex === idx ? 'active' : ''}`}
+                                            onClick={() => setSelectedCatIndex(idx)}
+                                        >
+                                            <div className="item-text-cbp">
+                                                {selectedCatIndex === idx ? (
+                                                    <input
+                                                        className="inline-input-cbp"
+                                                        value={cat.label}
+                                                        onChange={e => handleUpdateCategoryLabel(idx, e.target.value)}
+                                                        placeholder="그룹명 입력"
+                                                    />
+                                                ) : (
+                                                    <div className="item-title-cbp">{cat.label || `새 그룹 ${idx + 1}`}</div>
+                                                )}
+                                                <div className="item-info-cbp count-text">{cat.conditionSets.reduce((acc, set) => acc + set.conditions.length, 0)}개</div>
+                                            </div>
+                                            <button className="del-btn-cbp" onClick={(e) => { e.stopPropagation(); handleRemoveCategory(cat.id); }}>
+                                                <X size={14} color="#94a3b8" />
+                                            </button>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </div>
-                        <div className="col-list-cbp pad-inside">
-                            {isLoading ? (
-                                <div className="loading-cbp">데이터를 불러오는 중...</div>
-                            ) : (
-                                categories.map((cat, idx) => (
-                                    <div
-                                        key={cat.id}
-                                        className={`list-item-cbp cat-item-cbp ${selectedCatIndex === idx ? 'active' : ''}`}
-                                        onClick={() => setSelectedCatIndex(idx)}
-                                    >
-                                        <div className="item-text-cbp">
-                                            {selectedCatIndex === idx ? (
-                                                <input
-                                                    className="inline-input-cbp"
-                                                    value={cat.label}
-                                                    onChange={e => handleUpdateCategoryLabel(idx, e.target.value)}
-                                                    placeholder="그룹명 입력"
-                                                />
-                                            ) : (
-                                                <div className="item-title-cbp">{cat.label || `새 그룹 ${idx + 1}`}</div>
-                                            )}
-                                            <div className="item-info-cbp count-text">{cat.conditionSets.reduce((acc, set) => acc + set.conditions.length, 0)}개</div>
-                                        </div>
-                                        <button className="del-btn-cbp" onClick={(e) => { e.stopPropagation(); handleRemoveCategory(cat.id); }}>
-                                            <X size={14} color="#94a3b8" />
-                                        </button>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-                    </div>
+                    )}
 
                     {/* Column 3: 조건 설정 (Condition Sets) */}
                     <div className="col-cbp col-conds">
