@@ -18,8 +18,25 @@ import AdditionalAnalysisFilterPopup from '../../../../components/common/popup/A
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
 const EditableCell = (props) => {
-    const { dataItem, field, columns, onUpdate, onPaste, onLogicSettingsClick } = props;
+    const { dataItem, field, columns, onUpdate, onLogicSettingsClick } = props;
     const isEditable = columns.find(c => c.field === field)?.editable;
+    const [localValue, setLocalValue] = React.useState(dataItem[field]);
+    const textareaRef = React.useRef(null);
+
+    React.useEffect(() => {
+        setLocalValue(dataItem[field]);
+    }, [dataItem[field]]);
+
+    const adjustHeight = () => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = "auto";
+            textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+        }
+    };
+
+    React.useEffect(() => {
+        adjustHeight();
+    }, [localValue]);
 
     if (!isEditable) {
         return (
@@ -65,19 +82,38 @@ const EditableCell = (props) => {
     }
 
     return (
-        <td className={props.className} style={props.style}>
-            <input
-                type="text"
-                defaultValue={dataItem[field]}
-                placeholder={field === 'logic' ? "로직 (예: age >= 20 && age < 30)" : ""}
-                onBlur={(e) => {
-                    if (onUpdate && e.target.value !== dataItem[field]) {
-                        onUpdate(dataItem.id, field, e.target.value);
-                    }
-                }}
-                onPaste={(e) => onPaste && onPaste(e, dataItem, field)}
-                className="recoding-cell-input"
-            />
+        <td className={props.className} style={{ ...props.style, verticalAlign: 'middle', padding: 0 }}>
+            <div style={{ padding: '8px 5px', width: '100%', height: '100%', boxSizing: 'border-box' }}>
+                <textarea
+                    ref={textareaRef}
+                    value={localValue || ''}
+                    rows={1}
+                    onChange={(e) => setLocalValue(e.target.value)}
+                    placeholder={field === 'logic' ? "로직 (예: age >= 20 && age < 30)" : ""}
+                    onBlur={(e) => {
+                        if (onUpdate && localValue !== dataItem[field]) {
+                            onUpdate(dataItem.id, field, localValue);
+                        }
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            e.target.blur();
+                        }
+                    }}
+                    onPaste={(e) => e.stopPropagation()}
+                    className="recoding-cell-input"
+                    style={{
+                        resize: 'none',
+                        overflow: 'hidden',
+                        lineHeight: '1.4',
+                        padding: '6px 8px',
+                        display: 'block',
+                        width: '100%',
+                        boxSizing: 'border-box'
+                    }}
+                />
+            </div>
         </td>
     );
 };
@@ -366,7 +402,7 @@ const RecodingPage = () => {
     const [columns, setColumns] = useState([
         { field: 'id', title: '코드', show: true, width: '80px', editable: false },
         { field: 'category', title: '보기', show: true, width: '250px', editable: true },
-        { field: 'val', title: '새코드', show: true, width: '100px', editable: true },
+        { field: 'val', title: '새코드', show: true, width: '120px', editable: true },
         { field: 'logic', title: '로직', show: true, minWidth: 200, editable: true },
         { field: 'check', title: '로직체크', show: true, width: '120px', editable: false },
         { field: 'delete', title: '삭제', show: true, width: '100px', editable: false },
@@ -388,8 +424,8 @@ const RecodingPage = () => {
                 id: selectedVar.id,
                 label: selectedVar.label,
                 type: selectedVar.type || "categorical",
-                info: categories.map(c => ({
-                    index: Number(c.realVal) || 0,
+                info: categories.map((c, idx) => ({
+                    index: Number(c.id) || (idx + 1),
                     label: c.category,
                     logic: c.logic,
                     type: "categorical",
@@ -561,8 +597,8 @@ const RecodingPage = () => {
                 id: variableKey,
                 label: selectedVar.label,
                 type: selectedVar.type || "categorical",
-                info: targetCategories.map(c => ({
-                    index: Number(c.realVal) || 0,
+                info: targetCategories.map((c, idx) => ({
+                    index: Number(c.id) || (idx + 1),
                     label: c.category,
                     logic: c.logic,
                     type: "categorical",
@@ -850,7 +886,7 @@ const RecodingPage = () => {
                                     </button>
                                     <button
                                         onClick={() => {
-                                            const newId = categories.length > 0 ? Math.max(...categories.map(c => c.id)) + 1 : 0;
+                                            const newId = categories.length > 0 ? Math.max(...categories.map(c => Number(c.id) || 0)) + 1 : 1;
                                             setCategories([...categories, { id: newId, category: '', val: '', logic: '' }]);
                                         }}
                                         className="recoding-add-category-btn"
