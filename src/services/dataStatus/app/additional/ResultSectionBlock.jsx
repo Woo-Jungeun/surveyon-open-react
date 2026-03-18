@@ -377,11 +377,22 @@ export const ResultSectionBlock = ({
             }
             if (!svgElement) return;
             const bbox = svgElement.getBBox();
-            const width = bbox.width || 800;
-            const height = bbox.height || 600;
+            const rect = svgElement.getBoundingClientRect();
+
+            // 여백(Padding)을 주어 Y축 긴 라벨이나 끝부분 막대가 잘리지 않도록 보호
+            const padding = 20;
+            const width = Math.max(bbox.width, rect.width) + padding * 2;
+            const height = Math.max(bbox.height, rect.height) + padding * 2;
+
             const clonedSvg = svgElement.cloneNode(true);
             clonedSvg.setAttribute('width', width);
             clonedSvg.setAttribute('height', height);
+
+            // Kendo 차트가 음수 좌표에 그릴 경우를 대비해 viewBox 시작점 재조정
+            const minX = Math.min(0, bbox.x) - padding;
+            const minY = Math.min(0, bbox.y) - padding;
+            clonedSvg.setAttribute('viewBox', `${minX} ${minY} ${width} ${height}`);
+
             const svgString = new XMLSerializer().serializeToString(clonedSvg);
             if (format === 'svg') {
                 const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });

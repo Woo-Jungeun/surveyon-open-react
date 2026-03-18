@@ -165,6 +165,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
             // SVG 해상도 추출
             const bbox = svgElement.getBBox();
             const viewBox = svgElement.getAttribute('viewBox');
+            const rect = svgElement.getBoundingClientRect();
+
+            const padding = 20;
             let width, height;
 
             if (viewBox) {
@@ -172,16 +175,19 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 width = vbWidth;
                 height = vbHeight;
             } else {
-                width = bbox.width || svgElement.width.baseVal.value || 800;
-                height = bbox.height || svgElement.height.baseVal.value || 600;
+                width = Math.max(bbox.width, rect.width) + padding * 2;
+                height = Math.max(bbox.height, rect.height) + padding * 2;
             }
 
             // SVG 복제 및 설정
             const clonedSvg = svgElement.cloneNode(true);
             clonedSvg.setAttribute('width', width);
             clonedSvg.setAttribute('height', height);
+
             if (!viewBox) {
-                clonedSvg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                const minX = Math.min(0, bbox.x) - padding;
+                const minY = Math.min(0, bbox.y) - padding;
+                clonedSvg.setAttribute('viewBox', `${minX} ${minY} ${width} ${height}`);
             }
 
             const svgString = new XMLSerializer().serializeToString(clonedSvg);
