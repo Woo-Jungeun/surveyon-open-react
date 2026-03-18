@@ -1069,7 +1069,7 @@ export const ResultSectionBlock = ({
                                                     </div>
                                                     {/* <button className="view-option-btn" onClick={() => toggleLayoutOption('chart')} title="차트 닫기"><X size={16} /></button> */}
                                                     <div style={{ width: '1px', height: '16px', background: '#e2e8f0', margin: '0 4px' }}></div>
-                                                    <button className={`view-option-btn ${activeChartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형"><BarChart2 size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형"><LineChart size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형"><PieChart size={16} /></button>
@@ -1079,7 +1079,7 @@ export const ResultSectionBlock = ({
                                                     <button className={`view-option-btn ${activeChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점도표"><MoreHorizontal size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형"><AreaChart size={16} /></button>
                                                     {/* <button className={`view-option-btn ${activeChartMode === 'map' ? 'active' : ''}`} onClick={() => setChartMode('map')} title="지도"><MapIcon size={16} /></button> */}
-                                                    <button className={`view-option-btn ${activeChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="트리맵"><LayoutGrid size={16} /></button>
+                                                    <button className={`view-option-btn ${activeChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="히트맵"><LayoutGrid size={16} /></button>
                                                     <button className={`view-option-btn ${activeChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setChartMode('wordCloud')} title="워드클라우드"><Cloud size={16} /></button>
                                                 </div>
                                                 <button

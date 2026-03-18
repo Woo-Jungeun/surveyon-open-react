@@ -117,15 +117,21 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
 
     const renderSeries = () => {
         if (isPieOrDonut) {
-            // 기준 필드 찾기 (전달받은 seriesNames의 첫 번째 필드 우선 사용)
+            // 기준 필드 찾기: 파이/도넛은 보통 단일 차원이므로 가급적 합계(total) 기준 적용을 우선
             const defaultField = suffix === '%' ? 'total_pct' : 'total';
-            const targetField = (seriesNames && seriesNames.length > 0)
-                ? (typeof seriesNames[0] === 'string' ? seriesNames[0] : seriesNames[0].field)
-                : defaultField;
+            let targetField = defaultField;
+
+            if (filteredData.length > 0 && typeof filteredData[0][defaultField] !== 'undefined') {
+                targetField = defaultField;
+            } else if (filteredData.length > 0 && typeof filteredData[0]['total'] !== 'undefined') {
+                targetField = 'total';
+            } else if (seriesNames && seriesNames.length > 0) {
+                targetField = typeof seriesNames[0] === 'string' ? seriesNames[0] : seriesNames[0].field;
+            }
 
             const pieData = filteredData
                 .map((row, index) => ({
-                    name: row.name,
+                    name: String(row.name).replace(/\n/g, ' '),
                     pieValue: Number(row[targetField] || 0),
                     color: activePalette[index % activePalette.length]
                 }));
@@ -179,7 +185,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         if (chartType === 'funnel') {
             // 퍼널: 각 행(row)를 단계로, total count를 값으로 사용 (파이/도넛과 동일)
             const funnelData = filteredData.map((item, index) => ({
-                name: item.name,
+                name: String(item.name).replace(/\n/g, ' '),
                 funnelValue: Number(item['total'] || 0),
                 color: activePalette[index % activePalette.length]
             }));
@@ -315,10 +321,30 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         );
     }
 
+    const activeSeriesCount = Object.keys(visibleSeries).length > 0 ? Object.values(visibleSeries).filter(Boolean).length : (seriesNames?.length || 1);
+
     // 가로 스크롤이 필요한 차트 타입인지 확인
-    const isHorizontalScrollType = ['column', 'stackedColumn', 'stacked100Column', 'line', 'area', 'scatterPoint'].includes(chartType);
-    // 항목당 최소 너비 80px 확보 (단, 전체 컨테이너보다 작아지지 않게 함)
-    const calculatedWidth = isHorizontalScrollType ? Math.max(100, data.length * 80) : '100%';
+    const isHorizontalScrollType = ['column', 'stackedColumn', 'stacked100Column', 'line', 'area', 'scatterPoint', 'heatmap'].includes(chartType);
+    // 세로 스크롤이 필요한 차트 타입인지 확인 (가로형 막대)
+    const isVerticalScrollType = ['bar'].includes(chartType);
+
+    // 최소 너비/높이 계산 (그룹 수 * 항목 수에 비례)
+    let calculatedWidth = '100%';
+    let calculatedHeight = '100%';
+
+    if (chartType === 'heatmap') {
+        calculatedWidth = Math.max(100, data.length * 100); // 100px per column to accommodate horizontal labels
+    } else if (isHorizontalScrollType) {
+        const isStacked = ['stackedColumn', 'stacked100Column', 'line', 'area'].includes(chartType);
+        // Increase base width for stacked types to 180px to safely show long X-axis labels
+        const groupWidth = isStacked ? 180 : Math.max(120, activeSeriesCount * 25);
+        calculatedWidth = Math.max(100, data.length * groupWidth + 100);
+    }
+
+    if (isVerticalScrollType) {
+        const groupHeight = Math.max(45, activeSeriesCount * 8); // 라벨 3줄 표시를 위한 최소 높이 45px 확보, 막대당 8px
+        calculatedHeight = Math.max(200, data.length * groupHeight + 50);
+    }
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
@@ -375,23 +401,101 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     </button>
                 )}
             </div>
-            <div style={{ flex: 1, overflowX: 'auto', overflowY: 'hidden', width: '100%', display: 'flex', flexDirection: 'column' }}>
+
+            {showLegend && !isHeatmap && (
                 <div style={{
-                    width: isHorizontalScrollType ? `${calculatedWidth}px` : '100%',
-                    minWidth: '100%',
-                    height: '100%',
-                    flex: 1
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '6px 16px',
+                    padding: '12px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '6px',
+                    marginBottom: '10px',
+                    maxHeight: '120px',
+                    overflowY: 'auto',
+                    flexShrink: 0
+                }}>
+                    {(() => {
+                        const items = [];
+                        if (isPieOrDonut || chartType === 'funnel') {
+                            filteredData.forEach((row, index) => {
+                                items.push({
+                                    name: String(row.name).replace(/\n/g, ' '),
+                                    color: activePalette[index % activePalette.length],
+                                    field: row.name,
+                                    canToggle: false
+                                });
+                            });
+                        } else {
+                            const targetSeries = seriesNames || ["완료", "선정탈락", "쿼터오버"];
+                            targetSeries.forEach((s, index) => {
+                                const field = typeof s === 'string' ? s : s.field;
+                                const label = typeof s === 'string' ? s : s.name;
+                                items.push({
+                                    name: String(label).replace(/\n/g, ' '),
+                                    color: activePalette[index % activePalette.length],
+                                    field: field,
+                                    canToggle: true
+                                });
+                            });
+                        }
+
+                        return items.map((item, idx) => {
+                            const isHidden = item.canToggle && visibleSeries[item.field] === false;
+                            return (
+                                <div
+                                    key={idx}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'flex-start',
+                                        gap: '6px',
+                                        fontSize: '12px',
+                                        color: '#334155',
+                                        cursor: item.canToggle ? 'pointer' : 'default',
+                                        opacity: isHidden ? 0.4 : 1,
+                                        transition: 'opacity 0.2s',
+                                        maxWidth: '100%'
+                                    }}
+                                    onClick={() => {
+                                        if (item.canToggle) {
+                                            setVisibleSeries(prev => ({ ...prev, [item.field]: !prev[item.field] }));
+                                        }
+                                    }}
+                                    title={item.name}
+                                >
+                                    <div style={{ width: '12px', height: '12px', backgroundColor: isHidden ? '#cbd5e1' : item.color, borderRadius: '2px', flexShrink: 0, marginTop: '2px' }}></div>
+                                    <span style={{
+                                        wordBreak: 'keep-all',
+                                        lineHeight: '1.4',
+                                        flex: 1
+                                    }}>
+                                        {item.name}
+                                    </span>
+                                </div>
+                            );
+                        });
+                    })()}
+                </div>
+            )}
+
+            <div style={{ flex: 1, overflowX: isHorizontalScrollType ? 'auto' : 'hidden', overflowY: isVerticalScrollType ? 'auto' : 'hidden', width: '100%', display: 'flex', flexDirection: 'column' }}>
+                <div style={{
+                    width: typeof calculatedWidth === 'number' ? `${calculatedWidth}px` : calculatedWidth,
+                    minWidth: typeof calculatedWidth === 'number' ? `${calculatedWidth}px` : '100%',
+                    height: typeof calculatedHeight === 'number' ? `${calculatedHeight}px` : calculatedHeight,
+                    minHeight: typeof calculatedHeight === 'number' ? `${calculatedHeight}px` : '100%',
+                    flex: isVerticalScrollType || isHorizontalScrollType ? 'none' : 1
                 }}>
                     <Chart
                         style={{ width: '100%', height: '100%' }}
                         key={`${chartType}-${JSON.stringify(visibleSeries)}`}
-                        onLegendItemClick={onLegendItemClick}
                         seriesColors={CHART_COLORS}
                         transitions={false}
                     >
                         {/* 차트 여백 조정: 하단에 가로 스크롤과 레이블 공간 확보 */}
-                        <ChartArea background="none" margin={{ top: 20, bottom: showLegend ? 20 : 60, left: 10, right: 10 }} />
-                        {!isHeatmap && <ChartLegend visible={showLegend} position="bottom" orientation="horizontal" margin={{ top: 10 }} />}
+                        <ChartArea background="none" margin={{ top: 20, bottom: 20, left: 10, right: 10 }} />
+                        <ChartLegend visible={false} />
 
                         {/* Axes for Standard Charts */}
                         {
@@ -400,9 +504,13 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                     <ChartCategoryAxisItem
                                         categories={filteredData.map(d => d.name)}
                                         labels={{
-                                            rotation: filteredData.length > 5 ? -45 : 0,
+                                            rotation: (filteredData.length > 5 && !filteredData.some(d => String(d.name).includes('\n')) && chartType !== 'bar') ? -45 : 0,
                                             padding: { top: 10 },
-                                            content: (e) => (labelLimit > 0 && e.value && e.value.length > labelLimit) ? e.value.substring(0, labelLimit) + '...' : e.value
+                                            content: (e) => {
+                                                if (!e.value) return '';
+                                                const limit = labelLimit > 0 ? labelLimit : 12; // 12자 제한 추가
+                                                return String(e.value).split('\n').map(l => l.length > limit ? l.substring(0, limit) + '...' : l).join('\n');
+                                            }
                                         }}
                                     />
                                 </ChartCategoryAxis>
@@ -411,7 +519,18 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                         {
                             isRadar && (
                                 <ChartCategoryAxis>
-                                    <ChartCategoryAxisItem categories={filteredData.map(d => d.name)} />
+                                    <ChartCategoryAxisItem
+                                        categories={filteredData.map(d => String(d.name).replace(/\n/g, ' '))}
+                                        labels={{
+                                            visible: filteredData.length <= 30,
+                                            font: "11px sans-serif",
+                                            content: (e) => {
+                                                if (!e.value) return '';
+                                                const limit = labelLimit > 0 ? labelLimit : 12;
+                                                return String(e.value).length > limit ? String(e.value).substring(0, limit) + '...' : e.value;
+                                            }
+                                        }}
+                                    />
                                 </ChartCategoryAxis>
                             )
                         }
@@ -452,9 +571,16 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                             name="xAxis"
                                             categories={filteredData.map(d => typeof d === 'string' ? d : (d.name || d.category || ''))}
                                             labels={{
-                                                rotation: filteredData.length > 5 ? -45 : 0,
+                                                rotation: 0,
                                                 padding: { top: 10 },
-                                                content: (e) => (labelLimit > 0 && e.value && e.value.length > labelLimit) ? e.value.substring(0, labelLimit) + '...' : e.value
+                                                content: (e) => {
+                                                    if (!e.value) return '';
+                                                    const maxLen = 10;
+                                                    return String(e.value).split('\n').map(part => {
+                                                        const p = part.trim();
+                                                        return p.length > maxLen ? p.substring(0, maxLen) + '...' : p;
+                                                    }).join('\n');
+                                                }
                                             }}
                                         />
                                     </ChartXAxis>
@@ -463,7 +589,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                             name="yAxis"
                                             categories={(seriesNames || []).map(s => typeof s === 'string' ? s : (s.name || s.label || ''))}
                                             labels={{
-                                                content: (e) => (labelLimit > 0 && e.value && e.value.length > labelLimit) ? e.value.substring(0, labelLimit) + '...' : e.value
+                                                content: (e) => {
+                                                    if (!e.value) return '';
+                                                    const limit = labelLimit > 0 ? labelLimit : 15;
+                                                    let text = String(e.value).replace(/\n/g, ' ');
+                                                    return text.length > limit ? text.substring(0, limit) + '...' : text;
+                                                }
                                             }}
                                         />
                                     </ChartYAxis>
@@ -478,6 +609,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             shadow={{ visible: false }}
                             padding={0}
                             opacity={1}
+                            animation={false}
                             render={(e) => {
                                 const category = e.point ? e.point.category : e.category;
                                 const value = e.point ? e.point.value : e.value;
@@ -488,8 +620,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                 // 히트맵용 심플 스타일
                                 if (isHeatmap) {
                                     return (
-                                        <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500' }}>
-                                            <div style={{ opacity: 0.9, fontSize: '11px', marginBottom: '2px' }}>{e.point?.dataItem?.y} - {e.point?.dataItem?.x}</div>
+                                        <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500', maxWidth: '300px', whiteSpace: 'pre-wrap', wordBreak: 'keep-all', textAlign: 'left', lineHeight: '1.4' }}>
+                                            <div style={{ opacity: 0.9, fontSize: '11px', marginBottom: '2px' }}>{String(e.point?.dataItem?.y).replace(/\n/g, ' ')}\n{e.point?.dataItem?.x}</div>
                                             <strong>{e.point?.dataItem?.value}{suffix}</strong>
                                         </div>
                                     );
@@ -499,11 +631,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                 if (isPieOrDonut || chartType === 'funnel') {
                                     const pctValue = e.point?.percentage ? (e.point.percentage * 100).toFixed(1) : value;
                                     return (
-                                        <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500' }}>
-                                            <strong>
-                                                {category}: {value}{suffix}
-                                                {chartType === 'pie' && suffix !== '%' && ` (${pctValue}%)`}
-                                            </strong>
+                                        <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500', maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'keep-all', textAlign: 'left', lineHeight: '1.4' }}>
+                                            <div style={{ opacity: 0.9, fontSize: '11px', marginBottom: '4px' }}>{category}</div>
+                                            <div>
+                                                <strong>{value}{suffix}</strong>
+                                                {chartType === 'pie' && suffix !== '%' && <span style={{ opacity: 0.9, fontSize: '11px', marginLeft: '4px' }}>({pctValue}%)</span>}
+                                            </div>
                                         </div>
                                     );
                                 }
@@ -516,7 +649,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                         borderRadius: '4px',
                                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
                                         fontSize: '13px',
-                                        fontWeight: '500'
+                                        fontWeight: '500',
+                                        maxWidth: '300px',
+                                        whiteSpace: 'normal',
+                                        wordBreak: 'keep-all',
+                                        textAlign: 'left',
+                                        lineHeight: '1.4'
                                     }}>
                                         <div style={{ opacity: 0.9, fontSize: '11px', marginBottom: '2px' }}>
                                             {category}

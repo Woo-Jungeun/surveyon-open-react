@@ -101,63 +101,48 @@ const FullscreenModal = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const getChartTypeName = (mode) => {
-        const map = {
-            'column': '막대형', 'stackedColumn': '누적막대형', 'stacked100Column': '100%누적막대형',
-            'line': '선형', 'pie': '원형', 'donut': '도넛형', 'radarArea': '방사형',
-            'funnel': '깔때기', 'scatterPoint': '점도표', 'area': '영역형', 'map': '지도', 'heatmap': '트리맵', 'wordCloud': '워드클라우드'
-        };
-        return map[mode] || '차트';
-    };
-
-    const handleDownload = (format) => {
+    const handleDownload = async (format) => {
+        const typeName = localChartMode || 'column';
+        const fileName = `crosstab_${typeName}`;
         if (!chartContainerRef.current) return;
-        const svgElement = chartContainerRef.current.querySelector('svg');
-        if (!svgElement) {
-            alert('차트 이미지를 찾을 수 없습니다.');
-            return;
-        }
-
-        const bbox = svgElement.getBoundingClientRect();
-        let width = bbox.width;
-        let height = bbox.height;
-
-        // Clone and prepare SVG
-        const clonedSvg = svgElement.cloneNode(true);
-        clonedSvg.setAttribute('width', width);
-        clonedSvg.setAttribute('height', height);
-
-        const svgString = new XMLSerializer().serializeToString(clonedSvg);
-
-        if (format === 'svg') {
-            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `crosstab_${localChartMode}.svg`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-        } else if (format === 'png') {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-
-            img.onload = () => {
-                canvas.width = width * 2;
-                canvas.height = height * 2;
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-                canvas.toBlob((blob) => {
-                    saveAs(blob, `crosstab_${localChartMode}.png`);
+        try {
+            let svgElement = chartContainerRef.current.querySelector('.k-chart svg');
+            if (!svgElement) {
+                const allSvgs = chartContainerRef.current.querySelectorAll('svg');
+                svgElement = Array.from(allSvgs).find(svg => {
+                    const bbox = svg.getBBox();
+                    return bbox.width > 100 && bbox.height > 100;
                 });
-            };
-            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+            }
+            if (!svgElement) return;
+            const bbox = svgElement.getBBox();
+            const width = bbox.width || 800;
+            const height = bbox.height || 600;
+            const clonedSvg = svgElement.cloneNode(true);
+            clonedSvg.setAttribute('width', width);
+            clonedSvg.setAttribute('height', height);
+            const svgString = new XMLSerializer().serializeToString(clonedSvg);
+            if (format === 'svg') {
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                saveAs(blob, `${fileName}.svg`);
+            } else if (format === 'png') {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.onload = () => {
+                    canvas.width = width * 2;
+                    canvas.height = height * 2;
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob((blob) => saveAs(blob, `${fileName}.png`));
+                };
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+            }
+            setShowDownloadMenu(false);
+        } catch (error) {
+            console.error('Download error:', error);
         }
-        setShowDownloadMenu(false);
     };
     if (!isOpen) return null;
 
@@ -283,15 +268,15 @@ const FullscreenModal = ({
                                     )}
                                 </div>
                                 <div className="toolbar-divider"></div>
-                                <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적형 차트"><Layers size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'line' ? 'active' : ''}`} onClick={() => setLocalChartMode('line')} title="선형 차트"><LineChart size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'pie' ? 'active' : ''}`} onClick={() => setLocalChartMode('pie')} title="원형 차트"><PieChart size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'donut' ? 'active' : ''}`} onClick={() => setLocalChartMode('donut')} title="도넛형 차트"><Donut size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setLocalChartMode('radarArea')} title="방사형 차트"><Aperture size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setLocalChartMode('scatterPoint')} title="점 도표"><MoreHorizontal size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'area' ? 'active' : ''}`} onClick={() => setLocalChartMode('area')} title="영역형 차트"><AreaChart size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setLocalChartMode('heatmap')} title="트리맵"><LayoutGrid size={18} /></button>
+                                <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="막대형"><BarChart2 size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적 막대형"><Layers size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'line' ? 'active' : ''}`} onClick={() => setLocalChartMode('line')} title="선형"><LineChart size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'pie' ? 'active' : ''}`} onClick={() => setLocalChartMode('pie')} title="원형"><PieChart size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'donut' ? 'active' : ''}`} onClick={() => setLocalChartMode('donut')} title="도넛형"><Donut size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setLocalChartMode('radarArea')} title="방사형"><Aperture size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setLocalChartMode('scatterPoint')} title="점도표"><MoreHorizontal size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'area' ? 'active' : ''}`} onClick={() => setLocalChartMode('area')} title="영역형"><AreaChart size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setLocalChartMode('heatmap')} title="히트맵"><LayoutGrid size={18} /></button>
                                 <button className={`view-option-btn ${localChartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => setLocalChartMode('wordCloud')} title="워드클라우드"><Cloud size={18} /></button>
                             </div>
                         )}
@@ -727,13 +712,9 @@ const FullscreenModal = ({
                         </div>
                     )}
 
-                    {type === 'chart' && chartData && chartData.length > 0 && (
-                        <div className="fullscreen-chart-wrapper" ref={chartContainerRef} style={{ overflowX: 'auto', overflowY: 'hidden', height: '100%', flex: 1 }}>
-                            <div style={{
-                                width: `${Math.max(100, chartData.length * 120)}px`,
-                                minWidth: '100%',
-                                height: '100%'
-                            }}>
+                    {type === 'chart' && (
+                        <div className="fullscreen-chart-wrapper" ref={chartContainerRef} style={{ overflow: 'hidden', height: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ flex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <KendoChart
                                     data={localComputedChartData}
                                     seriesNames={localComputedSeriesNames}
