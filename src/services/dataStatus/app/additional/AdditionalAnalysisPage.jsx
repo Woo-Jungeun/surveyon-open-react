@@ -2007,6 +2007,7 @@ const AdditionalAnalysisPage = () => {
                 setDisplayMode={fullscreenModal.setDisplayMode}
                 paletteId={globalPaletteId}
                 setPaletteId={setGlobalPaletteId}
+                tableName={fullscreenModal.tableName}
             />
 
             <CreateTablePopup

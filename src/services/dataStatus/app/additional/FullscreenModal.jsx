@@ -18,7 +18,8 @@ const FullscreenModal = ({
     displayMode,
     setDisplayMode,
     paletteId,
-    setPaletteId
+    setPaletteId,
+    tableName
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
     const [localDisplayMode, setLocalDisplayMode] = useState(displayMode);
@@ -101,9 +102,18 @@ const FullscreenModal = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const getChartTypeName = (mode) => {
+        const typeMap = {
+            'column': 'column', 'bar': 'bar', 'stackedColumn': 'stacked_column', 'stacked100Column': 'stacked_100_column',
+            'line': 'line', 'pie': 'pie', 'donut': 'donut', 'radarArea': 'radar', 'funnel': 'funnel',
+            'scatterPoint': 'scatter', 'area': 'area', 'map': 'map', 'heatmap': 'heatmap', 'wordCloud': 'wordCloud'
+        };
+        return typeMap[mode] || 'chart';
+    };
+
     const handleDownload = async (format) => {
-        const typeName = localChartMode || 'column';
-        const fileName = `crosstab_${typeName}`;
+        const typeName = getChartTypeName(localChartMode || 'column');
+        const fileName = `${tableName || 'CrossTab'}_${typeName}`;
         if (!chartContainerRef.current) return;
         try {
             let svgElement = chartContainerRef.current.querySelector('.k-chart svg');

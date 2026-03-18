@@ -600,7 +600,8 @@ export const ResultSectionBlock = ({
                                                         chartMode,
                                                         displayMode,
                                                         setDisplayMode, // Pass the setter
-                                                        paletteId
+                                                        paletteId,
+                                                        tableName
                                                     })}
                                                     className="action-btn"
                                                 >
@@ -843,7 +844,8 @@ export const ResultSectionBlock = ({
                                                         chartMode,
                                                         displayMode,
                                                         setDisplayMode, // Pass the setter
-                                                        paletteId
+                                                        paletteId,
+                                                        tableName
                                                     })}
                                                     className="action-btn"
                                                 >
@@ -1104,7 +1106,8 @@ export const ResultSectionBlock = ({
                                                         chartMode: activeChartMode,
                                                         suffix,
                                                         displayMode,
-                                                        paletteId
+                                                        paletteId,
+                                                        tableName
                                                     })}
                                                     className="action-btn"
                                                 >
