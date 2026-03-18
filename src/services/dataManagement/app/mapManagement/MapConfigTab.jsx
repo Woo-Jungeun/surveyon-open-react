@@ -149,25 +149,29 @@ const LogicCell = (props) => {
     const isEditing = dataItem.id === editingRowId || dataItem.isNew;
 
     return (
-        <td style={{ ...style, verticalAlign: 'middle', textAlign: 'center', padding: '4px 8px' }} className={className}>
-            <div className={`logic-cell-wrapper ${dataItem.logic ? 'has-logic' : 'no-logic'}`}>
-                {dataItem.logic && (
-                    <span
-                        className="logic-cell-text"
-                        title={dataItem.logic}
-                    >
-                        {dataItem.logic}
-                    </span>
-                )}
-
+        <td style={{ ...style, verticalAlign: 'middle', padding: 0 }} className={className}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', height: '100%', padding: '8px 10px', boxSizing: 'border-box' }}>
+                <div style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#4b5563', fontSize: '13px', textAlign: 'left', lineHeight: '1.4' }}>
+                    {dataItem.logic}
+                </div>
                 <button
                     type="button"
-                    className="logic-cell-btn"
                     onClick={(e) => {
                         e.stopPropagation();
                         setEditingLogicPopupOpen(dataItem);
                     }}
                     title="로직 편집"
+                    style={{
+                        backgroundColor: '#fff',
+                        color: '#059669',
+                        border: '1px solid #059669',
+                        borderRadius: '4px',
+                        padding: '4px 12px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        cursor: 'pointer',
+                        flexShrink: 0
+                    }}
                 >
                     설정
                 </button>
