@@ -98,23 +98,31 @@ const ProPermissionModal = ({ open, onClose }) => {
             setLoading(true);
             let worker_position = "";
             let worker_name_override = formData.worker_name;
+            let page_id = "";
             if (formData.permission_gubun === "고객(읽기)") worker_position = "고객";
             else if (formData.permission_gubun === "일반(읽기)") worker_position = "일반";
             else if (formData.permission_gubun === "H-SRT고객") {
                 worker_position = "H-SRT고객";
                 worker_name_override = "H-SRT고객";
+                page_id = sessionStorage.getItem("pageId") || "";
+            }
+
+            const reqParams = {
+                gb: "worker_enter", projectname, projectnum, ...formData,
+                worker_name: worker_name_override,
+                worker_position: formData.worker_position || worker_position || "",
+                worker_expired: formData.worker_expired
+                    ? moment(formData.worker_expired).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
+                    : "",
+                user: auth?.user?.userId || "",
+            };
+
+            if (formData.permission_gubun === "H-SRT고객") {
+                reqParams.page_id = page_id;
             }
 
             const res = await proPermissionData.mutateAsync({
-                params: {
-                    gb: "worker_enter", projectname, projectnum, ...formData,
-                    worker_name: worker_name_override,
-                    worker_position: formData.worker_position || worker_position || "",
-                    worker_expired: formData.worker_expired
-                        ? moment(formData.worker_expired).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
-                        : "",
-                    user: auth?.user?.userId || "",
-                },
+                params: reqParams,
             });
             if (res?.success === "777") {
                 modal.showConfirm("알림", "프로젝트 권한이 등록되었습니다.", {
@@ -124,12 +132,38 @@ const ProPermissionModal = ({ open, onClose }) => {
                             title: "확인",
                             click: async () => {
                                 const pageId = sessionStorage.getItem("pageId");
-                                if (pageId && ["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun)) {
+                                if (pageId) {
+                                    let targetUserId = formData.worker_id;
+
+                                    // [TODO: 차후 API 적용 시 아래 주석 해제하여 사용]
+                                    /*
+                                    // H-SRT고객의 경우 서버에서 생성해서 내려준 workerid를 사용
+                                    if (formData.permission_gubun === "H-SRT고객" && res.resultjson && res.resultjson.length > 0) {
+                                        targetUserId = res.resultjson[0].workerid;
+                                    }
+                                    */
+
+                                    // (임시 조치) API 미운영 상태이므로 일단 리스트를 다시 조회해서 가장 마지막 항목의 worker_id를 가져옴
+                                    if (formData.permission_gubun === "H-SRT고객") {
+                                        try {
+                                            const listRes = await proPermissionData.mutateAsync({
+                                                params: { gb: "worker_list", projectnum, user: auth?.user?.userId || "" }
+                                            });
+                                            if (listRes?.success === "777" && listRes.resultjson && listRes.resultjson.length > 0) {
+                                                const listData = listRes.resultjson;
+                                                targetUserId = listData[listData.length - 1].worker_id || listData[listData.length - 1].id;
+                                            }
+                                        } catch (e) {
+                                            console.error("임시 목록 조회 실패: ", e);
+                                        }
+                                    }
+
+                                    console.log("pageId", pageId, targetUserId)
                                     try {
                                         await pagesMembersSet.mutateAsync({
                                             params: {
                                                 pageid: pageId,
-                                                user_id: formData.worker_id,
+                                                user_id: targetUserId,
                                                 role: "admin",
                                                 user: auth?.user?.userId || ""
                                             }
