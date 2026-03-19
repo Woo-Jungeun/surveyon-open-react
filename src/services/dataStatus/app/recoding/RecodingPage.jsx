@@ -958,6 +958,7 @@ const RecodingPage = () => {
                                         );
 
                                         if (c.field === 'check') {
+                                            const isLogicCheckDisabled = !selectedVar?.info || selectedVar.info.length === 0;
                                             return (
                                                 <Column
                                                     key={c.field}
@@ -971,8 +972,13 @@ const RecodingPage = () => {
                                                             <button
                                                                 onClick={handleLogicCheck}
                                                                 className="recoding-logic-check-btn"
-                                                                disabled={!selectedVar?.info || selectedVar.info.length === 0}
-                                                                style={{ opacity: (!selectedVar?.info || selectedVar.info.length === 0) ? 0.5 : 1, cursor: 'pointer' }}
+                                                                disabled={isLogicCheckDisabled}
+                                                                style={{
+                                                                    cursor: 'default',
+                                                                    backgroundColor: isLogicCheckDisabled ? '#f8fafc' : undefined,
+                                                                    borderColor: isLogicCheckDisabled ? '#cbd5e1' : undefined,
+                                                                    color: isLogicCheckDisabled ? '#94a3b8' : undefined
+                                                                }}
                                                             >
                                                                 로직 체크
                                                             </button>
