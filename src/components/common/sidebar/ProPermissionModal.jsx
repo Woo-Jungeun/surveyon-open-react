@@ -105,6 +105,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                 worker_position = "H-SRT고객";
                 worker_name_override = "H-SRT고객";
                 page_id = sessionStorage.getItem("pageId") || "";
+                page_title = sessionStorage.getItem("pagetitle") || "";
             }
 
             const reqParams = {
@@ -119,6 +120,7 @@ const ProPermissionModal = ({ open, onClose }) => {
 
             if (formData.permission_gubun === "H-SRT고객") {
                 reqParams.page_id = page_id;
+                reqParams.page_title = page_title;
             }
 
             const res = await proPermissionData.mutateAsync({
