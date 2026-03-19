@@ -457,6 +457,20 @@ body:has(.pp-modal-overlay) .k-list-item:hover {
     border: none !important;
 }
 
+/* DatePicker 입력창 기본 테두리(이중 테두리) 현상 제거 */
+.pp-modal-container .k-datepicker .k-input,
+.pp-modal-container .k-datepicker .k-input-solid,
+.pp-modal-container .k-datepicker .k-input-inner {
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* DatePicker 텍스트 패딩 조정 (이중 테두리 제거 후 위치 보정) */
+.pp-modal-container .k-datepicker .k-input-inner {
+    padding-left: 12px !important;
+}
+
 /* 기존 Kendo SVG 아이콘 및 span 강제 숨김 */
 .pp-modal-container .k-datepicker .k-input-button svg,
 .pp-modal-container .k-datepicker>button svg,

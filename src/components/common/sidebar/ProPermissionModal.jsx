@@ -89,7 +89,7 @@ const ProPermissionModal = ({ open, onClose }) => {
             if (!formData.worker_name.trim()) errs.push("고객 이름을 입력해 주세요.");
             if (!formData.worker_id.trim()) errs.push("고객 이메일을 입력해 주세요.");
             if (!formData.worker_password.trim()) errs.push("고객 비밀번호를 입력해 주세요.");
-        } else {
+        } else if (formData.permission_gubun !== "H-SRT고객") {
             if (!formData.worker_name.trim()) errs.push("작업자 이름을 입력해 주세요.");
         }
         if (errs.length) { modal.showErrorAlert("알림", errs.join("\n"), { themeClass: "purple-theme" }); return; }
@@ -97,12 +97,18 @@ const ProPermissionModal = ({ open, onClose }) => {
         try {
             setLoading(true);
             let worker_position = "";
+            let worker_name_override = formData.worker_name;
             if (formData.permission_gubun === "고객(읽기)") worker_position = "고객";
             else if (formData.permission_gubun === "일반(읽기)") worker_position = "일반";
+            else if (formData.permission_gubun === "H-SRT고객") {
+                worker_position = "H-SRT고객";
+                worker_name_override = "H-SRT고객";
+            }
 
             const res = await proPermissionData.mutateAsync({
                 params: {
                     gb: "worker_enter", projectname, projectnum, ...formData,
+                    worker_name: worker_name_override,
                     worker_position: formData.worker_position || worker_position || "",
                     worker_expired: formData.worker_expired
                         ? moment(formData.worker_expired).set({ hour: 23, minute: 59, second: 59 }).format("YYYY-MM-DD HH:mm:ss")
@@ -118,7 +124,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                             title: "확인",
                             click: async () => {
                                 const pageId = sessionStorage.getItem("pageId");
-                                if (pageId) {
+                                if (pageId && ["고객(읽기)", "일반(읽기)"].includes(formData.permission_gubun)) {
                                     try {
                                         await pagesMembersSet.mutateAsync({
                                             params: {
@@ -256,7 +262,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                             <div className="pp-form-field">
                                 <label className="pp-form-label">작업 권한 <span className="pp-required">*</span></label>
                                 <DropDownList
-                                    data={["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)"]}
+                                    data={["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)", "H-SRT고객"]}
                                     value={formData.permission_gubun}
                                     onChange={(e) => handleChange("permission_gubun", e.value)}
                                     disabled={loading}
@@ -269,7 +275,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     <label className="pp-form-label">고객명 <span className="pp-required">*</span></label>
                                     <Input className="k-input k-input-solid" value={formData.worker_name || ""} onChange={(e) => handleChange("worker_name", e.value)} disabled={loading} placeholder="고객명을 입력해 주세요" />
                                 </div>
-                            ) : (
+                            ) : formData.permission_gubun === "H-SRT고객" ? null : (
                                 <div className="pp-form-field">
                                     <label className="pp-form-label">작업자 선택 <span className="pp-required">*</span></label>
                                     <DropDownList
@@ -372,7 +378,7 @@ const ProPermissionModal = ({ open, onClose }) => {
                                         const parts = val.split(" ");
                                         return (
                                             <td className={props.className} style={{ textAlign: "center" }}>
-                                                <div style={{ fontSize: "1ㄹpx", lineHeight: "1.4" }}>
+                                                <div style={{ fontSize: "13px", lineHeight: "1.4" }}>
                                                     {parts[0]}
                                                     {parts[1] && <><br />{parts[1]}</>}
                                                 </div>
