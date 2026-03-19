@@ -1639,16 +1639,25 @@ const OptionSettingTab1 = forwardRef((props, ref) => {
 
                                             let content = answerText;
 
-                                            // excerpts가 null/빈값이 아니고, 클리닝응답과 100% 일치하지 않으며, 안에 포함되어 있을 경우 하이라이트
-                                            if (excerpts && String(answerText).trim() !== String(excerpts).trim() && String(answerText).includes(String(excerpts))) {
-                                                const excerptsStr = String(excerpts);
-                                                content = String(answerText).split(excerptsStr).reduce((prev, current, i) => {
-                                                    if (!i) return [current];
-                                                    return prev.concat(
-                                                        <span key={i} style={{ color: '#fb9320', fontWeight: '600' }}>{excerptsStr}</span>,
-                                                        current
-                                                    );
-                                                }, []);
+                                            // excerpts에 @#@ 구분자가 있을 경우 여러 문장 강조, 없으면 단일 강조
+                                            if (excerpts) {
+                                                const keywords = String(excerpts).split('@#@').filter(k => k);
+
+                                                if (keywords.length > 0 && String(answerText).trim() !== String(excerpts).trim()) {
+                                                    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                                                    // 긴 문장부터 매칭되도록 길이 역순 정렬
+                                                    const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
+                                                    const pattern = new RegExp(`(${sortedKeywords.map(escapeRegExp).join('|')})`, 'g');
+
+                                                    const parts = String(answerText).split(pattern);
+                                                    content = parts.map((part, i) => {
+                                                        // 정규식 캡처 그룹으로 split 시 홀수 인덱스가 매치된 문자열
+                                                        if (i % 2 === 1) {
+                                                            return <span key={i} style={{ color: '#fb9320', fontWeight: '600' }}>{part}</span>;
+                                                        }
+                                                        return part;
+                                                    });
+                                                }
                                             }
 
                                             return (
