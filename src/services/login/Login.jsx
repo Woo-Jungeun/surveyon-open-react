@@ -17,7 +17,7 @@ const Login = () => {
     //체크박스 상태
     const [isSavedId, setIsSavedId] = useState(formData.user !== null && formData.user !== "");
     const modal = useContext(modalContext);
-    const { loginMutation } = LoginApi();
+    const { loginMutation, loginCsMutation } = LoginApi();
 
     /**
      * 로그인 API
@@ -31,7 +31,16 @@ const Login = () => {
             user: formData.user,
             pass: formData.pass
         };
-        const result = await loginMutation.mutateAsync(payload);
+
+        const result = location.pathname === "/cs"
+            ? await loginCsMutation.mutateAsync({
+                user: formData.user
+            })
+            : await loginMutation.mutateAsync({
+                user: formData.user,
+                pass: formData.pass
+            });
+
         if (result.success === "777") {
             // 아이디 기억하기
             if (isSavedId) {
@@ -61,12 +70,14 @@ const Login = () => {
             <div className="dot-pattern"></div>
 
             {/* 뒤로가기 버튼 */}
-            <div className="login-back-area">
-                <button className="login-back-button" onClick={() => navigate('/')}>
-                    <ArrowLeft size={16} />
-                    홈으로
-                </button>
-            </div>
+            {location.pathname !== "/cs" && (
+                <div className="login-back-area">
+                    <button className="login-back-button" onClick={() => navigate('/')}>
+                        <ArrowLeft size={16} />
+                        홈으로
+                    </button>
+                </div>
+            )}
 
             <div className="login-center">
                 <div className="login-card-wrap">
@@ -107,22 +118,24 @@ const Login = () => {
                                 </div>
                             </div>
 
-                            <div className="login-field">
-                                <label>비밀번호</label>
-                                <div className="login-input-wrap">
-                                    <Lock className="input-icon" />
-                                    <input
-                                        type="password"
-                                        className="login-input"
-                                        placeholder="비밀번호를 입력하세요."
-                                        value={formData.pass}
-                                        onChange={(e) =>
-                                            setFormData((prev) => ({ ...prev, pass: e.target.value }))
-                                        }
-                                        required
-                                    />
+                            {location.pathname !== "/cs" && (
+                                <div className="login-field">
+                                    <label>비밀번호</label>
+                                    <div className="login-input-wrap">
+                                        <Lock className="input-icon" />
+                                        <input
+                                            type="password"
+                                            className="login-input"
+                                            placeholder="비밀번호를 입력하세요."
+                                            value={formData.pass}
+                                            onChange={(e) =>
+                                                setFormData((prev) => ({ ...prev, pass: e.target.value }))
+                                            }
+                                            required
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             <div className="loginBtm">
                                 <input

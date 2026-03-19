@@ -77,6 +77,63 @@ export function LoginApi() {
         }
     );
 
+    const loginCsMutation = useMutation(
+        async (data) => {
+            const payload = {
+                user: data?.user ?? ""
+            };
+            return await api.post(payload, "/Login/check/cs", "API_BASE_URL_OPENAI");
+        },
+        {
+            onSuccess: (res, v) => {
+                const parseOutput = (out) => {
+                    if (!out) return null;
+                    if (typeof out === "string") {
+                        try { return JSON.parse(out); } catch { return null; }
+                    }
+                    return out;
+                };
+                if (res?.success === "777") {
+                    const from = location.state?.from || "/";
+                    const originalState = location.state?.originalState;
+
+                    // 성공 처리: 스토어/쿠키/세션 동기화
+                    const out = parseOutput(res?.output);
+                    const info = Array.isArray(out) ? out[0] : out || {};
+                    const { username = "", groupposition = "", loginkey = "", expiration = "" } = info;
+
+                    // 1) redux 저장
+                    dispatch(
+                        login({
+                            userId: v?.user ?? "",       // mutate 시 넘긴 값
+                            userNm: username,
+                            userGroup: groupposition,
+                        })
+                    );
+                    // 2) 쿠키 저장 (로그인키 & X-Auth-Token)
+                    const cookieOptions = { path: "/", sameSite: "Lax" }; // 필요시 secure:true
+                    if (loginkey) {
+                        setCookie("TOKEN", loginkey, cookieOptions);
+                    }
+                    if (res?.Token) {
+                        setCookie("X-Auth-Token", res.Token, cookieOptions);
+                    }
+
+                    // 3) 모든 세팅 완료 후 navigate (isLoggedIn이 true가 된 다음 이동)
+                    navigate(from, { replace: true, state: originalState });
+                }
+            },
+            onError: (err, v) => {
+                modal?.showErrorAlert?.("NETWORK", "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            },
+            onMutate: () => {
+            },
+            onSettled: () => {
+            },
+
+        }
+    );
+
     /**
      * 로그아웃 api
      * */
@@ -132,5 +189,5 @@ export function LoginApi() {
         }
     );
 
-    return { loginMutation, logoutMutation, validateToken };
+    return { loginMutation, loginCsMutation, logoutMutation, validateToken };
 }

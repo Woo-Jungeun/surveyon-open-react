@@ -36,6 +36,7 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/cs" element={<Login />} />
           <Route path="/board/notice" element={<BoardList type="notice" />} />
           <Route path="/board/patchnotes" element={<BoardList type="patchnotes" />} />
           <Route path="/board/:type/write" element={<BoardWrite />} />
