@@ -53,14 +53,6 @@ const MENU_ITEMS = [
       { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
     ]
   }
-  /*
-  ,{
-    label: "시스템 관리",
-    items: [
-      { label: "메뉴 권한 설정", path: "/data_status/system/menu_permission", icon: ShieldCheck },
-    ]
-  }
-  */
 ];
 
 const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
@@ -367,6 +359,19 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     }
   };
 
+  const userGroup = auth?.user?.userGroup || "";
+  const isAiSolutionTeam = userGroup === "AI솔루션팀";
+
+  const computedMenuGroups = [...MENU_ITEMS];
+  if (isAiSolutionTeam) {
+    computedMenuGroups.push({
+      label: "시스템 관리",
+      items: [
+        { label: "메뉴 권한 설정", path: "/data_status/system/menu_permission", icon: ShieldCheck },
+      ]
+    });
+  }
+
   return (
     <>
       <Sidebar
@@ -376,7 +381,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           logoClass: "menu-bar-logo",
           onClick: () => navigate("/data_status/analysis/frequency")
         }}
-        menuGroups={MENU_ITEMS}
+        menuGroups={computedMenuGroups}
         projectInfo={projectInfoData}
         pageInfo={sidebarPageInfo} // Add this
         theme="blue"
