@@ -285,13 +285,21 @@
   /* 배지 자리 축소 */
 }
 
-/* 텍스트 넘침 방지 */
+/* 텍스트 줄바꿈 허용 (기존 ellipsis 방지) */
 .lv3-display {
   display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
+
+/* Kendo Grid td 내 소분류 컬럼 직접 줄바꿈 허용 */
+#grid_01 td[data-field="lv3"] {
+  white-space: normal !important;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 
 /* 에러 배지 */
 #grid_01 td.cell-error .cell-error-badge {
@@ -641,7 +649,8 @@
 }
 
 #grid_01 .k-grid-table tr {
-  height: 38px;
+  min-height: 38px;
+  height: auto !important;
 }
 
 #grid_01 .k-pager {
