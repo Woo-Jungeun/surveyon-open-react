@@ -136,27 +136,27 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     let targetUserId = formData.worker_id;
 
                                     // [TODO: 차후 API 적용 시 아래 주석 해제하여 사용]
-                                    /*
+
                                     // H-SRT고객의 경우 서버에서 생성해서 내려준 workerid를 사용
                                     if (formData.permission_gubun === "H-SRT고객" && res.resultjson && res.resultjson.length > 0) {
                                         targetUserId = res.resultjson[0].workerid;
                                     }
-                                    */
+
 
                                     // (임시 조치) API 미운영 상태이므로 일단 리스트를 다시 조회해서 가장 마지막 항목의 worker_id를 가져옴
-                                    if (formData.permission_gubun === "H-SRT고객") {
-                                        try {
-                                            const listRes = await proPermissionData.mutateAsync({
-                                                params: { gb: "worker_list", projectnum, user: auth?.user?.userId || "" }
-                                            });
-                                            if (listRes?.success === "777" && listRes.resultjson && listRes.resultjson.length > 0) {
-                                                const listData = listRes.resultjson;
-                                                targetUserId = listData[listData.length - 1].worker_id || listData[listData.length - 1].id;
-                                            }
-                                        } catch (e) {
-                                            console.error("임시 목록 조회 실패: ", e);
-                                        }
-                                    }
+                                    // if (formData.permission_gubun === "H-SRT고객") {
+                                    //     try {
+                                    //         const listRes = await proPermissionData.mutateAsync({
+                                    //             params: { gb: "worker_list", projectnum, user: auth?.user?.userId || "" }
+                                    //         });
+                                    //         if (listRes?.success === "777" && listRes.resultjson && listRes.resultjson.length > 0) {
+                                    //             const listData = listRes.resultjson;
+                                    //             targetUserId = listData[listData.length - 1].worker_id || listData[listData.length - 1].id;
+                                    //         }
+                                    //     } catch (e) {
+                                    //         console.error("임시 목록 조회 실패: ", e);
+                                    //     }
+                                    // }
 
                                     console.log("pageId", pageId, targetUserId)
                                     try {
