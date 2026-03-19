@@ -169,26 +169,88 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
 
             const padding = 20;
             let width, height;
+            let minX = 0, minY = 0;
 
             if (viewBox) {
-                const [, , vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+                const [vx, vy, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+                minX = vx;
+                minY = vy;
                 width = vbWidth;
                 height = vbHeight;
             } else {
+                minX = Math.min(0, bbox.x) - padding;
+                minY = Math.min(0, bbox.y) - padding;
                 width = Math.max(bbox.width, rect.width) + padding * 2;
                 height = Math.max(bbox.height, rect.height) + padding * 2;
             }
 
             // SVG 복제 및 설정
             const clonedSvg = svgElement.cloneNode(true);
-            clonedSvg.setAttribute('width', width);
-            clonedSvg.setAttribute('height', height);
+            let finalWidth = width;
+            let finalHeight = height;
 
-            if (!viewBox) {
-                const minX = Math.min(0, bbox.x) - padding;
-                const minY = Math.min(0, bbox.y) - padding;
-                clonedSvg.setAttribute('viewBox', `${minX} ${minY} ${width} ${height}`);
+            // HTML 범례가 있으면 SVG의 하단에 수동으로 그려 넣음 (SVG/PNG 다운로드 모두 적용)
+            const legendDiv = chartContainerRef.current.querySelector('.custom-kendo-legend');
+            if (legendDiv) {
+                const legendItems = Array.from(legendDiv.children);
+                if (legendItems.length > 0) {
+                    const canvasHelper = document.createElement('canvas');
+                    const ctxWrapper = canvasHelper.getContext('2d');
+                    ctxWrapper.font = '12px sans-serif';
+
+                    const legendGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    legendGroup.setAttribute('transform', `translate(${minX + 10}, ${minY + height + 15})`);
+
+                    let curX = 0;
+                    let curY = 0;
+                    let maxLegendWidth = finalWidth - 20;
+
+                    legendItems.forEach(item => {
+                        const box = item.querySelector('div');
+                        const span = item.querySelector('span');
+                        if (!box || !span) return;
+
+                        const color = box.style.backgroundColor;
+                        const text = span.textContent || span.innerText || '';
+                        const textWidth = ctxWrapper.measureText(text).width;
+                        const itemWidth = 10 + 6 + textWidth + 16;
+
+                        if (curX + itemWidth > maxLegendWidth && curX > 0) {
+                            curX = 0;
+                            curY += 20;
+                        }
+
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', curX);
+                        rect.setAttribute('y', curY + 2);
+                        rect.setAttribute('width', 10);
+                        rect.setAttribute('height', 10);
+                        rect.setAttribute('fill', color);
+                        rect.setAttribute('rx', 2);
+
+                        const textNode = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        textNode.setAttribute('x', curX + 16);
+                        textNode.setAttribute('y', curY + 11);
+                        textNode.setAttribute('font-size', '12px');
+                        textNode.setAttribute('fill', item.style.opacity === '0.4' ? '#94a3b8' : '#334155');
+                        textNode.setAttribute('font-family', 'sans-serif');
+                        textNode.textContent = text;
+
+                        legendGroup.appendChild(rect);
+                        legendGroup.appendChild(textNode);
+
+                        curX += itemWidth;
+                    });
+
+                    const legendAddedHeight = curY + 30;
+                    finalHeight += legendAddedHeight;
+                    clonedSvg.appendChild(legendGroup);
+                }
             }
+
+            clonedSvg.setAttribute('viewBox', `${minX} ${minY} ${finalWidth} ${finalHeight}`);
+            clonedSvg.setAttribute('width', finalWidth);
+            clonedSvg.setAttribute('height', finalHeight);
 
             const svgString = new XMLSerializer().serializeToString(clonedSvg);
 
@@ -212,8 +274,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
 
                 img.onload = () => {
                     // 캔버스를 SVG 크기에 맞춤
-                    canvas.width = width * 2; // 화질 저하 방지를 위해 2배 확대
-                    canvas.height = height * 2;
+                    canvas.width = finalWidth * 2; // 화질 저하 방지를 위해 2배 확대
+                    canvas.height = finalHeight * 2;
 
                     // 흰색 배경 채우기
                     ctx.fillStyle = 'white';

@@ -438,7 +438,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             </div>
 
             {showLegend && !isHeatmap && (
-                <div style={{
+                <div className="custom-kendo-legend" style={{
                     display: 'flex',
                     flexWrap: 'wrap',
                     gap: '6px 16px',

@@ -129,8 +129,75 @@ const FullscreenModal = ({
             const width = bbox.width || 800;
             const height = bbox.height || 600;
             const clonedSvg = svgElement.cloneNode(true);
-            clonedSvg.setAttribute('width', width);
-            clonedSvg.setAttribute('height', height);
+            let finalWidth = width;
+            let finalHeight = height;
+
+            const padding = 10; // Add some padding around the chart
+            const minX = Math.min(0, bbox.x) - padding;
+            const minY = Math.min(0, bbox.y) - padding;
+
+            const legendDiv = chartContainerRef.current.querySelector('.custom-kendo-legend');
+            if (legendDiv) {
+                const legendItems = Array.from(legendDiv.children);
+                if (legendItems.length > 0) {
+                    const canvasHelper = document.createElement('canvas');
+                    const ctxWrapper = canvasHelper.getContext('2d');
+                    ctxWrapper.font = '12px sans-serif';
+
+                    const legendGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    legendGroup.setAttribute('transform', `translate(${minX + 10}, ${minY + height + 15})`);
+
+                    let curX = 0;
+                    let curY = 0;
+                    let maxLegendWidth = finalWidth - 20;
+
+                    legendItems.forEach(item => {
+                        const box = item.querySelector('div');
+                        const span = item.querySelector('span');
+                        if (!box || !span) return;
+
+                        const color = box.style.backgroundColor;
+                        const text = span.textContent || span.innerText || '';
+                        const textWidth = ctxWrapper.measureText(text).width;
+                        const itemWidth = 10 + 6 + textWidth + 16;
+
+                        if (curX + itemWidth > maxLegendWidth && curX > 0) {
+                            curX = 0;
+                            curY += 20;
+                        }
+
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', curX);
+                        rect.setAttribute('y', curY + 2);
+                        rect.setAttribute('width', 10);
+                        rect.setAttribute('height', 10);
+                        rect.setAttribute('fill', color);
+                        rect.setAttribute('rx', 2);
+
+                        const textNode = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        textNode.setAttribute('x', curX + 16);
+                        textNode.setAttribute('y', curY + 11);
+                        textNode.setAttribute('font-size', '12px');
+                        textNode.setAttribute('fill', item.style.opacity === '0.4' ? '#94a3b8' : '#334155');
+                        textNode.setAttribute('font-family', 'sans-serif');
+                        textNode.textContent = text;
+
+                        legendGroup.appendChild(rect);
+                        legendGroup.appendChild(textNode);
+
+                        curX += itemWidth;
+                    });
+
+                    const legendAddedHeight = curY + 30;
+                    finalHeight += legendAddedHeight;
+                    clonedSvg.appendChild(legendGroup);
+                }
+            }
+
+            clonedSvg.setAttribute('viewBox', `${minX} ${minY} ${finalWidth} ${finalHeight}`);
+            clonedSvg.setAttribute('width', finalWidth);
+            clonedSvg.setAttribute('height', finalHeight);
+
             const svgString = new XMLSerializer().serializeToString(clonedSvg);
             if (format === 'svg') {
                 const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
@@ -140,8 +207,8 @@ const FullscreenModal = ({
                 const ctx = canvas.getContext('2d');
                 const img = new Image();
                 img.onload = () => {
-                    canvas.width = width * 2;
-                    canvas.height = height * 2;
+                    canvas.width = finalWidth * 2;
+                    canvas.height = finalHeight * 2;
                     ctx.fillStyle = 'white';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
