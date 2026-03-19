@@ -702,8 +702,9 @@ const RecodingPage = () => {
 
 
 
-    const handleDeleteVariable = () => {
-        if (!auth?.user?.userId || !selectedVar.id) return;
+    const handleDeleteVariable = (deleteId) => {
+        const targetId = deleteId || selectedVar?.id;
+        if (!auth?.user?.userId || !targetId) return;
 
         modal.showConfirm("알림", "선택한 문항을 삭제하시겠습니까?", {
             btns: [
@@ -723,7 +724,7 @@ const RecodingPage = () => {
                             const result = await deleteRecodedVariable.mutateAsync({
                                 user: userId,
                                 pageid: pageId,
-                                variables: [selectedVar.id]
+                                variables: [targetId]
                             });
 
                             if (result?.success === "777") {
@@ -739,7 +740,12 @@ const RecodingPage = () => {
                                         info: item.info || []
                                     }));
                                     setVariables(transformedData);
-                                    handleAddVariable();
+                                    if (transformedData.length > 0) {
+                                        setSelectedVar(transformedData[0]);
+                                        setIsAddMode(false);
+                                    } else {
+                                        handleAddVariable();
+                                    }
                                 } else {
                                     setVariables([]);
                                     handleAddVariable();
