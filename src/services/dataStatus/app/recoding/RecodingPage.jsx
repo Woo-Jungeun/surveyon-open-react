@@ -164,39 +164,49 @@ const RecodingPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddMode, setIsAddMode] = useState(false); // 추가 모드 상태 관리
 
-    const { pageList: getPageList } = VariablePageApi();
-    const { getOverviewList } = FrequencyAnalysisPageApi();
+    const { pageList: getPageList, getOriginalVariables } = VariablePageApi();
     const [overviewVariables, setOverviewVariables] = useState([]);
 
     useEffect(() => {
-        const fetchOverviewVars = async () => {
+        const fetchOriginalVars = async () => {
             if (!auth?.user?.userId) return;
             const pageId = sessionStorage.getItem("pageId");
             if (!pageId) return;
             try {
-                const payload = {
-                    pageid: pageId,
+                const result = await getOriginalVariables.mutateAsync({
                     user: auth.user.userId,
-                    start: 0,
-                    limit: 10000
-                };
-                const result = await getOverviewList.mutateAsync(payload);
+                    pageid: pageId
+                });
+
                 if (result?.success === "777" && result.resultjson) {
-                    const overviewList = result.resultjson.tables || [];
-                    const formattedVars = overviewList.map(item => ({
-                        id: item.table_id || item.id,
-                        sysName: item.table_id || item.id,
-                        label: item.title || item.label || item.name || item.table_id || item.id,
-                        info: []
-                    }));
+                    const originalList = Object.values(result.resultjson);
+                    const formattedVars = originalList.map(item => {
+                        const rawType = (item.type || '').toLowerCase();
+                        let color = 'gray';
+
+                        if (rawType.includes('single')) color = 'single';
+                        else if (rawType.includes('multi')) color = 'multi';
+                        else if (rawType.includes('dummy')) color = 'dummy';
+                        else if (rawType.includes('custom')) color = 'custom';
+                        else if (rawType.includes('문자') || rawType.includes('숫자') || rawType.includes('open')) color = 'open';
+
+                        return {
+                            id: item.id,
+                            sysName: item.id,
+                            label: item.label,
+                            type: item.type,
+                            color: color,
+                            info: item.info || []
+                        };
+                    });
                     setOverviewVariables(formattedVars);
                 }
             } catch (e) {
-                console.error("Failed to fetch overview vars", e);
+                console.error("Failed to fetch original vars", e);
             }
         };
         if (auth?.isLogin) {
-            fetchOverviewVars();
+            fetchOriginalVars();
         }
     }, [auth?.isLogin]);
     const [isPageListOpen, setIsPageListOpen] = useState(false);
