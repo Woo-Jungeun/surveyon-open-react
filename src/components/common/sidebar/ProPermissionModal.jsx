@@ -99,6 +99,7 @@ const ProPermissionModal = ({ open, onClose }) => {
             let worker_position = "";
             let worker_name_override = formData.worker_name;
             let page_id = "";
+            let page_title = "";
             if (formData.permission_gubun === "고객(읽기)") worker_position = "고객";
             else if (formData.permission_gubun === "일반(읽기)") worker_position = "일반";
             else if (formData.permission_gubun === "H-SRT고객") {
