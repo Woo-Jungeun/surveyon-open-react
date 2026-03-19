@@ -14,6 +14,7 @@ import { modalContext } from '../../../../components/common/Modal';
 import { VariablePageApi } from '../variable/VariablePageApi';
 import PageListPopup from '../variable/PageListPopup';
 import AdditionalAnalysisFilterPopup from '../../../../components/common/popup/AdditionalAnalysisFilterPopup';
+import { FrequencyAnalysisPageApi } from '../frequency/FrequencyAnalysisPageApi';
 // const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse", "chi2", "df", "p_value"];
 const ALL_STATS = ["mean", "std", "min", "max", "n", "median", "mode", "rse"];
 
@@ -164,6 +165,40 @@ const RecodingPage = () => {
     const [isAddMode, setIsAddMode] = useState(false); // 추가 모드 상태 관리
 
     const { pageList: getPageList } = VariablePageApi();
+    const { getOverviewList } = FrequencyAnalysisPageApi();
+    const [overviewVariables, setOverviewVariables] = useState([]);
+
+    useEffect(() => {
+        const fetchOverviewVars = async () => {
+            if (!auth?.user?.userId) return;
+            const pageId = sessionStorage.getItem("pageId");
+            if (!pageId) return;
+            try {
+                const payload = {
+                    pageid: pageId,
+                    user: auth.user.userId,
+                    start: 0,
+                    limit: 10000
+                };
+                const result = await getOverviewList.mutateAsync(payload);
+                if (result?.success === "777" && result.resultjson) {
+                    const overviewList = result.resultjson.tables || [];
+                    const formattedVars = overviewList.map(item => ({
+                        id: item.table_id || item.id,
+                        sysName: item.table_id || item.id,
+                        label: item.title || item.label || item.name || item.table_id || item.id,
+                        info: []
+                    }));
+                    setOverviewVariables(formattedVars);
+                }
+            } catch (e) {
+                console.error("Failed to fetch overview vars", e);
+            }
+        };
+        if (auth?.isLogin) {
+            fetchOverviewVars();
+        }
+    }, [auth?.isLogin]);
     const [isPageListOpen, setIsPageListOpen] = useState(false);
     const [pageListData, setPageListData] = useState([]);
 
@@ -936,6 +971,8 @@ const RecodingPage = () => {
                                                             <button
                                                                 onClick={handleLogicCheck}
                                                                 className="recoding-logic-check-btn"
+                                                                disabled={!selectedVar?.info || selectedVar.info.length === 0}
+                                                                style={{ opacity: (!selectedVar?.info || selectedVar.info.length === 0) ? 0.5 : 1, cursor: 'pointer' }}
                                                             >
                                                                 로직 체크
                                                             </button>
@@ -984,7 +1021,7 @@ const RecodingPage = () => {
                     auth={auth}
                     pageId={sessionStorage.getItem("pageId")}
                     initialVariables={[]}
-                    variablesList={variables}
+                    variablesList={overviewVariables}
                     initialLogic={logicPopupState.initialLogic}
                     initialInfo={[]}
                     title="로직 생성"
