@@ -120,8 +120,8 @@ export function LoginApi() {
                     dispatch(
                         login({
                             userId: v?.user ?? "",
-                            userNm: res.username || "고객",
-                            userGroup: "H-SRT고객",
+                            userNm: groupcode === "999999991" ? "H-SRT고객" : (res.username || "고객"),
+                            userGroup: groupcode === "999999991" ? "H-SRT고객" : (res.groupposition || "고객"),
                         })
                     );
 

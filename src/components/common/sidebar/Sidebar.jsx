@@ -196,7 +196,11 @@ const Sidebar = ({
                             </>
                         )}
                         {/* 상단: 브랜드 */}
-                        <div className="brand-area" onClick={onBrandClick}>
+                        <div
+                            className="brand-area"
+                            onClick={onBrandClick}
+                            style={isHsrtCustomer ? { flex: 1, justifyContent: "center", marginLeft: 0 } : {}}
+                        >
                             {brand?.icon}
                             <span className={brand?.logoClass || "brand-title"}>
                                 {brand?.logoText && <span className="logo-accent">{brand.logoText}</span>}
@@ -372,7 +376,9 @@ const Sidebar = ({
                             </div>
                             {!isCollapsed && (
                                 <div className="user-info">
-                                    <span className="user-name">{auth?.user?.userNm || "사용자"}님</span>
+                                    <span className="user-name">
+                                        {isHsrtCustomer ? "H-SRT고객" : `${auth?.user?.userNm || "사용자"}님`}
+                                    </span>
                                 </div>
                             )}
                         </div>
