@@ -74,7 +74,7 @@ const ViewLabelTab = ({
                     </button>
                 </div>
                 <div className="category-grid-container">
-                    <div className="cmn_grid singlehead">
+                    <div className="cmn_grid singlehead" style={{ height: '100%' }}>
                         {/* key로 변수 선택/변경 시 강제 재마운트 → 내부 viewData 캐시 초기화 */}
                         <KendoGrid
                             key={`${selectedVariableId ?? 'empty'}_${selectedVariable?.category ?? ''}`}
@@ -85,7 +85,7 @@ const ViewLabelTab = ({
                                     id: idx + 1
                                 })) || [],
                                 dataItemKey: "id",
-                                height: "590px",
+                                height: "100%",
                                 filterable: false,
                             }}
                         >

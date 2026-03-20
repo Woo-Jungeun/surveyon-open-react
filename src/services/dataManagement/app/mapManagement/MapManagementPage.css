@@ -10,9 +10,9 @@
 /* Content Area */
 .variable-page-content {
     flex: 1;
+    min-height: 0;
     padding: 0;
     overflow: hidden;
-    height: calc(100% - 32px);
     margin: 16px;
     background: #fff;
     border: 1px solid var(--ds-border);
