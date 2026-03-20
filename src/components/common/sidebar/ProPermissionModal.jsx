@@ -162,7 +162,6 @@ const ProPermissionModal = ({ open, onClose }) => {
                                     //     }
                                     // }
 
-                                    console.log("pageId", pageId, targetUserId)
                                     try {
                                         await pagesMembersSet.mutateAsync({
                                             params: {
