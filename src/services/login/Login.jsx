@@ -55,10 +55,6 @@ const Login = () => {
             navigate(targetPath, { replace: true });
             return;
         }
-
-        if (localStorage.getItem("lastLoginType") === "customer" && location.pathname !== "/cs") {
-            navigate("/cs", { replace: true });
-        }
     }, [location.pathname, navigate, auth, cookies]);
 
     /**

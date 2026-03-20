@@ -40,9 +40,6 @@ export function LoginApi() {
                     const from = location.state?.from || "/";
                     const originalState = location.state?.originalState;
 
-                    // 마지막 로그인 타입을 저장 (고객/직원 구분 리다이렉트를 위함)
-                    localStorage.setItem("lastLoginType", "employee");
-
                     // 성공 처리: 스토어/쿠키/세션 동기화
                     const out = parseOutput(res?.output);
                     const info = Array.isArray(out) ? out[0] : out || {};
@@ -92,9 +89,6 @@ export function LoginApi() {
                 // 성공 확인 (success: '777' 이거나 token 값이 존재할 경우)
                 if (res?.success === "777" || res?.token || res?.loginkey) {
                     const originalState = location.state?.originalState;
-
-                    // 마지막 로그인 타입을 저장 (고객/직원 구분 리다이렉트를 위함)
-                    localStorage.setItem("lastLoginType", "customer");
 
                     // 응답에서 주요 값 추출
                     const tokenStr = res.token || res.loginkey || res.Token;
