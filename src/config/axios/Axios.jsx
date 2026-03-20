@@ -99,10 +99,10 @@ apiAxios.interceptors.response.use(function (response) {
     }
     if (data.errorCode === "704") {
         // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+        const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
         persistor.purge();
         deleteCookie("TOKEN", { path: "/" });
         deleteCookie("X-Auth-Token", { path: "/" });
-        const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
         sessionStorage.clear();
         window.location.href = isCustomer ? "/cs" : "/login";
     }
@@ -118,10 +118,10 @@ apiAxios.interceptors.response.use(function (response) {
 
         if (status === 401) {
             // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+            const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
             await persistor.purge();
             deleteCookie("TOKEN", { path: "/" });
             deleteCookie("X-Auth-Token", { path: "/" });
-            const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
             sessionStorage.clear();
             window.location.href = isCustomer ? "/cs" : "/login";
             return Promise.reject(error);
