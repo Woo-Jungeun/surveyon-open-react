@@ -86,41 +86,56 @@ export function LoginApi() {
         },
         {
             onSuccess: (res, v) => {
-                const parseOutput = (out) => {
-                    if (!out) return null;
-                    if (typeof out === "string") {
-                        try { return JSON.parse(out); } catch { return null; }
-                    }
-                    return out;
-                };
-                if (res?.success === "777") {
-                    const from = location.state?.from || "/";
+                // 성공 확인 (success: '777' 이거나 token 값이 존재할 경우)
+                if (res?.success === "777" || res?.token || res?.loginkey) {
                     const originalState = location.state?.originalState;
 
-                    // 성공 처리: 스토어/쿠키/세션 동기화
-                    const out = parseOutput(res?.output);
-                    const info = Array.isArray(out) ? out[0] : out || {};
-                    const { username = "", groupposition = "", loginkey = "", expiration = "" } = info;
+                    // 응답에서 주요 값 추출
+                    const tokenStr = res.token || res.loginkey || res.Token;
+                    const projectnum = res.projectnum || "";
+                    const merge_pn = res.merge_pn || "";
+                    const page_id = res.page_id || "";
+                    const showmenu = res.showmenu || ""; // "빈도분석,추가분석,변수생성,가중치생성"
+                    const groupcode = res.groupcode || "";
+                    const page_title = res.page_title || "";
 
-                    // 1) redux 저장
+                    // 프로젝트, 페이지, 권한 메뉴 정보를 세션 스토리지에 저장
+                    sessionStorage.setItem("projectnum", projectnum);
+                    sessionStorage.setItem("merge_pn", merge_pn);
+                    sessionStorage.setItem("pageId", page_id);
+                    sessionStorage.setItem("showmenu", showmenu);
+                    sessionStorage.setItem("groupcode", groupcode);
+
+                    // 임시로 화면에 보여줄 이름 설정 (응답에 projectname이 없으면 projectnum 사용)
+                    if (res.projectname) sessionStorage.setItem("projectname", res.projectname);
+                    else if (merge_pn) sessionStorage.setItem("projectname", merge_pn);
+
+                    if (page_title) sessionStorage.setItem("pagetitle", page_title);
+
+                    if (groupcode === "999999991") {
+                        sessionStorage.setItem("userName", "H-SRT고객");
+                    }
+
+                    // 1) redux 저장 (식별을 위해 userGroup에 H-SRT고객 표기)
                     dispatch(
                         login({
-                            userId: v?.user ?? "",       // mutate 시 넘긴 값
-                            userNm: username,
-                            userGroup: groupposition,
+                            userId: v?.user ?? "",
+                            userNm: res.username || "고객",
+                            userGroup: "H-SRT고객",
                         })
                     );
-                    // 2) 쿠키 저장 (로그인키 & X-Auth-Token)
+
+                    // 2) 쿠키(토큰) 저장
                     const cookieOptions = { path: "/", sameSite: "Lax" }; // 필요시 secure:true
-                    if (loginkey) {
-                        setCookie("TOKEN", loginkey, cookieOptions);
-                    }
-                    if (res?.Token) {
-                        setCookie("X-Auth-Token", res.Token, cookieOptions);
+                    if (tokenStr) {
+                        setCookie("TOKEN", tokenStr, cookieOptions);
+                        setCookie("X-Auth-Token", tokenStr, cookieOptions);
                     }
 
-                    // 3) 모든 세팅 완료 후 navigate (isLoggedIn이 true가 된 다음 이동)
-                    navigate(from, { replace: true, state: originalState });
+                    // 3) 이동 처리 (H-SRT고객은 프로젝트 내부 라우트로 바로 이동)
+                    navigate("/data_status", { replace: true, state: originalState });
+                } else {
+                    modal?.showErrorAlert?.("에러", res?.message || "로그인 정보를 확인할 수 없습니다.");
                 }
             },
             onError: (err, v) => {

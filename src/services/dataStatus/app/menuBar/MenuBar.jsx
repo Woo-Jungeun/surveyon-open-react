@@ -106,7 +106,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const projectInfoData = {
     title: pageInfo.title,
     subTitle: sessionStorage.getItem("merge_pn") || sessionStorage.getItem("projectpof") || "ID 미지정",
-    onSettingsClick: () => {
+    onSettingsClick: auth?.user?.userGroup === "H-SRT고객" ? undefined : () => {
       if (onOpenProjectModal) {
         onOpenProjectModal();
       } else {
@@ -126,8 +126,12 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   // 데이터 정보 조회 (최종 업데이트 시간)
   const fetchDataInfo = async (pn) => {
+    // 고객(groupcode: 999999991)일 경우 데이터 정보 조회를 우선 건너뜁니다
+    if (sessionStorage.getItem("groupcode") === "999999991") return;
+
     const userId = auth?.user?.userId;
     if (!userId || !pn) return;
+    console.log(userId, pn)
     try {
       const result = await getDataInfo.mutateAsync({ user: userId, pn });
       if (result?.success === "777") {
@@ -136,6 +140,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           processedAt: formatDate(result.resultjson.parquetBakedAt)
         }));
       } else {
+        console.log("err", err)
         const errorMsg = result?.errortext || result?.errorcontent || result?.message;
         if (errorMsg) {
           modal.showErrorAlert("에러", errorMsg || "데이터 정보 조회에 실패했습니다.");
@@ -345,7 +350,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const sidebarPageInfo = {
     title: pageState.title,
     subTitle: pageState.merge_pn,
-    onSettingsClick: () => {
+    onSettingsClick: auth?.user?.userGroup === "H-SRT고객" ? undefined : () => {
       const user = auth?.user?.userId;
       const mergePn = sessionStorage.getItem("merge_pn");
       if (user && mergePn) {
@@ -361,8 +366,23 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   const userGroup = auth?.user?.userGroup || "";
   const isAiSolutionTeam = userGroup === "AI솔루션팀";
+  const isHSRTCustomer = userGroup === "H-SRT고객";
 
-  const computedMenuGroups = [...MENU_ITEMS];
+  let computedMenuGroups = [...MENU_ITEMS];
+
+  // H-SRT고객인 경우 세션에 있는 showmenu 값(권한 메뉴)으로만 메뉴 아이템을 필터링 구성합니다.
+  if (isHSRTCustomer) {
+    const showMenuStr = sessionStorage.getItem("showmenu");
+    if (showMenuStr) {
+      // "가중치 생성", "가중치생성" 모두 같은 취급으로 일치시키기 위해 내부 띄어쓰기를 모두 제거해서 비교
+      const allowedMenus = showMenuStr.split(",").map(m => m.replace(/\s+/g, ''));
+      computedMenuGroups = computedMenuGroups.map(group => {
+        const filteredItems = group.items.filter(item => allowedMenus.includes(item.label.replace(/\s+/g, '')));
+        return { ...group, items: filteredItems };
+      }).filter(group => group.items.length > 0);
+    }
+  }
+
   if (isAiSolutionTeam) {
     computedMenuGroups.push({
       label: "시스템 관리",

@@ -134,60 +134,66 @@ const Sidebar = ({
         }
     };
 
+    const isHsrtCustomer = sessionStorage.getItem("groupcode") === "999999991";
+
     return (
         <>
             <aside className={`common-sidebar ${theme} ${isCollapsed ? "collapsed" : ""}`} data-theme={theme === "blue" ? "data-dashboard" : ""}>
                 {/* Header Area */}
                 <div className="sidebar-header">
                     <div className="header-top" style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%' }}>
-                        {/* 홈 버튼 */}
-                        <button type="button" className="home-btn" title="홈으로" onClick={onHomeClick} style={{ padding: '6px' }}>
-                            <Home size={18} />
-                        </button>
+                        {!isHsrtCustomer && (
+                            <>
+                                {/* 홈 버튼 */}
+                                <button type="button" className="home-btn" title="홈으로" onClick={onHomeClick} style={{ padding: '6px' }}>
+                                    <Home size={18} />
+                                </button>
 
-                        <div className="header-divider" style={{ margin: '0 2px' }}></div>
+                                <div className="header-divider" style={{ margin: '0 2px' }}></div>
 
-                        {/* 모듈 메뉴 (드롭다운) */}
-                        <div className="module-menu-wrapper" ref={moduleMenuRef}>
-                            <button
-                                type="button"
-                                className={`module-menu-btn ${moduleListOpen ? 'active' : ''}`}
-                                onClick={() => setModuleListOpen(!moduleListOpen)}
-                                title="메인 메뉴"
-                            >
-                                <Menu size={20} />
-                            </button>
+                                {/* 모듈 메뉴 (드롭다운) */}
+                                <div className="module-menu-wrapper" ref={moduleMenuRef}>
+                                    <button
+                                        type="button"
+                                        className={`module-menu-btn ${moduleListOpen ? 'active' : ''}`}
+                                        onClick={() => setModuleListOpen(!moduleListOpen)}
+                                        title="메인 메뉴"
+                                    >
+                                        <Menu size={20} />
+                                    </button>
 
-                            {moduleListOpen && (
-                                <div className={`module-dropdown ${isCollapsed ? 'collapsed' : ''}`}>
-                                    <ul className="module-dropdown-list">
-                                        {moduleItems
-                                            .filter(m => m.label !== "프로젝트 목록")
-                                            .map((m, i) => (
-                                                <li key={i} className="module-dropdown-item">
-                                                    <div
-                                                        className={`module-link ${m.highlight || m.module === theme.replace('blue', 'data_status') ? 'active' : ''} ${m.isDisabled ? 'disabled' : ''}`}
-                                                        onClick={() => {
-                                                            if (m.isDisabled) return;
-                                                            setModuleListOpen(false);
-                                                            if (m.onClick) {
-                                                                m.onClick();
-                                                            } else {
-                                                                navigate(m.path, { state: m.state });
-                                                            }
-                                                        }}
-                                                    >
-                                                        {m.icon && React.cloneElement(m.icon, { size: 18, strokeWidth: 2, className: "module-icon" })}
-                                                        <span>{m.label}</span>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                    </ul>
+                                    {moduleListOpen && (
+                                        <div className={`module-dropdown ${isCollapsed ? 'collapsed' : ''}`}>
+                                            <ul className="module-dropdown-list">
+                                                {moduleItems
+                                                    .filter(m => m.label !== "프로젝트 목록")
+                                                    .map((m, i) => (
+                                                        <li key={i} className="module-dropdown-item">
+                                                            <div
+                                                                className={`module-link ${m.highlight || m.module === theme.replace('blue', 'data_status') ? 'active' : ''} ${m.isDisabled ? 'disabled' : ''}`}
+                                                                onClick={() => {
+                                                                    if (m.isDisabled) return;
+                                                                    setModuleListOpen(false);
+                                                                    if (m.onClick) {
+                                                                        m.onClick();
+                                                                    } else {
+                                                                        navigate(m.path, { state: m.state });
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {m.icon && React.cloneElement(m.icon, { size: 18, strokeWidth: 2, className: "module-icon" })}
+                                                                <span>{m.label}</span>
+                                                            </div>
+                                                        </li>
+                                                    ))}
+                                            </ul>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
 
-                        <div className="header-divider"></div>
+                                <div className="header-divider"></div>
+                            </>
+                        )}
                         {/* 상단: 브랜드 */}
                         <div className="brand-area" onClick={onBrandClick}>
                             {brand?.icon}
@@ -217,9 +223,11 @@ const Sidebar = ({
                             {projectInfo.subTitle && (
                                 <span className="project-id-badge">{projectInfo.subTitle}</span>
                             )}
-                            <button className="project-settings-btn">
-                                <Settings size={16} />
-                            </button>
+                            {!isHsrtCustomer && (
+                                <button className="project-settings-btn">
+                                    <Settings size={16} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -234,9 +242,11 @@ const Sidebar = ({
                             }}
                         >
                             <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }}>{pageInfo.title}</div>
-                            <button className="project-settings-btn">
-                                <Settings size={16} />
-                            </button>
+                            {!isHsrtCustomer && (
+                                <button className="project-settings-btn">
+                                    <Settings size={16} />
+                                </button>
+                            )}
                         </div>
                     </div>
                 )}
@@ -332,11 +342,13 @@ const Sidebar = ({
                     <div className="user-wrap">
                         {userOpen && (
                             <div className="user-dropdown">
-                                <button className="permission-btn" onClick={() => window.open("/manual", "manual", "width=1280,height=900,scrollbars=yes")}>
-                                    <BookOpen size={16} />
-                                    <span>매뉴얼</span>
-                                </button>
-                                {hasMergePn && (
+                                {!isHsrtCustomer && (
+                                    <button className="permission-btn" onClick={() => window.open("/manual", "manual", "width=1280,height=900,scrollbars=yes")}>
+                                        <BookOpen size={16} />
+                                        <span>매뉴얼</span>
+                                    </button>
+                                )}
+                                {!isHsrtCustomer && hasMergePn && (
                                     <button className="permission-btn" onClick={handleGoPermission}>
                                         <ShieldCheck size={16} />
                                         <span>권한 관리</span>

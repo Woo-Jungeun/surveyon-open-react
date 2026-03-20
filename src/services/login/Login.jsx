@@ -41,14 +41,17 @@ const Login = () => {
                 pass: formData.pass
             });
 
-        if (result.success === "777") {
+        // cs 로그인의 경우 응답에 success: '777'이 없이 올 수 있으므로 토큰이나 메시지 여부로 성공을 판별합니다.
+        const isSuccess = result?.success === "777" || result?.token || result?.loginkey || result?.message === "로그인 성공 (고객 인증)";
+
+        if (isSuccess) {
             // 아이디 기억하기
             if (isSavedId) {
                 localStorage.setItem("savedId", formData.user);
             }
             // 로그인 성공 시 navigate는 LoginApi.onSuccess에서 처리
         } else {
-            modal.showErrorAlert("에러", result?.message); //오류 팝업 표출
+            modal.showErrorAlert("에러", result?.message || "로그인 정보를 확인할 수 없습니다."); //오류 팝업 표출
         }
     };
 
