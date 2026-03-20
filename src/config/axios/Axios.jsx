@@ -102,8 +102,9 @@ apiAxios.interceptors.response.use(function (response) {
         persistor.purge();
         deleteCookie("TOKEN", { path: "/" });
         deleteCookie("X-Auth-Token", { path: "/" });
+        const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
         sessionStorage.clear();
-        window.location.href = "/login";
+        window.location.href = isCustomer ? "/cs" : "/login";
     }
     if (data.errorCode === "404") {
         // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
@@ -120,8 +121,9 @@ apiAxios.interceptors.response.use(function (response) {
             await persistor.purge();
             deleteCookie("TOKEN", { path: "/" });
             deleteCookie("X-Auth-Token", { path: "/" });
+            const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
             sessionStorage.clear();
-            window.location.href = "/login";
+            window.location.href = isCustomer ? "/cs" : "/login";
             return Promise.reject(error);
         }
 
