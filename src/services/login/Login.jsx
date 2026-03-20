@@ -1,4 +1,4 @@
-import { useState, useCallback, useContext } from "react";
+import { useState, useCallback, useContext, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { LogIn, Mail, Lock, ArrowLeft, Sparkles } from "lucide-react";
@@ -6,6 +6,8 @@ import "@/services/login/Login.css";
 import { Input } from "@progress/kendo-react-inputs";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { LoginApi } from "@/services/login/LoginApi.js";
+import { useSelector } from "react-redux";
+import { useCookies } from "react-cookie";
 
 const Login = () => {
     const navigate = useNavigate();
@@ -18,6 +20,46 @@ const Login = () => {
     const [isSavedId, setIsSavedId] = useState(formData.user !== null && formData.user !== "");
     const modal = useContext(modalContext);
     const { loginMutation, loginCsMutation } = LoginApi();
+
+    const auth = useSelector((store) => store.auth);
+    const [cookies] = useCookies();
+
+    // 고객 브라우저로 한 번 로그인한 이력이 있다면, 다른 로그인 화면 등 접근 시 고객 전용 로그인으로 막음
+    useEffect(() => {
+        // 이미 로그인된 상태에서 /login 또는 /cs 에 접근하면 바로 메인화면으로 리다이렉트
+        const isLoggedIn = auth?.isLogin && cookies?.TOKEN;
+        if (isLoggedIn) {
+            const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
+            let targetPath = "/";
+            if (isCustomer) {
+                targetPath = "/data_status";
+                const showmenu = sessionStorage.getItem("showmenu");
+                if (showmenu) {
+                    const firstMenuLabel = showmenu.split(",")[0].replace(/\s+/g, "");
+                    const menuPathMap = {
+                        "빈도분석": "/data_status/analysis/frequency",
+                        "교차분석": "/data_status/analysis/cross",
+                        "추가분석": "/data_status/analysis/additional",
+                        "쿼터현황/관리": "/data_status/analysis/quota",
+                        "AI분석": "/data_status/ai/analysis",
+                        "AI리포트": "/data_status/ai/report",
+                        "변수생성": "/data_status/setting/recoding",
+                        "DP의뢰서정의": "/data_status/setting/dp_definition",
+                        "가중치생성": "/data_status/setting/weight",
+                    };
+                    if (menuPathMap[firstMenuLabel]) {
+                        targetPath = menuPathMap[firstMenuLabel];
+                    }
+                }
+            }
+            navigate(targetPath, { replace: true });
+            return;
+        }
+
+        if (localStorage.getItem("lastLoginType") === "customer" && location.pathname !== "/cs") {
+            navigate("/cs", { replace: true });
+        }
+    }, [location.pathname, navigate, auth, cookies]);
 
     /**
      * 로그인 API
