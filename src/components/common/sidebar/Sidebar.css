@@ -431,6 +431,33 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* 고객 전용 모드일 때 포인터 및 hover 이펙트 무력화 */
+.project-info-card.customer-mode {
+    cursor: default !important;
+}
+
+.project-info-card.customer-mode:hover {
+    background: #F8F9FA !important;
+    border-color: #d3d7d5 !important;
+    transform: none !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+.blue .project-info-card.customer-mode:hover {
+    background: #eff6ff !important;
+    border-color: #bfdbfe !important;
+}
+
+.orange .project-info-card.customer-mode:hover {
+    background: #fffafa !important;
+    border-color: #ffd8a8 !important;
+}
+
+.green .project-info-card.customer-mode:hover {
+    background: #f0fdf4 !important;
+    border-color: #bbf7d0 !important;
+}
+
 .project-info-card:hover .project-settings-btn {
     color: #5A4BFF;
 }
