@@ -99,13 +99,11 @@ apiAxios.interceptors.response.use(function (response) {
     }
     if (data.errorCode === "704") {
         // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
-        const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
         persistor.purge();
         deleteCookie("TOKEN", { path: "/" });
         deleteCookie("X-Auth-Token", { path: "/" });
         sessionStorage.clear();
-        if (isCustomer) sessionStorage.setItem("wasCustomer", "true");
-        window.location.href = isCustomer ? "/cs" : "/login";
+        window.location.href = "/login";
     }
     if (data.errorCode === "404") {
         // url Not Found 화면 이동(NS_ER_CT_01: url 찾을 수 없음)
@@ -119,13 +117,11 @@ apiAxios.interceptors.response.use(function (response) {
 
         if (status === 401) {
             // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
-            const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
             await persistor.purge();
             deleteCookie("TOKEN", { path: "/" });
             deleteCookie("X-Auth-Token", { path: "/" });
             sessionStorage.clear();
-            if (isCustomer) sessionStorage.setItem("wasCustomer", "true");
-            window.location.href = isCustomer ? "/cs" : "/login";
+            window.location.href = "/login";
             return Promise.reject(error);
         }
 

@@ -60,12 +60,12 @@ function App() {
               <Route path="/data_management/*" element={<DataManagementRoutes />} />
             </>
           ) : (
-            // 로그인 안 되어 있는데 내부 메뉴 접근 시 → /login 또는 /cs 로 이동
+            // 로그인 안 되어 있는데 내부 메뉴 접근 시 → /login 으로 이동
             <>
-              <Route path="/project/*" element={<Navigate to={sessionStorage.getItem("groupcode") === "999999991" || sessionStorage.getItem("wasCustomer") === "true" ? "/cs" : "/login"} replace />} />
-              <Route path="/ai_open_analysis/*" element={<Navigate to={sessionStorage.getItem("groupcode") === "999999991" || sessionStorage.getItem("wasCustomer") === "true" ? "/cs" : "/login"} replace />} />
-              <Route path="/data_status/*" element={<Navigate to={sessionStorage.getItem("groupcode") === "999999991" || sessionStorage.getItem("wasCustomer") === "true" ? "/cs" : "/login"} replace />} />
-              <Route path="/data_management/*" element={<Navigate to={sessionStorage.getItem("groupcode") === "999999991" || sessionStorage.getItem("wasCustomer") === "true" ? "/cs" : "/login"} replace />} />
+              <Route path="/project/*" element={<Navigate to="/login" replace />} />
+              <Route path="/ai_open_analysis/*" element={<Navigate to="/login" replace />} />
+              <Route path="/data_status/*" element={<Navigate to="/login" replace />} />
+              <Route path="/data_management/*" element={<Navigate to="/login" replace />} />
             </>
           )}
 

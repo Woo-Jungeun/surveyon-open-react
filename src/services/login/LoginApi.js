@@ -211,7 +211,6 @@ export function LoginApi() {
                         removeCookie("TOKEN", { path: "/" });
                         removeCookie("X-Auth-Token", { path: "/" });
                         sessionStorage.clear();
-                        if (isCustomer) sessionStorage.setItem("wasCustomer", "true");
                         navigate(isCustomer ? "/cs" : "/login");
                     }
                 } catch (e) {
@@ -225,7 +224,6 @@ export function LoginApi() {
                 removeCookie("TOKEN", { path: "/" });
                 removeCookie("X-Auth-Token", { path: "/" });
                 sessionStorage.clear();
-                if (isCustomer) sessionStorage.setItem("wasCustomer", "true");
                 navigate(isCustomer ? "/cs" : "/login");
             }
         }
