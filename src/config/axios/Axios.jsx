@@ -104,6 +104,7 @@ apiAxios.interceptors.response.use(function (response) {
         deleteCookie("TOKEN", { path: "/" });
         deleteCookie("X-Auth-Token", { path: "/" });
         sessionStorage.clear();
+        if (isCustomer) sessionStorage.setItem("wasCustomer", "true");
         window.location.href = isCustomer ? "/cs" : "/login";
     }
     if (data.errorCode === "404") {
@@ -123,6 +124,7 @@ apiAxios.interceptors.response.use(function (response) {
             deleteCookie("TOKEN", { path: "/" });
             deleteCookie("X-Auth-Token", { path: "/" });
             sessionStorage.clear();
+            if (isCustomer) sessionStorage.setItem("wasCustomer", "true");
             window.location.href = isCustomer ? "/cs" : "/login";
             return Promise.reject(error);
         }

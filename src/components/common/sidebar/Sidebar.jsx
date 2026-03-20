@@ -97,11 +97,10 @@ const Sidebar = ({
                         try {
                             const res = await logoutMutation.mutateAsync({ user: auth?.user?.userId, gb: "out" });
                             if (res?.success === "777") {
-                                const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
                                 await persistor.purge();
                                 removeCookie("TOKEN", { path: "/" });
                                 sessionStorage.clear();
-                                navigate(isCustomer ? "/cs" : "/login");
+                                navigate("/login");
                             } else {
                                 modal.showAlert("알림", "로그아웃 실패");
                             }
