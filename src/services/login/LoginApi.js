@@ -132,8 +132,31 @@ export function LoginApi() {
                         setCookie("X-Auth-Token", tokenStr, cookieOptions);
                     }
 
-                    // 3) 이동 처리 (H-SRT고객은 프로젝트 내부 라우트로 바로 이동)
-                    navigate("/data_status", { replace: true, state: originalState });
+                    // 3) 이동 처리 (H-SRT고객은 지정된 첫 번째 권한 메뉴로 바로 이동)
+                    let targetPath = "/data_status";
+                    if (groupcode === "999999991" && showmenu) {
+                        const firstMenuLabel = showmenu.split(",")[0].replace(/\s+/g, "");
+                        const menuPathMap = {
+                            "빈도분석": "/data_status/analysis/frequency",
+                            "교차분석": "/data_status/analysis/cross",
+                            "추가분석": "/data_status/analysis/additional",
+                            "쿼터현황/관리": "/data_status/analysis/quota",
+                            "AI분석": "/data_status/ai/analysis",
+                            "AI리포트": "/data_status/ai/report",
+                            "변수생성": "/data_status/setting/recoding",
+                            "DP의뢰서정의": "/data_status/setting/dp_definition",
+                            "가중치생성": "/data_status/setting/weight",
+                        };
+                        if (menuPathMap[firstMenuLabel]) {
+                            targetPath = menuPathMap[firstMenuLabel];
+                        }
+                    }
+
+                    let finalPath = targetPath;
+                    if (groupcode !== "999999991") {
+                        finalPath = location.state?.from || targetPath;
+                    }
+                    navigate(finalPath, { replace: true, state: originalState });
                 } else {
                     modal?.showErrorAlert?.("에러", res?.message || "로그인 정보를 확인할 수 없습니다.");
                 }
@@ -183,11 +206,12 @@ export function LoginApi() {
                 try {
                     if (res?.errorCode === "704") {
                         // 세션 만료 또는 유효하지 않음 -> 로그아웃 처리
+                        const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
                         await persistor.purge();
                         removeCookie("TOKEN", { path: "/" });
                         removeCookie("X-Auth-Token", { path: "/" });
                         sessionStorage.clear();
-                        navigate("/login");
+                        navigate(isCustomer ? "/cs" : "/login");
                     }
                 } catch (e) {
                     console.error("Token validation error", e);
@@ -195,11 +219,12 @@ export function LoginApi() {
             },
             onError: async () => {
                 // 에러 발생 시에도 로그아웃 처리 (보안상 안전)
+                const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
                 await persistor.purge();
                 removeCookie("TOKEN", { path: "/" });
                 removeCookie("X-Auth-Token", { path: "/" });
                 sessionStorage.clear();
-                navigate("/login");
+                navigate(isCustomer ? "/cs" : "/login");
             }
         }
     );
