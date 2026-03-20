@@ -215,7 +215,7 @@ const Sidebar = ({
                 {projectInfo && !isCollapsed && (
                     <div className="project-info-box">
                         <div
-                            className="project-info-card"
+                            className={`project-info-card ${isHsrtCustomer ? "customer-mode" : ""}`}
                             onClick={() => {
                                 if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
                             }}
@@ -237,7 +237,7 @@ const Sidebar = ({
                 {pageInfo && !isCollapsed && (
                     <div className="project-info-box">
                         <div
-                            className="project-info-card"
+                            className={`project-info-card ${isHsrtCustomer ? "customer-mode" : ""}`}
                             onClick={() => {
                                 if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
                             }}
