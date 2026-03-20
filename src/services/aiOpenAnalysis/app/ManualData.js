@@ -1,3 +1,32 @@
+import manual_img_0 from '@/assets/images/manual/1/1.png';
+import manual_img_1 from '@/assets/images/manual/2/0.png';
+import manual_img_2 from '@/assets/images/manual/2/1-1.png';
+import manual_img_3 from '@/assets/images/manual/2/1-2.png';
+import manual_img_4 from '@/assets/images/manual/2/2-1.png';
+import manual_img_5 from '@/assets/images/manual/2/2-2.png';
+import manual_img_6 from '@/assets/images/manual/2/2-3.png';
+import manual_img_7 from '@/assets/images/manual/2/4.png';
+import manual_img_8 from '@/assets/images/manual/4/0.png';
+import manual_img_9 from '@/assets/images/manual/4/1.png';
+import manual_img_10 from '@/assets/images/manual/4/1_1.png';
+import manual_img_11 from '@/assets/images/manual/4/1_2.png';
+import manual_img_12 from '@/assets/images/manual/4/1.png';
+import manual_img_13 from '@/assets/images/manual/4/1_1.png';
+import manual_img_14 from '@/assets/images/manual/4/1_2.png';
+import manual_img_15 from '@/assets/images/manual/4/3.png';
+import manual_img_16 from '@/assets/images/manual/4/2.png';
+import manual_img_17 from '@/assets/images/manual/4/2.png';
+import manual_img_18 from '@/assets/images/manual/4/2_1.png';
+import manual_img_19 from '@/assets/images/manual/4/4.png';
+import manual_img_20 from '@/assets/images/manual/4/4_1.png';
+import manual_img_21 from '@/assets/images/manual/4/4_2.png';
+import manual_img_22 from '@/assets/images/manual/4/5.png';
+import manual_img_23 from '@/assets/images/manual/4/6.png';
+import manual_img_24 from '@/assets/images/manual/4/7.png';
+import manual_img_25 from '@/assets/images/manual/4/7_1.png';
+import manual_img_26 from '@/assets/images/manual/4/8.png';
+import manual_img_27 from '@/assets/images/manual/4/7_2.png';
+
 /**
  * 통합 웹 매뉴얼 데이터
  * 
@@ -8,24 +37,6 @@
  * icon: SVG 아이콘 경로 또는 SVG 코드
  */
 
-import img_1_1 from '@/assets/images/manual/1/1.png';
-import img_4_0 from '@/assets/images/manual/4/0.png';
-import img_4_1 from '@/assets/images/manual/4/1.png';
-import img_4_1_1 from '@/assets/images/manual/4/1_1.png';
-import img_4_1_2 from '@/assets/images/manual/4/1_2.png';
-import img_4_3 from '@/assets/images/manual/4/3.png';
-import img_4_2 from '@/assets/images/manual/4/2.png';
-import img_4_2_1 from '@/assets/images/manual/4/2_1.png';
-import img_4_4 from '@/assets/images/manual/4/4.png';
-import img_4_4_1 from '@/assets/images/manual/4/4_1.png';
-import img_4_4_2 from '@/assets/images/manual/4/4_2.png';
-import img_4_5 from '@/assets/images/manual/4/5.png';
-import img_4_6 from '@/assets/images/manual/4/6.png';
-import img_4_7 from '@/assets/images/manual/4/7.png';
-import img_4_7_1 from '@/assets/images/manual/4/7_1.png';
-import img_4_8 from '@/assets/images/manual/4/8.png';
-import img_4_7_2 from '@/assets/images/manual/4/7_2.png';
-
 export const manualData = [
     {
         id: "intro",
@@ -35,19 +46,17 @@ export const manualData = [
             <h2>0. 설문온 소개</h2>
             <p>
             모든 메뉴는 프로젝트 기준으로 구동되도록 설계되어 설문제작,진행/관리,현황,분석,추출,보고서 조사에 필요한 업무를 한곳에서 이루어질 수 있는 통합플랫폼 구조로 설계되었습니다.
-            <ul>
             <li>메인페이지 (주요메뉴별 간단한 소개 컨텐츠)</li>
-            <li>설문관리 (AI제작 – 표준안 작업 없이 제작 설문지 변환)</li>
-            <li>데이터 관리 (AI데이터 생성[테스트] – 자동 응답 및 기본 로직 체크)</li>
+            <li>설문관리 (AI제작 - 표준안 작업 없이 제작 설문지 변환)</li>
+            <li>데이터 관리 (AI데이터 생성[테스트] - 자동 응답 및 기본 로직 체크)</li>
             <li>데이터 현황 (표, 차트) (문항별 결과 AI분석 보고 가능 )</li>
             <li>AI오픈 분석 (AI오픈  - 자동 오픈 카테고리 분류 )</li>
             <li>응답자 관리 (상태 관리  및 AI 성실도 분류 및 관리)</li>
             <li>계정 및 권한 관리</li>
             <li>문의하기</li>
-            </ul>
             </p>
             <p>기대효과 : 설문온에서 조사의 필요한 자동화 실무와 고객과의 다양한 조사 결과를 풍부하게 공유할 수 있는 통합 플랫폼이다.</p>
-            <img src="${img_1_1}" alt="설문온 소개" width="100%">
+            <img src="${manual_img_0}" alt="설문온 소개" width="100%">
         `
     },
     {
@@ -60,14 +69,188 @@ export const manualData = [
         `
     },
     {
+        id: "usage",
+        title: "2. 데이터 관리",
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s 9-1.34 9-3V5"></path></svg>`,
+        content: `
+            <h2>2. 데이터 관리</h2>
+            <div class="guide-section">
+                <h3>2.1 개요</h3>
+                <p>큐마(Q-Master) 조사 데이터와의 연동 또는 SAV 마이그레이션을 통해 자동 데이터 맵(Map)을 생성하고, 응답 데이터의 업데이트 및 외부 양식(SAV, CRD) 추출을 통합 관리하는 모듈입니다.</p>
+            </div>
+
+            <div class="guide-section">
+                <h3>2.2 주요 기능</h3>
+                <div class="note-orange">
+                    <ul>
+                        <li><strong>데이터 맵 자동 생성 및 편집:</strong> Q-Master 연동 또는 SAV 업로드를 통해 변수(컬럼), 문항 레이블, 보기 레이블, 데이터 타입(문자/숫자)을 자동 정의 및 편집</li>
+                        <li><strong>안전한 SAV 부분 업데이트:</strong> 기존 응답 데이터 위에 최신 SAV 파일을 덮어쓰기. (무결성 검사: PID 중복 감지 및 대소문자 무관 매칭 지원)</li>
+                        <li><strong>데이터 완전성 보장:</strong> 미매칭 변수/PID 무시 등 유연한 예외 처리로 안정성 보장.</li>
+                        <li><strong>데이터 추출 (Export):</strong> 정의된 데이터 맵 기준으로 무결한 SAV 및 CRD 파일 다운로드</li>
+                    </ul>
+                    <img src="${manual_img_1}" alt="데이터 관리 메인화면" width="100%">
+                </div>
+            </div>
+
+            <div class="guide-section">
+                <h3>2.3 작업자 업무프로세스</h3>
+                <div class="process-flow">
+                    <div class="process-step">
+                        <div class="step-number">01</div>
+                        <div class="step-content">
+                            <span class="step-title">프로젝트 맵 연동 개시</span>
+                            <div class="step-desc">
+                                조사엔진(Q-Master)과 연동하여 데이터 맵을 초기 생성하거나, SAV 파일을 통한 마이그레이션을 준비합니다.
+                            </div>
+                            <div class="step-meta">
+                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션본부</span> <span class="badge badge-green">연구부서</span>
+                                <button class="btn-detail" data-detail="detail_usage_1">상세보기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="process-step">
+                        <div class="step-number">02</div>
+                        <div class="step-content">
+                            <span class="step-title">데이터 맵 구조 정의 및 편집</span>
+                            <div class="step-desc">
+                                자동 연동된 컬럼, 문항 레이블, 데이터 타입(단일/다중/오픈(문자,숫자))을 확인하고 편집합니다.
+                            </div>
+                            <div class="step-meta">
+                                <strong>담당자:</strong> <span class="badge badge-blue">솔루션본부</span>
+                                <button class="btn-detail" data-detail="detail_usage_2">상세보기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="process-step">
+                        <div class="step-number">03</div>
+                        <div class="step-content">
+                            <span class="step-title">SAV 파일로 데이터 업데이트</span>
+                            <div class="step-desc">
+                                SPSS 작업이 완료된 SAV 파일을 업로드하여 최신 응답을 갱신합니다. (유효성 검증 포함)
+                            </div>
+                            <div class="step-meta">
+                                <strong>담당자:</strong> <span class="badge badge-gray">SPSS팀</span> <span class="badge badge-green">연구부서</span>
+                                <button class="btn-detail" data-detail="detail_usage_3">상세보기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="process-step">
+                        <div class="step-number">04</div>
+                        <div class="step-content">
+                            <span class="step-title">데이터 추출 (SAV, CRD)</span>
+                            <div class="step-desc">
+                                검증 완료된 맵 기준으로 깨끗하게 맞춰진 최종 데이터를 로컬로 다운로드합니다.
+                            </div>
+                            <div class="step-meta">
+                                <strong>담당자:</strong> <span class="badge badge-green">연구부서</span> <span class="badge badge-blue">솔루션본부</span>
+                                <button class="btn-detail" data-detail="detail_usage_4">상세보기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `,
+        detail_usage_1: `
+            <h3>프로젝트 맵 연동 가이드</h3>
+            <div class="guide-section">
+                <p>통합 데이터 관리를 위해 조사 시스템의 응답 기초 자료(맵)를 불러오는 초기 단계입니다.</p>
+                
+                <div class="note-yellow">
+                    <h4>Q-Master 조사 연동 (기본)</h4>
+                    <ul>
+                        <li><strong>방법:</strong> "프로젝트 목록"에서 큐마(조사엔진)로 구성된 프로젝트를 선택합니다.</li>
+                        <li><strong>기능:</strong> 선택 즉시 조사 기준으로 데이터 맵(문항, 보기, 유형)이 내부적으로 자동 생성 및 파싱됩니다.</li>
+                        <li><strong>주의사항:</strong> 목록에 없을 경우, "프로젝트 등록" 메뉴에서 큐마 조사를 먼저 할당해야 합니다.</li>
+                    </ul>
+                    <img src="${manual_img_2}" class="guide-image" alt="Q-Master 파트 연동">
+                </div>
+
+                <div class="note-green">
+                    <h4>초기 데이터 업로드 (SAV 연동)</h4>
+                    <ul>
+                        <li>큐마 없이 깡통 프로젝트에 SAV 파일 하나만 통째로 던져서 데이터 맵을 세팅하는 방법입니다.</li>
+                        <li>업로드 시 순차적으로 <code>1, 2, 3...</code> 고유 PID가 자동 발급되거나, 기존 <code>PID</code> 컬럼의 중복 여부를 1차 검열하여 신뢰성을 확보합니다.</li>
+                    </ul>
+                    <img src="${manual_img_3}" class="guide-image" alt="SAV 마이그레이션 연동">
+                </div>
+            </div>
+        `,
+        detail_usage_2: `
+            <h3>데이터 맵 구조 편집 상세 가이드</h3>
+            <div class="guide-section">
+                <p>데이터 관리 탭에서 연동된 각 문항들의 구조 속성을 수정하고 저장하는 화면입니다. (H-SRT와 연동에 필요한 필수 과정)</p>
+                <img src="${manual_img_4}" class="guide-image" alt="맵 에디터 통합 화면">
+                
+                <div class="note-yellow">
+                    <h4>기본 맵 설정 항목</h4>
+                    <ul>
+                        <li><strong>오픈문항 숫자/문자 지정:</strong> 주관식(Open) 문항의 데이터 형태가 순수 숫자('numeric')인지 문자인지('string') 명시하여, SPSS 출력시 제대로 포맷팅(F8.0 등)되게 합니다.</li>
+                        <li><strong>저장 완료:</strong> 맵 수정 후 상위 탭의 저장 버튼을 누르면 다른 H-SRT 컴포넌트들에서 즉시 갱신된 구조를 참조하게 됩니다.</li>
+                    </ul>
+                </div>
+
+                <div class="note-blue">
+                    <h4>보기 레이블 편집하기</h4>
+                    <p>특정 문항에 속한 보기(선택지)의 이름을 일괄적으로 추가하거나 수정할 수 있습니다.</p>
+                    <div style="display: flex; gap: 15px; margin-top: 10px; flex-wrap: wrap;">
+                        <div style="flex: 1; min-width: 300px;">
+                            <img src="${manual_img_5}" alt="레이블 편집 1" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+                            <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 5px;">▲ 명칭 입력 및 확정 적용</p>
+                        </div>
+                        <div style="flex: 1; min-width: 300px;">
+                            <img src="${manual_img_6}" alt="레이블 편집 2" style="width: 100%; border: 1px solid #ddd; border-radius: 4px;">
+                            <p style="text-align: center; font-size: 0.9em; color: #666; margin-top: 5px;">▲ 보기 편집 모달창 호출</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `,
+        detail_usage_3: `
+            <h3>SAV 파일 데이터 업데이트 가이드</h3>
+            <div class="guide-section">
+                <p>최초 수집된 응답 데이터를 SPSS팀이 가공(클리닝/리코딩)한 후 다시 백엔드에 덮어씌울 때 사용하는 기능입니다.</p>
+                
+                <div style="padding: 40px; background: #eef2f5; text-align: center; color: #4b6a8a; font-weight: bold; margin-bottom: 20px; border-radius: 8px; border: 2px dashed #b8cce0;">
+                    <svg style="width: 32px; height: 32px; margin: 0 auto 10px; display: block; opacity: 0.8;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg><br>
+                    🚧 현재 기능 개발(화면 연동)이 진행 중입니다 🚧
+                </div>
+                
+                <div class="note-purple">
+                    <h4>업데이트 시 안전(유효성) 강화 기능 작동</h4>
+                    <ul>
+                        <li><strong>실시간 중복 차단:</strong> 업로드하는 SAV 파일 안에 중복된 PID가 여러 개 있으면 시스템이 덮어쓰기를 원천 <strong>거부(취소)</strong>하고 목록을 보여줍니다. (907 에러)</li>
+                        <li><strong>대소문자 교차 매칭:</strong> <code>Q1</code>(대문자)로 올리든 <code>q1</code>(소문자)로 올리든 시스템이 알아서 대소문자를 무시하고 기존 컬럼과 매칭해 끼워넣습니다.</li>
+                        <li><strong>잔여물 찌꺼기 무시:</strong> 기존 DB맵에 정의되지 않은 엉뚱한 임시 컬럼이나 모르는 PID가 섞여있으면 에러 없이 조용히 무시(Skip)합니다.</li>
+                    </ul>
+                </div>
+            </div>
+        `,
+        detail_usage_4: `
+            <h3>최종 데이터 추출 (Export) 가이드</h3>
+            <div class="guide-section">
+                <p>모든 데이터 편집이 완료된 최종 버전을 SAV 데이터 파일 또는 CRD 문서로 추출할 수 있습니다.</p>
+                <img src="${manual_img_7}" class="guide-image" alt="추출 화면">
+                
+                <div class="note-gray">
+                    <ul>
+                        <li><strong>메뉴 사용법:</strong> 상단의 "다운로드" 버튼 또는 "내보내기" 버튼을 클릭하여 파일 포맷을 지정합니다.</li>
+                        <li><strong>스키마 일치 확보:</strong> 앞서 "데이터 맵 편집" 단계에서 지정한 속성들(다중응답 분리, 숫자형 데이터 등)의 양식을 곧이곧대로 적용하여 파싱합니다.</li>
+                    </ul>
+                </div>
+            </div>
+        `
+    },
+    {
         id: "dataadmin",
-        title: "2. H-SRT 데이터 현황",
+        title: "3. H-SRT (데이터 현황)",
         icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
         content: `
-            <h2>2. H-SRT 데이터 현황(Statistical Reporting Tool)</h2>
+            <h2>3. H-SRT 데이터 현황(Statistical Reporting Tool)</h2>
             <p>문항별 결과 AI분석 보고 가능 표, 시각화, 요약</p>
             <p>기대효과 : 한눈에 분석되는 결과와 시각화 도출로 보고서 활용 시 유용한 자료로 제공<br>고객 제공용 (로그인, 기간설정 등의 권한)</p>
-            <ul>
             <li>[ 데이터설정 ]
             <br>설문문항 & 가공문항 관리 (문항,보기레이블 수정, 가중치 설정, 문항 가공(리코딩) 설정)
             <br>DP의뢰서 설정 : DP테이블로 생성되어야 하는 조건을 정의하면 자동테이블 생성
@@ -78,16 +261,6 @@ export const manualData = [
             <br>DP테이블 : DP의뢰서의 정의된 규칙으로 자동생성 및 추출 가능
             <br>쿼터현황/관리 : 진행사이트 및 쿼터핸들링
             </li>
-            </ul>
-        `
-    },
-    {
-        id: "usage",
-        title: "3. 데이터 관리",
-        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s 9-1.34 9-3V5"></path></svg>`,
-        content: `
-            <h2>3. 데이터 관리</h2>
-            <p>데이터 맵관리, 출력, 수정 <br>AI데이터 생성[테스트] – 자동 응답 및 기본 로직 체크</p>
         `
     },
     {
@@ -110,7 +283,7 @@ export const manualData = [
                         <li><strong>다국어 자동 번역 지원:</strong> 여러 다국어 오픈을 한번에 하나의 언어로 자동분류 및 번역</li>
                         <li><strong>트래킹오픈:</strong> 기존 카테고리 분류 기준으로 새로운 데이터 자동 분류</li>
                     </ul>
-                    <img src="${img_4_0}" alt="AI 오픈 분석" width="100%">
+                    <img src="${manual_img_8}" alt="AI 오픈 분석" width="100%">
                 </div>
             </div>
 
@@ -122,7 +295,7 @@ export const manualData = [
                         <div class="step-content">
                             <span class="step-title">프로젝트 등록</span>
                             <div class="step-desc">
-                                조사DB(솔루션본부) 또는 신규등록(연구부서)을 통해 프로젝트를 생성합니다.
+                                조사DB(솔루션본부) 또는 신규등록(연구부서)을 통해 프로젝트 생성합니다.
                             </div>
                             <div class="step-meta">
                                 <strong>담당자:</strong> <span class="badge badge-blue">솔루션본부</span> <span class="badge badge-green">연구부서</span>
@@ -257,7 +430,7 @@ export const manualData = [
             <h3>프로젝트 등록 상세 가이드</h3>
             <div class="guide-section">
                 <p>2가지 등록 방법이 있습니다. 첫번째는 웹제작 담당자가 "조사(Qmaster)"를 통한 등록, 두번째는 연구부서에서 엑셀파일 전용 프로젝트를 위한 "신규등록"을 진행합니다.</p>
-                <img src="${img_4_1}" class="guide-image" alt="프로젝트 등록 화면">
+                <img src="${manual_img_9}" class="guide-image" alt="프로젝트 등록 화면">
                      
                 <div class="note-yellow">
                     <h4>1-1. 조사(Qmaster) (솔루션본부-웹제작담당자)</h4>
@@ -268,7 +441,7 @@ export const manualData = [
                         <li><strong>대상:</strong> 큐마 시스템에 등록된 조사 - "담당자" 지정된 대상만 등록 허용</li>
                         <li><strong>방법:</strong> '조사(Qmaster)' 버튼 클릭 -> 해당프로젝트 선택 -> 등록 자동</li>
                         <li><strong>특징:</strong> 큐마조사의 문항 및 보기 데이터가 자동으로 연동됩니다.</li>
-                        <img src="${img_4_1_1}" class="guide-image" alt="프로젝트 등록 화면">
+                        <img src="${manual_img_10}" class="guide-image" alt="프로젝트 등록 화면">
                     </ul>
                     
                 </div>
@@ -280,7 +453,7 @@ export const manualData = [
                         <li><strong>대상:</strong> 엑셀 파일 기반의 조사 데이터</li>
                         <li><strong>방법:</strong> '신규등록' 버튼 클릭 > POF (없을경우 2026-00-0000 맞춰) 입력 / 조사명 입력 > '등록하기' 버튼 클릭</li>
                         <li><strong>참고:</strong> 문항과 데이터는 "문항목록" > "문항추가"에서 엑셀로 직접 업로드해야 합니다.</li>
-                        <img src="${img_4_1_2}" class="guide-image" alt="프로젝트 등록 화면" width="50%">
+                        <img src="${manual_img_11}" class="guide-image" alt="프로젝트 등록 화면" width="50%">
                     </ul>
                 </div>
             </div>
@@ -291,7 +464,7 @@ export const manualData = [
                 <p>2가지 등록 방법이 있습니다. <br>
                    조사(Qmaster) - (솔루션본부-웹제작자) 등록시 문항 자동 등록 (문자열이 있는 데이터 모두 등록)<br>
                    신규등록 - (연구부서) 등록시 문항 엑셀양식에 맞춰 문항 등록 직접선택(멀티) </p>
-                <img src="${img_4_1}" class="guide-image" alt="프로젝트 등록 화면">
+                <img src="${manual_img_12}" class="guide-image" alt="프로젝트 등록 화면">
                      
                 <div class="note-yellow">
                     <h4>1-1. 조사(Qmaster) (솔루션본부-웹제작담당자)</h4>
@@ -302,7 +475,7 @@ export const manualData = [
                         <li><strong>대상:</strong> 큐마 시스템에 등록된 조사 - "담당자" 지정된 대상만 등록 허용</li>
                         <li><strong>방법:</strong> '조사(Qmaster)' 버튼 클릭 -> 해당프로젝트 선택 -> 등록 자동</li>
                         <li><strong>특징:</strong> 큐마조사의 문항 및 보기 데이터가 자동으로 연동됩니다.</li>
-                        <img src="${img_4_1_1}" class="guide-image" alt="프로젝트 등록 화면">
+                        <img src="${manual_img_13}" class="guide-image" alt="프로젝트 등록 화면">
                     </ul>
                     
                 </div>
@@ -314,7 +487,7 @@ export const manualData = [
                         <li><strong>대상:</strong> 엑셀 파일 기반의 조사 데이터</li>
                         <li><strong>방법:</strong> '신규등록' 버튼 클릭 > POF (없을경우 2026-00-0000 맞춰) 입력 / 조사명 입력 > '등록하기' 버튼 클릭</li>
                         <li><strong>참고:</strong> 문항과 데이터는 "문항목록" > "문항추가"에서 엑셀로 직접 업로드해야 합니다.</li>
-                        <img src="${img_4_1_2}" class="guide-image" alt="프로젝트 등록 화면" width="50%">
+                        <img src="${manual_img_14}" class="guide-image" alt="프로젝트 등록 화면" width="50%">
                     </ul>
                 </div>
             </div>
@@ -323,7 +496,7 @@ export const manualData = [
             <h3>프로젝트 분석 대상 등록 상세 가이드</h3>
             <div class="guide-section">
                 <p>프로젝트별 분석 대상을 등록하는 페이지 입니다. </p>
-                <img src="${img_4_3}" class="guide-image" alt="권한 관리 화면">
+                <img src="${manual_img_15}" class="guide-image" alt="권한 관리 화면">
                      
                 <div class="note-yellow">
                       <ul>
@@ -338,18 +511,18 @@ export const manualData = [
             <h3>OPENAI API KEY 등록 상세 가이드</h3>
             <div class="guide-section">
                 <p>API KEY는 OPENAI에서 발급받은 키를 입력합니다. (자동분석 시 유료 API가 실행됩니다)</p>
-                <img src="${img_4_2}" class="guide-image" alt="API KEY 등록 화면"  >
+                <img src="${manual_img_16}" class="guide-image" alt="API KEY 등록 화면"  >
                      
                 <div class="note-yellow">
                       <ul>
                         <li><strong>유형선택:</strong> 개인키(개인법인카드등록된키),부서공용키(부서에서 관리하고 있는 키),회사공용키(경영지원에서 관리하고 있는 키)  </li>
-                        <img src="${img_4_2}" class="guide-image" alt="API KEY 등록 화면"  >
+                        <img src="${manual_img_17}" class="guide-image" alt="API KEY 등록 화면"  >
                     </ul>
                 </div>
                 <div class="note-green">
                       <ul>
                         <li><strong>API KEY 목록 > 기본사용설정(필수):</strong>키 등록 후  "기본사용설정" 에 해당되는 키를 필수 선택해야 APIKEY가 설정됩니다. </li>
-                        <img src="${img_4_2_1}" class="guide-image" alt="API KEY 등록 화면" width="100%">
+                        <img src="${manual_img_18}" class="guide-image" alt="API KEY 등록 화면" width="100%">
                     </ul>
                 </div>
             </div>
@@ -358,14 +531,14 @@ export const manualData = [
             <h3>문항목록 > 문항 등록, 문항옵션 상세 가이드</h3>
             <div class="guide-section">
                 <p>문항목록에서 "조사등록"에서 자동 등록된 문항 제시 및 "신규등록"에서 "문항추가" 엑셀로 직접 업로드한 문항 목록 페이지 </p>
-                <img src="${img_4_4}" class="guide-image" alt="문항등록 화면">
+                <img src="${manual_img_19}" class="guide-image" alt="문항등록 화면">
                  <h3>문항등록</h3>        
                 <div class="note-yellow">
                       <ul>
                         <li><strong>DB:</strong> 조사DB 데이터 자동 등록 (문자열 응답 문항 모두 자동 등록)  <br>- 데이터맵기준으로 (진행/완료) 추가된 응답자 데이터, (추가문항) 자동 등록
                         <br>1. 등록된 맵 기준의 오픈 문항 확인하기
                         <br>2. 등록하기 버튼 클릭</li>
-                        <img src="${img_4_4_1}" class="guide-image" alt="문항 등록 화면">
+                        <img src="${manual_img_20}" class="guide-image" alt="문항 등록 화면">
                         
                         <li><strong>Excel:</strong> "문항추가" 엑셀로 직접 업로드한 문항 목록 페이지 
                         <br>1. 엑셀파일 작성 가이드 포맷으로 구선된 응답자 데이터 엑셀저장
@@ -374,7 +547,7 @@ export const manualData = [
                         <br>4. 문항선택하기 버튼 클릭 > 분석할 문항 멀티 선택
                         <br>5. 등록하기 버튼 클릭
                         </li>
-                        <img src="${img_4_4_2}" class="guide-image" alt="신규등록 화면">
+                        <img src="${manual_img_21}" class="guide-image" alt="신규등록 화면">
                         
                     </ul>
                 </div>
@@ -386,7 +559,7 @@ export const manualData = [
                                 <li><strong>분석보기:</strong> 각 문항별 카테고리 자동분류 페이지 이동</li>
                                 <li><strong>문항통합저장:</strong> 한번에 분류할 문항 정의 후 기준으로 일괄 분류 - 보기코드가 동일하게 잡힐 문항을 묶어서 분류 또는 최초상기, 비보조상기 문항을 묶어 분류</li>
                                 <li><strong>수정허용/불가:</strong> 분석 완료 후 트래킹조사 또는 변경불가 문항에서 더이상 수정불가를 설정하고자 할때</li>
-                                <img src="${img_4_5}" class="guide-image" alt="분석 보기 화면">
+                                <img src="${manual_img_22}" class="guide-image" alt="분석 보기 화면">
                      </ul>
                 </div>
             </div>
@@ -413,7 +586,7 @@ export const manualData = [
                         <li><strong>7. 소분류 개수:</strong> 소분류 개수 범위 지정 (예) 0~50</li>
                         <li><strong>8. 중분류 개수:</strong> 중분류 개수 범위 지정 (예) 5~10</li>
                         <li><strong>9. 대분류 개수:</strong> 대분류 개수 범위 지정 (예) 1~5</li>
-                        <img src="${img_4_6}" class="guide-image" alt="문항별 분석 화면">
+                        <img src="${manual_img_23}" class="guide-image" alt="문항별 분석 화면">
                 
                     </ul>
                 </div>
@@ -423,7 +596,7 @@ export const manualData = [
                         <li><strong>분석 / 보기:</strong> 문항+응답데이터+프롬프트 정의를 기준으로 "보기 데이터" 자동 카테고리 분석 / 코드화</li>
                         <li><strong>분석 / 응답자 분석(NEW):</strong> 문항+보기데이터+프롬프트 정의를 기준으로 "응답 데이터" 자동 카테고리 분석 / 코드화</li>
                         <li><strong>분석 / 응답자 빈셀 & 기타:</strong> 응답자 분석 후 응답데이터 기준으로 빈셀과 기타를 다시 재분류 (필수 2회 자동 구동)</li>
-                        <img src="${img_4_7}" class="guide-image" alt="문항별 분석 화면" width="50%">
+                        <img src="${manual_img_24}" class="guide-image" alt="문항별 분석 화면" width="50%">
                     </ul>
                 </div>  
             </div>
@@ -440,7 +613,7 @@ export const manualData = [
                         <li><strong>엑셀 다운로드:</strong> 1번째 시트(응답데이터 중복제거), 2번째 시트(보기데이터), 3번째 시트(응답자별세로멀티), 4번째 시트(응답자별 가로 멀티sav포맷 & 멀티콤마머지)</li>
                         <li><strong>엑셀 업로드:</strong> 다운로드 엑셀 파일 기준으로 1,2번째 시트를 수정 > 업로드 > 일괄 업데이트 적용됨 </li>
                         <li><strong>보기불러오기:</strong> 하단 참고</li>
-                        <img src="${img_4_7_1}" class="guide-image" alt="데이터 관리 화면" width="100%">  
+                        <img src="${manual_img_25}" class="guide-image" alt="데이터 관리 화면" width="100%">  
                         </ul>
                 </div>  
                 <h3>보기 불러오기</h4>
@@ -450,7 +623,7 @@ export const manualData = [
                         <li><strong>엑셀보기 추가시:</strong> 오른쪽 "보기엑셀샘플" -> 보기엑셀업로드 -> 보기저장</li>
                         <li><strong>기존분석 보기 추가시:</strong> 왼쪽 기존 분석된 프로젝트/문항선택 -> 오른쪽 보기 확인 -> 보기저장</li>
                         <li><strong>백업 보기 추가시:</strong> "문항+#BACK1, #BACK2" "보기분석" 또는 "보기초기화"를 통해 이전 보기를 자동 백업한다. 2개 -> 오른쪽 보기 확인 -> 보기저장</li>
-                        <img src="${img_4_8}" class="guide-image" alt="데이터 관리 화면" width="100%">
+                        <img src="${manual_img_26}" class="guide-image" alt="데이터 관리 화면" width="100%">
                     </ul>
                 </div>
                 <h3>응답자 데이터 수정방법</h4>
@@ -465,7 +638,7 @@ export const manualData = [
                         <li><strong>6. 미확인 데이터보기:</strong> 확인/미확인 체크란으로 확인된 데이터와 미확인한 데이터를 구분하여 코드 작업이 유용하게 활용하면 된다. </li>
                         <li><strong>7. 저장 :</strong> 응답데이터를 수정하는 순간 "저장"버튼이 활성화 됩니다. 저장시 설문온디비와 조사디비에 두가지 곳에 코드화된 데이터가 저장됩니다.</li>
                         <li><strong>8. 중복코드 제거(DB) :</strong> 큐마조사로 연동된 문항만 가능하며 해당 버튼을 누르면 응답자(PID)를 기준으로 머지된 문항에서 중복코드가 매겨질 경우 중복제거하여 완료데이터에 재저장됩니다. (설문온디비에는 중복코드 그대로 유지) </li>
-                        <img src="${img_4_7_2}" class="guide-image" alt="데이터 관리 화면" width="100%">
+                        <img src="${manual_img_27}" class="guide-image" alt="데이터 관리 화면" width="100%">
                     </ul>
                 </div>
             </div>
@@ -486,47 +659,11 @@ export const manualData = [
     {
         id: "usageadmin",
         title: "5. 응답자 관리",
-        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+        icon: `<svg xmlns=\"http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
         content: `
             <h2>5. 응답자 관리</h2>
             <p>상태 관리 및 AI 성실도 분류 및 관리</p>
         `
-    },
-    //   {
-    //       id: "style_guide",
-    //       title: "6. 스타일 가이드",
-    //       icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5"></circle><circle cx="17.5" cy="10.5" r=".5"></circle><circle cx="8.5" cy="7.5" r=".5"></circle><circle cx="6.5" cy="12.5" r=".5"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.01 17.461 2 12 2z"></path></svg>`,
-    //       content: `
-    //             <h2>스타일 가이드</h2>
-    //             <p>매뉴얼 작성 시 사용할 수 있는 다양한 스타일 예시입니다.</p>
+    }
 
-    //             <h3>1. 강조 박스 (Note) 스타일</h3>
-    //             <p>상황에 맞는 색상을 선택하여 사용하세요. <code>class="note-색상명"</code></p>
-
-    //             <div class="note-orange">기본/주의 (Orange): class="note-orange" (또는 note)</div>
-    //             <div class="note-blue">정보/알림 (Blue): class="note-blue"</div>
-    //             <div class="note-green">성공/완료 (Green): class="note-green"</div>
-    //             <div class="note-red">경고/오류 (Red): class="note-red"</div>
-    //             <div class="note-purple">팁/제안 (Purple): class="note-purple"</div>
-    //             <div class="note-gray">참고/기타 (Gray): class="note-gray"</div>
-    //             <div class="note-teal">Teal: class="note-teal"</div>
-    //             <div class="note-indigo">Indigo: class="note-indigo"</div>
-    //             <div class="note-pink">Pink: class="note-pink"</div>
-    //             <div class="note-yellow">Yellow: class="note-yellow"</div>
-
-    //             <h3>2. 이미지 스타일</h3>
-
-    //             <h4>Style 1: 심플 보더 (class="img-style-simple")</h4>
-    //             <img src="https://via.placeholder.com/600x200" class="img-style-simple" alt="예시 이미지">
-
-    //             <h4>Style 2: 그림자 효과 (class="img-style-shadow")</h4>
-    //             <img src="https://via.placeholder.com/600x200" class="img-style-shadow" alt="예시 이미지">
-
-    //             <h4>Style 3: 캡션 포함 (class="img-style-caption")</h4>
-    //             <div class="img-style-caption">
-    //                 <img src="https://via.placeholder.com/600x200" alt="예시 이미지">
-    //                 <div class="img-caption-text">이미지 하단에 설명을 입력할 수 있습니다.</div>
-    //             </div>
-    //         `
-    //     }
 ];
