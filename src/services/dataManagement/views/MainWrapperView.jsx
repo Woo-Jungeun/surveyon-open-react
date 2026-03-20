@@ -25,6 +25,7 @@ const MainWrapperView = (props) => {
                 <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                     <Outlet />
                 </div>
+                <FooterSection style={{ height: '40px', padding: '0 20px' }} />
             </section>
         </div>
     );
