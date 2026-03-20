@@ -101,6 +101,7 @@ const Sidebar = ({
                                 await persistor.purge();
                                 removeCookie("TOKEN", { path: "/" });
                                 sessionStorage.clear();
+                                localStorage.removeItem("hsrtCustomerState");
                                 navigate(isCustomer ? "/cs" : "/login");
                             } else {
                                 modal.showAlert("알림", "로그아웃 실패");

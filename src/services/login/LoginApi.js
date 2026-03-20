@@ -61,6 +61,7 @@ export function LoginApi() {
                     if (res?.Token) {
                         setCookie("X-Auth-Token", res.Token, cookieOptions);
                     }
+                    localStorage.removeItem("hsrtCustomerState");
 
                     // 3) 모든 세팅 완료 후 navigate (isLoggedIn이 true가 된 다음 이동)
                     navigate(from, { replace: true, state: originalState });
@@ -107,13 +108,26 @@ export function LoginApi() {
                     sessionStorage.setItem("groupcode", groupcode);
 
                     // 임시로 화면에 보여줄 이름 설정 (응답에 projectname이 없으면 projectnum 사용)
-                    if (res.projectname) sessionStorage.setItem("projectname", res.projectname);
-                    else if (merge_pn) sessionStorage.setItem("projectname", merge_pn);
-
+                    const finalProjectname = res.projectname || merge_pn || "";
+                    if (finalProjectname) sessionStorage.setItem("projectname", finalProjectname);
                     if (page_title) sessionStorage.setItem("pagetitle", page_title);
 
                     if (groupcode === "999999991") {
                         sessionStorage.setItem("userName", "H-SRT고객");
+
+                        // 브라우저 닫았다 열어도 유지되도록 localStorage에 H-SRT 고객 상태 백업
+                        const hsrtState = {
+                            projectnum,
+                            merge_pn,
+                            pageId: page_id,
+                            showmenu,
+                            groupcode,
+                            projectname: finalProjectname,
+                            pagetitle: page_title,
+                            userName: "H-SRT고객"
+                        };
+                        localStorage.setItem("hsrtCustomerState", JSON.stringify(hsrtState));
+                        localStorage.removeItem("lastLoginType"); // 직원 로그인 캐시 지우기
                     }
 
                     // 1) redux 저장 (식별을 위해 userGroup에 H-SRT고객 표기)
@@ -182,6 +196,7 @@ export function LoginApi() {
                 removeCookie("X-Auth-Token", { path: "/" });
                 localStorage.removeItem("X-Auth-Token"); // 혹시 모르니 로컬스토리지도 삭제
                 sessionStorage.removeItem("openai_balance");
+                localStorage.removeItem("hsrtCustomerState"); // 고객 세션 복원 데이터 삭제
                 v?.options?.onSuccess?.();
             },
             onError: (_, v) => {

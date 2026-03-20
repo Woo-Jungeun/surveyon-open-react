@@ -26,6 +26,24 @@ function App() {
   const auth = useSelector((store) => store.auth);
   const isLoggedIn = auth?.isLogin && cookies?.TOKEN;
 
+  // 브라우저를 닫았다 열어서 sessionStorage가 비어있는 경우 (Redux/Token은 유지됨), 
+  // H-SRT 고객이라면 localStorage에 저장해둔 백업 상태를 복원합니다.
+  if (isLoggedIn && !sessionStorage.getItem("groupcode")) {
+    const hsrtStateStr = localStorage.getItem("hsrtCustomerState");
+    if (hsrtStateStr) {
+      try {
+        const hsrtState = JSON.parse(hsrtStateStr);
+        Object.keys(hsrtState).forEach(key => {
+          if (hsrtState[key]) {
+            sessionStorage.setItem(key, hsrtState[key]);
+          }
+        });
+      } catch (e) {
+        console.error("Failed to restore H-SRT customer session state", e);
+      }
+    }
+  }
+
   return (
     <Fragment>
       <Routes>
