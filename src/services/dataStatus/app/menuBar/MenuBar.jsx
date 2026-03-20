@@ -126,9 +126,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   // 데이터 정보 조회 (최종 업데이트 시간)
   const fetchDataInfo = async (pn) => {
-    // 고객(groupcode: 999999991)일 경우 데이터 정보 조회를 우선 건너뜁니다
-    if (sessionStorage.getItem("groupcode") === "999999991") return;
-
     const userId = auth?.user?.userId;
     if (!userId || !pn) return;
     try {
