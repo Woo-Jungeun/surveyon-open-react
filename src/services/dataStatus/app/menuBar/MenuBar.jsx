@@ -131,7 +131,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     const userId = auth?.user?.userId;
     if (!userId || !pn) return;
-    console.log(userId, pn)
     try {
       const result = await getDataInfo.mutateAsync({ user: userId, pn });
       if (result?.success === "777") {
@@ -140,7 +139,6 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           processedAt: formatDate(result.resultjson.parquetBakedAt)
         }));
       } else {
-        console.log("err", err)
         const errorMsg = result?.errortext || result?.errorcontent || result?.message;
         if (errorMsg) {
           modal.showErrorAlert("에러", errorMsg || "데이터 정보 조회에 실패했습니다.");
