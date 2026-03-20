@@ -12,13 +12,14 @@ import { ProPermissionApi } from "@/services/aiOpenAnalysis/app/proPermission/Pr
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import moment from "moment";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./ProPermissionModal.css";
 
 const ProPermissionModal = ({ open, onClose }) => {
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
     const navigate = useNavigate();
+    const location = useLocation();
     const { proPermissionData, pagesMembersSet } = ProPermissionApi();
 
     const projectnum = sessionStorage.getItem("projectnum");
@@ -299,11 +300,15 @@ const ProPermissionModal = ({ open, onClose }) => {
                             <div className="pp-form-field">
                                 <label className="pp-form-label">작업 권한 <span className="pp-required">*</span></label>
                                 <DropDownList
-                                    data={["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)", "H-SRT고객"]}
+                                    className={!formData.permission_gubun ? "pp-dropdown-placeholder" : ""}
+                                    data={
+                                        location.pathname.startsWith("/data_status")
+                                            ? ["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)", "H-SRT고객"]
+                                            : ["오픈팀(관리,읽기,쓰기)", "제작자(관리,읽기,쓰기)", "연구원(읽기,쓰기)"]
+                                    }
                                     value={formData.permission_gubun}
                                     onChange={(e) => handleChange("permission_gubun", e.value)}
                                     disabled={loading}
-                                    defaultItem="권한을 선택하세요"
                                 />
                             </div>
 
