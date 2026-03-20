@@ -214,7 +214,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   };
 
   // 추가 액션 영역 (날짜와 새로고침 아이콘 한 줄 정리)
-  const ExtraActions = (
+  const isHsrtCustomer = sessionStorage.getItem("groupcode") === "999999991";
+  const ExtraActions = isHsrtCustomer ? null : (
     <div className="menu-bar-actions">
       <div className="menu-bar-refresh-bar">
         <div className="menu-bar-info-group">
