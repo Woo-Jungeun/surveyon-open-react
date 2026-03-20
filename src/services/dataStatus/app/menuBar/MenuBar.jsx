@@ -126,6 +126,9 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   // 데이터 정보 조회 (최종 업데이트 시간)
   const fetchDataInfo = async (pn) => {
+    // H-SRT 고객일 경우 데이터 정보 조회를 건너뜁니다
+    if (sessionStorage.getItem("groupcode") === "999999991") return;
+
     const userId = auth?.user?.userId;
     if (!userId || !pn) return;
     try {
