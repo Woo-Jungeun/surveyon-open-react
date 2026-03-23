@@ -13,8 +13,8 @@ const menuItems = [
       "직관적인 인터페이스로 다양한 유형의 설문을 손쉽게 제작할 수 있습니다.",
     icon: FileText,
     status: "예정",
-    color: "#A060FF",
-    bg: "rgba(160,96,255,0.12)",
+    color: "#374151", // 차콜 그레이 (고급스러운 먹색)
+    bg: "rgba(55,65,81,0.12)",
     statusColor: "#6E6E6E"
   },
   {
@@ -61,15 +61,15 @@ const menuItems = [
       "응답자 정보를 체계적으로 관리하고 응답 현황을 모니터링합니다.",
     icon: Users,
     status: "예정",
-    color: "#6D67FF",
-    bg: "rgba(109,103,255,0.12)",
+    color: "#A060FF",
+    bg: "rgba(160,96,255,0.12)",
     statusColor: "#6E6E6E"
   },
   {
     id: "field-management",
     title: "실사관리",
     path: "/field_management",
-    description: "실시간으로 설문 조사 진행 흐름을 한눈에 파악하고 쿼터를 손쉽게 관리할 수 있습니다.",
+    description: "설문 조사 진행 흐름을 한눈에 파악하고 쿼터를 손쉽게 관리할 수 있습니다.",
     icon: ClipboardList,
     status: "1차오픈",
     color: "#1E3A8A",
