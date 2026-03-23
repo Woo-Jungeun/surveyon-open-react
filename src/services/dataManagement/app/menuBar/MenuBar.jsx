@@ -48,9 +48,9 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
     {
       label: "H-SRT",
-      icon: <BarChart3 size={16} />,
-      path: "/data_status/analysis/frequency",
-      onClick: () => { navigate("/data_status/analysis/frequency"); }
+      icon: <Grid size={16} />,
+      path: "/data_status/analysis/additional",
+      onClick: () => { navigate("/data_status/analysis/additional"); }
     },
     {
       label: "데이터관리",
@@ -66,6 +66,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         navigate("/ai_open_analysis");
       }
     },
+    { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/frequency", onClick: () => { navigate("/field_management/analysis/frequency"); } },
     { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
   ];
 

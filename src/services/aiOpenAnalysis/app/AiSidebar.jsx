@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useCookies } from "react-cookie";
-import { List, FileText, BarChart3, Database, BrainCircuit, Users, Sparkles, BookOpen, Settings, UserCog } from "lucide-react";
+import { List, FileText, Grid, Database, BrainCircuit, Users, Sparkles, BookOpen, Settings, UserCog, ClipboardList, BarChart3 } from "lucide-react";
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import { modalContext } from "@/components/common/Modal.jsx";
 import { MenuBarApi } from "./MenuBarApi";
@@ -144,9 +144,9 @@ const AiSidebar = ({ onOpenProjectModal }) => {
         { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
         {
             label: "H-SRT",
-            icon: <BarChart3 size={16} />,
-            path: "/data_status/analysis/frequency",
-            onClick: () => { navigate("/data_status/analysis/frequency"); }
+            icon: <Grid size={16} />,
+            path: "/data_status/analysis/additional",
+            onClick: () => { navigate("/data_status/analysis/additional"); }
             // isDisabled: true
         },
         {
@@ -157,6 +157,7 @@ const AiSidebar = ({ onOpenProjectModal }) => {
             // isDisabled: true
         },
         { label: "AI오픈분석", icon: <BrainCircuit size={16} />, path: "/ai_open_analysis", highlight: true },
+        { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/frequency", onClick: () => { navigate("/field_management/analysis/frequency"); } },
         { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
     ];
 

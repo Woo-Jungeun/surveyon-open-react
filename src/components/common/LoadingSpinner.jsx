@@ -111,6 +111,23 @@ function LoadingProvider(props) {
 function LoadingSpinner(props) {
     const { loading, content, target } = props;
 
+    // react-router-dom의 useLocation은 <Router> 외부에서 사용 시 충돌하므로 window.location 사용
+    const getThemeClass = (path) => {
+        if (!path || path === "/" || path === "/login") return "purple-theme";
+        if (path.startsWith("/survey_creation")) return "survey-create-theme";
+        if (path.startsWith("/data_status")) return "data-dashboard-theme";
+        if (path.startsWith("/data_management")) return "data-management-theme";
+        if (path.startsWith("/field_management")) return "field-management-theme";
+        if (path.startsWith("/respondent_management")) return "respondent-theme";
+        if (path.startsWith("/board")) return "purple-theme";
+        if (path.startsWith("/inquiry")) return "purple-theme";
+        if (path.startsWith("/ai_open_analysis")) return "orange-theme";
+        return "purple-theme";
+    };
+
+    // 로딩이 활성화될 때마다 현재 경로를 기준으로 테마 가져오기
+    const themeClass = loading ? getThemeClass(window.location.pathname) : "purple-theme";
+
     let maskStyle;
 
     if (target !== null) {
@@ -127,7 +144,7 @@ function LoadingSpinner(props) {
         <Fragment>
             {
                 loading
-                    ? <article className={"modal on"} style={maskStyle}>
+                    ? <article className={`modal on ${themeClass}`} style={maskStyle}>
                         <div className="loading">
                             <div className="survey-loading-spinner">
                                 <div className="dot"></div>

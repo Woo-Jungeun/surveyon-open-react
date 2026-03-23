@@ -2,7 +2,7 @@
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
-  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck
+  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck, Columns
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
@@ -20,13 +20,13 @@ const MENU_ITEMS = [
   {
     label: "교차표",
     items: [
-      { label: "빈도분석", path: "/data_status/analysis/frequency", icon: BarChart3 },
+      // { label: "빈도분석", path: "/data_status/analysis/additional", icon: BarChart3 },
       // { label: "교차분석", path: "/data_status/analysis/cross", icon: Table, isPending: true },
-      { label: "배너설정", path: "/data_status/analysis/additional", icon: Grid },
+      { label: "배너설정", path: "/data_status/analysis/additional", icon: Columns },
       { label: "문항", path: "/data_status/analysis/cross", icon: Table, isPending: true },
       // todo 임시 주석  [쿼터현황/관리] 메뉴
       // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
-      { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList, isPending: true },
+      // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList, isPending: true },
     ]
   },
   // {
@@ -85,7 +85,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-    { label: "H-SRT", icon: <BarChart3 size={16} />, path: "/data_status/analysis/frequency", highlight: true },
+    { label: "H-SRT", icon: <Grid size={16} />, path: "/data_status/analysis/additional", highlight: true },
     {
       label: "데이터관리",
       icon: <Database size={16} />,
@@ -100,6 +100,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         navigate("/ai_open_analysis");
       }
     },
+    { label: "실사관리", icon: <ClipboardList size={16} />, path: "/field_management/analysis/frequency" },
     { label: "응답자관리", icon: <Users size={16} />, path: "/project", isDisabled: true },
   ];
 
@@ -399,14 +400,13 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           title: "데이터 현황",
           logoText: "H-SRT",
           logoClass: "menu-bar-logo",
-          onClick: () => navigate("/data_status/analysis/frequency")
+          onClick: () => navigate("/data_status/analysis/additional")
         }}
         menuGroups={computedMenuGroups}
         projectInfo={projectInfoData}
         pageInfo={sidebarPageInfo} // Add this
         theme="blue"
         moduleItems={moduleItems}
-        extraActions={ExtraActions}
       />
 
       {isNewDataModalOpen && (

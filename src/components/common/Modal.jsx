@@ -291,8 +291,8 @@ function ModalProvider(props) {
         if (path.startsWith("/survey_creation")) return "survey-create-theme";
         if (path.startsWith("/data_status")) return "data-dashboard-theme";
         if (path.startsWith("/data_management")) return "data-management-theme";
+        if (path.startsWith("/field_management")) return "field-management-theme";
         if (path.startsWith("/respondent_management")) return "respondent-theme";
-        if (path.startsWith("/board/notice")) return "purple-theme";
         if (path.startsWith("/board/patchnotes")) return "purple-theme";
         if (path.startsWith("/board")) return "purple-theme"; // 기본 게시판 테마
         if (path.startsWith("/inquiry")) return "purple-theme";

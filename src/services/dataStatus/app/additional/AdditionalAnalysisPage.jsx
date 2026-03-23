@@ -1561,7 +1561,7 @@ const AdditionalAnalysisPage = () => {
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
             <DataHeader
-                title="추가분석"
+                title="배너설정"
             >
 
                 {/* 고급 필터 버튼 - AdditionalAnalysisFilterPopup 오픈 */}

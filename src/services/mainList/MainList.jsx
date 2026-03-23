@@ -77,7 +77,7 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
         sessionStorage.setItem("merge_pn_text", merge_pn_text || "");
 
         if (from === 'data_status') {
-            navigate('/data_status/analysis/frequency');
+            navigate('/data_status/analysis/additional');
         } else {
             navigate('/project/pro_list', { state: { projectnum, projectname, servername, projectpof } });
         }

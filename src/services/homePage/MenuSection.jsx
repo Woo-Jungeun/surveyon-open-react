@@ -1,5 +1,5 @@
 ﻿import React from "react";
-import { FileText, BarChart3, Database, BrainCircuit, Users } from "lucide-react";
+import { FileText, BarChart3, Database, BrainCircuit, Users, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useCookies } from "react-cookie";
@@ -64,6 +64,17 @@ const menuItems = [
     color: "#6D67FF",
     bg: "rgba(109,103,255,0.12)",
     statusColor: "#6E6E6E"
+  },
+  {
+    id: "field-management",
+    title: "실사관리",
+    path: "/field_management",
+    description: "실시간으로 설문 조사 진행 흐름을 한눈에 파악하고 쿼터를 손쉽게 관리할 수 있습니다.",
+    icon: ClipboardList,
+    status: "1차오픈",
+    color: "#1E3A8A",
+    bg: "rgba(30,58,138,0.12)",
+    statusColor: "#2DB670"
   }
 ];
 
@@ -78,7 +89,7 @@ const MenuSection = () => {
       <div className="hp-menu-title-wrap">
         <h2 className="hp-menu-title">통합 플랫폼 기능</h2>
         <p className="hp-menu-desc">
-          설문온의 강력한 5가지 핵심 기능을 경험해보세요.
+          설문온의 강력한 6가지 핵심 기능을 경험해보세요.
         </p>
         {!isLoggedIn && (
           <p className="hp-menu-desc" style={{ color: "#FF5252", marginTop: "8px", fontWeight: "500" }}>
@@ -101,8 +112,11 @@ const MenuSection = () => {
             let targetState = {};
 
             if (item.id === "data-dashboard") {
-              targetPath = "/data_status/analysis/frequency";
+              targetPath = "/data_status/analysis/additional";
               targetState = { from: "data_status" };
+            } else if (item.id === "field-management") {
+              targetPath = "/field_management/analysis/frequency";
+              targetState = { from: "field_management" };
             } else if (item.id === "ai-open-analysis") {
               const projectnum = sessionStorage.getItem("projectnum");
               targetPath = projectnum ? "/project/pro_list" : "/project";

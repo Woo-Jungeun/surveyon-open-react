@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3, FileText, Database, Users } from "lucide-react";
+import { LogIn, User, LogOut, Sparkles, BrainCircuit, Zap, BarChart3, FileText, Database, Users, ClipboardList } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import { useCookies } from "react-cookie";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
@@ -211,10 +211,10 @@ const InfoSection = () => {
               // todo H-SRT 임시 주석 
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/data_status/analysis/frequency", originalState: { from: "data_status" } } });
+                  navigate("/login", { state: { from: "/data_status/analysis/additional", originalState: { from: "data_status" } } });
                   return;
                 }
-                navigate("/data_status/analysis/frequency", { state: { from: "data_status" } });
+                navigate("/data_status/analysis/additional", { state: { from: "data_status" } });
               }}
               style={{ cursor: "pointer" }}
             >
@@ -258,6 +258,21 @@ const InfoSection = () => {
             <div className="hp-feature-item">
               <Users className="hp-feature-icon" />
               <span>응답자관리</span>
+            </div>
+
+            <div
+              className="hp-feature-item"
+              onClick={() => {
+                if (!isLoggedIn) {
+                  navigate("/login", { state: { from: "/field_management/analysis/frequency", originalState: { from: "field_management" } } });
+                  return;
+                }
+                navigate("/field_management/analysis/frequency", { state: { from: "field_management" } });
+              }}
+              style={{ cursor: "pointer" }}
+            >
+              <ClipboardList className="hp-feature-icon" />
+              <span>실사관리</span>
             </div>
           </div>
 

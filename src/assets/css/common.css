@@ -4666,8 +4666,78 @@ footer {
 }
 
 /* =========================================
+   Modal Theme Variables 
+========================================= */
+.purple-theme {
+    --primary-color: #7c3aed;
+}
+
+.survey-create-theme {
+    --primary-color: #A060FF;
+}
+
+.data-dashboard-theme {
+    --primary-color: #4EA3FF;
+}
+
+.data-management-theme {
+    --primary-color: #23C6A3;
+}
+
+.respondent-theme {
+    --primary-color: #6D67FF;
+}
+
+.orange-theme {
+    --primary-color: #FF913A;
+}
+
+.field-management-theme {
+    --primary-color: #1e3a8a;
+}
+
+/* =========================================
    Modal Theme Overrides
 ========================================= */
+
+/* --- Field Management Theme (Navy) #1e3a8a --- */
+.field-management-theme.modal .k-button-solid-primary,
+.field-management-theme.modal .btnM[themeColor="primary"] {
+    background-color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+    color: #fff !important;
+}
+
+.field-management-theme.modal .k-button-solid-primary:hover,
+.field-management-theme.modal .btnM[themeColor="primary"]:hover {
+    background-color: #1e40af !important;
+    border-color: #1e40af !important;
+}
+
+.field-management-theme.modal .btnTxt.type01 {
+    color: #1e3a8a !important;
+    border-color: #1e3a8a !important;
+}
+
+.field-management-theme.modal .btnTxt.type01:hover {
+    background-color: #e0e7ff !important;
+}
+
+.modal.field-management-theme .iconNoti,
+.field-management-theme.modal .iconNoti {
+    background: none !important;
+}
+
+.modal.field-management-theme .iconNoti::before,
+.field-management-theme.modal .iconNoti::before {
+    content: '' !important;
+    display: inline-block !important;
+    width: 32px !important;
+    height: 32px !important;
+    background: url("data:image/svg+xml,%3csvg width='24' height='24' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12 2C12.5523 2 13 2.44772 13 3V13C13 13.5523 12.5523 14 12 14C11.4477 14 11 13.5523 11 13V3C11 2.44772 11.4477 2 12 2Z' fill='%231e3a8a'/%3e%3ccircle cx='12' cy='18' r='1.5' fill='%231e3a8a'/%3e%3c/svg%3e") no-repeat center / contain !important;
+    vertical-align: middle !important;
+    margin-right: 8px !important;
+}
 
 /* --- Purple Theme (Login, Main) #7c3aed --- */
 .purple-theme.modal .k-button-solid-primary,

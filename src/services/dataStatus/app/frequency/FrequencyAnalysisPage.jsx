@@ -1235,7 +1235,7 @@ const FrequencyAnalysisPage = () => {
 
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
-            <DataHeader title="빈도분석">
+            <DataHeader title="진행현황표">
                 {/* 필터 영역 그룹 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     {/* 필터 문항 선택 드롭다운 */}

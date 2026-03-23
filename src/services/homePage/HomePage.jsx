@@ -23,7 +23,8 @@ const HomePage = () => {
       if (showmenu) {
         const firstMenuLabel = showmenu.split(",")[0].replace(/\s+/g, "");
         const menuPathMap = {
-          "빈도분석": "/data_status/analysis/frequency",
+          "빈도분석": "/data_status/analysis/additional",
+          "배너설정": "/data_status/analysis/additional",
           "교차분석": "/data_status/analysis/cross",
           "추가분석": "/data_status/analysis/additional",
           "쿼터현황/관리": "/data_status/analysis/quota",
