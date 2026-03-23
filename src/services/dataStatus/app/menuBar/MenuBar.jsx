@@ -29,13 +29,13 @@ const MENU_ITEMS = [
       // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList, isPending: true },
     ]
   },
-  // {
-  //   label: "AI요약",
-  //   items: [
-  //     { label: "AI분석", path: "/data_status/ai/analysis", icon: Sparkles, isPending: true },
-  //     { label: "AI리포트", path: "/data_status/ai/report", icon: FileText, isPending: true },
-  //   ]
-  // },
+  {
+    label: "AI요약",
+    items: [
+      { label: "AI분석", path: "/data_status/ai/analysis", icon: Sparkles, isPending: true },
+      { label: "AI리포트", path: "/data_status/ai/report", icon: FileText, isPending: true },
+    ]
+  },
   {
     label: "데이터설정",
     items: [
