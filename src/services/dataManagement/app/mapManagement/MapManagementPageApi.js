@@ -71,6 +71,15 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** SPS 파일 업로드 */
+    const uploadSpss = useMutation(
+        async (data) => await api.post(data, "/upload", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -78,6 +87,7 @@ export function MapManagementPageApi() {
         updateMapVariables,
         updateMapLabels,
         createMapLabels,
-        exportData
+        exportData,
+        uploadSpss
     };
 }

@@ -12,7 +12,8 @@ import AddLabelPopup from './AddLabelPopup';
 import LogicEditPopup from './LogicEditPopup';
 import MapConfigFilterPopup from '../../../../components/common/popup/MapConfigFilterPopup';
 import DownloadModal from './DownloadModal';
-import { Download } from 'lucide-react';
+import UploadModal from './UploadModal';
+import { Download, Upload } from 'lucide-react';
 
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
@@ -43,6 +44,7 @@ const MapManagementPage = () => {
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
     const [editingLogicPopupOpen, setEditingLogicPopupOpen] = useState(null);       // 로직 변경 팝업
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);              // 다운로드 모달 상태
+    const [uploadModalOpen, setUploadModalOpen] = useState(false);                  // 업로드 모달 상태
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
 
     const [sort, setSort] = useState([]);
@@ -125,12 +127,16 @@ const MapManagementPage = () => {
             } else if (result?.success !== "777") {
                 const errorMsg = result?.errortext || result?.errorcontent || result?.message || "프로젝트 매핑 정보를 조회할 수 없습니다.";
                 modal.showErrorAlert("에러", errorMsg);
+                setVariables([]);
+                setOriginalVariables([]);
             } else {
                 setVariables([]);
                 setOriginalVariables([]);
             }
         } catch (error) {
             console.error("맵 변수 조회 오류:", error);
+            setVariables([]);
+            setOriginalVariables([]);
             if (error?.response?.status === 404) {
                 modal.showErrorAlert("알림", "프로젝트를 찾을 수 없습니다.");
             } else if (error?.response?.status === 400) {
@@ -571,25 +577,45 @@ const MapManagementPage = () => {
                     onSave={handleSave}
                     saveButtonDisabled={!hasChanges}
                 >
-                    {/* {activeTab === 'mapping' && (
-                        ...
-                    )} */}
-                    <button
-                        className="data-header-btn"
-                        onClick={() => setDownloadModalOpen(true)}
-                        style={{
-                            height: '38px',
-                            padding: '0 20px',
-                            border: '1px solid #16a34a',
-                            background: '#fff',
-                            color: '#16a34a',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                    >
-                        <Download size={16} />
-                        다운로드
-                    </button>
+                    {activeTab === 'mapping' && (
+                        <>
+                            {!(sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '').toLowerCase().startsWith('q') && (
+                                <button
+                                    className="data-header-btn"
+                                    onClick={() => setUploadModalOpen(true)}
+                                    style={{
+                                        height: '38px',
+                                        padding: '0 20px',
+                                        border: '1px solid #16a34a',
+                                        background: '#fff',
+                                        color: '#16a34a',
+                                        marginRight: '8px'
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                                >
+                                    <Upload size={16} />
+                                    업로드
+                                </button>
+                            )}
+                            <button
+                                className="data-header-btn"
+                                onClick={() => setDownloadModalOpen(true)}
+                                style={{
+                                    height: '38px',
+                                    padding: '0 20px',
+                                    border: '1px solid #16a34a',
+                                    background: '#fff',
+                                    color: '#16a34a',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                                <Download size={16} />
+                                다운로드
+                            </button>
+                        </>
+                    )}
                 </DataHeader>
 
 
@@ -677,6 +703,13 @@ const MapManagementPage = () => {
                 <DownloadModal
                     isOpen={downloadModalOpen}
                     onClose={() => setDownloadModalOpen(false)}
+                />
+
+                {/* 업로드 모달 */}
+                <UploadModal
+                    isOpen={uploadModalOpen}
+                    onClose={() => setUploadModalOpen(false)}
+                    refreshData={() => setRefreshKey(prev => prev + 1)}
                 />
             </div>
         </MapManagementContext.Provider>
