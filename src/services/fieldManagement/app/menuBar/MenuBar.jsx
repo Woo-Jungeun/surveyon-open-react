@@ -219,7 +219,15 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
                 <ProjectSelectionModal
                     from="data_status"
                     onSelect={handleProjectSelect}
-                    onClose={() => setIsProjectModalOpen(false)}
+                    onClose={() => {
+                        setIsProjectModalOpen(false);
+                        const projectnum = sessionStorage.getItem("projectnum");
+                        const mergePn = sessionStorage.getItem("merge_pn");
+                        if ((!projectnum || projectnum === "null" || projectnum === "undefined") &&
+                            (!mergePn || mergePn === "null" || mergePn === "undefined")) {
+                            navigate("/");
+                        }
+                    }}
                 />
             )}
         </>
