@@ -581,43 +581,42 @@ const MapManagementPage = () => {
                 >
                     {activeTab === 'mapping' && (
                         <>
+                            <button
+                                className="data-header-btn"
+                                onClick={() => setDataUpdateModalOpen(true)}
+                                style={{
+                                    height: '38px',
+                                    padding: '0 20px',
+                                    border: '1px solid #16a34a',
+                                    background: '#fff',
+                                    color: '#16a34a',
+                                    marginRight: '8px'
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                                <Upload size={16} />
+                                데이터 업데이트
+                            </button>
+
                             {!(sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '').toLowerCase().startsWith('q') && (
-                                <>
-                                    <button
-                                        className="data-header-btn"
-                                        onClick={() => setDataUpdateModalOpen(true)}
-                                        style={{
-                                            height: '38px',
-                                            padding: '0 20px',
-                                            border: '1px solid #16a34a',
-                                            background: '#fff',
-                                            color: '#16a34a',
-                                            marginRight: '8px'
-                                        }}
-                                        onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                                    >
-                                        <Upload size={16} />
-                                        데이터 업데이트
-                                    </button>
-                                    <button
-                                        className="data-header-btn"
-                                        onClick={() => setUploadModalOpen(true)}
-                                        style={{
-                                            height: '38px',
-                                            padding: '0 20px',
-                                            border: '1px solid #16a34a',
-                                            background: '#fff',
-                                            color: '#16a34a',
-                                            marginRight: '8px'
-                                        }}
-                                        onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                                    >
-                                        <Upload size={16} />
-                                        업로드
-                                    </button>
-                                </>
+                                <button
+                                    className="data-header-btn"
+                                    onClick={() => setUploadModalOpen(true)}
+                                    style={{
+                                        height: '38px',
+                                        padding: '0 20px',
+                                        border: '1px solid #16a34a',
+                                        background: '#fff',
+                                        color: '#16a34a',
+                                        marginRight: '8px'
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                                >
+                                    <Upload size={16} />
+                                    업로드
+                                </button>
                             )}
                             <button
                                 className="data-header-btn"
