@@ -103,30 +103,29 @@ const MenuPermissionPage = () => {
         });
     };
 
-    // 더미 스위치 데이터 컴포넌트 (우측 화면)
-    const SettingRow = ({ label, isVisible, onToggle }) => (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid #f1f5f9' }}>
-            <span style={{ fontSize: '14px', color: '#334155', fontWeight: 500 }}>{label}</span>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Eye size={16} color={isVisible ? "#3b82f6" : "#94a3b8"} />
-                    <span style={{ fontSize: '13px', color: isVisible ? '#3b82f6' : '#64748b', fontWeight: isVisible ? 600 : 400 }}>페이지 표출</span>
-                    <div
-                        onClick={onToggle}
-                        style={{
-                            width: '40px', height: '22px', borderRadius: '12px',
-                            backgroundColor: isVisible ? '#3b82f6' : '#cbd5e1',
-                            position: 'relative', cursor: 'pointer', transition: 'all 0.2s',
-                            marginLeft: '8px'
-                        }}
-                    >
-                        <div style={{
-                            width: '18px', height: '18px', backgroundColor: '#fff', borderRadius: '50%',
-                            position: 'absolute', top: '2px', left: isVisible ? 'calc(100% - 20px)' : '2px',
-                            transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
-                        }}></div>
-                    </div>
-                </div>
+    // 단위 컴포넌트: 심플한 토글 스위치 형태
+    const SettingRow = ({ label, isVisible, onToggle, isLast }) => (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 0',
+            borderBottom: isLast ? 'none' : '1px solid #f1f5f9'
+        }}>
+            <span style={{ fontSize: '14px', color: isVisible ? '#1e293b' : '#94a3b8', fontWeight: isVisible ? 600 : 400, transition: 'color 0.2s' }}>
+                {label}
+            </span>
+            <div
+                onClick={onToggle}
+                style={{
+                    width: '36px', height: '20px', borderRadius: '12px',
+                    backgroundColor: isVisible ? '#3b82f6' : '#cbd5e1',
+                    position: 'relative', cursor: 'pointer', transition: 'all 0.2s'
+                }}
+            >
+                <div style={{
+                    width: '16px', height: '16px', backgroundColor: '#fff', borderRadius: '50%',
+                    position: 'absolute', top: '2px', left: isVisible ? 'calc(100% - 18px)' : '2px',
+                    transition: 'all 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
+                }}></div>
             </div>
         </div>
     );
@@ -210,62 +209,77 @@ const MenuPermissionPage = () => {
                         {selectedUser ? (
                             <>
                                 {/* 집계 현황 섹션 */}
-                                <div style={{ marginBottom: '32px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid #3b82f6', paddingLeft: '12px', marginBottom: '16px' }}>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid #3b82f6', paddingLeft: '12px', paddingRight: '20px', marginBottom: '12px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>집계 현황</h3>
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <span
                                                 onClick={() => handleToggleSection(statusKeys)}
-                                                style={{ fontSize: '12px', color: isStatusAllOff ? '#94a3b8' : '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                style={{
+                                                    fontSize: '12px', color: isStatusAllOff ? '#64748b' : '#3b82f6',
+                                                    backgroundColor: isStatusAllOff ? '#f1f5f9' : '#eff6ff',
+                                                    padding: '6px 14px', borderRadius: '16px',
+                                                    cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
+                                                }}
                                             >
-                                                <Eye size={14} /> {isStatusAllOff ? '전체 표출 ON' : '전체 표출 OFF'}
+                                                {isStatusAllOff ? '전체 켜기' : '전체 끄기'}
                                             </span>
                                         </div>
                                     </div>
-                                    <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0 20px' }}>
+                                    <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 20px' }}>
                                         <SettingRow label="빈도분석" isVisible={permissions.status_freq} onToggle={() => handleToggle('status_freq')} />
                                         <SettingRow label="교차분석" isVisible={permissions.status_cross} onToggle={() => handleToggle('status_cross')} />
                                         <SettingRow label="추가분석" isVisible={permissions.status_add} onToggle={() => handleToggle('status_add')} />
-                                        <SettingRow label="쿼터현황/관리" isVisible={permissions.status_quota} onToggle={() => handleToggle('status_quota')} />
+                                        <SettingRow label="쿼터현황/관리" isVisible={permissions.status_quota} onToggle={() => handleToggle('status_quota')} isLast />
                                     </div>
                                 </div>
 
                                 {/* AI요약 섹션 */}
-                                <div style={{ marginBottom: '32px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid #3b82f6', paddingLeft: '12px', marginBottom: '16px' }}>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid #3b82f6', paddingLeft: '12px', paddingRight: '20px', marginBottom: '12px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>AI요약</h3>
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <span
                                                 onClick={() => handleToggleSection(aiKeys)}
-                                                style={{ fontSize: '12px', color: isAiAllOff ? '#94a3b8' : '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                style={{
+                                                    fontSize: '12px', color: isAiAllOff ? '#64748b' : '#3b82f6',
+                                                    backgroundColor: isAiAllOff ? '#f1f5f9' : '#eff6ff',
+                                                    padding: '6px 14px', borderRadius: '16px',
+                                                    cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
+                                                }}
                                             >
-                                                <Eye size={14} /> {isAiAllOff ? '전체 표출 ON' : '전체 표출 OFF'}
+                                                {isAiAllOff ? '전체 켜기' : '전체 끄기'}
                                             </span>
                                         </div>
                                     </div>
-                                    <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0 20px' }}>
+                                    <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 20px' }}>
                                         <SettingRow label="AI분석" isVisible={permissions.ai_analysis} onToggle={() => handleToggle('ai_analysis')} />
-                                        <SettingRow label="AI리포트" isVisible={permissions.ai_report} onToggle={() => handleToggle('ai_report')} />
+                                        <SettingRow label="AI리포트" isVisible={permissions.ai_report} onToggle={() => handleToggle('ai_report')} isLast />
                                     </div>
                                 </div>
 
                                 {/* 데이터설정 섹션 */}
-                                <div style={{ marginBottom: '32px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid #3b82f6', paddingLeft: '12px', marginBottom: '16px' }}>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid #3b82f6', paddingLeft: '12px', paddingRight: '20px', marginBottom: '12px' }}>
                                         <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#1e293b', margin: 0 }}>데이터설정</h3>
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <span
                                                 onClick={() => handleToggleSection(dataKeys)}
-                                                style={{ fontSize: '12px', color: isDataAllOff ? '#94a3b8' : '#3b82f6', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}
+                                                style={{
+                                                    fontSize: '12px', color: isDataAllOff ? '#64748b' : '#3b82f6',
+                                                    backgroundColor: isDataAllOff ? '#f1f5f9' : '#eff6ff',
+                                                    padding: '6px 14px', borderRadius: '16px',
+                                                    cursor: 'pointer', fontWeight: 600, transition: 'all 0.2s'
+                                                }}
                                             >
-                                                <Eye size={14} /> {isDataAllOff ? '전체 표출 ON' : '전체 표출 OFF'}
+                                                {isDataAllOff ? '전체 켜기' : '전체 끄기'}
                                             </span>
                                         </div>
                                     </div>
-                                    <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0 20px' }}>
+                                    <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 20px' }}>
                                         <SettingRow label="변수 생성" isVisible={permissions.data_var} onToggle={() => handleToggle('data_var')} />
                                         <SettingRow label="DP 의뢰서 정의" isVisible={permissions.data_dp} onToggle={() => handleToggle('data_dp')} />
-                                        <SettingRow label="가중치 생성" isVisible={permissions.data_weight} onToggle={() => handleToggle('data_weight')} />
+                                        <SettingRow label="가중치 생성" isVisible={permissions.data_weight} onToggle={() => handleToggle('data_weight')} isLast />
                                     </div>
                                 </div>
                             </>
