@@ -674,7 +674,7 @@ input:checked+.slider:before {
 
 /* Download Modal Styles */
 .download-modal-content {
-    width: 520px !important;
+    width: 550px !important;
 }
 
 .download-modal-content .variable-modal-header {
@@ -1614,4 +1614,44 @@ input:checked+.slider:before {
 
 .upload-submit-btn:hover {
     background-color: #15803d;
+}
+
+/* ── Data Update Modal Info Box ── */
+.update-info-box {
+    margin-bottom: 16px;
+    background-color: #f0faf5;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.update-info-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #16a34a;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.update-info-list {
+    margin: 0;
+    padding-left: 20px;
+    color: #475569;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.update-info-list li {
+    margin-bottom: 4px;
+}
+
+.update-info-list li:last-child {
+    margin-bottom: 0;
+}
+
+.update-info-highlight {
+    color: #16a34a;
+    font-weight: 600;
 }

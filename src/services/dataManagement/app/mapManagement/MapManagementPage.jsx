@@ -13,6 +13,7 @@ import LogicEditPopup from './LogicEditPopup';
 import MapConfigFilterPopup from '../../../../components/common/popup/MapConfigFilterPopup';
 import DownloadModal from './DownloadModal';
 import UploadModal from './UploadModal';
+import DataUpdateModal from './DataUpdateModal';
 import { Download, Upload } from 'lucide-react';
 
 import '../../../../assets/css/grid_vertical_borders.css';
@@ -45,6 +46,7 @@ const MapManagementPage = () => {
     const [editingLogicPopupOpen, setEditingLogicPopupOpen] = useState(null);       // 로직 변경 팝업
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);              // 다운로드 모달 상태
     const [uploadModalOpen, setUploadModalOpen] = useState(false);                  // 업로드 모달 상태
+    const [dataUpdateModalOpen, setDataUpdateModalOpen] = useState(false);          // 데이터 업데이트 모달 상태
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
 
     const [sort, setSort] = useState([]);
@@ -580,23 +582,42 @@ const MapManagementPage = () => {
                     {activeTab === 'mapping' && (
                         <>
                             {!(sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '').toLowerCase().startsWith('q') && (
-                                <button
-                                    className="data-header-btn"
-                                    onClick={() => setUploadModalOpen(true)}
-                                    style={{
-                                        height: '38px',
-                                        padding: '0 20px',
-                                        border: '1px solid #16a34a',
-                                        background: '#fff',
-                                        color: '#16a34a',
-                                        marginRight: '8px'
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                                >
-                                    <Upload size={16} />
-                                    업로드
-                                </button>
+                                <>
+                                    <button
+                                        className="data-header-btn"
+                                        onClick={() => setDataUpdateModalOpen(true)}
+                                        style={{
+                                            height: '38px',
+                                            padding: '0 20px',
+                                            border: '1px solid #16a34a',
+                                            background: '#fff',
+                                            color: '#16a34a',
+                                            marginRight: '8px'
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                                    >
+                                        <Upload size={16} />
+                                        데이터 업데이트
+                                    </button>
+                                    <button
+                                        className="data-header-btn"
+                                        onClick={() => setUploadModalOpen(true)}
+                                        style={{
+                                            height: '38px',
+                                            padding: '0 20px',
+                                            border: '1px solid #16a34a',
+                                            background: '#fff',
+                                            color: '#16a34a',
+                                            marginRight: '8px'
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                                    >
+                                        <Upload size={16} />
+                                        업로드
+                                    </button>
+                                </>
                             )}
                             <button
                                 className="data-header-btn"
@@ -709,6 +730,13 @@ const MapManagementPage = () => {
                 <UploadModal
                     isOpen={uploadModalOpen}
                     onClose={() => setUploadModalOpen(false)}
+                    refreshData={() => setRefreshKey(prev => prev + 1)}
+                />
+
+                {/* 데이터 업데이트 모달 */}
+                <DataUpdateModal
+                    isOpen={dataUpdateModalOpen}
+                    onClose={() => setDataUpdateModalOpen(false)}
                     refreshData={() => setRefreshKey(prev => prev + 1)}
                 />
             </div>

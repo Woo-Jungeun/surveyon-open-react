@@ -1,14 +1,14 @@
 import React, { useRef, useState, useContext } from 'react';
-import { UploadCloud, X } from 'lucide-react';
+import { UploadCloud, X, Info } from 'lucide-react';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useSelector } from 'react-redux';
 import { MapManagementPageApi } from './MapManagementPageApi';
 import './MapManagementPage.css';
 
-const UploadModal = ({ isOpen, onClose, refreshData }) => {
+const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
     const fileInputRef = useRef(null);
     const modal = useContext(modalContext);
-    const { uploadSpss } = MapManagementPageApi();
+    const { updateDataFromSav } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
 
     const [selectedFile, setSelectedFile] = useState(null);
@@ -50,14 +50,14 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
 
     const handleUploadSubmit = async () => {
         if (!selectedFile) {
-            modal.showErrorAlert("알림", "업로드할 파일을 선택해주세요.");
+            modal.showErrorAlert("알림", "업데이트할 파일을 선택해주세요.");
             return;
         }
 
         // 확장자 확인 (.sav)
         const fileName = selectedFile.name.toLowerCase();
         if (!fileName.endsWith('.sav')) {
-            modal.showErrorAlert("알림", ".sav 형식의 파일만 업로드할 수 있습니다.");
+            modal.showErrorAlert("알림", ".sav 형식의 파일만 업데이트할 수 있습니다.");
             return;
         }
 
@@ -70,7 +70,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
             return;
         }
 
-        modal.showConfirm("알림", "업로드 완료 시 기존 내용으로의 복구가 절대 불가능하므로 \n 신중히 확인해 주세요.\n 파일 업로드를 계속 진행하시겠습니까?", {
+        modal.showConfirm("알림", "업데이트 완료 시 기존 내용으로의 복구가 절대 불가능하므로 \n 신중히 확인해 주세요.\n 데이터 업데이트를 계속 진행하시겠습니까?", {
             btns: [
                 { title: "취소", click: () => { } },
                 {
@@ -79,27 +79,37 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                         const formData = new FormData();
                         formData.append("pn", pn);
                         formData.append("file", selectedFile);
-                        formData.append("gb", "spss");
-                        if (projectName) formData.append("projectName", projectName);
                         if (userId) formData.append("user", userId);
 
                         try {
-                            const res = await uploadSpss.mutateAsync(formData);
+                            const res = await updateDataFromSav.mutateAsync(formData);
 
                             if (res?.success === "777") {
                                 // 1. 성공 시 팝업 닫기
                                 handleModalClose();
                                 // 2. 알림 메시지 띄우기 (확인 버튼 누를 때까지 대기)
-                                await modal.showAlert("알림", "파일 업로드가 완료되었습니다.");
+                                await modal.showAlert("알림", "데이터 업데이트 처리가 완료되었습니다.");
                                 // 3. 맵 구성 조회 API 태우기 (재조회)
                                 if (refreshData) refreshData();
+                            } else if (res?.success === "907") {
+                                let duplicatePids = [
+                                    "중복PID값1",
+                                    "중복PID값2",
+                                    "중복PID값3"
+                                ];
+                                if (res?.resultjson && Array.isArray(res.resultjson)) {
+                                    duplicatePids = res.resultjson;
+                                }
+                                const pidsText = duplicatePids.length > 0 ? ` (중복된 PID: ${duplicatePids.slice(0, 10).join(", ")}${duplicatePids.length > 10 ? ' 등...' : ''})` : "";
+
+                                modal.showErrorAlert("에러", (res?.message || "SAV 파일 내에 중복된 고유 식별자(PID)가 존재하여 업데이트가 중단되었습니다.") + "\n" + pidsText);
                             } else {
-                                const errorMsg = res?.errortext || res?.message || "파일 업로드 중 오류가 발생했습니다.";
+                                const errorMsg = res?.errortext || res?.message || "데이터 업데이트 중 오류가 발생했습니다.";
                                 modal.showErrorAlert("에러", errorMsg);
                             }
                         } catch (error) {
-                            console.error("Upload error:", error);
-                            modal.showErrorAlert("에러", "파일 업로드 요청 중 오류가 발생했습니다.");
+                            console.error("Update error:", error);
+                            modal.showErrorAlert("에러", "데이터 업데이트 요청 중 오류가 발생했습니다.");
                         }
                     }
                 }
@@ -117,7 +127,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
 
     return (
         <div className="variable-modal-overlay">
-            <div className="variable-modal-content download-modal-content" style={{ width: '500px' }}>
+            <div className="variable-modal-content download-modal-content upload-modal-content">
                 <div className="variable-modal-header">
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                         <div style={{
@@ -127,7 +137,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                             borderRadius: '4px',
                             marginRight: '8px'
                         }}></div>
-                        <h3 className="variable-modal-title">업로드</h3>
+                        <h3 className="variable-modal-title">데이터 업데이트</h3>
                     </div>
                     <button onClick={handleModalClose} className="variable-modal-close"><X size={20} /></button>
                 </div>
@@ -138,6 +148,23 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                     <div className="upload-modal-warning">
                         <span className="upload-icon-warning">⚠️</span>
                         <span>파일을 업로드할 경우, 기존 맵 구성 데이터가 모두 덮어씌워집니다.</span>
+                    </div>
+
+                    {/* 데이터 업데이트 주의사항 (상단) */}
+                    <div className="update-info-box">
+                        <div className="update-info-title">
+                            <Info size={16} />
+                            <span>파일 업로드 주의사항</span>
+                        </div>
+                        <ul className="update-info-list" style={{ listStyle: 'none', paddingLeft: 0, marginTop: '4px' }}>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 이 기능은 데이터 업데이트 전용으로, 데이터 <strong>신규 입력은 지원하지 않습니다.</strong></li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> <strong>SPSS 파일(.sav)</strong> 형식만 지원합니다.</li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 첫 번째 데이터 필드는 반드시 <strong><span className="update-info-highlight">pid</span></strong>여야 합니다.</li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> pid는 Key 값이므로 <strong>데이터 중복이 허용되지 않습니다.</strong></li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> pid에 문제(중복, 특수문자 등)가 있을 경우 <strong>업로드가 진행되지 않습니다.</strong></li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 기존 필드명과 <strong>매칭되지 않는 값은 업데이트 시 무시</strong>됩니다.</li>
+                            <li style={{ marginTop: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 사이트에서 <strong>sav 파일로 데이터를 내려받으신 후 수정</strong>하시는 것을 권장드립니다.</li>
+                        </ul>
                     </div>
 
                     {/* 드래그 앤 드롭 영역 */}
@@ -152,7 +179,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                             <UploadCloud size={24} />
                         </div>
                         <p className="upload-drag-text">
-                            여기에 파일을 끌어다 놓거나 클릭하여 선택하세요
+                            여기에 업데이트할 파일을 끌어다 놓거나 클릭하여 선택하세요
                         </p>
                     </div>
 
@@ -187,7 +214,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                         취소
                     </button>
                     <button className="upload-submit-btn" onClick={handleUploadSubmit}>
-                        업로드 시작
+                        업데이트 시작
                     </button>
                 </div>
             </div>
@@ -195,4 +222,4 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
     );
 };
 
-export default UploadModal;
+export default DataUpdateModal;
