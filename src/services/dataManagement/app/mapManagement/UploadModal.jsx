@@ -123,90 +123,40 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
 
                 <div className="variable-modal-body" style={{ padding: '24px' }}>
 
-                    {/* 경고 문구 추가 */}
-                    <div style={{
-                        marginBottom: '16px',
-                        color: '#ef4444',
-                        fontSize: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                    }}>
-                        <span style={{ fontSize: '13px' }}>⚠️</span>
+                    {/* 경고 문구 추가 (타이틀 바로 아래) */}
+                    <div className="upload-modal-warning">
+                        <span className="upload-icon-warning">⚠️</span>
                         <span>새로운 파일을 업로드할 경우, 기존 맵 구성 데이터가 모두 덮어씌워집니다.</span>
                     </div>
 
                     {/* 드래그 앤 드롭 영역 */}
                     <div
+                        className={`upload-drag-area ${isDragging ? 'dragging' : ''}`}
                         onDragOver={onDragOver}
                         onDragLeave={onDragLeave}
                         onDrop={onDrop}
                         onClick={() => fileInputRef.current?.click()}
-                        style={{
-                            border: `2px dashed ${isDragging ? '#16a34a' : '#cbd5e1'}`,
-                            borderRadius: '8px',
-                            padding: '40px 20px',
-                            backgroundColor: isDragging ? '#f0faf5' : '#ffffff',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            marginBottom: '16px',
-                            transition: 'all 0.2s',
-                        }}
                     >
-                        <div style={{
-                            backgroundColor: '#f0faf5',
-                            color: '#16a34a',
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '50%',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            marginBottom: '12px'
-                        }}>
+                        <div className="upload-drag-icon">
                             <UploadCloud size={24} />
                         </div>
-                        <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
+                        <p className="upload-drag-text">
                             여기에 파일을 끌어다 놓거나 클릭하여 선택하세요
                         </p>
                     </div>
 
                     {/* 파일 선택 버튼 & 파일명 표시 영역 */}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <div className="upload-file-display-area">
                         <button
-                            // e.stopPropagation() necessary if button is clicked to avoid triggering the parent drag area click again (though currently the button is not overlapping).
-                            onClick={() => fileInputRef.current?.click()}
-                            style={{
-                                padding: '10px 16px',
-                                border: '1px solid #cbd5e1',
-                                backgroundColor: '#ffffff',
-                                borderRadius: '6px',
-                                color: '#334155',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                cursor: 'pointer',
-                                whiteSpace: 'nowrap'
+                            className="upload-file-btn"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                fileInputRef.current?.click();
                             }}
-                            onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                            onMouseLeave={e => e.currentTarget.style.backgroundColor = '#ffffff'}
                         >
                             파일 선택
                         </button>
-                        <div style={{
-                            flex: 1,
-                            padding: '10px 16px',
-                            border: '1px solid #e2e8f0',
-                            backgroundColor: '#e2e8f0',
-                            borderRadius: '6px',
-                            color: selectedFile ? '#334155' : '#94a3b8',
-                            fontSize: '14px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                        }}>
+                        <div className={`upload-file-name ${selectedFile ? 'has-file' : ''}`}>
                             {selectedFile ? selectedFile.name : '선택된 파일이 없습니다'}
                         </div>
                     </div>
@@ -222,34 +172,10 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                 </div>
 
                 <div className="variable-modal-footer" style={{ borderTop: 'none', padding: '0 24px 24px 24px', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                    <button
-                        onClick={handleModalClose}
-                        style={{
-                            padding: '10px 20px',
-                            fontSize: '14px',
-                            border: '1px solid #cbd5e1',
-                            backgroundColor: '#ffffff',
-                            color: '#475569',
-                            borderRadius: '6px',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                        }}
-                    >
+                    <button className="upload-cancel-btn" onClick={handleModalClose}>
                         취소
                     </button>
-                    <button
-                        onClick={handleUploadSubmit}
-                        style={{
-                            padding: '10px 20px',
-                            fontSize: '14px',
-                            border: 'none',
-                            backgroundColor: '#16a34a',
-                            color: '#ffffff',
-                            borderRadius: '6px',
-                            fontWeight: '500',
-                            cursor: 'pointer'
-                        }}
-                    >
+                    <button className="upload-submit-btn" onClick={handleUploadSubmit}>
                         업로드 시작
                     </button>
                 </div>
