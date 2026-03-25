@@ -6,12 +6,12 @@ export const MapManagementContext = React.createContext(null);
 // 자릿수 자동 계산 (순수 함수)
 export const NUMERIC_FIELDS = ['valLen', 'valCnt', 'startPos', 'totalLen'];
 
-export const recalcVariables = (vars) => {
+export const recalcVariables = (vars, updateRanking = false) => {
     let nextStart = null;
     return vars.map((v, index) => {
         const valLen = Number(v.valLen) || 0;
         const valCnt = Number(v.valCnt) || 0;
-        const ranking = index + 1; // 1-based 순서
+        const ranking = updateRanking ? index + 1 : v.ranking; // drag&drop 시에만 ranking 변경
 
         // 총자릿수 = 보기자릿수 × 보기갯수
         const totalLen = valLen * valCnt;

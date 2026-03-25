@@ -122,7 +122,7 @@ const MapManagementPage = () => {
                 });
 
                 const allZero = transformedData.every(v => v.startPos === 0);
-                const finalData = allZero ? recalcVariables(transformedData) : transformedData;
+                const finalData = allZero ? recalcVariables(transformedData, true) : transformedData;
 
                 setVariables(finalData);
                 setOriginalVariables(JSON.parse(JSON.stringify(finalData)));
@@ -556,7 +556,7 @@ const MapManagementPage = () => {
             const newVariables = [...prev];
             const [moved] = newVariables.splice(fromIndex, 1);
             newVariables.splice(toIndex, 0, moved);
-            return recalcVariables(newVariables);
+            return recalcVariables(newVariables, true);
         });
     }, []);
 
