@@ -159,8 +159,13 @@ const MapManagementPage = () => {
 
     useEffect(() => {
         const handlePageSelected = () => setRefreshKey(prev => prev + 1);
+        const handleOpenUpload = () => setUploadModalOpen(true);
         window.addEventListener("pageSelected", handlePageSelected);
-        return () => window.removeEventListener("pageSelected", handlePageSelected);
+        window.addEventListener("openUploadModal", handleOpenUpload);
+        return () => {
+            window.removeEventListener("pageSelected", handlePageSelected);
+            window.removeEventListener("openUploadModal", handleOpenUpload);
+        };
     }, []);
 
     useEffect(() => {
@@ -598,26 +603,6 @@ const MapManagementPage = () => {
                                 <Upload size={16} />
                                 데이터 업데이트
                             </button>
-
-                            {!(sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '').toLowerCase().startsWith('q') && (
-                                <button
-                                    className="data-header-btn"
-                                    onClick={() => setUploadModalOpen(true)}
-                                    style={{
-                                        height: '38px',
-                                        padding: '0 20px',
-                                        border: '1px solid #16a34a',
-                                        background: '#fff',
-                                        color: '#16a34a',
-                                        marginRight: '8px'
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
-                                >
-                                    <Upload size={16} />
-                                    업로드
-                                </button>
-                            )}
                             <button
                                 className="data-header-btn"
                                 onClick={() => setDownloadModalOpen(true)}

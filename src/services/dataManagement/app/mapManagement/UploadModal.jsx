@@ -127,7 +127,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                             borderRadius: '4px',
                             marginRight: '8px'
                         }}></div>
-                        <h3 className="variable-modal-title">업로드</h3>
+                        <h3 className="variable-modal-title">신규 세팅 업로드</h3>
                     </div>
                     <button onClick={handleModalClose} className="variable-modal-close"><X size={20} /></button>
                 </div>
@@ -137,7 +137,8 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                     {/* 경고 문구 추가 (타이틀 바로 아래) */}
                     <div className="upload-modal-warning">
                         <span className="upload-icon-warning">⚠️</span>
-                        <span>파일을 업로드할 경우, 기존 맵 구성 데이터가 모두 덮어씌워집니다.</span>
+                        <span>파일을 업로드할 경우, 기존 맵 구성 데이터가 모두 덮어씌워집니다.<br />
+                            SPSS 파일(.sav) 형식만 지원합니다.</span>
                     </div>
 
                     {/* 드래그 앤 드롭 영역 */}

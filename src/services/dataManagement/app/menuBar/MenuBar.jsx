@@ -110,6 +110,49 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
 
 
+  const ExtraActions = (
+    !(sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '').toLowerCase().startsWith('q') ? (
+      <div style={{ padding: '0 20px 16px 20px' }}>
+        <button
+          onClick={() => { window.dispatchEvent(new Event('openUploadModal')); }}
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '10px 14px',
+            borderRadius: '8px',
+            background: '#ffffff',
+            border: '1px solid #22c55e',
+            boxShadow: '0 1px 2px rgba(34, 197, 94, 0.05)',
+            transition: 'all 0.2s ease',
+            width: '100%',
+            cursor: 'pointer',
+            color: '#16a34a',
+            fontWeight: 600,
+            fontSize: '14px',
+            gap: '8px'
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = '#f0fdf4';
+            e.currentTarget.style.border = '1px solid #16a34a';
+            e.currentTarget.style.boxShadow = '0 2px 5px rgba(22, 163, 74, 0.1)';
+            e.currentTarget.style.transform = 'translateY(-1px)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = '#ffffff';
+            e.currentTarget.style.border = '1px solid #22c55e';
+            e.currentTarget.style.boxShadow = '0 1px 2px rgba(34, 197, 94, 0.05)';
+            e.currentTarget.style.transform = 'translateY(0)';
+          }}
+        >
+          <Upload size={16} strokeWidth={2.5} />
+          <span>신규 세팅</span>
+        </button>
+      </div>
+    ) : null
+  );
+
   return (
     <>
       <Sidebar
@@ -123,6 +166,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         projectInfo={projectInfoData}
         theme="green"
         moduleItems={moduleItems}
+        extraActions={ExtraActions}
       />
 
       {isNewDataModalOpen && (
