@@ -117,6 +117,26 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
         });
     };
 
+    const handleFileSelectClick = (e) => {
+        if (e) e.stopPropagation();
+
+        const handleFocus = () => {
+            setTimeout(() => {
+                if (fileInputRef.current && !fileInputRef.current.value) {
+                    setSelectedFile(null);
+                }
+                window.removeEventListener('focus', handleFocus);
+            }, 300);
+        };
+
+        window.addEventListener('focus', handleFocus);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+            fileInputRef.current.click();
+        }
+    };
+
     const handleModalClose = () => {
         setSelectedFile(null);
         if (fileInputRef.current) {
@@ -173,13 +193,13 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                         onDragOver={onDragOver}
                         onDragLeave={onDragLeave}
                         onDrop={onDrop}
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handleFileSelectClick}
                     >
                         <div className="upload-drag-icon">
                             <UploadCloud size={24} />
                         </div>
                         <p className="upload-drag-text">
-                            여기에 업데이트할 파일을 끌어다 놓거나 클릭하여 선택하세요
+                            여기에 파일을 끌어다 놓거나 클릭하여 선택하세요
                         </p>
                     </div>
 
@@ -187,10 +207,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                     <div className="upload-file-display-area">
                         <button
                             className="upload-file-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                fileInputRef.current?.click();
-                            }}
+                            onClick={handleFileSelectClick}
                         >
                             파일 선택
                         </button>

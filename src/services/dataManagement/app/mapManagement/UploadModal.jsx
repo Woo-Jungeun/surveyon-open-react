@@ -107,6 +107,26 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
         });
     };
 
+    const handleFileSelectClick = (e) => {
+        if (e) e.stopPropagation();
+
+        const handleFocus = () => {
+            setTimeout(() => {
+                if (fileInputRef.current && !fileInputRef.current.value) {
+                    setSelectedFile(null);
+                }
+                window.removeEventListener('focus', handleFocus);
+            }, 300);
+        };
+
+        window.addEventListener('focus', handleFocus);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+            fileInputRef.current.click();
+        }
+    };
+
     const handleModalClose = () => {
         setSelectedFile(null);
         if (fileInputRef.current) {
@@ -147,7 +167,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                         onDragOver={onDragOver}
                         onDragLeave={onDragLeave}
                         onDrop={onDrop}
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={handleFileSelectClick}
                     >
                         <div className="upload-drag-icon">
                             <UploadCloud size={24} />
@@ -161,10 +181,7 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                     <div className="upload-file-display-area">
                         <button
                             className="upload-file-btn"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                fileInputRef.current?.click();
-                            }}
+                            onClick={handleFileSelectClick}
                         >
                             파일 선택
                         </button>
