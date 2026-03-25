@@ -109,21 +109,16 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
 
     const handleFileSelectClick = (e) => {
         if (e) e.stopPropagation();
+        if (fileInputRef.current) {
+            fileInputRef.current.click();
+        }
+    };
 
-        const handleFocus = () => {
-            setTimeout(() => {
-                if (fileInputRef.current && !fileInputRef.current.value) {
-                    setSelectedFile(null);
-                }
-                window.removeEventListener('focus', handleFocus);
-            }, 300);
-        };
-
-        window.addEventListener('focus', handleFocus);
-
+    const handleClearFile = (e) => {
+        if (e) e.stopPropagation();
+        setSelectedFile(null);
         if (fileInputRef.current) {
             fileInputRef.current.value = "";
-            fileInputRef.current.click();
         }
     };
 
@@ -186,7 +181,22 @@ const UploadModal = ({ isOpen, onClose, refreshData }) => {
                             파일 선택
                         </button>
                         <div className={`upload-file-name ${selectedFile ? 'has-file' : ''}`}>
-                            {selectedFile ? selectedFile.name : '선택된 파일이 없습니다'}
+                            {selectedFile ? (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {selectedFile.name}
+                                    </span>
+                                    <button
+                                        className="upload-file-clear-btn"
+                                        onClick={handleClearFile}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: '2px', marginLeft: '8px' }}
+                                        onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
+                                        onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
+                                    >
+                                        <X size={14} />
+                                    </button>
+                                </div>
+                            ) : '선택된 파일이 없습니다'}
                         </div>
                     </div>
 
