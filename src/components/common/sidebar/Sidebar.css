@@ -1107,3 +1107,24 @@
     border-color: #1e3a8a;
     color: #1e3a8a;
 }
+
+/* =======================================
+   데이터 관리 - 신규 세팅 버튼 접힘 (Collapsed) 처리
+======================================= */
+.common-sidebar.collapsed .new-setting-text {
+    display: none !important;
+}
+
+.common-sidebar.collapsed .new-setting-btn {
+    padding: 10px !important;
+    width: 38px !important;
+    height: 38px !important;
+    margin: 0 auto !important;
+    border-radius: 8px !important;
+}
+
+.common-sidebar.collapsed .new-setting-wrapper {
+    padding: 4px 0 16px 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+}

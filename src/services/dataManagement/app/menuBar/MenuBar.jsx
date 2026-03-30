@@ -112,8 +112,9 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
   const ExtraActions = (
     !(sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum') || '').toLowerCase().startsWith('q') ? (
-      <div style={{ padding: '0 20px 16px 20px' }}>
+      <div className="new-setting-wrapper" style={{ padding: '0 20px 16px 20px' }}>
         <button
+          className="new-setting-btn"
           onClick={() => { window.dispatchEvent(new Event('openUploadModal')); }}
           style={{
             display: 'flex',
@@ -147,7 +148,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           }}
         >
           <Upload size={16} strokeWidth={2.5} />
-          <span>신규 세팅</span>
+          <span className="new-setting-text">신규 세팅</span>
         </button>
       </div>
     ) : null
