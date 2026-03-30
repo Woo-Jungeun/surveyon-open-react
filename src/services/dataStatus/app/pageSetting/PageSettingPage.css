@@ -30,7 +30,7 @@
     background: #fff;
     padding: 20px;
     position: relative;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .filter-box-header {
@@ -43,7 +43,7 @@
 .filter-box-title {
     font-size: 14px;
     font-weight: 700;
-    color: #2563eb;
+    /* color: #2563eb; */
 }
 
 .btn-add-set {
@@ -60,6 +60,7 @@
     cursor: pointer;
     transition: all 0.2s;
 }
+
 .btn-add-set:hover {
     background: #eff6ff;
 }
@@ -136,7 +137,8 @@
     margin-bottom: 2px;
 }
 
-.form-select, .form-input {
+.form-select,
+.form-input {
     width: 100%;
     padding: 8px 12px;
     border: 1px solid #cbd5e1;
@@ -148,11 +150,13 @@
     transition: border 0.2s;
 }
 
-.form-select:hover, .form-input:hover {
+.form-select:hover,
+.form-input:hover {
     border-color: #94a3b8;
 }
 
-.form-select:focus, .form-input:focus {
+.form-select:focus,
+.form-input:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
@@ -209,28 +213,33 @@
     border: 1px solid #bfdbfe;
     border-radius: 8px;
     padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
+
 .advanced-settings-header {
     margin-bottom: 20px;
     border-bottom: 2px solid #f1f5f9;
     padding-bottom: 12px;
 }
+
 .advanced-settings-title {
     font-size: 15px;
     font-weight: 700;
     color: #1e293b;
 }
+
 .advanced-settings-desc {
     font-size: 12px;
     color: #64748b;
     margin-top: 4px;
 }
+
 .settings-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
+
 .setting-item-box {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
@@ -242,6 +251,7 @@
     gap: 16px;
     transition: border 0.2s;
 }
+
 .setting-item-box:hover {
     border-color: #cbd5e1;
 }
@@ -252,7 +262,7 @@
     border: 1px solid #bfdbfe;
     border-radius: 8px;
     padding: 24px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .font-presets {
@@ -352,8 +362,22 @@
     cursor: pointer;
 }
 
-.preset-btn.blue { background: #3b82f6; }
-.preset-btn.lg { background: #dc2626; }
-.preset-btn.gs { background: #059669; }
-.preset-btn.cu { background: #7c3aed; }
-.preset-btn.dongsuh { background: #991b1b; }
+.preset-btn.blue {
+    background: #3b82f6;
+}
+
+.preset-btn.lg {
+    background: #dc2626;
+}
+
+.preset-btn.gs {
+    background: #059669;
+}
+
+.preset-btn.cu {
+    background: #7c3aed;
+}
+
+.preset-btn.dongsuh {
+    background: #991b1b;
+}
