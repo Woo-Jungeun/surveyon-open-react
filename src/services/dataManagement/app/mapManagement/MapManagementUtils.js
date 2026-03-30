@@ -31,7 +31,7 @@ export const recalcVariables = (vars, updateRanking = false) => {
 
 // 수정 감지 대상 필드 목록
 export const EDITABLE_FIELDS = [
-    'label', 'logic', 'decimal', 'spssName', 'type', 'memo',
+    'label', 'reLabel', 'excludeCode', 'logic', 'decimal', 'spssName', 'type', 'memo',
     'multiValChange', 'minQuestions', 'excludeOpenMerge',
     'verificationVar', 'excludeOutput', 'startPos', 'valLen',
     'valCnt', 'totalLen', 'etcOpen', 'category', 'ranking', 'isBaked'

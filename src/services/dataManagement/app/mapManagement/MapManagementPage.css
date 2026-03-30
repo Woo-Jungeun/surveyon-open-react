@@ -87,6 +87,7 @@
 .k-header-center .k-column-title {
     white-space: pre-line !important;
     line-height: 1.2;
+    font-size: 11px !important;
 }
 
 /* Map Subheader */
@@ -398,11 +399,11 @@ input:checked+.slider:before {
 /* Input Cell */
 .variable-input {
     width: 100%;
-    padding: 8px;
+    padding: 6px 4px;
     border-radius: 4px;
     border: 1px solid var(--grid-border);
     color: var(--color-dark-gray);
-    font-size: 13px;
+    font-size: 12px;
     outline: none;
     transition: border-color 0.2s;
     resize: none;
@@ -431,12 +432,12 @@ input:checked+.slider:before {
 
 .category-cell-content {
     width: 100%;
-    padding: 8px 50px 8px 8px;
+    padding: 6px 45px 6px 4px;
     border-radius: 4px;
     border: 1px solid var(--grid-border);
     background: var(--color-bg-gray);
     color: var(--color-medium-gray);
-    font-size: 13px;
+    font-size: 12px;
     min-height: 36px;
     white-space: normal;
     word-break: break-all;
@@ -473,12 +474,12 @@ input:checked+.slider:before {
 /* Read Only Cell */
 .variable-text-readonly {
     width: 100%;
-    padding: 8px;
+    padding: 6px 4px;
     border-radius: 4px;
     border: 1px solid var(--grid-border);
     background: var(--color-disabled-bg);
     color: var(--color-medium-gray);
-    font-size: 13px;
+    font-size: 12px;
     min-height: 36px;
     white-space: normal;
     word-break: break-all;
@@ -491,6 +492,7 @@ input:checked+.slider:before {
     text-align: center;
     color: #666;
     font-weight: 600;
+    font-size: 11px !important;
 }
 
 /* Variable Page Modal */
@@ -1347,6 +1349,7 @@ input:checked+.slider:before {
     gap: 8px;
     width: 100%;
     height: 100%;
+    font-size: 12px;
 }
 
 .logic-cell-wrapper.has-logic {
@@ -1363,7 +1366,7 @@ input:checked+.slider:before {
     word-break: break-word;
     white-space: normal;
     text-align: left;
-    font-size: 13px;
+    font-size: 12px;
     color: #334155;
     line-height: 1.4;
 }
@@ -1657,3 +1660,39 @@ input:checked+.slider:before {
     color: #16a34a;
     font-weight: 600;
 }
+/* 사용자 요청: 그리드 공간 확보를 위한 패딩 축소 및 헤더 글자 크기 지정 */
+.variable-page-card .k-grid td,
+.variable-page-card .k-grid th {
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+}
+
+.variable-page-card .k-grid th,
+.variable-page-card .k-grid th *,
+.variable-page-card .k-grid th .k-column-title {
+    font-size: 12px !important;
+    white-space: pre-line !important;
+    line-height: 1.2 !important;
+}
+
+/* 필터(컬럼메뉴) 아이콘 및 버튼 크기 대폭 축소 (가로공간 회수) */
+.variable-page-card .k-grid th .k-grid-filter,
+.variable-page-card .k-grid th .k-header-column-menu,
+.variable-page-card .k-grid th .k-grid-column-menu {
+    padding: 2px !important;
+    width: 20px !important;
+    height: 20px !important;
+    min-width: 20px !important;
+}
+
+.variable-page-card .k-grid th .k-grid-filter .k-svg-icon,
+.variable-page-card .k-grid th .k-grid-filter svg,
+.variable-page-card .k-grid th .k-header-column-menu .k-svg-icon,
+.variable-page-card .k-grid th .k-header-column-menu svg,
+.variable-page-card .k-grid th .k-grid-column-menu .k-svg-icon,
+.variable-page-card .k-grid th .k-grid-column-menu svg {
+    width: 12px !important;
+    height: 12px !important;
+    flex-basis: 12px !important;
+}
+

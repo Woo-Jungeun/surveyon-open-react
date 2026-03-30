@@ -455,7 +455,7 @@ const KendoGrid = ({ parentProps, children }) => {
                         onClick={stop}
                         style={{
                             display: 'flex',
-                            flexDirection: 'row',
+                            flexDirection: parentProps?.selectionHeaderFlexDirection || 'row',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '8px',
@@ -487,7 +487,7 @@ const KendoGrid = ({ parentProps, children }) => {
                     onClick={stop}
                     style={{
                         display: 'flex',
-                        flexDirection: 'row',
+                        flexDirection: parentProps?.selectionHeaderFlexDirection || 'row',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '4px',

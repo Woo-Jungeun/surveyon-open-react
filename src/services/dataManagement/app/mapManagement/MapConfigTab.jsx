@@ -68,11 +68,16 @@ const InputCell = (props) => {
         adjustHeight();
     }, [dataItem[field], editingRowId]);
 
-    // blur 시점에 변경값 반영 (onChange가 아닌 blur로 처리해 렌더 최소화)
+        // blur 시점에 변경값 반영 (onChange가 아닌 blur로 처리해 렌더 최소화)
     const handleBlur = (e) => {
         const newValue = e.target.value;
         // 숫자 필드는 Number 변환, 그 외는 문자열 그대로
-        const parsedValue = NUMERIC_FIELDS.includes(field) ? (Number(newValue) || 0) : newValue;
+        let parsedValue = NUMERIC_FIELDS.includes(field) ? (Number(newValue) || 0) : newValue;
+
+        // 분석제외코드(excludeCode)는 모든 띄어쓰기, 줄바꿈 강제 제거
+        if (field === 'excludeCode' && typeof parsedValue === 'string') {
+            parsedValue = parsedValue.replace(/\s+/g, '');
+        }
 
         if (dataItem[field] != parsedValue) { // != 로 타입 유연 비교 ("5" vs 5)
             setVariables(prev => {
@@ -151,7 +156,7 @@ const LogicCell = (props) => {
     return (
         <td style={{ ...style, verticalAlign: 'middle', padding: 0 }} className={className}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', height: '100%', padding: '8px 10px', boxSizing: 'border-box' }}>
-                <div style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#4b5563', fontSize: '13px', textAlign: 'left', lineHeight: '1.4' }}>
+                <div style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#4b5563', fontSize: '12px', textAlign: 'left', lineHeight: '1.4' }}>
                     {dataItem.logic}
                 </div>
                 <button
@@ -167,8 +172,8 @@ const LogicCell = (props) => {
                         border: '1px solid #059669',
                         borderRadius: '4px',
                         padding: '4px 12px',
-                        fontSize: '13px',
-                        fontWeight: '500',
+                        fontSize: '11px',
+                        fontWeight: '600',
                         cursor: 'pointer',
                         flexShrink: 0
                     }}
@@ -368,6 +373,8 @@ const getCell = (field) => {
         case 'totalLen': return ReadOnlyCell;
         case 'name':
         case 'label':
+        case 'reLabel':
+        case 'excludeCode':
         case 'minQuestions':
         case 'memo':
         case 'valLen':
@@ -478,8 +485,9 @@ const MapConfigTab = ({
         setSelectedState: handleBakedSelectedChange,
         linkRowClickToSelection: false,
         selectionHeaderTitle: "SRT\n이관",
-        selectionColumnAfterField: "label",
-        selectionColumnWidth: "90px",
+        selectionColumnAfterField: isDetailed ? "reLabel" : "label",
+        selectionColumnWidth: "60px",
+        selectionHeaderFlexDirection: "column",
         isItemSelectable,
         useCustomCheckbox: true
     }), [
@@ -493,24 +501,26 @@ const MapConfigTab = ({
             { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
             { field: 'add', title: '추가', width: '50px' },
             // { field: 'id', title: 'no', width: '50px' },
-            { field: 'sysName', title: '변수명', width: isDetailed ? '120px' : '100px' },
+            { field: 'sysName', title: '변수명', width: isDetailed ? '100px' : '100px' },
         ];
 
         if (isDetailed) {
             return [
                 ...commonPrefix,
-                { field: 'logic', title: '로직체크', width: '100px' },
-                { field: 'label', title: '레이블', width: '150px' },
-                { field: 'decimal', title: '소수점\n자리수', width: '100px' },
-                { field: 'spssName', title: 'SPSS\n변수명', width: '100px' },
-                { field: 'type', title: '변수 유형', width: '120px' },
-                { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
-                { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
-                { field: 'memo', title: '메모', minWidth: 200 },
-                { field: 'multiValChange', title: '멀티값\n변경', width: '90px' },
-                { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '100px' },
-                { field: 'verificationVar', title: '검증\n문항', width: '80px' },
-                { field: 'excludeOutput', title: '출력\n제외', width: '80px' },
+                { field: 'logic', title: '로직체크', width: '80px' },
+                { field: 'label', title: '레이블', width: '120px' },
+                { field: 'reLabel', title: '리레이블', width: '120px' },
+                { field: 'excludeCode', title: '분석제외\n코드', width: '90px' },
+                { field: 'decimal', title: '소수점\n자리수', width: '75px' },
+                { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },
+                { field: 'type', title: '변수 유형', width: '100px' },
+                { field: 'minQuestions', title: '문항\n최소갯수', width: '80px' },
+                { field: 'etcOpen', title: '기타\n오픈정의', width: '80px' },
+                { field: 'memo', title: '메모', minWidth: 120 },
+                { field: 'multiValChange', title: '멀티값\n변경', width: '75px' },
+                { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '80px' },
+                { field: 'verificationVar', title: '검증\n문항', width: '70px' },
+                { field: 'excludeOutput', title: '출력\n제외', width: '70px' },
                 { field: 'delete', title: '삭제', width: '50px' }
             ];
         }
