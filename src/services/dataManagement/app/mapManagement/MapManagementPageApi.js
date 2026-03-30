@@ -89,6 +89,15 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** Re-Label 자동 생성 */
+    const generateRelabels = useMutation(
+        async (data) => await api.post(data, "/generate-relabels", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -99,5 +108,6 @@ export function MapManagementPageApi() {
         exportData,
         uploadSpss,
         updateDataFromSav,
+        generateRelabels,
     };
 }

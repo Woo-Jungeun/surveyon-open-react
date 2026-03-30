@@ -14,7 +14,8 @@ import MapConfigFilterPopup from '../../../../components/common/popup/MapConfigF
 import DownloadModal from './DownloadModal';
 import UploadModal from './UploadModal';
 import DataUpdateModal from './DataUpdateModal';
-import { Download, Upload } from 'lucide-react';
+import RelabelModal from './RelabelModal';
+import { Download, Upload, Tags } from 'lucide-react';
 
 import '../../../../assets/css/grid_vertical_borders.css';
 import './MapManagementPage.css';
@@ -47,6 +48,7 @@ const MapManagementPage = () => {
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);              // 다운로드 모달 상태
     const [uploadModalOpen, setUploadModalOpen] = useState(false);                  // 업로드 모달 상태
     const [dataUpdateModalOpen, setDataUpdateModalOpen] = useState(false);          // 데이터 업데이트 모달 상태
+    const [reLabelModalOpen, setReLabelModalOpen] = useState(false);                // Re_Label 모달 상태
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
 
     const [sort, setSort] = useState([]);
@@ -594,6 +596,26 @@ const MapManagementPage = () => {
                         <>
                             <button
                                 className="data-header-btn"
+                                onClick={() => setReLabelModalOpen(true)}
+                                style={{
+                                    height: '38px',
+                                    padding: '0 20px',
+                                    border: '1px solid #16a34a',
+                                    background: '#fff',
+                                    color: '#16a34a',
+                                    marginRight: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = '#f0faf5'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
+                            >
+                                <Tags size={16} />
+                                Re_Label
+                            </button>
+                            <button
+                                className="data-header-btn"
                                 onClick={() => setDataUpdateModalOpen(true)}
                                 style={{
                                     height: '38px',
@@ -727,6 +749,13 @@ const MapManagementPage = () => {
                 <DataUpdateModal
                     isOpen={dataUpdateModalOpen}
                     onClose={() => setDataUpdateModalOpen(false)}
+                    refreshData={() => setRefreshKey(prev => prev + 1)}
+                />
+
+                {/* Re_Label 모달 (데이터업데이트 구조 완전복붙형) */}
+                <RelabelModal
+                    isOpen={reLabelModalOpen}
+                    onClose={() => setReLabelModalOpen(false)}
                     refreshData={() => setRefreshKey(prev => prev + 1)}
                 />
             </div>
