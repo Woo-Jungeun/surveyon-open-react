@@ -814,7 +814,7 @@ const RecodingPage = () => {
     return (
         <div className="recoding-page" data-theme="data-dashboard">
             <DataHeader
-                title="변수 생성"
+                title="스터브 생성"
                 addButtonLabel={isAddMode ? null : "문항 추가"}
                 onAdd={isAddMode ? null : handleAddVariable}
                 saveButtonLabel={isAddMode ? "추가 문항 저장" : "변경사항 저장"}

@@ -86,6 +86,7 @@ const MenuPermissionPage = () => {
         status_quota: true,
         ai_analysis: true,
         ai_report: true,
+        data_page: true,
         data_var: true,
         data_dp: true,
         data_weight: true,
@@ -138,7 +139,7 @@ const MenuPermissionPage = () => {
     const aiKeys = ['ai_analysis', 'ai_report'];
     const isAiAllOff = aiKeys.every(k => !permissions[k]);
 
-    const dataKeys = ['data_var', 'data_dp', 'data_weight'];
+    const dataKeys = ['data_page', 'data_var', 'data_dp', 'data_weight'];
     const isDataAllOff = dataKeys.every(k => !permissions[k]);
 
     return (
@@ -277,7 +278,8 @@ const MenuPermissionPage = () => {
                                         </div>
                                     </div>
                                     <div style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '4px 20px' }}>
-                                        <SettingRow label="변수 생성" isVisible={permissions.data_var} onToggle={() => handleToggle('data_var')} />
+                                        <SettingRow label="페이지 설정" isVisible={permissions.data_page} onToggle={() => handleToggle('data_page')} />
+                                        <SettingRow label="스터브 생성" isVisible={permissions.data_var} onToggle={() => handleToggle('data_var')} />
                                         <SettingRow label="DP 의뢰서 정의" isVisible={permissions.data_dp} onToggle={() => handleToggle('data_dp')} />
                                         <SettingRow label="가중치 생성" isVisible={permissions.data_weight} onToggle={() => handleToggle('data_weight')} isLast />
                                     </div>

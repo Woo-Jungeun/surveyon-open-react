@@ -1,8 +1,8 @@
-﻿import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
-  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck, Columns
+  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck, Columns, LayoutDashboard
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
@@ -49,7 +49,8 @@ const MENU_ITEMS = [
           window.open("/data_status/setting/viewer", "_blank", `width=${width},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
         }
       }, */
-      { label: "변수 생성", path: "/data_status/setting/recoding", icon: Wrench },
+      { label: "페이지 설정", path: "/data_status/setting/page", icon: LayoutDashboard },
+      { label: "스터브 생성", path: "/data_status/setting/recoding", icon: Wrench },
       { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
       { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
     ]
