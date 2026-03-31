@@ -68,7 +68,7 @@ const InputCell = (props) => {
         adjustHeight();
     }, [dataItem[field], editingRowId]);
 
-        // blur 시점에 변경값 반영 (onChange가 아닌 blur로 처리해 렌더 최소화)
+    // blur 시점에 변경값 반영 (onChange가 아닌 blur로 처리해 렌더 최소화)
     const handleBlur = (e) => {
         const newValue = e.target.value;
         // 숫자 필드는 Number 변환, 그 외는 문자열 그대로
@@ -508,8 +508,8 @@ const MapConfigTab = ({
             return [
                 ...commonPrefix,
                 { field: 'logic', title: '로직체크', width: '110px' },
-                { field: 'label', title: '레이블', width: '120px' },
-                { field: 'reLabel', title: '리레이블', width: '120px' },
+                { field: 'label', title: '문항', width: '120px' },
+                { field: 'reLabel', title: '표제목', width: '120px' },
                 { field: 'excludeCode', title: '분석제외\n코드', width: '90px' },
                 { field: 'decimal', title: '소수점\n자리수', width: '75px' },
                 { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },
@@ -564,7 +564,7 @@ const MapConfigTab = ({
                 <div className="cmn_grid singlehead">
                     <KendoGrid parentProps={gridProps}>
                         {mappingColumns.map((c) => {
-                            const isUtilityColumn = ['drag', 'add', 'logic', 'delete'].includes(c.field);
+                            const isUtilityColumn = ['drag', 'add', 'logic', 'delete'].includes(c.field); //columnMenu 전부 제거
                             return (
                                 <Column
                                     key={c.field}
@@ -572,12 +572,13 @@ const MapConfigTab = ({
                                     title={c.title}
                                     width={c.width}
                                     minWidth={c.minWidth}
-                                    columnMenu={isUtilityColumn ? undefined : columnMenu}
+                                    // columnMenu={isUtilityColumn ? undefined : columnMenu}
+                                    columnMenu={undefined}
                                     cell={getCell(c.field)}
                                     headerCell={c.headerCell}
                                     headerClassName="k-header-center variable-column-header"
-                                    sortable={!isUtilityColumn}
-                                    filterable={!isUtilityColumn}
+                                // sortable={!isUtilityColumn}
+                                // filterable={!isUtilityColumn}
                                 />
                             );
                         })}
