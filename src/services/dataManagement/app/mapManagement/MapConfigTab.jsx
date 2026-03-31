@@ -83,14 +83,13 @@ const CustomReLabelHeaderCell = (props) => {
                 letterSpacing: '-0.3px',
                 boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
-            title="표제목"
+            title=" 표 제목 자동생성"
             onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
                 handleSubmit();
             }}
-        >
-            표제목
+        >표 제목<br />자동생성
         </span>
     );
 };
