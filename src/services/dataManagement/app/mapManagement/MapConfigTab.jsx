@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useEffect, useCallback, useMemo, memo } from 'react';
+import React, { useContext, useRef, useEffect, useCallback, useMemo, memo, useState } from 'react';
 import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
@@ -67,30 +67,35 @@ const CustomReLabelHeaderCell = (props) => {
     };
 
     return (
-        <span
-            style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px solid #059669',
-                borderRadius: '4px',
-                padding: '3px 8px',
-                color: '#059669',
-                fontSize: '12px',
-                background: '#fff',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                letterSpacing: '-0.3px',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-            }}
-            title=" 표 제목 자동생성"
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleSubmit();
-            }}
-        >표 제목<br />자동생성
-        </span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', paddingTop: '4px', paddingBottom: '4px' }}>
+            <span style={{ fontSize: '12px', lineHeight: '1' }}>표제목</span>
+            <span
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px solid #059669',
+                    borderRadius: '4px',
+                    padding: '2px 8px',
+                    color: '#059669',
+                    fontSize: '11px',
+                    lineHeight: '1.1',
+                    background: '#fff',
+                    cursor: 'pointer',
+                    letterSpacing: '-0.3px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                    whiteSpace: 'nowrap'
+                }}
+                title="표제목 자동생성"
+                onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleSubmit();
+                }}
+            >
+                자동생성
+            </span>
+        </div>
     );
 };
 
@@ -497,6 +502,8 @@ const MapConfigTab = ({
     setEditingRowId
 }) => {
     const { variables: ctxVars, setVariables, editingRowId } = useContext(MapManagementContext);
+    const auth = useSelector((store) => store.auth);
+    const isResearcher = (auth?.user?.userAuth || []).includes("연구원");
     const allIds = useMemo(() => (ctxVars || []).map(v => v.id), [ctxVars]);
 
     // ── Grid Props & 상태 최적화 ──
@@ -572,7 +579,7 @@ const MapConfigTab = ({
         setSelectedState: handleBakedSelectedChange,
         linkRowClickToSelection: false,
         selectionHeaderTitle: "SRT\n이관",
-        selectionColumnAfterField: isDetailed ? "reLabel" : "label",
+        selectionColumnAfterField: (isDetailed || isResearcher) ? "reLabel" : "label",
         selectionColumnWidth: "60px",
         selectionHeaderFlexDirection: "column",
         isItemSelectable,
@@ -580,7 +587,7 @@ const MapConfigTab = ({
     }), [
         variables, sort, filter, setSort, setFilter, rowRender,
         skip, pageSize, handlePageChange, setEditingRowId,
-        bakedSelectedState, handleBakedSelectedChange, isItemSelectable
+        bakedSelectedState, handleBakedSelectedChange, isItemSelectable, isResearcher, isDetailed
     ]);
 
     const mappingColumns = useMemo(() => {
@@ -588,8 +595,21 @@ const MapConfigTab = ({
             { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
             { field: 'add', title: '추가', width: '50px' },
             // { field: 'id', title: 'no', width: '50px' },
-            { field: 'sysName', title: '변수명', width: isDetailed ? '100px' : '100px' },
+            { field: 'sysName', title: '변수명', width: (isDetailed || isResearcher) ? '100px' : '100px' },
         ];
+
+        if (isResearcher) {
+            return [
+                ...commonPrefix,
+                { field: 'logic', title: '로직체크', width: '180px' },
+                { field: 'label', title: '문항', minWidth: 250 },
+                { field: 'reLabel', title: '표제목', width: '200px', headerCell: CustomReLabelHeaderCell },
+                { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },
+                { field: 'type', title: '변수 유형', width: '120px' },
+                { field: 'memo', title: '메모', minWidth: 120 },
+                { field: 'delete', title: '삭제', width: '50px' }
+            ];
+        }
 
         if (isDetailed) {
             return [
@@ -603,11 +623,11 @@ const MapConfigTab = ({
                 { field: 'type', title: '변수 유형', width: '100px' },
                 { field: 'minQuestions', title: '문항\n최소갯수', width: '80px' },
                 { field: 'etcOpen', title: '기타\n오픈정의', width: '80px' },
-                { field: 'memo', title: '메모', minWidth: 120 },
                 { field: 'multiValChange', title: '멀티값\n변경', width: '75px' },
                 { field: 'excludeOpenMerge', title: '오픈머지\n제외', width: '80px' },
                 { field: 'verificationVar', title: '검증\n문항', width: '70px' },
                 { field: 'excludeOutput', title: '출력\n제외', width: '70px' },
+                { field: 'memo', title: '메모', minWidth: 120 },
                 { field: 'delete', title: '삭제', width: '50px' }
             ];
         }
@@ -620,14 +640,14 @@ const MapConfigTab = ({
             { field: 'totalLen', title: '총\n자리수', width: '90px' },
             { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
             { field: 'logic', title: '로직체크', width: '150px' },
-            { field: 'label', title: '레이블', minWidth: 50 },
+            { field: 'label', title: '문항', minWidth: 50 },
             { field: 'decimal', title: '소수점\n자리수', width: '90px' },
             // { field: 'spssName', title: 'SPSS\n변수명', width: '100px' },
             { field: 'type', title: '변수\n유형', width: '140px' },
             { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
             { field: 'delete', title: '삭제', width: '50px' }
         ];
-    }, [isDetailed]);
+    }, [isDetailed, isResearcher]);
 
     return (
         <>
@@ -637,13 +657,15 @@ const MapConfigTab = ({
                 </div>
                 <div className="map-controls">
                     {/* <span className="grid-guide"><span className="guide-icon">💡</span> 셀 클릭 편집 | '+': 행 추가 | 'Trash': 삭제 | 가로/세로 스크롤 시 고정</span> */}
-                    <div className="toggle-wrapper">
-                        <span className="toggle-label">상세 설정</span>
-                        <label className="switch">
-                            <input type="checkbox" checked={isDetailed} onChange={() => setIsDetailed(!isDetailed)} />
-                            <span className="slider round"></span>
-                        </label>
-                    </div>
+                    {!isResearcher && (
+                        <div className="toggle-wrapper">
+                            <span className="toggle-label">상세 설정</span>
+                            <label className="switch">
+                                <input type="checkbox" checked={isDetailed} onChange={() => setIsDetailed(!isDetailed)} />
+                                <span className="slider round"></span>
+                            </label>
+                        </div>
+                    )}
                 </div>
             </div>
 
