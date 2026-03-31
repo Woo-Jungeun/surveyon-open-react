@@ -80,7 +80,7 @@ export function MapManagementPageApi() {
         }
     );
 
-    /** 데이터 업데이트 (SAV) */
+    /** 데이터 불러오기 (SAV) */
     const updateDataFromSav = useMutation(
         async (data) => await api.post(data, "/data/update-from-sav", "API_BASE_URL_DATAMANAGEMENT"),
         {

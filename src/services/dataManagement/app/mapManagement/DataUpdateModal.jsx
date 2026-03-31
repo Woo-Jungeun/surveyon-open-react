@@ -70,7 +70,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
             return;
         }
 
-        modal.showConfirm("알림", "업데이트 완료 시 기존 내용으로의 복구가 절대 불가능하므로 \n 신중히 확인해 주세요.\n 데이터 업데이트를 계속 진행하시겠습니까?", {
+        modal.showConfirm("알림", "불러오기 완료 시 기존 내용으로의 복구가 절대 불가능하므로 \n 신중히 확인해 주세요.\n 데이터 불러오기를 계속 진행하시겠습니까?", {
             btns: [
                 { title: "취소", click: () => { } },
                 {
@@ -88,7 +88,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                                 // 1. 성공 시 팝업 닫기
                                 handleModalClose();
                                 // 2. 알림 메시지 띄우기 (확인 버튼 누를 때까지 대기)
-                                await modal.showAlert("알림", "데이터 업데이트 처리가 완료되었습니다.");
+                                await modal.showAlert("알림", "데이터 불러오기 처리가 완료되었습니다.");
                                 // 3. 맵 구성 조회 API 태우기 (재조회)
                                 if (refreshData) refreshData();
                             } else if (res?.success === "907") {
@@ -104,12 +104,12 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
 
                                 modal.showErrorAlert("에러", (res?.message || "SAV 파일 내에 중복된 고유 식별자(PID)가 존재하여 업데이트가 중단되었습니다.") + "\n" + pidsText);
                             } else {
-                                const errorMsg = res?.errortext || res?.message || "데이터 업데이트 중 오류가 발생했습니다.";
+                                const errorMsg = res?.errortext || res?.message || "데이터 불러오기 중 오류가 발생했습니다.";
                                 modal.showErrorAlert("에러", errorMsg);
                             }
                         } catch (error) {
                             console.error("Update error:", error);
-                            modal.showErrorAlert("에러", "데이터 업데이트 요청 중 오류가 발생했습니다.");
+                            modal.showErrorAlert("에러", "데이터 불러오기 요청 중 오류가 발생했습니다.");
                         }
                     }
                 }
@@ -152,7 +152,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                             borderRadius: '4px',
                             marginRight: '8px'
                         }}></div>
-                        <h3 className="variable-modal-title">데이터 업데이트</h3>
+                        <h3 className="variable-modal-title">데이터 불러오기</h3>
                     </div>
                     <button onClick={handleModalClose} className="variable-modal-close"><X size={20} /></button>
                 </div>
@@ -165,14 +165,14 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                         <span>파일을 업로드할 경우, 기존 맵 구성 데이터가 모두 덮어씌워집니다.</span>
                     </div>
 
-                    {/* 데이터 업데이트 주의사항 (상단) */}
+                    {/* 데이터 불러오기 주의사항 (상단) */}
                     <div className="update-info-box">
                         <div className="update-info-title">
                             <Info size={16} />
                             <span>파일 업로드 주의사항</span>
                         </div>
                         <ul className="update-info-list" style={{ listStyle: 'none', paddingLeft: 0, marginTop: '4px' }}>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 이 기능은 데이터 업데이트 전용으로, 데이터 <strong>신규 입력은 지원하지 않습니다.</strong></li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 이 기능은 데이터 불러오기 전용으로, 데이터 <strong>신규 입력은 지원하지 않습니다.</strong></li>
                             <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> <strong>SPSS 파일(.sav)</strong> 형식만 지원합니다.</li>
                             <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 첫 번째 데이터 필드는 반드시 <strong><span className="update-info-highlight">pid</span></strong>여야 합니다.</li>
                             <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> pid는 Key 값이므로 <strong>데이터 중복이 허용되지 않습니다.</strong></li>

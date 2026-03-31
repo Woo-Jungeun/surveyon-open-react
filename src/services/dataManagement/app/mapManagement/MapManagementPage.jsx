@@ -47,7 +47,7 @@ const MapManagementPage = () => {
     const [editingLogicPopupOpen, setEditingLogicPopupOpen] = useState(null);       // 로직 변경 팝업
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);              // 다운로드 모달 상태
     const [uploadModalOpen, setUploadModalOpen] = useState(false);                  // 업로드 모달 상태
-    const [dataUpdateModalOpen, setDataUpdateModalOpen] = useState(false);          // 데이터 업데이트 모달 상태
+    const [dataUpdateModalOpen, setDataUpdateModalOpen] = useState(false);          // 데이터 불러오기 모달 상태
     const [reLabelModalOpen, setReLabelModalOpen] = useState(false);                // Re_Label 모달 상태
     const [addValueModalOpen, setAddValueModalOpen] = useState(false);              // 레이블 추가 팝업 상태
 
@@ -594,7 +594,7 @@ const MapManagementPage = () => {
                 >
                     {activeTab === 'mapping' && (
                         <>
-                            <button
+                            {/* <button
                                 className="data-header-btn"
                                 onClick={() => setReLabelModalOpen(true)}
                                 style={{
@@ -613,7 +613,7 @@ const MapManagementPage = () => {
                             >
                                 <Tags size={16} />
                                 Re_Label
-                            </button>
+                            </button> */}
                             <button
                                 className="data-header-btn"
                                 onClick={() => setDataUpdateModalOpen(true)}
@@ -629,7 +629,7 @@ const MapManagementPage = () => {
                                 onMouseLeave={e => { e.currentTarget.style.background = '#fff'; }}
                             >
                                 <Upload size={16} />
-                                데이터 업데이트
+                                데이터 불러오기
                             </button>
                             <button
                                 className="data-header-btn"
@@ -745,7 +745,7 @@ const MapManagementPage = () => {
                     refreshData={() => setRefreshKey(prev => prev + 1)}
                 />
 
-                {/* 데이터 업데이트 모달 */}
+                {/* 데이터 불러오기 모달 */}
                 <DataUpdateModal
                     isOpen={dataUpdateModalOpen}
                     onClose={() => setDataUpdateModalOpen(false)}
