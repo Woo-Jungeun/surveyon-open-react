@@ -4,9 +4,97 @@ import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { modalContext } from "@/components/common/Modal.jsx";
+import { MapManagementPageApi } from './MapManagementPageApi';
 import { MapManagementContext, NUMERIC_FIELDS, recalcVariables } from './MapManagementUtils';
 
 /** 행 드래그 핸들 셀 */
+const CustomReLabelHeaderCell = (props) => {
+    const modal = useContext(modalContext);
+    const { generateRelabels } = MapManagementPageApi();
+    const auth = useSelector((store) => store.auth);
+    const { refreshData } = useContext(MapManagementContext);
+
+    const handleSubmit = async () => {
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
+        const userId = auth?.user?.userId || '';
+
+        if (!pn) {
+            modal.showErrorAlert("알림", "프로젝트 정보를 찾을 수 없습니다.");
+            return;
+        }
+
+        const payload = {
+            pn,
+            overwrite: true,
+            language: 'ko',
+            user: userId
+        };
+
+        try {
+            await modal.showConfirm("알림", "표제목 Re-Label을 진행하시겠습니까? \n(기존 표제목이 모두 덮어씌워질 수 있습니다.)", {
+                btns: [
+                    { title: "취소", click: () => { } },
+                    {
+                        title: "진행",
+                        click: async () => {
+                            try {
+                                const res = await generateRelabels.mutateAsync(payload);
+                                if (res?.success === '777' || res?.success === 777) {
+                                    if (res?.resultjson && res.resultjson.processedCount !== undefined) {
+                                        await modal.showAlert("완료", `${res?.message || 'AI 요약본이 매핑되었습니다.'}\n(처리된 문항 건수: ${res.resultjson.processedCount}건)`);
+                                    } else {
+                                        await modal.showAlert("완료", res?.message || "완료되었습니다.");
+                                    }
+                                    if (refreshData) refreshData();
+                                } else {
+                                    console.warn("Re-Label Not 777:", res);
+                                    if (res?.message) {
+                                        await modal.showAlert("알림", res.message);
+                                    }
+                                }
+                            } catch (err) {
+                                console.error(err);
+                            }
+                        }
+                    }
+                ]
+            });
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    return (
+        <span
+            style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px solid #059669',
+                borderRadius: '4px',
+                padding: '3px 8px',
+                color: '#059669',
+                fontSize: '12px',
+                background: '#fff',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                letterSpacing: '-0.3px',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+            title="표제목"
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSubmit();
+            }}
+        >
+            표제목
+        </span>
+    );
+};
+
 const DragCell = (props) => {
     const { moveVariable, variables } = useContext(MapManagementContext);
     const { dataItem } = props;
@@ -509,7 +597,7 @@ const MapConfigTab = ({
                 ...commonPrefix,
                 { field: 'logic', title: '로직체크', width: '110px' },
                 { field: 'label', title: '문항', width: '120px' },
-                { field: 'reLabel', title: '표제목', width: '120px' },
+                { field: 'reLabel', title: '표제목', width: '120px', headerCell: CustomReLabelHeaderCell },
                 { field: 'excludeCode', title: '분석제외\n코드', width: '90px' },
                 { field: 'decimal', title: '소수점\n자리수', width: '75px' },
                 { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },

@@ -579,7 +579,8 @@ const MapManagementPage = () => {
         isDetailed,
         onAdd: handleAddVariable,
         onDelete: handleDeleteVariable,
-        moveVariable
+        moveVariable,
+        refreshData: () => setRefreshKey(prev => prev + 1)
     }), [variables, editingRowId, isDetailed, handleAddVariable, handleDeleteVariable, moveVariable]);
 
     // ── 렌더 ──
