@@ -167,7 +167,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
         projectInfo={projectInfoData}
         theme="green"
         moduleItems={moduleItems}
-        extraActions={ExtraActions}
+      // extraActions={ExtraActions}
       />
 
       {isNewDataModalOpen && (
