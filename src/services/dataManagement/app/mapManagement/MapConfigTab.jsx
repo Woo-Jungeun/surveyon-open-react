@@ -155,7 +155,7 @@ const LogicCell = (props) => {
 
     return (
         <td style={{ ...style, verticalAlign: 'middle', padding: 0 }} className={className}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', height: '100%', padding: '8px 10px', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', height: '100%', padding: '8px 4px', boxSizing: 'border-box' }}>
                 <div style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#4b5563', fontSize: '12px', textAlign: 'left', lineHeight: '1.4' }}>
                     {dataItem.logic}
                 </div>
@@ -171,7 +171,7 @@ const LogicCell = (props) => {
                         color: '#059669',
                         border: '1px solid #059669',
                         borderRadius: '4px',
-                        padding: '4px 12px',
+                        padding: '2px 6px',
                         fontSize: '11px',
                         fontWeight: '600',
                         cursor: 'pointer',
@@ -507,7 +507,7 @@ const MapConfigTab = ({
         if (isDetailed) {
             return [
                 ...commonPrefix,
-                { field: 'logic', title: '로직체크', width: '80px' },
+                { field: 'logic', title: '로직체크', width: '110px' },
                 { field: 'label', title: '레이블', width: '120px' },
                 { field: 'reLabel', title: '리레이블', width: '120px' },
                 { field: 'excludeCode', title: '분석제외\n코드', width: '90px' },
