@@ -481,9 +481,9 @@ const PageSettingPage = () => {
                             <div>
                                 <label className="form-label" style={{ color: '#0f172a', display: 'block', marginBottom: '8px' }}>신뢰수준 (Confidence Level)</label>
                             </div>
-                            <select className="form-select" style={{ height: '38px', backgroundColor: '#fff', fontSize: '13px' }}>
+                            <select className="form-select" defaultValue="95" style={{ height: '38px', backgroundColor: '#fff', fontSize: '13px' }}>
                                 <option value="99">99%</option>
-                                <option value="95" selected>95%</option>
+                                <option value="95">95%</option>
                                 <option value="90">90%</option>
                             </select>
                         </div>
