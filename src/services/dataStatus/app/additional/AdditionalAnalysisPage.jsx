@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List } from 'lucide-react';
+import { ChevronDown, ChevronUp, Play, Search, BarChart2, BarChartHorizontal, Download, X, Settings, ChevronRight, GripVertical, GripHorizontal, LineChart, Map as MapIcon, PieChart, Donut, AreaChart, LayoutGrid, ChevronLeft, Layers, Filter, Aperture, MoreHorizontal, Copy, Bot, Loader2, Sparkles, CheckCircle2, Maximize, Minimize, Save, Grid, Plus, Table, List, Star } from 'lucide-react';
 import Toast from '../../../../components/common/Toast';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
@@ -115,6 +115,7 @@ const AdditionalAnalysisPage = () => {
     // Data State
     const [tables, setTables] = useState([]);
     const [selectedTableId, setSelectedTableId] = useState(null);
+    const [mainBannerId, setMainBannerId] = useState(null);
     const [isConfigOpen, setIsConfigOpen] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tableSearchTerm, setTableSearchTerm] = useState('');
@@ -1631,7 +1632,15 @@ const AdditionalAnalysisPage = () => {
                     {/* Sidebar */}
                     <SideBar
                         title="배너 목록"
-                        items={filteredTables}
+                        items={filteredTables.map(t => ({
+                            ...t,
+                            name: t.id === mainBannerId ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Star size={15} fill="#facc15" color="#facc15" style={{ flexShrink: 0 }} />
+                                    <span>{t.name}</span>
+                                </div>
+                            ) : t.name
+                        }))}
                         selectedId={selectedTableId}
                         onItemClick={handleTableSelect}
                         onSearch={setTableSearchTerm}
@@ -1664,7 +1673,7 @@ const AdditionalAnalysisPage = () => {
                                                 {/* 토글 기능 제거 및 열림 고정 */}
                                             </div>
 
-                                            <div className="config-header__title-group">
+                                            <div className="config-header__title-group" style={{ display: 'flex', alignItems: 'center' }}>
                                                 <span className="config-header__title-label">배너 명</span>
                                                 <input
                                                     type="text"
@@ -1673,6 +1682,26 @@ const AdditionalAnalysisPage = () => {
                                                     onChange={(e) => setTableName(e.target.value)}
                                                     placeholder="배너 명을 입력하세요"
                                                 />
+                                                <div
+                                                    title={mainBannerId === selectedTableId ? "주배너 해제" : "이 배너를 주배너로 지정합니다"}
+                                                    onClick={() => setMainBannerId(mainBannerId === selectedTableId ? null : selectedTableId)}
+                                                    style={{
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                        width: '28px', height: '28px', marginLeft: '6px',
+                                                        cursor: 'pointer', transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    <Star 
+                                                        size={22} 
+                                                        fill={mainBannerId === selectedTableId ? '#facc15' : 'none'} 
+                                                        color={mainBannerId === selectedTableId ? '#facc15' : '#cbd5e1'} 
+                                                        strokeWidth={mainBannerId === selectedTableId ? 2.5 : 2} 
+                                                        style={{ 
+                                                            transition: 'all 0.2s', 
+                                                            transform: mainBannerId === selectedTableId ? 'scale(1.05)' : 'scale(1)'
+                                                        }}
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
 
