@@ -596,7 +596,7 @@ const AdditionalAnalysisPage = () => {
             }
         });
 
-        // 표분리 모드에서는 각 행변수를 독립적인 테이블처럼 표현
+        // 표분리 모드에서는 각 행변수를 독립적인 배너처럼 표현
         // (실제 결과도 row_eval_mode=split 이라 각 행변수 별로 별도 표가 생김)
         let rowGroups;
         if (tableMode === 'separated' && rowVars.length > 1) {
@@ -843,7 +843,7 @@ const AdditionalAnalysisPage = () => {
                 }
             } catch (error) {
                 console.error("Error fetching table data:", error);
-                setToast({ show: true, message: "테이블 데이터 조회 실패" });
+                setToast({ show: true, message: "배너 데이터 조회 실패" });
             } finally {
                 loadingSpinner.hide();
             }
@@ -1519,7 +1519,7 @@ const AdditionalAnalysisPage = () => {
             return;
         }
 
-        modal.showConfirm('알림', '해당 테이블을 삭제하시겠습니까?', {
+        modal.showConfirm('알림', '해당 배너를 삭제하시겠습니까?', {
             btns: [
                 { title: '취소' },
                 {
@@ -1544,7 +1544,7 @@ const AdditionalAnalysisPage = () => {
                                     setTableName('');
                                 }
 
-                                modal.showAlert('성공', '테이블이 삭제되었습니다.');
+                                modal.showAlert('성공', '배너가 삭제되었습니다.');
                             } else {
                                 modal.showAlert('실패', '삭제 실패');
                             }
@@ -1565,7 +1565,7 @@ const AdditionalAnalysisPage = () => {
             >
 
                 {/* 고급 필터 버튼 - AdditionalAnalysisFilterPopup 오픈 */}
-                <div style={{ marginLeft: '12px' }}>
+                <div style={{ marginLeft: '12px', display: 'none' }}>
                     <button
                         onClick={() => setIsFilterPopupOpen(true)}
                         className={`advanced-filter-btn ${filterExpression ? 'active' : ''}`}
@@ -1611,14 +1611,14 @@ const AdditionalAnalysisPage = () => {
                 <div className="cross-tab-layout">
                     {/* Sidebar */}
                     <SideBar
-                        title="테이블 목록"
+                        title="배너 목록"
                         items={filteredTables}
                         selectedId={selectedTableId}
                         onItemClick={handleTableSelect}
                         onSearch={setTableSearchTerm}
                         onDelete={handleDeleteTable}
                         displayField="name"
-                        searchPlaceholder="테이블을 검색하세요."
+                        searchPlaceholder="배너를 검색하세요."
                         listRef={tableListRef}
                     />
 
@@ -1649,13 +1649,13 @@ const AdditionalAnalysisPage = () => {
                                             </div>
 
                                             <div className="config-header__title-group">
-                                                <span className="config-header__title-label">테이블 명</span>
+                                                <span className="config-header__title-label">배너 명</span>
                                                 <input
                                                     type="text"
                                                     className="config-title-input"
                                                     value={tableName}
                                                     onChange={(e) => setTableName(e.target.value)}
-                                                    placeholder="테이블 명을 입력하세요"
+                                                    placeholder="배너 명을 입력하세요"
                                                 />
                                             </div>
                                         </div>
@@ -1664,20 +1664,20 @@ const AdditionalAnalysisPage = () => {
                                         {isConfigOpen && (
                                             <>
                                                 {/* Table Mode Switch */}
-                                                <div className="table-mode-switch">
+                                                {/* <div className="table-mode-switch">
                                                     <button
                                                         className={`mode-option-btn ${tableMode === 'separated' ? 'active' : ''}`}
                                                         onClick={() => setTableMode('separated')}
                                                     >
                                                         표 분리
                                                     </button>
-                                                    {/* <button
+                                                 <button
                                                 className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
                                                 onClick={() => setTableMode('merged')}
                                             >
                                                 표 병합
-                                            </button> */}
-                                                </div>
+                                            </button>
+                                                </div> */}
 
                                                 <div className="action-buttons">
                                                     <button className="btn-run" onClick={handleSaveAndRun}>
@@ -1927,7 +1927,7 @@ const AdditionalAnalysisPage = () => {
                                                             </div>
                                                         )}
 
-                                                        <div className="filter-weight-row" style={{ display: 'flex', gap: '20px', position: 'sticky', bottom: 0, background: '#f8f9fa', zIndex: 10, padding: '8px 12px', borderTop: '1px solid #e0e0e0', alignItems: 'center', boxShadow: '0 -2px 5px rgba(0,0,0,0.05)' }}>
+                                                        <div className="filter-weight-row" style={{ display: 'none', gap: '20px', position: 'sticky', bottom: 0, background: '#f8f9fa', zIndex: 10, padding: '8px 12px', borderTop: '1px solid #e0e0e0', alignItems: 'center', boxShadow: '0 -2px 5px rgba(0,0,0,0.05)' }}>
                                                             <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                                 <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터</span>
                                                                 <input

@@ -19,17 +19,17 @@ const CreateTablePopup = ({ isOpen, onClose, onCreate }) => {
         <div className="modal-overlay">
             <div className="modal-content">
                 <div className="modal-header">
-                    <h3 className="modal-title">새 테이블 만들기</h3>
+                    <h3 className="modal-title">새 배너 만들기</h3>
                     <button className="modal-close" onClick={onClose}>
                         <X size={20} />
                     </button>
                 </div>
                 <div className="modal-body">
-                    <label className="modal-label">테이블 명</label>
+                    <label className="modal-label">배너 명</label>
                     <input
                         type="text"
                         className="modal-input"
-                        placeholder="테이블 명"
+                        placeholder="배너 명"
                         value={tableName}
                         onChange={(e) => setTableName(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
