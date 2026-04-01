@@ -210,7 +210,8 @@ const ProPermissionModal = ({ open, onClose }) => {
                                             ["projectnum", "projectname", "servername", "projectpof", "merge_pn", "merge_pn_text"]
                                                 .forEach(k => sessionStorage.setItem(k, ""));
                                             onClose();
-                                            navigate("/ai_open_analysis");
+                                            const baseModule = location.pathname.split('/')[1] || "";
+                                            window.location.href = baseModule ? `/${baseModule}` : "/";
                                         }
                                     }]
                                 });
