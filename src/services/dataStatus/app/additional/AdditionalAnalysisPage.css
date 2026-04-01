@@ -1825,8 +1825,8 @@
     top: 0;
     left: 0;
     z-index: 30;
-    min-width: 280px;
-    max-width: 280px;
+    min-width: 200px;
+    max-width: 200px;
     border-right: 1px solid #cbd5e1;
     border-bottom: 1px solid #cbd5e1;
 }
@@ -1863,10 +1863,11 @@
     text-align: center;
     color: #475569;
     border-right: 1px solid #e2e8f0;
-    min-width: 110px;
+    min-width: 140px;
     /* Fixed Width */
-    max-width: 110px;
-    word-break: break-all;
+    max-width: 140px;
+    word-break: keep-all;
+    word-wrap: break-word;
     /* Fixed Width */
     white-space: normal;
 }
@@ -1876,10 +1877,11 @@
     font-weight: 500;
     color: #475569;
     border-right: 1px solid #e2e8f0;
-    min-width: 170px;
+    min-width: 60px;
     /* Fixed Width */
-    max-width: 170px;
-    word-break: break-all;
+    max-width: 60px;
+    word-break: keep-all;
+    word-wrap: break-word;
     /* Fixed Width */
     white-space: normal;
 }
@@ -1896,7 +1898,7 @@
 
 .sticky-left-indent {
     position: sticky;
-    left: 110px;
+    left: 140px;
     /* Matches fixed width of group head */
     z-index: 5;
     background: #fff;

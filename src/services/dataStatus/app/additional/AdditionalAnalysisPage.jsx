@@ -115,7 +115,7 @@ const AdditionalAnalysisPage = () => {
     // Data State
     const [tables, setTables] = useState([]);
     const [selectedTableId, setSelectedTableId] = useState(null);
-    const [isConfigOpen, setIsConfigOpen] = useState(false);
+    const [isConfigOpen, setIsConfigOpen] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tableSearchTerm, setTableSearchTerm] = useState('');
     const [variableSearchTerm, setVariableSearchTerm] = useState('');
@@ -1376,8 +1376,8 @@ const AdditionalAnalysisPage = () => {
                     const newColumnsList = newData.columns || [];
                     setResultDataList(processResults(newData));
 
-                    // Success - Close config
-                    setIsConfigOpen(false);
+                    // Success - Close config (disabled)
+                    // setIsConfigOpen(false);
                     modal.showAlert("알림", "저장 및 실행이 완료되었습니다.");
 
                 } else {
@@ -1519,7 +1519,7 @@ const AdditionalAnalysisPage = () => {
             if (result?.success === "777" && result.resultjson) {
                 setResultDataList(processResults(result.resultjson));
 
-                setIsConfigOpen(false);
+                // setIsConfigOpen(false); // 토글 비활성화
             }
             else {
                 modal.showAlert('실패', '분석 실행 실패');
@@ -1651,20 +1651,17 @@ const AdditionalAnalysisPage = () => {
                             <>
                                 {/* Config Section */}
                                 <div className="config-section" style={{
-                                    height: (isConfigOpen && resultDataList.length === 0) ? '100%' : (isConfigOpen ? '600px' : '54px'),
-                                    flex: (isConfigOpen && resultDataList.length === 0) ? 1 : 'none',
+                                    height: '100%',
+                                    flex: 1,
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    minHeight: isConfigOpen ? '400px' : '54px',
+                                    minHeight: '400px',
                                     transition: 'all 0.3s ease'
                                 }}>
-                                    <div className="config-header" style={{ padding: isConfigOpen ? '20px 24px' : '8px 24px', transition: 'all 0.2s' }}>
+                                    <div className="config-header" style={{ padding: '20px 24px', transition: 'all 0.2s' }}>
                                         <div className="config-header__left-group">
-                                            <div
-                                                onClick={() => setIsConfigOpen(!isConfigOpen)}
-                                                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                            >
-                                                {isConfigOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                                            <div style={{ display: 'none' }}>
+                                                {/* 토글 기능 제거 및 열림 고정 */}
                                             </div>
 
                                             <div className="config-header__title-group">
@@ -1963,7 +1960,8 @@ const AdditionalAnalysisPage = () => {
                                     )}
                                 </div>
 
-                                {/* Result Section (Scroll Area) */}
+                                {/* Result Section (Scroll Area) - 요청에 의해 숨김 처리 */}
+                                {false && (
                                 <div className="results-scroll-container" style={{ display: resultDataList.length === 0 ? 'none' : 'flex' }}>
                                     {resultDataList.map((resultData, dataIndex) => (
                                         <ResultSectionBlock
@@ -1994,6 +1992,7 @@ const AdditionalAnalysisPage = () => {
                                         />
                                     ))}
                                 </div>
+                                )}
                             </>
                         )}
                     </div>
