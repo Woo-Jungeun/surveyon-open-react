@@ -23,19 +23,19 @@ const MENU_ITEMS = [
       // { label: "빈도분석", path: "/data_status/analysis/additional", icon: BarChart3 },
       // { label: "교차분석", path: "/data_status/analysis/cross", icon: Table, isPending: true },
       { label: "배너설정", path: "/data_status/analysis/additional", icon: Columns },
-      { label: "문항", path: "/data_status/analysis/cross", icon: Table, isPending: true },
+      { label: "문항", path: "/data_status/analysis/cross", icon: Table },
       // todo 임시 주석  [쿼터현황/관리] 메뉴
       // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
       // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList, isPending: true },
     ]
   },
-  {
-    label: "AI요약",
-    items: [
-      { label: "AI분석", path: "/data_status/ai/analysis", icon: Sparkles, isPending: true },
-      { label: "AI리포트", path: "/data_status/ai/report", icon: FileText, isPending: true },
-    ]
-  },
+  // {
+  //   label: "AI요약",
+  //   items: [
+  //     { label: "AI분석", path: "/data_status/ai/analysis", icon: Sparkles, isPending: true },
+  //     { label: "AI리포트", path: "/data_status/ai/report", icon: FileText, isPending: true },
+  //   ]
+  // },
   {
     label: "데이터설정",
     items: [
