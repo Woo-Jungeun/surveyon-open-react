@@ -143,7 +143,16 @@ const AdditionalAnalysisPage = () => {
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([]);
 
-    const [rowVars, setRowVars] = useState([]);
+    const [_rowVarsState, _setRowVarsState] = useState([]);
+    
+    // 강제로 세로축(rowVars)을 answerStateCode 의 '완료'로 고정
+    const rowVars = useMemo(() => {
+        const targetAsc = variables.find(v => v.id === 'answerStateCode' || v.name === 'answerStateCode');
+        if (targetAsc) return [targetAsc];
+        return [{ id: 'answerStateCode', name: 'answerStateCode', label: 'answerStateCode', type: 'single', info: [{ value: '1', label: '완료' }] }];
+    }, [variables]);
+    
+    const setRowVars = () => {}; // 상태 변경 무력화 (드래그/제거 불가)
     const [colVars, setColVars] = useState([]); // Array of arrays: [[v1, v2], [v3]]
     const [selectedVarIds, setSelectedVarIds] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
@@ -298,6 +307,16 @@ const AdditionalAnalysisPage = () => {
                 }
 
                 loadedVariables = Array.from(variablesMap.values());
+
+                // answerStateCode의 info를 '완료'만 남기도록 강제 고정
+                const targetAns = loadedVariables.find(v => v.id === 'answerStateCode' || v.name === 'answerStateCode');
+                if (targetAns && Array.isArray(targetAns.info)) {
+                    const completeLabel = targetAns.info.find(i => String(i.label).includes('완료') || String(i.value).includes('완료'));
+                    if (completeLabel) {
+                        targetAns.info = [completeLabel];
+                    }
+                }
+
                 setVariables(loadedVariables);
             } catch (error) {
                 console.error("Failed to fetch variables:", error);
@@ -1822,13 +1841,6 @@ const AdditionalAnalysisPage = () => {
                                                     >
                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                             <span className="drop-zone-label" style={{ marginBottom: 0 }}>세로축 (행)</span>
-                                                            <button
-                                                                onClick={() => setRowVars([])}
-                                                                className="axis-clear-btn"
-                                                                title="전체 삭제"
-                                                            >
-                                                                <X size={12} />
-                                                            </button>
                                                         </div>
                                                         <div className="drop-zone-area vertical">
                                                             {rowVars.length === 0 ? (
@@ -1838,14 +1850,9 @@ const AdditionalAnalysisPage = () => {
                                                                     <div
                                                                         key={`${v.id}-${itemIndex}`}
                                                                         className="dropped-tag row-tag"
-                                                                        draggable
-                                                                        onDragStart={(e) => handleDragStart(e, { type: 'ROW_ITEM', itemIndex, item: v })}
-                                                                        onDragOver={handleDragOver}
-                                                                        onDrop={(e) => handleDrop(e, 'row_item', null, itemIndex)}
+                                                                        style={{ cursor: 'default' }}
                                                                     >
-                                                                        <span className="item-drag-handle"><GripVertical size={13} strokeWidth={2.5} /></span>
-                                                                        <span className="tag-text">{v.id}</span>
-                                                                        <X size={14} className="remove" style={{ flexShrink: 0 }} onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'row'); }} />
+                                                                        <span className="tag-text">{v.id} (완료)</span>
                                                                     </div>
                                                                 ))
                                                             )}
