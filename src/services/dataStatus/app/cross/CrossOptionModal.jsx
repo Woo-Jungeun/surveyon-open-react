@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Check } from 'lucide-react';
 import './CrossOptionModal.css';
+import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
 
 const CrossOptionModal = ({ onClose, onApply }) => {
     const [options, setOptions] = useState({
@@ -12,7 +13,7 @@ const CrossOptionModal = ({ onClose, onApply }) => {
         showStdDev: false,
         stdDevDecimal: 2,
         border: '있음',
-        theme: '기본',
+        theme: 'default',
         stub100: 'Show'
     });
 
@@ -160,8 +161,9 @@ const CrossOptionModal = ({ onClose, onApply }) => {
                         <div className="style-option-row">
                             <span className="style-label">차트 테마</span>
                             <select className="option-select" value={options.theme} onChange={(e) => setOptions({...options, theme: e.target.value})}>
-                                <option value="기본">기본</option>
-                                <option value="어두운">어두운</option>
+                                {CHART_THEME_OPTIONS.map(theme => (
+                                    <option key={theme.id} value={theme.id}>{theme.name}</option>
+                                ))}
                             </select>
                         </div>
 
