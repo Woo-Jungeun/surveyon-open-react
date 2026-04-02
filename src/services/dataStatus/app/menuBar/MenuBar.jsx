@@ -243,7 +243,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const handlePageSelect = async (selectedPage) => {
     setIsPageListPopupOpen(false);
     const userId = auth?.user?.userId;
-    const pageId = selectedPage.id || selectedPage.pageid;
+    const pageId = selectedPage.page_id || selectedPage.pageid || selectedPage.id;
     const pageTitle = selectedPage.title || selectedPage.name || "제목 없음";
 
     if (!userId || !pageId) return;

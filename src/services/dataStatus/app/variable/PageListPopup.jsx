@@ -84,7 +84,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
                 ...item,
                 merge_pn: mPn,
                 originalTitle: item.title,
-                pageid: item.pageid || item.id || `temp_${Math.random()}`
+                pageid: item.page_id || item.pageid || item.id || `temp_${Math.random()}`
             };
         });
     });
@@ -97,7 +97,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
                     ...item,
                     merge_pn: mPn,
                     originalTitle: item.title,
-                    pageid: item.pageid || item.id || `temp_${Math.random()}`
+                    pageid: item.page_id || item.pageid || item.id || `temp_${Math.random()}`
                 };
             });
             setLocalData(initialData);
@@ -143,7 +143,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
 
             // 기존 대시보드 수정일 경우 pageid 추가
             if (!dataItem.isNew) {
-                payload.pageid = dataItem.pageid || dataItem.id;
+                payload.pageid = dataItem.page_id || dataItem.pageid || dataItem.id;
             }
 
             const result = await pageSet.mutateAsync(payload);
@@ -159,7 +159,7 @@ const PageListPopup = ({ isOpen, onClose, data, onSelect }) => {
                             ...item,
                             merge_pn: mPn,
                             originalTitle: item.title,
-                            pageid: item.pageid || item.id || `temp_${Math.random()}`
+                            pageid: item.page_id || item.pageid || item.id || `temp_${Math.random()}`
                         };
                     }));
                 } else {

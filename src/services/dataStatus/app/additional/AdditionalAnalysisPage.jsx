@@ -197,7 +197,7 @@ const AdditionalAnalysisPage = () => {
     };
 
     const handlePageSelected = (page) => {
-        const pageId = page.pageid || page.id;
+        const pageId = page.page_id || page.pageid || page.id;
         const pageTitle = page.title || page.name;
         sessionStorage.setItem("pageId", pageId);
         sessionStorage.setItem("pagetitle", pageTitle);
@@ -218,7 +218,7 @@ const AdditionalAnalysisPage = () => {
             const currentPid = sessionStorage.getItem("pageId");
             setCurrentPageId(currentPid);
 
-            if (!currentPid) {
+            if (!currentPid || currentPid === "null" || currentPid === "undefined") {
                 setVariables([]);
                 setTables([]);
                 setSelectedTableId(null);
@@ -229,7 +229,7 @@ const AdditionalAnalysisPage = () => {
                 if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
                 alertTimerRef.current = setTimeout(() => {
                     const finalPid = sessionStorage.getItem("pageId");
-                    if (sessionStorage.getItem("merge_pn") && !finalPid) {
+                    if (sessionStorage.getItem("merge_pn") && (!finalPid || finalPid === "null" || finalPid === "undefined")) {
                         modal.showAlert("알림", "선택된 대시보드 정보가 없습니다.", null, handleOpenPageList);
                     }
                 }, 1000);
