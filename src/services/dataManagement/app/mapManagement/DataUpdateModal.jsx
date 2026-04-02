@@ -183,14 +183,13 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                             <Info size={16} />
                             <span>파일 업로드 주의사항</span>
                         </div>
-                        <ul className="update-info-list" style={{ listStyle: 'none', paddingLeft: 0, marginTop: '4px' }}>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 이 기능은 데이터 불러오기 전용으로, 데이터 <strong>신규 입력은 지원하지 않습니다.</strong></li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> <strong>SPSS 파일(.sav)</strong> 형식만 지원합니다.</li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 첫 번째 데이터 필드는 반드시 <strong><span className="update-info-highlight">pid</span></strong>여야 합니다.</li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> pid는 Key 값이므로 <strong>데이터 중복이 허용되지 않습니다.</strong></li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> pid에 문제(중복, 특수문자 등)가 있을 경우 <strong>업로드가 진행되지 않습니다.</strong></li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 기존 필드명과 <strong>매칭되지 않는 값은 업데이트 시 무시</strong>됩니다.</li>
-                            <li style={{ marginTop: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 사이트에서 <strong>sav 파일로 데이터를 내려받으신 후 수정</strong>하시는 것을 권장드립니다.</li>
+                        <ul className="update-info-list" style={{ listStyle: 'none', paddingLeft: 0, marginTop: '4px', wordBreak: 'keep-all' }}>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> spss 파일(sav) 형식만 지원합니다.</li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 신규 등록되어 MAP 변수가 PID 하나인 프로젝트의 경우 최초 1회에 한하여 SAV 파일 양식에 맞춰 MAP 세팅이 진행됩니다.</li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 첫 번째 데이터는 반드시 <strong style={{ color: '#16a34a' }}>PID</strong>여야 합니다. (최초 등록일 경우 PID가 없을 경우에 한해서만 PID를 자동 생성합니다.)</li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 신규 등록 이후엔 데이터를 내려받으신 후 PID가 부여된 파일로 데이터 업데이트를 진행해 주시기 바랍니다.</li>
+                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 만약 pid에 문제가 있을 경우(중복, 특수문자 등) 업로드는 진행되지 않습니다.</li>
+                            <li style={{ marginTop: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> MAP 세팅과 SAV 파일의 필드명이 매칭되지 않을 시 업데이트가 진행되지 않습니다.</li>
                         </ul>
                     </div>
 

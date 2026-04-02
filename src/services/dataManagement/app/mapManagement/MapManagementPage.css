@@ -1494,7 +1494,8 @@ input:checked+.slider:before {
 
 /* ── Upload Modal Styles ── */
 .upload-modal-content {
-    width: 500px;
+    width: 560px;
+    max-height: 92vh;
 }
 
 .upload-modal-warning {
