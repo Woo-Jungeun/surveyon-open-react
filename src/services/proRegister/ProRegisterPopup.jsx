@@ -1,10 +1,211 @@
-import { useMemo, memo, useState, Fragment, useEffect, useCallback, useContext, cloneElement, useRef } from "react";
+import { useMemo, memo, useState, Fragment, useEffect, useCallback, useContext, cloneElement, useRef, createContext } from "react";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { Button } from "@progress/kendo-react-buttons";
 import { modalContext } from "@/components/common/Modal";
+
+// 하위 컴포넌트로 상태와 함수 파라미터를 넘기기 위한 Context
+const PopupGridContext = createContext({});
+
+// 질문 셀 전용 컴포넌트 (외부로 분리)
+const QuestionCell = memo((props) => {
+  const { dataItem, field } = props;
+  const ctx = useContext(PopupGridContext);
+  const inEdit = field === "question" && dataItem.__rowKey === ctx.editingKey;
+  const inputRef = useRef(null);
+  const [local, setLocal] = useState(dataItem[field] ?? "");
+
+  // 편집행 바뀌거나 원본 값이 바뀌면 로컬 초기화
+  useEffect(() => {
+    if (inEdit) setLocal(dataItem[field] ?? "");
+  }, [inEdit, dataItem, field]);
+
+  // 편집 시작 시 자동 포커스
+  useEffect(() => {
+    if (inEdit) inputRef.current?.focus({ preventScroll: true });
+  }, [inEdit]);
+
+  const commit = useCallback(
+    (next) => {
+      ctx.handleItemChange({ ...props, field, value: next, dataItem });
+    },
+    [props, field, dataItem, ctx]
+  );
+
+  // 일반 상태는 텍스트로 표시
+  if (!inEdit) return <td>{dataItem[field]}</td>;
+
+  // 편집 모드 input
+  return (
+    <td onMouseDown={(e) => e.stopPropagation()}>
+      <input
+        ref={inputRef}
+        className="k-input k-input-solid"
+        value={local}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={(e) => {
+          commit(e.target.value ?? "");
+          ctx.setEditingKey(null);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            commit(e.target.value ?? "");
+            ctx.setEditingKey(null);
+          }
+          if (e.key === "Escape") {
+            ctx.setEditingKey(null);
+          }
+        }}
+      />
+    </td>
+  );
+});
+
+// 컬럼 셀: '중복' 배지 (외부로 분리)
+const ColumnCell = memo((props) => {
+  const { dataItem, field } = props;
+  return (
+    <td>
+      {dataItem[field]}
+      {dataItem.isDuplicate && (
+        <span style={{ color: "#ef4444", marginLeft: 8 }}>중복</span>
+      )}
+    </td>
+  );
+});
+
+// GridRenderer (외부로 분리하여 매 렌더마다 remount 현상 소거)
+const GridRenderer = memo((props) => {
+  const { idGetter } = props;
+  const ctx = useContext(PopupGridContext);
+
+  const didInitRef = useRef(false);
+  useEffect(() => {
+    if (!ctx.popupShow || didInitRef.current) return;
+    didInitRef.current = true;
+    ctx.restoreScroll();
+  }, [ctx.popupShow, ctx.restoreScroll]);
+
+  return (
+    <Fragment>
+      <style>{`
+        #grid_popup_01 .k-grid-content {
+          max-height: 500px !important;
+        }
+      `}</style>
+      <div className="cmn_gird_wrap">
+        <div id="grid_popup_01" className="cmn_grid singlehead">
+          <KendoGrid
+            parentProps={{
+              height: "auto", // CSS max-height 제어
+              data: ctx.popupGridData,
+              dataItemKey: "__rowKey",
+              selectedState: ctx.selectedState,
+              setSelectedState: ctx.setSelectedState,
+              selectedField: ctx.SELECTED_FIELD,
+              idGetter,
+              sortable: { mode: "multiple", allowUnsort: true },
+              filterable: true,
+              sortChange: ({ sort }) => ctx.setSort(sort ?? []),
+              filterChange: ({ filter }) => ctx.setFilter(filter ?? undefined),
+              sort: ctx.sort,
+              filter: ctx.filter,
+              multiSelect: true,
+              linkRowClickToSelection: false,
+              editable: "incell",
+              onItemChange: ctx.handleItemChange,
+
+              // checkbox 클릭일 때만 선택 변경 (행 클릭 시 선택 X)
+              onSelectionChange: (e) => {
+                ctx.rememberScroll(); // 스크롤 위치 저장
+                const input = e?.syntheticEvent?.target;
+                if (!input || input.type !== "checkbox") return;
+
+                const { dataItem } = e;
+                if (dataItem.isDuplicate) return; // 중복행 선택 불가
+
+                const key = dataItem.__rowKey;
+                ctx.setSelectedState((prev) => {
+                  const prevVal = !!prev[key];
+                  const nextVal = !prevVal;
+                  if (prevVal === nextVal) return prev;
+                  return { ...prev, [key]: nextVal };
+                });
+              },
+
+              // 헤더 전체 선택: 중복행은 제외
+              onHeaderSelectionChange: (e) => {
+                ctx.rememberScroll(); // 스크롤 저장
+                const checked = e?.syntheticEvent?.target?.checked;
+                ctx.setSelectedState((prev) => {
+                  const next = { ...prev };
+                  ctx.popupGridData.forEach((r) => {
+                    if (r.isDuplicate) next[r.__rowKey] = false;
+                    else next[r.__rowKey] = !!checked;
+                  });
+                  return next;
+                });
+              },
+
+              // 행 클릭은 편집만 수행 (선택과 분리)
+              onRowClick: (e) => {
+                e.preventDefault?.();
+                e.syntheticEvent?.stopPropagation?.();
+                const { dataItem } = e;
+                ctx.rememberScroll();
+                ctx.setEditingKey(dataItem.__rowKey);
+              },
+
+              // 중복행: 회색 처리 + 완전 클릭 차단 (체크박스 포함)
+              rowRender: (row, rowProps) => {
+                const item = rowProps.dataItem;
+                if (!item?.isDuplicate) return row;
+                const rowStyle = {
+                  backgroundColor: "#f5f5f5",
+                  color: "#999",
+                  pointerEvents: "none",
+                };
+                return cloneElement(row, { style: rowStyle });
+              },
+            }}
+          >
+            {ctx.columns
+              .filter((c) => c.show !== false)
+              .map((c) => (
+                <Column
+                  key={c.field}
+                  field={c.field}
+                  title={c.title}
+                  columnMenu={ctx.columnMenu}
+                  editable={c.field === "question"}
+                  // question만 커스텀 셀(포커스 안정) / column은 '중복' 배지
+                  cell={
+                    c.field === "question"
+                      ? QuestionCell
+                      : c.field === "column"
+                        ? ColumnCell
+                        : undefined
+                  }
+                />
+              ))}
+          </KendoGrid>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", justifyContent: "flex-end", padding: "18px 12px 16px 12px" }}>
+        <Button
+          themeColor="primary"
+          onClick={ctx.handleSelectConfirm}
+          style={{ padding: "10px 30px", fontSize: "15px", fontWeight: "600" }}
+        >
+          선택 완료
+        </Button>
+      </div>
+    </Fragment>
+  );
+});
 
 /**
  * 문항 등록 > 문항선택 팝업
@@ -30,7 +231,7 @@ const ProRegisterPopup = (parentProps) => {
   // 스크롤 위치 저장용 ref
   const scrollTopRef = useRef(0);
   const rememberScroll = useCallback(() => {
-    const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+    const grid = document.querySelector("#grid_popup_01 .k-grid-content, #grid_popup_01 .k-grid-contents");
     if (grid) {
       scrollTopRef.current = grid.scrollTop;
     };
@@ -38,7 +239,7 @@ const ProRegisterPopup = (parentProps) => {
 
   const restoreScroll = useCallback(() => {
     const saved = scrollTopRef.current;
-    const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+    const grid = document.querySelector("#grid_popup_01 .k-grid-content, #grid_popup_01 .k-grid-contents");
     if (grid) {
       grid.scrollTop = saved;
     }
@@ -47,7 +248,7 @@ const ProRegisterPopup = (parentProps) => {
   // 최초 렌더 시 1회 스크롤 위치 강제 초기화
   useEffect(() => {
     if (!popupShow) return;
-    const grid = document.querySelector("#grid_01 .k-grid-content, #grid_01 .k-grid-contents");
+    const grid = document.querySelector("#grid_popup_01 .k-grid-content, #grid_popup_01 .k-grid-contents");
     if (grid) {
       const timer = setTimeout(() => {
         if (scrollTopRef.current === 0) {
@@ -189,218 +390,56 @@ const ProRegisterPopup = (parentProps) => {
     initSelectionRef.current = true;
   }, [popupShow, selectData, makeRowKey]);
 
-  // 질문 셀 전용 컴포넌트
-  const QuestionCell = memo((props) => {
-    const { dataItem, field } = props;
-    const inEdit = field === "question" && dataItem.__rowKey === editingKey;
-    const inputRef = useRef(null);
-    const [local, setLocal] = useState(dataItem[field] ?? "");
+  // (내부에 있던 셀 컴포넌트와 렌더 함수는 최상위 스코프로 분리됨)
 
-    // 편집행 바뀌거나 원본 값이 바뀌면 로컬 초기화
-    useEffect(() => {
-      if (inEdit) setLocal(dataItem[field] ?? "");
-    }, [inEdit, dataItem, field]);
+  // 1단계: 팝업 데이터 기본 구조 계산 (내용이나 목록이 바뀔 때만 재연산)
+  const baseGridData = useMemo(() => {
+    const filtered = (popupData || []).filter((r) => r.question !== idColumn); // 선택한 아이디 컬럼 제외
+    const colCounts = filtered.reduce((acc, cur) => {
+      acc[cur.column] = (acc[cur.column] || 0) + 1;
+      return acc;
+    }, {});
+    return filtered.map((row) => {
+      const isDuplicate = colCounts[row.column] > 1;
+      return { ...row, isDuplicate };
+    });
+  }, [popupData, idColumn]);
 
-    // 편집 시작 시 자동 포커스
-    useEffect(() => {
-      if (inEdit) inputRef.current?.focus({ preventScroll: true });
-    }, [inEdit]);
+  // 2단계: 최근 이전 데이터를 참조하여 선택된 상태만 불변성 최소화로 덮어쓰기
+  const prevDataRef = useRef([]);
+  const popupGridData = useMemo(() => {
+    const nextData = baseGridData.map((row) => {
+      const selected = !!selectedState[row.__rowKey];
+      const prevRow = prevDataRef.current.find((r) => r.__rowKey === row.__rowKey);
+      if (prevRow && prevRow.isDuplicate === row.isDuplicate && prevRow[SELECTED_FIELD] === selected) {
+        if (prevRow.question === row.question && prevRow.column === row.column) {
+          return prevRow;
+        }
+      }
+      return { ...row, [SELECTED_FIELD]: selected };
+    });
+    prevDataRef.current = nextData;
+    return nextData;
+  }, [baseGridData, selectedState, SELECTED_FIELD]);
 
-    const commit = useCallback(
-      (next) => {
-        handleItemChange({
-          ...props,
-          field,
-          value: next,
-          dataItem,
-        });
-      },
-      [props, field, dataItem]
-    );
-
-    // 일반 상태는 텍스트로 표시
-    if (!inEdit) return <td>{dataItem[field]}</td>;
-
-    // 편집 모드 input
-    return (
-      <td onMouseDown={(e) => e.stopPropagation()}>
-        <input
-          ref={inputRef}
-          className="k-input k-input-solid"
-          value={local}
-          onChange={(e) => setLocal(e.target.value)}
-          onBlur={(e) => {
-            commit(e.target.value ?? "");
-            setEditingKey(null);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              commit(e.target.value ?? "");
-              setEditingKey(null);
-            }
-            if (e.key === "Escape") {
-              setEditingKey(null);
-            }
-          }}
-        />
-      </td>
-    );
-  });
-  // 컬럼 셀: '중복' 배지
-  const ColumnCell = memo((props) => {
-    const { dataItem, field } = props;
-    return (
-      <td>
-        {dataItem[field]}
-        {dataItem.isDuplicate && (
-          <span style={{ color: "#ef4444", marginLeft: 8 }}>중복</span>
-        )}
-      </td>
-    );
-  });
-
-  // grid rendering
-  const GridRenderer = memo((props) => {
-    const { idGetter } = props;
-
-    // 중복 표시 + 선택 상태 주입
-    const popupGridData = useMemo(() => {
-      const filtered = (popupData || []).filter((r) => r.question !== idColumn); // 선택한 아이디 컬럼 제외
-      const colCounts = filtered.reduce((acc, cur) => {
-        acc[cur.column] = (acc[cur.column] || 0) + 1;
-        return acc;
-      }, {});
-      return filtered.map((row) => {
-        const selected = !!selectedState[row.__rowKey];
-        const isDuplicate = colCounts[row.column] > 1;
-        return { ...row, [SELECTED_FIELD]: selected, isDuplicate };
-      });
-    }, [popupData, selectedState, idColumn]);
-
-    const didInitRef = useRef(false);
-    useEffect(() => {
-      if (!popupShow || didInitRef.current) return;
-      didInitRef.current = true;
-      restoreScroll();
-    }, [popupShow]);
-
-    return (
-      <Fragment>
-        <style>{`
-          #grid_01 .k-grid-content {
-            max-height: 500px !important;
-          }
-        `}</style>
-        <div className="cmn_gird_wrap">
-          <div id="grid_01" className="cmn_grid singlehead">
-            <KendoGrid
-              parentProps={{
-                height: "auto", // CSS max-height 제어
-                data: popupGridData,
-                dataItemKey: "__rowKey",
-                selectedState,
-                setSelectedState,
-                selectedField: SELECTED_FIELD,
-                idGetter,
-                sortable: { mode: "multiple", allowUnsort: true },
-                filterable: true,
-                sortChange: ({ sort }) => setSort(sort ?? []),
-                filterChange: ({ filter }) => setFilter(filter ?? undefined),
-                sort,
-                filter,
-                multiSelect: true,
-                linkRowClickToSelection: false,
-                editable: "incell",
-                onItemChange: handleItemChange,
-
-                // checkbox 클릭일 때만 선택 변경 (행 클릭 시 선택 X)
-                onSelectionChange: (e) => {
-                  const input = e?.syntheticEvent?.target;
-                  if (!input || input.type !== "checkbox") return;
-
-                  const { dataItem } = e;
-                  if (dataItem.isDuplicate) return; // 중복행 선택 불가
-
-                  const key = dataItem.__rowKey;
-                  setSelectedState((prev) => {
-                    const prevVal = !!prev[key];
-                    const nextVal = !prevVal;
-                    if (prevVal === nextVal) return prev;
-                    return { ...prev, [key]: nextVal };
-                  });
-                },
-
-                // 헤더 전체 선택: 중복행은 제외
-                onHeaderSelectionChange: (e) => {
-                  rememberScroll(); // 스크롤 저장
-                  const checked = e?.syntheticEvent?.target?.checked;
-                  setSelectedState((prev) => {
-                    const next = { ...prev };
-                    popupGridData.forEach((r) => {
-                      if (r.isDuplicate) next[r.__rowKey] = false;
-                      else next[r.__rowKey] = !!checked;
-                    });
-                    return next;
-                  });
-                },
-
-                // 행 클릭은 편집만 수행 (선택과 분리)
-                onRowClick: (e) => {
-                  e.preventDefault?.();
-                  e.syntheticEvent?.stopPropagation?.();
-                  const { dataItem } = e;
-                  rememberScroll();
-                  setEditingKey(dataItem.__rowKey);
-                },
-
-                // 중복행: 회색 처리 + 완전 클릭 차단 (체크박스 포함)
-                rowRender: (row, rowProps) => {
-                  const item = rowProps.dataItem;
-                  if (!item?.isDuplicate) return row;
-                  const rowStyle = {
-                    backgroundColor: "#f5f5f5",
-                    color: "#999",
-                    pointerEvents: "none",
-                  };
-                  return cloneElement(row, { style: rowStyle });
-                },
-              }}
-            >
-              {columns
-                .filter((c) => c.show !== false)
-                .map((c) => (
-                  <Column
-                    key={c.field}
-                    field={c.field}
-                    title={c.title}
-                    columnMenu={columnMenu}
-                    editable={c.field === "question"}
-                    // question만 커스텀 셀(포커스 안정) / column은 '중복' 배지
-                    cell={
-                      c.field === "question"
-                        ? QuestionCell
-                        : c.field === "column"
-                          ? ColumnCell
-                          : undefined
-                    }
-                  />
-                ))}
-            </KendoGrid>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "flex-end", padding: "18px 12px 16px 12px" }}>
-          <Button
-            themeColor="primary"
-            onClick={handleSelectConfirm}
-            style={{ padding: "10px 30px", fontSize: "15px", fontWeight: "600" }}
-          >
-            선택 완료
-          </Button>
-        </div>
-      </Fragment>
-    );
-  });
+  // Context 주입용 값 구하기
+  const contextValue = useMemo(() => ({
+    editingKey, setEditingKey, handleItemChange,
+    selectedState, setSelectedState, SELECTED_FIELD,
+    popupData, setPopupData,
+    sort, setSort, filter, setFilter,
+    columns, columnMenu,
+    handleSelectConfirm,
+    rememberScroll, restoreScroll, popupShow, popupGridData
+  }), [
+    editingKey, setEditingKey, handleItemChange,
+    selectedState, setSelectedState, SELECTED_FIELD,
+    popupData, setPopupData,
+    sort, setSort, filter, setFilter,
+    columns, columnMenu,
+    handleSelectConfirm,
+    rememberScroll, restoreScroll, popupShow, popupGridData
+  ]);
 
   return (
     <article className={`modal ${modalOnOff}`}>
@@ -416,12 +455,14 @@ const ProRegisterPopup = (parentProps) => {
             <span className="hidden">close</span>
           </a>
         </div>
-        <GridData
-          // GridData 쪽 키도 __rowKey로 통일 (스크롤/선택 상태 보존에 유리)
-          dataItemKey="__rowKey"
-          selectedField={SELECTED_FIELD}
-          renderItem={(props) => <GridRenderer {...props} />}
-        />
+        <PopupGridContext.Provider value={contextValue}>
+          <GridData
+            // GridData 쪽 키도 __rowKey로 통일 (스크롤/선택 상태 보존에 유리)
+            dataItemKey="__rowKey"
+            selectedField={SELECTED_FIELD}
+            renderItem={(props) => <GridRenderer {...props} />}
+          />
+        </PopupGridContext.Provider>
       </div>
     </article>
   );
