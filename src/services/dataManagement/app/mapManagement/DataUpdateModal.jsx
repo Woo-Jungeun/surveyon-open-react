@@ -88,7 +88,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                                 // 1. 성공 시 팝업 닫기
                                 handleModalClose();
                                 // 2. 알림 메시지 띄우기 (확인 버튼 누를 때까지 대기)
-                                await modal.showAlert("알림", "데이터 불러오기 처리가 완료되었습니다.");
+                                await modal.showAlert("알림", "데이터 불러오기 처리가 완료되었습니다.", { zIndex: 99999 });
                                 // 3. 맵 구성 조회 API 태우기 (재조회)
                                 if (refreshData) refreshData();
                             } else if (res?.success === "907") {
@@ -100,16 +100,28 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                                 if (res?.resultjson && Array.isArray(res.resultjson)) {
                                     duplicatePids = res.resultjson;
                                 }
-                                const pidsText = duplicatePids.length > 0 ? ` (중복된 PID: ${duplicatePids.slice(0, 10).join(", ")}${duplicatePids.length > 10 ? ' 등...' : ''})` : "";
+                                const pidsText = duplicatePids.length > 0 ? ` (중복된 PID: ${duplicatePids.join(", ")})` : "";
 
-                                modal.showErrorAlert("에러", (res?.message || "SAV 파일 내에 중복된 고유 식별자(PID)가 존재하여 업데이트가 중단되었습니다.") + "\n" + pidsText);
+                                modal.showErrorAlert("에러", (res?.message || "SAV 파일 내에 중복된 고유 식별자(PID)가 존재하여 업데이트가 중단되었습니다.") + "\n" + pidsText, { zIndex: 99999 });
+                            } else if (res?.success === "909") {
+                                let errorDetails = res?.message || "SAV 파일과 프로젝트 맵(Map) 구조가 일치하지 않아 데이터 오염 방지를 위해 업데이트가 거부되었습니다.";
+                                if (res?.resultjson) {
+                                    const { missingInDb, missingInSav } = res.resultjson;
+                                    if (missingInDb && missingInDb.length > 0) {
+                                        errorDetails += `\n\n[SAV에만 존재하는 문항]:\n${missingInDb.join(", ")}`;
+                                    }
+                                    if (missingInSav && missingInSav.length > 0) {
+                                        errorDetails += `\n\n[DB(맵 구성)에만 선언되어 있는 문항]:\n${missingInSav.join(", ")}`;
+                                    }
+                                }
+                                modal.showErrorAlert("구조 불일치 에러", errorDetails, { zIndex: 99999 });
                             } else {
                                 const errorMsg = res?.errortext || res?.message || "데이터 불러오기 중 오류가 발생했습니다.";
-                                modal.showErrorAlert("에러", errorMsg);
+                                modal.showErrorAlert("에러", errorMsg, { zIndex: 99999 });
                             }
                         } catch (error) {
                             console.error("Update error:", error);
-                            modal.showErrorAlert("에러", "데이터 불러오기 요청 중 오류가 발생했습니다.");
+                            modal.showErrorAlert("에러", "데이터 불러오기 요청 중 오류가 발생했습니다.", { zIndex: 99999 });
                         }
                     }
                 }
@@ -209,13 +221,13 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                         <div className={`upload-file-name ${selectedFile ? 'has-file' : ''}`}>
                             {selectedFile ? (
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', paddingRight: '8px' }}>
                                         {selectedFile.name}
                                     </span>
                                     <button
                                         className="upload-file-clear-btn"
                                         onClick={handleClearFile}
-                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: '2px', marginLeft: '8px' }}
+                                        style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', padding: '2px' }}
                                         onMouseEnter={e => e.currentTarget.style.color = '#ef4444'}
                                         onMouseLeave={e => e.currentTarget.style.color = '#94a3b8'}
                                     >
