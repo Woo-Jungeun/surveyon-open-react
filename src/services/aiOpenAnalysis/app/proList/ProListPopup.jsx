@@ -229,6 +229,7 @@ const ProListPopup = (parentProps) => {
                 sortable: true,
                 selectionColumnWidth: "60px",
                 height: "100%",
+                linkRowClickToSelection: false,
               }}
             >
               <Column field="qnum_question" title="문항" width="auto" />
