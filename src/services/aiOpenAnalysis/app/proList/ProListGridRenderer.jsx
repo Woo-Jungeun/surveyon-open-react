@@ -34,6 +34,8 @@ const ProListGridRenderer = (props) => {
         filter, setFilter,
         sort, setSort,
         popupShow, setPopupShow,
+        popupMode, setPopupMode,
+        popupRow, setPopupRow,
         goOpenSetting,
         handleExportExcelDev,
         handleExportExcelDP,
@@ -410,20 +412,26 @@ const ProListGridRenderer = (props) => {
 
     // 헤더 버튼(단일)
     const HeaderBtn = ({ className = 'btnS', children, onClick }) => (
-        <div onClick={(e) => e.stopPropagation()} // 정렬/소팅 이벤트 막기
-            style={{ display: 'flex', justifyContent: 'center' }}>
-            <Button className={className} onClick={onClick}>{children}</Button>
+        <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} style={{ display: 'flex', justifyContent: 'center' }}>
+            <Button className={className} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => {
+                e.stopPropagation();
+                if (onClick) onClick(e);
+            }}>{children}</Button>
         </div>
     );
 
     // 헤더 버튼(2개)
     const HeaderBtnGroup = ({ buttons, disabled }) => (
-        <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+        <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
             {buttons.map((b, i) => (
                 <Button
                     key={i}
                     className={b.className ?? 'btnS'}
-                    onClick={disabled ? undefined : b.onClick}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (!disabled && b.onClick) b.onClick(e);
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()}
                     style={{
                         opacity: disabled ? 0.5 : 1,
                         cursor: disabled ? 'not-allowed' : 'pointer',
@@ -436,10 +444,10 @@ const ProListGridRenderer = (props) => {
         </div>
     );
 
-    // 라벨 + 버튼그룹(세로 스택)
     const HeaderLabeledBtnGroup = ({ label, buttons, disabled }) => (
         <div
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: '5px' }}
         >
             <span style={{ fontWeight: 500, fontSize: '12px' }}>{label}</span>
@@ -635,7 +643,7 @@ const ProListGridRenderer = (props) => {
                                 </React.Fragment>
                             }
                             buttons={[
-                                { text: '전체설정', className: 'btnS', onClick: () => setPopupShow(true) }
+                                { text: '전체설정', className: 'btnS', onClick: () => { setPopupMode("all"); setPopupRow(null); setPopupShow(true); } }
                             ]}
                             disabled={dataWithProxies.length === 0}
                         />
@@ -650,7 +658,7 @@ const ProListGridRenderer = (props) => {
                         return (
                             <td style={{ textAlign: "center" }}>
                                 <Button className="btnM btn-setting-outline" themeColor="primary"
-                                    onClick={(e) => { e.stopPropagation(); setPopupShow(true); }}
+                                    onClick={(e) => { e.stopPropagation(); setPopupMode("single"); setPopupRow(row); setPopupShow(true); }}
                                     onMouseDown={(e) => e.stopPropagation()} >
                                     설정
                                 </Button>
@@ -832,6 +840,7 @@ const ProListGridRenderer = (props) => {
                 width={c.width}
                 editable={c.editable}
                 columnMenu={columnMenu}
+                cell={c.wrap ? WrapCell(c.field, { wordBreak: 'break-all' }) : undefined}
             />
         );
     };
@@ -1033,6 +1042,8 @@ const ProListGridRenderer = (props) => {
                 <ProListPopup
                     popupShow={popupShow}
                     setPopupShow={setPopupShow}
+                    popupMode={popupMode}
+                    popupRow={popupRow}
                 />
             )}
 

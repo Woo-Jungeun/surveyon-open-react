@@ -46,6 +46,8 @@ const ProList = () => {
     const [sort, setSort] = useState([]);
     const [filter, setFilter] = useState(null);
     const [popupShow, setPopupShow] = useState(false);        // 필터문항설정 팝업 popupShow
+    const [popupMode, setPopupMode] = useState("all");        // "all" | "single"
+    const [popupRow, setPopupRow] = useState(null);           // 행 데이터
 
     const { proListData, editMutation, excelDownloadMutation } = ProListApi();
 
@@ -117,7 +119,7 @@ const ProList = () => {
         // ----- VIEW -----
         { field: "no", title: "no", group: "VIEW", show: true, allowHide: false, order: 1, width: "50px" },
         { field: "model", title: "모델", group: "VIEW", show: true, allowHide: false, order: 2, width: "60px" },
-        { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "80px" },
+        { field: "qnum", title: "문번호", group: "VIEW", show: true, allowHide: false, order: 3, width: "80px", wrap: true },
 
         // 문항최종(이미 묶음)
         withSubgroup("문항최종", 1)({ field: "qnum_text", title: "문항최종번호", group: "VIEW", show: true, allowHide: false, order: 4, width: "60px", wrap: true }),
@@ -284,6 +286,10 @@ const ProList = () => {
                     setSort={setSort}
                     popupShow={popupShow}
                     setPopupShow={setPopupShow}
+                    popupMode={popupMode}
+                    setPopupMode={setPopupMode}
+                    popupRow={popupRow}
+                    setPopupRow={setPopupRow}
                     goOpenSetting={goOpenSetting}
                     handleExportExcelDev={handleExportExcelDev}
                     handleExportExcelDP={handleExportExcelDP}
