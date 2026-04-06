@@ -657,11 +657,13 @@ const ProListGridRenderer = (props) => {
                         }
                         return (
                             <td style={{ textAlign: "center" }}>
-                                <Button className="btnM btn-setting-outline" themeColor="primary"
-                                    onClick={(e) => { e.stopPropagation(); setPopupMode("single"); setPopupRow(row); setPopupShow(true); }}
-                                    onMouseDown={(e) => e.stopPropagation()} >
-                                    설정
-                                </Button>
+                                {!isMergeRow(row) && (
+                                    <Button className="btnM btn-setting-outline" themeColor="primary"
+                                        onClick={(e) => { e.stopPropagation(); setPopupMode("single"); setPopupRow(row); setPopupShow(true); }}
+                                        onMouseDown={(e) => e.stopPropagation()} >
+                                        설정
+                                    </Button>
+                                )}
                             </td>
                         );
                     }}
