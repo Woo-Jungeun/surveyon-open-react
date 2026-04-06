@@ -14,7 +14,7 @@ import { process } from "@progress/kendo-data-query";
  * @since 2025-09-16<br />
  */
 const ProListPopup = (parentProps) => {
-  const { popupShow, setPopupShow, popupMode, popupRow } = parentProps;
+  const { popupShow, setPopupShow, popupMode, popupRow, firstQnum } = parentProps;
   const modalOnOff = popupShow ? "on" : "off";
 
   const auth = useSelector((store) => store.auth);
@@ -37,11 +37,15 @@ const ProListPopup = (parentProps) => {
 
   const fetchData = async () => {
     try {
+      const qnumVal = popupMode === "single"
+          ? (popupRow?.merge_qnum || "")
+          : (firstQnum || "");
+
       const res = await editMutation.mutateAsync({
         user: auth?.user?.userId || "",
         projectnum,
         gb: "filter_select_qnum",
-        ...(popupMode === "single" && { qnum: popupRow?.merge_qnum || "" }),
+        qnum: qnumVal,
       });
       if (res?.success === "777" && res?.resultjson) {
         setGridData(res.resultjson);

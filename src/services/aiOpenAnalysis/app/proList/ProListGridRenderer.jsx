@@ -1044,6 +1044,7 @@ const ProListGridRenderer = (props) => {
                     setPopupShow={setPopupShow}
                     popupMode={popupMode}
                     popupRow={popupRow}
+                    firstQnum={dataState?.data?.[0]?.merge_qnum}
                 />
             )}
 
