@@ -61,8 +61,33 @@
 }
 
 /* Compact Grid Header */
-#grid_01 .k-grid-header .k-header {
+#grid_01 .k-grid-header .k-header,
+#grid_01 .k-grid-header .k-header .k-column-title,
+#grid_01 .k-grid-header .k-header .k-link,
+#grid_01 .k-grid-header .k-header span,
+#grid_01 .k-grid-header .k-header div {
     font-size: 12px !important;
-    padding: 8px 4px !important;
+}
+#grid_01 .k-grid-header .k-header .k-column-title {
+    white-space: pre-line !important; 
+    word-break: keep-all !important;
+}
+#grid_01 .k-grid-header .k-header {
     text-align: center;
+    vertical-align: middle !important;
+}
+/* Reduce filter icon space to fit more text */
+#grid_01 .k-grid-header .k-header .k-column-menu,
+#grid_01 .k-grid-header .k-header .k-icon {
+    width: 14px !important;
+    height: 14px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Compact Grid Data */
+#grid_01 .k-grid-content td,
+#grid_01 .k-grid-content td span,
+#grid_01 .k-grid-content td div {
+    font-size: 12px !important;
 }

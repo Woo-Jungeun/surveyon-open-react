@@ -1,4 +1,4 @@
-﻿import React, { useRef, useMemo, useCallback, useEffect, useState } from "react";
+import React, { useRef, useMemo, useCallback, useEffect, useState } from "react";
 import { Button } from "@progress/kendo-react-buttons";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -442,7 +442,7 @@ const ProListGridRenderer = (props) => {
             onClick={(e) => e.stopPropagation()}
             style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: '5px' }}
         >
-            <span style={{ fontWeight: 500 }}>{label}</span>
+            <span style={{ fontWeight: 500, fontSize: '12px' }}>{label}</span>
             <HeaderBtnGroup buttons={buttons} disabled={disabled} />
         </div>
     );
@@ -624,8 +624,22 @@ const ProListGridRenderer = (props) => {
                     key={c.field}
                     field={c.field}
                     title={c.title}
+                    width={c.width}
                     sortable={false}
                     columnMenu={undefined}
+                    headerCell={() => (
+                        <HeaderLabeledBtnGroup
+                            label={
+                                <React.Fragment>
+                                    필터문항<br />설정
+                                </React.Fragment>
+                            }
+                            buttons={[
+                                { text: '전체설정', className: 'btnS', onClick: () => setPopupShow(true) }
+                            ]}
+                            disabled={dataWithProxies.length === 0}
+                        />
+                    )}
                     cell={(cellProps) => {
                         const row = cellProps.dataItem;
                         const excluded = isExcluded(row);
@@ -670,6 +684,7 @@ const ProListGridRenderer = (props) => {
                     key={c.field}
                     field={c.field}
                     title={c.title}
+                    width={c.width}
                     columnMenu={columnMenu}
                     cell={BlankWhenMergeCell('status_text')}
                 />
@@ -715,6 +730,7 @@ const ProListGridRenderer = (props) => {
                     key={c.field}
                     field={c.field}
                     title=""
+                    width={c.width}
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
@@ -730,6 +746,7 @@ const ProListGridRenderer = (props) => {
                     key={c.field}
                     field={c.field}
                     title=""
+                    width={c.width}
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
@@ -764,16 +781,21 @@ const ProListGridRenderer = (props) => {
                                     key={`${row.id}:${cur}`}     // 재조회로 값이 바뀌면 인풋을 리마운트
                                     defaultValue={cur}           // 타이핑 중에는 리렌더 안 일어남(포커스 유지)
                                     disabled={disabled}
-                                    placeholder="번호 입력"
+                                    placeholder="입력"
                                     rows={1}
                                     style={{
                                         resize: 'none',
                                         minHeight: '30px',
                                         height: 'auto',
-                                        width: '100%',
+                                        width: 'calc(100% - 20px)',
+                                        margin: '0 auto',
+                                        display: 'block',
                                         overflow: 'hidden',
                                         whiteSpace: 'pre-wrap', // 줄바꿈 허용
-                                        lineHeight: '1.5'
+                                        lineHeight: '1.5',
+                                        fontSize: '12px',
+                                        textAlign: 'center',
+                                        boxSizing: 'border-box'
                                     }}
                                     onInput={(e) => {
                                         const now = norm(e.currentTarget.value);
