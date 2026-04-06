@@ -119,10 +119,10 @@ const ProListPopup = (parentProps) => {
   };
 
   const handleComplete = async () => {
-    if (selectedItems.length === 0) {
-      modal.showErrorAlert("알림", "선택된 문항이 없습니다.");
-      return;
-    }
+    // if (selectedItems.length === 0) {
+    //   modal.showErrorAlert("알림", "선택된 문항이 없습니다.");
+    //   return;
+    // }
 
     const gb = popupMode === "single" ? "filter_update_single" : "filter_update_all";
 
@@ -143,14 +143,14 @@ const ProListPopup = (parentProps) => {
       const res = await editMutation.mutateAsync(payload);
       if (res?.success === "777") {
         modal.showConfirm("알림", "필터 선택이 완료되었습니다.", {
-            btns: [
-                {
-                    title: "확인",
-                    click: () => {
-                        setPopupShow(false);
-                    }
-                }
-            ]
+          btns: [
+            {
+              title: "확인",
+              click: () => {
+                setPopupShow(false);
+              }
+            }
+          ]
         });
       } else {
         modal.showErrorAlert("에러", res?.message || "저장에 실패했습니다.");
