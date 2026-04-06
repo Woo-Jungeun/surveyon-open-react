@@ -1601,7 +1601,7 @@ const AdditionalAnalysisPage = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '4px',
-                        height: '38px',
+                        height: '32px',
                         padding: '0 12px',
                         border: '1px solid #3b82f6',
                         borderRadius: '6px',

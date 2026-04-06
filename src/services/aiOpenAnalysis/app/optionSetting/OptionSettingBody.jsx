@@ -647,7 +647,7 @@ const OptionSettingBody = () => {
                   setCanSave(prev => ({ ...prev, "1": true }));
                   markUnsaved("1", true);
                 }}
-                style={{ height: "40px", fontSize: "14px", padding: "0 15px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ height: "32px", fontSize: "13px", padding: "0 12px", borderRadius: "6px", display: "flex", alignItems: "center", gap: "6px" }}
               >
                 <span className="check-icon">{duplicateAnswerChecked ? '☑' : '☐'}</span>
                 중복코드 제거(DB, Excel)
@@ -660,7 +660,7 @@ const OptionSettingBody = () => {
               <GridHeaderBtnPrimary
                 disabled={!canSave["1"]}
                 onClick={onTab1SaveClick}
-                style={{ height: "auto", minHeight: "40px", fontSize: "14px", padding: "0 24px", display: "flex", alignItems: "center" }}
+                style={{ height: "32px", minWidth: "70px", justifyContent: "center", fontSize: "13px", padding: "0 12px", display: "flex", alignItems: "center", gap: "8px" }}
               >
                 저장
               </GridHeaderBtnPrimary>
@@ -670,7 +670,7 @@ const OptionSettingBody = () => {
             <GridHeaderBtnPrimary
               disabled={!(canSave["2"] || stageChanged)}
               onClick={onTab2SaveClick}
-              style={{ height: "40px", fontSize: "14px", padding: "0 24px" }}
+              style={{ height: "32px", minWidth: "70px", justifyContent: "center", fontSize: "13px", padding: "0 12px", display: "flex", alignItems: "center", gap: "8px" }}
             >
               저장
             </GridHeaderBtnPrimary>

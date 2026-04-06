@@ -1472,7 +1472,7 @@ const FrequencyAnalysisPage = () => {
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        height: '38px',
+                        height: '32px',
                         padding: '0 12px',
                         border: '1px solid #e2e8f0',
                         borderRadius: '6px',

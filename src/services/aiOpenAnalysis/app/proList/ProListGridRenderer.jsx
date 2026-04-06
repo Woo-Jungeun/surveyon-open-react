@@ -868,28 +868,28 @@ const ProListGridRenderer = (props) => {
                 tooltip={`문항 목록|조사(Qmaster): 등록 시 오픈응답문항 중 텍스트로 입력된 데이터 자동 등록\n신규(수동): "문항등록"을 통해 엑셀로 문항을 선택하여 등록`}
             >
                 {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                    <GridHeaderBtnTxt
+                    <button
+                        className="ai-data-header-btn ai-data-header-btn-secondary"
                         onClick={handleExportExcelDev}
-                        style={{ height: '40px', fontSize: '14px', padding: '0 20px' }}
                     >
                         보기 추출 (개발자용)
-                    </GridHeaderBtnTxt>
+                    </button>
                 )}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                    <GridHeaderBtnTxt
+                    <button
+                        className="ai-data-header-btn ai-data-header-btn-secondary"
                         onClick={handleExportExcelDP}
-                        style={{ height: '40px', fontSize: '14px', padding: '0 20px' }}
                     >
                         보기 추출 (DP용)
-                    </GridHeaderBtnTxt>
+                    </button>
                 )}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
                     <GridHeaderBtnPrimary
                         onClick={() => setShowRegisterPopup(true)}
                         style={{
-                            height: '40px',
-                            fontSize: '14px',
-                            padding: '0 20px',
+                            height: '32px',
+                            fontSize: '13px',
+                            padding: '0 12px',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '8px',

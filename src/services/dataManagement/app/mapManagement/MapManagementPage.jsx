@@ -599,8 +599,8 @@ const MapManagementPage = () => {
                                 className="data-header-btn"
                                 onClick={() => setReLabelModalOpen(true)}
                                 style={{
-                                    height: '38px',
-                                    padding: '0 20px',
+                                    height: '32px',
+                                    padding: '0 12px',
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
@@ -619,8 +619,8 @@ const MapManagementPage = () => {
                                 className="data-header-btn"
                                 onClick={() => setDataUpdateModalOpen(true)}
                                 style={{
-                                    height: '38px',
-                                    padding: '0 20px',
+                                    height: '32px',
+                                    padding: '0 12px',
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
@@ -636,8 +636,8 @@ const MapManagementPage = () => {
                                 className="data-header-btn"
                                 onClick={() => setDownloadModalOpen(true)}
                                 style={{
-                                    height: '38px',
-                                    padding: '0 20px',
+                                    height: '32px',
+                                    padding: '0 12px',
                                     border: '1px solid #16a34a',
                                     background: '#fff',
                                     color: '#16a34a',
