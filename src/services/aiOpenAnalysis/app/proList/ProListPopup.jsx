@@ -38,8 +38,8 @@ const ProListPopup = (parentProps) => {
   const fetchData = async () => {
     try {
       const qnumVal = popupMode === "single"
-          ? (popupRow?.merge_qnum || "")
-          : (firstQnum || "");
+        ? (popupRow?.merge_qnum || "")
+        : (firstQnum || "");
 
       const res = await editMutation.mutateAsync({
         user: auth?.user?.userId || "",
@@ -142,7 +142,16 @@ const ProListPopup = (parentProps) => {
     try {
       const res = await editMutation.mutateAsync(payload);
       if (res?.success === "777") {
-        setPopupShow(false);
+        modal.showConfirm("알림", "필터 선택이 완료되었습니다.", {
+            btns: [
+                {
+                    title: "확인",
+                    click: () => {
+                        setPopupShow(false);
+                    }
+                }
+            ]
+        });
       } else {
         modal.showErrorAlert("에러", res?.message || "저장에 실패했습니다.");
       }
@@ -154,33 +163,23 @@ const ProListPopup = (parentProps) => {
 
   return (
     <article className={`modal ${modalOnOff}`}>
-      <div className="cmn_popup" style={{ width: "800px", maxHeight: "80vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="cmn_popup" style={{ width: "800px", height: "700px", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div className="popTit">
-          <h3>필터 설정</h3>
+          <h3>필터문항 설정</h3>
           <a className="btnClose" onClick={handleCancelButton}><span className="hidden">close</span></a>
         </div>
 
-        <div className="popCont" style={{ padding: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
-          {/* Selected Items Area */}
-          <div style={{ display: "flex", alignItems: "center", minHeight: "30px" }}>
-            <span style={{ fontSize: "14px", fontWeight: "600", color: "#333", marginRight: "12px", whiteSpace: "nowrap" }}>
-              선택된 문항 ({selectedItems.length}/3)
-            </span>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", flex: 1 }}>
-              {selectedItems.length === 0 ? (
-                <span style={{ color: "#9ca3af", fontSize: "13px" }}>선택된 문항이 없습니다.</span>
-              ) : (
-                selectedItems.map(item => (
-                  <div key={item.qnum_id} style={{ display: "flex", alignItems: "center", backgroundColor: "#fff7ed", color: "#ea580c", padding: "4px 10px", borderRadius: "16px", fontSize: "13px", border: "1px solid #fdba74" }}>
-                    <span style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={item.qnum_question}>{item.qnum_question}</span>
-                    <button onClick={() => handleRemoveItem(item.qnum_id)} style={{ marginLeft: "4px", background: "none", border: "none", cursor: "pointer", color: "#ea580c", padding: 0, display: "flex", outline: "none" }}>
-                      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                  </div>
-                ))
-              )}
+        <div className="popCont" style={{ flex: 1, padding: "20px", display: "flex", flexDirection: "column", gap: "12px", overflow: "hidden" }}>
+          {/* Warning Message for All-Setting */}
+          {popupMode === "all" && (
+            <div>
+              <span style={{ fontSize: "16px" }}>⚠️</span>
+              <span style={{ fontSize: "14px", color: "#dc2626", fontWeight: "500", letterSpacing: "-0.5px" }}>
+                "전체필터" 설정 시 "모든 문항"에 일괄 필터 적용됩니다.
+              </span>
             </div>
-          </div>
+          )}
+
 
           {/* Search Input Area */}
           <div style={{ position: "relative", marginBottom: "4px" }}>
@@ -211,7 +210,7 @@ const ProListPopup = (parentProps) => {
           </div>
 
           {/* Kendo Grid */}
-          <div style={{ height: "400px", border: "1px solid #e2e8f0" }}>
+          <div style={{ flex: 1, minHeight: 0, border: "1px solid #e2e8f0" }}>
             <KendoGrid
               parentProps={{
                 data: processedData.data,
@@ -229,7 +228,7 @@ const ProListPopup = (parentProps) => {
                 filterable: true,
                 sortable: true,
                 selectionColumnWidth: "60px",
-                height: "400px",
+                height: "100%",
               }}
             >
               <Column field="qnum_question" title="문항" width="auto" />
@@ -237,10 +236,35 @@ const ProListPopup = (parentProps) => {
             </KendoGrid>
           </div>
 
-          <div style={{ display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
-            <Button className="btnM" themeColor="primary" onClick={handleComplete} style={{ backgroundColor: "#F97316", borderColor: "#F97316", color: "#fff", minWidth: "100px", height: "36px", fontSize: "14px", fontWeight: "600" }}>
-              선택 완료
-            </Button>
+          {/* Footer Area: Selected Items & Action Button */}
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "4px", borderTop: "1px solid #e2e8f0", paddingTop: "12px" }}>
+            {/* Selected Items Area */}
+            <div style={{ display: "flex", alignItems: "center", minHeight: "36px" }}>
+              <span style={{ fontSize: "14px", fontWeight: "600", color: "#333", marginRight: "12px", whiteSpace: "nowrap" }}>
+                선택된 문항 ({selectedItems.length}/3)
+              </span>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", flex: 1 }}>
+                {selectedItems.length === 0 ? (
+                  <span style={{ color: "#9ca3af", fontSize: "13px" }}>선택된 문항이 없습니다.</span>
+                ) : (
+                  selectedItems.map(item => (
+                    <div key={item.qnum_id} style={{ display: "flex", alignItems: "center", backgroundColor: "#fff7ed", color: "#ea580c", padding: "4px 10px", borderRadius: "16px", fontSize: "13px", border: "1px solid #fdba74" }}>
+                      <span style={{ wordBreak: "break-all" }}>{item.qnum_question}</span>
+                      <button onClick={() => handleRemoveItem(item.qnum_id)} style={{ marginLeft: "4px", background: "none", border: "none", cursor: "pointer", color: "#ea580c", padding: 0, display: "flex", outline: "none" }}>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: "flex", justifyContent: "flex-end" }}>
+              <Button className="btnM" themeColor="primary" onClick={handleComplete} style={{ backgroundColor: "#F97316", borderColor: "#F97316", color: "#fff", minWidth: "100px", height: "36px", fontSize: "14px", fontWeight: "600", flexShrink: 0 }}>
+                선택 완료
+              </Button>
+            </div>
           </div>
         </div>
       </div>
