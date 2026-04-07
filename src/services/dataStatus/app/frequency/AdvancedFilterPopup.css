@@ -830,3 +830,49 @@
     background: #3b82f6;
     border-color: #3b82f6;
 }
+
+/* Kendo UI Overrides for Orange -> Blue (Strictly Scoped) */
+.advanced-filter-overlay-v5 .k-dropdownlist.k-focus,
+.advanced-filter-overlay-v5 .k-dropdownlist:focus,
+.advanced-filter-overlay-v5 .k-dropdownlist:focus-within,
+.advanced-filter-overlay-v5 .k-picker.k-focus,
+.advanced-filter-overlay-v5 .k-picker:focus,
+.advanced-filter-overlay-v5 .k-picker:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1) !important;
+}
+
+body:has(.advanced-filter-overlay-v5) .k-dropdownlist-popup,
+body:has(.advanced-filter-overlay-v5) .k-list-container {
+    border-color: #93c5fd !important;
+}
+
+body:has(.advanced-filter-overlay-v5) .k-list-item.k-selected,
+body:has(.advanced-filter-overlay-v5) .k-list-item.k-selected.k-hover,
+body:has(.advanced-filter-overlay-v5) .k-list-item.k-selected:hover,
+body:has(.advanced-filter-overlay-v5) .k-list-optionlabel.k-selected,
+body:has(.advanced-filter-overlay-v5) .k-list-optionlabel.k-selected:hover {
+    background-color: #eff6ff !important;
+    color: #3b82f6 !important;
+}
+
+.advanced-filter-overlay-v5 .k-dropdownlist .k-input-inner {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+body:has(.advanced-filter-overlay-v5) .k-list-item,
+body:has(.advanced-filter-overlay-v5) .k-list-optionlabel {
+    font-size: 12px;
+}
+
+body:has(.advanced-filter-overlay-v5) .k-list-item.k-hover,
+body:has(.advanced-filter-overlay-v5) .k-list-item:hover,
+body:has(.advanced-filter-overlay-v5) .k-list-optionlabel:hover {
+    background-color: #f8fafc !important;
+}
+
+/* Ensure no orange on focus */
+.advanced-filter-overlay-v5 :focus {
+    outline: none !important;
+}
