@@ -14,7 +14,7 @@ import { process } from "@progress/kendo-data-query";
  * @since 2025-09-16<br />
  */
 const ProListPopup = (parentProps) => {
-  const { popupShow, setPopupShow, popupMode, popupRow, firstQnum } = parentProps;
+  const { popupShow, setPopupShow, popupMode, popupRow, firstQnum, onRefresh } = parentProps;
   const modalOnOff = popupShow ? "on" : "off";
 
   const auth = useSelector((store) => store.auth);
@@ -148,6 +148,7 @@ const ProListPopup = (parentProps) => {
               title: "확인",
               click: () => {
                 setPopupShow(false);
+                if (onRefresh) onRefresh();
               }
             }
           ]
@@ -165,7 +166,12 @@ const ProListPopup = (parentProps) => {
     <article className={`modal ${modalOnOff}`}>
       <div className="cmn_popup" style={{ width: "800px", height: "700px", maxHeight: "85vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div className="popTit">
-          <h3>필터문항 설정</h3>
+          <h3 style={{ display: 'flex', alignItems: 'center' }}>
+            필터문항 설정
+            <span style={{ color: '#f97316', marginLeft: '8px', fontSize: '0.9em' }}>
+              [{popupMode === "single" ? (popupRow?.merge_qnum || "") : "전체"}]
+            </span>
+          </h3>
           <a className="btnClose" onClick={handleCancelButton}><span className="hidden">close</span></a>
         </div>
 

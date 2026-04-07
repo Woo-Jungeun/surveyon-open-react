@@ -656,12 +656,32 @@ const ProListGridRenderer = (props) => {
                             return <td style={{ textAlign: 'center' }}></td>;
                         }
                         return (
-                            <td style={{ textAlign: "center" }}>
+                            <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                                 {!isMergeRow(row) && (
                                     <Button className="btnM btn-setting-outline" themeColor="primary"
                                         onClick={(e) => { e.stopPropagation(); setPopupMode("single"); setPopupRow(row); setPopupShow(true); }}
-                                        onMouseDown={(e) => e.stopPropagation()} >
-                                        설정
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        style={{ padding: '0 8px', height: '26px', minWidth: 'auto' }} >
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                                            <span>설정</span>
+                                            {row.qnum_join_cnt != null && (
+                                                <b style={{
+                                                    background: row.qnum_join_cnt > 0 ? '#f97316' : '#e2e8f0',
+                                                    color: row.qnum_join_cnt > 0 ? '#fff' : '#475569',
+                                                    fontSize: '9px',
+                                                    fontWeight: '500',
+                                                    height: '14px',
+                                                    minWidth: '14px',
+                                                    padding: '0 4px',
+                                                    borderRadius: '7px',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    paddingBottom: '0.5px',
+                                                    boxSizing: 'border-box'
+                                                }}>
+                                                    {row.qnum_join_cnt || 0}
+                                                </b>
+                                            )}
+                                        </div>
                                     </Button>
                                 )}
                             </td>
@@ -1047,6 +1067,7 @@ const ProListGridRenderer = (props) => {
                     popupMode={popupMode}
                     popupRow={popupRow}
                     firstQnum={dataState?.data?.[0]?.merge_qnum}
+                    onRefresh={handleSearch}
                 />
             )}
 
