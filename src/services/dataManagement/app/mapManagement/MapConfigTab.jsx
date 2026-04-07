@@ -324,6 +324,9 @@ const INLINE_STYLE = `
 .dm-type-dropdown .k-input-inner {
     padding: 2px 8px !important;
 }
+.dm-type-cell .variable-text-readonly {
+    font-size: 13px !important;
+}
 `;
 document.head.insertAdjacentHTML('beforeend', `<style>${INLINE_STYLE}</style>`);
 
@@ -484,10 +487,10 @@ const CheckboxCell = memo((props) => {
 });
 
 
-/** 읽기 전용 셀 - 박스 없이 텍스트만 표시 */
+/** 읽기 전용 셀 - 박스 없이 텍스트만 표시 (그리드 기본 글씨 크기와 통일) */
 const ReadOnlyCell = (props) => (
     <td style={{ ...props.style, verticalAlign: 'middle', textAlign: 'center' }} className={props.className}>
-        <span style={{ userSelect: 'none', color: 'inherit' }}>{props.dataItem[props.field]}</span>
+        <span style={{ userSelect: 'none', color: '#475569', fontSize: '13px', fontWeight: 500 }}>{props.dataItem[props.field]}</span>
     </td>
 );
 
