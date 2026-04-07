@@ -605,7 +605,7 @@ const MapConfigTab = ({
                 { field: 'label', title: '문항', minWidth: 250 },
                 { field: 'reLabel', title: '표제목', width: '200px', headerCell: CustomReLabelHeaderCell },
                 { field: 'spssName', title: 'SPSS\n변수명', width: '90px' },
-                { field: 'type', title: '변수 유형', width: '120px' },
+                { field: 'type', title: '변수 유형', width: '140px' },
                 { field: 'memo', title: '메모', minWidth: 120 },
                 { field: 'delete', title: '삭제', width: '50px' }
             ];
