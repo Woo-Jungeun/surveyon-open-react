@@ -5,7 +5,8 @@ import GridData from "@/components/common/grid/GridData.jsx";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { MainListApi } from "./MainListApi.js";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { login } from "@/common/redux/action/AuthAction";
 import ExcelColumnMenu from '@/components/common/grid/ExcelColumnMenu';
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import { process } from "@progress/kendo-data-query";
@@ -20,6 +21,7 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
  */
 const MainList = ({ showHeader = true, onProjectSelect }) => {
     const auth = useSelector((store) => store.auth);
+    const dispatch = useDispatch();
     const userGroup = auth?.user?.userGroup || "";
     const navigate = useNavigate();
     const DATA_ITEM_KEY = "no";
@@ -44,7 +46,8 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
             { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, width: "140px", allowHide: false },
             { field: "project_status", title: "작업현황", show: true, editable: true, width: "80px", allowHide: false },
             { field: "postgrecompletecount", title: "DB\n완료수", show: true, editable: true, width: "85px", allowHide: false },
-            { field: "usergroup", title: "권한정보", show: true, editable: true, width: "140px", allowHide: false },
+            { field: "groupposition", title: "소속", show: true, editable: true, width: "120px", allowHide: false },
+            { field: "usergroup", title: "권한정보", show: true, editable: true, width: "120px", allowHide: false },
         ]);
 
     const location = useLocation();
@@ -58,30 +61,34 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
 
     const from = getFromSource();
 
-    // 행 클릭
     const onRowClick = useCallback((e) => {
+        const { projectnum, projectname, servername, projectpof, merge_pn, merge_pn_text, usergroup } = e.dataItem;
+
+        // 어떤 모드(팝업/페이지 전환)에서든 프로젝트가 선택되면 공통적으로 세션 최신화
+        if (projectnum && projectname) {
+            dispatch(login({ ...auth?.user, userAuth: usergroup }));
+            sessionStorage.setItem("projectnum", projectnum || "");
+            sessionStorage.setItem("projectname", projectname || "");
+            sessionStorage.setItem("servername", servername || "");
+            sessionStorage.setItem("projectpof", projectpof || "");
+            sessionStorage.setItem("merge_pn", merge_pn || "");
+            sessionStorage.setItem("merge_pn_text", merge_pn_text || "");
+            sessionStorage.setItem("usergroup", usergroup || "");
+        }
+
         if (onProjectSelect) {
             onProjectSelect(e.dataItem);
             return;
         }
 
-        const { projectnum, projectname, servername, projectpof, merge_pn, merge_pn_text } = e.dataItem;
         if (!projectnum || !projectname) return;
-
-        // 세션 스토리지 저장 (Data Status용)
-        sessionStorage.setItem("projectnum", projectnum || "");
-        sessionStorage.setItem("projectname", projectname || "");
-        sessionStorage.setItem("servername", servername || "");
-        sessionStorage.setItem("projectpof", projectpof || "");
-        sessionStorage.setItem("merge_pn", merge_pn || "");
-        sessionStorage.setItem("merge_pn_text", merge_pn_text || "");
 
         if (from === 'data_status') {
             navigate('/data_status/analysis/additional');
         } else {
             navigate('/project/pro_list', { state: { projectnum, projectname, servername, projectpof } });
         }
-    }, [navigate, from, onProjectSelect]);
+    }, [navigate, from, onProjectSelect, auth, dispatch]);
 
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = (menuProps) => (

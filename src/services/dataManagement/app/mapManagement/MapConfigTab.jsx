@@ -503,7 +503,8 @@ const MapConfigTab = ({
 }) => {
     const { variables: ctxVars, setVariables, editingRowId } = useContext(MapManagementContext);
     const auth = useSelector((store) => store.auth);
-    const isResearcher = (auth?.user?.userAuth || []).includes("연구원");
+    const projectUserGroup = sessionStorage.getItem("usergroup") || "";
+    const isResearcher = (auth?.user?.userAuth || []).includes("연구원") || projectUserGroup.includes("연구원");
     const allIds = useMemo(() => (ctxVars || []).map(v => v.id), [ctxVars]);
 
     // ── Grid Props & 상태 최적화 ──
