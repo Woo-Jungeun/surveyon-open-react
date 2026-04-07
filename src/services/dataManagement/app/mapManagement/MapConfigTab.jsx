@@ -302,7 +302,7 @@ const TypeCell = memo((props) => {
         }));
     };
 
-    const typeOptions = ["single", "multi", "dummy", "custom", "open(문자)", "open(숫자)"];
+    const typeOptions = ["single", "multi", "rank", "minrank", "maxrank", "scale", "open(문자)", "open(숫자)", "dummy", "custom"];
     const isEditing = dataItem.id === editingRowId || dataItem.isNew;
 
     if (!isEditing) {
