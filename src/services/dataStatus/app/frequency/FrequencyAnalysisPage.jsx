@@ -585,7 +585,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                                         <td className="sticky-col2" style={{ textAlign: 'left', fontSize: '12px', paddingLeft: '12px', fontWeight: '600', color: '#334155' }}>{row.name}</td>
                                         {q.columns ? q.columns.map(col => {
                                             const count = row[col.key] ?? 0;
-                                            const pct = row[`${col.key}_pct`];
+                                            const pctRaw = row[`${col.key}_pct`];
+                                            const pct = pctRaw !== undefined && !isNaN(Number(pctRaw)) ? Number(pctRaw).toFixed(1) : pctRaw;
                                             return (
                                                 <td key={col.key}>
                                                     {displayMode === 'all' && (
