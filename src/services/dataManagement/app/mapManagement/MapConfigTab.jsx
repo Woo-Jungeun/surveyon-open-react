@@ -283,26 +283,43 @@ let dragLastEnteredId = null;
 let typeDragJustEnded = false;
 let globalSetEditingRowId = null;
 const dragSelectedIds = new Set();
+let dragBaseSelectedIds = new Set(); // Ctrl 다중 선택용 베이스 스냅샷
+let isPendingCtrlRelease = false; // Ctrl 키를 누르고 다중선택 중인지 여부
 
 window.addEventListener('pointerdown', () => {
     typeDragJustEnded = false;
 }, { capture: true });
 
-const handleGlobalPointerUp = () => {
+const handleGlobalPointerUp = (e) => {
     if (isDraggingTypeCell) {
-        typeDragJustEnded = true;
-        // 브라우저 텍스트 드래그를 막느라 e.preventDefault()를 사용했기 때문에 기본 click 이벤트가 발생하지 않습니다.
-        // 강제로 마지막 통과한 행을 편집 모드(드롭다운 오픈 대상)로 진입시킵니다.
-        if (globalSetEditingRowId !== null && dragLastEnteredId !== null) {
-            globalSetEditingRowId(dragLastEnteredId);
+        if (e && (e.ctrlKey || e.metaKey)) {
+            // Ctrl 키가 눌려있으면 즉시 열지 않고, 키를 뗄 때까지 보류
+            isPendingCtrlRelease = true;
+        } else {
+            typeDragJustEnded = true;
+            if (globalSetEditingRowId !== null && dragLastEnteredId !== null) {
+                globalSetEditingRowId(dragLastEnteredId);
+            }
         }
     }
     isDraggingTypeCell = false;
     dragStartId = null;
-    dragLastEnteredId = null;
 };
 window.addEventListener('mouseup', handleGlobalPointerUp);
 window.addEventListener('pointerup', handleGlobalPointerUp);
+
+// Ctrl 뗐을 때 보류해둔 편집 모드 진입 실행
+window.addEventListener('keyup', (e) => {
+    if (e.key === 'Control' || e.key === 'Meta') {
+        if (isPendingCtrlRelease) {
+            isPendingCtrlRelease = false;
+            typeDragJustEnded = true;
+            if (globalSetEditingRowId !== null && dragLastEnteredId !== null) {
+                globalSetEditingRowId(dragLastEnteredId);
+            }
+        }
+    }
+});
 
 const INLINE_STYLE = `
 .type-cell-selected > div {
@@ -377,6 +394,7 @@ const TypeCell = memo((props) => {
         }));
         // 변경 완료 후 드래그 선택 리셋
         dragSelectedIds.clear();
+        dragBaseSelectedIds.clear();
         dragStartId = null;
         dragLastEnteredId = null;
         document.querySelectorAll('.type-cell-selected').forEach(el => el.classList.remove('type-cell-selected'));
@@ -387,12 +405,31 @@ const TypeCell = memo((props) => {
     const handlePointerDown = (e) => {
         if (!isEditing) {
             e.preventDefault();
+            e.stopPropagation(); // Kendo Grid 행 선택 방지
+
             isDraggingTypeCell = true;
             dragStartId = dataItem.id;
             dragLastEnteredId = dataItem.id;
             
-            dragSelectedIds.clear();
-            document.querySelectorAll('.type-cell-selected').forEach(el => el.classList.remove('type-cell-selected'));
+            const isMultiSelect = e.ctrlKey || e.metaKey;
+            
+            if (!isMultiSelect) {
+                // 일반 클릭이면 전부 지움
+                dragSelectedIds.clear();
+                document.querySelectorAll('.type-cell-selected').forEach(el => el.classList.remove('type-cell-selected'));
+            } else if (dragSelectedIds.has(dataItem.id) || dragSelectedIds.has(String(dataItem.id))) {
+                // 이미 선택된 대상을 Ctrl+클릭 시 선택 해제(토글) 후 드래그 종료
+                dragSelectedIds.delete(dataItem.id);
+                dragSelectedIds.delete(String(dataItem.id));
+                e.currentTarget.classList.remove('type-cell-selected');
+                isDraggingTypeCell = false; // 드래그 모드로 진입하지 않음
+                dragBaseSelectedIds = new Set(dragSelectedIds);
+                return;
+            }
+
+            // 스냅샷 베이스 저장 (Ctrl 드래그 지지대가 됌)
+            dragBaseSelectedIds = new Set(dragSelectedIds);
+            
             dragSelectedIds.add(dataItem.id);
             e.currentTarget.classList.add('type-cell-selected');
         }
@@ -409,8 +446,16 @@ const TypeCell = memo((props) => {
                 const min = Math.min(startIndex, currentIndex);
                 const max = Math.max(startIndex, currentIndex);
                 
-                document.querySelectorAll('.type-cell-selected').forEach(el => el.classList.remove('type-cell-selected'));
+                // 기존 상태 클리어 (Ctrl로 스냅샷 떠둔 것 제외)
+                document.querySelectorAll('.type-cell-selected').forEach(el => {
+                    const idStr = el.getAttribute('data-row-id');
+                    if (!dragBaseSelectedIds.has(Number(idStr)) && !dragBaseSelectedIds.has(idStr)) {
+                        el.classList.remove('type-cell-selected');
+                    }
+                });
+                
                 dragSelectedIds.clear();
+                dragBaseSelectedIds.forEach(id => dragSelectedIds.add(id));
                 
                 for (let i = min; i <= max; i++) {
                     const targetCell = cells[i];
@@ -423,14 +468,17 @@ const TypeCell = memo((props) => {
         }
     };
     
+    const isSelectedManually = dragSelectedIds.has(dataItem.id) || dragSelectedIds.has(String(dataItem.id)) || dragSelectedIds.has(Number(dataItem.id));
+    
     if (!isEditing) {
         return (
             <td 
                 style={{ ...cellStyle, cursor: 'cell' }} 
-                className={`${className || ''} dm-type-cell`}
+                className={`${className || ''} dm-type-cell ${isSelectedManually ? 'type-cell-selected' : ''}`}
                 data-row-id={dataItem.id}
                 onPointerDown={handlePointerDown}
                 onPointerEnter={handlePointerEnter}
+                onMouseDown={e => e.stopPropagation()}
             >
                 <div className="variable-text-readonly" style={{ background: 'transparent', border: '1px solid transparent', pointerEvents: 'none' }}>
                     {dataItem.type}
@@ -440,7 +488,7 @@ const TypeCell = memo((props) => {
     }
 
     return (
-        <td style={cellStyle} className={className}>
+        <td style={cellStyle} className={`${className || ''} dm-type-cell ${isSelectedManually ? 'type-cell-selected' : ''}`}>
             <DropDownList
                 data={typeOptions}
                 value={dataItem.type}
