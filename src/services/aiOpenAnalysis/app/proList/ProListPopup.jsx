@@ -239,7 +239,15 @@ const ProListPopup = (parentProps) => {
               }}
             >
               <Column field="qnum_question" title="문항" width="auto" />
-              <Column field="qnum_type" title="타입" width="180px" />
+              <Column field="qnum_type" title="타입" width="180px" headerCell={(props) => (
+                <div onClick={props.onClick} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', lineHeight: '1.2' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <span>타입</span>
+                    {props.children}
+                  </div>
+                  <span style={{ fontSize: '11.5px', color: '#ef4444', fontWeight: '500', letterSpacing: '-0.5px', marginTop: '2px' }}>복수, 순위 제외</span>
+                </div>
+              )} />
             </KendoGrid>
           </div>
 
