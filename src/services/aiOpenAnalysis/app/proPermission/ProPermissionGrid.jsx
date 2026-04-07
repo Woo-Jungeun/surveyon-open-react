@@ -124,7 +124,7 @@ const ProPermissionGrid = ({ data, setData, fetchData }) => {
               total: processedData.total,
               dataItemKey: DATA_ITEM_KEY,
               sortable: { mode: "multiple", allowUnsort: true },
-              filterable: true,
+              filterable: false, // ExcelColumnMenu를 사용하므로 인라인 필터 행 비활성화
               sortChange: ({ sort }) => setSort(sort ?? []),
               filterChange: ({ filter }) => setFilter(filter ?? undefined),
               sort,
