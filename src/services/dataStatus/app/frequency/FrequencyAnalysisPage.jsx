@@ -1340,11 +1340,11 @@ const FrequencyAnalysisPage = () => {
                                         </div>
                                         <span className="filter-text">응답현황</span>
                                     </div>
-                                    {overviewVariables.length === 0 && (
+                                    {/* {overviewVariables.length === 0 && (
                                         <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
                                             조회된 변수가 없습니다.
                                         </div>
-                                    )}
+                                    )} */}
                                 </div>
                             )}
                         </div>
