@@ -661,21 +661,23 @@ const ProListGridRenderer = (props) => {
                                     <Button className="btnM btn-setting-outline" themeColor="primary"
                                         onClick={(e) => { e.stopPropagation(); setPopupMode("single"); setPopupRow(row); setPopupShow(true); }}
                                         onMouseDown={(e) => e.stopPropagation()}
-                                        style={{ padding: '0 8px', height: '26px', minWidth: 'auto' }} >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px' }}>
+                                        style={{ padding: '0 8px', height: '26px', minWidth: '54px' }} >
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
                                             <span>설정</span>
-                                            {row.qnum_join_cnt != null && (
+                                            {row.qnum_join_cnt > 0 && (
                                                 <b style={{
-                                                    background: row.qnum_join_cnt > 0 ? '#f97316' : '#e2e8f0',
-                                                    color: row.qnum_join_cnt > 0 ? '#fff' : '#475569',
+                                                    background: '#f97316',
+                                                    color: '#fff',
                                                     fontSize: '9px',
-                                                    fontWeight: '500',
+                                                    fontWeight: '600',
                                                     height: '14px',
                                                     minWidth: '14px',
-                                                    padding: '0 4px',
+                                                    padding: '1px 4px 2px 2px',
                                                     borderRadius: '7px',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    paddingBottom: '0.5px',
+                                                    paddingTop: '1px',
+                                                    lineHeight: 1,
+                                                    letterSpacing: '-0.5px',
                                                     boxSizing: 'border-box'
                                                 }}>
                                                     {row.qnum_join_cnt || 0}
