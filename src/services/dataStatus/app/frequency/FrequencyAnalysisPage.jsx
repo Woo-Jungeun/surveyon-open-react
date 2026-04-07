@@ -1250,7 +1250,7 @@ const FrequencyAnalysisPage = () => {
                             >
                                 <span className="trigger-text">
                                     {(() => {
-                                        if (overviewVariables.length === 0 && selectedVariableIds.length === 1 && selectedVariableIds[0] === 'answerStateCode') return 'answerStateCode';
+                                        if (overviewVariables.length === 0 && selectedVariableIds.length === 1 && selectedVariableIds[0] === 'answerStateCode') return '응답현황';
                                         if (overviewVariables.length === 0 && selectedVariableIds.length === 0) return '필터 문항 선택';
                                         if (selectedVariableIds.length === 0) return '선택 안함';
                                         if (selectedVariableIds.length === overviewVariables.length + 1) return '전체';
@@ -1262,7 +1262,7 @@ const FrequencyAnalysisPage = () => {
                                             }
                                         });
                                         if (selectedVariableIds.includes('answerStateCode')) {
-                                            displayNames.push('answerStateCode');
+                                            displayNames.push('응답현황');
                                         }
                                         return displayNames.join(', ');
                                     })()}
@@ -1338,7 +1338,7 @@ const FrequencyAnalysisPage = () => {
                                         <div className={`checkbox-custom ${selectedVariableIds.includes('answerStateCode') ? 'checked' : ''}`}>
                                             {selectedVariableIds.includes('answerStateCode') && <Check size={12} color="#fff" strokeWidth={3} />}
                                         </div>
-                                        <span className="filter-text">answerStateCode</span>
+                                        <span className="filter-text">응답현황</span>
                                     </div>
                                     {overviewVariables.length === 0 && (
                                         <div className="custom-filter-item" style={{ color: '#999', justifyContent: 'center' }}>
