@@ -53,18 +53,20 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                                 className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
                             >
                                 <div className="sidebar-item-content">
-                                    <div className="sidebar-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px', gap: '8px' }}>
-                                        <div className="sidebar-item-name" style={{ flex: 1, minWidth: 0, wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
-                                            {item[displayField]}
+                                    <div className="sidebar-item-header" style={{ marginBottom: '4px' }}>
+                                        <div className="sidebar-item-name" style={{ wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
+                                            {item.label || item[displayField]}
                                         </div>
+                                    </div>
+                                    <div className="sidebar-item-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                        <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all' }}>
+                                            {item.label ? item[displayField] : ''}
+                                        </span>
                                         {item.type && (
-                                            <span className={`question-type-badge ${item.color || 'gray'}`}>
+                                            <span className={`question-type-badge ${item.color || 'gray'}`} style={{ flexShrink: 0 }}>
                                                 {String(item.type).toLowerCase()}
                                             </span>
                                         )}
-                                    </div>
-                                    <div className="sidebar-item-label">
-                                        {item.label}
                                     </div>
                                 </div>
                                 {onDelete && (
