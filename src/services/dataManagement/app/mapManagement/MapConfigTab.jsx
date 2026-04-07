@@ -277,21 +277,93 @@ const LogicCell = (props) => {
     );
 };
 
-/** 변수 유형 셀 - 편집 중이면 드롭다운, 아니면 읽기 전용 */
+let isDraggingTypeCell = false;
+let dragStartId = null;
+let dragLastEnteredId = null;
+let typeDragJustEnded = false;
+let globalSetEditingRowId = null;
+const dragSelectedIds = new Set();
+
+window.addEventListener('pointerdown', () => {
+    typeDragJustEnded = false;
+}, { capture: true });
+
+const handleGlobalPointerUp = () => {
+    if (isDraggingTypeCell) {
+        typeDragJustEnded = true;
+        // 브라우저 텍스트 드래그를 막느라 e.preventDefault()를 사용했기 때문에 기본 click 이벤트가 발생하지 않습니다.
+        // 강제로 마지막 통과한 행을 편집 모드(드롭다운 오픈 대상)로 진입시킵니다.
+        if (globalSetEditingRowId !== null && dragLastEnteredId !== null) {
+            globalSetEditingRowId(dragLastEnteredId);
+        }
+    }
+    isDraggingTypeCell = false;
+    dragStartId = null;
+    dragLastEnteredId = null;
+};
+window.addEventListener('mouseup', handleGlobalPointerUp);
+window.addEventListener('pointerup', handleGlobalPointerUp);
+
+const INLINE_STYLE = `
+.type-cell-selected > div {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+    border: 1px solid #10b981 !important;
+}
+.dm-dropdown-popup .k-list-item {
+    min-height: 28px !important;
+    padding: 2px 8px !important;
+}
+.dm-dropdown-popup .k-list-item-text {
+    font-size: 13px !important;
+    line-height: 1.2 !important;
+}
+.dm-type-dropdown, .dm-type-dropdown .k-input-inner, .dm-type-dropdown .k-input-value-text {
+    font-size: 13px !important;
+}
+.dm-type-dropdown .k-input-inner {
+    padding: 2px 8px !important;
+}
+`;
+document.head.insertAdjacentHTML('beforeend', `<style>${INLINE_STYLE}</style>`);
+
+/** 변수 유형 셀 - 편집 중이면 드롭다운, 아니면 읽기 전용 (초고속 드래그 다중선택 지원) */
 const TypeCell = memo((props) => {
-    const { setVariables, editingRowId } = useContext(MapManagementContext);
+    const { setVariables, editingRowId, setEditingRowId } = useContext(MapManagementContext);
+    globalSetEditingRowId = setEditingRowId;
     const { dataItem, style, className } = props;
     const isCustom = String(dataItem.type || '').toLowerCase() === 'custom';
     const cellStyle = {
         ...style,
         verticalAlign: 'middle',
-        backgroundColor: isCustom ? '#FFF9C4' : undefined
+        backgroundColor: isCustom ? '#FFF9C4' : undefined,
+        userSelect: 'none'
     };
 
+    const isEditing = dataItem.id === editingRowId || dataItem.isNew;
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        if (isEditing && typeDragJustEnded) {
+            // React 렌더링 + Kendo 내부 포커스 이벤트를 충분히 기다린 후 안정적으로 열기
+            const timer = setTimeout(() => {
+                setIsOpen(true);
+                // 연 이후에는 재실행 방지를 위해 flag 해제
+                typeDragJustEnded = false;
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isEditing]);
+
+    const handleOpen = () => setIsOpen(true);
+    const handleClose = () => setIsOpen(false);
+
     const handleChange = (e) => {
+        setIsOpen(false);
         const newType = String(e.target.value).toLowerCase();
         setVariables(prev => prev.map(v => {
-            if (v.id === dataItem.id) {
+            const isTarget = v.id === dataItem.id || dragSelectedIds.has(v.id) || dragSelectedIds.has(String(v.id));
+            if (isTarget) {
                 const updated = { ...v, type: newType };
                 if (newType === 'custom') {
                     updated.isBaked = false;
@@ -300,15 +372,64 @@ const TypeCell = memo((props) => {
             }
             return v;
         }));
+        // 변경 완료 후 드래그 선택 리셋
+        dragSelectedIds.clear();
+        dragStartId = null;
+        dragLastEnteredId = null;
+        document.querySelectorAll('.type-cell-selected').forEach(el => el.classList.remove('type-cell-selected'));
     };
 
     const typeOptions = ["single", "multi", "rank", "minrank", "maxrank", "scale", "open(문자)", "open(숫자)", "dummy", "custom"];
-    const isEditing = dataItem.id === editingRowId || dataItem.isNew;
 
+    const handlePointerDown = (e) => {
+        if (!isEditing) {
+            e.preventDefault();
+            isDraggingTypeCell = true;
+            dragStartId = dataItem.id;
+            dragLastEnteredId = dataItem.id;
+            
+            dragSelectedIds.clear();
+            document.querySelectorAll('.type-cell-selected').forEach(el => el.classList.remove('type-cell-selected'));
+            dragSelectedIds.add(dataItem.id);
+            e.currentTarget.classList.add('type-cell-selected');
+        }
+    };
+
+    const handlePointerEnter = (e) => {
+        if (isDraggingTypeCell && dragStartId && !isEditing) {
+            dragLastEnteredId = dataItem.id;
+            const cells = Array.from(document.querySelectorAll('td.dm-type-cell'));
+            const startIndex = cells.findIndex(c => c.getAttribute('data-row-id') == dragStartId);
+            const currentIndex = cells.findIndex(c => c.getAttribute('data-row-id') == dataItem.id);
+            
+            if (startIndex !== -1 && currentIndex !== -1) {
+                const min = Math.min(startIndex, currentIndex);
+                const max = Math.max(startIndex, currentIndex);
+                
+                document.querySelectorAll('.type-cell-selected').forEach(el => el.classList.remove('type-cell-selected'));
+                dragSelectedIds.clear();
+                
+                for (let i = min; i <= max; i++) {
+                    const targetCell = cells[i];
+                    targetCell.classList.add('type-cell-selected');
+                    const rowIdStr = targetCell.getAttribute('data-row-id');
+                    dragSelectedIds.add(Number(rowIdStr));
+                    dragSelectedIds.add(rowIdStr); 
+                }
+            }
+        }
+    };
+    
     if (!isEditing) {
         return (
-            <td style={cellStyle} className={className}>
-                <div className="variable-text-readonly" style={{ background: 'transparent', border: 'none', pointerEvents: 'none' }}>
+            <td 
+                style={{ ...cellStyle, cursor: 'cell' }} 
+                className={`${className || ''} dm-type-cell`}
+                data-row-id={dataItem.id}
+                onPointerDown={handlePointerDown}
+                onPointerEnter={handlePointerEnter}
+            >
+                <div className="variable-text-readonly" style={{ background: 'transparent', border: '1px solid transparent', pointerEvents: 'none' }}>
                     {dataItem.type}
                 </div>
             </td>
@@ -321,7 +442,11 @@ const TypeCell = memo((props) => {
                 data={typeOptions}
                 value={dataItem.type}
                 onChange={handleChange}
+                opened={isOpen}
+                onOpen={handleOpen}
+                onClose={handleClose}
                 style={{ width: '100%' }}
+                className="dm-type-dropdown"
                 popupSettings={{ className: 'dm-dropdown-popup' }}
             />
         </td>
