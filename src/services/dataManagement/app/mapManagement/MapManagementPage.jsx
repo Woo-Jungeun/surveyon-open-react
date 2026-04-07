@@ -24,7 +24,7 @@ import './MapManagementPage.css';
 // 메인 컴포넌트
 // ─────────────────────────────────────────────
 const MapManagementPage = () => {
-    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels } = MapManagementPageApi();
+    const { getMapVariables, srtTransfer, createMapVariables, updateMapVariables, updateMapLabels, createMapLabels, syncMap } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
@@ -497,6 +497,11 @@ const MapManagementPage = () => {
             if (createSuccess && updateSuccess) {
                 setDeletedIds([]);
                 await loadData();
+                try {
+                    await syncMap.mutateAsync({ user: userId, pn });
+                } catch (err) {
+                    console.error("Map sync error:", err);
+                }
                 if (showSuccessModal) modal.showAlert("알림", "저장되었습니다.");
                 return true;
             } else {

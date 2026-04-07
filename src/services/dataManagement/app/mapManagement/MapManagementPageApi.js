@@ -98,6 +98,15 @@ export function MapManagementPageApi() {
         }
     );
 
+    /** 데이터 맵 새로고침 (저장 후 싱크용) */
+    const syncMap = useMutation(
+        async (data) => await api.post(data, "/data/sync", "API_BASE_URL_DATAMANAGEMENT"),
+        {
+            onMutate: () => loadingSpinner.show(),
+            onSettled: () => loadingSpinner.hide(),
+        }
+    );
+
     return {
         getMapVariables,
         srtTransfer,
@@ -109,5 +118,6 @@ export function MapManagementPageApi() {
         uploadSpss,
         updateDataFromSav,
         generateRelabels,
+        syncMap
     };
 }
