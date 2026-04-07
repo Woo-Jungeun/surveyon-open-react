@@ -62,11 +62,25 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                                         <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all' }}>
                                             {item.label ? item[displayField] : ''}
                                         </span>
-                                        {item.type && (
-                                            <span className={`question-type-badge ${item.color || 'gray'}`} style={{ flexShrink: 0 }}>
-                                                {String(item.type).toLowerCase()}
-                                            </span>
-                                        )}
+                                        {item.type && (() => {
+                                            const t = String(item.type).toLowerCase();
+                                            let badgeClass = item.color || 'gray';
+                                            if (t === 'single') badgeClass = 'single';
+                                            else if (t === 'multi') badgeClass = 'multi';
+                                            else if (t === 'rank') badgeClass = 'rank';
+                                            else if (t === 'minrank') badgeClass = 'minrank';
+                                            else if (t === 'maxrank') badgeClass = 'maxrank';
+                                            else if (t === 'scale') badgeClass = 'scale';
+                                            else if (t === 'open(문자)') badgeClass = 'open-text';
+                                            else if (t === 'open(숫자)') badgeClass = 'open-num';
+                                            else if (t === 'dummy') badgeClass = 'dummy';
+                                            else if (t === 'custom') badgeClass = 'custom';
+                                            return (
+                                                <span className={`question-type-badge ${badgeClass}`} style={{ flexShrink: 0 }}>
+                                                    {String(item.type).toLowerCase()}
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
                                 </div>
                                 {onDelete && (

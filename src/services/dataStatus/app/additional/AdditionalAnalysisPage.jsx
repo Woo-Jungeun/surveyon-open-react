@@ -259,11 +259,15 @@ const AdditionalAnalysisPage = () => {
 
                         if (rawType === 'single') { color = 'single'; }
                         else if (rawType === 'multi') { color = 'multi'; }
+                        else if (rawType === 'rank') { color = 'rank'; }
+                        else if (rawType === 'minrank') { color = 'minrank'; }
+                        else if (rawType === 'maxrank') { color = 'maxrank'; }
+                        else if (rawType === 'scale') { color = 'scale'; }
                         else if (rawType === 'dummy') { color = 'dummy'; }
                         else if (rawType === 'custom') { color = 'custom'; }
-                        else if (rawType.includes('문자')) { color = 'open'; displayType = 'open(문자)'; }
-                        else if (rawType.includes('숫자')) { color = 'open'; displayType = 'open(숫자)'; }
-                        else if (rawType.includes('open')) { color = 'open'; displayType = 'open'; }
+                        else if (rawType.includes('문자')) { color = 'open-text'; displayType = 'open(문자)'; }
+                        else if (rawType.includes('숫자')) { color = 'open-num'; displayType = 'open(숫자)'; }
+                        else if (rawType.includes('open')) { color = 'open-text'; displayType = 'open'; }
 
                         variablesMap.set(item.id, {
                             id: item.id,
@@ -290,11 +294,15 @@ const AdditionalAnalysisPage = () => {
 
                         if (rawType === 'single') { color = 'single'; }
                         else if (rawType === 'multi') { color = 'multi'; }
+                        else if (rawType === 'rank') { color = 'rank'; }
+                        else if (rawType === 'minrank') { color = 'minrank'; }
+                        else if (rawType === 'maxrank') { color = 'maxrank'; }
+                        else if (rawType === 'scale') { color = 'scale'; }
                         else if (rawType === 'dummy') { color = 'dummy'; }
                         else if (rawType === 'custom') { color = 'custom'; }
-                        else if (rawType.includes('문자')) { color = 'open'; displayType = 'open(문자)'; }
-                        else if (rawType.includes('숫자')) { color = 'open'; displayType = 'open(숫자)'; }
-                        else if (rawType.includes('open')) { color = 'open'; displayType = 'open'; }
+                        else if (rawType.includes('문자')) { color = 'open-text'; displayType = 'open(문자)'; }
+                        else if (rawType.includes('숫자')) { color = 'open-num'; displayType = 'open(숫자)'; }
+                        else if (rawType.includes('open')) { color = 'open-text'; displayType = 'open'; }
 
                         variablesMap.set(item.id, {
                             id: item.id,

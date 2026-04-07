@@ -294,18 +294,26 @@ const WeightPage = () => {
                                 color = 'single';
                             } else if (rawType === 'multi') {
                                 color = 'multi';
+                            } else if (rawType === 'rank') {
+                                color = 'rank';
+                            } else if (rawType === 'minrank') {
+                                color = 'minrank';
+                            } else if (rawType === 'maxrank') {
+                                color = 'maxrank';
+                            } else if (rawType === 'scale') {
+                                color = 'scale';
                             } else if (rawType === 'dummy') {
                                 color = 'dummy';
                             } else if (rawType === 'custom') {
                                 color = 'custom';
                             } else if (rawType.includes('문자')) {
-                                color = 'open';
+                                color = 'open-text';
                                 displayType = 'open(문자)';
                             } else if (rawType.includes('숫자')) {
-                                color = 'open';
+                                color = 'open-num';
                                 displayType = 'open(숫자)';
                             } else if (rawType.includes('open')) {
-                                color = 'open';
+                                color = 'open-text';
                                 displayType = 'open';
                             }
 

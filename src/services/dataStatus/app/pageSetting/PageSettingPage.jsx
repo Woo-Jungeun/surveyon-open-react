@@ -181,8 +181,14 @@ const PageSettingPage = () => {
                         if (!v.color && v.type) {
                             if (rawType.includes('single')) color = 'single';
                             else if (rawType.includes('multi')) color = 'multi';
+                            else if (rawType.includes('rank')) color = 'rank';
+                            else if (rawType.includes('minrank')) color = 'minrank';
+                            else if (rawType.includes('maxrank')) color = 'maxrank';
+                            else if (rawType.includes('scale')) color = 'scale';
                             else if (rawType.includes('dummy')) color = 'dummy';
-                            else if (rawType.includes('open')) color = 'open';
+                            else if (rawType.includes('custom')) color = 'custom';
+                            else if (rawType.includes('문자') || rawType.includes('open')) color = 'open-text';
+                            else if (rawType.includes('숫자')) color = 'open-num';
                         }
                         kendoOpts.push({
                             text: v.label ? `${v.sysName || v.id} (${v.label})` : (v.sysName || v.id),

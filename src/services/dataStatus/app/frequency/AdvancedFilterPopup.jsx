@@ -708,8 +708,14 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         if (!v.color && v.type) {
             if (rawType.includes('single')) color = 'single';
             else if (rawType.includes('multi')) color = 'multi';
+            else if (rawType.includes('rank')) color = 'rank';
+            else if (rawType.includes('minrank')) color = 'minrank';
+            else if (rawType.includes('maxrank')) color = 'maxrank';
+            else if (rawType.includes('scale')) color = 'scale';
             else if (rawType.includes('dummy')) color = 'dummy';
-            else if (rawType.includes('open')) color = 'open';
+            else if (rawType.includes('custom')) color = 'custom';
+            else if (rawType.includes('문자') || rawType.includes('open')) color = 'open-text';
+            else if (rawType.includes('숫자')) color = 'open-num';
         }
 
         kendoVarOptions.push({
@@ -773,6 +779,22 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         return defaultOps;
     };
 
+    const getBadgeClass = (type, customColor) => {
+        if (!type) return customColor || 'default';
+        const t = String(type).toLowerCase();
+        if (t === 'single') return 'single';
+        if (t === 'multi') return 'multi';
+        if (t === 'rank') return 'rank';
+        if (t === 'minrank') return 'minrank';
+        if (t === 'maxrank') return 'maxrank';
+        if (t === 'scale') return 'scale';
+        if (t === 'open(문자)' || t.includes('open(') || t === 'open') return 'open-text';
+        if (t === 'open(숫자)') return 'open-num';
+        if (t === 'dummy') return 'dummy';
+        if (t === 'custom') return 'custom';
+        return customColor || 'default';
+    };
+
     const DropDownItemRender = (li, itemProps) => {
         const itemChildren = (
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: '8px' }}>
@@ -780,7 +802,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     {itemProps.dataItem.text}
                 </span>
                 {itemProps.dataItem.type && (
-                    <span className={`question-type-badge ${itemProps.dataItem.color || 'default'}`} style={{ flexShrink: 0 }}>
+                    <span className={`question-type-badge ${getBadgeClass(itemProps.dataItem.type, itemProps.dataItem.color)}`} style={{ flexShrink: 0 }}>
                         {String(itemProps.dataItem.type).toLowerCase()}
                     </span>
                 )}
@@ -797,7 +819,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     {value.text}
                 </span>
                 {value.type && (
-                    <span className={`question-type-badge ${value.color || 'default'}`} style={{ flexShrink: 0 }}>
+                    <span className={`question-type-badge ${getBadgeClass(value.type, value.color)}`} style={{ flexShrink: 0 }}>
                         {String(value.type).toLowerCase()}
                     </span>
                 )}

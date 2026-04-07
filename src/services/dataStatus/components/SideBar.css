@@ -253,14 +253,40 @@
     color: #0369A1;
 }
 
+.question-type-badge.rank {
+    background: #E0E7FF;
+    color: #4338CA;
+}
+
+.question-type-badge.minrank {
+    background: #FCE7F3;
+    color: #BE185D;
+}
+
+.question-type-badge.maxrank {
+    background: #FFE4E6;
+    color: #BE123C;
+}
+
+.question-type-badge.scale {
+    background: #FEF3C7;
+    color: #B45309;
+}
+
+.question-type-badge.open,
+.question-type-badge.open-text {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+.question-type-badge.open-num {
+    background: #CCFBF1;
+    color: #0F766E;
+}
+
 .question-type-badge.dummy {
     background: #DCFCE7;
     color: #15803D;
-}
-
-.question-type-badge.open {
-    background: #FEE2E2;
-    color: #B91C1C;
 }
 
 .question-type-badge.custom {
