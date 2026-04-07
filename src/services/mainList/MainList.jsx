@@ -35,18 +35,18 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
 
     const [columns, setColumns] = useState(() =>
         [
-            { field: "no", title: "no", show: true, editable: false, width: "70px", allowHide: false },
-            { field: "projectpof", title: "프로젝트\n번호", show: true, editable: false, width: "140px", allowHide: false },
-            { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "160px", allowHide: false },
+            { field: "no", title: "no", show: true, editable: false, width: "60px", allowHide: false },
+            { field: "projectpof", title: "프로젝트\n번호", show: true, editable: false, width: "120px", allowHide: false },
+            { field: "projectnum", title: "웹프로젝트\n번호", show: true, editable: false, width: "130px", allowHide: false },
             { field: "projectname", title: "프로젝트명", show: true, editable: false, allowHide: false },
-            { field: "register_userid", title: "등록자명", show: true, editable: false, width: "110px", allowHide: false },
-            { field: "register_date", title: "등록일", show: true, editable: false, width: "140px", allowHide: false },
-            { field: "servername", title: "오픈\n서버정보", show: true, editable: false, width: "110px", allowHide: false },
-            { field: "project_use_name", title: "오픈\n작업자", show: true, editable: false, width: "110px", allowHide: false },
-            { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, width: "140px", allowHide: false },
-            { field: "project_status", title: "작업현황", show: true, editable: true, width: "80px", allowHide: false },
-            { field: "postgrecompletecount", title: "DB\n완료수", show: true, editable: true, width: "85px", allowHide: false },
-            { field: "groupposition", title: "소속", show: true, editable: true, width: "120px", allowHide: false },
+            { field: "register_userid", title: "등록자명", show: true, editable: false, width: "80px", allowHide: false },
+            { field: "register_date", title: "등록일", show: true, editable: false, width: "90px", allowHide: false },
+            { field: "servername", title: "오픈\n서버정보", show: true, editable: false, width: "90px", allowHide: false },
+            { field: "project_use_name", title: "오픈\n작업자", show: true, editable: false, width: "80px", allowHide: false },
+            { field: "project_update_date", title: "업데이트\n일자", show: true, editable: false, width: "90px", allowHide: false },
+            { field: "project_status", title: "작업현황", show: true, editable: true, width: "70px", allowHide: false },
+            { field: "postgrecompletecount", title: "DB\n완료수", show: true, editable: true, width: "80px", allowHide: false },
+            { field: "groupposition", title: "소속", show: true, editable: true, width: "90px", allowHide: false },
             { field: "usergroup", title: "권한정보", show: true, editable: true, width: "120px", allowHide: false },
         ]);
 
@@ -109,6 +109,21 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
         />
     );
 
+    // 날짜 커스텀 셀
+    const DateTimeCell = (props) => {
+        const val = props.dataItem[props.field] || "";
+        const parts = val.split(" ");
+        if (parts.length >= 2) {
+            return (
+                <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', lineHeight: '1.3' }}>
+                    <div style={{ fontSize: '12px' }}>{parts[0]}</div>
+                    <div style={{ fontSize: '11px', color: '#666' }}>{parts.slice(1).join(" ")}</div>
+                </td>
+            );
+        }
+        return <td colSpan={props.colSpan} className={props.className} style={{ ...props.style, textAlign: 'center', fontSize: '12px' }}>{val}</td>;
+    };
+
     //grid rendering 
     const GridRenderer = (props) => {
         const { selectedState, setSelectedState, idGetter, dataState, dataItemKey, selectedField } = props;
@@ -150,6 +165,11 @@ const MainList = ({ showHeader = true, onProjectSelect }) => {
                                         editable={c.editable}
                                         columnMenu={columnMenu}
                                         headerClassName="k-header-center"
+                                        cell={
+                                            c.field === 'project_update_date' || c.field === 'register_date'
+                                                ? DateTimeCell
+                                                : undefined
+                                        }
                                     />
                                 );
                             })}

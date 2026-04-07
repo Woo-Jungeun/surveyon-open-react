@@ -344,18 +344,31 @@
     border-color: #7C3AED !important;
 }
 
+/* Reduce Filter Icon & Header Padding */
+.project-list-content .k-grid-header th .k-grid-filter {
+    padding: 0 4px !important;
+}
+.project-list-content .k-grid-header th .k-grid-filter .k-icon {
+    font-size: 14px !important;
+}
+.project-list-content .k-grid-header th {
+    padding: 8px 4px !important;
+}
+
 /* Ensure Grid cells can wrap text */
-.project-list-page .k-grid td {
+.project-list-content .k-grid td {
     white-space: normal !important;
     word-break: break-all !important;
     vertical-align: middle !important;
     line-height: 1.4 !important;
+    font-size: 12px !important;
 }
 
-.project-list-page .k-grid th {
+.project-list-content .k-grid th {
     vertical-align: middle !important;
     white-space: pre-wrap !important;
     text-align: center !important;
+    font-size: 12px !important;
 }
 
 /* Force Grid Header Background to White (matching Project List) */
