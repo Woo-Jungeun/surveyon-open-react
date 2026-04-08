@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { useSelector } from "react-redux";
 import { modalContext } from "@/components/common/Modal.jsx";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { Button } from "@progress/kendo-react-buttons";
 import KendoGrid from "@/components/kendo/KendoGrid.jsx";
@@ -21,6 +22,7 @@ const ProListPopup = (parentProps) => {
   const projectnum = sessionStorage.getItem("projectnum");
   const { editMutation } = ProListApi();
   const modal = useContext(modalContext);
+  const loadingSpinner = useContext(loadingSpinnerContext);
 
   const [gridData, setGridData] = useState([]);
   const [selectedState, setSelectedState] = useState({});
@@ -139,6 +141,7 @@ const ProListPopup = (parentProps) => {
       }))
     };
 
+    loadingSpinner.show();
     try {
       const res = await editMutation.mutateAsync(payload);
       if (res?.success === "777") {
@@ -159,6 +162,8 @@ const ProListPopup = (parentProps) => {
     } catch (error) {
       console.error(error);
       modal.showErrorAlert("에러", "처리 중 오류가 발생했습니다.");
+    } finally {
+      loadingSpinner.hide();
     }
   };
 
