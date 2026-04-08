@@ -822,11 +822,12 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
             {/* 접혔을 땐 내용 숨김 */}
             {isOpen && (
                 <div className="left-body">
-                    <div className="mgB12">
+                    <div style={{ marginBottom: "6px" }}>
                         {/* 문항 요약 */}
                         <div className="cmn_pop_ipt">
                             <TextArea
                                 className="custom-padding-textarea k-input-solid"
+                                rows={2}
                                 value={
                                     data?.keyword_string && data.keyword_string.trim() !== ""
                                         ? data.keyword_string
@@ -860,7 +861,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         <div className="promptArea">
                             <TextArea
                                 className="promptBox"
-                                rows={5}
+                                rows={3}
                                 placeholder="프롬프트 지침을 입력하세요."
                                 value={data?.prompt_string || ""}
                                 onChange={(e) => onChangeInputEvent(e, "prompt_string")}
@@ -945,30 +946,43 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                         open={openCounts}
                         onToggle={() => setOpenCounts(v => !v)}
                     >
-                        <div className="cmn_pop_ipt">
-                            <span className="iptTit">소분류 개수</span>
-                            <Input
-                                className="k-input k-input-solid"
-                                // defaultValue={100} 
-                                value={data?.open_item_lv1 || ""}
-                                onChange={(e) => onChangeInputEvent(e, "open_item_lv1")}
-                            />
-                        </div>
-                        <div className="cmn_pop_ipt">
-                            <span className="iptTit">중분류 개수</span>
-                            <Input
-                                className="k-input k-input-solid"
-                                value={data?.open_item_lv2 || ""}
-                                onChange={(e) => onChangeInputEvent(e, "open_item_lv2")}
-                            />
-                        </div>
-                        <div className="cmn_pop_ipt">
-                            <span className="iptTit">대분류 개수</span>
-                            <Input
-                                className="k-input k-input-solid"
-                                value={data?.open_item_lv3 || ""}
-                                onChange={(e) => onChangeInputEvent(e, "open_item_lv3")}
-                            />
+                        <div style={{ display: "flex", gap: "6px", alignItems: "center", width: "100%", boxSizing: "border-box" }}>
+                            <style>{`
+                                .custom-counts-input {
+                                    height: 26px;
+                                }
+                                .custom-counts-input .k-input-inner {
+                                    padding: 0 4px !important;
+                                    text-align: center;
+                                }
+                            `}</style>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
+                                <span style={{ fontSize: "12px", color: "#334155", whiteSpace: "nowrap", fontWeight: 500, letterSpacing: "-0.5px" }}>소분류</span>
+                                <Input
+                                    className="k-input k-input-solid custom-counts-input"
+                                    value={data?.open_item_lv1 || ""}
+                                    onChange={(e) => onChangeInputEvent(e, "open_item_lv1")}
+                                    style={{ width: "100%", minWidth: "30px", fontSize: "12px" }}
+                                />
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
+                                <span style={{ fontSize: "12px", color: "#334155", whiteSpace: "nowrap", fontWeight: 500, letterSpacing: "-0.5px" }}>중분류</span>
+                                <Input
+                                    className="k-input k-input-solid custom-counts-input"
+                                    value={data?.open_item_lv2 || ""}
+                                    onChange={(e) => onChangeInputEvent(e, "open_item_lv2")}
+                                    style={{ width: "100%", minWidth: "30px", fontSize: "12px" }}
+                                />
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}>
+                                <span style={{ fontSize: "12px", color: "#334155", whiteSpace: "nowrap", fontWeight: 500, letterSpacing: "-0.5px" }}>대분류</span>
+                                <Input
+                                    className="k-input k-input-solid custom-counts-input"
+                                    value={data?.open_item_lv3 || ""}
+                                    onChange={(e) => onChangeInputEvent(e, "open_item_lv3")}
+                                    style={{ width: "100%", minWidth: "30px", fontSize: "12px" }}
+                                />
+                            </div>
                         </div>
                     </Section>
 
@@ -1044,8 +1058,8 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
                     )}
                     {/* 분석결과 */}
                     {project_lock !== '수정불가' && (
-                        <div className="mgT16">
-                            <div ref={logRef} className="resultBox" aria-label="분석결과창">
+                        <div style={{ marginTop: "6px" }}>
+                            <div ref={logRef} className="resultBox" aria-label="분석결과창" style={{ minHeight: "80px", height: "140px" }}>
                                 {logText}
                             </div>
                             <div className="mgT10" style={{ display: "flex", justifyContent: "space-between" }}>
