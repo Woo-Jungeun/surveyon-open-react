@@ -514,6 +514,11 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
         if (d?.duplicateRemoveDate) {
             setData(prev => ({ ...prev, duplicateRemoveDate: d.duplicateRemoveDate }));
         }
+
+        // 프롬프트 내용 있으면 토글 열린 상태 유지
+        if (d?.prompt_string && String(d.prompt_string).trim() !== "") {
+            setOpenPrompt(true);
+        }
     };
 
     // 조회/재조회 공용
@@ -802,7 +807,7 @@ const OptionSettingInfo = ({ isOpen, onToggle, showEmptyEtcBtn, onNavigateTab, p
     return (
         <Fragment>
             <div className="collapseBar">
-                {isOpen && <div className="collapseTitle">{(qnum ? `${qnum} ` : "")}문항</div>}
+                {isOpen && <div className="collapseTitle">{(qnum ? `${qnum} ` : "")}</div>}
                 <Button
                     type="button"
                     className="btnCollapse"
