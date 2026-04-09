@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
-import { FileText, Play, X, CheckCircle, ChevronLeft, ChevronRight, SmilePlus, Bot, FileDown, Database } from 'lucide-react';
+import { FileText, Play, X, CheckCircle, ChevronLeft, ChevronRight, SmilePlus, Bot, FileDown, Database, ChevronUp, ChevronDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { SurveyTestPageApi } from './SurveyTestPageApi';
 import './SurveyTestPage.css';
@@ -47,6 +47,11 @@ const SurveyTestPage = () => {
     const [uploadedFile, setUploadedFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [resultJson, setResultJson] = useState(null);
+    const [expandedSections, setExpandedSections] = useState({
+        logic: true,
+        syntax: true,
+        cross: true
+    });
 
     const fileInputRef = useRef(null);
     const tabContentRef = useRef(null);
@@ -76,6 +81,13 @@ const SurveyTestPage = () => {
     };
     const handleRemoveFile = () => setUploadedFile(null);
     const handleSectionClick = (key) => setActiveSection(prev => prev === key ? null : key);
+    
+    const toggleSection = (key) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [key]: !prev[key]
+        }));
+    };
 
     // ── 분석 시작 ──
     const handleAnalyze = async () => {
@@ -236,38 +248,51 @@ const SurveyTestPage = () => {
                                     {visibleSections.map((s) => {
                                         const items = resultJson?.[s.dataKey] || [];
                                         const cnt = getCount(s);
+                                        const isExpanded = expandedSections[s.key];
+                                        const isAllTab = activeSection === null;
+                                        const showBody = isAllTab ? isExpanded : true;
+
                                         return (
-                                            <div key={s.key} className={`qa-section-block ${items.length === 0 ? 'is-empty' : ''}`}>
-                                                <div className="qa-section-header">
-                                                    <span className="qa-section-seq">
-                                                        {QA_SECTIONS.findIndex(x => x.key === s.key) + 1}.
-                                                    </span>
-                                                    <span className="qa-section-label">{s.label}</span>
-                                                    {cnt !== null ? (
-                                                        <span className={`qa-section-badge ${cnt > 0 ? 'found' : ''}`}>
-                                                            {cnt}건 발견
+                                            <div key={s.key} className={`qa-section-block ${items.length === 0 ? 'is-empty' : ''} ${isAllTab && !isExpanded ? 'is-collapsed' : ''}`}>
+                                                <div className="qa-section-header" onClick={() => isAllTab && toggleSection(s.key)} style={{ cursor: isAllTab ? 'pointer' : 'default' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                                                        <span className="qa-section-seq">
+                                                            {QA_SECTIONS.findIndex(x => x.key === s.key) + 1}.
                                                         </span>
-                                                    ) : (
-                                                        <span className="qa-section-badge">0건 발견</span>
+                                                        <span className="qa-section-label">{s.label}</span>
+                                                        {cnt !== null ? (
+                                                            <span className={`qa-section-badge ${cnt > 0 ? 'found' : ''}`}>
+                                                                {cnt}건 발견
+                                                            </span>
+                                                        ) : (
+                                                            <span className="qa-section-badge">0건 발견</span>
+                                                        )}
+                                                    </div>
+                                                    {isAllTab && (
+                                                        <span className="qa-section-toggle" style={{ color: '#94a3b8' }}>
+                                                            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                                        </span>
                                                     )}
                                                 </div>
 
-                                                <div className="qa-section-body">
-                                                    {items.length > 0 ? (
-                                                        <div className="qa-error-list">
-                                                            {items.map((item, idx) => (
-                                                                <ErrorCard key={idx} item={item} />
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <div className="qa-empty-state">
-                                                            <SmilePlus size={22} className="qa-empty-icon" />
-                                                            <p className="qa-empty-text">
-                                                                {resultJson ? '발견된 오류가 없습니다.' : '분석 결과가 없습니다.'}
-                                                            </p>
-                                                        </div>
-                                                    )}
-                                                </div>
+                                                {showBody && (
+                                                    <div className="qa-section-body">
+                                                        {items.length > 0 ? (
+                                                            <div className="qa-error-list">
+                                                                {items.map((item, idx) => (
+                                                                    <ErrorCard key={idx} item={item} />
+                                                                ))}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="qa-empty-state">
+                                                                <SmilePlus size={22} className="qa-empty-icon" />
+                                                                <p className="qa-empty-text">
+                                                                    {resultJson ? '발견된 오류가 없습니다.' : '분석 결과가 없습니다.'}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
