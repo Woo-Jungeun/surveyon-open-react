@@ -284,11 +284,11 @@ const SurveyTestPage = () => {
                                         한 응답 패턴을 지닌 100건의 가상 응답 데이터를 생성했습니다.
                                     </p>
                                     <div className="st-vd-actions">
-                                        <button className="st-vd-btn csv">
+                                        <button className="st-vd-btn csv" onClick={() => modal.showAlert('알림', '개발 예정입니다.')}>
                                             <FileDown size={18} />
                                             CSV 다운로드
                                         </button>
-                                        <button className="st-vd-btn db">
+                                        <button className="st-vd-btn db" onClick={() => modal.showAlert('알림', '개발 예정입니다.')}>
                                             <Database size={18} />
                                             QMaster DB 즉시 주입
                                         </button>
