@@ -3,7 +3,7 @@ import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
   Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit,
-  Map as MapIcon
+  Map as MapIcon, ClipboardCheck
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
@@ -23,7 +23,7 @@ const MENU_ITEMS = [
   {
     label: "",
     items: [
-      { label: "설문 테스트", path: "/data_management/survey_test", icon: MapIcon }
+      { label: "설문 테스트", path: "/data_management/survey_test", icon: ClipboardCheck }
     ]
   }
 ];
