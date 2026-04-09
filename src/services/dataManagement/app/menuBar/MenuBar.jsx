@@ -19,6 +19,12 @@ const MENU_ITEMS = [
     items: [
       { label: "맵 관리", path: "/data_management/setting/map", icon: MapIcon }
     ]
+  },
+  {
+    label: "",
+    items: [
+      { label: "설문 테스트", path: "/data_management/survey_test", icon: MapIcon }
+    ]
   }
 ];
 
