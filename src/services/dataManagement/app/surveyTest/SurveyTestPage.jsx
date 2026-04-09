@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { FileText, Play, X, CheckCircle, ChevronLeft, ChevronRight, SmilePlus } from 'lucide-react';
 import { useSelector } from 'react-redux';
@@ -49,10 +49,17 @@ const SurveyTestPage = () => {
     const [errorMsg, setErrorMsg] = useState(null);
 
     const fileInputRef = useRef(null);
+    const tabContentRef = useRef(null);
     const auth = useSelector(store => store.auth);
     const { analyzeAll } = SurveyTestPageApi();
 
     const handleTabChange = (tab) => { if (tab !== activeTab) setActiveTab(tab); };
+
+    useEffect(() => {
+        if (tabContentRef.current) {
+            tabContentRef.current.scrollTo(0, 0);
+        }
+    }, [activeTab]);
 
     const handleDrop = useCallback((e) => {
         e.preventDefault(); setIsDragging(false);
@@ -169,7 +176,7 @@ const SurveyTestPage = () => {
                         </button>
                     </div>
 
-                    <div className="survey-test-tab-content">
+                    <div className="survey-test-tab-content" ref={tabContentRef}>
                         {activeTab === 'qaReport' ? (
                             <div className="qa-report-wrapper">
 
@@ -226,7 +233,7 @@ const SurveyTestPage = () => {
                                 </div>
 
                                 {/* ── 섹션 목록 ── */}
-                                <div className="qa-sections">
+                                <div className="qa-sections" key={activeSection || 'all'}>
                                     {visibleSections.map((s) => {
                                         const items = resultJson?.[s.dataKey] || [];
                                         const cnt = getCount(s);
