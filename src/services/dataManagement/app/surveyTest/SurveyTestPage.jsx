@@ -42,7 +42,6 @@ const ErrorCard = ({ item }) => {
 // ─── 메인 컴포넌트 ────────────────────────────────────────
 const SurveyTestPage = () => {
     const [activeTab, setActiveTab] = useState('qaReport');
-    const [panelOpen, setPanelOpen] = useState(true);
     const [activeSection, setActiveSection] = useState(null);
     const [uploadedFile, setUploadedFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -112,39 +111,33 @@ const SurveyTestPage = () => {
 
             <div className="survey-test-body">
 
-                {/* ── 왼쪽 컨트롤 패널 ── */}
-                <aside className={`st-control-panel ${panelOpen ? 'is-open' : 'is-closed'}`}>
-                    <button className="st-panel-toggle"
-                        onClick={() => setPanelOpen(v => !v)}
-                        title={panelOpen ? '패널 닫기' : '패널 열기'}>
-                        {panelOpen ? <ChevronLeft size={15} /> : <ChevronRight size={15} />}
-                    </button>
+                {/* ── 상단 컨트롤 패널 ── */}
+                <div className="st-top-panel">
+                    <p className="st-section-title horizontal">설문 표준안 파일 업로드</p>
 
-                    <div className="st-panel-body">
-                        <p className="st-section-title">설문 표준안 파일 업로드</p>
-
+                    <div className="st-top-panel-row">
                         <div className="st-field-group">
                             <input type="file" ref={fileInputRef}
                                 accept=".hwp,.hwpx,.docx,.doc"
                                 style={{ display: 'none' }}
                                 onChange={handleFileChange} />
                             <div
-                                className={`st-drop-zone ${isDragging ? 'is-dragging' : ''} ${uploadedFile ? 'is-filled' : ''}`}
+                                className={`st-drop-zone horizontal ${isDragging ? 'is-dragging' : ''} ${uploadedFile ? 'is-filled' : ''}`}
                                 onClick={() => !uploadedFile && fileInputRef.current?.click()}
                                 onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
                                 {uploadedFile ? (
-                                    <div className="st-drop-filled">
-                                        <CheckCircle size={24} className="st-drop-check" />
+                                    <div className="st-drop-filled horizontal">
+                                        <CheckCircle size={20} className="st-drop-check" />
                                         <span className="st-drop-filename">{uploadedFile.name}</span>
-                                        <button className="st-drop-remove"
+                                        <button className="st-drop-remove horizontal"
                                             onClick={(e) => { e.stopPropagation(); handleRemoveFile(); }}>
                                             <X size={12} />
                                         </button>
                                     </div>
                                 ) : (
-                                    <div className="st-drop-empty">
-                                        <FileText size={28} className="st-drop-icon" />
-                                        <span className="st-drop-hint">클릭하여 파일 찾기<br />또는 여기로 드래그</span>
+                                    <div className="st-drop-empty horizontal">
+                                        <FileText size={20} className="st-drop-icon" />
+                                        <span className="st-drop-hint">클릭하여 파일 찾기 또는 여기로 드래그</span>
                                         <span className="st-drop-ext">.hwp · .docx</span>
                                     </div>
                                 )}
@@ -155,13 +148,13 @@ const SurveyTestPage = () => {
                             )}
                         </div>
 
-                        <button className="st-btn-run" onClick={handleAnalyze}
+                        <button className="st-btn-run horizontal" onClick={handleAnalyze}
                             disabled={analyzeAll.isLoading}>
                             <Play size={14} />
                             {analyzeAll.isLoading ? '분석 중...' : '원스텝 통합 QA 분석 시작'}
                         </button>
                     </div>
-                </aside>
+                </div>
 
                 {/* ── 오른쪽: 탭 + 컨텐츠 ── */}
                 <div className="survey-test-content">
