@@ -1,6 +1,7 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
-import { FileText, Play, X, CheckCircle, ChevronLeft, ChevronRight, SmilePlus } from 'lucide-react';
+import { modalContext } from "@/components/common/Modal.jsx";
+import { FileText, Play, X, CheckCircle, ChevronLeft, ChevronRight, SmilePlus, Bot, FileDown, Database } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { SurveyTestPageApi } from './SurveyTestPageApi';
 import './SurveyTestPage.css';
@@ -46,11 +47,11 @@ const SurveyTestPage = () => {
     const [uploadedFile, setUploadedFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [resultJson, setResultJson] = useState(null);
-    const [errorMsg, setErrorMsg] = useState(null);
 
     const fileInputRef = useRef(null);
     const tabContentRef = useRef(null);
     const auth = useSelector(store => store.auth);
+    const modal = useContext(modalContext);
     const { analyzeAll } = SurveyTestPageApi();
 
     const handleTabChange = (tab) => { if (tab !== activeTab) setActiveTab(tab); };
@@ -79,10 +80,9 @@ const SurveyTestPage = () => {
     // ── 분석 시작 ──
     const handleAnalyze = async () => {
         if (!uploadedFile) {
-            setErrorMsg('설문 표준안 파일을 먼저 업로드해 주세요.');
+            modal.showAlert('알림', '설문 표준안 파일을 먼저 업로드해 주세요.');
             return;
         }
-        setErrorMsg(null);
 
         const pn = sessionStorage.getItem('projectnum') || '';
         const user = auth?.user?.userId || '';
@@ -97,11 +97,13 @@ const SurveyTestPage = () => {
             if (res?.success === '777') {
                 setResultJson(res.resultjson);
                 setActiveTab('qaReport');
+            } else if (res?.success === '908' || res?.success === '900') {
+                modal.showErrorAlert("알림", res?.message || '분석 중 오류가 발생했습니다.');
             } else {
-                setErrorMsg(res?.message || '분석 중 오류가 발생했습니다.');
+                modal.showErrorAlert("알림", res?.message || '분석 중 오류가 발생했습니다.');
             }
         } catch (e) {
-            setErrorMsg('서버 통신 중 오류가 발생했습니다.');
+            modal.showErrorAlert("오류", '서버 통신 중 오류가 발생했습니다.');
         }
     };
 
@@ -150,9 +152,6 @@ const SurveyTestPage = () => {
                                 )}
                             </div>
 
-                            {errorMsg && (
-                                <p className="st-error-msg">{errorMsg}</p>
-                            )}
                         </div>
 
                         <button className="st-btn-run horizontal" onClick={handleAnalyze}
@@ -276,8 +275,25 @@ const SurveyTestPage = () => {
 
                             </div>
                         ) : (
-                            <div className="survey-test-placeholder">
-                                <p>가상 테스트 데이터 영역</p>
+                            <div className="st-virtual-data-wrapper">
+                                <div className="st-vd-content">
+                                    <Bot size={72} strokeWidth={1.5} className="st-vd-icon" />
+                                    <h2 className="st-vd-title">가상 응답자 테스트 데이터 (Mock Data)</h2>
+                                    <p className="st-vd-desc">
+                                        오류가 수정된 정상적인 QMaster 로직 플로우를 기반으로 다양<br />
+                                        한 응답 패턴을 지닌 100건의 가상 응답 데이터를 생성했습니다.
+                                    </p>
+                                    <div className="st-vd-actions">
+                                        <button className="st-vd-btn csv">
+                                            <FileDown size={18} />
+                                            CSV 다운로드
+                                        </button>
+                                        <button className="st-vd-btn db">
+                                            <Database size={18} />
+                                            QMaster DB 즉시 주입
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
