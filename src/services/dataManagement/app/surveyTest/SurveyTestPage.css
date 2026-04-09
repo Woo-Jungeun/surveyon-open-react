@@ -545,10 +545,11 @@
 
 /* 문항 ID 태그 */
 .qa-error-target {
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 700;
-    color: #64748b;
-    background: #f1f5f9;
+    color: #1e40af; /* 깊은 파란색으로 변경하여 가독성 강화 */
+    background: #dbeafe; /* 밝은 푸른 배경 */
+    border: 1px solid #93c5fd; /* 테두리를 진하게 설정하여 명확하게 구분 */
     padding: 2px 8px;
     border-radius: 5px;
     flex-shrink: 0;
