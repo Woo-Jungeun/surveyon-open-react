@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useSelector } from 'react-redux';
 import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
 import { DpRequestPageApi } from './DpRequestPageApi';
+import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import DataHeader from "@/services/dataStatus/components/DataHeader";
@@ -244,7 +245,7 @@ const DpRequestPage = () => {
                                         </div>
                                         <div
                                             className="drop-zone-area"
-                                            style={{ flex: 1, display: 'flex', gap: '12px', alignItems: 'flex-start', padding: '12px', overflowX: 'auto', overflowY: 'hidden' }}
+                                            style={{ flex: 1, display: 'flex', gap: '12px', alignItems: 'stretch', padding: '12px', overflowX: 'auto', overflowY: 'hidden' }}
                                             onDragOver={handleDragOver}
                                             onDrop={(e) => handleDrop(e, 'new')}
                                         >
@@ -336,36 +337,23 @@ const DpRequestPage = () => {
                         </div>
 
                         <div className="dp-table-container">
-                            <table className="dp-grid-table">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: '50px' }}></th>
-                                        <th>라벨3</th>
-                                        <th>라벨2</th>
-                                        <th>라벨</th>
-                                        <th>조건</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {banners.find(b => b.id === selectedBanner)?.info?.length > 0 ? (
-                                        banners.find(b => b.id === selectedBanner).info.map((row, i) => (
-                                            <tr key={i}>
-                                                <td className="dp-row-num">{i + 1}</td>
-                                                <td>{row.label3 || ''}</td>
-                                                <td>{row.label2 || ''}</td>
-                                                <td>{row.label || ''}</td>
-                                                <td>{row.logic || ''}</td>
-                                            </tr>
-                                        ))
-                                    ) : (
-                                        <tr>
-                                            <td colSpan="5" style={{ textAlign: 'center', padding: '40px', color: '#94a3b8' }}>
-                                                설정된 배너 조건이 없습니다.
-                                            </td>
-                                        </tr>
+                            <KendoGridV2
+                                data={banners.find(b => b.id === selectedBanner)?.info || []}
+                            >
+                                <Column
+                                    title="No"
+                                    width="50px"
+                                    cell={(props) => (
+                                        <td className="dp-row-num">
+                                            {props.dataIndex + 1}
+                                        </td>
                                     )}
-                                </tbody>
-                            </table>
+                                />
+                                <Column field="label3" title="라벨3" />
+                                <Column field="label2" title="라벨2" />
+                                <Column field="label" title="라벨" />
+                                <Column field="logic" title="조건" />
+                            </KendoGridV2>
                         </div>
                     </div>
                 </div>

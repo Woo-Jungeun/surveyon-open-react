@@ -137,12 +137,20 @@
     overflow: hidden;
 }
 
-.dp-wizard-sidebar {
-    width: 250px;
-    border-right: 1px solid #cbd5e1;
+.variable-panel {
+    width: 340px;
+    background: #fff;
+    border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
-    background: #f8fafc;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.variable-panel.collapsed {
+    width: 0;
+    overflow: hidden;
+    border-right: none;
 }
 
 .dp-wizard-sidebar-title,
@@ -328,7 +336,7 @@
 
 /* Sidebar */
 .dp-sidebar {
-    width: 320px;
+    width: 340px; /* Unified width to match wizard panel */
     background: #fff;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
@@ -524,63 +532,85 @@
     padding: 16px;
 }
 
-.dp-grid-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.dp-grid-table th {
-    background: #f8fafc;
-    /* Professional light gray */
-    color: #475569;
-    font-size: 13px;
-    font-weight: 700;
-    padding: 12px 16px;
-    text-align: left;
-    border-bottom: 2px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.dp-grid-table th:last-child {
-    border-right: none;
-}
-
-.dp-grid-table td {
-    border-bottom: 1px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
-    padding: 12px 16px;
-    font-size: 13px;
-    color: #334155;
+/* Excel-like Version 2 Grid (Kendo Override) */
+.dp-excel-grid-v2.k-grid {
+    border: 1px solid #ccc;
+    border-radius: 0;
+    font-size: 13px; /* Standardized */
     background: #fff;
-    transition: background 0.15s;
 }
 
-.dp-grid-table td:last-child {
-    border-right: none;
+.dp-excel-grid-v2.k-grid .k-grid-header {
+    padding: 0 !important;
+    background: #f3f4f6;
+    border-bottom: 2px solid #bbb;
 }
 
-.dp-grid-table tbody tr:last-child td {
-    border-bottom: none;
+.dp-excel-grid-v2.k-grid .k-header {
+    background: #fff;
+    color: #334155;
+    font-weight: 700;
+    padding: 0 8px !important;
+    height: 32px !important;
+    border-right: 1px solid #ddd;
+    border-bottom: 2px solid #ddd;
+    text-align: left;
+    font-size: 13px;
+    vertical-align: middle !important;
+    overflow: visible !important;
 }
 
-.dp-grid-table tbody tr:hover td {
-    background: #f1f5f9;
+.dp-excel-grid-v2.k-grid .k-link {
+    padding: 0 !important;
+    height: 100%;
+    display: table-cell !important; /* Restore standard behavior */
+    vertical-align: middle !important;
 }
 
-.dp-row-num {
-    text-align: center !important;
-    font-weight: 600;
-    color: #94a3b8;
-    background: #f8fafc;
-    width: 40px;
+.dp-excel-grid-v2.k-grid .k-column-title {
+    overflow: visible !important;
+    line-height: 1; /* Reset to natural height */
+    vertical-align: middle;
+}
+
+.dp-excel-grid-v2.k-grid .k-table-row {
+    min-height: 26px !important;
+}
+
+.dp-excel-grid-v2.k-grid td {
+    padding: 3px 8px;
+    background: #fff; /* Pure white background */
+    min-height: 26px !important;
+    height: auto !important;
+    border-right: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    white-space: normal !important;
+    word-break: break-all;
+    line-height: 1.4;
+    vertical-align: middle;
+    font-size: 13px;
+}
+
+.dp-excel-grid-v2.k-grid .dp-row-num {
+    background: #fff !important; /* Removed tint */
+    border-right: 2px solid #e2e8f0 !important;
+    color: #64748b;
+    font-weight: 700;
+    text-align: center;
+    width: 50px;
+}
+
+/* Remove zebra striping and hover tints */
+.dp-excel-grid-v2.k-grid .k-alt {
+    background-color: #fff;
+}
+
+.dp-excel-grid-v2.k-grid tr:hover {
+    background-color: #f8fafc !important; /* Extremely subtle hover only */
+}
+
+.dp-excel-grid-v2.k-grid .k-grid-content {
+    overflow-y: auto !important;
 }
 
 /* Media Queries for Responsiveness */
