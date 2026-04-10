@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import Sidebar from "@/components/common/sidebar/Sidebar";
 import {
   Info, Database, Wrench, FileText, Target, BarChart3, Grid,
-  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck, Columns, LayoutDashboard
+  Table, ClipboardList, Sparkles, Upload, RefreshCw, Clock, Users, BrainCircuit, ShieldCheck, Columns, LayoutDashboard, PlusCircle, FileCog, Wand2
 } from "lucide-react";
 import { modalContext } from "@/components/common/Modal.jsx";
 import NewDataModal from "./NewDataModal";
@@ -16,7 +16,9 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import "./MenuBar.css";
 
 // 메뉴 아이템 정의
-const MENU_ITEMS = [
+// 원래 있는건 그대로 두되 메뉴바에서 주석처리
+/*
+const MENU_ITEMS_OLD = [
   {
     label: "교차표",
     items: [
@@ -29,30 +31,32 @@ const MENU_ITEMS = [
       // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList, isPending: true },
     ]
   },
-  // {
-  //   label: "AI요약",
-  //   items: [
-  //     { label: "AI분석", path: "/data_status/ai/analysis", icon: Sparkles, isPending: true },
-  //     { label: "AI리포트", path: "/data_status/ai/report", icon: FileText, isPending: true },
-  //   ]
-  // },
   {
     label: "데이터설정",
     items: [
-      // { label: "문항 관리", path: "/data_status/setting/variable", icon: Info },
-      /* {
-        label: "전체 데이터(뷰어)", path: "/data_status/setting/viewer", icon: Database,
-        onClick: (e) => {
-          e.preventDefault();
-          const width = window.screen.width;
-          const height = window.screen.height;
-          window.open("/data_status/setting/viewer", "_blank", `width=${width},height=${height},left=0,top=0,resizable=yes,scrollbars=yes`);
-        }
-      }, */
       { label: "페이지 설정", path: "/data_status/setting/page", icon: LayoutDashboard },
       { label: "스터브 생성", path: "/data_status/setting/recoding", icon: Wrench },
       { label: "DP 의뢰서 정의", path: "/data_status/setting/dp_definition", icon: FileText, isPending: true },
       { label: "가중치 생성", path: "/data_status/setting/weight", icon: Target },
+    ]
+  }
+];
+*/
+
+// 신규 H-SRT 메뉴 아이템 반영
+const MENU_ITEMS = [
+  {
+    label: "데이터 설정",
+    items: [
+      { label: "문항추가", path: "/data_status/hsrt/add_question", icon: PlusCircle },
+      { label: "DP의뢰서", path: "/data_status/hsrt/dp_request", icon: FileCog },
+      { label: "스터브 생성", path: "/data_status/hsrt/stub", icon: Wand2 },
+    ]
+  },
+  {
+    label: "집계 현황",
+    items: [
+      { label: "교차분석", path: "/data_status/hsrt/cross_analysis", icon: Table },
     ]
   }
 ];
