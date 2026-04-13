@@ -14,17 +14,17 @@ import './DpRequestPage.css';
 
 const DpRequestPage = () => {
     const [currentStep, setCurrentStep] = useState(0);
-    const steps = ['배너', '표', '요약표', '표상세', '표설정'];
+    const steps = ['설정', '배너', '스터브', '요약표', '표 순서'];
 
     // 단계별 렌더링 매핑
     const renderStepContent = () => {
         switch (currentStep) {
-            case 0: return <DpRequestBannerStep />;
-            case 1: return <DpRequestTableStep />;
-            case 2: return <DpRequestSummaryStep />;
-            case 3: return <DpRequestDetailStep />;
-            case 4: return <DpRequestSettingStep />;
-            default: return <DpRequestBannerStep />;
+            case 0: return <DpRequestSettingStep />;
+            case 1: return <DpRequestBannerStep />;
+            case 2: return <DpRequestTableStep />;
+            case 3: return <DpRequestSummaryStep />;
+            case 4: return <DpRequestDetailStep />;
+            default: return <DpRequestSettingStep />;
         }
     };
 
