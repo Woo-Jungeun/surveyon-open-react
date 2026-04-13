@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
+import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, ArrowUp, ArrowDown } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -69,6 +69,50 @@ const DpRequestBannerStep = () => {
         });
     };
 
+    // --- 상태 업데이트 관련 ---
+
+    /**
+     * 현재 선택된 배너의 상세 정보(Grid 데이터)를 업데이트합니다.
+     */
+    const updateBannerInfo = (newInfo) => {
+        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo } : b));
+    };
+
+    /**
+     * 그리드 상단 '행 추가' 버튼 클릭 시 실행됩니다.
+     */
+    const handleAddRow = () => {
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        if (!currentBanner) return;
+        const newInfo = [...(currentBanner.info || [])];
+        newInfo.push({ label3: '', label2: '', label: '', logic: '', inEdit: false });
+        updateBannerInfo(newInfo);
+    };
+
+    /**
+     * 그리드 행 클릭 시 편집 모드로 전환합니다.
+     */
+    const handleRowClick = (e) => {
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        if (!currentBanner) return;
+        // 클릭한 행만 편집 가능하도록 상태 변경
+        updateBannerInfo((currentBanner.info || []).map(item => ({ ...item, inEdit: item === e.dataItem })));
+    };
+
+    /**
+     * 편집 모드를 해제합니다. (그리드 외부 클릭 시 호출)
+     */
+    const exitEditMode = () => {
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        if (!currentBanner) return;
+        updateBannerInfo((currentBanner.info || []).map(item => ({ ...item, inEdit: false })));
+    };
+
+    // --- 데이터 통신 (API) 관련 ---
+
+    /**
+     * 배너 상세 정보를 서버로부터 가져옵니다.
+     */
     useEffect(() => {
         const fetchBannerData = async () => {
             const pageId = sessionStorage.getItem('pageId');
@@ -88,9 +132,9 @@ const DpRequestBannerStep = () => {
                             id: v.id || `var_${i}`,
                             label: v.name || v.label,
                             subId: v.id || `banner_0${i + 1}`,
-                            info: v.info || v.categories || []
+                            info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
                         })));
-                        if (recodes.length > 0) {
+                        if (recodes.length > 0 && !selectedBanner) {
                             const first = recodes[0];
                             setSelectedBanner(first.id || 'var_0');
                             setCurrentLabel(first.name || first.label || '');
@@ -104,7 +148,7 @@ const DpRequestBannerStep = () => {
             }
         };
         if (auth?.user?.userId) fetchBannerData();
-    }, [auth?.user?.userId]);
+    }, [auth?.user?.userId]); // selectedBanner 의존성 제거
 
     useEffect(() => {
         const fetchBaseVariables = async () => {
@@ -124,9 +168,9 @@ const DpRequestBannerStep = () => {
     }, [auth?.user?.userId]);
 
     return (
-        <div className="dp-request-container">
+        <div className="dp-request-container" onClick={exitEditMode}>
             {/* 자동 배너 구성 */}
-            <div className="dp-wizard-accordion">
+            <div className="dp-wizard-accordion" onClick={(e) => e.stopPropagation()}>
                 <div className="dp-accordion-header" onClick={() => setIsWizardOpen(prev => !prev)}>
                     <span>자동 배너 구성</span>
                     <div className="dp-accordion-icons">
@@ -272,7 +316,7 @@ const DpRequestBannerStep = () => {
             </div>
 
             {/* 메인 레이아웃 */}
-            <div className="dp-main-layout">
+            <div className="dp-main-layout" onClick={(e) => e.stopPropagation()}>
                 <div className="dp-sidebar">
                     <div className="dp-sidebar-title">생성된 배너 목록</div>
                     <div className="dp-banner-list">
@@ -303,28 +347,29 @@ const DpRequestBannerStep = () => {
                             />
                         </div>
                         <div className="dp-content-actions">
-                            <button className="dp-btn-outline">미리보기 계산</button>
-                            <button className="dp-primary-btn"><Save size={16} /> 저장</button>
+                            <button className="dp-primary-btn">
+                                <Save size={16} />
+                                <span>저장</span>
+                            </button>
                         </div>
                     </div>
 
                     <div className="dp-table-container">
                         <KendoGridV2
                             data={banners.find(b => b.id === selectedBanner)?.info || []}
+                            reorderable
+                            addable
+                            showNo
+                            deletable
+                            editField="inEdit"
+                            onDataChange={updateBannerInfo}
+                            onRowClick={handleRowClick}
+                            newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
                         >
-                            <Column
-                                title="No"
-                                width="50px"
-                                cell={(props) => (
-                                    <td className="dp-row-num">
-                                        {props.dataIndex + 1}
-                                    </td>
-                                )}
-                            />
-                            <Column field="label3" title="라벨3" />
-                            <Column field="label2" title="라벨2" />
+                            <Column field="label3" title="라벨3" width="150px" />
+                            <Column field="label2" title="라벨2" width="150px" />
                             <Column field="label" title="라벨" />
-                            <Column field="logic" title="조건" />
+                            <Column field="logic" title="조건" width="180px" />
                         </KendoGridV2>
                     </div>
                 </div>

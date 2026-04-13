@@ -541,76 +541,182 @@
 }
 
 .dp-excel-grid-v2.k-grid .k-grid-header {
-    padding: 0 !important;
-    background: #f3f4f6;
-    border-bottom: 2px solid #bbb;
+    background: #f8fafc;
+    border-top: 3px solid #065f46 !important;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .dp-excel-grid-v2.k-grid .k-header {
-    background: #fff;
-    color: #334155;
+    background: #f9fafb !important;
+    color: #374151;
     font-weight: 700;
-    padding: 0 8px !important;
-    height: 32px !important;
-    border-right: 1px solid #ddd;
-    border-bottom: 2px solid #ddd;
-    text-align: left;
-    font-size: 13px;
+    padding: 2px 4px !important;
+    border-right: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    text-align: center;
+    font-size: 12px;
     vertical-align: middle !important;
-    overflow: visible !important;
+    box-sizing: border-box;
+}
+
+/* Ensure table layout is consistent */
+.dp-excel-grid-v2.k-grid table {
+    table-layout: fixed !important;
+    width: 100% !important;
 }
 
 .dp-excel-grid-v2.k-grid .k-link {
     padding: 0 !important;
-    height: 100%;
-    display: table-cell !important; /* Restore standard behavior */
-    vertical-align: middle !important;
-}
-
-.dp-excel-grid-v2.k-grid .k-column-title {
-    overflow: visible !important;
-    line-height: 1; /* Reset to natural height */
-    vertical-align: middle;
-}
-
-.dp-excel-grid-v2.k-grid .k-table-row {
-    min-height: 26px !important;
 }
 
 .dp-excel-grid-v2.k-grid td {
-    padding: 3px 8px;
-    background: #fff; /* Pure white background */
-    min-height: 26px !important;
-    height: auto !important;
-    border-right: 1px solid #eee;
-    border-bottom: 1px solid #eee;
-    white-space: normal !important;
-    word-break: break-all;
-    line-height: 1.4;
+    padding: 0px 4px !important;
+    background: #fff;
+    border-right: 1px solid #e2e8f0 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+    white-space: nowrap !important;
+    word-break: keep-all;
+    line-height: 1.2;
     vertical-align: middle;
+    font-size: 12px;
+    color: #1e293b;
+    height: 22px !important;
+    box-sizing: border-box;
+}
+
+/* 순서 변경 셀 스타일 */
+.dp-order-change-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0px;
+    height: 100%;
+}
+
+.dp-order-move-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    line-height: 0;
+    color: #cbd5e1;
+    transition: all 0.2s;
+    opacity: 0.2; /* 평소에는 매우 흐리게 */
+}
+
+.dp-order-change-cell:hover .dp-order-move-btn {
+    opacity: 1; /* 마우스 올리면 선명하게 */
+    color: #3b82f6;
+}
+
+.dp-order-move-btn:hover:not(:disabled) {
+    color: #2563eb !important;
+    transform: scale(1.2);
+}
+
+.dp-order-move-btn:disabled {
+    cursor: default;
+    color: #f1f5f9 !important;
+    opacity: 0 !important;
+}
+
+/* Grid Icons Centering */
+.dp-grid-handle {
+    cursor: grab;
+    color: #cbd5e1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    width: 100%;
+}
+
+.dp-grid-add-row-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    width: 100%; /* Fill cell width for easy centering */
+    height: 100%;
+}
+
+.dp-grid-add-row-btn:hover {
+    background: #eff6ff;
+}
+
+.dp-row-del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+}
+
+.dp-row-del-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Toolbar Buttons */
+.dp-content-actions {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.dp-btn-outline {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    padding: 6px 14px;
+    border-radius: 6px;
     font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    transition: all 0.2s;
+    min-width: 68px;
 }
 
-.dp-excel-grid-v2.k-grid .dp-row-num {
-    background: #fff !important; /* Removed tint */
-    border-right: 2px solid #e2e8f0 !important;
-    color: #64748b;
-    font-weight: 700;
-    text-align: center;
-    width: 50px;
+.dp-btn-outline:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #1e293b;
 }
 
-/* Remove zebra striping and hover tints */
-.dp-excel-grid-v2.k-grid .k-alt {
-    background-color: #fff;
+.dp-primary-btn {
+    background: #3b82f6;
+    border: 1px solid #2563eb;
+    color: #fff;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
 }
 
-.dp-excel-grid-v2.k-grid tr:hover {
-    background-color: #f8fafc !important; /* Extremely subtle hover only */
-}
-
-.dp-excel-grid-v2.k-grid .k-grid-content {
-    overflow-y: auto !important;
+.dp-primary-btn:hover {
+    background: #2563eb;
 }
 
 /* Media Queries for Responsiveness */
@@ -790,3 +896,98 @@
     opacity: 0.65;
     width: 100%;
 }
+
+/* 행 조작 버튼 스타일 */
+.dp-row-move-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+}
+
+.dp-row-num:hover .dp-row-move-btns {
+    opacity: 1;
+}
+
+.dp-row-move-btns button {
+    padding: 2px;
+    background: transparent;
+    border: none;
+    color: #64748b;
+    cursor: pointer;
+    line-height: 0;
+    border-radius: 2px;
+}
+
+.dp-row-move-btns button:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.dp-row-move-btns button:disabled {
+    cursor: default;
+    color: #cbd5e1;
+}
+
+.dp-row-del-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #94a3b8;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.dp-row-del-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+    border-color: #fecaca;
+}
+
+/* 드래그 앤 드롭 피드백 */
+.dp-excel-grid-v2 tr.dragging {
+    opacity: 0.5;
+    background-color: #f1f5f9 !important;
+}
+
+.dp-excel-grid-v2 tr.drag-over {
+    border-top: 2px solid #3b82f6 !important;
+    background-color: #eff6ff !important;
+}
+
+/* 그리드 인라인 에디팅 인풋 스타일 (SRT 디자인 동기화) */
+.dp-excel-grid-v2.k-grid .k-grid-edit-cell {
+    padding: 0 !important;
+}
+
+.dp-excel-grid-v2.k-grid .k-grid-edit-cell input,
+.dp-excel-grid-v2.k-grid .k-grid-edit-cell .k-textbox {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 21px !important;
+    padding: 0 4px !important;
+    margin: 0 !important;
+    border: 1px solid #3b82f6 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    font-size: 12px !important;
+    font-family: inherit !important;
+    color: #1e293b !important;
+    box-sizing: border-box !important;
+    outline: none !important;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.05) !important;
+}
+
+.dp-excel-grid-v2.k-grid .k-grid-edit-cell input:focus {
+    border-color: #2563eb !important;
+    background: #fff !important;
+    box-shadow: 0 0 0 1px #2563eb !important;
+}
+
+
