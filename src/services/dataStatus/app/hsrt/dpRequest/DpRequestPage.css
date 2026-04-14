@@ -59,6 +59,20 @@
     margin: 0 16px;
 }
 
+/* 완료된 단계 스타일 */
+.dp-step-compact.done {
+    color: #64748b;
+}
+
+.dp-step-compact.done .dp-step-num-compact {
+    background: #10b981;
+    color: #fff;
+}
+
+.dp-step-line-compact.done {
+    background: #10b981;
+}
+
 .dp-primary-btn {
     display: flex;
     align-items: center;
@@ -990,4 +1004,194 @@
     box-shadow: 0 0 0 1px #2563eb !important;
 }
 
+/* 설정 단계 전용 탭 스타일 */
+.dp-step-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px 24px;
+    background: #fff;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.dp-tab-item {
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #64748b;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.dp-tab-item:hover {
+    background: #f1f5f9;
+    color: #1e293b;
+}
+
+.dp-tab-item.active {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+/* 설정 카드 스타일 */
+.dp-setting-section {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dp-setting-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.dp-setting-card-header {
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #334155;
+}
+
+.dp-setting-card-body {
+    padding: 20px;
+}
+
+.dp-setting-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+}
+
+.dp-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dp-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.dp-form-group input, .dp-form-group select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    background: #fff;
+}
+
+.dp-form-group input:focus {
+    border-color: #3b82f6;
+}
+
+.dp-alert-card {
+    background: #fff5f5;
+    border: 1px solid #feb2b2;
+    padding: 12px 16px;
+    border-radius: 6px;
+    color: #c53030;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* 컬러 피커 시뮬레이션 스타일 */
+.dp-color-swatch-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.dp-color-swatch {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.dp-color-swatch:hover {
+    transform: scale(1.1);
+}
+
+/* Common Step Layouts (Stub, Summary, Detail) */
+.dp-step-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.dp-step-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.dp-toolbar-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dp-toolbar-title h4 {
+    margin: 0;
+    font-size: 16px;
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.dp-badge {
+    background: #3b82f6;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.dp-toolbar-desc {
+    font-size: 13px;
+    color: #64748b;
+    margin-left: 8px;
+}
+
+.dp-toolbar-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.dp-grid-wrapper {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    padding: 1px;
+}
 

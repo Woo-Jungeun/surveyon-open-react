@@ -12,8 +12,20 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/variables/base/list", "API_BASE_URL_DATASTATUS")
     );
 
+    /** DP 의뢰서 - 테이블 설정 초기 맥락 조회 */
+    const getTableRenderContext = useMutation(
+        async (data) => await api.post(data, "/dp-request/table/render-context", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** DP 의뢰서 - 테이블 설정 저장 */
+    const saveTableSettings = useMutation(
+        async (data) => await api.post(data, "/dp-request/table/save", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
+        getTableRenderContext,
+        saveTableSettings,
     };
 }
