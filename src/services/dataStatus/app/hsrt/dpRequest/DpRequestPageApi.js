@@ -22,10 +22,16 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/dp-request/table/save", "API_BASE_URL_DATASTATUS")
     );
 
+    /** DP 의뢰서 - 전체 컨텍스트(단계별 상태/카운트) 조회 */
+    const getDpContext = useMutation(
+        async (data) => await api.post(data, "/dp-request/context", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
         getTableRenderContext,
         saveTableSettings,
+        getDpContext,
     };
 }
