@@ -15,11 +15,17 @@ import {
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import useUpdateHistory from '@/hooks/useUpdateHistory';
+import { useRef } from 'react';
 
 const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getTableRenderContext, saveTableSettings, getBaseVariableList } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
+
+    // --- 히스토리 관리 (Undo/Redo) ---
+    const history = useUpdateHistory('dp-setting');
+    const isHistoryAction = useRef(false);
 
     // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
     useImperativeHandle(ref, () => ({
@@ -90,7 +96,19 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
 
                 if (Array.isArray(varList)) {
-                    setWeightOptions(['없음', ...varList.map(v => v.name || v.label)]);
+                    const weightOpt = ['없음', ...varList.map(v => v.name || v.label)];
+                    setWeightOptions(weightOpt);
+                    
+                    // 초기 히스토리 기준점 설정 (서버 데이터)
+                    history.reset({ 
+                        settings: result.id ? {
+                            weight_variable: result.weight_variable || '없음',
+                            confidence_level: result.confidence_level || 95,
+                            render: { ...settings.render, ...result.effective_render_settings },
+                            display: { ...settings.display, ...result.effective_display_policy }
+                        } : settings, 
+                        scaleData, rankData, groupData 
+                    });
                 }
             } catch (err) {
                 console.error("Failed to fetch initial setting data:", err);
@@ -101,6 +119,56 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         fetchInitialData();
     }, [auth?.user?.userId]);
+
+    // 키보드 이벤트 (Undo/Redo)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key.toLowerCase() === 'z') {
+                    if (e.shiftKey) { // Redo (Ctrl+Shift+Z)
+                        const redoData = history.redo();
+                        if (redoData) {
+                            isHistoryAction.current = true;
+                            if (redoData.settings) setSettings(redoData.settings);
+                            if (redoData.scaleData) setScaleData(redoData.scaleData);
+                            if (redoData.rankData) setRankData(redoData.rankData);
+                            if (redoData.groupData) setGroupData(redoData.groupData);
+                        }
+                    } else { // Undo (Ctrl+Z)
+                        const undoData = history.undo();
+                        if (undoData) {
+                            isHistoryAction.current = true;
+                            if (undoData.settings) setSettings(undoData.settings);
+                            if (undoData.scaleData) setScaleData(undoData.scaleData);
+                            if (undoData.rankData) setRankData(undoData.rankData);
+                            if (undoData.groupData) setGroupData(undoData.groupData);
+                        }
+                    }
+                } else if (e.key.toLowerCase() === 'y') { // Redo (Ctrl+Y)
+                    const redoData = history.redo();
+                    if (redoData) {
+                        isHistoryAction.current = true;
+                        if (redoData.settings) setSettings(redoData.settings);
+                        if (redoData.scaleData) setScaleData(redoData.scaleData);
+                        if (redoData.rankData) setRankData(redoData.rankData);
+                        if (redoData.groupData) setGroupData(redoData.groupData);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [history]);
+
+    // 데이터 변경 감지 및 히스토리 커밋
+    useEffect(() => {
+        if (isHistoryAction.current) {
+            isHistoryAction.current = false;
+            return;
+        }
+        history.commit({ settings, scaleData, rankData, groupData });
+    }, [settings, scaleData, rankData, groupData, history]);
 
     // --- 저장 로직 ---
     const handleSave = async () => {

@@ -5,6 +5,8 @@ import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
+import useUpdateHistory from '@/hooks/useUpdateHistory';
+import { useRef } from 'react';
 
 const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
@@ -13,6 +15,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const { getBannerDetail } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
+
+    // --- 히스토리 관리 (Undo/Redo) ---
+    const history = useUpdateHistory('dp-table');
+    const isHistoryAction = useRef(false);
 
     // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
     useImperativeHandle(ref, () => ({
@@ -30,6 +36,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         { id: 'q5', name: 'Q5. 한 달 평균 소득은 어느 정도입니까?', type: 'Single', base: '전체', show: true },
     ]);
 
+    // 초기 마운트 시 히스토리 기준점 설정
+    useEffect(() => {
+        history.reset(stubs);
+    }, []);
+
     // 필터링된 데이터
     const filteredStubs = useMemo(() => {
         if (!searchTerm) return stubs;
@@ -38,6 +49,49 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             s.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [stubs, searchTerm]);
+
+    // 키보드 이벤트 (Undo/Redo)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key.toLowerCase() === 'z') {
+                    if (e.shiftKey) { // Redo (Ctrl+Shift+Z)
+                        const redoData = history.redo();
+                        if (redoData) {
+                            isHistoryAction.current = true;
+                            setStubs([...redoData]);
+                        }
+                    } else { // Undo (Ctrl+Z)
+                        const undoData = history.undo();
+                        if (undoData) {
+                            isHistoryAction.current = true;
+                            setStubs([...undoData]);
+                        }
+                    }
+                } else if (e.key.toLowerCase() === 'y') { // Redo (Ctrl+Y)
+                    const redoData = history.redo();
+                    if (redoData) {
+                        isHistoryAction.current = true;
+                        setStubs([...redoData]);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [history]);
+
+    // 데이터 변경 감지 및 히스토리 커밋
+    useEffect(() => {
+        if (isHistoryAction.current) {
+            isHistoryAction.current = false;
+            return;
+        }
+        if (stubs.length > 0) {
+            history.commit(stubs);
+        }
+    }, [stubs, history]);
 
     // --- 저장 로직 ---
     const handleSave = async () => {

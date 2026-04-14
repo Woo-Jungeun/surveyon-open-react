@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
+import useUpdateHistory from '@/hooks/useUpdateHistory';
 
 // --- (성능 개선) 개별 아이템 메모이제이션 ---
 const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
@@ -77,6 +78,10 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
+    // --- 히스토리 관리 (Undo/Redo) ---
+    const history = useUpdateHistory('dp-banner');
+    const isHistoryAction = useRef(false);
+
     // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
     useImperativeHandle(ref, () => ({
         save: async () => {
@@ -99,6 +104,49 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 삭제 관리용 스테이트 추가 ---
     const [deletedBannerIds, setDeletedBannerIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
     const [originalBannerIds, setOriginalBannerIds] = useState([]); // 초기 로딩된 배너 ID 목록 (신규 구분용)
+
+    // 키보드 이벤트 (Undo/Redo)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key.toLowerCase() === 'z') {
+                    if (e.shiftKey) { // Redo (Ctrl+Shift+Z)
+                        const redoData = history.redo();
+                        if (redoData) {
+                            isHistoryAction.current = true;
+                            setBanners([...redoData]);
+                        }
+                    } else { // Undo (Ctrl+Z)
+                        const undoData = history.undo();
+                        if (undoData) {
+                            isHistoryAction.current = true;
+                            setBanners([...undoData]);
+                        }
+                    }
+                } else if (e.key.toLowerCase() === 'y') { // Redo (Ctrl+Y)
+                    const redoData = history.redo();
+                    if (redoData) {
+                        isHistoryAction.current = true;
+                        setBanners([...redoData]);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [history]);
+
+    // 데이터 변경 감지 및 히스토리 커밋
+    useEffect(() => {
+        if (isHistoryAction.current) {
+            isHistoryAction.current = false;
+            return;
+        }
+        if (banners.length > 0) {
+            history.commit(banners);
+        }
+    }, [banners, history]);
 
     // --- Interaction Logic ---
     const toggleSelection = useCallback((id) => {
@@ -259,6 +307,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                         info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
                     }));
                     setBanners(formatted);
+                    history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
 
                     // 서버에서 온 원본 ID들 보관
                     const ids = formatted.map(b => b.id);
