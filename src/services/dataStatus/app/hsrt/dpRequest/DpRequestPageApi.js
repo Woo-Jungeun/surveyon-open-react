@@ -36,12 +36,17 @@ export function DpRequestPageApi() {
     const generateBanner = useMutation(
         async (data) => await api.post(data, "/dp-request/banner/generate", "API_BASE_URL_DATASTATUS"),
         {
-            onMutate: (vars) => {
-                loadingSpinner.show();
-            },
-            onSettled: () => {
-                loadingSpinner.hide();
-            }
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
+    /** 생성된 배너 변수 저장 API */
+    const saveBannerDetail = useMutation(
+        async (data) => await api.post(data, "/dp-request/banner/save", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
         }
     );
 
@@ -52,5 +57,6 @@ export function DpRequestPageApi() {
         saveTableSettings,
         getDpContext,
         generateBanner,
+        saveBannerDetail,
     };
 }

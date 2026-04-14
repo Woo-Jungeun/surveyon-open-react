@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, forwardRef, useImperativeHandle } from 'react';
 import { useSelector } from 'react-redux';
 import {
     AlertCircle,
@@ -16,10 +16,17 @@ import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
-const DpRequestSettingStep = () => {
+const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getTableRenderContext, saveTableSettings, getBaseVariableList } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
+
+    // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
+    useImperativeHandle(ref, () => ({
+        save: async () => {
+            return await handleSave();
+        }
+    }));
 
     const [activeTab, setActiveTab] = useState(0); // 0: 분석, 1: 응답 묶기, 2: 디자인
 
@@ -132,10 +139,14 @@ const DpRequestSettingStep = () => {
             const result = await saveTableSettings.mutateAsync(payload);
             if (result?.message || result?.status === 'success') {
                 alert("설정이 저장되었습니다.");
+                if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
+                return true;
             }
+            return false;
         } catch (err) {
             console.error("Save failed:", err);
             alert("저장에 실패했습니다.");
+            return false;
         } finally {
             loadingSpinner.hide();
         }
@@ -179,7 +190,10 @@ const DpRequestSettingStep = () => {
                     className="dp-select"
                     style={{ width: '100%', maxWidth: 'none', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b' }}
                     value={settings.weight_variable}
-                    onChange={(e) => setSettings({ ...settings, weight_variable: e.target.value })}
+                    onChange={(e) => {
+                        setSettings({ ...settings, weight_variable: e.target.value });
+                        if (onUnsavedChange) onUnsavedChange(true);
+                    }}
                 >
                     {weightOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
@@ -208,20 +222,26 @@ const DpRequestSettingStep = () => {
                                     <input
                                         type="checkbox"
                                         checked={settings.display.show_n}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, show_n: e.target.checked }
-                                        })}
+                                        onChange={(e) => {
+                                            setSettings({
+                                                ...settings,
+                                                display: { ...settings.display, show_n: e.target.checked }
+                                            });
+                                            if (onUnsavedChange) onUnsavedChange(true);
+                                        }}
                                     /> 빈도(N) 기본 표시 (show_n)
                                 </label>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 400, fontSize: '13px' }}>
                                     <input
                                         type="checkbox"
                                         checked={settings.display.show_percent}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, show_percent: e.target.checked }
-                                        })}
+                                        onChange={(e) => {
+                                            setSettings({
+                                                ...settings,
+                                                display: { ...settings.display, show_percent: e.target.checked }
+                                            });
+                                            if (onUnsavedChange) onUnsavedChange(true);
+                                        }}
                                     /> 비율(%) 기본 표시 (show_percent)
                                 </label>
                             </div>
@@ -467,7 +487,10 @@ const DpRequestSettingStep = () => {
                         addable
                         deletable
                         showNo
-                        onDataChange={(newData) => setScaleData(newData)}
+                        onDataChange={(newData) => {
+                            setScaleData(newData);
+                            if (onUnsavedChange) onUnsavedChange(true);
+                        }}
                     >
                         <Column field="name" title="이름" width="300px" />
                         <Column field="type" title="응답" width="120px" />
@@ -532,6 +555,6 @@ const DpRequestSettingStep = () => {
             </div>
         </div>
     );
-};
+});
 
 export default DpRequestSettingStep;
