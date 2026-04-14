@@ -13,6 +13,7 @@ const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
         draggable
         onDragStart={(e) => onDragStart(e, v)}
         onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
+        style={{ borderRadius: '6px' }}
     >
         <div className="variable-item-header">
             <div className="variable-item__name">{v.id}</div>
@@ -42,29 +43,19 @@ const BannerActionFooter = memo(({ onCreateBanner }) => {
                     placeholder="배너명을 입력하세요"
                     value={localName}
                     onChange={(e) => setLocalName(e.target.value)}
-                    style={{
-                        flex: 1,
-                        maxWidth: '500px', // 넓이 확장
-                        height: '32px',
-                        padding: '0 12px',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                        background: '#fff',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                    }}
+                    className="dp-input"
+                    style={{ flex: 1, maxWidth: '500px' }}
                 />
             </div>
             <button
                 className="dp-primary-btn"
                 onClick={() => onCreateBanner(localName)}
                 style={{
-                    height: '32px', // 높이 일치
+                    height: '32px',
                     padding: '0 20px',
                     fontSize: '13px',
                     fontWeight: 600,
-                    borderRadius: '4px',
+                    borderRadius: '6px',
                     background: '#2563eb',
                     color: '#fff',
                     border: 'none',
@@ -91,7 +82,9 @@ const DpRequestBannerStep = () => {
     const [baseVariables, setBaseVariables] = useState([]);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
+    const [isBannerSidebarOpen, setIsBannerSidebarOpen] = useState(true); 
     const [wizardSearch, setWizardSearch] = useState('');
+    const [bannerSearch, setBannerSearch] = useState('');
     const [colVars, setColVars] = useState([]);
     const [currentLabel, setCurrentLabel] = useState('');
     const [selectedIds, setSelectedIds] = useState([]);
@@ -236,6 +229,14 @@ const DpRequestBannerStep = () => {
         );
     }, [baseVariables, wizardSearch]);
 
+    // 배너 목록 필터링
+    const filteredBanners = useMemo(() => {
+        const search = bannerSearch.toLowerCase();
+        return banners.filter(b =>
+            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
+        );
+    }, [banners, bannerSearch]);
+
     useEffect(() => { fetchBannerData(); }, [auth?.user?.userId]);
 
     useEffect(() => {
@@ -256,7 +257,7 @@ const DpRequestBannerStep = () => {
             <div className="dp-wizard-accordion" onClick={(e) => { e.stopPropagation(); setSelectedIds([]); }}>
                 <div className="dp-accordion-header" onClick={() => setIsWizardOpen(prev => !prev)}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>자동 배너 구성 (마법사)</span>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>자동 배너 구성</span>
                         {!isWizardOpen && colVars.length > 0 && (
                             <span className="dp-badge-ongoing">{colVars.length}개 그룹 구성 중</span>
                         )}
@@ -266,23 +267,23 @@ const DpRequestBannerStep = () => {
 
                 {isWizardOpen && (
                     <div className="dp-wizard-body" onClick={(e) => e.stopPropagation()}>
-                        <div className="dp-wizard-setup" style={{ height: '380px' }}> {/* 높이 재조정 */}
+                        <div className="dp-wizard-setup" style={{ height: '380px' }}>
                             {/* 좌측 변수 목록 */}
                             <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
                                 <div className="variable-panel-header">
                                     {isVariablePanelOpen && (
-                                        <div className="search-input-wrapper">
-                                            <Search size={14} className="search-icon" />
+                                        <div className="dp-search-input-wrapper">
+                                            <Search size={14} className="dp-search-input-icon" />
                                             <input
                                                 type="text"
                                                 placeholder="변수명 검색"
                                                 value={wizardSearch}
                                                 onChange={(e) => setWizardSearch(e.target.value)}
-                                                className="search-input"
+                                                className="dp-search-input"
                                             />
                                         </div>
                                     )}
-                                    <button onClick={() => setIsVariablePanelOpen(prev => !prev)} className="panel-toggle-btn">
+                                    <button onClick={() => setIsVariablePanelOpen(prev => !prev)} className="dp-sidebar-toggle-btn-compact">
                                         {isVariablePanelOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
                                     </button>
                                 </div>
@@ -316,12 +317,12 @@ const DpRequestBannerStep = () => {
                                 <div className="drop-zone-scroll-area custom-scrollbar"
                                     style={{
                                         flex: 1,
-                                        display: 'grid', // 그리드 적용
-                                        gridTemplateColumns: 'repeat(5, 1fr)', // 5열 고정
+                                        display: 'grid', 
+                                        gridTemplateColumns: 'repeat(5, 1fr)', 
                                         gap: '12px',
                                         padding: '16px',
                                         background: '#eff6ff',
-                                        overflowY: 'auto', // 세로 스크롤
+                                        overflowY: 'auto', 
                                         alignContent: 'start',
                                         position: 'relative'
                                     }}
@@ -336,7 +337,7 @@ const DpRequestBannerStep = () => {
                                             onDragStart={(e) => handleInternalGroupDragStart(e, groupIndex)}
                                             onDragOver={(e) => e.preventDefault()}
                                             onDrop={(e) => { e.stopPropagation(); handleDrop(e, groupIndex); }}
-                                            style={{ width: '100%', marginBottom: '0' }}
+                                            style={{ width: '100%', marginBottom: '0', borderRadius: '8px' }}
                                         >
                                             <div className="group-drag-handle" style={{ padding: '2px 0' }}><GripVertical size={14} /></div>
                                             <div className="col-group-items" style={{ minHeight: '30px', paddingBottom: '4px' }}>
@@ -346,7 +347,7 @@ const DpRequestBannerStep = () => {
                                                         className="dropped-tag grouped"
                                                         draggable
                                                         onDragStart={(e) => { e.stopPropagation(); handleInternalItemDragStart(e, groupIndex, itemIndex); }}
-                                                        style={{ marginBottom: '3px' }}
+                                                        style={{ marginBottom: '3px', borderRadius: '4px' }}
                                                     >
                                                         <div className="item-drag-handle"><GripVertical size={10} /></div>
                                                         <span className="tag-text" style={{ fontSize: '11px' }}>{v.id}</span>
@@ -379,18 +380,48 @@ const DpRequestBannerStep = () => {
 
             {/* 2. 메인 레이아웃 */}
             <div className="dp-main-layout" onClick={(e) => e.stopPropagation()}>
-                <div className="dp-sidebar custom-scrollbar">
-                    <div className="dp-sidebar-title">배너 목록 ({banners.length})</div>
-                    <div className="dp-banner-list">
-                        {banners.map(banner => (
-                            <div key={banner.id} className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`} onClick={() => { setSelectedBanner(banner.id); setCurrentLabel(banner.label); }}>
-                                <div className="dp-banner-item-info">
-                                    <span className="dp-banner-label">{banner.label}</span>
-                                    <span className="dp-banner-sub">{banner.id}</span>
-                                </div>
-                                <button className="dp-banner-delete"><Trash2 size={16} /></button>
+                <div className={`dp-sidebar-container ${!isBannerSidebarOpen ? 'collapsed' : ''}`}>
+                    {!isBannerSidebarOpen && (
+                        <div className="dp-sidebar-collapsed-bar" onClick={() => setIsBannerSidebarOpen(true)}>
+                            <ChevronRight size={16} />
+                        </div>
+                    )}
+                    <div className="dp-sidebar custom-scrollbar">
+                        <div className="dp-sidebar-title">
+                            배너 목록 ({filteredBanners.length})
+                        </div>
+                        <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #e2e8f0', gap: '8px' }}>
+                            <div className="dp-search-input-wrapper" style={{ flex: 1 }}>
+                                <Search size={14} className="dp-search-input-icon" />
+                                <input
+                                    type="text"
+                                    placeholder="배너명 또는 ID 검색"
+                                    value={bannerSearch}
+                                    onChange={(e) => setBannerSearch(e.target.value)}
+                                    className="dp-search-input"
+                                />
                             </div>
-                        ))}
+                            <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)}>
+                                <ChevronLeft size={16} />
+                            </button>
+                        </div>
+                        <div className="dp-banner-list">
+                            {filteredBanners.map(banner => (
+                                <div key={banner.id}
+                                    className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
+                                    onClick={() => { setSelectedBanner(banner.id); setCurrentLabel(banner.label); }}
+                                    style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
+                                >
+                                    <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
+                                        <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px' }}>{banner.label}</span>
+                                        <span className="dp-banner-sub" style={{ fontSize: '11px', opacity: 0.6 }}>{banner.id}</span>
+                                    </div>
+                                    <button className="dp-banner-delete" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}>
+                                        <Trash2 size={16} />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
@@ -402,11 +433,12 @@ const DpRequestBannerStep = () => {
                                 type="text"
                                 value={currentLabel}
                                 onChange={(e) => setCurrentLabel(e.target.value)}
-                                style={{ height: '32px', width: '400px', padding: '0 10px', borderRadius: '4px', border: '1px solid #e2e8f0', boxSizing: 'border-box' }}
+                                className="dp-input"
+                                style={{ width: '600px' }}
                             />
                         </div>
                         <div className="dp-content-actions" style={{ marginLeft: 'auto' }}>
-                            <button className="dp-primary-btn" style={{ height: '32px' }}><Save size={16} /> <span>저장</span></button>
+                            <button className="dp-primary-btn" style={{ height: '32px', borderRadius: '6px' }}><Save size={16} /> <span>저장</span></button>
                         </div>
                     </div>
                     <div className="dp-table-container">
