@@ -171,8 +171,7 @@
 /* Wizard Content */
 .dp-wizard-body {
     border-top: 1px solid #cbd5e1;
-    height: 520px;
-    /* 조금 더 확장 */
+    height: 428px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -206,8 +205,7 @@
 }
 
 .variable-panel {
-    width: 260px;
-    /* 320px에서 더 슬림하게 축소 */
+    width: 340px;
     background: #fff;
     border-right: 1px solid #e2e8f0;
     display: flex;
@@ -287,7 +285,8 @@
 
 .variable-item.selected {
     background: #eff6ff;
-    border-color: #3b82f6; /* 조금 더 부드러운 블루 */
+    border-color: #3b82f6;
+    /* 조금 더 부드러운 블루 */
 }
 
 .variable-item-header {
