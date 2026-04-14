@@ -9,6 +9,11 @@
     gap: 12px;
 }
 
+/* 3단계 스터브 그리드: 헤더 텍스트 윗부분 잘림 방지 (Kendo 기본 overflow 속성 해제) */
+.dp-grid-content-v2 .k-grid-header .k-column-title {
+    overflow: visible !important;
+}
+
 /* Compact Stepper for DataHeader */
 .dp-stepper-compact {
     display: flex;
@@ -762,7 +767,6 @@
 
 .dp-excel-grid-v2.k-grid .k-grid-header {
     background: #f8fafc;
-    border-top: 3px solid #065f46 !important;
     border-bottom: 1px solid #e2e8f0;
 }
 

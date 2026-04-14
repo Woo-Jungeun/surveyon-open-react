@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import { Save, ChevronRight, Check } from 'lucide-react';
+import { Save, ChevronRight, Check, RotateCcw } from 'lucide-react';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import { DpRequestPageApi } from './DpRequestPageApi';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -50,7 +50,7 @@ const DpRequestPage = () => {
     const steps = [
         { key: 'table', label: '설정', desc: '' },
         { key: 'banner', label: '배너', desc: '분석 테이블 상단에 기준이 되는 배너를 설정합니다.' },
-        { key: 'recoded', label: '스터브', desc: '' },
+        { key: 'recoded', label: '스터브', desc: 'DP 표 생성을 위한 recoded 메타데이터 설정. 이 화면에서 설정한 내용이 저장 시 실제 recoded 변수 및 필터로 생성됩니다.' },
         { key: 'summary', label: '요약표', desc: '' },
         { key: 'order', label: '표 순서', desc: '' },
     ];
@@ -183,16 +183,39 @@ const DpRequestPage = () => {
                 </div>
 
                 {/* 우측 액션 버튼 */}
-                <button
-                    className="dp-primary-btn"
-                    onClick={() => {
-                        if (currentStep < steps.length - 1) handleStepChange(currentStep + 1);
-                    }}
-                >
-                    <Save size={16} />
-                    <span>저장 및 다음 단계로</span>
-                    <ChevronRight size={16} />
-                </button>
+                <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                    {currentStep === 2 && (
+                        <button
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                background: '#fff', border: '1px solid #ef4444', color: '#ef4444',
+                                padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                                height: '36px'
+                            }}
+                            onClick={() => {
+                                modal.showConfirm('초기화', '설정을 초기화하시겠습니까?', () => {
+                                    if (step3Ref.current && step3Ref.current.reset) {
+                                        step3Ref.current.reset();
+                                    }
+                                });
+                            }}
+                        >
+                            <RotateCcw size={14} />
+                            <span>초기화</span>
+                        </button>
+                    )}
+                    <button
+                        className="dp-primary-btn"
+                        onClick={() => {
+                            if (currentStep < steps.length - 1) handleStepChange(currentStep + 1);
+                        }}
+                        style={{ height: '36px' }}
+                    >
+                        <Save size={16} />
+                        <span>저장 및 다음 단계로</span>
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
             </DataHeader>
 
             {/* 단계별 컨텐츠 영역 */}
