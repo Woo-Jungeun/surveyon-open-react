@@ -125,9 +125,18 @@ const DpRequestBannerStep = () => {
                 if (data.type === 'INTERNAL_ITEM') {
                     const item = next[data.gIdx][data.iIdx];
                     next[data.gIdx].splice(data.iIdx, 1);
-                    if (targetIdx === 'new') next.push([item]);
-                    else {
-                        if (!next[targetIdx].find(v => v.id === item.id) && next[targetIdx].length < 10) {
+                    if (targetIdx === 'new') {
+                        if (next.length >= 10) {
+                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                            return prev;
+                        }
+                        next.push([item]);
+                    } else {
+                        if (!next[targetIdx].find(v => v.id === item.id)) {
+                            if (next[targetIdx].length >= 3) {
+                                modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
+                                return prev;
+                            }
                             next[targetIdx].push(item);
                         } else if (data.gIdx === targetIdx) {
                             next[targetIdx].splice(data.iIdx, 0, item);
@@ -138,20 +147,35 @@ const DpRequestBannerStep = () => {
                 if (data.type === 'INTERNAL_GROUP') {
                     const group = next[data.gIdx];
                     next.splice(data.gIdx, 1);
-                    if (targetIdx === 'new') next.push(group);
-                    else next.splice(targetIdx, 0, group);
+                    if (targetIdx === 'new') {
+                        if (next.length >= 10) {
+                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                            return prev;
+                        }
+                        next.push(group);
+                    } else next.splice(targetIdx, 0, group);
                     return next;
                 }
                 if (data.type === 'EXTERNAL') {
                     const itemsToAdd = data.items;
                     if (targetIdx === 'new') {
-                        if (next.length < 10) next.push(...itemsToAdd.map(it => [it]));
+                        // 새로 추가되면서 10개를 넘는지 체크
+                        if (next.length + itemsToAdd.length > 10) {
+                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                            // 가능힌 부분까지만 추가하거나 아예 안하거나 결정 (여기서는 안전하게 경고 후 중단)
+                            return prev;
+                        }
+                        next.push(...itemsToAdd.map(it => [it]));
                     } else {
                         const unique = itemsToAdd.filter(it => !next[targetIdx].find(v => v.id === it.id));
-                        next[targetIdx] = [...next[targetIdx], ...unique].slice(0, 10);
+                        if (next[targetIdx].length + unique.length > 3) {
+                            modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
+                            return prev;
+                        }
+                        next[targetIdx] = [...next[targetIdx], ...unique];
                     }
                 }
-                return next.slice(0, 10);
+                return next;
             });
             setSelectedIds([]);
         } catch (err) { console.error(err); }
