@@ -258,9 +258,6 @@ const DpRequestBannerStep = () => {
                 <div className="dp-accordion-header" onClick={() => setIsWizardOpen(prev => !prev)}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>자동 배너 구성</span>
-                        {!isWizardOpen && colVars.length > 0 && (
-                            <span className="dp-badge-ongoing">{colVars.length}개 그룹 구성 중</span>
-                        )}
                     </div>
                     <ChevronDown size={16} />
                 </div>
