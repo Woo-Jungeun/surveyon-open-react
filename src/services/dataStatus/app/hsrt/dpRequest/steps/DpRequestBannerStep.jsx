@@ -82,7 +82,7 @@ const DpRequestBannerStep = () => {
     const [baseVariables, setBaseVariables] = useState([]);
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
-    const [isBannerSidebarOpen, setIsBannerSidebarOpen] = useState(true); 
+    const [isBannerSidebarOpen, setIsBannerSidebarOpen] = useState(true);
     const [wizardSearch, setWizardSearch] = useState('');
     const [bannerSearch, setBannerSearch] = useState('');
     const [colVars, setColVars] = useState([]);
@@ -317,12 +317,12 @@ const DpRequestBannerStep = () => {
                                 <div className="drop-zone-scroll-area custom-scrollbar"
                                     style={{
                                         flex: 1,
-                                        display: 'grid', 
-                                        gridTemplateColumns: 'repeat(5, 1fr)', 
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(5, 1fr)',
                                         gap: '12px',
                                         padding: '16px',
                                         background: '#eff6ff',
-                                        overflowY: 'auto', 
+                                        overflowY: 'auto',
                                         alignContent: 'start',
                                         position: 'relative'
                                     }}
@@ -388,7 +388,7 @@ const DpRequestBannerStep = () => {
                     )}
                     <div className="dp-sidebar custom-scrollbar">
                         <div className="dp-sidebar-title">
-                            배너 목록 ({filteredBanners.length})
+                            생성된 배너 목록 ({filteredBanners.length})
                         </div>
                         <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #e2e8f0', gap: '8px' }}>
                             <div className="dp-search-input-wrapper" style={{ flex: 1 }}>
