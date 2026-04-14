@@ -1,7 +1,12 @@
 import { useMutation } from "react-query";
 import api from "@/common/queries/Api.js";
+import { useContext } from "react";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 export function DpRequestPageApi() {
+
+    const loadingSpinner = useContext(loadingSpinnerContext);
+
     /** DP 의뢰서 - 배너 및 기본 정보 가져오기 */
     const getBannerDetail = useMutation(
         async (data) => await api.post(data, "/dp-request/banner/detail", "API_BASE_URL_DATASTATUS")
@@ -27,11 +32,25 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/dp-request/context", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 자동 배너 구성 - 배너 생성 API */
+    const generateBanner = useMutation(
+        async (data) => await api.post(data, "/dp-request/banner/generate", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: (vars) => {
+                loadingSpinner.show();
+            },
+            onSettled: () => {
+                loadingSpinner.hide();
+            }
+        }
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
         getTableRenderContext,
         saveTableSettings,
         getDpContext,
+        generateBanner,
     };
 }

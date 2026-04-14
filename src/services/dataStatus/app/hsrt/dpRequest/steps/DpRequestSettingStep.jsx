@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useSelector } from 'react-redux';
-import { 
-    AlertCircle, 
-    Settings, 
-    Palette, 
-    Layers, 
-    ChevronDown, 
-    Plus, 
+import {
+    AlertCircle,
+    Settings,
+    Palette,
+    Layers,
+    ChevronDown,
+    Plus,
     Trash2,
     Type,
     Layout,
@@ -18,7 +18,7 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
 const DpRequestSettingStep = () => {
     const auth = useSelector((store) => store.auth);
-    const { getTableRenderContext, saveTableSettings } = DpRequestPageApi();
+    const { getTableRenderContext, saveTableSettings, getBaseVariableList } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
 
     const [activeTab, setActiveTab] = useState(0); // 0: 분석, 1: 응답 묶기, 2: 디자인
@@ -128,7 +128,7 @@ const DpRequestSettingStep = () => {
                 group_presets: groupData,
                 stat_presets: []
             };
-            
+
             const result = await saveTableSettings.mutateAsync(payload);
             if (result?.message || result?.status === 'success') {
                 alert("설정이 저장되었습니다.");
@@ -162,9 +162,9 @@ const DpRequestSettingStep = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontWeight: 600, fontSize: '14px', color: '#1e293b' }}>기본 weight 변수</span>
-                    <span style={{ 
-                        backgroundColor: settings.weight_variable === '없음' ? '#ef4444' : '#10b981', 
-                        color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600 
+                    <span style={{
+                        backgroundColor: settings.weight_variable === '없음' ? '#ef4444' : '#10b981',
+                        color: 'white', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 600
                     }}>
                         {settings.weight_variable === '없음' ? '설정 안됨' : '설정됨'}
                     </span>
@@ -173,10 +173,10 @@ const DpRequestSettingStep = () => {
                     <Plus size={14} style={{ marginRight: '4px' }} /> 새 가중치 변수 생성
                 </button>
             </div>
-            
+
             <div className="dp-form-group" style={{ marginBottom: '12px' }}>
-                <select 
-                    className="dp-select" 
+                <select
+                    className="dp-select"
                     style={{ width: '100%', maxWidth: 'none', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#1e293b' }}
                     value={settings.weight_variable}
                     onChange={(e) => setSettings({ ...settings, weight_variable: e.target.value })}
@@ -205,9 +205,9 @@ const DpRequestSettingStep = () => {
                             <label>A. 기본 표시 여부</label>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 400, fontSize: '13px' }}>
-                                    <input 
-                                        type="checkbox" 
-                                        checked={settings.display.show_n} 
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.display.show_n}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, show_n: e.target.checked }
@@ -215,9 +215,9 @@ const DpRequestSettingStep = () => {
                                     /> 빈도(N) 기본 표시 (show_n)
                                 </label>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 400, fontSize: '13px' }}>
-                                    <input 
-                                        type="checkbox" 
-                                        checked={settings.display.show_percent} 
+                                    <input
+                                        type="checkbox"
+                                        checked={settings.display.show_percent}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, show_percent: e.target.checked }
@@ -231,9 +231,9 @@ const DpRequestSettingStep = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '4px' }}>
                                 <div className="dp-form-group">
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>비율 (%)</span>
-                                    <input 
-                                        type="number" 
-                                        value={settings.display.percent_digits} 
+                                    <input
+                                        type="number"
+                                        value={settings.display.percent_digits}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, percent_digits: parseInt(e.target.value) || 0 }
@@ -242,9 +242,9 @@ const DpRequestSettingStep = () => {
                                 </div>
                                 <div className="dp-form-group">
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>평균 (Mean)</span>
-                                    <input 
-                                        type="number" 
-                                        value={settings.display.mean_digits} 
+                                    <input
+                                        type="number"
+                                        value={settings.display.mean_digits}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, mean_digits: parseInt(e.target.value) || 0 }
@@ -253,9 +253,9 @@ const DpRequestSettingStep = () => {
                                 </div>
                                 <div className="dp-form-group">
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>표준편차 (Std)</span>
-                                    <input 
-                                        type="number" 
-                                        value={settings.display.std_digits} 
+                                    <input
+                                        type="number"
+                                        value={settings.display.std_digits}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, std_digits: parseInt(e.target.value) || 0 }
@@ -264,9 +264,9 @@ const DpRequestSettingStep = () => {
                                 </div>
                                 <div className="dp-form-group">
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>변량 (Var)</span>
-                                    <input 
-                                        type="number" 
-                                        value={settings.display.var_digits} 
+                                    <input
+                                        type="number"
+                                        value={settings.display.var_digits}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, var_digits: parseInt(e.target.value) || 0 }
@@ -275,9 +275,9 @@ const DpRequestSettingStep = () => {
                                 </div>
                                 <div className="dp-form-group">
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>중앙값 (Median)</span>
-                                    <input 
-                                        type="number" 
-                                        value={settings.display.median_digits} 
+                                    <input
+                                        type="number"
+                                        value={settings.display.median_digits}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, median_digits: parseInt(e.target.value) || 0 }
@@ -286,9 +286,9 @@ const DpRequestSettingStep = () => {
                                 </div>
                                 <div className="dp-form-group">
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>최소/최대 (Min/Max)</span>
-                                    <input 
-                                        type="number" 
-                                        value={settings.display.min_digits} 
+                                    <input
+                                        type="number"
+                                        value={settings.display.min_digits}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             display: { ...settings.display, min_digits: parseInt(e.target.value) || 0 }
@@ -315,9 +315,9 @@ const DpRequestSettingStep = () => {
                     <div className="dp-setting-grid">
                         <div className="dp-form-group">
                             <label>글꼴 (Font-Family)</label>
-                            <input 
-                                type="text" 
-                                value={settings.render.font_family} 
+                            <input
+                                type="text"
+                                value={settings.render.font_family}
                                 onChange={(e) => setSettings({
                                     ...settings,
                                     render: { ...settings.render, font_family: e.target.value }
@@ -334,9 +334,9 @@ const DpRequestSettingStep = () => {
                         </div>
                         <div className="dp-form-group">
                             <label>표 기본 글자 크기 (px)</label>
-                            <input 
-                                type="number" 
-                                value={settings.render.font_size} 
+                            <input
+                                type="number"
+                                value={settings.render.font_size}
                                 onChange={(e) => setSettings({
                                     ...settings,
                                     render: { ...settings.render, font_size: parseInt(e.target.value) || 0 }
@@ -361,7 +361,7 @@ const DpRequestSettingStep = () => {
                                 </table>
                             </div>
                         </div>
-                        
+
                         <div>
                             <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '12px', display: 'block' }}>
                                 2. 선택된 면에 적용할 선 스타일:
@@ -389,9 +389,9 @@ const DpRequestSettingStep = () => {
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>Primary (테마색/강조)</span>
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                         <div className="dp-color-preview" style={{ background: settings.render.theme_primary, width: '32px', height: '32px', borderRadius: '4px' }}></div>
-                                        <input 
-                                            type="text" 
-                                            value={settings.render.theme_primary} 
+                                        <input
+                                            type="text"
+                                            value={settings.render.theme_primary}
                                             onChange={(e) => setSettings({
                                                 ...settings,
                                                 render: { ...settings.render, theme_primary: e.target.value }
@@ -403,9 +403,9 @@ const DpRequestSettingStep = () => {
                                     <span style={{ fontSize: '12px', color: '#64748b' }}>Primary 영문자 색상 (헤더 텍스트)</span>
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                         <div className="dp-color-preview" style={{ background: settings.render.theme_primary_fg, width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                        <input 
-                                            type="text" 
-                                            value={settings.render.theme_primary_fg} 
+                                        <input
+                                            type="text"
+                                            value={settings.render.theme_primary_fg}
                                             onChange={(e) => setSettings({
                                                 ...settings,
                                                 render: { ...settings.render, theme_primary_fg: e.target.value }
@@ -437,9 +437,9 @@ const DpRequestSettingStep = () => {
                                 <span style={{ fontSize: '12px', color: '#64748b' }}>Background 1 (기본 배경)</span>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <div className="dp-color-preview" style={{ background: settings.render.theme_bg, width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                    <input 
-                                        type="text" 
-                                        value={settings.render.theme_bg} 
+                                    <input
+                                        type="text"
+                                        value={settings.render.theme_bg}
                                         onChange={(e) => setSettings({
                                             ...settings,
                                             render: { ...settings.render, theme_bg: e.target.value }
@@ -461,11 +461,11 @@ const DpRequestSettingStep = () => {
             <div className="dp-setting-card">
                 <div className="dp-setting-card-header">단일형 척도 설정</div>
                 <div style={{ height: '300px' }}>
-                    <KendoGridV2 
-                        data={scaleData} 
-                        reorderable 
-                        addable 
-                        deletable 
+                    <KendoGridV2
+                        data={scaleData}
+                        reorderable
+                        addable
+                        deletable
                         showNo
                         onDataChange={(newData) => setScaleData(newData)}
                     >
@@ -507,7 +507,7 @@ const DpRequestSettingStep = () => {
             <div className="dp-step-tabs">
                 <div style={{ display: 'flex', flex: 1, gap: '8px' }}>
                     {tabs.map((tab, idx) => (
-                        <div 
+                        <div
                             key={idx}
                             className={`dp-tab-item ${activeTab === idx ? 'active' : ''}`}
                             onClick={() => setActiveTab(idx)}

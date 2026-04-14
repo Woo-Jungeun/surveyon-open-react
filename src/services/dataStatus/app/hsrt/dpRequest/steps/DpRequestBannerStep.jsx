@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo, memo } from 'react';
 import { useSelector } from 'react-redux';
 import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
@@ -6,9 +6,51 @@ import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 
+// --- (성능 개선) 개별 아이템 메모이제이션 ---
+const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
+    <div
+        className={`variable-item ${isSelected ? 'selected' : ''}`}
+        draggable
+        onDragStart={(e) => onDragStart(e, v)}
+        onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
+    >
+        <div className="variable-item-header">
+            <div className="variable-item__name">{v.id}</div>
+            {v.type && <span className={`question-type-badge ${String(v.type).toLowerCase()}`}>{v.type}</span>}
+        </div>
+        <div className="variable-item__label">{v.label}</div>
+    </div>
+));
+
+// --- 배너명 입력창 섹션 ---
+const BannerNameSection = memo(({ onCreateBanner }) => {
+    const [localName, setLocalName] = useState('');
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>배너명</span>
+                <input
+                    type="text"
+                    placeholder="배너명을 입력하세요."
+                    value={localName}
+                    onChange={(e) => setLocalName(e.target.value)}
+                    style={{ width: '240px', padding: '4px 10px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '13px', background: '#fff', outline: 'none' }}
+                />
+            </div>
+            <button
+                className="dp-primary-btn"
+                onClick={() => onCreateBanner(localName)}
+                style={{ height: '30px', padding: '0 16px', fontSize: '12px', borderRadius: '4px', background: '#2563EB', fontWeight: 600 }}
+            >
+                배너 생성
+            </button>
+        </div>
+    );
+});
+
 const DpRequestBannerStep = () => {
     const auth = useSelector((store) => store.auth);
-    const { getBannerDetail, getBaseVariableList } = DpRequestPageApi();
+    const { getBannerDetail, getBaseVariableList, generateBanner } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -20,14 +62,15 @@ const DpRequestBannerStep = () => {
     const [wizardSearch, setWizardSearch] = useState('');
     const [colVars, setColVars] = useState([]);
     const [currentLabel, setCurrentLabel] = useState('');
-
     const [selectedIds, setSelectedIds] = useState([]);
 
-    const toggleSelection = (id) => {
+    // --- Interaction Logic ---
+    const toggleSelection = useCallback((id) => {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-    };
+    }, []);
 
-    const handleDragStart = (e, draggedVar) => {
+    // 외부 변수 드래그 시작
+    const handleDragStart = useCallback((e, draggedVar) => {
         let targets = [];
         if (selectedIds.includes(draggedVar.id)) {
             targets = baseVariables.filter(v => selectedIds.includes(v.id));
@@ -35,141 +78,150 @@ const DpRequestBannerStep = () => {
             targets = [draggedVar];
             setSelectedIds([draggedVar.id]);
         }
-        e.dataTransfer.setData('text/plain', JSON.stringify(targets));
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'EXTERNAL', items: targets }));
+    }, [selectedIds, baseVariables]);
+
+    // 내부 문항 드래그 시작
+    const handleInternalItemDragStart = (e, gIdx, iIdx) => {
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_ITEM', gIdx, iIdx }));
     };
 
-    const handleDragOver = (e) => e.preventDefault();
+    // 내부 그룹 드래그 시작
+    const handleInternalGroupDragStart = (e, gIdx) => {
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_GROUP', gIdx }));
+    };
 
-    const handleDrop = (e, index) => {
+    const handleDrop = (e, targetIdx) => {
         e.preventDefault();
         try {
-            const dataStr = e.dataTransfer.getData('text/plain');
-            if (!dataStr) return;
-            const items = JSON.parse(dataStr);
-            const itemsToAdd = Array.isArray(items) ? items : [items];
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            if (!data) return;
 
-            if (itemsToAdd.length > 0) {
-                if (index === 'new') {
-                    const currentCount = colVars.length;
-                    const availableSpace = 10 - currentCount;
+            setColVars(prev => {
+                let next = [...prev.map(g => [...g])];
 
-                    if (availableSpace <= 0) {
-                        modal.showAlert('알림', '그룹은 최대 10개까지만 생성할 수 있습니다.');
-                        setSelectedIds([]);
-                        return;
+                // 1. 내부 문항 이동
+                if (data.type === 'INTERNAL_ITEM') {
+                    const item = next[data.gIdx][data.iIdx];
+                    next[data.gIdx].splice(data.iIdx, 1); // 원래 위치 제거
+
+                    if (targetIdx === 'new') {
+                        next.push([item]);
+                    } else {
+                        // 중복 체크 및 추가 (최대 3개)
+                        if (!next[targetIdx].find(v => v.id === item.id) && next[targetIdx].length < 3) {
+                            next[targetIdx].push(item);
+                        } else if (data.gIdx === targetIdx) {
+                            // 같은 그룹 내 이동인 경우 다시 넣어줌 (실제론 순서 변경 로직 필요하나 여기선 보존)
+                            next[targetIdx].splice(data.iIdx, 0, item);
+                        }
                     }
+                    return next.filter(g => g.length > 0);
+                }
 
-                    let targets = itemsToAdd;
-                    let isCapped = false;
-                    if (itemsToAdd.length > availableSpace) {
-                        targets = itemsToAdd.slice(0, availableSpace);
-                        isCapped = true;
+                // 2. 내부 그룹 순서 변경
+                if (data.type === 'INTERNAL_GROUP') {
+                    const group = next[data.gIdx];
+                    next.splice(data.gIdx, 1);
+                    if (targetIdx === 'new') {
+                        next.push(group);
+                    } else {
+                        next.splice(targetIdx, 0, group);
                     }
+                    return next;
+                }
 
-                    setColVars(prev => [...prev, ...targets.map(it => [it])]);
-                    if (isCapped) {
-                        modal.showAlert('알림', `최대 그룹 개수(10개)를 초과하여 ${targets.length}개 그룹만 생성되었습니다.`);
-                    }
-                } else {
-                    const currentGroup = colVars[index];
-                    const uniqueItems = itemsToAdd.filter(it => !currentGroup.find(v => v.id === it.id));
-                    const availableInGroup = 3 - currentGroup.length;
-
-                    if (uniqueItems.length === 0) {
-                        setSelectedIds([]);
-                        return;
-                    }
-
-                    if (availableInGroup <= 0) {
-                        modal.showAlert('알림', '한 그룹에는 최대 3개의 문항만 담을 수 있습니다.');
-                        setSelectedIds([]);
-                        return;
-                    }
-
-                    let targets = uniqueItems;
-                    let isCapped = false;
-                    if (uniqueItems.length > availableInGroup) {
-                        targets = uniqueItems.slice(0, availableInGroup);
-                        isCapped = true;
-                    }
-
-                    setColVars(prev => {
-                        const next = prev.map((g, i) => i === index ? [...g, ...targets] : g);
-                        return next;
-                    });
-
-                    if (isCapped) {
-                        modal.showAlert('알림', `한 그룹 최대 개수(3개)를 초과하여 ${targets.length}개 문항만 추가되었습니다.`);
+                // 3. 외부 변수 추가
+                if (data.type === 'EXTERNAL') {
+                    const itemsToAdd = data.items;
+                    if (targetIdx === 'new') {
+                        if (next.length < 10) next.push(...itemsToAdd.map(it => [it]));
+                    } else {
+                        const unique = itemsToAdd.filter(it => !next[targetIdx].find(v => v.id === it.id));
+                        next[targetIdx] = [...next[targetIdx], ...unique].slice(0, 3);
                     }
                 }
-            }
+
+                return next.slice(0, 10);
+            });
             setSelectedIds([]);
-        } catch (err) {
-            console.error('Drop error', err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const removeVar = (varId, groupIndex) => {
         setColVars(prev => {
             const next = prev.map(g => [...g]);
             next[groupIndex] = next[groupIndex].filter(v => v.id !== varId);
-            if (next[groupIndex].length === 0) next.splice(groupIndex, 1);
-            return next;
+            return next.filter(g => g.length > 0);
         });
     };
 
-    const updateBannerInfo = (newInfo) => {
-        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo } : b));
-    };
+    // --- 데이터 로직 ---
+    const fetchBannerData = async (isFresh = false) => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) return;
+        try {
+            loadingSpinner.show();
+            const result = await getBannerDetail.mutateAsync({ pageid: pageId, user: auth.user.userId });
+            if (result?.success === '777' && result.resultjson) {
+                if (result.resultjson.base_variables) {
+                    const baseVars = result.resultjson.base_variables;
+                    setBaseVariables(Array.isArray(baseVars) ? baseVars : Object.values(baseVars));
+                }
+                if (result.resultjson.recoded_variables) {
+                    const raw = result.resultjson.recoded_variables;
+                    const recodes = Array.isArray(raw) ? raw : Object.values(raw);
+                    const formatted = recodes.map((v, i) => ({
+                        id: v.id || `var_${i}`,
+                        label: v.name || v.label,
+                        subId: v.id || `banner_0${i + 1}`,
+                        info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
+                    }));
+                    setBanners(formatted);
 
-    const handleRowClick = (e) => {
-        const currentBanner = banners.find(b => b.id === selectedBanner);
-        if (!currentBanner) return;
-        updateBannerInfo((currentBanner.info || []).map(item => ({ ...item, inEdit: item === e.dataItem })));
-    };
-
-    const exitEditMode = () => {
-        const currentBanner = banners.find(b => b.id === selectedBanner);
-        if (!currentBanner) return;
-        updateBannerInfo((currentBanner.info || []).map(item => ({ ...item, inEdit: false })));
-    };
-
-    useEffect(() => {
-        const fetchBannerData = async () => {
-            const pageId = sessionStorage.getItem('pageId');
-            if (!pageId || !auth?.user?.userId) return;
-            try {
-                loadingSpinner.show();
-                const result = await getBannerDetail.mutateAsync({ pageid: pageId, user: auth.user.userId });
-                if (result?.success === '777' && result.resultjson) {
-                    if (result.resultjson.base_variables) {
-                        const baseVars = result.resultjson.base_variables;
-                        setBaseVariables(Array.isArray(baseVars) ? baseVars : Object.values(baseVars));
-                    }
-                    if (result.resultjson.recoded_variables) {
-                        const raw = result.resultjson.recoded_variables;
-                        const recodes = Array.isArray(raw) ? raw : Object.values(raw);
-                        setBanners(recodes.map((v, i) => ({
-                            id: v.id || `var_${i}`,
-                            label: v.name || v.label,
-                            subId: v.id || `banner_0${i + 1}`,
-                            info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
-                        })));
-                        if (recodes.length > 0 && !selectedBanner) {
-                            const first = recodes[0];
-                            setSelectedBanner(first.id || 'var_0');
-                            setCurrentLabel(first.name || first.label || '');
+                    if (formatted.length > 0) {
+                        const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
+                        if (isFresh || !selectedBanner) {
+                            setSelectedBanner(target.id);
+                            setCurrentLabel(target.label);
                         }
                     }
                 }
-            } catch (error) {
-                console.error(error);
-            } finally {
-                loadingSpinner.hide();
             }
-        };
-        fetchBannerData();
-    }, [auth?.user?.userId]);
+        } catch (error) { console.error(error); }
+        finally { loadingSpinner.hide(); }
+    };
+
+    const handleCreateBanner = async (name) => {
+        if (!name?.trim()) return modal.showAlert('알림', '배너명을 입력해 주세요.');
+        if (colVars.length === 0) return modal.showAlert('알림', '문항 그룹을 구성해 주세요.');
+        const pageId = sessionStorage.getItem('pageId');
+        const formula = colVars.map(group => group.map(v => v.id).join('*')).join('+');
+        try {
+            loadingSpinner.show();
+            const result = await generateBanner.mutateAsync({ pageid: pageId, formula, label: name, user: auth?.user?.userId });
+            if (result?.success === "777") {
+                await fetchBannerData(true);
+                setColVars([]);
+                setIsWizardOpen(false);
+                modal.showAlert('알림', '배너가 성공적으로 생성되었습니다.');
+            }
+        } catch (error) { console.error(error); }
+        finally { loadingSpinner.hide(); }
+    };
+
+    const updateBannerInfo = useCallback((newInfo) => {
+        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo } : b));
+    }, [selectedBanner]);
+
+    const filteredVariables = useMemo(() => {
+        const search = wizardSearch.toLowerCase();
+        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v =>
+            (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search)
+        );
+    }, [baseVariables, wizardSearch]);
+
+    useEffect(() => { fetchBannerData(); }, [auth?.user?.userId]);
 
     useEffect(() => {
         const fetchBaseVariables = async () => {
@@ -177,35 +229,19 @@ const DpRequestBannerStep = () => {
             if (!pageId || !auth?.user?.userId) return;
             try {
                 const result = await getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
-                if (result?.success === '777' && result.resultjson) {
-                    setBaseVariables(Object.values(result.resultjson));
-                }
+                if (result?.success === '777' && result.resultjson) setBaseVariables(Object.values(result.resultjson));
             } catch (error) { }
         };
         fetchBaseVariables();
     }, [auth?.user?.userId]);
 
     return (
-        <div className="dp-request-container" onClick={exitEditMode}>
+        <div className="dp-request-container" onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
             <div className="dp-wizard-accordion" onClick={(e) => { e.stopPropagation(); setSelectedIds([]); }}>
                 <div className="dp-accordion-header" onClick={() => setIsWizardOpen(prev => !prev)}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '32px', flex: 1 }}>
                         <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>자동 배너 구성</span>
-                        {isWizardOpen && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', animation: 'fadeIn 0.2s ease-out' }} onClick={(e) => e.stopPropagation()}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748b' }}>배너명</span>
-                                    <input
-                                        type="text"
-                                        placeholder="배너명을 입력하세요."
-                                        style={{ width: '240px', padding: '4px 10px', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '13px', background: '#fff', outline: 'none' }}
-                                    />
-                                </div>
-                                <button className="dp-primary-btn" style={{ height: '30px', padding: '0 16px', fontSize: '12px', borderRadius: '4px', background: '#2563EB', fontWeight: 600 }}>
-                                    배너 생성
-                                </button>
-                            </div>
-                        )}
+                        {isWizardOpen && <BannerNameSection onCreateBanner={handleCreateBanner} />}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#94a3b8' }}>
                         <ChevronDown size={18} style={{ transform: isWizardOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: '0.3s' }} />
@@ -215,6 +251,7 @@ const DpRequestBannerStep = () => {
                 {isWizardOpen && (
                     <div className="dp-wizard-body">
                         <div className="dp-wizard-setup" style={{ display: 'flex', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                            {/* 좌측 변수 패널 */}
                             <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                                 <div className="variable-panel-header" style={{ padding: '10px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     {isVariablePanelOpen && (
@@ -234,40 +271,46 @@ const DpRequestBannerStep = () => {
                                         {isVariablePanelOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
                                     </button>
                                 </div>
+
                                 {isVariablePanelOpen && (
                                     <div className="variable-list" style={{ flex: 1, overflowY: 'auto', padding: '4px' }}>
-                                        {(Array.isArray(baseVariables) ? baseVariables : [])
-                                            .filter(v => (v.label || '').toLowerCase().includes(wizardSearch.toLowerCase()) || (v.id || '').toLowerCase().includes(wizardSearch.toLowerCase()))
-                                            .map((v, idx) => (
-                                                <div key={`${v.id}-${idx}`} className={`variable-item ${selectedIds.includes(v.id) ? 'selected' : ''}`} draggable onDragStart={(e) => handleDragStart(e, v)} onClick={(e) => { e.stopPropagation(); toggleSelection(v.id); }}>
-                                                    <div className="variable-item-header">
-                                                        <div className="variable-item__name">{v.id}</div>
-                                                        {v.type && <span className={`question-type-badge ${String(v.type).toLowerCase()}`}>{v.type}</span>}
-                                                    </div>
-                                                    <div className="variable-item__label">{v.label}</div>
-                                                </div>
-                                            ))}
+                                        {filteredVariables.map(v => (
+                                            <VariableItem
+                                                key={v.id}
+                                                v={v}
+                                                isSelected={selectedIds.includes(v.id)}
+                                                onDragStart={handleDragStart}
+                                                onClick={toggleSelection}
+                                            />
+                                        ))}
                                     </div>
                                 )}
                             </div>
-                            <div className="drop-zones-container" style={{ flex: 1, background: '#eff6ff', display: 'flex', flexDirection: 'column' }}>
+
+                            {/* 우측 드롭존 */}
+                            <div className="drop-zones-container" style={{ flex: 1, background: 'rgb(239, 246, 255)', display: 'flex', flexDirection: 'column' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid #e2e8f0' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>가로축 (열)</span>
                                     <button onClick={() => setColVars([])} className="axis-clear-btn"><X size={12} /></button>
                                 </div>
-                                <div className="drop-zone-area" style={{ flex: 1, display: 'flex', gap: '10px', padding: '16px', overflowX: 'auto', minHeight: 0 }} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, 'new')}>
+                                <div className="drop-zone-area" style={{ flex: 1, display: 'flex', gap: '10px', padding: '16px', overflowX: 'auto', minHeight: 0 }} onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, 'new')}>
                                     {colVars.map((group, groupIndex) => (
-                                        <div key={`group-${groupIndex}`} className="col-group" onDragOver={handleDragOver} onDrop={(e) => { e.stopPropagation(); handleDrop(e, groupIndex); }}>
+                                        <div key={groupIndex} className="col-group" draggable onDragStart={(e) => handleInternalGroupDragStart(e, groupIndex)} onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.stopPropagation(); handleDrop(e, groupIndex); }}>
                                             <div className="group-drag-handle"><GripVertical size={16} /></div>
                                             <div className="col-group-items">
                                                 {group.map((v, itemIndex) => (
-                                                    <div key={`${v.id}-${itemIndex}`} className="dropped-tag grouped">
+                                                    <div
+                                                        key={`${v.id}-${itemIndex}`}
+                                                        className="dropped-tag grouped"
+                                                        draggable
+                                                        onDragStart={(e) => { e.stopPropagation(); handleInternalItemDragStart(e, groupIndex, itemIndex); }}
+                                                    >
                                                         <div className="item-drag-handle"><GripVertical size={10} /></div>
                                                         <span className="tag-text">{v.id}</span>
-                                                        <X size={13} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, groupIndex); }} />
+                                                        <X size={13} className="remove" onClick={() => removeVar(v.id, groupIndex)} />
                                                     </div>
                                                 ))}
-                                                {Array.from({ length: 3 - group.length }).map((_, i) => <div key={`empty-${i}`} className="empty-slot" />)}
+                                                {Array.from({ length: 3 - group.length }).map((_, i) => <div key={i} className="empty-slot" />)}
                                             </div>
                                         </div>
                                     ))}
@@ -300,6 +343,7 @@ const DpRequestBannerStep = () => {
                         ))}
                     </div>
                 </div>
+
                 <div className="dp-content">
                     <div className="dp-content-header">
                         <div className="dp-content-label-edit">
@@ -311,7 +355,13 @@ const DpRequestBannerStep = () => {
                         </div>
                     </div>
                     <div className="dp-table-container">
-                        <KendoGridV2 data={banners.find(b => b.id === selectedBanner)?.info || []} reorderable addable showNo deletable editField="inEdit" onDataChange={updateBannerInfo} onRowClick={handleRowClick} newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}>
+                        <KendoGridV2
+                            data={banners.find(b => b.id === selectedBanner)?.info || []}
+                            reorderable addable showNo deletable editField="inEdit"
+                            onDataChange={updateBannerInfo}
+                            onRowClick={(e) => updateBannerInfo(banners.find(b => b.id === selectedBanner).info.map(it => ({ ...it, inEdit: it === e.dataItem })))}
+                            newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
+                        >
                             <Column field="label3" title="라벨3" width="150px" />
                             <Column field="label2" title="라벨2" width="150px" />
                             <Column field="label" title="라벨" />
