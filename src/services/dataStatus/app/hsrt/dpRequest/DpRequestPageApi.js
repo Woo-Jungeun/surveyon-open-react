@@ -50,6 +50,11 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** DP 의뢰서 - Recoded (스터브) 오버뷰 조회 */
+    const getRecodedOverview = useMutation(
+        async (data) => await api.post(data, "/dp-request/recoded/overview", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
@@ -58,5 +63,6 @@ export function DpRequestPageApi() {
         getDpContext,
         generateBanner,
         saveBannerDetail,
+        getRecodedOverview,
     };
 }

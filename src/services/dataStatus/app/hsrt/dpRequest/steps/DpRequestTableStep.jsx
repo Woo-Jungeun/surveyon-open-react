@@ -12,28 +12,14 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
-    const { getBannerDetail } = DpRequestPageApi();
+    const { getRecodedOverview } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
-
-    // --- 초기 데이터 상태 정의 ---
-    const initialStubs = [
-        { id: '1', name: '구분', type: 'OPTION', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-        { id: 'SQ0', name: 'SQ0. 참여동의', type: 'OPTION', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-        { id: 'SQ1', name: 'SQ1. 직업군', type: 'MULTI', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-        { id: 'SQ2', name: 'SQ2. 시장조사참여', type: 'OPTION', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-        { id: 'SQ3', name: 'SQ3. 성별', type: 'OPTION', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-        { id: 'SQ4', name: 'SQ4. 연령', type: 'DOUBLE', condition: '', banner: 'banner_01', groupPreset: '', statSetting: 'mean', scalePreset: '', rankPreset: '' },
-        { id: 'SQ4-1', name: 'SQ4-1. 연령코드', type: 'OPTION', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-        { id: 'SQ5', name: 'SQ5. 거주지역', type: 'OPTION', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-        { id: 'SQ6', name: 'SQ6. 차량구매여부', type: 'OPTION', condition: '', banner: 'banner_01', groupPreset: '', statSetting: '통계 설정 열기', scalePreset: '', rankPreset: '' },
-    ];
+    const [stubs, setStubs] = useState([]);
 
     // --- 히스토리 관리 (Undo/Redo) ---
     const history = useUpdateHistory('dp-table');
     const isHistoryAction = useRef(false);
-
-    const [stubs, setStubs] = useState(initialStubs);
 
     // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
     useImperativeHandle(ref, () => ({
@@ -41,15 +27,62 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             return await handleSave();
         },
         reset: () => {
-            setStubs([...initialStubs]);
-            history.reset(initialStubs); // Undo 배열도 함께 초기화
-            if (onUnsavedChange) onUnsavedChange(true); // 변경됨 감지
+            fetchOverview(); // 초기화 시 다시 불러옴
         }
     }));
 
-    // 초기 마운트 시 히스토리 기준점 설정
+    // 오버뷰 데이터 로드 (API)
+    const fetchOverview = useCallback(async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId) return;
+
+        try {
+            loadingSpinner.show();
+            const payload = {
+                user: auth?.user?.userId,
+                pageid: pageId,
+            };
+            const response = await getRecodedOverview.mutateAsync(payload);
+            
+            // 유연한 응답 경로 탐색 (Axios 래퍼, resultjson 분기 완벽 대비)
+            const rawData = response?.data || response || {};
+            const resultData = rawData.resultjson || rawData;
+            
+            // 1. 이미 저장된 Recoded 정보가 있으면 우선순위
+            let items = resultData.dp_request_recoded_items || [];
+            
+            // 2. 만약 저장된 내용이 하나도 없으면 (최초 의뢰 작성 시) base_variables를 가공하여 초기 구성
+            if (items.length === 0 && resultData.base_variables) {
+                items = Object.values(resultData.base_variables).map((bv, index) => ({
+                    id: bv.id,
+                    name: bv.label || bv.id,
+                    type: bv.type?.toUpperCase() || 'OPTION',
+                    condition: '',
+                    banner: 'banner_01', 
+                    groupPreset: '',
+                    statSetting: '통계 설정 열기',
+                    scalePreset: '',
+                    rankPreset: ''
+                }));
+            }
+
+            console.log("Parsed Overview Items:", items, "from result:", resultData);
+
+            setStubs(items);
+            history.reset(items); // 히스토리 기준점 재설정
+            if (onUnsavedChange) onUnsavedChange(false);
+        } catch (err) {
+            console.error("fetchOverview Error:", err);
+            modal.showAlert('오류', '스터브 데이터를 불러오는 데 실패했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
+    }, [auth?.user?.userId, getRecodedOverview, history, loadingSpinner, modal, onUnsavedChange]);
+
+    // 초기 마운트 시 데이터 로컬
     useEffect(() => {
-        history.reset(stubs);
+        fetchOverview();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // 필터링된 데이터
@@ -146,7 +179,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         // 전달 받은 공통 문항 유형 (color) 로직 적용
         let typeClass = 'dummy'; // 기본값
         const rawType = val.toLowerCase();
-        
+
         if (rawType === 'single' || rawType === 'option') {
             typeClass = 'single';
         } else if (rawType === 'multi') {
@@ -201,23 +234,28 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                         전체 <span style={{ color: '#2563eb' }}>{filteredStubs.length}</span>건
                     </div>
                 </div>
-                <div className="dp-grid-content-v2" style={{ flex: 1 }}>
-                    <KendoGridV2
-                        data={filteredStubs}
-                        reorderable={false}
-                        showNo
-                        onDataChange={handleDataChange}
-                    >
-                        <Column field="id" title="ID" width="100px" editable={false} headerClassName="k-text-center" />
-                        <Column field="name" title="라벨" width="300px" headerClassName="k-text-center" />
-                        <Column field="type" title="유형" width="100px" editable={false} cell={TypeCell} headerClassName="k-text-center" />
-                        <Column field="condition" title="조건" width="150px" headerClassName="k-text-center" />
-                        <Column field="banner" title="배너(x_info)" width="150px" editable={false} headerClassName="k-text-center" />
-                        <Column field="groupPreset" title="그룹 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
-                        <Column field="statSetting" title="통계 설정" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
-                        <Column field="scalePreset" title="척도 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
-                        <Column field="rankPreset" title="순위 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
-                    </KendoGridV2>
+                <div className="dp-grid-content-v2" style={{ flex: 1, position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
+                        <KendoGridV2
+                            data={filteredStubs}
+                            reorderable={false}
+                            showNo={true}
+                            onDataChange={handleDataChange}
+                            style={{ height: '100%', border: 'none' }}
+                            scrollable="virtual"
+                            rowHeight={28}
+                        >
+                            <Column field="id" title="ID" width="100px" editable={false} headerClassName="k-text-center" />
+                            <Column field="name" title="라벨" width="300px" headerClassName="k-text-center" />
+                            <Column field="type" title="유형" width="100px" editable={false} cell={TypeCell} headerClassName="k-text-center" />
+                            <Column field="condition" title="조건" width="150px" headerClassName="k-text-center" />
+                            <Column field="banner" title="배너(x_info)" width="150px" editable={false} headerClassName="k-text-center" />
+                            <Column field="groupPreset" title="그룹 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
+                            <Column field="statSetting" title="통계 설정" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
+                            <Column field="scalePreset" title="척도 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
+                            <Column field="rankPreset" title="순위 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
+                        </KendoGridV2>
+                    </div>
                 </div>
             </div>
         </div>
