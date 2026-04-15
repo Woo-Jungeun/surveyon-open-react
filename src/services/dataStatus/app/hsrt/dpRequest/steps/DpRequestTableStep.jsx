@@ -264,6 +264,50 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [activePresetId, setActivePresetId] = useState(null);
 
     const history = useUpdateHistory('dp-table');
+    const isHistoryAction = useRef(false);
+
+    // 키보드 이벤트 (Undo/Redo)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key.toLowerCase() === 'z') {
+                    if (e.shiftKey) { // Redo (Ctrl+Shift+Z)
+                        const redoData = history.redo();
+                        if (redoData) {
+                            isHistoryAction.current = true;
+                            setStubs([...redoData]);
+                        }
+                    } else { // Undo (Ctrl+Z)
+                        const undoData = history.undo();
+                        if (undoData) {
+                            isHistoryAction.current = true;
+                            setStubs([...undoData]);
+                        }
+                    }
+                } else if (e.key.toLowerCase() === 'y') { // Redo (Ctrl+Y)
+                    const redoData = history.redo();
+                    if (redoData) {
+                        isHistoryAction.current = true;
+                        setStubs([...redoData]);
+                    }
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [history]);
+
+    // 데이터 변경 감지 및 히스토리 커밋
+    useEffect(() => {
+        if (isHistoryAction.current) {
+            isHistoryAction.current = false;
+            return;
+        }
+        if (stubs.length > 0) {
+            history.commit(stubs);
+        }
+    }, [stubs, history]);
 
     useImperativeHandle(ref, () => ({
         save: async () => await handleSave(),
