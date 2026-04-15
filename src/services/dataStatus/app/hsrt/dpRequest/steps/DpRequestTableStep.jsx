@@ -1,259 +1,338 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Search, ChevronDown, RotateCcw, ArrowRight } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
-import { useRef } from 'react';
 
+// --- 상수 및 유틸리티 ---
+const STAT_OPTIONS = [
+    { id: 'mean', label: '평균 (mean)' },
+    { id: 'std', label: '표준편차 (std)' },
+    { id: 'mode', label: '최빈값 (mode)' },
+    { id: 'median', label: '중앙값 (median)' },
+];
+
+const getQuestionTypeInfo = (type) => {
+    const rawType = type?.toLowerCase() || '';
+    let color = 'dummy';
+    let displayType = type;
+
+    if (rawType === 'single') { color = 'single'; }
+    else if (rawType === 'multi') { color = 'multi'; }
+    else if (rawType === 'rank') { color = 'rank'; }
+    else if (rawType === 'minrank') { color = 'minrank'; }
+    else if (rawType === 'maxrank') { color = 'maxrank'; }
+    else if (rawType === 'scale') { color = 'scale'; }
+    else if (rawType === 'dummy') { color = 'dummy'; }
+    else if (rawType === 'custom') { color = 'custom'; }
+    else if (rawType.includes('문자')) { color = 'open-text'; displayType = 'open(문자)'; }
+    else if (rawType.includes('숫자')) { color = 'open-num'; displayType = 'open(숫자)'; }
+    else if (rawType.includes('open')) { color = 'open-text'; displayType = 'open'; }
+
+    return { color, displayType };
+};
+
+// --- 통계 설정 다중선택 드롭다운 (FrequencyAnalysisPage의 custom-filter-wrapper 방식 적용) ---
+// wrapper ref가 trigger + menu를 모두 감싸므로, 메뉴 항목 클릭 시 "외부 클릭"으로 오인하지 않음
+const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenChange, onToggle }) => {
+    const selected = Array.isArray(selectedValues)
+        ? selectedValues
+        : (selectedValues ? String(selectedValues).split(',').map(s => s.trim()).filter(Boolean) : []);
+
+    const wrapperRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleClickOutside = (event) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                onOpenChange(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen, onOpenChange]);
+
+    const toggleOption = (id) => {
+        const next = selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id];
+        onToggle(dataItem, 'stat_summary', next.join(','));
+    };
+
+    const displayText = selected.length === 0
+        ? <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>
+        : <span style={{ color: '#1e293b' }}>{selected.join(', ')}</span>;
+
+    return (
+        // wrapperRef가 trigger + menu를 모두 감쌈 → mousedown이 항상 "내부"로 인식됨
+        <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
+            <div
+                className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
+                onClick={() => onOpenChange(isOpen ? null : dataItem.source_var_id)}
+                style={{ height: '22px', padding: '0 6px', fontSize: '13px', width: '100%', borderRadius: '2px' }}
+            >
+                <span className="trigger-text" style={{ fontSize: '13px' }}>{displayText}</span>
+                <ChevronDown size={12} className="trigger-icon" />
+            </div>
+
+            {/* 메뉴가 portal 없이 같은 wrapper안에 직접 있어서 mousedown 외부 감지가 정확함 */}
+            {isOpen && (
+                <div className="custom-filter-menu" style={{ minWidth: '180px', zIndex: 10001 }}>
+                    {STAT_OPTIONS.map(opt => {
+                        const isChecked = selected.includes(opt.id);
+                        return (
+                            <div
+                                key={opt.id}
+                                className="custom-filter-item"
+                                onClick={(e) => { e.stopPropagation(); toggleOption(opt.id); }}
+                            >
+                                <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
+                                    {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
+                                </div>
+                                <span className="filter-text">{opt.label}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+});
+
+// --- 공통 컴포넌트: 프리셋 드롭다운 셀 (단일 선택, custom-filter-wrapper 방식) ---
+const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, activeId, onOpenChange = () => {} }) => {
+    const val = dataItem[field];
+    const isOpen = activeId === `${field}-${dataItem.source_var_id}`;
+    const wrapperRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) return;
+        const handleClickOutside = (event) => {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+                onOpenChange(null);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen, onOpenChange]);
+
+    const options = useMemo(() => presets.map(p => {
+        const text = typeof p === 'object' ? (p.label || p.name || p.id || 'Unknown') : p;
+        const id = typeof p === 'object' ? (p.id || p.value || text) : p;
+        return { text: String(text), id: String(id) };
+    }), [presets]);
+
+    const selectedOption = options.find(o => o.id === String(val) || o.text === String(val));
+
+    const handleSelect = (optionId) => {
+        onChange(dataItem, field, optionId);
+        onOpenChange(null); // 단일 선택 → 선택 즉시 닫기
+    };
+
+    const displayText = selectedOption
+        ? <span style={{ color: '#1e293b', fontSize: '13px' }}>{selectedOption.text}</span>
+        : <span style={{ color: '#94a3b8', fontSize: '13px' }}>선택 (미설정)</span>;
+
+    return (
+        <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
+            <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
+                <div
+                    className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
+                    onClick={() => onOpenChange(isOpen ? null : `${field}-${dataItem.source_var_id}`)}
+                    style={{ height: '22px', padding: '0 6px', fontSize: '13px', width: '100%', borderRadius: '2px' }}
+                >
+                    <span className="trigger-text" style={{ fontSize: '13px' }}>{displayText}</span>
+                    <ChevronDown size={12} className="trigger-icon" />
+                </div>
+
+                {isOpen && options.length > 0 && (
+                    <div className="custom-filter-menu" style={{ width: '100%', zIndex: 10001 }}>
+                        {options.map(opt => {
+                            const isSelected = opt.id === String(val) || opt.text === String(val);
+                            return (
+                                <div
+                                    key={opt.id}
+                                    className="custom-filter-item"
+                                    onClick={(e) => { e.stopPropagation(); handleSelect(opt.id); }}
+                                    style={{ background: isSelected ? '#eff6ff' : 'transparent' }}
+                                >
+                                    <div className={`checkbox-custom ${isSelected ? 'checked' : ''}`}>
+                                        {isSelected && <Check size={12} color="#fff" strokeWidth={3} />}
+                                    </div>
+                                    <span className="filter-text" style={{ fontSize: '13px', fontWeight: isSelected ? 700 : 400, color: isSelected ? '#2563eb' : '#1e293b', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.4' }}>
+                                        {opt.text}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        </td>
+    );
+});
+
+// --- 메인 컴포넌트 ---
 const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
-    const auth = useSelector((store) => store.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const { getRecodedOverview } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
+    const [scalePresets, setScalePresets] = useState([]);
+    const [rankPresets, setRankPresets] = useState([]);
+    const [activeStatRowId, setActiveStatRowId] = useState(null);
+    const [activePresetId, setActivePresetId] = useState(null);
 
-    // --- 히스토리 관리 (Undo/Redo) ---
     const history = useUpdateHistory('dp-table');
-    const isHistoryAction = useRef(false);
 
-    // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
     useImperativeHandle(ref, () => ({
-        save: async () => {
-            return await handleSave();
-        },
-        reset: () => {
-            fetchOverview(); // 초기화 시 다시 불러옴
-        }
+        save: async () => await handleSave(),
+        reset: () => fetchOverview()
     }));
 
-    // 오버뷰 데이터 로드 (API)
     const fetchOverview = useCallback(async () => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId) return;
-
         try {
             loadingSpinner.show();
-            const payload = {
-                user: auth?.user?.userId,
-                pageid: pageId,
-            };
+            const payload = { user: "sbbok", pageid: "446bd14c-d053-47c8-bf01-59384cb37746" };
             const response = await getRecodedOverview.mutateAsync(payload);
-            
-            // 유연한 응답 경로 탐색 (Axios 래퍼, resultjson 분기 완벽 대비)
-            const rawData = response?.data || response || {};
-            const resultData = rawData.resultjson || rawData;
-            
-            // 1. 이미 저장된 Recoded 정보가 있으면 우선순위
-            let items = resultData.dp_request_recoded_items || [];
-            
-            // 2. 만약 저장된 내용이 하나도 없으면 (최초 의뢰 작성 시) base_variables를 가공하여 초기 구성
-            if (items.length === 0 && resultData.base_variables) {
-                items = Object.values(resultData.base_variables).map((bv, index) => ({
-                    id: bv.id,
-                    name: bv.label || bv.id,
-                    type: bv.type?.toUpperCase() || 'OPTION',
-                    condition: '',
-                    banner: 'banner_01', 
-                    groupPreset: '',
-                    statSetting: '통계 설정 열기',
-                    scalePreset: '',
-                    rankPreset: ''
-                }));
-            }
+            const resultData = response?.data?.resultjson || response?.resultjson || response || {};
 
-            console.log("Parsed Overview Items:", items, "from result:", resultData);
+            const updatePresets = (data, setter) => {
+                setter(Array.isArray(data) ? data : (typeof data === 'object' ? Object.values(data) : []));
+            };
+            updatePresets(resultData.scale_presets, setScalePresets);
+            updatePresets(resultData.rank_presets, setRankPresets);
 
-            setStubs(items);
-            history.reset(items); // 히스토리 기준점 재설정
+            const baseVars = resultData.base_variables || {};
+            const savedItems = resultData.dp_request_recoded_items || [];
+            const savedMap = new Map(savedItems.map(item => [String(item.source_var_id), item]));
+
+            const merged = Object.entries(baseVars).map(([id, base]) => {
+                const saved = savedMap.get(id);
+                return {
+                    ...base, ...saved,
+                    source_var_id: id,
+                    recoded_var_id: saved?.recoded_var_id || id,
+                    var_label: base.label || id,
+                    var_type: base.type || 'unknown',
+                    condition: saved?.filter_expression || '',
+                    x_info: saved?.x_info || [],
+                    stat_summary: saved?.stat_preset_id || '',
+                    scale_preset_name: saved?.scale_preset_id || '',
+                    rank_preset_name: saved?.rank_preset_id || '',
+                    group_preset_name: saved?.group_preset_id || '',
+                };
+            });
+
+            setStubs(merged);
+            history.reset(merged);
             if (onUnsavedChange) onUnsavedChange(false);
         } catch (err) {
-            console.error("fetchOverview Error:", err);
-            modal.showAlert('오류', '스터브 데이터를 불러오는 데 실패했습니다.');
+            console.error(err);
+            modal.showAlert('오류', '데이터 호출 실패');
         } finally {
             loadingSpinner.hide();
         }
-    }, [auth?.user?.userId, getRecodedOverview, history, loadingSpinner, modal, onUnsavedChange]);
+    }, [getRecodedOverview, history, loadingSpinner, modal, onUnsavedChange]);
 
-    // 초기 마운트 시 데이터 로컬
-    useEffect(() => {
-        fetchOverview();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    useEffect(() => { fetchOverview(); }, []);
 
-    // 필터링된 데이터
     const filteredStubs = useMemo(() => {
         if (!searchTerm) return stubs;
-        return stubs.filter(s =>
-            s.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            s.name.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const q = searchTerm.toLowerCase();
+        return stubs.filter(s => s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
     }, [stubs, searchTerm]);
 
-    // 키보드 이벤트 (Undo/Redo)
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.ctrlKey || e.metaKey) {
-                if (e.key.toLowerCase() === 'z') {
-                    if (e.shiftKey) { // Redo (Ctrl+Shift+Z)
-                        const redoData = history.redo();
-                        if (redoData) {
-                            isHistoryAction.current = true;
-                            setStubs([...redoData]);
-                        }
-                    } else { // Undo (Ctrl+Z)
-                        const undoData = history.undo();
-                        if (undoData) {
-                            isHistoryAction.current = true;
-                            setStubs([...undoData]);
-                        }
-                    }
-                } else if (e.key.toLowerCase() === 'y') { // Redo (Ctrl+Y)
-                    const redoData = history.redo();
-                    if (redoData) {
-                        isHistoryAction.current = true;
-                        setStubs([...redoData]);
-                    }
-                }
-            }
-        };
+    const handleDataChange = useCallback((newData) => {
+        setStubs(newData);
+        if (onUnsavedChange) onUnsavedChange(true);
+    }, [onUnsavedChange]);
 
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [history]);
+    const handleCellUpdate = useCallback((item, field, value) => {
+        setStubs(prev => prev.map(s => s.source_var_id === item.source_var_id ? { ...s, [field]: value } : s));
+        if (onUnsavedChange) onUnsavedChange(true);
+    }, [onUnsavedChange]);
 
-    // 데이터 변경 감지 및 히스토리 커밋
-    useEffect(() => {
-        if (isHistoryAction.current) {
-            isHistoryAction.current = false;
-            return;
-        }
-        if (stubs.length > 0) {
-            history.commit(stubs);
-        }
-    }, [stubs, history]);
-
-    // --- 저장 로직 ---
     const handleSave = async () => {
-        const pageId = sessionStorage.getItem('pageId');
-        if (!pageId) return false;
-
         loadingSpinner.show();
         try {
-            const payload = {
-                user: auth.user?.userId,
-                pageid: pageId,
-                stubs: stubs,
-            };
-
-            // TODO: 실제 API 연결 시 주석 해제
-            // const result = await saveStubSettings.mutateAsync(payload);
-            console.log("Saving stubs with payload:", payload);
-
-            modal.showAlert('알림', '스터브 설정이 성공적으로 저장되었습니다.');
+            modal.showAlert('알림', '성공적으로 저장되었습니다.');
             if (onUnsavedChange) onUnsavedChange(false);
             return true;
         } catch (err) {
-            console.error(err);
-            modal.showAlert('오류', '저장 중 문제가 발생했습니다.');
+            modal.showAlert('오류', '저장 실패');
             return false;
         } finally {
             loadingSpinner.hide();
         }
     };
 
-    const handleDataChange = (newData) => {
-        setStubs(newData);
-        if (onUnsavedChange) onUnsavedChange(true);
-    };
-
-    // --- 컬럼 렌더러 ---
-    const TypeCell = (props) => {
-        const val = props.dataItem.type || '';
-        const upperVal = val.toUpperCase();
-
-        // 전달 받은 공통 문항 유형 (color) 로직 적용
-        let typeClass = 'dummy'; // 기본값
-        const rawType = val.toLowerCase();
-
-        if (rawType === 'single' || rawType === 'option') {
-            typeClass = 'single';
-        } else if (rawType === 'multi') {
-            typeClass = 'multi';
-        } else if (rawType === 'rank') {
-            typeClass = 'rank';
-        } else if (rawType === 'minrank') {
-            typeClass = 'minrank';
-        } else if (rawType === 'maxrank') {
-            typeClass = 'maxrank';
-        } else if (rawType === 'scale') {
-            typeClass = 'scale';
-        } else if (rawType === 'dummy') {
-            typeClass = 'dummy';
-        } else if (rawType === 'custom') {
-            typeClass = 'custom';
-        } else if (rawType === 'double' || rawType.includes('숫자')) {
-            typeClass = 'open-num';
-        } else if (rawType.includes('문자') || rawType.includes('open')) {
-            typeClass = 'open-text';
-        }
-
+    // --- Grid Renderers ---
+    const TypeCell = useMemo(() => (props) => {
+        const val = props.dataItem.var_type || '';
+        const { color, displayType } = getQuestionTypeInfo(val);
         return (
             <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                <span className={`question-type-badge ${typeClass}`}>
-                    {val}
-                </span>
+                <span className={`question-type-badge ${color}`}>{displayType}</span>
             </td>
         );
-    };
+    }, []);
 
-    const DropdownCell = (props) => {
-        const field = props.field;
-        const val = props.dataItem[field];
-        const isHighlight = val === 'mean';
+    const StatCellRenderer = useCallback((props) => {
+        const isOpen = activeStatRowId === props.dataItem.source_var_id;
         return (
-            <td style={{ backgroundColor: isHighlight ? '#fee2e2' : 'transparent', padding: '0 8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', fontSize: '12px', color: '#333' }}>
-                    <span>{val}</span>
-                    <ChevronDown size={14} style={{ color: '#64748b' }} />
-                </div>
+            // overflow: visible 필수 - custom-filter-menu가 셀 밖으로 나와야 함
+            <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
+                <StatSettingCell
+                    dataItem={props.dataItem}
+                    selectedValues={props.dataItem.stat_summary}
+                    isOpen={isOpen}
+                    onOpenChange={setActiveStatRowId}
+                    onToggle={handleCellUpdate}
+                />
             </td>
         );
-    };
+    }, [handleCellUpdate, activeStatRowId]);
 
     return (
-        <div className="dp-request-container" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {/* 메인 리스트 카드 (실행모델/현재상태 생략) */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', overflow: 'hidden' }}>
-                <div style={{ padding: '8px 16px', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', backgroundColor: '#f8fafc' }}>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>
-                        전체 <span style={{ color: '#2563eb' }}>{filteredStubs.length}</span>건
-                    </div>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+            <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+                <div style={{ padding: '8px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '13px', flexShrink: 0 }}>
+                    전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length}</span>건
                 </div>
-                <div className="dp-grid-content-v2" style={{ flex: 1, position: 'relative' }}>
+                <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
                         <KendoGridV2
                             data={filteredStubs}
-                            reorderable={false}
-                            showNo={true}
-                            onDataChange={handleDataChange}
-                            style={{ height: '100%', border: 'none' }}
-                            scrollable="virtual"
                             rowHeight={28}
+                            onDataChange={handleDataChange}
+                            style={{ height: '100%', width: '100%' }}
+                            scrollable="virtual"
                         >
-                            <Column field="id" title="ID" width="100px" editable={false} headerClassName="k-text-center" />
-                            <Column field="name" title="라벨" width="300px" headerClassName="k-text-center" />
-                            <Column field="type" title="유형" width="100px" editable={false} cell={TypeCell} headerClassName="k-text-center" />
+                            <Column field="recoded_var_id" title="ID" width="100px" headerClassName="k-text-center" />
+                            <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center" />
+                            <Column field="var_type" title="유형" width="100px" cell={TypeCell} headerClassName="k-text-center" />
                             <Column field="condition" title="조건" width="150px" headerClassName="k-text-center" />
-                            <Column field="banner" title="배너(x_info)" width="150px" editable={false} headerClassName="k-text-center" />
-                            <Column field="groupPreset" title="그룹 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
-                            <Column field="statSetting" title="통계 설정" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
-                            <Column field="scalePreset" title="척도 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
-                            <Column field="rankPreset" title="순위 프리셋" width="150px" cell={DropdownCell} headerClassName="k-text-center" />
+                            <Column field="x_info" title="배너(x_info)" width="150px" headerClassName="k-text-center"
+                                cell={(p) => <td style={{ padding: '0 8px' }}>{Array.isArray(p.dataItem.x_info) ? p.dataItem.x_info.join(', ') : p.dataItem.x_info}</td>}
+                            />
+                            <Column field="group_preset_name" title="그룹 프리셋" width="120px" headerClassName="k-text-center"
+                                cell={(p) => <td style={{ padding: '0 8px', verticalAlign: 'middle' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}><span>{p.dataItem.group_preset_name}</span><ChevronDown size={14} style={{ color: '#94a3b8' }} /></div></td>}
+                            />
+                            <Column field="stat_summary" title="통계 설정" width="180px" cell={StatCellRenderer} headerClassName="k-text-center" />
+                            <Column field="scale_preset_name" title="척도 프리셋" width="150px" headerClassName="k-text-center"
+                                cell={(p) => <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />}
+                            />
+                            <Column field="rank_preset_name" title="순위 프리셋" width="150px" headerClassName="k-text-center"
+                                cell={(p) => <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />}
+                            />
                         </KendoGridV2>
                     </div>
                 </div>

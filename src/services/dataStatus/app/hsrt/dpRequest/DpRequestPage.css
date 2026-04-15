@@ -801,7 +801,10 @@
     padding: 0 !important;
 }
 
-.dp-excel-grid-v2.k-grid td {
+.dp-excel-grid-v2.k-grid td,
+.dp-excel-grid-v2.k-grid .k-grid-content td,
+.dp-excel-grid-v2.k-grid .k-table-row > td,
+.dp-excel-grid-v2.k-grid .k-table-td {
     padding: 0px 4px !important;
     background: #fff;
     border-right: 1px solid #e2e8f0 !important;
@@ -810,7 +813,7 @@
     word-break: keep-all;
     line-height: 1.2;
     vertical-align: middle;
-    font-size: 12px;
+    font-size: 13px !important;
     color: #1e293b;
     height: 22px !important;
     box-sizing: border-box;
@@ -1476,3 +1479,114 @@
     border-color: #2563eb;
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
+
+/* ============================================================
+   스터브 탭 - 척도 프리셋 Kendo DropDownList 컴팩트 스타일
+   (오렌지 제거 + 그리드 로우 높이에 맞게 taight하게 유지)
+   ============================================================ */
+
+/* 인라인 드롭다운 박스 */
+.hsrt-compact-dropdown.k-dropdownlist,
+.hsrt-compact-dropdown.k-dropdown {
+    width: 100% !important;
+    height: 22px !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 3px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 13px !important;
+    font-family: inherit !important;
+}
+
+/* 선택된 값 표시 영역 */
+.hsrt-compact-dropdown .k-input-inner,
+.hsrt-compact-dropdown .k-dropdown-wrap .k-input,
+.hsrt-compact-dropdown * {
+    padding: 0 4px !important;
+    height: 20px !important;
+    font-size: 13px !important;
+    line-height: 20px !important;
+    color: #1e293b !important;
+    background: transparent !important;
+}
+
+/* 화살표 버튼 */
+.hsrt-compact-dropdown .k-select,
+.hsrt-compact-dropdown .k-input-button {
+    width: 20px !important;
+    height: 20px !important;
+    background: transparent !important;
+    border-left: 1px solid #e2e8f0 !important;
+    color: #64748b !important;
+    padding: 0 !important;
+}
+
+/* 포커스/hover 시 파란색으로 (오렌지 제거) */
+.hsrt-compact-dropdown.k-state-hover,
+.hsrt-compact-dropdown:hover,
+.hsrt-compact-dropdown.k-dropdownlist:hover {
+    border-color: #94a3b8 !important;
+    background: #f8fafc !important;
+    box-shadow: none !important;
+}
+
+.hsrt-compact-dropdown.k-state-focused,
+.hsrt-compact-dropdown:focus-within,
+.hsrt-compact-dropdown.k-focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25) !important;
+    outline: none !important;
+}
+
+/* 오렌지 계열 완전 제거 */
+.hsrt-compact-dropdown .k-dropdown-wrap:focus,
+.hsrt-compact-dropdown .k-dropdown-wrap.k-state-focused,
+.hsrt-compact-dropdown .k-dropdown-wrap.k-state-hover {
+    border-color: #3b82f6 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+}
+
+/* 팝업 리스트 */
+.hsrt-compact-dropdown-popup.k-popup,
+.hsrt-compact-dropdown-popup {
+    font-size: 13px !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    padding: 2px 0 !important;
+}
+
+/* 팝업 각 아이템 */
+.hsrt-compact-dropdown-popup .k-list-item,
+.hsrt-compact-dropdown-popup .k-item {
+    padding: 3px 8px !important;
+    font-size: 13px !important;
+    color: #1e293b !important;
+    line-height: 1.4 !important;
+}
+
+/* 아이템 hover */
+.hsrt-compact-dropdown-popup .k-list-item:hover,
+.hsrt-compact-dropdown-popup .k-item.k-state-hover,
+.hsrt-compact-dropdown-popup .k-list-item.k-hover {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+}
+
+/* 선택된 아이템 (오렌지 → 파란색) */
+.hsrt-compact-dropdown-popup .k-list-item.k-selected,
+.hsrt-compact-dropdown-popup .k-item.k-state-selected,
+.hsrt-compact-dropdown-popup .k-list-item.k-state-selected {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    font-weight: 600 !important;
+}
+
+/* 포커스된 아이템 */
+.hsrt-compact-dropdown-popup .k-list-item.k-focus,
+.hsrt-compact-dropdown-popup .k-item.k-state-focused {
+    background: #eff6ff !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
