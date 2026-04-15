@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { FileText, BarChart3, Database, BrainCircuit, Users, ClipboardList } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -112,7 +112,7 @@ const MenuSection = () => {
             let targetState = {};
 
             if (item.id === "data-dashboard") {
-              targetPath = "/data_status/analysis/additional";
+              targetPath = "/data_status/hsrt/add_question";
               targetState = { from: "data_status" };
             } else if (item.id === "field-management") {
               targetPath = "/field_management/analysis/frequency";

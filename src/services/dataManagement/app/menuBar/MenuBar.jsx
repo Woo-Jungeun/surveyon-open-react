@@ -55,8 +55,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     {
       label: "H-SRT",
       icon: <Grid size={16} />,
-      path: "/data_status/analysis/additional",
-      onClick: () => { navigate("/data_status/analysis/additional"); }
+      path: "/data_status/hsrt/add_question",
+      onClick: () => { navigate("/data_status/hsrt/add_question"); }
     },
     {
       label: "데이터관리",

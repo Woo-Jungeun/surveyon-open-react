@@ -151,10 +151,10 @@ export function LoginApi() {
                     if (groupcode === "999999991" && showmenu) {
                         const firstMenuLabel = showmenu.split(",")[0].replace(/\s+/g, "");
                         const menuPathMap = {
-                            "빈도분석": "/data_status/analysis/additional",
-                            "배너설정": "/data_status/analysis/additional",
+                            "빈도분석": "/data_status/hsrt/add_question",
+                            "배너설정": "/data_status/hsrt/add_question",
                             "교차분석": "/data_status/analysis/cross",
-                            "추가분석": "/data_status/analysis/additional",
+                            "추가분석": "/data_status/hsrt/add_question",
                             "쿼터현황/관리": "/data_status/analysis/quota",
                             "AI분석": "/data_status/ai/analysis",
                             "AI리포트": "/data_status/ai/report",

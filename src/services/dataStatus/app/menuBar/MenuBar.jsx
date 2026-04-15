@@ -22,9 +22,9 @@ const MENU_ITEMS_OLD = [
   {
     label: "교차표",
     items: [
-      // { label: "빈도분석", path: "/data_status/analysis/additional", icon: BarChart3 },
+      // { label: "빈도분석", path: "/data_status/hsrt/add_question", icon: BarChart3 },
       // { label: "교차분석", path: "/data_status/analysis/cross", icon: Table, isPending: true },
-      { label: "배너설정", path: "/data_status/analysis/additional", icon: Columns },
+      { label: "배너설정", path: "/data_status/hsrt/add_question", icon: Columns },
       { label: "문항", path: "/data_status/analysis/cross", icon: Table },
       // todo 임시 주석  [쿼터현황/관리] 메뉴
       // { label: "쿼터현황/관리", path: "/data_status/analysis/quota", icon: ClipboardList },
@@ -90,7 +90,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   // 모듈 전환 메뉴 아이템
   const moduleItems = [
     { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-    { label: "H-SRT", icon: <Grid size={16} />, path: "/data_status/analysis/additional", highlight: true },
+    { label: "H-SRT", icon: <Grid size={16} />, path: "/data_status/hsrt/add_question", highlight: true },
     {
       label: "데이터관리",
       icon: <Database size={16} />,
@@ -405,7 +405,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           title: "데이터 현황",
           logoText: "H-SRT",
           logoClass: "menu-bar-logo",
-          onClick: () => navigate("/data_status/analysis/additional")
+          onClick: () => navigate("/data_status/hsrt/add_question")
         }}
         menuGroups={computedMenuGroups}
         projectInfo={projectInfoData}

@@ -211,10 +211,10 @@ const InfoSection = () => {
               // todo H-SRT 임시 주석 
               onClick={() => {
                 if (!isLoggedIn) {
-                  navigate("/login", { state: { from: "/data_status/analysis/additional", originalState: { from: "data_status" } } });
+                  navigate("/login", { state: { from: "/data_status/hsrt/add_question", originalState: { from: "data_status" } } });
                   return;
                 }
-                navigate("/data_status/analysis/additional", { state: { from: "data_status" } });
+                navigate("/data_status/hsrt/add_question", { state: { from: "data_status" } });
               }}
               style={{ cursor: "pointer" }}
             >

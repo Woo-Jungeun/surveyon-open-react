@@ -47,7 +47,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     const moduleItems = [
         { label: "설문제작", icon: <FileText size={16} />, path: "/project/pro_list", isDisabled: true },
-        { label: "H-SRT", icon: <Grid size={16} />, path: "/data_status/analysis/additional" },
+        { label: "H-SRT", icon: <Grid size={16} />, path: "/data_status/hsrt/add_question" },
         {
             label: "데이터관리",
             icon: <Database size={16} />,
