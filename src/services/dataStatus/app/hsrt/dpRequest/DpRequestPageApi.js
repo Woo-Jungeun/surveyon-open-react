@@ -55,6 +55,15 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/dp-request/recoded/overview", "API_BASE_URL_DATASTATUS")
     );
 
+    /** DP 의뢰서 - Recoded (스터브) 오버뷰 저장 */
+    const saveRecodedOverview = useMutation(
+        async (data) => await api.post(data, "/dp-request/recoded/overview/save", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
@@ -64,5 +73,6 @@ export function DpRequestPageApi() {
         generateBanner,
         saveBannerDetail,
         getRecodedOverview,
+        saveRecodedOverview,
     };
 }

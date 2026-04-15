@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { Check } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -254,10 +255,12 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left' }) 
 const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
-    const { getRecodedOverview } = DpRequestPageApi();
+    const auth = useSelector((store) => store.auth);
+    const { getRecodedOverview, saveRecodedOverview } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
+    const [originalRecodedIds, setOriginalRecodedIds] = useState([]);
     const [scalePresets, setScalePresets] = useState([]);
     const [rankPresets, setRankPresets] = useState([]);
     const [activeStatRowId, setActiveStatRowId] = useState(null);
@@ -319,7 +322,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (!pageId) return;
         try {
             loadingSpinner.show();
-            const payload = { user: "sbbok", pageid: "446bd14c-d053-47c8-bf01-59384cb37746" };
+            // const payload = { user: auth?.user?.userId || '', pageid: pageId };
+            const payload = {
+                pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
+                user: "sbbok"
+            };
             const response = await getRecodedOverview.mutateAsync(payload);
             const resultData = response?.data?.resultjson || response?.resultjson || response || {};
 
@@ -332,6 +339,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             const baseVars = resultData.base_variables || {};
             const savedItems = resultData.dp_request_recoded_items || [];
             const savedMap = new Map(savedItems.map(item => [String(item.source_var_id), item]));
+
+            // 삭제 처리용 원본 ID 보관
+            setOriginalRecodedIds(savedItems.map(item => item.recoded_var_id).filter(Boolean));
 
             const merged = Object.entries(baseVars).map(([id, base]) => {
                 const saved = savedMap.get(id);
@@ -396,13 +406,57 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
 
     const handleSave = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) {
+            modal.showAlert('알림', '사용자 정보나 페이지 정보를 확인할 수 없습니다.');
+            return false;
+        }
+
+        // 2. Variables 객체 구성
+        const variables = {};
+        stubs.forEach(stub => {
+            variables[stub.source_var_id] = {
+                source_var_id: stub.source_var_id,
+                recoded_var_id: stub.recoded_var_id,
+                var_label: stub.var_label,
+                var_type: stub.var_type,
+                filter_expression: stub.condition || '',
+                x_info: Array.isArray(stub.x_info) ? stub.x_info : (stub.x_info ? [stub.x_info] : []),
+                stat_preset_id: stub.stat_summary || '',
+                scale_preset_id: stub.scale_preset_name || '',
+                rank_preset_id: stub.rank_preset_name || '',
+                group_preset_id: stub.group_preset_name || ''
+            };
+        });
+
+        // 3. 삭제될 ID 추출 (원본에 있었지만 현재는 없는 recoded_var_id)
+        const currentRecodedIds = stubs.map(s => s.recoded_var_id).filter(Boolean);
+        const deletedIds = originalRecodedIds.filter(id => !currentRecodedIds.includes(id));
+
+        const requestData = {
+            // pageid: pageId,
+            // user: auth.user.userId,
+            pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
+            user: "sbbok",
+            variables: variables,
+            delete_ids: deletedIds
+        };
+
         loadingSpinner.show();
         try {
-            modal.showAlert('알림', '성공적으로 저장되었습니다.');
-            if (onUnsavedChange) onUnsavedChange(false);
-            return true;
+            const result = await saveRecodedOverview.mutateAsync(requestData);
+            if (result?.success === "777") {
+                modal.showAlert('알림', '저장되었습니다.');
+                if (onUnsavedChange) onUnsavedChange(false);
+                await fetchOverview(); // 저장 후 목록 최신화
+                return true;
+            } else {
+                modal.showAlert('오류', '저장 처리에 실패했습니다.');
+                return false;
+            }
         } catch (err) {
-            modal.showAlert('오류', '저장 실패');
+            console.error(err);
+            modal.showAlert('오류', '저장 중 서류 오류가 발생했습니다.');
             return false;
         } finally {
             loadingSpinner.hide();
@@ -458,7 +512,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             newRowTemplate={newRowTemplate}
                         >
                             <Column field="recoded_var_id" title="ID" width="100px" headerClassName="k-text-center"
-                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} />}
+                                cell={(p) => (
+                                    <td style={{ padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', userSelect: 'none' }}>
+                                        {p.dataItem.recoded_var_id || <span style={{ fontSize: '11px', opacity: 0.7 }}>(자동 생성)</span>}
+                                    </td>
+                                )}
                             />
                             <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
