@@ -228,6 +228,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     scale_preset_name: saved?.scale_preset_id || '',
                     rank_preset_name: saved?.rank_preset_id || '',
                     group_preset_name: saved?.group_preset_id || '',
+                    inEdit: false,
                 };
             });
 
@@ -259,6 +260,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         setStubs(prev => prev.map(s => s.source_var_id === item.source_var_id ? { ...s, [field]: value } : s));
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
+
+    const handleRowClick = useCallback((e) => {
+        setStubs(prev => prev.map(s => ({ ...s, inEdit: s.source_var_id === e.dataItem.source_var_id })));
+    }, []);
 
     const handleSave = async () => {
         loadingSpinner.show();
@@ -313,8 +318,25 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             data={filteredStubs}
                             rowHeight={28}
                             onDataChange={handleDataChange}
+                            onRowClick={handleRowClick}
                             style={{ height: '100%', width: '100%' }}
                             scrollable="virtual"
+                            addable
+                            deletable
+                            editField="inEdit"
+                            newRowTemplate={{
+                                source_var_id: `new_${Date.now()}`,
+                                recoded_var_id: '',
+                                var_label: '',
+                                var_type: '',
+                                condition: '',
+                                x_info: [],
+                                stat_summary: '',
+                                scale_preset_name: '',
+                                rank_preset_name: '',
+                                group_preset_name: '',
+                                inEdit: true,
+                            }}
                         >
                             <Column field="recoded_var_id" title="ID" width="100px" headerClassName="k-text-center" />
                             <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center" />
