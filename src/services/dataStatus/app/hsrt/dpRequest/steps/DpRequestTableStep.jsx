@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { useSelector } from 'react-redux';
 import { ChevronDown } from 'lucide-react';
 import { Check } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
-import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
@@ -175,6 +173,50 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, act
     );
 });
 
+// --- 텍스트 편집 셀: 자체 로컬 state로 타이핑 즉각 반응, onBlur에만 stubs 업데이트 ---
+const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left' }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
+
+    // 외부에서 dataItem이 바뀔 때만 동기화 (편집 중에는 무시)
+    useEffect(() => {
+        if (!isEditing) setLocalVal(String(dataItem[field] ?? ''));
+    }, [dataItem.source_var_id, dataItem[field], isEditing]);
+
+    const commit = () => {
+        setIsEditing(false);
+        if (localVal !== String(dataItem[field] ?? '')) onUpdate(dataItem, field, localVal);
+    };
+
+    if (isEditing) {
+        return (
+            <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
+                <input
+                    autoFocus
+                    value={localVal}
+                    onChange={e => setLocalVal(e.target.value)}
+                    onBlur={commit}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter') e.target.blur();
+                        if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
+                    }}
+                    style={{ width: '100%', border: '1px solid #3b82f6', borderRadius: '2px', padding: '0 5px', fontSize: '13px', height: '22px', outline: 'none', boxSizing: 'border-box' }}
+                />
+            </td>
+        );
+    }
+
+    return (
+        <td
+            onClick={() => setIsEditing(true)}
+            style={{ padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', cursor: 'text', textAlign: align,
+                color: localVal ? '#1e293b' : '#94a3b8', userSelect: 'none' }}
+        >
+            {localVal || '-'}
+        </td>
+    );
+});
+
 // --- 메인 컴포넌트 ---
 const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -228,7 +270,6 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     scale_preset_name: saved?.scale_preset_id || '',
                     rank_preset_name: saved?.rank_preset_id || '',
                     group_preset_name: saved?.group_preset_id || '',
-                    inEdit: false,
                 };
             });
 
@@ -251,6 +292,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         return stubs.filter(s => s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
     }, [stubs, searchTerm]);
 
+    // onDataChange는 행추가/삭제 시에만 호출됨 (텍스트 편집은 TextEditCell의 onBlur에서 처리)
     const handleDataChange = useCallback((newData) => {
         setStubs(newData);
         if (onUnsavedChange) onUnsavedChange(true);
@@ -260,10 +302,21 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         setStubs(prev => prev.map(s => s.source_var_id === item.source_var_id ? { ...s, [field]: value } : s));
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
+    // 행 추가 시 고유 ID 생성 (counter 방식으로 중복 방지)
+    const newRowIdRef = useRef(0);
+    const newRowTemplate = useMemo(() => ({
+        get source_var_id() { return `new_${Date.now()}_${newRowIdRef.current++}`; },
+        recoded_var_id: '',
+        var_label: '',
+        var_type: '',
+        condition: '',
+        x_info: [],
+        stat_summary: '',
+        scale_preset_name: '',
+        rank_preset_name: '',
+        group_preset_name: '',
+    }), []);
 
-    const handleRowClick = useCallback((e) => {
-        setStubs(prev => prev.map(s => ({ ...s, inEdit: s.source_var_id === e.dataItem.source_var_id })));
-    }, []);
 
     const handleSave = async () => {
         loadingSpinner.show();
@@ -318,30 +371,22 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             data={filteredStubs}
                             rowHeight={28}
                             onDataChange={handleDataChange}
-                            onRowClick={handleRowClick}
                             style={{ height: '100%', width: '100%' }}
                             scrollable="virtual"
                             addable
                             deletable
-                            editField="inEdit"
-                            newRowTemplate={{
-                                source_var_id: `new_${Date.now()}`,
-                                recoded_var_id: '',
-                                var_label: '',
-                                var_type: '',
-                                condition: '',
-                                x_info: [],
-                                stat_summary: '',
-                                scale_preset_name: '',
-                                rank_preset_name: '',
-                                group_preset_name: '',
-                                inEdit: true,
-                            }}
+                            newRowTemplate={newRowTemplate}
                         >
-                            <Column field="recoded_var_id" title="ID" width="100px" headerClassName="k-text-center" />
-                            <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center" />
+                            <Column field="recoded_var_id" title="ID" width="100px" headerClassName="k-text-center"
+                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} />}
+                            />
+                            <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center"
+                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
+                            />
                             <Column field="var_type" title="유형" width="100px" cell={TypeCell} headerClassName="k-text-center" />
-                            <Column field="condition" title="조건" width="150px" headerClassName="k-text-center" />
+                            <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
+                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
+                            />
                             <Column field="x_info" title="배너(x_info)" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <td style={{ padding: '0 8px' }}>{Array.isArray(p.dataItem.x_info) ? p.dataItem.x_info.join(', ') : p.dataItem.x_info}</td>}
                             />
