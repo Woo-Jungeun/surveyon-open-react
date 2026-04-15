@@ -35,6 +35,37 @@ const getQuestionTypeInfo = (type) => {
     return { color, displayType };
 };
 
+const canUseScalePreset = (type) => {
+    const t = String(type || '').toLowerCase();
+    return t === 'scale' || t === 'single';
+};
+
+const canUseRankPreset = (type) => {
+    const t = String(type || '').toLowerCase();
+    return t === 'rank' || t === 'minrank' || t === 'maxrank' || t === 'multi';
+};
+
+const canUseStatPreset = (type) => {
+    const t = String(type || '').toLowerCase();
+    if (t === 'dummy' || t === 'multi' || t.includes('문자') || t === 'open-text' || t === 'open') return false;
+    return true;
+};
+
+const canUseGroupPreset = (type) => {
+    const t = String(type || '').toLowerCase();
+    if (t === 'double' || t.includes('문자') || t.includes('숫자') || t === 'open' || t === 'open-text' || t === 'open-num') return false;
+    return true;
+};
+
+// 막혀있는 셀을 위한 스타일
+const DISABLED_CELL_STYLE = {
+    textAlign: 'center',
+    verticalAlign: 'middle',
+    backgroundColor: '#eaedf1',
+    color: '#94a3b8',
+    userSelect: 'none'
+};
+
 // --- 통계 설정 다중선택 드롭다운 (FrequencyAnalysisPage의 custom-filter-wrapper 방식 적용) ---
 // wrapper ref가 trigger + menu를 모두 감싸므로, 메뉴 항목 클릭 시 "외부 클릭"으로 오인하지 않음
 const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenChange, onToggle }) => {
@@ -101,7 +132,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
 });
 
 // --- 공통 컴포넌트: 프리셋 드롭다운 셀 (단일 선택, custom-filter-wrapper 방식) ---
-const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, activeId, onOpenChange = () => {} }) => {
+const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, activeId, onOpenChange = () => { } }) => {
     const val = dataItem[field];
     const isOpen = activeId === `${field}-${dataItem.source_var_id}`;
     const wrapperRef = useRef(null);
@@ -209,8 +240,10 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left' }) 
     return (
         <td
             onClick={() => setIsEditing(true)}
-            style={{ padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', cursor: 'text', textAlign: align,
-                color: localVal ? '#1e293b' : '#94a3b8', userSelect: 'none' }}
+            style={{
+                padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', cursor: 'text', textAlign: align,
+                color: localVal ? '#1e293b' : '#94a3b8', userSelect: 'none'
+            }}
         >
             {localVal || '-'}
         </td>
@@ -344,6 +377,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, []);
 
     const StatCellRenderer = useCallback((props) => {
+        if (!canUseStatPreset(props.dataItem.var_type)) {
+            return <td style={DISABLED_CELL_STYLE}>-</td>;
+        }
         const isOpen = activeStatRowId === props.dataItem.source_var_id;
         return (
             // overflow: visible 필수 - custom-filter-menu가 셀 밖으로 나와야 함
@@ -391,14 +427,29 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 cell={(p) => <td style={{ padding: '0 8px' }}>{Array.isArray(p.dataItem.x_info) ? p.dataItem.x_info.join(', ') : p.dataItem.x_info}</td>}
                             />
                             <Column field="group_preset_name" title="그룹 프리셋" width="120px" headerClassName="k-text-center"
-                                cell={(p) => <td style={{ padding: '0 8px', verticalAlign: 'middle' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}><span>{p.dataItem.group_preset_name}</span><ChevronDown size={14} style={{ color: '#94a3b8' }} /></div></td>}
+                                cell={(p) => {
+                                    if (!canUseGroupPreset(p.dataItem.var_type)) {
+                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                    }
+                                    return <td style={{ padding: '0 8px', verticalAlign: 'middle' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}><span>{p.dataItem.group_preset_name}</span><ChevronDown size={14} style={{ color: '#94a3b8' }} /></div></td>;
+                                }}
                             />
                             <Column field="stat_summary" title="통계 설정" width="180px" cell={StatCellRenderer} headerClassName="k-text-center" />
                             <Column field="scale_preset_name" title="척도 프리셋" width="150px" headerClassName="k-text-center"
-                                cell={(p) => <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />}
+                                cell={(p) => {
+                                    if (!canUseScalePreset(p.dataItem.var_type)) {
+                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                    }
+                                    return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />;
+                                }}
                             />
                             <Column field="rank_preset_name" title="순위 프리셋" width="150px" headerClassName="k-text-center"
-                                cell={(p) => <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />}
+                                cell={(p) => {
+                                    if (!canUseRankPreset(p.dataItem.var_type)) {
+                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                    }
+                                    return <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />;
+                                }}
                             />
                         </KendoGridV2>
                     </div>
