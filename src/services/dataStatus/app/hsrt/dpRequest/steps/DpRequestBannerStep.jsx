@@ -550,18 +550,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             </div>
 
             {/* 2. 메인 레이아웃 */}
-            <div className="dp-main-layout" onClick={(e) => e.stopPropagation()}>
-                <div className={`dp-sidebar-container ${!isBannerSidebarOpen ? 'collapsed' : ''}`}>
+            <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
+                <div className={`dp-sidebar-container ${!isBannerSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                     {!isBannerSidebarOpen && (
                         <div className="dp-sidebar-collapsed-bar" onClick={() => setIsBannerSidebarOpen(true)}>
                             <ChevronRight size={16} />
                         </div>
                     )}
-                    <div className="dp-sidebar custom-scrollbar">
+                    <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                         <div className="dp-sidebar-title">
                             생성된 배너 목록 ({filteredBanners.length})
                         </div>
-                        <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #e2e8f0', gap: '8px' }}>
+                        <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #e2e8f0', gap: '8px', flexShrink: 0 }}>
                             <div className="dp-search-input-wrapper" style={{ flex: 1 }}>
                                 <Search size={14} className="dp-search-input-icon" />
                                 <input
@@ -576,7 +576,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <ChevronLeft size={16} />
                             </button>
                         </div>
-                        <div className="dp-banner-list">
+                        <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                             {filteredBanners.map(banner => (
                                 <div key={banner.id}
                                     className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
@@ -599,8 +599,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                 </div>
 
-                <div className="dp-content">
-                    <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center' }}>
+                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                         <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 700 }}>배너 라벨</span>
                             <input
@@ -618,7 +618,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <button className="dp-primary-btn" style={{ height: '32px', borderRadius: '6px' }} onClick={handleSaveBanner}><Save size={16} /> <span>저장</span></button>
                         </div>
                     </div>
-                    <div className="dp-table-container">
+                    <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                         <KendoGridV2
                             data={banners.find(b => b.id === selectedBanner)?.info || []}
                             reorderable addable showNo deletable editField="inEdit"

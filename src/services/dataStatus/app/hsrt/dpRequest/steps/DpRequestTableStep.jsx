@@ -17,18 +17,6 @@ const STAT_OPTIONS = [
     { id: 'median', label: '중앙값 (median)' },
 ];
 
-const VAR_TYPE_OPTIONS = [
-    'single',
-    'multi',
-    'rank',
-    'minrank',
-    'maxrank',
-    'scale',
-    'dummy',
-    'custom',
-    'open(문자)',
-    'open(숫자)'
-];
 
 const getQuestionTypeInfo = (type) => {
     const rawType = type?.toLowerCase() || '';
@@ -50,26 +38,27 @@ const getQuestionTypeInfo = (type) => {
     return { color, displayType };
 };
 
+const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', 'minrank', 'maxrank', 'scale', 'dummy', 'custom', 'open(문자)', 'open(숫자)'];
+
 const canUseScalePreset = (type) => {
     const t = String(type || '').toLowerCase();
-    return true; // 사용자가 1번 문제(비활성화)를 호소하므로 제한 일시 해제
+    return t === 'scale' || t === 'single';
 };
 
 const canUseRankPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    // return t === 'rank' || t === 'minrank' || t === 'maxrank' || t === 'multi';
-    return true;
+    return t === 'rank' || t === 'minrank' || t === 'maxrank' || t === 'multi';
 };
 
 const canUseStatPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    // if (t === 'dummy' || t === 'multi' || t.includes('문자') || t === 'open-text' || t === 'open') return false;
+    if (t === 'dummy' || t === 'multi' || t.includes('문자') || t === 'open-text' || t === 'open') return false;
     return true;
 };
 
 const canUseGroupPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    // if (t === 'double' || t.includes('문자') || t.includes('숫자') || t === 'open' || t === 'open-text' || t === 'open-num') return false;
+    if (t === 'double' || t.includes('문자') || t.includes('숫자') || t === 'open' || t === 'open-text' || t === 'open-num') return false;
     return true;
 };
 
@@ -89,16 +78,12 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
         ? selectedValues
         : (selectedValues ? String(selectedValues).split(',').map(s => s.trim()).filter(Boolean) : []);
 
-    const [anchor, setAnchor] = useState(null);
+    const wrapperRef = useRef(null);
 
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (event) => {
-            if (
-                anchor && 
-                !anchor.contains(event.target) &&
-                !event.target.closest('.custom-filter-menu')
-            ) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
                 onOpenChange(null);
             }
         };
@@ -116,8 +101,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
         : <span style={{ color: '#1e293b' }}>{selected.join(', ')}</span>;
 
     return (
-        // wrapperRef가 trigger + menu를 모두 감쌈 → mousedown이 항상 "내부"로 인식됨
-        <div ref={setAnchor} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
+        <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
             <div
                 className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
                 onClick={() => onOpenChange(isOpen ? null : dataItem.source_var_id)}
@@ -128,23 +112,12 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
                 <ChevronDown size={12} className="trigger-icon" />
             </div>
 
-            <Popup 
-                anchor={anchor} 
-                show={isOpen && Boolean(anchor)} 
-                popupClass={'dropdown-popup-portal'}
-                anchorAlign={{ horizontal: 'left', vertical: 'bottom' }}
-                popupAlign={{ horizontal: 'left', vertical: 'top' }}
-                collision={{ horizontal: 'fit', vertical: 'flip' }}
-            >
-                <div className="custom-filter-menu" style={{ minWidth: '180px', zIndex: 10001, transform: 'translateY(4px)' }}>
+            {isOpen && (
+                <div className="custom-filter-menu" style={{ minWidth: '180px', zIndex: 10001 }}>
                     {STAT_OPTIONS.map(opt => {
                         const isChecked = selected.includes(opt.id);
                         return (
-                            <div
-                                key={opt.id}
-                                className="custom-filter-item"
-                                onClick={(e) => { e.stopPropagation(); toggleOption(opt.id); }}
-                            >
+                            <div key={opt.id} className="custom-filter-item" onClick={(e) => { e.stopPropagation(); toggleOption(opt.id); }}>
                                 <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
                                     {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
                                 </div>
@@ -153,7 +126,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
                         );
                     })}
                 </div>
-            </Popup>
+            )}
         </div>
     );
 });
@@ -162,16 +135,12 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
 const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, activeId, onOpenChange = () => { } }) => {
     const val = dataItem[field];
     const isOpen = activeId === `${field}-${dataItem.source_var_id}`;
-    const [anchor, setAnchor] = useState(null);
+    const wrapperRef = useRef(null);
 
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (event) => {
-            if (
-                anchor && 
-                !anchor.contains(event.target) &&
-                !event.target.closest('.custom-filter-menu')
-            ) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
                 onOpenChange(null);
             }
         };
@@ -189,7 +158,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, act
 
     const handleSelect = (optionId) => {
         onChange(dataItem, field, optionId);
-        onOpenChange(null); // 단일 선택 → 선택 즉시 닫기
+        onOpenChange(null);
     };
 
     const displayText = selectedOption
@@ -203,7 +172,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, act
 
     return (
         <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
-            <div ref={setAnchor} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
+            <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
                 <div
                     className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
                     onClick={() => onOpenChange(isOpen ? null : `${field}-${dataItem.source_var_id}`)}
@@ -214,15 +183,8 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, act
                     <ChevronDown size={12} className="trigger-icon" />
                 </div>
 
-                <Popup 
-                    anchor={anchor} 
-                    show={isOpen && options.length > 0 && Boolean(anchor)} 
-                    popupClass={'dropdown-popup-portal'}
-                    anchorAlign={{ horizontal: 'left', vertical: 'bottom' }}
-                    popupAlign={{ horizontal: 'left', vertical: 'top' }}
-                    collision={{ horizontal: 'fit', vertical: 'flip' }}
-                >
-                    <div className="custom-filter-menu" style={{ width: anchor ? anchor.offsetWidth : 'auto', minWidth: '150px', zIndex: 10001, transform: 'translateY(4px)' }}>
+                {isOpen && options.length > 0 && (
+                    <div className="custom-filter-menu" style={{ width: '100%', zIndex: 10001 }}>
                         {options.map(opt => {
                             const isSelected = opt.id === String(val) || opt.text === String(val);
                             return (
@@ -242,7 +204,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, act
                             );
                         })}
                     </div>
-                </Popup>
+                )}
             </div>
         </td>
     );
@@ -299,10 +261,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getRecodedOverview, saveRecodedOverview } = DpRequestPageApi();
+    const { getRecodedOverview, saveRecodedOverview, getBannerDetail } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
+    const [banners, setBanners] = useState([]);
     const [originalRecodedIds, setOriginalRecodedIds] = useState([]);
     const [scalePresets, setScalePresets] = useState([]);
     const [rankPresets, setRankPresets] = useState([]);
@@ -378,6 +341,19 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             };
             updatePresets(resultData.scale_presets, setScalePresets);
             updatePresets(resultData.rank_presets, setRankPresets);
+
+            try {
+                const bannerRes = await getBannerDetail.mutateAsync(payload);
+                if (bannerRes?.resultjson?.recoded_variables || bannerRes?.data?.resultjson?.recoded_variables) {
+                    const raw = bannerRes?.resultjson?.recoded_variables || bannerRes?.data?.resultjson?.recoded_variables;
+                    const recodes = Array.isArray(raw) ? raw : Object.values(raw);
+                    const formattedBanners = recodes.map((v, i) => {
+                        const labelString = v.name || v.label || v.id || `banner_0${i + 1}`;
+                        return { id: labelString, label: labelString };
+                    });
+                    setBanners(formattedBanners);
+                }
+            } catch (e) { console.error('Failed to fetch banners', e); }
 
             const baseVars = resultData.base_variables || {};
             const savedItems = resultData.dp_request_recoded_items || [];
@@ -568,7 +544,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
                             />
                             <Column field="x_info" title="배너(x_info)" width="150px" headerClassName="k-text-center"
-                                cell={(p) => <td style={{ padding: '0 8px' }}>{Array.isArray(p.dataItem.x_info) ? p.dataItem.x_info.join(', ') : p.dataItem.x_info}</td>}
+                                cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />}
                             />
                             <Column field="group_preset_name" title="그룹 프리셋" width="120px" headerClassName="k-text-center"
                                 cell={(p) => {
