@@ -111,7 +111,27 @@ const KendoGridV2 = (props) => {
         >
             <GridNoRecords>
                 <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: "14px" }}>
-                    조회된 데이터가 없습니다.
+                    <div style={{ marginBottom: addable ? '16px' : '0' }}>조회된 데이터가 없습니다.</div>
+                    {addable && (
+                        <button 
+                            onClick={() => handleAdd()}
+                            style={{ 
+                                padding: '5px 16px', 
+                                borderRadius: '4px', 
+                                border: '1px solid #3b82f6', 
+                                background: '#ffffff', 
+                                color: '#3b82f6', 
+                                cursor: 'pointer', 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '6px', 
+                                fontSize: '13px',
+                                fontWeight: '600'
+                            }}
+                        >
+                            <Plus size={16} /> 새 항목 추가하기
+                        </button>
+                    )}
                 </div>
             </GridNoRecords>
 
