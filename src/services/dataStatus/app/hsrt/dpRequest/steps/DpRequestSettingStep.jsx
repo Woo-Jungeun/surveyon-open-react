@@ -1050,7 +1050,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     );
 
     return (
-        <div className="dp-request-container" style={{ background: '#f8fafc' }}>
+        <div className="dp-request-container" style={{ background: '#f8fafc', gap: 0 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E2E8F0', padding: '0 24px', background: '#FFFFFF' }}>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     {tabs.map((tab, idx) => {
