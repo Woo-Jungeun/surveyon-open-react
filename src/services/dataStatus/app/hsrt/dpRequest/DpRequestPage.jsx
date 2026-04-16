@@ -148,7 +148,7 @@ const DpRequestPage = () => {
     const contentPadding = currentStep === 0 ? '0' : '12px 16px 16px 16px';
 
     return (
-        <div className="dp-request-container">
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <DataHeader title="DP의뢰서">
                 {/* 중앙 스텝퍼 */}
                 <div className="dp-stepper-compact">
@@ -219,7 +219,7 @@ const DpRequestPage = () => {
             </DataHeader>
 
             {/* 단계별 컨텐츠 영역 */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: contentPadding, boxSizing: 'border-box' }}>
+            <div style={{ flex: 1, overflow: 'auto', padding: contentPadding, boxSizing: 'border-box' }}>
                 {renderStepContent()}
             </div>
         </div>

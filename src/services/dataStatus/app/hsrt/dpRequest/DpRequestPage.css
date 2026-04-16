@@ -1,7 +1,8 @@
 .dp-request-container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100vh - 120px);
+    /* 푸터와 겹치지 않게 충분히 축소 */
     overflow: hidden;
     padding: 0px 0px 10px 0px;
     box-sizing: border-box;
@@ -802,7 +803,7 @@
 
 .dp-excel-grid-v2.k-grid td,
 .dp-excel-grid-v2.k-grid .k-grid-content td,
-.dp-excel-grid-v2.k-grid .k-table-row > td,
+.dp-excel-grid-v2.k-grid .k-table-row>td,
 .dp-excel-grid-v2.k-grid .k-table-td {
     padding: 0px 4px !important;
     background: #fff;
@@ -1650,7 +1651,7 @@
     justify-content: center;
 }
 
-.dp-checkbox-input:checked + .dp-checkbox-box {
+.dp-checkbox-input:checked+.dp-checkbox-box {
     border-color: #3b82f6;
 }
 
@@ -1667,7 +1668,7 @@
     transition: opacity 0.2s;
 }
 
-.dp-checkbox-input:checked + .dp-checkbox-box::after {
+.dp-checkbox-input:checked+.dp-checkbox-box::after {
     opacity: 1;
 }
 
@@ -1686,4 +1687,4 @@
 /* Reduce standard height */
 .dp-excel-grid-v2 .k-grid-header th.k-header {
     height: 40px !important;
-}
+}

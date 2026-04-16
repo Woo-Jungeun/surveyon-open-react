@@ -8,10 +8,10 @@ import { GripVertical, Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
  * 행 추가, 삭제, 드래그 이동, 인라인 편집 기능을 내장한 공통 컴포넌트입니다.
  */
 const KendoGridV2 = (props) => {
-    const { 
-        data = [], 
-        children, 
-        className = "", 
+    const {
+        data = [],
+        children,
+        className = "",
         height = "100%",
         reorderable = false,
         addable = false,
@@ -21,7 +21,7 @@ const KendoGridV2 = (props) => {
         newRowTemplate = {},
         onDataChange,
         onRowClick,
-        ...rest 
+        ...rest
     } = props;
 
     const [draggedItemIndex, setDraggedItemIndex] = useState(null);
@@ -65,7 +65,7 @@ const KendoGridV2 = (props) => {
     // --- 내부 Row 렌더러 (드래그앤드롭) ---
     const internalRowRender = (trElement, trProps) => {
         if (!reorderable) return trElement;
-        
+
         const index = trProps.dataIndex;
         const extendedProps = {
             ...trElement.props,
@@ -102,7 +102,6 @@ const KendoGridV2 = (props) => {
         <Grid
             data={data}
             className={`dp-excel-grid-v2 ${className} ${reorderable ? 'reorderable' : ''}`}
-            dataItemKey="source_var_id"
             style={{ height }}
             onItemChange={onItemChange}
             editField={editField}
