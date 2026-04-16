@@ -326,32 +326,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             )}
 
-            <div className="dp-setting-card" style={{ marginBottom: '24px' }}>
-                <div className="dp-setting-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div className="dp-setting-card" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: '#1E293B', fontSize: '14px' }}>
                         <Layout size={16} /> 기본 Weight(가중치) 변수
-                        <span style={{
-                            backgroundColor: settings.weight_variable === '없음' ? '#ef4444' : '#10b981',
-                            color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 600
-                        }}>
-                            {settings.weight_variable === '없음' ? '미설정됨' : '설정됨'}
-                        </span>
-                    </div>
-                    <button style={{
-                        border: 'none', background: '#E2E8F0', padding: '4px 10px',
-                        borderRadius: '4px', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', gap: '4px'
-                    }}>
-                        <Plus size={14} /> 가중치 변수 생성
-                    </button>
-                </div>
-                <div className="dp-setting-card-body">
-                    <div style={{ fontSize: '13px', color: '#64748B', marginBottom: '12px' }}>
-                        이 분석에 적용될 전체 가중치 변수를 지정합니다.
                     </div>
                     <select
                         className="dp-select"
-                        style={{ width: '100%', maxWidth: '400px', background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#1E293B', padding: '8px 12px', borderRadius: '6px' }}
+                        style={{ width: '220px', background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#1E293B', padding: '6px 10px', borderRadius: '6px', fontSize: '13px' }}
                         value={settings.weight_variable}
                         onChange={(e) => {
                             setSettings({ ...settings, weight_variable: e.target.value });
@@ -360,13 +342,19 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     >
                         {weightOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
-
                     {settings.weight_variable === '없음' && (
-                        <div style={{ marginTop: '16px', padding: '12px 16px', background: '#FEF2F2', color: '#DC2626', fontSize: '13px', border: '1px solid #FCA5A5', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <AlertCircle size={16} /> 분석 결과의 올바른 보정을 위해 가중치 변수를 지정해주세요.
-                        </div>
+                        <span style={{ color: '#DC2626', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 500 }}>
+                            <AlertCircle size={14} /> 가중치 변수가 지정되지 않았습니다. 분석 결과의 올바른 보정을 위해 새 가중치 변수 생성 버튼을 눌러 지정해주세요.
+                        </span>
                     )}
                 </div>
+                <button style={{
+                    border: 'none', background: '#E2E8F0', padding: '6px 12px',
+                    borderRadius: '4px', fontSize: '12px', fontWeight: 600, color: '#334155', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: '4px'
+                }}>
+                    <Plus size={14} /> 가중치 변수 생성
+                </button>
             </div>
 
             <div className="dp-setting-card">
@@ -474,7 +462,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     // 2. 표 설정 탭
     const renderTableSettingsTab = () => (
         <div className="dp-setting-section">
-            <div className="dp-setting-card">
+            <div className="dp-setting-card" style={{ marginBottom: '24px' }}>
                 <div className="dp-setting-card-header">
                     <Layout size={16} /> 테이블 표시 정책 재정의 (Overrides)
                 </div>
@@ -588,6 +576,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                 </div>
             </div>
+
             <div className="dp-setting-card">
                 <div className="dp-setting-card-header">
                     <Type size={16} /> 표 서식 및 렌더링 설정 (미리보기)
