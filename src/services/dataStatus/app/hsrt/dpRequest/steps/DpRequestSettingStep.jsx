@@ -110,7 +110,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 // 2. 가중치 선택을 위한 기본 변수 목록 조회
                 const variablesPromise = getBaseVariableList.mutateAsync({ pageid: pageId, user: userId });
                 const [renderContext, tableDetail, varList] = await Promise.all([contextPromise, detailPromise, variablesPromise]);
-
+                console.log(tableDetail)
                 if (renderContext) {
                     setContextData(renderContext);
                 }
@@ -120,8 +120,10 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 let nextRankData = rankData;
                 let nextGroupData = groupData;
 
-                if (tableDetail?.id || renderContext?.id) {
-                    const ui = tableDetail?.ui_settings || {};
+                let actualTableDetail = tableDetail?.resultjson || tableDetail;
+
+                if (actualTableDetail?.id || renderContext?.id) {
+                    const ui = actualTableDetail?.ui_settings || {};
 
                     const initDisplay = { ...settings.display, ...renderContext?.effective_display_policy };
                     if (ui.format_show_n !== undefined) initDisplay.show_n = ui.format_show_n;
@@ -135,24 +137,24 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     if (ui.format_max_round !== undefined) initDisplay.max_digits = ui.format_max_round;
 
                     nextSettings = {
-                        weight_variable: tableDetail?.weight_variable || renderContext?.weight_variable || '없음',
-                        confidence_level: tableDetail?.confidence_level || renderContext?.confidence_level || 95,
+                        weight_variable: actualTableDetail?.weight_variable || renderContext?.weight_variable || '없음',
+                        confidence_level: actualTableDetail?.confidence_level || renderContext?.confidence_level || 95,
                         render: { ...settings.render, ...renderContext?.effective_render_settings, ...ui },
                         display: initDisplay
                     };
 
                     setSettings(nextSettings);
 
-                    if (tableDetail?.scale_presets) {
-                        nextScaleData = tableDetail.scale_presets;
+                    if (actualTableDetail?.scale_presets) {
+                        nextScaleData = actualTableDetail.scale_presets;
                         setScaleData(nextScaleData);
                     }
-                    if (tableDetail?.rank_presets) {
-                        nextRankData = tableDetail.rank_presets;
+                    if (actualTableDetail?.rank_presets) {
+                        nextRankData = actualTableDetail.rank_presets;
                         setRankData(nextRankData);
                     }
-                    if (tableDetail?.group_presets) {
-                        nextGroupData = tableDetail.group_presets;
+                    if (actualTableDetail?.group_presets) {
+                        nextGroupData = actualTableDetail.group_presets;
                         setGroupData(nextGroupData);
                     }
                 }
@@ -435,7 +437,23 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '14px', color: '#1E293B', marginBottom: '8px' }}>다중형 순위 설정</div>
                         <div style={{ height: '200px', border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
-                            <KendoGridV2 data={rankData} addable deletable showNo onDataChange={(newData) => { setRankData(newData); if (onUnsavedChange) onUnsavedChange(true); }}>
+                            <KendoGridV2 
+                                data={rankData} 
+                                addable 
+                                deletable 
+                                showNo 
+                                onRowClick={(e) => {
+                                    const newData = rankData.map(item => ({
+                                        ...item,
+                                        inEdit: item === e.dataItem
+                                    }));
+                                    setRankData(newData);
+                                }}
+                                onDataChange={(newData) => { 
+                                    setRankData(newData); 
+                                    if (onUnsavedChange) onUnsavedChange(true); 
+                                }}
+                            >
                                 <Column field="name" title="이름" width="400px" />
                                 <Column field="selection" title="조합 선언 (예: 1, 1+2, 1+2+3)" />
                             </KendoGridV2>
@@ -444,9 +462,25 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                     {/* 그룹화 */}
                     <div>
-                        <div style={{ fontWeight: 600, fontSize: '14px', color: '#1E293B', marginBottom: '8px' }}>사용자 정의 그룹 조건 병합(Group) 관리</div>
+                        <div style={{ fontWeight: 600, fontSize: '14px', color: '#1E293B', marginBottom: '8px' }}>그룹(값 묶기) 설정</div>
                         <div style={{ height: '200px', border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
-                            <KendoGridV2 data={groupData} addable deletable showNo onDataChange={(newData) => { setGroupData(newData); if (onUnsavedChange) onUnsavedChange(true); }}>
+                            <KendoGridV2 
+                                data={groupData} 
+                                addable 
+                                deletable 
+                                showNo 
+                                onRowClick={(e) => {
+                                    const newData = groupData.map(item => ({
+                                        ...item,
+                                        inEdit: item === e.dataItem
+                                    }));
+                                    setGroupData(newData);
+                                }}
+                                onDataChange={(newData) => { 
+                                    setGroupData(newData); 
+                                    if (onUnsavedChange) onUnsavedChange(true); 
+                                }}
+                            >
                                 <Column field="name" title="이름" width="400px" />
                                 <Column field="selection" title="그룹 선언 (예: 브랜드A=1,2 | 브랜드B=3)" />
                             </KendoGridV2>
