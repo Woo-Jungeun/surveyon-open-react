@@ -48,10 +48,10 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         render: {
             font_family: 'Arial, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif',
             font_size: 14,
-            theme_primary: '#2F5597',
-            theme_primary_fg: '#FFFFFF',
-            theme_secondary: '#D9E1F2',
-            theme_secondary_alt: '#F1F5F9',
+            theme_primary: '#D3D3D3',
+            theme_primary_fg: '#1E293B',
+            theme_secondary: '#F1F5F9',
+            theme_secondary_alt: '#E2E8F0',
             theme_bg: '#FFFFFF',
             theme_bg_alt: '#F8FAFC',
             theme_stripe: '#F5F7FB',
@@ -61,7 +61,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             theme_destructive: '#EF4444',
             theme_warning: '#F59E0B',
             theme_success: '#10B981',
-            theme_info: '#3B82F6',
+            theme_info: '#475569',
             theme_sidebar_hover: '',
             theme_border_color: '#CBD5E1',
             theme_border_outer_top: 'solid',
@@ -136,10 +136,19 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     if (ui.format_min_round !== undefined) initDisplay.min_digits = ui.format_min_round;
                     if (ui.format_max_round !== undefined) initDisplay.max_digits = ui.format_max_round;
 
+                    let mergedRender = { ...settings.render, ...renderContext?.effective_render_settings, ...ui };
+                    // Replace legacy Navy blue with the modern Tailwind Blue theme for consistency
+                    if (mergedRender.theme_primary === '#2F5597' || mergedRender.theme_primary === '#2563EB' || mergedRender.theme_primary === '#475569') {
+                        mergedRender.theme_primary = '#D3D3D3';
+                        mergedRender.theme_primary_fg = '#1E293B';
+                        mergedRender.theme_secondary = '#F1F5F9';
+                        mergedRender.theme_secondary_alt = '#E2E8F0';
+                    }
+
                     nextSettings = {
                         weight_variable: actualTableDetail?.weight_variable || renderContext?.weight_variable || '없음',
                         confidence_level: actualTableDetail?.confidence_level || renderContext?.confidence_level || 95,
-                        render: { ...settings.render, ...renderContext?.effective_render_settings, ...ui },
+                        render: mergedRender,
                         display: initDisplay
                     };
 
@@ -498,7 +507,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9' }}>
             <div className="dp-setting-card" style={{ marginBottom: '24px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                    <Layout size={16} color="#3B82F6" /> 테이블 표시 정책 재정의 (Overrides)
+                    <Layout size={16} color="#475569" /> 테이블 표시 정책 재정의 (Overrides)
                 </div>
                 <div className="dp-setting-card-body" style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
@@ -513,7 +522,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_n ? '#3B82F6' : '#fff', border: settings.display.show_n ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     {settings.display.show_n && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                 </div>
-                                <span style={{ fontWeight: 500 }}>빈도(N) 기본 표시 <span style={{ color: '#94A3B8', fontWeight: 400 }}>(show_n)</span></span>
+                                <span style={{ fontWeight: 500 }}>빈도(N) 기본 표시</span>
                             </div>
                             <div
                                 onClick={() => { setSettings({ ...settings, display: { ...settings.display, show_percent: !settings.display.show_percent } }); if (onUnsavedChange) onUnsavedChange(true); }}
@@ -522,7 +531,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_percent ? '#3B82F6' : '#fff', border: settings.display.show_percent ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     {settings.display.show_percent && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                                 </div>
-                                <span style={{ fontWeight: 500 }}>비율(%) 기본 표시 <span style={{ color: '#94A3B8', fontWeight: 400 }}>(show_percent)</span></span>
+                                <span style={{ fontWeight: 500 }}>비율(%) 기본 표시</span>
                             </div>
                         </div>
 
@@ -564,118 +573,132 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
                     <Type size={16} color="#8B5CF6" /> 표 서식 및 렌더링 설정 (미리보기)
                 </div>
-                <div className="dp-setting-card-body" style={{ padding: '20px' }}>
-                    <div className="dp-setting-grid">
-                        <div className="dp-form-group">
-                            <label>글꼴 (Font-Family)</label>
-                            <input
-                                type="text"
-                                value={settings.render.font_family}
-                                onChange={(e) => setSettings({
-                                    ...settings,
-                                    render: { ...settings.render, font_family: e.target.value }
-                                })}
-                            />
-                            <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                                <button className="dp-tag-btn" onClick={() => setSettings({
-                                    ...settings, render: { ...settings.render, font_family: 'Arial' }
-                                })}>기본 (Arial)</button>
-                                <button className="dp-tag-btn" onClick={() => setSettings({
-                                    ...settings, render: { ...settings.render, font_family: 'Noto Sans KR' }
-                                })}>본고딕 (Noto)</button>
+                <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'stretch' }}>
+
+                    {/* Left: Main Workspace (Typography & Preview) */}
+                    <div style={{ flex: '1 1 600px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {/* Typography */}
+                        <div style={{ background: '#F8FAFC', padding: '12px 20px', borderRadius: '8px', border: '1px solid #E2E8F0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '24px', justifyContent: 'flex-start' }}>
+                            {/* 폰트 종류 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1 1 auto', minWidth: '350px' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>글꼴 (Font-Family)</label>
+                                <input
+                                    type="text"
+                                    style={{ flex: 1, minWidth: '150px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '13px', outline: 'none' }}
+                                    value={settings.render.font_family}
+                                    onChange={(e) => setSettings({ ...settings, render: { ...settings.render, font_family: e.target.value } })}
+                                    placeholder="폰트를 입력하세요"
+                                />
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                    <button className="dp-tag-btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', fontSize: '11px', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, font_family: "'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif" } })}>Spoqa</button>
+                                    <button className="dp-tag-btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', fontSize: '11px', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, font_family: "'Noto Sans KR', sans-serif" } })}>Noto</button>
+                                    <button className="dp-tag-btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', fontSize: '11px', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, font_family: "'Apple SD Gothic Neo', sans-serif" } })}>Apple SD</button>
+                                    <button className="dp-tag-btn" style={{ background: '#FFFFFF', border: '1px solid #E2E8F0', color: '#475569', fontSize: '11px', padding: '6px 12px', borderRadius: '4px', cursor: 'pointer', whiteSpace: 'nowrap' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, font_family: "Arial, sans-serif" } })}>Arial</button>
+                                </div>
+                            </div>
+                            {/* 구분선 */}
+                            <div style={{ width: '1px', height: '24px', background: '#CBD5E1' }}></div>
+                            {/* 폰트 크기 */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '0 0 auto' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>크기</label>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '6px', padding: '4px 12px' }}>
+                                    <input
+                                        type="number"
+                                        style={{ width: '60px', padding: '4px 0', border: 'none', fontSize: '14px', outline: 'none', textAlign: 'center', fontWeight: 500 }}
+                                        value={settings.render.font_size}
+                                        onChange={(e) => setSettings({ ...settings, render: { ...settings.render, font_size: parseInt(e.target.value) || 0 } })}
+                                    />
+                                    <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: 500 }}>px</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="dp-form-group">
-                            <label>표 기본 글자 크기 (px)</label>
-                            <input
-                                type="number"
-                                value={settings.render.font_size}
-                                onChange={(e) => setSettings({
-                                    ...settings,
-                                    render: { ...settings.render, font_size: parseInt(e.target.value) || 0 }
-                                })}
-                            />
-                        </div>
-                    </div>
-                    {/* ... (테두리 설정 미리보기 부분 - 생략 또는 유지) */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '24px', marginTop: '24px', borderTop: '1px solid #e2e8f0', paddingTop: '24px' }}>
-                        {/* Interactive Box (Left) */}
-                        <div style={{ flex: '1 1 340px', minWidth: '340px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '16px' }}>
-                                1. 변경할 테두리 영역을 선택하세요:
-                                {activeBorderTarget && (
-                                    <span style={{ background: settings.render.theme_primary, color: settings.render.theme_primary_fg, padding: '4px 10px', borderRadius: '4px', fontSize: '12px' }}>
-                                        현재 선택됨: {activeBorderTarget.toUpperCase()}
-                                    </span>
-                                )}
-                            </label>
 
-                            {/* Interactive Container */}
+                        {/* Interactive Preview Container */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#F8FAFC', padding: '16px 20px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                                <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>
+                                    변경할 테두리 영역 선택
+                                </label>
+                                {activeBorderTarget && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#3B82F6', fontWeight: 600, background: '#EFF6FF', padding: '4px 10px', borderRadius: '12px', border: '1px solid #BFDBFE' }}>
+                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#3B82F6' }} />
+                                        현재 대상: {
+                                            activeBorderTarget === 'top' ? '외곽 상단 (Top)' :
+                                                activeBorderTarget === 'bottom' ? '외곽 하단 (Bottom)' :
+                                                    activeBorderTarget === 'left' ? '외곽 좌측 (Left)' :
+                                                        activeBorderTarget === 'right' ? '외곽 우측 (Right)' :
+                                                            activeBorderTarget === 'header' ? '헤더 하단 (Header)' :
+                                                                activeBorderTarget === 'stub' ? '스터브 우측 (Stub)' : activeBorderTarget.toUpperCase()
+                                        }
+                                    </div>
+                                )}
+                            </div>
+
                             <div style={{
-                                position: 'relative', width: '340px', height: '220px',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                border: '1px solid #e2e8f0', backgroundColor: settings.render.theme_bg, borderRadius: '8px',
-                                padding: '24px', boxSizing: 'border-box'
+                                position: 'relative', width: '100%', maxWidth: '460px', height: '240px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: 'auto',
+                                border: '1px solid #E2E8F0', backgroundColor: settings.render.theme_bg, borderRadius: '8px',
+                                padding: '16px', boxSizing: 'border-box'
                             }}>
-                                {/* The Table Block */}
                                 <div style={{
                                     position: 'relative', width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
                                     color: settings.render.theme_text, fontFamily: settings.render.font_family,
                                     fontSize: `${settings.render.font_size}px`
                                 }}>
                                     {/* Header Row */}
-                                    <div style={{ display: 'flex', height: '45px', textAlign: 'center', fontWeight: 'bold', backgroundColor: settings.render.theme_primary, color: settings.render.theme_primary_fg }}>
-                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>Stub Label</div>
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Total / Header</div>
+                                    <div style={{ display: 'flex', height: '48px', textAlign: 'center', fontWeight: 'bold', backgroundColor: settings.render.theme_primary, color: settings.render.theme_primary_fg }}>
+                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Stub Label</div>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Total / Header</div>
                                     </div>
-
                                     {/* Data Row 1 */}
                                     <div style={{ display: 'flex', flex: 1, backgroundColor: settings.render.theme_bg }}>
-                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt }}>Category 1</div>
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted }}>54% | 23%</div>
+                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Category 1</div>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>54% | 23%</div>
                                     </div>
-
                                     {/* Data Row 2 */}
                                     <div style={{ display: 'flex', flex: 1, backgroundColor: settings.render.theme_stripe }}>
-                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt }}>Category 2</div>
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted }}>46% | 77%</div>
+                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Category 2</div>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>46% | 77%</div>
                                     </div>
 
                                     {/* Clickable Overlays */}
-                                    {/* Top */}
-                                    <div onClick={() => setActiveBorderTarget('top')} style={{ position: 'absolute', top: '-16px', left: 0, right: 0, height: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', background: activeBorderTarget === 'top' ? 'rgba(59,130,246,0.1)' : 'transparent', border: activeBorderTarget === 'top' ? '1px dashed #3b82f6' : 'none' }}>
-                                        <div style={{ width: '100%', borderTop: settings.render.theme_border_outer_top === 'none' ? 'none' : settings.render.theme_border_outer_top === 'thick' ? '3px solid' : settings.render.theme_border_outer_top === 'double' ? '4px double' : '1px solid', borderColor: settings.render.theme_border_color }} />
+                                    <div onClick={() => setActiveBorderTarget('top')} style={{ position: 'absolute', top: '-16px', left: 0, right: 0, height: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', background: activeBorderTarget === 'top' ? 'rgba(59,130,246,0.15)' : 'transparent', border: activeBorderTarget === 'top' ? '1px dashed #3B82F6' : 'none' }}>
+                                        <div style={{ width: '100%', borderTopStyle: settings.render.theme_border_outer_top === 'none' ? 'none' : settings.render.theme_border_outer_top === 'double' ? 'double' : 'solid', borderTopWidth: settings.render.theme_border_outer_top === 'thick' ? '3px' : settings.render.theme_border_outer_top === 'double' ? '4px' : settings.render.theme_border_outer_top === 'none' ? '0' : '1px', borderTopColor: settings.render.theme_border_color || '#1e293b' }} />
                                     </div>
-                                    {/* Bottom */}
-                                    <div onClick={() => setActiveBorderTarget('bottom')} style={{ position: 'absolute', bottom: '-16px', left: 0, right: 0, height: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', background: activeBorderTarget === 'bottom' ? 'rgba(59,130,246,0.1)' : 'transparent', border: activeBorderTarget === 'bottom' ? '1px dashed #3b82f6' : 'none' }}>
-                                        <div style={{ width: '100%', borderBottom: settings.render.theme_border_outer_bottom === 'none' ? 'none' : settings.render.theme_border_outer_bottom === 'thick' ? '3px solid' : settings.render.theme_border_outer_bottom === 'double' ? '4px double' : '1px solid', borderColor: settings.render.theme_border_color }} />
+                                    <div onClick={() => setActiveBorderTarget('bottom')} style={{ position: 'absolute', bottom: '-16px', left: 0, right: 0, height: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', background: activeBorderTarget === 'bottom' ? 'rgba(59,130,246,0.15)' : 'transparent', border: activeBorderTarget === 'bottom' ? '1px dashed #3B82F6' : 'none' }}>
+                                        <div style={{ width: '100%', borderBottomStyle: settings.render.theme_border_outer_bottom === 'none' ? 'none' : settings.render.theme_border_outer_bottom === 'double' ? 'double' : 'solid', borderBottomWidth: settings.render.theme_border_outer_bottom === 'thick' ? '3px' : settings.render.theme_border_outer_bottom === 'double' ? '4px' : settings.render.theme_border_outer_bottom === 'none' ? '0' : '1px', borderBottomColor: settings.render.theme_border_color || '#1e293b' }} />
                                     </div>
-                                    {/* Left */}
-                                    <div onClick={() => setActiveBorderTarget('left')} style={{ position: 'absolute', top: 0, bottom: 0, left: '-16px', width: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeBorderTarget === 'left' ? 'rgba(59,130,246,0.1)' : 'transparent', border: activeBorderTarget === 'left' ? '1px dashed #3b82f6' : 'none' }}>
-                                        <div style={{ height: '100%', borderLeft: settings.render.theme_border_outer_left === 'none' ? 'none' : settings.render.theme_border_outer_left === 'thick' ? '3px solid' : settings.render.theme_border_outer_left === 'double' ? '4px double' : '1px solid', borderColor: settings.render.theme_border_color }} />
+                                    <div onClick={() => setActiveBorderTarget('left')} style={{ position: 'absolute', top: 0, bottom: 0, left: '-16px', width: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeBorderTarget === 'left' ? 'rgba(59,130,246,0.15)' : 'transparent', border: activeBorderTarget === 'left' ? '1px dashed #3B82F6' : 'none' }}>
+                                        <div style={{ height: '100%', borderLeftStyle: settings.render.theme_border_outer_left === 'none' ? 'none' : settings.render.theme_border_outer_left === 'double' ? 'double' : 'solid', borderLeftWidth: settings.render.theme_border_outer_left === 'thick' ? '3px' : settings.render.theme_border_outer_left === 'double' ? '4px' : settings.render.theme_border_outer_left === 'none' ? '0' : '1px', borderLeftColor: settings.render.theme_border_color || '#1e293b' }} />
                                     </div>
-                                    {/* Right */}
-                                    <div onClick={() => setActiveBorderTarget('right')} style={{ position: 'absolute', top: 0, bottom: 0, right: '-16px', width: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeBorderTarget === 'right' ? 'rgba(59,130,246,0.1)' : 'transparent', border: activeBorderTarget === 'right' ? '1px dashed #3b82f6' : 'none' }}>
-                                        <div style={{ height: '100%', borderRight: settings.render.theme_border_outer_right === 'none' ? 'none' : settings.render.theme_border_outer_right === 'thick' ? '3px solid' : settings.render.theme_border_outer_right === 'double' ? '4px double' : '1px solid', borderColor: settings.render.theme_border_color }} />
+                                    <div onClick={() => setActiveBorderTarget('right')} style={{ position: 'absolute', top: 0, bottom: 0, right: '-16px', width: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeBorderTarget === 'right' ? 'rgba(59,130,246,0.15)' : 'transparent', border: activeBorderTarget === 'right' ? '1px dashed #3B82F6' : 'none' }}>
+                                        <div style={{ height: '100%', borderRightStyle: settings.render.theme_border_outer_right === 'none' ? 'none' : settings.render.theme_border_outer_right === 'double' ? 'double' : 'solid', borderRightWidth: settings.render.theme_border_outer_right === 'thick' ? '3px' : settings.render.theme_border_outer_right === 'double' ? '4px' : settings.render.theme_border_outer_right === 'none' ? '0' : '1px', borderRightColor: settings.render.theme_border_color || '#1e293b' }} />
                                     </div>
-                                    {/* Header Inner */}
-                                    <div onClick={() => setActiveBorderTarget('header')} style={{ position: 'absolute', top: '29px', left: 0, right: 0, height: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', background: activeBorderTarget === 'header' ? 'rgba(59,130,246,0.1)' : 'transparent', border: activeBorderTarget === 'header' ? '1px dashed #3b82f6' : 'none' }}>
-                                        <div style={{ width: '100%', borderTop: settings.render.theme_border_header === 'none' ? 'none' : settings.render.theme_border_header === 'thick' ? '3px solid' : settings.render.theme_border_header === 'double' ? '4px double' : '1px solid', borderColor: settings.render.theme_border_color }} />
+                                    <div onClick={() => setActiveBorderTarget('header')} style={{ position: 'absolute', top: '32px', left: 0, right: 0, height: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', background: activeBorderTarget === 'header' ? 'rgba(59,130,246,0.15)' : 'transparent', border: activeBorderTarget === 'header' ? '1px dashed #3B82F6' : 'none' }}>
+                                        <div style={{ width: '100%', borderTopStyle: settings.render.theme_border_header === 'none' ? 'none' : settings.render.theme_border_header === 'double' ? 'double' : 'solid', borderTopWidth: settings.render.theme_border_header === 'thick' ? '3px' : settings.render.theme_border_header === 'double' ? '4px' : settings.render.theme_border_header === 'none' ? '0' : '1px', borderTopColor: settings.render.theme_border_color || '#1e293b' }} />
                                     </div>
-                                    {/* Stub Inner */}
-                                    <div onClick={() => setActiveBorderTarget('stub')} style={{ position: 'absolute', top: 0, bottom: 0, left: '84px', width: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeBorderTarget === 'stub' ? 'rgba(59,130,246,0.1)' : 'transparent', border: activeBorderTarget === 'stub' ? '1px dashed #3b82f6' : 'none' }}>
-                                        <div style={{ height: '100%', borderLeft: settings.render.theme_border_stub === 'none' ? 'none' : settings.render.theme_border_stub === 'thick' ? '3px solid' : settings.render.theme_border_stub === 'double' ? '4px double' : '1px solid', borderColor: settings.render.theme_border_color }} />
+                                    <div onClick={() => setActiveBorderTarget('stub')} style={{ position: 'absolute', top: 0, bottom: 0, left: '84px', width: '32px', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', background: activeBorderTarget === 'stub' ? 'rgba(59,130,246,0.15)' : 'transparent', border: activeBorderTarget === 'stub' ? '1px dashed #3B82F6' : 'none' }}>
+                                        <div style={{ height: '100%', borderLeftStyle: settings.render.theme_border_stub === 'none' ? 'none' : settings.render.theme_border_stub === 'double' ? 'double' : 'solid', borderLeftWidth: settings.render.theme_border_stub === 'thick' ? '3px' : settings.render.theme_border_stub === 'double' ? '4px' : settings.render.theme_border_stub === 'none' ? '0' : '1px', borderLeftColor: settings.render.theme_border_color || '#1e293b' }} />
                                     </div>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        {/* Style Picker (Right) */}
-                        <div style={{ flex: '0 0 200px' }}>
-                            <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '12px', display: 'block' }}>
-                                2. 적용할 선 스타일:
+                    {/* Right: Inspector Sidebar (Styles & Colors) */}
+                    <div style={{ flex: '0 0 280px', background: '#FFFFFF', padding: '16px', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+                        <div style={{ paddingBottom: '12px', borderBottom: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#1E293B' }}>표 테두리 상세 설정</span>
+                        </div>
+
+                        {/* 2. Style Picker */}
+                        <div style={{ opacity: activeBorderTarget ? 1 : 0.5, pointerEvents: activeBorderTarget ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
+                            <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                1. 적용할 선 스타일
+                                {!activeBorderTarget && <span style={{ fontSize: '11px', color: '#EF4444', fontWeight: 500 }}>영역을 먼저 선택하세요</span>}
                             </label>
-                            <div style={{ border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {['none', 'solid', 'thick', 'double'].map(styleStr => {
                                     const labels = { none: '선 없음 (None)', solid: '일반선 (Solid)', thick: '굵은선 (Bold)', double: '이중선 (Double)' };
                                     const currentStyle = activeBorderTarget && settings.render[`theme_border_${activeBorderTarget === 'header' || activeBorderTarget === 'stub' ? '' : 'outer_'}${activeBorderTarget}`] === styleStr;
@@ -690,22 +713,72 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 });
                                             }}
                                             style={{
-                                                padding: '12px', borderBottom: '1px solid #e2e8f0', cursor: 'pointer',
-                                                fontSize: '13px', color: currentStyle ? '#fff' : '#1e293b',
-                                                fontWeight: currentStyle ? 600 : 400,
-                                                backgroundColor: currentStyle ? settings.render.theme_primary : 'transparent'
+                                                padding: '8px 12px', cursor: 'pointer', borderRadius: '6px',
+                                                backgroundColor: currentStyle ? '#EFF6FF' : '#FFFFFF',
+                                                border: currentStyle ? '1px solid #3B82F6' : '1px solid #E2E8F0',
+                                                transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
                                             }}
                                         >
-                                            {labels[styleStr]}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                {/* Visual Preview Box */}
+                                                <div style={{
+                                                    width: '28px', height: '20px', flexShrink: 0,
+                                                    backgroundColor: currentStyle ? '#FFFFFF' : '#F8FAFC',
+                                                    border: currentStyle ? '1px solid #BFDBFE' : '1px solid #E2E8F0',
+                                                    borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    padding: '0 4px', boxSizing: 'border-box'
+                                                }}>
+                                                    {styleStr !== 'none' ? (
+                                                        <div style={{
+                                                            width: '100%',
+                                                            borderTopStyle: styleStr === 'double' ? 'double' : 'solid',
+                                                            borderTopWidth: styleStr === 'thick' ? '3px' : styleStr === 'double' ? '3px' : '1px',
+                                                            borderTopColor: currentStyle ? '#3B82F6' : '#64748B'
+                                                        }} />
+                                                    ) : (
+                                                        <div style={{ width: '100%', borderTop: '1px dashed', borderColor: currentStyle ? '#93C5FD' : '#CBD5E1' }} />
+                                                    )}
+                                                </div>
+                                                <div style={{ fontSize: '13px', color: currentStyle ? '#3B82F6' : '#334155', fontWeight: currentStyle ? 600 : 400 }}>
+                                                    {labels[styleStr]}
+                                                </div>
+                                            </div>
+                                            {currentStyle && <CheckCircle2 size={16} color="#3B82F6" />}
                                         </div>
                                     );
                                 })}
                             </div>
                         </div>
+
+                        {/* 3. Border Color Picker */}
+                        <div style={{ transition: 'opacity 0.2s' }}>
+                            <label style={{ fontSize: '13px', fontWeight: 600, color: '#475569', marginBottom: '8px', display: 'block' }}>
+                                2. 일괄 테두리 색상
+                            </label>
+                            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#FFFFFF', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1' }}>
+                                    <input
+                                        type="color"
+                                        value={settings.render.theme_border_color || '#000000'}
+                                        onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_border_color: e.target.value } })}
+                                        style={{ width: '36px', height: '24px', padding: 0, border: 'none', cursor: 'pointer', borderRadius: '4px' }}
+                                    />
+                                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#1E293B' }}>{settings.render.theme_border_color?.toUpperCase() || '#000000'}</span>
+                                </div>
+                                <button
+                                    onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_border_color: '#000000' } })}
+                                    style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#475569', fontSize: '13px', fontWeight: 600, cursor: 'pointer', padding: '8px 16px', borderRadius: '6px', width: '100%', transition: 'all 0.2s' }}
+                                    onMouseEnter={(e) => { e.target.style.backgroundColor = '#F1F5F9'; e.target.style.borderColor = '#94A3B8' }}
+                                    onMouseLeave={(e) => { e.target.style.backgroundColor = '#FFFFFF'; e.target.style.borderColor = '#CBD5E1' }}
+                                >
+                                    초기화 (기본색상)
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
-
             <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
                     <Palette size={16} color="#10B981" /> 전체 테마 색상 (커스텀/프리셋)
@@ -717,14 +790,14 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                             <div style={{ display: 'flex', gap: '6px' }}>
                                 <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', lineHeight: '24px' }}>LIGHT:</span>
-                                <button className="dp-tag-btn" style={{ background: '#2F5597', color: 'white', borderColor: '#2F5597', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#2F5597", theme_primary_fg: "#FFFFFF", theme_secondary: "#D9E1F2", theme_secondary_alt: "#F1F5F9", theme_bg: "#FFFFFF", theme_bg_alt: "#F8FAFC", theme_stripe: "#F5F7FB", theme_text: "#1F2937", theme_text_muted: "#64748B", theme_highlight: "#E74C3C", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_border_color: "#CBD5E1" } })}>블루 (기본)</button>
-                                <button className="dp-tag-btn" style={{ background: '#FAFAFA', color: '#18181B', borderColor: '#E4E4E7', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#3F3F46", theme_primary_fg: "#FFFFFF", theme_secondary: "#E4E4E7", theme_secondary_alt: "#F4F4F5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAFA", theme_stripe: "#F7F7F8", theme_text: "#18181B", theme_text_muted: "#A1A1AA", theme_highlight: "#18181B", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_border_color: "#E4E4E7" } })}>플래티넘 실버</button>
-                                <button className="dp-tag-btn" style={{ background: '#064E3B', color: 'white', borderColor: '#064E3B', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#064E3B", theme_primary_fg: "#FFFFFF", theme_secondary: "#D1FAE5", theme_secondary_alt: "#ECFDF5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAF9", theme_stripe: "#F5F5F4", theme_text: "#1C1917", theme_text_muted: "#78716C", theme_highlight: "#D97706", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_border_color: "#D6D3D1" } })}>에메랄드 포레스트</button>
+                                <button className="dp-tag-btn" style={{ background: '#D3D3D3', color: '#1E293B', borderColor: '#D3D3D3', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#D3D3D3", theme_primary_fg: "#1E293B", theme_secondary: "#F1F5F9", theme_secondary_alt: "#E2E8F0", theme_bg: "#FFFFFF", theme_bg_alt: "#F8FAFC", theme_stripe: "#F5F7FB", theme_text: "#1F2937", theme_text_muted: "#64748B", theme_highlight: "#E74C3C", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#D3D3D3", theme_border_color: "#CBD5E1" } })}>모던 그레이 (기본)</button>
+                                <button className="dp-tag-btn" style={{ background: '#FAFAFA', color: '#18181B', borderColor: '#E4E4E7', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#3F3F46", theme_primary_fg: "#FFFFFF", theme_secondary: "#E4E4E7", theme_secondary_alt: "#F4F4F5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAFA", theme_stripe: "#F7F7F8", theme_text: "#18181B", theme_text_muted: "#A1A1AA", theme_highlight: "#18181B", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#475569", theme_border_color: "#E4E4E7" } })}>플래티넘 실버</button>
+                                <button className="dp-tag-btn" style={{ background: '#064E3B', color: 'white', borderColor: '#064E3B', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#064E3B", theme_primary_fg: "#FFFFFF", theme_secondary: "#D1FAE5", theme_secondary_alt: "#ECFDF5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAF9", theme_stripe: "#F5F5F4", theme_text: "#1C1917", theme_text_muted: "#78716C", theme_highlight: "#D97706", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#475569", theme_border_color: "#D6D3D1" } })}>에메랄드 포레스트</button>
                             </div>
                             <div style={{ width: '1px', height: '16px', background: '#cbd5e1' }} />
                             <div style={{ display: 'flex', gap: '6px' }}>
                                 <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', lineHeight: '24px' }}>DARK:</span>
-                                <button className="dp-tag-btn" style={{ background: '#0F172A', color: '#F8FAFC', borderColor: '#1E293B', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#3B82F6", theme_primary_fg: "#FFFFFF", theme_secondary: "#1E293B", theme_secondary_alt: "#334155", theme_bg: "#0F172A", theme_bg_alt: "#1E293B", theme_stripe: "#172033", theme_text: "#F8FAFC", theme_text_muted: "#94A3B8", theme_highlight: "#FCD34D", theme_destructive: "#F87171", theme_warning: "#FBBF24", theme_success: "#34D399", theme_info: "#60A5FA", theme_border_color: "#334155" } })}>슬레이트 다크</button>
+                                <button className="dp-tag-btn" style={{ background: '#0F172A', color: '#F8FAFC', borderColor: '#1E293B', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#475569", theme_primary_fg: "#FFFFFF", theme_secondary: "#1E293B", theme_secondary_alt: "#334155", theme_bg: "#0F172A", theme_bg_alt: "#1E293B", theme_stripe: "#172033", theme_text: "#F8FAFC", theme_text_muted: "#94A3B8", theme_highlight: "#FCD34D", theme_destructive: "#F87171", theme_warning: "#FBBF24", theme_success: "#34D399", theme_info: "#60A5FA", theme_border_color: "#334155" } })}>슬레이트 다크</button>
                                 <button className="dp-tag-btn" style={{ background: '#36393F', color: 'white', borderColor: '#36393F', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#4752C4", theme_primary_fg: "#FFFFFF", theme_secondary: "#4F545C", theme_secondary_alt: "#40444B", theme_bg: "#36393F", theme_bg_alt: "#2F3136", theme_stripe: "#32353B", theme_text: "#DCDDDE", theme_text_muted: "#B9BBBE", theme_highlight: "#ED4245", theme_destructive: "#ED4245", theme_warning: "#FEE75C", theme_success: "#3BA55C", theme_info: "#4752C4", theme_border_color: "#202225" } })}>Discord (Dark)</button>
                             </div>
                         </div>
@@ -807,8 +880,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     cursor: 'pointer',
                                     fontWeight: isActive ? 600 : 500,
                                     fontSize: '15px',
-                                    color: isActive ? '#3B82F6' : '#64748B',
-                                    borderBottom: isActive ? '3px solid #3B82F6' : '3px solid transparent',
+                                    color: isActive ? '#475569' : '#64748B',
+                                    borderBottom: isActive ? '3px solid #475569' : '3px solid transparent',
                                     marginBottom: '-1px', // Overlay parent border
                                     transition: 'all 0.2s ease',
                                     display: 'flex',
