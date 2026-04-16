@@ -504,58 +504,82 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
                 <div className="dp-setting-card-body" style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
-                        {/* A. 기본 표시 여부 */}
-                        {/* A. 기본 표시 여부 */}
-                        <div style={{ flex: '0 0 340px' }}>
-                            <div style={{ fontWeight: 600, fontSize: '13px', color: '#1E293B', paddingBottom: '8px', marginBottom: '16px', borderBottom: '1px solid #CBD5E1' }}>A. 기본 표시 여부</div>
-                            <div
-                                onClick={() => { setSettings({ ...settings, display: { ...settings.display, show_n: !settings.display.show_n } }); if (onUnsavedChange) onUnsavedChange(true); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginBottom: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none' }}
-                            >
-                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_n ? '#3B82F6' : '#fff', border: settings.display.show_n ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {settings.display.show_n && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                        {/* 기본 표시 여부 */}
+                        <div style={{ flex: '0 0 280px' }}>
+                            <div style={{ fontWeight: 600, fontSize: '13px', color: '#1E293B', paddingBottom: '8px', marginBottom: '16px', borderBottom: '1px solid #CBD5E1' }}>기본 표시 여부</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div
+                                    onClick={() => { setSettings({ ...settings, display: { ...settings.display, show_n: !settings.display.show_n } }); if (onUnsavedChange) onUnsavedChange(true); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', padding: '10px 12px', borderRadius: '6px', border: '1px solid #E2E8F0' }}
+                                >
+                                    <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_n ? '#3B82F6' : '#fff', border: settings.display.show_n ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {settings.display.show_n && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                    </div>
+                                    <span style={{ fontWeight: 500 }}>빈도(N) 기본 표시</span>
                                 </div>
-                                <span style={{ fontWeight: 500 }}>빈도(N) 기본 표시</span>
-                            </div>
-                            <div
-                                onClick={() => { setSettings({ ...settings, display: { ...settings.display, show_percent: !settings.display.show_percent } }); if (onUnsavedChange) onUnsavedChange(true); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer', userSelect: 'none' }}
-                            >
-                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_percent ? '#3B82F6' : '#fff', border: settings.display.show_percent ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    {settings.display.show_percent && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                <div
+                                    onClick={() => { setSettings({ ...settings, display: { ...settings.display, show_percent: !settings.display.show_percent } }); if (onUnsavedChange) onUnsavedChange(true); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F8FAFC', padding: '10px 12px', borderRadius: '6px', border: '1px solid #E2E8F0' }}
+                                >
+                                    <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_percent ? '#3B82F6' : '#fff', border: settings.display.show_percent ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        {settings.display.show_percent && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                    </div>
+                                    <span style={{ fontWeight: 500 }}>비율(%) 기본 표시</span>
                                 </div>
-                                <span style={{ fontWeight: 500 }}>비율(%) 기본 표시</span>
                             </div>
                         </div>
 
-                        {/* B. 소수점 자릿수 재정의 */}
+                        {/* 소수점 자릿수 재정의 */}
                         <div style={{ flex: 1, borderLeft: '1px solid #E2E8F0', paddingLeft: '32px' }}>
                             <div style={{ fontWeight: 600, fontSize: '13px', color: '#1E293B', paddingBottom: '8px', marginBottom: '16px', borderBottom: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                B. 소수점 자릿수 재정의
+                                소수점 자릿수 재정의
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                                 {[
-                                    { label: '비율 (%)', field: 'percent_digits' },
-                                    { label: '평균 (Mean)', field: 'mean_digits' },
-                                    { label: '표준편차 (Std)', field: 'std_digits' },
-                                    { label: '변량 (Var)', field: 'var_digits' },
-                                    { label: '중앙값 (Median)', field: 'median_digits' },
-                                    { label: '최대 (Max)', field: 'max_digits' },
-                                    { label: '최소 (Min)', field: 'min_digits' }
-                                ].map((item) => (
-                                    <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
-                                        <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>{item.label}</span>
-                                        <div style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: '4px', border: '1px solid #CBD5E1', overflow: 'hidden', width: '40px' }}>
-                                            <input
-                                                type="number"
-                                                value={settings.display[item.field]}
-                                                onChange={(e) => { setSettings({ ...settings, display: { ...settings.display, [item.field]: parseInt(e.target.value) || 0 } }); if (onUnsavedChange) onUnsavedChange(true); }}
-                                                style={{ width: '100%', padding: '4px 0', fontSize: '12px', textAlign: 'center', border: 'none', outline: 'none', fontWeight: 600, color: '#0F172A' }}
-                                                min={0} max={10}
-                                            />
+                                    { label: '비율 (%)', field: 'percent_digits', suffix: '%' },
+                                    { label: '평균 (Mean)', field: 'mean_digits', suffix: '' },
+                                    { label: '표준편차 (Std)', field: 'std_digits', suffix: '' },
+                                    { label: '변량 (Var)', field: 'var_digits', suffix: '' },
+                                    { label: '중앙값 (Median)', field: 'median_digits', suffix: '' },
+                                    { label: '최대 (Max)', field: 'max_digits', suffix: '' },
+                                    { label: '최소 (Min)', field: 'min_digits', suffix: '' }
+                                ].map((item) => {
+                                    const val = settings.display[item.field] || 0;
+                                    const previewText = val === 0 ? `12${item.suffix}` : `12.${'0'.repeat(val)}${item.suffix}`;
+                                    return (
+                                        <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ fontSize: '13px', color: '#475569', fontWeight: 600 }}>{item.label}</span>
+                                                <span style={{ fontSize: '11px', color: '#94A3B8' }}>ex: {previewText}</span>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: '4px', border: '1px solid #CBD5E1', overflow: 'hidden' }}>
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = Math.max(0, val - 1);
+                                                        setSettings({ ...settings, display: { ...settings.display, [item.field]: newVal } });
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }}
+                                                    style={{ width: '28px', height: '28px', background: '#F1F5F9', border: 'none', borderRight: '1px solid #CBD5E1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '16px', fontWeight: 'bold' }}
+                                                    onMouseEnter={(e) => e.target.style.background = '#E2E8F0'}
+                                                    onMouseLeave={(e) => e.target.style.background = '#F1F5F9'}
+                                                >−</button>
+                                                <div style={{ width: '28px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: '#0F172A' }}>
+                                                    {val}
+                                                </div>
+                                                <button
+                                                    onClick={() => {
+                                                        const newVal = Math.min(10, val + 1);
+                                                        setSettings({ ...settings, display: { ...settings.display, [item.field]: newVal } });
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }}
+                                                    style={{ width: '28px', height: '28px', background: '#F1F5F9', border: 'none', borderLeft: '1px solid #CBD5E1', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#475569', fontSize: '16px', fontWeight: 'bold' }}
+                                                    onMouseEnter={(e) => e.target.style.background = '#E2E8F0'}
+                                                    onMouseLeave={(e) => e.target.style.background = '#F1F5F9'}
+                                                >+</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
