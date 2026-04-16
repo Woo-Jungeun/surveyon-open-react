@@ -102,6 +102,7 @@ const KendoGridV2 = (props) => {
         <Grid
             data={data}
             className={`dp-excel-grid-v2 ${className} ${reorderable ? 'reorderable' : ''}`}
+            dataItemKey="source_var_id"
             style={{ height }}
             onItemChange={onItemChange}
             editField={editField}

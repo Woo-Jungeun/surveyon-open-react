@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRe
 import { ChevronDown } from 'lucide-react';
 import { Check } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -14,6 +15,19 @@ const STAT_OPTIONS = [
     { id: 'std', label: '표준편차 (std)' },
     { id: 'mode', label: '최빈값 (mode)' },
     { id: 'median', label: '중앙값 (median)' },
+];
+
+const VAR_TYPE_OPTIONS = [
+    'single',
+    'multi',
+    'rank',
+    'minrank',
+    'maxrank',
+    'scale',
+    'dummy',
+    'custom',
+    'open(문자)',
+    'open(숫자)'
 ];
 
 const getQuestionTypeInfo = (type) => {
@@ -38,23 +52,24 @@ const getQuestionTypeInfo = (type) => {
 
 const canUseScalePreset = (type) => {
     const t = String(type || '').toLowerCase();
-    return t === 'scale' || t === 'single';
+    return true; // 사용자가 1번 문제(비활성화)를 호소하므로 제한 일시 해제
 };
 
 const canUseRankPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    return t === 'rank' || t === 'minrank' || t === 'maxrank' || t === 'multi';
+    // return t === 'rank' || t === 'minrank' || t === 'maxrank' || t === 'multi';
+    return true;
 };
 
 const canUseStatPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'dummy' || t === 'multi' || t.includes('문자') || t === 'open-text' || t === 'open') return false;
+    // if (t === 'dummy' || t === 'multi' || t.includes('문자') || t === 'open-text' || t === 'open') return false;
     return true;
 };
 
 const canUseGroupPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'double' || t.includes('문자') || t.includes('숫자') || t === 'open' || t === 'open-text' || t === 'open-num') return false;
+    // if (t === 'double' || t.includes('문자') || t.includes('숫자') || t === 'open' || t === 'open-text' || t === 'open-num') return false;
     return true;
 };
 
@@ -74,12 +89,16 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
         ? selectedValues
         : (selectedValues ? String(selectedValues).split(',').map(s => s.trim()).filter(Boolean) : []);
 
-    const wrapperRef = useRef(null);
+    const [anchor, setAnchor] = useState(null);
 
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (event) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+            if (
+                anchor && 
+                !anchor.contains(event.target) &&
+                !event.target.closest('.custom-filter-menu')
+            ) {
                 onOpenChange(null);
             }
         };
@@ -98,19 +117,26 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
 
     return (
         // wrapperRef가 trigger + menu를 모두 감쌈 → mousedown이 항상 "내부"로 인식됨
-        <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
+        <div ref={setAnchor} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
             <div
                 className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
                 onClick={() => onOpenChange(isOpen ? null : dataItem.source_var_id)}
                 style={{ height: '22px', padding: '0 6px', fontSize: '13px', width: '100%', borderRadius: '2px' }}
             >
-                <span className="trigger-text" style={{ fontSize: '13px' }}>{displayText}</span>
+                <div style={{ width: '20px', flexShrink: 0 }} />
+                <span className="trigger-text" style={{ fontSize: '13px', textAlign: 'center' }}>{displayText}</span>
                 <ChevronDown size={12} className="trigger-icon" />
             </div>
 
-            {/* 메뉴가 portal 없이 같은 wrapper안에 직접 있어서 mousedown 외부 감지가 정확함 */}
-            {isOpen && (
-                <div className="custom-filter-menu" style={{ minWidth: '180px', zIndex: 10001 }}>
+            <Popup 
+                anchor={anchor} 
+                show={isOpen && Boolean(anchor)} 
+                popupClass={'dropdown-popup-portal'}
+                anchorAlign={{ horizontal: 'left', vertical: 'bottom' }}
+                popupAlign={{ horizontal: 'left', vertical: 'top' }}
+                collision={{ horizontal: 'fit', vertical: 'flip' }}
+            >
+                <div className="custom-filter-menu" style={{ minWidth: '180px', zIndex: 10001, transform: 'translateY(4px)' }}>
                     {STAT_OPTIONS.map(opt => {
                         const isChecked = selected.includes(opt.id);
                         return (
@@ -127,7 +153,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
                         );
                     })}
                 </div>
-            )}
+            </Popup>
         </div>
     );
 });
@@ -136,12 +162,16 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenCh
 const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, activeId, onOpenChange = () => { } }) => {
     const val = dataItem[field];
     const isOpen = activeId === `${field}-${dataItem.source_var_id}`;
-    const wrapperRef = useRef(null);
+    const [anchor, setAnchor] = useState(null);
 
     useEffect(() => {
         if (!isOpen) return;
         const handleClickOutside = (event) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+            if (
+                anchor && 
+                !anchor.contains(event.target) &&
+                !event.target.closest('.custom-filter-menu')
+            ) {
                 onOpenChange(null);
             }
         };
@@ -163,23 +193,36 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, act
     };
 
     const displayText = selectedOption
-        ? <span style={{ color: '#1e293b', fontSize: '13px' }}>{selectedOption.text}</span>
+        ? (field === 'var_type' 
+            ? (() => {
+                const { color, displayType } = getQuestionTypeInfo(selectedOption.text);
+                return <span className={`question-type-badge ${color}`} style={{ display: 'inline-flex', alignItems: 'center' }}>{displayType}</span>;
+            })()
+            : <span style={{ color: '#1e293b', fontSize: '13px' }}>{selectedOption.text}</span>)
         : <span style={{ color: '#94a3b8', fontSize: '13px' }}>선택 (미설정)</span>;
 
     return (
         <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
-            <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
+            <div ref={setAnchor} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
                 <div
                     className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
                     onClick={() => onOpenChange(isOpen ? null : `${field}-${dataItem.source_var_id}`)}
                     style={{ height: '22px', padding: '0 6px', fontSize: '13px', width: '100%', borderRadius: '2px' }}
                 >
-                    <span className="trigger-text" style={{ fontSize: '13px' }}>{displayText}</span>
+                    <div style={{ width: '20px', flexShrink: 0 }} />
+                    <span className="trigger-text" style={{ fontSize: '13px', textAlign: 'center' }}>{displayText}</span>
                     <ChevronDown size={12} className="trigger-icon" />
                 </div>
 
-                {isOpen && options.length > 0 && (
-                    <div className="custom-filter-menu" style={{ width: '100%', zIndex: 10001 }}>
+                <Popup 
+                    anchor={anchor} 
+                    show={isOpen && options.length > 0 && Boolean(anchor)} 
+                    popupClass={'dropdown-popup-portal'}
+                    anchorAlign={{ horizontal: 'left', vertical: 'bottom' }}
+                    popupAlign={{ horizontal: 'left', vertical: 'top' }}
+                    collision={{ horizontal: 'fit', vertical: 'flip' }}
+                >
+                    <div className="custom-filter-menu" style={{ width: anchor ? anchor.offsetWidth : 'auto', minWidth: '150px', zIndex: 10001, transform: 'translateY(4px)' }}>
                         {options.map(opt => {
                             const isSelected = opt.id === String(val) || opt.text === String(val);
                             return (
@@ -199,7 +242,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, act
                             );
                         })}
                     </div>
-                )}
+                </Popup>
             </div>
         </td>
     );
@@ -463,35 +506,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     };
 
-    // --- Grid Renderers ---
-    const TypeCell = useMemo(() => (props) => {
-        const val = props.dataItem.var_type || '';
-        const { color, displayType } = getQuestionTypeInfo(val);
-        return (
-            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                <span className={`question-type-badge ${color}`}>{displayType}</span>
-            </td>
-        );
-    }, []);
 
-    const StatCellRenderer = useCallback((props) => {
-        if (!canUseStatPreset(props.dataItem.var_type)) {
-            return <td style={DISABLED_CELL_STYLE}>-</td>;
-        }
-        const isOpen = activeStatRowId === props.dataItem.source_var_id;
-        return (
-            // overflow: visible 필수 - custom-filter-menu가 셀 밖으로 나와야 함
-            <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
-                <StatSettingCell
-                    dataItem={props.dataItem}
-                    selectedValues={props.dataItem.stat_summary}
-                    isOpen={isOpen}
-                    onOpenChange={setActiveStatRowId}
-                    onToggle={handleCellUpdate}
-                />
-            </td>
-        );
-    }, [handleCellUpdate, activeStatRowId]);
+
+
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -506,7 +523,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             rowHeight={28}
                             onDataChange={handleDataChange}
                             style={{ height: '100%', width: '100%' }}
-                            scrollable="virtual"
+                            scrollable="scrollable"
                             addable
                             deletable
                             newRowTemplate={newRowTemplate}
@@ -521,7 +538,32 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
                             />
-                            <Column field="var_type" title="유형" width="100px" cell={TypeCell} headerClassName="k-text-center" />
+                            <Column field="var_type" title="유형" width="150px" headerClassName="k-text-center"
+                                cell={(p) => {
+                                    const val = p.dataItem.var_type || '';
+                                    const isNew = String(p.dataItem.source_var_id).startsWith('new_');
+                                    
+                                    if (!isNew) {
+                                        const { color, displayType } = getQuestionTypeInfo(val);
+                                        return (
+                                            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                                                <span className={`question-type-badge ${color}`}>{displayType}</span>
+                                            </td>
+                                        );
+                                    }
+                                    
+                                    return (
+                                        <PresetDropdownCell
+                                            field="var_type"
+                                            dataItem={p.dataItem}
+                                            presets={VAR_TYPE_OPTIONS}
+                                            onChange={handleCellUpdate}
+                                            activeId={activePresetId}
+                                            onOpenChange={setActivePresetId}
+                                        />
+                                    );
+                                }}
+                            />
                             <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
                             />
@@ -536,7 +578,25 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     return <td style={{ padding: '0 8px', verticalAlign: 'middle' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}><span>{p.dataItem.group_preset_name}</span><ChevronDown size={14} style={{ color: '#94a3b8' }} /></div></td>;
                                 }}
                             />
-                            <Column field="stat_summary" title="통계 설정" width="180px" cell={StatCellRenderer} headerClassName="k-text-center" />
+                            <Column field="stat_summary" title="통계 설정" width="180px" headerClassName="k-text-center" 
+                                cell={(p) => {
+                                    if (!canUseStatPreset(p.dataItem.var_type)) {
+                                        return <td style={DISABLED_CELL_STYLE}>-</td>;
+                                    }
+                                    const isOpen = activeStatRowId === p.dataItem.source_var_id;
+                                    return (
+                                        <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
+                                            <StatSettingCell
+                                                dataItem={p.dataItem}
+                                                selectedValues={p.dataItem.stat_summary}
+                                                isOpen={isOpen}
+                                                onOpenChange={setActiveStatRowId}
+                                                onToggle={handleCellUpdate}
+                                            />
+                                        </td>
+                                    );
+                                }}
+                            />
                             <Column field="scale_preset_name" title="척도 프리셋" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseScalePreset(p.dataItem.var_type)) {

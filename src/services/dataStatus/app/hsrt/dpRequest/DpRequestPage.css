@@ -1,8 +1,7 @@
 .dp-request-container {
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 120px);
-    /* 푸터와 겹치지 않게 충분히 축소 */
+    height: 100%;
     overflow: hidden;
     padding: 0px 0px 10px 0px;
     box-sizing: border-box;
