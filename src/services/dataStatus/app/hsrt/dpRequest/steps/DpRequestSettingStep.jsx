@@ -316,7 +316,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // 1. 분석 설정 탭
     const renderAnalysisTab = () => (
-        <div className="dp-setting-section">
+        <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9' }}>
             {contextData?.issues?.length > 0 && (
                 <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '16px', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1E293B', fontWeight: 600, marginBottom: '8px' }}>
@@ -328,7 +328,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             )}
 
-            <div className="dp-setting-card" style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px' }}>
+            <div className="dp-setting-card" style={{ marginBottom: '24px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: '#1E293B', fontSize: '14px' }}>
                         <Layout size={16} /> 기본 Weight(가중치) 변수
@@ -359,11 +359,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </button>
             </div>
 
-            <div className="dp-setting-card">
-                <div className="dp-setting-card-header">
-                    <Layers size={16} /> 고급 분석 설정 (응답 묶기 및 재정의)
+            <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                    <Layers size={16} color="#F59E0B" /> 고급 분석 설정 (응답 묶기 및 재정의)
                 </div>
-                <div className="dp-setting-card-body" style={{ display: 'flex', flexDirection: 'column', gap: '24px', background: '#F8FAFC' }}>
+                <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                     {/* 단일형 척도 */}
                     <div>
@@ -437,11 +437,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '14px', color: '#1E293B', marginBottom: '8px' }}>다중형 순위 설정</div>
                         <div style={{ height: '200px', border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
-                            <KendoGridV2 
-                                data={rankData} 
-                                addable 
-                                deletable 
-                                showNo 
+                            <KendoGridV2
+                                data={rankData}
+                                addable
+                                deletable
+                                showNo
                                 onRowClick={(e) => {
                                     const newData = rankData.map(item => ({
                                         ...item,
@@ -449,9 +449,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     }));
                                     setRankData(newData);
                                 }}
-                                onDataChange={(newData) => { 
-                                    setRankData(newData); 
-                                    if (onUnsavedChange) onUnsavedChange(true); 
+                                onDataChange={(newData) => {
+                                    setRankData(newData);
+                                    if (onUnsavedChange) onUnsavedChange(true);
                                 }}
                             >
                                 <Column field="name" title="이름" width="400px" />
@@ -464,11 +464,11 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '14px', color: '#1E293B', marginBottom: '8px' }}>그룹(값 묶기) 설정</div>
                         <div style={{ height: '200px', border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
-                            <KendoGridV2 
-                                data={groupData} 
-                                addable 
-                                deletable 
-                                showNo 
+                            <KendoGridV2
+                                data={groupData}
+                                addable
+                                deletable
+                                showNo
                                 onRowClick={(e) => {
                                     const newData = groupData.map(item => ({
                                         ...item,
@@ -476,9 +476,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     }));
                                     setGroupData(newData);
                                 }}
-                                onDataChange={(newData) => { 
-                                    setGroupData(newData); 
-                                    if (onUnsavedChange) onUnsavedChange(true); 
+                                onDataChange={(newData) => {
+                                    setGroupData(newData);
+                                    if (onUnsavedChange) onUnsavedChange(true);
                                 }}
                             >
                                 <Column field="name" title="이름" width="400px" />
@@ -495,127 +495,76 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // 2. 표 설정 탭
     const renderTableSettingsTab = () => (
-        <div className="dp-setting-section">
-            <div className="dp-setting-card" style={{ marginBottom: '24px' }}>
-                <div className="dp-setting-card-header">
-                    <Layout size={16} /> 테이블 표시 정책 재정의 (Overrides)
+        <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9' }}>
+            <div className="dp-setting-card" style={{ marginBottom: '24px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                    <Layout size={16} color="#3B82F6" /> 테이블 표시 정책 재정의 (Overrides)
                 </div>
-                <div className="dp-setting-card-body" style={{ background: '#f8fafc' }}>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '20px', paddingBottom: '12px', borderBottom: '1px solid #e2e8f0' }}>
-                        서버 기본 표시 정책을 재정의합니다. 하단의 "자동" 상태인 항목들은 백엔드의 render-context 정책에 따릅니다.
-                    </div>
-                    <div className="dp-setting-grid">
-                        <div className="dp-form-group">
-                            <label>A. 기본 표시 여부</label>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 400, fontSize: '13px' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.display.show_n}
-                                        onChange={(e) => {
-                                            setSettings({
-                                                ...settings,
-                                                display: { ...settings.display, show_n: e.target.checked }
-                                            });
-                                            if (onUnsavedChange) onUnsavedChange(true);
-                                        }}
-                                    /> 빈도(N) 기본 표시 (show_n)
-                                </label>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 400, fontSize: '13px' }}>
-                                    <input
-                                        type="checkbox"
-                                        checked={settings.display.show_percent}
-                                        onChange={(e) => {
-                                            setSettings({
-                                                ...settings,
-                                                display: { ...settings.display, show_percent: e.target.checked }
-                                            });
-                                            if (onUnsavedChange) onUnsavedChange(true);
-                                        }}
-                                    /> 비율(%) 기본 표시 (show_percent)
-                                </label>
+                <div className="dp-setting-card-body" style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+                        {/* A. 기본 표시 여부 */}
+                        {/* A. 기본 표시 여부 */}
+                        <div style={{ flex: '0 0 340px' }}>
+                            <div style={{ fontWeight: 600, fontSize: '13px', color: '#1E293B', paddingBottom: '8px', marginBottom: '16px', borderBottom: '1px solid #CBD5E1' }}>A. 기본 표시 여부</div>
+                            <div
+                                onClick={() => { setSettings({ ...settings, display: { ...settings.display, show_n: !settings.display.show_n } }); if (onUnsavedChange) onUnsavedChange(true); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', marginBottom: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none' }}
+                            >
+                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_n ? '#3B82F6' : '#fff', border: settings.display.show_n ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {settings.display.show_n && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                </div>
+                                <span style={{ fontWeight: 500 }}>빈도(N) 기본 표시 <span style={{ color: '#94A3B8', fontWeight: 400 }}>(show_n)</span></span>
+                            </div>
+                            <div
+                                onClick={() => { setSettings({ ...settings, display: { ...settings.display, show_percent: !settings.display.show_percent } }); if (onUnsavedChange) onUnsavedChange(true); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#334155', cursor: 'pointer', userSelect: 'none' }}
+                            >
+                                <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display.show_percent ? '#3B82F6' : '#fff', border: settings.display.show_percent ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {settings.display.show_percent && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                                </div>
+                                <span style={{ fontWeight: 500 }}>비율(%) 기본 표시 <span style={{ color: '#94A3B8', fontWeight: 400 }}>(show_percent)</span></span>
                             </div>
                         </div>
-                        <div className="dp-form-group">
-                            <label>B. 소수점 자릿수 재정의</label>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '4px' }}>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>비율 (%)</span>
-                                    <input
-                                        type="number"
-                                        value={settings.display.percent_digits}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, percent_digits: parseInt(e.target.value) || 0 }
-                                        })}
-                                    />
-                                </div>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>평균 (Mean)</span>
-                                    <input
-                                        type="number"
-                                        value={settings.display.mean_digits}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, mean_digits: parseInt(e.target.value) || 0 }
-                                        })}
-                                    />
-                                </div>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>표준편차 (Std)</span>
-                                    <input
-                                        type="number"
-                                        value={settings.display.std_digits}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, std_digits: parseInt(e.target.value) || 0 }
-                                        })}
-                                    />
-                                </div>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>변량 (Var)</span>
-                                    <input
-                                        type="number"
-                                        value={settings.display.var_digits}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, var_digits: parseInt(e.target.value) || 0 }
-                                        })}
-                                    />
-                                </div>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>중앙값 (Median)</span>
-                                    <input
-                                        type="number"
-                                        value={settings.display.median_digits}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, median_digits: parseInt(e.target.value) || 0 }
-                                        })}
-                                    />
-                                </div>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>최소/최대 (Min/Max)</span>
-                                    <input
-                                        type="number"
-                                        value={settings.display.min_digits}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            display: { ...settings.display, min_digits: parseInt(e.target.value) || 0 }
-                                        })}
-                                    />
-                                </div>
+
+                        {/* B. 소수점 자릿수 재정의 */}
+                        <div style={{ flex: 1, borderLeft: '1px solid #E2E8F0', paddingLeft: '32px' }}>
+                            <div style={{ fontWeight: 600, fontSize: '13px', color: '#1E293B', paddingBottom: '8px', marginBottom: '16px', borderBottom: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                B. 소수점 자릿수 재정의
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
+                                {[
+                                    { label: '비율 (%)', field: 'percent_digits' },
+                                    { label: '평균 (Mean)', field: 'mean_digits' },
+                                    { label: '표준편차 (Std)', field: 'std_digits' },
+                                    { label: '변량 (Var)', field: 'var_digits' },
+                                    { label: '중앙값 (Median)', field: 'median_digits' },
+                                    { label: '최대 (Max)', field: 'max_digits' },
+                                    { label: '최소 (Min)', field: 'min_digits' }
+                                ].map((item) => (
+                                    <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
+                                        <span style={{ fontSize: '12px', color: '#475569', fontWeight: 500 }}>{item.label}</span>
+                                        <div style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: '4px', border: '1px solid #CBD5E1', overflow: 'hidden', width: '40px' }}>
+                                            <input
+                                                type="number"
+                                                value={settings.display[item.field]}
+                                                onChange={(e) => { setSettings({ ...settings, display: { ...settings.display, [item.field]: parseInt(e.target.value) || 0 } }); if (onUnsavedChange) onUnsavedChange(true); }}
+                                                style={{ width: '100%', padding: '4px 0', fontSize: '12px', textAlign: 'center', border: 'none', outline: 'none', fontWeight: 600, color: '#0F172A' }}
+                                                min={0} max={10}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="dp-setting-card">
-                <div className="dp-setting-card-header">
-                    <Type size={16} /> 표 서식 및 렌더링 설정 (미리보기)
+            <div className="dp-setting-card" style={{ marginBottom: '24px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                    <Type size={16} color="#8B5CF6" /> 표 서식 및 렌더링 설정 (미리보기)
                 </div>
-                <div className="dp-setting-card-body">
+                <div className="dp-setting-card-body" style={{ padding: '20px' }}>
                     <div className="dp-setting-grid">
                         <div className="dp-form-group">
                             <label>글꼴 (Font-Family)</label>
@@ -757,229 +706,84 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
             </div>
 
-            <div className="dp-setting-card">
-                <div className="dp-setting-card-header">전체 테마 색상 (커스텀/프리셋)</div>
-                <div className="dp-setting-card-body">
+            <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+                <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
+                    <Palette size={16} color="#10B981" /> 전체 테마 색상 (커스텀/프리셋)
+                </div>
+                <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {/* Presets */}
-                    <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0', marginBottom: '24px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', marginBottom: '12px' }}>빠른 프리셋 적용:</div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 500, width: '48px', color: '#64748b' }}>Light:</span>
-                                <button className="dp-tag-btn" style={{ background: '#2F5597', color: 'white', borderColor: '#2F5597' }}
-                                    onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#2F5597", theme_primary_fg: "#FFFFFF", theme_secondary: "#D9E1F2", theme_secondary_alt: "#F1F5F9", theme_bg: "#FFFFFF", theme_bg_alt: "#F8FAFC", theme_stripe: "#F5F7FB", theme_text: "#0F172A", theme_text_muted: "#64748B", theme_highlight: "#E74C3C", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_sidebar_hover: "" } })}
-                                >블루 (기본)</button>
-                                <button className="dp-tag-btn" style={{ background: '#FAFAFA', color: '#18181B', borderColor: '#E4E4E7' }}
-                                    onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#3F3F46", theme_primary_fg: "#FFFFFF", theme_secondary: "#E4E4E7", theme_secondary_alt: "#F4F4F5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAFA", theme_stripe: "#F7F7F8", theme_text: "#18181B", theme_text_muted: "#A1A1AA", theme_highlight: "#18181B", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_sidebar_hover: "" } })}
-                                >플래티넘 실버</button>
-                                <button className="dp-tag-btn" style={{ background: '#6264A7', color: 'white', borderColor: '#6264A7' }}
-                                    onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#6264A7", theme_primary_fg: "#FFFFFF", theme_secondary: "#EBEBEB", theme_secondary_alt: "#F5F5F5", theme_bg: "#FFFFFF", theme_bg_alt: "#F0F0F0", theme_stripe: "#FAFAFA", theme_text: "#242424", theme_text_muted: "#616161", theme_highlight: "#C4314B", theme_destructive: "#C4314B", theme_warning: "#F29D7D", theme_success: "#1A7B44", theme_info: "#6264A7", theme_sidebar_hover: "" } })}
-                                >Teams (Light)</button>
-                                <button className="dp-tag-btn" style={{ background: '#064E3B', color: 'white', borderColor: '#064E3B' }}
-                                    onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#064E3B", theme_primary_fg: "#FFFFFF", theme_secondary: "#D1FAE5", theme_secondary_alt: "#ECFDF5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAF9", theme_stripe: "#F5F5F4", theme_text: "#1C1917", theme_text_muted: "#78716C", theme_highlight: "#D97706", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_sidebar_hover: "" } })}
-                                >에메랄드 포레스트</button>
+                    <div style={{ background: '#f8fafc', padding: '12px 16px', borderRadius: '6px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'flex-start', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>빠른 프리셋 색상 적용</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', lineHeight: '24px' }}>LIGHT:</span>
+                                <button className="dp-tag-btn" style={{ background: '#2F5597', color: 'white', borderColor: '#2F5597', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#2F5597", theme_primary_fg: "#FFFFFF", theme_secondary: "#D9E1F2", theme_secondary_alt: "#F1F5F9", theme_bg: "#FFFFFF", theme_bg_alt: "#F8FAFC", theme_stripe: "#F5F7FB", theme_text: "#1F2937", theme_text_muted: "#64748B", theme_highlight: "#E74C3C", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_border_color: "#CBD5E1" } })}>블루 (기본)</button>
+                                <button className="dp-tag-btn" style={{ background: '#FAFAFA', color: '#18181B', borderColor: '#E4E4E7', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#3F3F46", theme_primary_fg: "#FFFFFF", theme_secondary: "#E4E4E7", theme_secondary_alt: "#F4F4F5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAFA", theme_stripe: "#F7F7F8", theme_text: "#18181B", theme_text_muted: "#A1A1AA", theme_highlight: "#18181B", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_border_color: "#E4E4E7" } })}>플래티넘 실버</button>
+                                <button className="dp-tag-btn" style={{ background: '#064E3B', color: 'white', borderColor: '#064E3B', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#064E3B", theme_primary_fg: "#FFFFFF", theme_secondary: "#D1FAE5", theme_secondary_alt: "#ECFDF5", theme_bg: "#FFFFFF", theme_bg_alt: "#FAFAF9", theme_stripe: "#F5F5F4", theme_text: "#1C1917", theme_text_muted: "#78716C", theme_highlight: "#D97706", theme_destructive: "#EF4444", theme_warning: "#F59E0B", theme_success: "#10B981", theme_info: "#3B82F6", theme_border_color: "#D6D3D1" } })}>에메랄드 포레스트</button>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <span style={{ fontSize: '11px', fontWeight: 500, width: '48px', color: '#64748b' }}>Dark:</span>
-                                <button className="dp-tag-btn" style={{ background: '#0F172A', color: '#F8FAFC', borderColor: '#1E293B' }}
-                                    onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#3B82F6", theme_primary_fg: "#FFFFFF", theme_secondary: "#1E293B", theme_secondary_alt: "#334155", theme_bg: "#0F172A", theme_bg_alt: "#1E293B", theme_stripe: "#172033", theme_text: "#F8FAFC", theme_text_muted: "#94A3B8", theme_highlight: "#FCD34D", theme_destructive: "#F87171", theme_warning: "#FBBF24", theme_success: "#34D399", theme_info: "#60A5FA", theme_sidebar_hover: "" } })}
-                                >슬레이트 다크</button>
-                                <button className="dp-tag-btn" style={{ background: '#36393F', color: 'white', borderColor: '#36393F' }}
-                                    onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#4752C4", theme_primary_fg: "#FFFFFF", theme_secondary: "#4F545C", theme_secondary_alt: "#40444B", theme_bg: "#36393F", theme_bg_alt: "#2F3136", theme_stripe: "#32353B", theme_text: "#DCDDDE", theme_text_muted: "#B9BBBE", theme_highlight: "#ED4245", theme_destructive: "#ED4245", theme_warning: "#FEE75C", theme_success: "#3BA55C", theme_info: "#4752C4", theme_sidebar_hover: "#3F4147" } })}
-                                >Discord (Dark)</button>
+                            <div style={{ width: '1px', height: '16px', background: '#cbd5e1' }} />
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 600, color: '#94a3b8', lineHeight: '24px' }}>DARK:</span>
+                                <button className="dp-tag-btn" style={{ background: '#0F172A', color: '#F8FAFC', borderColor: '#1E293B', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#3B82F6", theme_primary_fg: "#FFFFFF", theme_secondary: "#1E293B", theme_secondary_alt: "#334155", theme_bg: "#0F172A", theme_bg_alt: "#1E293B", theme_stripe: "#172033", theme_text: "#F8FAFC", theme_text_muted: "#94A3B8", theme_highlight: "#FCD34D", theme_destructive: "#F87171", theme_warning: "#FBBF24", theme_success: "#34D399", theme_info: "#60A5FA", theme_border_color: "#334155" } })}>슬레이트 다크</button>
+                                <button className="dp-tag-btn" style={{ background: '#36393F', color: 'white', borderColor: '#36393F', padding: '2px 8px' }} onClick={() => setSettings({ ...settings, render: { ...settings.render, theme_primary: "#4752C4", theme_primary_fg: "#FFFFFF", theme_secondary: "#4F545C", theme_secondary_alt: "#40444B", theme_bg: "#36393F", theme_bg_alt: "#2F3136", theme_stripe: "#32353B", theme_text: "#DCDDDE", theme_text_muted: "#B9BBBE", theme_highlight: "#ED4245", theme_destructive: "#ED4245", theme_warning: "#FEE75C", theme_success: "#3BA55C", theme_info: "#4752C4", theme_border_color: "#202225" } })}>Discord (Dark)</button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="dp-setting-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                        {/* Column 1 (Primary, Text) */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            <div>
-                                <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#1e293b' }}>1. Primary (주 색상)</h4>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>Primary (테마색/강조)</span>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <div className="dp-color-preview" style={{ background: settings.render.theme_primary, width: '32px', height: '32px', borderRadius: '4px' }}></div>
-                                        <input
-                                            type="text"
-                                            value={settings.render.theme_primary}
-                                            onChange={(e) => setSettings({
-                                                ...settings,
-                                                render: { ...settings.render, theme_primary: e.target.value }
-                                            })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="dp-form-group" style={{ marginTop: '12px' }}>
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>Primary 영문자 색상 (헤더 텍스트)</span>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <div className="dp-color-preview" style={{ background: settings.render.theme_primary_fg, width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                        <input
-                                            type="text"
-                                            value={settings.render.theme_primary_fg}
-                                            onChange={(e) => setSettings({
-                                                ...settings,
-                                                render: { ...settings.render, theme_primary_fg: e.target.value }
-                                            })}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#1e293b' }}>4. Text (텍스트)</h4>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>기본 텍스트 (진한)</span>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <div className="dp-color-preview" style={{ background: settings.render.theme_text, width: '32px', height: '32px', borderRadius: '4px' }}></div>
-                                        <input
-                                            type="text"
-                                            value={settings.render.theme_text}
-                                            onChange={(e) => setSettings({
-                                                ...settings,
-                                                render: { ...settings.render, theme_text: e.target.value }
-                                            })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="dp-form-group" style={{ marginTop: '12px' }}>
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>보조 텍스트 (연한/Muted)</span>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <div className="dp-color-preview" style={{ background: '#64748B', width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                        <input type="text" value="#64748B" readOnly />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Column 2 (Secondary, Status) */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                            <div>
-                                <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#1e293b' }}>2. Secondary (보조 색상)</h4>
-                                <div className="dp-form-group">
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>Secondary 1 (서브/버튼)</span>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <div className="dp-color-preview" style={{ background: settings.render.theme_secondary, width: '32px', height: '32px', borderRadius: '4px' }}></div>
-                                        <input
-                                            type="text"
-                                            value={settings.render.theme_secondary}
-                                            onChange={(e) => setSettings({
-                                                ...settings,
-                                                render: { ...settings.render, theme_secondary: e.target.value }
-                                            })}
-                                        />
-                                    </div>
-                                </div>
-                                <div className="dp-form-group" style={{ marginTop: '12px' }}>
-                                    <span style={{ fontSize: '12px', color: '#64748b' }}>Secondary 2 (서브 보완)</span>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <div className="dp-color-preview" style={{ background: settings.render.theme_secondary_alt, width: '32px', height: '32px', borderRadius: '4px' }}></div>
-                                        <input
-                                            type="text"
-                                            value={settings.render.theme_secondary_alt}
-                                            onChange={(e) => setSettings({
-                                                ...settings,
-                                                render: { ...settings.render, theme_secondary_alt: e.target.value }
-                                            })}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#1e293b' }}>5. Status (상태 색상)</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                                    <div className="dp-form-group">
-                                        <span style={{ fontSize: '12px', color: '#10B981' }}>Success (진행/성공)</span>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <div className="dp-color-preview" style={{ background: settings.render.theme_success, width: '24px', height: '24px', borderRadius: '4px' }}></div>
-                                            <input type="text" value={settings.render.theme_success} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_success: e.target.value } })} style={{ padding: '2px 6px', fontSize: '11px' }} />
-                                        </div>
-                                    </div>
-                                    <div className="dp-form-group">
-                                        <span style={{ fontSize: '12px', color: '#F59E0B' }}>Warning (경고/대기)</span>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <div className="dp-color-preview" style={{ background: settings.render.theme_warning, width: '24px', height: '24px', borderRadius: '4px' }}></div>
-                                            <input type="text" value={settings.render.theme_warning} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_warning: e.target.value } })} style={{ padding: '2px 6px', fontSize: '11px' }} />
-                                        </div>
-                                    </div>
-                                    <div className="dp-form-group">
-                                        <span style={{ fontSize: '12px', color: '#EF4444' }}>Error (에러/금지)</span>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <div className="dp-color-preview" style={{ background: settings.render.theme_destructive, width: '24px', height: '24px', borderRadius: '4px' }}></div>
-                                            <input type="text" value={settings.render.theme_destructive} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_destructive: e.target.value } })} style={{ padding: '2px 6px', fontSize: '11px' }} />
-                                        </div>
-                                    </div>
-                                    <div className="dp-form-group">
-                                        <span style={{ fontSize: '12px', color: '#3B82F6' }}>Info (정보/Highlight)</span>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <div className="dp-color-preview" style={{ background: settings.render.theme_info, width: '24px', height: '24px', borderRadius: '4px' }}></div>
-                                            <input type="text" value={settings.render.theme_info} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_info: e.target.value } })} style={{ padding: '2px 6px', fontSize: '11px' }} />
-                                        </div>
-                                    </div>
-                                    <div className="dp-form-group" style={{ gridColumn: 'span 2' }}>
-                                        <span style={{ fontSize: '12px', color: '#E74C3C' }}>Accent (강조/테이블)</span>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <div className="dp-color-preview" style={{ background: settings.render.theme_highlight, width: '24px', height: '24px', borderRadius: '4px' }}></div>
-                                            <input type="text" value={settings.render.theme_highlight} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_highlight: e.target.value } })} style={{ padding: '2px 6px', fontSize: '11px' }} />
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Column 3 (Background) */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#1e293b' }}>3. Background (배경)</h4>
-                            <div className="dp-form-group">
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>Background 1 (기본 배경)</span>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <div className="dp-color-preview" style={{ background: settings.render.theme_bg, width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
+                    {/* Colors Editor */}
+                    <div>
+                        <h4 style={{ fontSize: '13px', margin: '0 0 12px 0', color: '#1E293B', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>상세 색상 팔레트</h4>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
+                            {[
+                                { group: 'Primary', label: '메인 테마색', field: 'theme_primary' },
+                                { group: 'Primary', label: '메인 텍스트', field: 'theme_primary_fg' },
+                                { group: 'Secondary', label: '서브/버튼', field: 'theme_secondary' },
+                                { group: 'Secondary', label: '서브 보완', field: 'theme_secondary_alt' },
+                                { group: 'Text', label: '기본 텍스트', field: 'theme_text' },
+                                { group: 'Text', label: '보조 텍스트', field: 'theme_text_muted' },
+                                { group: 'Background', label: '기본 배경', field: 'theme_bg' },
+                                { group: 'Background', label: '카드 배경', field: 'theme_bg_alt' },
+                                { group: 'Background', label: '교차/Stripe', field: 'theme_stripe' },
+                                { group: 'Border', label: '테두리 색상', field: 'theme_border_color' },
+                                { group: 'Status', label: 'Success', field: 'theme_success' },
+                                { group: 'Status', label: 'Warning', field: 'theme_warning' },
+                                { group: 'Status', label: 'Error', field: 'theme_destructive' },
+                                { group: 'Status', label: 'Info', field: 'theme_info' },
+                                { group: 'Status', label: 'Accent', field: 'theme_highlight' },
+                            ].map(item => (
+                                <div key={item.field} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }}>
                                     <input
-                                        type="text"
-                                        value={settings.render.theme_bg}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            render: { ...settings.render, theme_bg: e.target.value }
-                                        })}
+                                        type="color"
+                                        value={(settings.render[item.field] || '#ffffff').slice(0, 7)}
+                                        onChange={(e) => {
+                                            setSettings({ ...settings, render: { ...settings.render, [item.field]: e.target.value.toUpperCase() } });
+                                            if (onUnsavedChange) onUnsavedChange(true);
+                                        }}
+                                        style={{ width: '28px', height: '28px', padding: 0, border: 'none', cursor: 'pointer', background: 'transparent' }}
                                     />
+                                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                                        <span style={{ fontSize: '10px', color: '#64748B', lineHeight: '1.2' }}>{item.group}</span>
+                                        <span style={{ fontSize: '13px', color: '#1E293B', fontWeight: 600, lineHeight: '1.2' }}>{item.label}</span>
+                                    </div>
+                                    <span style={{ fontSize: '11px', color: '#94A3B8', width: '50px', textAlign: 'right' }}>{settings.render[item.field]?.slice(0, 7) || ''}</span>
                                 </div>
-                            </div>
-                            <div className="dp-form-group">
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>Background 2 (카드/표 배경)</span>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <div className="dp-color-preview" style={{ background: settings.render.theme_bg_alt, width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                    <input type="text" value={settings.render.theme_bg_alt} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_bg_alt: e.target.value } })} />
+                            ))}
+                            {/* Special case for hover color since it uses rgba */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px', border: '1px dashed #CBD5E1', borderRadius: '4px', background: '#F8FAFC', gridColumn: '1 / -1' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', width: '150px' }}>
+                                    <span style={{ fontSize: '10px', color: '#64748B' }}>Hover</span>
+                                    <span style={{ fontSize: '13px', color: '#1E293B', fontWeight: 600 }}>Sidebar 호버 색상</span>
                                 </div>
-                            </div>
-                            <div className="dp-form-group">
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>Background 3 (교차색/Stripe)</span>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <div className="dp-color-preview" style={{ background: settings.render.theme_stripe, width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                    <input type="text" value={settings.render.theme_stripe} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_stripe: e.target.value } })} />
-                                </div>
-                            </div>
-                            <div className="dp-form-group">
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>테두리 (Border Color)</span>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <div className="dp-color-preview" style={{ background: settings.render.theme_border_color, width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                    <input
-                                        type="text"
-                                        value={settings.render.theme_border_color}
-                                        onChange={(e) => setSettings({
-                                            ...settings,
-                                            render: { ...settings.render, theme_border_color: e.target.value }
-                                        })}
-                                    />
-                                </div>
-                            </div>
-                            <div className="dp-form-group" style={{ marginTop: '8px' }}>
-                                <span style={{ fontSize: '12px', color: '#64748b' }}>Sidebar 호버 색상 (+투명도 속성 권장)</span>
-                                <span style={{ fontSize: '11px', color: '#94a3b8', display: 'block', marginBottom: '8px' }}>예: rgba(255,255,255,0.1) 또는 #3F4147. 비워두면 자동 연산</span>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <div className="dp-color-preview" style={{ background: settings.render.theme_sidebar_hover || 'rgba(255,255,255,0.1)', width: '32px', height: '32px', borderRadius: '4px', border: '1px solid #e2e8f0' }}></div>
-                                    <input type="text" value={settings.render.theme_sidebar_hover} onChange={(e) => setSettings({ ...settings, render: { ...settings.render, theme_sidebar_hover: e.target.value } })} placeholder="rgba(255,255,255,0.1)" />
-                                </div>
+                                <input
+                                    type="text"
+                                    value={settings.render.theme_sidebar_hover || ''}
+                                    placeholder="rgba(0,0,0,0.1) 또는 비워두기"
+                                    onChange={(e) => {
+                                        setSettings({ ...settings, render: { ...settings.render, theme_sidebar_hover: e.target.value } });
+                                        if (onUnsavedChange) onUnsavedChange(true);
+                                    }}
+                                    style={{ flex: 1, padding: '4px 8px', fontSize: '12px', border: '1px solid #cbd5e1', borderRadius: '4px' }}
+                                />
                             </div>
                         </div>
                     </div>
