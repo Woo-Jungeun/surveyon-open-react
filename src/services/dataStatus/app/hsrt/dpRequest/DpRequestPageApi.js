@@ -22,6 +22,11 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/dp-request/table/render-context", "API_BASE_URL_DATASTATUS")
     );
 
+    /** DP 의뢰서 - 테이블 설정 상세 정보 조회 (원본 편집 조회용) */
+    const getTableDetail = useMutation(
+        async (data) => await api.post(data, "/dp-request/table/detail", "API_BASE_URL_DATASTATUS")
+    );
+
     /** DP 의뢰서 - 테이블 설정 저장 */
     const saveTableSettings = useMutation(
         async (data) => await api.post(data, "/dp-request/table/save", "API_BASE_URL_DATASTATUS")
@@ -68,6 +73,7 @@ export function DpRequestPageApi() {
         getBannerDetail,
         getBaseVariableList,
         getTableRenderContext,
+        getTableDetail,
         saveTableSettings,
         getDpContext,
         generateBanner,

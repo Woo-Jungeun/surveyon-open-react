@@ -48,9 +48,9 @@ const DpRequestPage = () => {
 
     // 명세서 기반 5단계 워크플로우 정의
     const steps = [
-        { key: 'table', label: '설정', desc: '' },
-        { key: 'banner', label: '배너', desc: '분석 테이블 상단에 기준이 되는 배너를 설정합니다.' },
-        { key: 'recoded', label: '스터브', desc: 'DP 표 생성을 위한 recoded 메타데이터 설정. 이 화면에서 설정한 내용이 저장 시 실제 recoded 변수 및 필터로 생성됩니다.' },
+        { key: 'table', label: '설정', desc: '[표 설정] 가중치 변수, 숫자 표시 정책, 테마 색상과 프리셋을 구성하고 저장합니다.' },
+        { key: 'banner', label: '배너', desc: '[배너 설정] 분석 테이블 상단에 기준이 되는 배너를 설정합니다.' },
+        { key: 'recoded', label: '스터브', desc: '[스터브 설정] DP 표 생성을 위한 recoded 메타데이터 설정. 이 화면에서 설정한 내용이 저장 시 실제 recoded 변수 및 필터로 생성됩니다.' },
         { key: 'summary', label: '요약표', desc: '' },
         { key: 'order', label: '표 순서', desc: '' },
     ];

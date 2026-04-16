@@ -1589,4 +1589,102 @@
     background: #eff6ff !important;
     box-shadow: none !important;
     outline: none !important;
+}
+
+/* Force 22px height on inline Kendo DropDowns */
+.dp-mini-dropdown.k-dropdownlist {
+    min-height: 22px !important;
+    height: 22px !important;
+}
+
+.dp-mini-dropdown .k-input-inner {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 20px !important;
+    line-height: normal !important;
+    font-size: 13px !important;
+}
+
+.dp-mini-dropdown .k-input-button {
+    min-height: 22px !important;
+    padding: 0 4px !important;
+}
+
+/* Fix Orange Focus Ring */
+.dp-mini-dropdown.k-focus,
+.dp-mini-dropdown.k-state-focused,
+.dp-mini-dropdown:focus-within {
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+    border-color: #3B82F6 !important;
+    outline: none !important;
+}
+
+/* -----------------------------------------
+   Blue Hollow Custom Checkbox (Map Config Style)
+------------------------------------------ */
+.dp-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    margin: 0;
+}
+
+.dp-checkbox-input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.dp-checkbox-box {
+    display: flex;
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 4px;
+    background-color: #fff;
+    transition: all 0.2s;
+    align-items: center;
+    justify-content: center;
+}
+
+.dp-checkbox-input:checked + .dp-checkbox-box {
+    border-color: #3b82f6;
+}
+
+.dp-checkbox-box::after {
+    content: "";
+    display: block;
+    width: 4px;
+    height: 8px;
+    border: solid #3b82f6;
+    border-width: 0 1.5px 1.5px 0;
+    transform: rotate(45deg);
+    opacity: 0;
+    margin-bottom: 1px;
+    transition: opacity 0.2s;
+}
+
+.dp-checkbox-input:checked + .dp-checkbox-box::after {
+    opacity: 1;
+}
+
+.dp-checkbox-box:hover {
+    border-color: #93c5fd;
+}
+
+/* Prevent Kendo headers from being chopped horizontally/vertically */
+.dp-excel-grid-v2 .k-grid-header th.k-header .k-cell-inner,
+.dp-excel-grid-v2 .k-grid-header th.k-header .k-column-title {
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+}
+
+/* Reduce standard height */
+.dp-excel-grid-v2 .k-grid-header th.k-header {
+    height: 40px !important;
 }
