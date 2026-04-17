@@ -282,11 +282,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (!pageId) return;
         try {
             loadingSpinner.show();
-            // const payload = { user: auth?.user?.userId || '', pageid: pageId };
-            const payload = {
-                pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
-                user: "sbbok"
-            };
+            const payload = { user: auth?.user?.userId || '', pageid: pageId };
             const response = await getRecodedOverview.mutateAsync(payload);
             const resultData = response?.data?.resultjson || response?.resultjson || response || {};
 
@@ -295,6 +291,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             };
             updatePresets(resultData.scale_presets, setScalePresets);
             updatePresets(resultData.rank_presets, setRankPresets);
+            updatePresets(resultData.group_presets, setGroupPresets);
 
             try {
                 const bannerRes = await getBannerDetail.mutateAsync(payload);
@@ -407,10 +404,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         const deletedIds = originalRecodedIds.filter(id => !currentRecodedIds.includes(id));
 
         const requestData = {
-            // pageid: pageId,
-            // user: auth.user.userId,
-            pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
-            user: "sbbok",
+            pageid: pageId,
+            user: auth?.user?.userId || '',
             variables: variables,
             delete_ids: deletedIds
         };
@@ -477,7 +472,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Column field="x_info" title="배너(x_info)" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
                             />
-                            <Column field="group_preset_name" title="그룹 프리셋" width="120px" headerClassName="k-text-center"
+                            <Column field="group_preset_name" title="그룹 프리셋" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseGroupPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;

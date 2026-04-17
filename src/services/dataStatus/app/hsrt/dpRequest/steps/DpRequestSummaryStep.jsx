@@ -300,8 +300,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // --- 데이터 로직 ---
     const fetchSummaryData = async (isFresh = false) => {
-        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746"; // 임시 pageId
-        const userId = "sbbok"; // 임시 user
+        const pageId = sessionStorage.getItem('pageId');
+        const userId = auth?.user?.userId || '';
         
         try {
             loadingSpinner.show();
