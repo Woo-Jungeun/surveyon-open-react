@@ -37,21 +37,23 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
         const itemData = itemProps.dataItem;
         const isChecked = selected.includes(itemData.id);
 
-        return React.cloneElement(li, li.props, (
+        return React.cloneElement(li, { ...li.props, onClick: undefined }, (
             <div
-                style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '2px 0', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '4px 0', cursor: 'pointer' }}
                 onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }}
+                onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     handleChange(itemData.id, !isChecked);
                 }}
             >
-                <input
-                    type="checkbox"
-                    checked={isChecked}
-                    readOnly
-                    style={{ marginRight: '8px', pointerEvents: 'none', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '13px', height: '13px', opacity: 1, position: 'relative' }}
-                />
+                <label className="dp-checkbox-label" style={{ margin: '0 8px 0 0', pointerEvents: 'none' }}>
+                    <input type="checkbox" className="dp-checkbox-input" checked={isChecked} readOnly />
+                    <span className="dp-checkbox-box" />
+                </label>
                 <span style={{ fontSize: '13px' }}>{itemData.label}</span>
             </div>
         ));
