@@ -97,20 +97,18 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 데이터 fetch 로직 ---
     useEffect(() => {
         const fetchInitialData = async () => {
-            // const pageId = sessionStorage.getItem('pageId');
-            // if (!pageId || !auth?.user?.userId) return;
-            const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-            const userId = "sbbok";
+            const pageId = sessionStorage.getItem('pageId');
+            if (!pageId || !auth?.user?.userId) return;
 
             loadingSpinner.show();
             try {
                 // 1. 설정 정보 조회
-                const contextPromise = getTableRenderContext.mutateAsync({ pageid: pageId, user: userId });
-                const detailPromise = getTableDetail.mutateAsync({ pageid: pageId, user: userId });
+                const contextPromise = getTableRenderContext.mutateAsync({ pageid: pageId, user: auth.user.userId });
+                const detailPromise = getTableDetail.mutateAsync({ pageid: pageId, user: auth.user.userId });
                 // 2. 가중치 선택을 위한 기본 변수 목록 조회
-                const variablesPromise = getBaseVariableList.mutateAsync({ pageid: pageId, user: userId });
+                const variablesPromise = getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
                 const [renderContext, tableDetail, varList] = await Promise.all([contextPromise, detailPromise, variablesPromise]);
-                console.log(tableDetail)
+
                 if (renderContext) {
                     setContextData(renderContext);
                 }
@@ -148,15 +146,61 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     setSettings(nextSettings);
 
                     if (actualTableDetail?.scale_presets) {
-                        nextScaleData = actualTableDetail.scale_presets;
+                        nextScaleData = actualTableDetail.scale_presets.map(item => {
+                            let top = '', mid = '', bot = '';
+                            const options = item.options || {};
+                            if (Array.isArray(options.bands)) {
+                                options.bands.forEach(band => {
+                                    const lbl = (band.label || '').toLowerCase();
+                                    const vals = (band.values || []).join(',');
+                                    if (lbl.includes('top')) top = vals;
+                                    else if (lbl.includes('mid')) mid = vals;
+                                    else if (lbl.includes('bot')) bot = vals;
+                                });
+                            }
+                            return {
+                                id: item.id,
+                                name: item.name || '',
+                                type: item.type || 'scale',
+                                min: options.min ?? '',
+                                max: options.max ?? '',
+                                recode: !!options.reverse,
+                                top: top,
+                                mid: mid,
+                                bot: bot
+                            };
+                        });
                         setScaleData(nextScaleData);
                     }
                     if (actualTableDetail?.rank_presets) {
-                        nextRankData = actualTableDetail.rank_presets;
+                        nextRankData = actualTableDetail.rank_presets.map(item => {
+                            let selection = '';
+                            if (Array.isArray(item.ranks)) {
+                                selection = item.ranks.map(n => {
+                                    if (n === 1) return '1';
+                                    return Array.from({ length: n }, (_, i) => i + 1).join('+');
+                                }).join(', ');
+                            }
+                            return {
+                                id: item.id,
+                                name: item.name || '',
+                                selection: selection
+                            };
+                        });
                         setRankData(nextRankData);
                     }
                     if (actualTableDetail?.group_presets) {
-                        nextGroupData = actualTableDetail.group_presets;
+                        nextGroupData = actualTableDetail.group_presets.map(item => {
+                            let selection = '';
+                            if (Array.isArray(item.groups)) {
+                                selection = item.groups.map(g => `${g.label || ''}=${(g.values || []).join(',')}`).join(' | ');
+                            }
+                            return {
+                                id: item.id,
+                                name: item.name || '',
+                                selection: selection
+                            };
+                        });
                         setGroupData(nextGroupData);
                     }
                 }
@@ -235,14 +279,80 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // --- 저장 로직 ---
     const handleSave = async () => {
-        // const pageId = sessionStorage.getItem('pageId');
-        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-        const userId = "sbbok";
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) {
+            alert("저장할 수 없습니다. 다시 로그인하거나 페이지를 새로고침 해주세요.");
+            return false;
+        }
+
         loadingSpinner.show();
         try {
+            const scaleDataPayload = scaleData.map(item => {
+                const parseValues = (str) => {
+                    if (!str) return [];
+                    return String(str).split(',').map(s => Number(s.trim())).filter(n => !isNaN(n));
+                };
+                const bands = [];
+                if (item.bot) bands.push({ label: 'bot', values: parseValues(item.bot), min: null, max: null, score: null });
+                if (item.mid) bands.push({ label: 'mid', values: parseValues(item.mid), min: null, max: null, score: null });
+                if (item.top) bands.push({ label: 'top', values: parseValues(item.top), min: null, max: null, score: null });
+
+                return {
+                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    name: item.name,
+                    type: item.type || 'scale',
+                    options: {
+                        enabled: true,
+                        min: (item.min === 0 || item.min) ? Number(item.min) : null,
+                        max: (item.max === 0 || item.max) ? Number(item.max) : null,
+                        reverse: !!item.recode,
+                        score_transform: null,
+                        custom_value_map: [],
+                        bands: bands
+                    }
+                };
+            });
+
+            const rankDataPayload = rankData.map(item => {
+                const ranks = [];
+                if (item.selection) {
+                    String(item.selection).split(',').forEach(part => {
+                        const match = part.match(/\d+/g);
+                        if (match) ranks.push(match.length);
+                    });
+                }
+                return {
+                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    name: item.name,
+                    type: 'multi',
+                    ranks: ranks.length > 0 ? ranks : [1]
+                };
+            });
+
+            const groupDataPayload = groupData.map(item => {
+                const groups = [];
+                if (item.selection) {
+                    String(item.selection).split('|').forEach(part => {
+                        const splitted = part.split('=');
+                        if (splitted.length >= 2) {
+                            const label = splitted[0].trim();
+                            const valStr = splitted.slice(1).join('=');
+                            groups.push({
+                                label: label,
+                                values: valStr.split(',').map(s => Number(s.trim())).filter(n => !isNaN(n))
+                            });
+                        }
+                    });
+                }
+                return {
+                    id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+                    name: item.name,
+                    groups: groups
+                };
+            });
+
             const payload = {
-                // user: auth.user?.userId,
-                user: userId,
+                user: auth.user.userId,
                 pageid: pageId,
                 weight_variable: settings.weight_variable !== '없음' ? settings.weight_variable : null,
                 confidence_level: settings.confidence_level,
@@ -273,17 +383,17 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_border_color: settings.render.theme_border_color || undefined,
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
-                    format_percent_round: settings.display.percent_digits,
-                    format_mean_round: settings.display.mean_digits,
-                    format_std_round: settings.display.std_digits,
-                    format_var_round: settings.display.var_digits,
-                    format_median_round: settings.display.median_digits,
-                    format_min_round: settings.display.min_digits,
-                    format_max_round: settings.display.max_digits
+                    format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
+                    format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
+                    format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
+                    format_var_round: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
+                    format_median_round: settings.display.median_digits !== "" && settings.display.median_digits !== null ? Number(settings.display.median_digits) : undefined,
+                    format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
+                    format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined
                 },
-                scale_presets: scaleData,
-                rank_presets: rankData,
-                group_presets: groupData,
+                scale_presets: scaleDataPayload,
+                rank_presets: rankDataPayload,
+                group_presets: groupDataPayload,
                 stat_presets: []
             };
 
@@ -373,7 +483,6 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         <div style={{ height: '300px', border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
                             <KendoGridV2
                                 data={scaleData}
-                                reorderable
                                 addable
                                 deletable
                                 showNo
