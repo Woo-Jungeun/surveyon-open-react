@@ -115,6 +115,15 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
 
     const valueItem = options.find(o => o.id === String(val) || o.text === String(val)) || null;
 
+    const isEmpty = !valueItem || !valueItem.id;
+
+    const valueRender = (element, value) => {
+        if (!value || !value.id) {
+            return <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>;
+        }
+        return element;
+    };
+
     return (
         <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
             <DropDownList
@@ -128,6 +137,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
                     onChange(dataItem, field, selectedId);
                 }}
                 defaultItem={{ text: "선택 (미설정)", id: "" }}
+                valueRender={valueRender}
                 style={{ width: '100%', height: '22px', fontSize: '13px' }}
             />
         </td>
