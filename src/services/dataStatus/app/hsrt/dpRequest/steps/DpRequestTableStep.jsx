@@ -3,6 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { Check } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -252,6 +253,37 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left' }) 
             }}
         >
             {localVal || '-'}
+        </td>
+    );
+});
+
+// --- 유형 선택 드롭다운 셀 (Kendo DropDownList 연동) ---
+const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
+    const val = dataItem.var_type || '';
+    const isNew = String(dataItem.source_var_id).startsWith('new_');
+
+    const handleChange = (e) => {
+        onUpdate(dataItem, 'var_type', e.value);
+    };
+
+    if (isNew) {
+        return (
+            <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
+                <DropDownList
+                    className="k-dropdown-solid dp-mini-dropdown"
+                    data={VAR_TYPE_OPTIONS}
+                    value={val}
+                    onChange={handleChange}
+                    style={{ width: '100%', height: '22px', fontSize: '13px' }}
+                />
+            </td>
+        );
+    }
+
+    const { color, displayType } = getQuestionTypeInfo(val);
+    return (
+        <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+            <span className={`question-type-badge ${color}`}>{displayType}</span>
         </td>
     );
 });
@@ -515,30 +547,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
                             />
                             <Column field="var_type" title="유형" width="150px" headerClassName="k-text-center"
-                                cell={(p) => {
-                                    const val = p.dataItem.var_type || '';
-                                    const isNew = String(p.dataItem.source_var_id).startsWith('new_');
-                                    
-                                    if (!isNew) {
-                                        const { color, displayType } = getQuestionTypeInfo(val);
-                                        return (
-                                            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                                                <span className={`question-type-badge ${color}`}>{displayType}</span>
-                                            </td>
-                                        );
-                                    }
-                                    
-                                    return (
-                                        <PresetDropdownCell
-                                            field="var_type"
-                                            dataItem={p.dataItem}
-                                            presets={VAR_TYPE_OPTIONS}
-                                            onChange={handleCellUpdate}
-                                            activeId={activePresetId}
-                                            onOpenChange={setActivePresetId}
-                                        />
-                                    );
-                                }}
+                                cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}
                             />
                             <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
