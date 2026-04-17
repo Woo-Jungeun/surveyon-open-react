@@ -17,10 +17,10 @@ const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
         style={{ borderRadius: '6px' }}
     >
         <div className="variable-item-header">
-            <div className="variable-item__name">{v.id}</div>
+            <div className="variable-item__name">{v.label}</div>
             {v.type && <span className={`question-type-badge ${String(v.type).toLowerCase()}`}>{v.type}</span>}
         </div>
-        <div className="variable-item__label">{v.label}</div>
+        <div className="variable-item__label">{v.id}</div>
     </div>
 ));
 
@@ -521,7 +521,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         style={{ marginBottom: '3px', borderRadius: '4px' }}
                                                     >
                                                         <div className="item-drag-handle"><GripVertical size={10} /></div>
-                                                        <span className="tag-text" style={{ fontSize: '11px' }}>{v.id}</span>
+                                                        <span className="tag-text" style={{ fontSize: '11px' }}>{v.label}</span>
                                                         <X size={12} className="remove" onClick={() => removeVar(v.id, groupIndex)} />
                                                     </div>
                                                 ))}
