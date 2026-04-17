@@ -53,7 +53,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     { label: '최소 (Min)', field: 'min_digits', suffix: '' }
                                 ].map((item) => {
                                     const val = settings.display[item.field] || 0;
-                                    const previewText = val === 0 ? `12${item.suffix}` : `12.${'0'.repeat(val)}${item.suffix}`;
+                                    const previewText = val === 0 ? `12${item.suffix}` : `1.${'0'.repeat(val)}${item.suffix}`;
                                     return (
                                         <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: '6px', border: '1px solid #E2E8F0' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
