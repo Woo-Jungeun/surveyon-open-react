@@ -18,6 +18,68 @@ const STAT_OPTIONS = [
     { id: 'median', label: '중앙값 (median)' },
 ];
 
+const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
+    const selected = Array.isArray(selectedValues)
+        ? selectedValues
+        : (selectedValues ? String(selectedValues).split(',').map(s => s.trim()).filter(Boolean) : []);
+
+    const handleChange = (id, checked) => {
+        let nextSelected;
+        if (checked) {
+            nextSelected = [...selected, id];
+        } else {
+            nextSelected = selected.filter(v => v !== id);
+        }
+        onUpdate(dataItem, 'stat_summary', nextSelected.join(','));
+    };
+
+    const itemRender = (li, itemProps) => {
+        const itemData = itemProps.dataItem;
+        const isChecked = selected.includes(itemData.id);
+
+        return React.cloneElement(li, li.props, (
+            <div
+                style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '2px 0', cursor: 'pointer' }}
+                onMouseDown={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleChange(itemData.id, !isChecked);
+                }}
+            >
+                <input
+                    type="checkbox"
+                    checked={isChecked}
+                    readOnly
+                    style={{ marginRight: '8px', pointerEvents: 'none', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '13px', height: '13px', opacity: 1, position: 'relative' }}
+                />
+                <span style={{ fontSize: '13px' }}>{itemData.label}</span>
+            </div>
+        ));
+    };
+
+    const valueRender = (element, value) => {
+        if (selected.length === 0) {
+            return <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>;
+        }
+        const displayText = selected.join(',');
+        return <span style={{ whiteSpace: 'nowrap' }}>{displayText}</span>;
+    };
+
+    return (
+        <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
+            <DropDownList
+                className="k-dropdown-solid dp-mini-dropdown"
+                data={STAT_OPTIONS}
+                textField="label"
+                dataItemKey="id"
+                value={null}
+                itemRender={itemRender}
+                valueRender={valueRender}
+                style={{ width: '100%', height: '22px', fontSize: '13px' }}
+            />
+        </td>
+    );
+});
 
 const getQuestionTypeInfo = (type) => {
     const rawType = type?.toLowerCase() || '';
@@ -71,34 +133,6 @@ const DISABLED_CELL_STYLE = {
     color: '#94a3b8',
     userSelect: 'none'
 };
-
-// --- 통계 설정 다중선택 드롭다운 (Kendo MultiSelect) ---
-const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
-    const selected = Array.isArray(selectedValues)
-        ? selectedValues
-        : (selectedValues ? String(selectedValues).split(',').map(s => s.trim()).filter(Boolean) : []);
-
-    const valueItems = STAT_OPTIONS.filter(opt => selected.includes(opt.id));
-
-    return (
-        <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
-            <MultiSelect
-                className="dp-mini-dropdown k-dropdown-solid"
-                data={STAT_OPTIONS}
-                textField="label"
-                dataItemKey="id"
-                value={valueItems}
-                onChange={(e) => {
-                    const nextIds = e.value.map(val => val.id).join(',');
-                    onUpdate(dataItem, 'stat_summary', nextIds);
-                }}
-                style={{ width: '100%', minHeight: '22px', fontSize: '13px' }}
-                placeholder="선택 (미설정)"
-                autoClose={false}
-            />
-        </td>
-    );
-});
 
 // --- 공통 컴포넌트: 프리셋 드롭다운 셀 (단일 선택 Kendo DropDownList) ---
 const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) => {
@@ -235,6 +269,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [scalePresets, setScalePresets] = useState([]);
     const [rankPresets, setRankPresets] = useState([]);
     const [groupPresets, setGroupPresets] = useState([]);
+    const [statPresets, setStatPresets] = useState([]);
 
     const history = useUpdateHistory('dp-table');
     const isHistoryAction = useRef(false);
@@ -302,6 +337,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             updatePresets(resultData.scale_presets, setScalePresets);
             updatePresets(resultData.rank_presets, setRankPresets);
             updatePresets(resultData.group_presets, setGroupPresets);
+            updatePresets(resultData.stat_presets, setStatPresets);
 
             try {
                 const bannerRes = await getBannerDetail.mutateAsync(payload);
@@ -495,13 +531,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     if (!canUseStatPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
                                     }
-                                    return (
-                                        <StatSettingCell
-                                            dataItem={p.dataItem}
-                                            selectedValues={p.dataItem.stat_summary}
-                                            onUpdate={handleCellUpdate}
-                                        />
-                                    );
+                                    return <StatSettingCell dataItem={p.dataItem} selectedValues={p.dataItem.stat_summary} onUpdate={handleCellUpdate} />;
                                 }}
                             />
                             <Column field="scale_preset_name" title="척도 프리셋" width="150px" headerClassName="k-text-center"
