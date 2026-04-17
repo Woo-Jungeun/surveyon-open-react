@@ -615,7 +615,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             />
                         </div>
                         <div className="dp-content-actions" style={{ marginLeft: 'auto' }}>
-                            <button className="dp-primary-btn" style={{ height: '32px', borderRadius: '6px' }} onClick={handleSaveBanner}><Save size={16} /> <span>저장</span></button>
+                            {/* 저장 버튼이 상단 글로벌 헤더로 통합되어 이곳에서는 제거됨 */}
                         </div>
                     </div>
                     <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

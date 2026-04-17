@@ -21,6 +21,7 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 import AnalysisSettingTab from './AnalysisSettingTab';
 import TableSettingTab from './TableSettingTab';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import { useRef } from 'react';
 
@@ -28,6 +29,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getTableRenderContext, getTableDetail, saveTableSettings, getBaseVariableList } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
+    const modal = useContext(modalContext);
 
     // --- 히스토리 관리 (Undo/Redo) ---
     const history = useUpdateHistory('dp-setting');
@@ -96,8 +98,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [contextData, setContextData] = useState(null);
 
     // --- 데이터 fetch 로직 ---
-    useEffect(() => {
-        const fetchInitialData = async () => {
+    const fetchInitialData = async () => {
             const pageId = sessionStorage.getItem('pageId');
             if (!pageId || !auth?.user?.userId) return;
 
@@ -225,6 +226,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
         };
 
+    useEffect(() => {
         fetchInitialData();
     }, [auth?.user?.userId]);
 
@@ -400,14 +402,15 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const result = await saveTableSettings.mutateAsync(payload);
             if (result?.message || result?.status === 'success') {
-                alert("설정이 저장되었습니다.");
+                modal.showAlert("알림", "설정이 저장되었습니다.");
                 if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
+                await fetchInitialData();
                 return true;
             }
             return false;
         } catch (err) {
             console.error("Save failed:", err);
-            alert("저장에 실패했습니다.");
+            modal.showAlert("오류", "저장에 실패했습니다.");
             return false;
         } finally {
             loadingSpinner.hide();

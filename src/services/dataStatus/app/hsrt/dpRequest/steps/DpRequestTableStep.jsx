@@ -419,7 +419,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             const result = await saveRecodedOverview.mutateAsync(requestData);
             if (result?.success === "777") {
-                modal.showAlert('알림', '저장되었습니다.');
+                modal.showAlert('알림', '스터브가 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
                 await fetchOverview(); // 저장 후 목록 최신화
                 return true;

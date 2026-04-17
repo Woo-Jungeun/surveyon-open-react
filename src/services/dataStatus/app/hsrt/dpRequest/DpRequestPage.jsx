@@ -204,17 +204,37 @@ const DpRequestPage = () => {
                             <span>초기화</span>
                         </button>
                     )}
-                    <button
-                        className="dp-primary-btn"
-                        onClick={() => {
-                            if (currentStep < steps.length - 1) handleStepChange(currentStep + 1);
-                        }}
-                        style={{ height: '36px' }}
-                    >
-                        <Save size={16} />
-                        <span>저장 및 다음 단계로</span>
-                        <ChevronRight size={16} />
-                    </button>
+                    {currentStep < steps.length - 1 && (
+                        <button
+                            className="dp-primary-btn"
+                            onClick={async () => {
+                                const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : step3Ref;
+                                if (currentRef?.current?.save) {
+                                    await currentRef.current.save();
+                                }
+                            }}
+                            style={{ height: '36px' }}
+                        >
+                            <Save size={16} />
+                            <span>저장</span>
+                        </button>
+                    )}
+                    {currentStep < steps.length - 1 && (
+                        <button
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#475569',
+                                padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                                height: '36px'
+                            }}
+                            onClick={() => {
+                                if (currentStep < steps.length - 1) handleStepChange(currentStep + 1);
+                            }}
+                        >
+                            <span>다음 단계로</span>
+                            <ChevronRight size={16} />
+                        </button>
+                    )}
                 </div>
             </DataHeader>
 
