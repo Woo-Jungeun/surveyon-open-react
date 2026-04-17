@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react';
 import { Check } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
-import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { DropDownList, MultiSelect } from '@progress/kendo-react-dropdowns';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -72,141 +72,64 @@ const DISABLED_CELL_STYLE = {
     userSelect: 'none'
 };
 
-// --- 통계 설정 다중선택 드롭다운 (FrequencyAnalysisPage의 custom-filter-wrapper 방식 적용) ---
-// wrapper ref가 trigger + menu를 모두 감싸므로, 메뉴 항목 클릭 시 "외부 클릭"으로 오인하지 않음
-const StatSettingCell = React.memo(({ dataItem, selectedValues, isOpen, onOpenChange, onToggle }) => {
+// --- 통계 설정 다중선택 드롭다운 (Kendo MultiSelect) ---
+const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     const selected = Array.isArray(selectedValues)
         ? selectedValues
         : (selectedValues ? String(selectedValues).split(',').map(s => s.trim()).filter(Boolean) : []);
 
-    const wrapperRef = useRef(null);
-
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleClickOutside = (event) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                onOpenChange(null);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen, onOpenChange]);
-
-    const toggleOption = (id) => {
-        const next = selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id];
-        onToggle(dataItem, 'stat_summary', next.join(','));
-    };
-
-    const displayText = selected.length === 0
-        ? <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>
-        : <span style={{ color: '#1e293b' }}>{selected.join(', ')}</span>;
+    const valueItems = STAT_OPTIONS.filter(opt => selected.includes(opt.id));
 
     return (
-        <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
-            <div
-                className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
-                onClick={() => onOpenChange(isOpen ? null : dataItem.source_var_id)}
-                style={{ height: '22px', padding: '0 6px', fontSize: '13px', width: '100%', borderRadius: '2px' }}
-            >
-                <div style={{ width: '20px', flexShrink: 0 }} />
-                <span className="trigger-text" style={{ fontSize: '13px', textAlign: 'center' }}>{displayText}</span>
-                <ChevronDown size={12} className="trigger-icon" />
-            </div>
-
-            {isOpen && (
-                <div className="custom-filter-menu" style={{ minWidth: '180px', zIndex: 10001 }}>
-                    {STAT_OPTIONS.map(opt => {
-                        const isChecked = selected.includes(opt.id);
-                        return (
-                            <div key={opt.id} className="custom-filter-item" onClick={(e) => { e.stopPropagation(); toggleOption(opt.id); }}>
-                                <div className={`checkbox-custom ${isChecked ? 'checked' : ''}`}>
-                                    {isChecked && <Check size={12} color="#fff" strokeWidth={3} />}
-                                </div>
-                                <span className="filter-text">{opt.label}</span>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
-        </div>
+        <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
+            <MultiSelect
+                className="dp-mini-dropdown k-dropdown-solid"
+                data={STAT_OPTIONS}
+                textField="label"
+                dataItemKey="id"
+                value={valueItems}
+                onChange={(e) => {
+                    const nextIds = e.value.map(val => val.id).join(',');
+                    onUpdate(dataItem, 'stat_summary', nextIds);
+                }}
+                style={{ width: '100%', minHeight: '22px', fontSize: '13px' }}
+                placeholder="선택 (미설정)"
+                autoClose={false}
+            />
+        </td>
     );
 });
 
-// --- 공통 컴포넌트: 프리셋 드롭다운 셀 (단일 선택, custom-filter-wrapper 방식) ---
-const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange, activeId, onOpenChange = () => { } }) => {
+// --- 공통 컴포넌트: 프리셋 드롭다운 셀 (단일 선택 Kendo DropDownList) ---
+const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) => {
     const val = dataItem[field];
-    const isOpen = activeId === `${field}-${dataItem.source_var_id}`;
-    const wrapperRef = useRef(null);
 
-    useEffect(() => {
-        if (!isOpen) return;
-        const handleClickOutside = (event) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
-                onOpenChange(null);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, [isOpen, onOpenChange]);
+    const options = useMemo(() => {
+        if (!presets) return [];
+        return presets.map(p => {
+            const text = typeof p === 'object' ? (p.label || p.name || p.id || 'Unknown') : p;
+            const id = typeof p === 'object' ? (p.id || p.value || text) : p;
+            return { text: String(text), id: String(id) };
+        });
+    }, [presets]);
 
-    const options = useMemo(() => presets.map(p => {
-        const text = typeof p === 'object' ? (p.label || p.name || p.id || 'Unknown') : p;
-        const id = typeof p === 'object' ? (p.id || p.value || text) : p;
-        return { text: String(text), id: String(id) };
-    }), [presets]);
-
-    const selectedOption = options.find(o => o.id === String(val) || o.text === String(val));
-
-    const handleSelect = (optionId) => {
-        onChange(dataItem, field, optionId);
-        onOpenChange(null);
-    };
-
-    const displayText = selectedOption
-        ? (field === 'var_type' 
-            ? (() => {
-                const { color, displayType } = getQuestionTypeInfo(selectedOption.text);
-                return <span className={`question-type-badge ${color}`} style={{ display: 'inline-flex', alignItems: 'center' }}>{displayType}</span>;
-            })()
-            : <span style={{ color: '#1e293b', fontSize: '13px' }}>{selectedOption.text}</span>)
-        : <span style={{ color: '#94a3b8', fontSize: '13px' }}>선택 (미설정)</span>;
+    const valueItem = options.find(o => o.id === String(val) || o.text === String(val)) || null;
 
     return (
-        <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
-            <div ref={wrapperRef} className="custom-filter-wrapper" style={{ position: 'relative', width: '100%' }}>
-                <div
-                    className={`custom-filter-trigger ${isOpen ? 'open' : ''}`}
-                    onClick={() => onOpenChange(isOpen ? null : `${field}-${dataItem.source_var_id}`)}
-                    style={{ height: '22px', padding: '0 6px', fontSize: '13px', width: '100%', borderRadius: '2px' }}
-                >
-                    <div style={{ width: '20px', flexShrink: 0 }} />
-                    <span className="trigger-text" style={{ fontSize: '13px', textAlign: 'center' }}>{displayText}</span>
-                    <ChevronDown size={12} className="trigger-icon" />
-                </div>
-
-                {isOpen && options.length > 0 && (
-                    <div className="custom-filter-menu" style={{ width: '100%', zIndex: 10001 }}>
-                        {options.map(opt => {
-                            const isSelected = opt.id === String(val) || opt.text === String(val);
-                            return (
-                                <div
-                                    key={opt.id}
-                                    className="custom-filter-item"
-                                    onClick={(e) => { e.stopPropagation(); handleSelect(opt.id); }}
-                                    style={{ background: isSelected ? '#eff6ff' : 'transparent' }}
-                                >
-                                    <div className={`checkbox-custom ${isSelected ? 'checked' : ''}`}>
-                                        {isSelected && <Check size={12} color="#fff" strokeWidth={3} />}
-                                    </div>
-                                    <span className="filter-text" style={{ fontSize: '13px', fontWeight: isSelected ? 700 : 400, color: isSelected ? '#2563eb' : '#1e293b', whiteSpace: 'normal', wordBreak: 'break-word', lineHeight: '1.4' }}>
-                                        {opt.text}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
+        <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
+            <DropDownList
+                className="k-dropdown-solid dp-mini-dropdown"
+                data={options}
+                textField="text"
+                dataItemKey="id"
+                value={valueItem}
+                onChange={(e) => {
+                    const selectedId = e.value ? e.value.id : '';
+                    onChange(dataItem, field, selectedId);
+                }}
+                defaultItem={{ text: "선택 (미설정)", id: "" }}
+                style={{ width: '100%', height: '22px', fontSize: '13px' }}
+            />
         </td>
     );
 });
@@ -301,8 +224,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [originalRecodedIds, setOriginalRecodedIds] = useState([]);
     const [scalePresets, setScalePresets] = useState([]);
     const [rankPresets, setRankPresets] = useState([]);
-    const [activeStatRowId, setActiveStatRowId] = useState(null);
-    const [activePresetId, setActivePresetId] = useState(null);
+    const [groupPresets, setGroupPresets] = useState([]);
 
     const history = useUpdateHistory('dp-table');
     const isHistoryAction = useRef(false);
@@ -553,32 +475,27 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
                             />
                             <Column field="x_info" title="배너(x_info)" width="150px" headerClassName="k-text-center"
-                                cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />}
+                                cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
                             />
                             <Column field="group_preset_name" title="그룹 프리셋" width="120px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseGroupPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
                                     }
-                                    return <td style={{ padding: '0 8px', verticalAlign: 'middle' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}><span>{p.dataItem.group_preset_name}</span><ChevronDown size={14} style={{ color: '#94a3b8' }} /></div></td>;
+                                    return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
                                 }}
                             />
-                            <Column field="stat_summary" title="통계 설정" width="180px" headerClassName="k-text-center" 
+                            <Column field="stat_summary" title="통계 설정" width="180px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseStatPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
                                     }
-                                    const isOpen = activeStatRowId === p.dataItem.source_var_id;
                                     return (
-                                        <td style={{ padding: '2px 6px', verticalAlign: 'middle', overflow: 'visible', position: 'relative' }}>
-                                            <StatSettingCell
-                                                dataItem={p.dataItem}
-                                                selectedValues={p.dataItem.stat_summary}
-                                                isOpen={isOpen}
-                                                onOpenChange={setActiveStatRowId}
-                                                onToggle={handleCellUpdate}
-                                            />
-                                        </td>
+                                        <StatSettingCell
+                                            dataItem={p.dataItem}
+                                            selectedValues={p.dataItem.stat_summary}
+                                            onUpdate={handleCellUpdate}
+                                        />
                                     );
                                 }}
                             />
@@ -587,7 +504,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     if (!canUseScalePreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
                                     }
-                                    return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />;
+                                    return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} />;
                                 }}
                             />
                             <Column field="rank_preset_name" title="순위 프리셋" width="150px" headerClassName="k-text-center"
@@ -595,7 +512,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     if (!canUseRankPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
                                     }
-                                    return <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} activeId={activePresetId} onOpenChange={setActivePresetId} />;
+                                    return <PresetDropdownCell field="rank_preset_name" dataItem={p.dataItem} presets={rankPresets} onChange={handleCellUpdate} />;
                                 }}
                             />
                         </KendoGridV2>
