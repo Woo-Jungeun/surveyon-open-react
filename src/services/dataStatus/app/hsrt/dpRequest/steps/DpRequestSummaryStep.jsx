@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy } from 'lucide-react';
+import { Save, Trash2, ChevronDown, ChevronUp, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -107,6 +107,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 삭제 관리용 스테이트 추가 ---
     const [deletedSummaryIds, setDeletedSummaryIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
     const [originalSummaryIds, setOriginalSummaryIds] = useState([]); // 초기 로딩된 요약표 ID 목록 (신규 구분용)
+    const [collapsedFolders, setCollapsedFolders] = useState(new Set()); // 아코디언 상태 관리용
+
+    const toggleFolderCollapse = (folderId) => {
+        setCollapsedFolders(prev => {
+            const next = new Set(prev);
+            if (next.has(folderId)) next.delete(folderId);
+            else next.add(folderId);
+            return next;
+        });
+    };
 
     // 키보드 이벤트 (Undo/Redo)
     useEffect(() => {
@@ -451,15 +461,24 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             <div className="dp-setting-card" style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '16px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                        <button className="dp-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px' }}>
+                        <button style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                        >
                             <Wand2 size={14} />
                             <span>척도형 자동 요약표 생성</span>
                         </button>
-                        <button className="dp-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px' }}>
+                        <button style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                        >
                             <Plus size={14} />
                             <span>빈도 요약표 추가</span>
                         </button>
-                        <button className="dp-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px' }}>
+                        <button style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
+                        >
                             <Plus size={14} />
                             <span>통계 요약표 추가</span>
                         </button>
@@ -515,6 +534,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         <div className="dp-summary-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
                             {filteredSummaryVariables.map(variable => (
                                 <div key={variable.base_id}
+                                    className="dp-variable-row"
                                     style={{ 
                                         display: 'flex', alignItems: 'center', gap: '8px', 
                                         padding: '8px', border: '1px solid #e2e8f0', 
@@ -527,11 +547,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                         {variable.type === 'scale' ? (variable.scale_points ? `${variable.scale_points}점 척도` : '척도형') : '숫자형'}
                                     </span>
-                                    <button className="dp-btn-outline" style={{ height: '24px', padding: '0 8px', fontSize: '10px' }}
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', borderRadius: '4px' }}
+                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#3b82f6'; e.currentTarget.style.background = '#eff6ff'; }}
+                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'none'; }}
                                         onClick={() => {
                                             // TODO: 요약표 폴더에 변수 추가 로직 연결
                                         }}
-                                    >추가</button>
+                                        title="변수 추가"
+                                    >
+                                        <Plus size={16} />
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -564,16 +589,21 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             </span>
                                         )}
                                     </div>
-                                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', color: '#64748b' }}>
-                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', color: '#64748b', alignItems: 'center' }}>
+                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
                                             <Copy size={16} />
                                         </button>
-                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
                                             <X size={16} />
+                                        </button>
+                                        <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+                                        <button onClick={() => toggleFolderCollapse(folder.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }}>
+                                            {collapsedFolders.has(folder.id) ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
                                         </button>
                                     </div>
                                 </div>
                                 {/* Folder Body */}
+                                {!collapsedFolders.has(folder.id) && (
                                 <div style={{ padding: '16px' }}>
                                     {folder.type === 'frequency' ? (
                                         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
@@ -633,6 +663,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         )}
                                     </div>
                                 </div>
+                                )}
                             </div>
                         ))}
                     </div>

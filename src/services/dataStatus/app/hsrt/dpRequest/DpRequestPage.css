@@ -6,7 +6,6 @@
     overflow: hidden;
     padding: 0px 0px 10px 0px;
     box-sizing: border-box;
-    gap: 12px;
 }
 
 /* 3단계 스터브 그리드: 엑셀 스타일 타이트 뷰 및 헤더 잘림 방지 */
@@ -535,7 +534,8 @@
 
 .dp-sidebar-collapsed-bar .dp-collapsed-header {
     width: 100%;
-    height: 49px; /* matching dp-sidebar-title border box */
+    height: 49px;
+    /* matching dp-sidebar-title border box */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1276,7 +1276,6 @@
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
 }
 
 .dp-setting-card {
@@ -1670,15 +1669,17 @@
     background-color: #f8fafc !important;
     box-shadow: none !important;
 }
+
 .dp-summary-dropdown.k-dropdownlist:focus,
 .dp-summary-dropdown.k-dropdownlist.k-focus,
 .dp-summary-dropdown.k-dropdownlist:focus-within,
 .dp-summary-dropdown.k-picker:focus,
 .dp-summary-dropdown.k-picker.k-focus {
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important; 
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
     border-color: #3b82f6 !important;
     outline: none !important;
 }
+
 .dp-summary-dropdown .k-input-inner {
     padding: 0 10px !important;
     font-size: 13px !important;

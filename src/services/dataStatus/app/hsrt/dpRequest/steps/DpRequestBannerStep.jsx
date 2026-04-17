@@ -426,7 +426,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     return (
-        <div className="dp-request-container" onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
+        <div className="dp-request-container" style={{ gap: '12px' }} onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
             {/* 1. 자동 배너 구성 마법사 */}
             <div className="dp-wizard-accordion" onClick={(e) => { e.stopPropagation(); setSelectedIds([]); }}>
                 <div className="dp-accordion-header" onClick={() => setIsWizardOpen(prev => !prev)}>
