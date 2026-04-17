@@ -554,15 +554,20 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <div className={`dp-sidebar-container ${!isBannerSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                     {!isBannerSidebarOpen && (
                         <div className="dp-sidebar-collapsed-bar" onClick={() => setIsBannerSidebarOpen(true)}>
-                            <ChevronRight size={16} />
+                            <div className="dp-collapsed-header">
+                                <ChevronRight size={16} />
+                            </div>
                         </div>
                     )}
                     <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
-                        <div className="dp-sidebar-title">
-                            생성된 배너 목록 ({filteredBanners.length})
+                        <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
+                            <span>생성된 배너 목록 ({filteredBanners.length})</span>
+                            <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)}>
+                                <ChevronLeft size={16} />
+                            </button>
                         </div>
-                        <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid #e2e8f0', gap: '8px', flexShrink: 0 }}>
-                            <div className="dp-search-input-wrapper" style={{ flex: 1 }}>
+                        <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                            <div className="dp-search-input-wrapper" style={{ flex: 1, width: '100%' }}>
                                 <Search size={14} className="dp-search-input-icon" />
                                 <input
                                     type="text"
@@ -572,9 +577,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     className="dp-search-input"
                                 />
                             </div>
-                            <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)}>
-                                <ChevronLeft size={16} />
-                            </button>
                         </div>
                         <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                             {filteredBanners.map(banner => (

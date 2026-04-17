@@ -60,6 +60,15 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/dp-request/recoded/overview", "API_BASE_URL_DATASTATUS")
     );
 
+    /** DP 의뢰서 - Summary 조회 */
+    const getSummaryDetail = useMutation(
+        async (data) => await api.post(data, "/dp-request/summary/detail", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** DP 의뢰서 - Recoded (스터브) 오버뷰 저장 */
     const saveRecodedOverview = useMutation(
         async (data) => await api.post(data, "/dp-request/recoded/overview/save", "API_BASE_URL_DATASTATUS"),
@@ -78,6 +87,7 @@ export function DpRequestPageApi() {
         getDpContext,
         generateBanner,
         saveBannerDetail,
+        getSummaryDetail,
         getRecodedOverview,
         saveRecodedOverview,
     };

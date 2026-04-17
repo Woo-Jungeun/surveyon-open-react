@@ -1,156 +1,576 @@
-import React, { useState, useContext, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, ListCheck, Trash2, Search, Filter, Info, Plus } from 'lucide-react';
+import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2 } from 'lucide-react';
+import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
+import useUpdateHistory from '@/hooks/useUpdateHistory';
+
+// --- (성능 개선) 개별 아이템 메모이제이션 ---
+const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
+    <div
+        className={`variable-item ${isSelected ? 'selected' : ''}`}
+        draggable
+        onDragStart={(e) => onDragStart(e, v)}
+        onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
+        style={{ borderRadius: '6px' }}
+    >
+        <div className="variable-item-header">
+            <div className="variable-item__name">{v.id}</div>
+            {v.type && <span className={`question-type-badge ${String(v.type).toLowerCase()}`}>{v.type}</span>}
+        </div>
+        <div className="variable-item__label">{v.label}</div>
+    </div>
+));
+
+// --- (컴팩트 디자인 & 여유로운 패딩) 요약표 생성 전용 푸터 바 ---
+const SummaryActionFooter = memo(({ onCreateSummary }) => {
+    const [localName, setLocalName] = useState('');
+    return (
+        <div style={{
+            padding: '14px 16px 0px',
+            background: '#ffffff',
+            borderTop: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표명</span>
+                <input
+                    type="text"
+                    placeholder="요약표명을 입력하세요"
+                    value={localName}
+                    onChange={(e) => setLocalName(e.target.value)}
+                    className="dp-input"
+                    style={{ flex: 1, maxWidth: '500px' }}
+                />
+            </div>
+            <button
+                className="dp-primary-btn"
+                onClick={() => onCreateSummary(localName)}
+                style={{
+                    height: '32px',
+                    padding: '0 20px',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    borderRadius: '6px',
+                    background: '#2563eb',
+                    color: '#fff',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+            >
+                요약표 생성
+            </button>
+        </div>
+    );
+});
 
 const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
+    const { getSummaryDetail, getBaseVariableList, generateSummary, saveSummaryDetail } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
-    const [searchTerm, setSearchTerm] = useState('');
+    // --- 히스토리 관리 (Undo/Redo) ---
+    const history = useUpdateHistory('dp-summary');
+    const isHistoryAction = useRef(false);
 
     // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
     useImperativeHandle(ref, () => ({
         save: async () => {
-            return await handleSave();
+            return await handleSaveSummary();
         }
     }));
 
-    // --- 상태 관리 ---
-    const [summaryItems, setSummaryItems] = useState([
-        { id: 'S1', name: '핵심지표 요약 (KPI Summary)', type: 'Summary', target: '전체 문항 대상', active: true },
-        { id: 'S2', name: '브랜드 인지도 요약 (Brand Awareness)', type: 'Summary', target: 'Q5, Q6', active: true },
-        { id: 'S3', name: '이용 만족도 요약 (Satisfaction Score)', type: 'Summary', target: 'Q10-Q15', active: false },
-    ]);
+    const [summaries, setSummaries] = useState([]);
+    const [selectedSummary, setSelectedSummary] = useState('');
+    const [folders, setFolders] = useState([]);
+    const [selectedFolderId, setSelectedFolderId] = useState('');
+    const [baseVariables, setBaseVariables] = useState([]);
+    const [isWizardOpen, setIsWizardOpen] = useState(false);
+    const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
+    const [isSummarySidebarOpen, setIsSummarySidebarOpen] = useState(true);
+    const [wizardSearch, setWizardSearch] = useState('');
+    const [summarySearch, setSummarySearch] = useState('');
+    const [colVars, setColVars] = useState([]);
+    const [currentLabel, setCurrentLabel] = useState('');
+    const [selectedIds, setSelectedIds] = useState([]);
 
-    // 필터링
-    const filteredItems = useMemo(() => {
-        if (!searchTerm) return summaryItems;
-        return summaryItems.filter(item => 
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            item.target.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [summaryItems, searchTerm]);
+    // --- 삭제 관리용 스테이트 추가 ---
+    const [deletedSummaryIds, setDeletedSummaryIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
+    const [originalSummaryIds, setOriginalSummaryIds] = useState([]); // 초기 로딩된 요약표 ID 목록 (신규 구분용)
 
-    // --- 저장 로직 ---
-    const handleSave = async () => {
-        const pageId = sessionStorage.getItem('pageId');
-        if (!pageId) return false;
+    // 키보드 이벤트 (Undo/Redo)
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key.toLowerCase() === 'z') {
+                    if (e.shiftKey) { // Redo (Ctrl+Shift+Z)
+                        const redoData = history.redo();
+                        if (redoData) {
+                            isHistoryAction.current = true;
+                            setSummaries([...redoData]);
+                        }
+                    } else { // Undo (Ctrl+Z)
+                        const undoData = history.undo();
+                        if (undoData) {
+                            isHistoryAction.current = true;
+                            setSummaries([...undoData]);
+                        }
+                    }
+                } else if (e.key.toLowerCase() === 'y') { // Redo (Ctrl+Y)
+                    const redoData = history.redo();
+                    if (redoData) {
+                        isHistoryAction.current = true;
+                        setSummaries([...redoData]);
+                    }
+                }
+            }
+        };
 
-        loadingSpinner.show();
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [history]);
+
+    // 데이터 변경 감지 및 히스토리 커밋
+    useEffect(() => {
+        if (isHistoryAction.current) {
+            isHistoryAction.current = false;
+            return;
+        }
+        if (summaries.length > 0) {
+            history.commit(summaries);
+        }
+    }, [summaries, history]);
+
+    // --- Interaction Logic ---
+    const toggleSelection = useCallback((id) => {
+        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+    }, []);
+
+    const handleDragStart = useCallback((e, draggedVar) => {
+        let targets = [];
+        if (selectedIds.includes(draggedVar.id)) {
+            targets = baseVariables.filter(v => selectedIds.includes(v.id));
+        } else {
+            targets = [draggedVar];
+            setSelectedIds([draggedVar.id]);
+        }
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'EXTERNAL', items: targets }));
+    }, [selectedIds, baseVariables]);
+
+    const handleInternalItemDragStart = (e, gIdx, iIdx) => {
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_ITEM', gIdx, iIdx }));
+    };
+
+    const handleInternalGroupDragStart = (e, gIdx) => {
+        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_GROUP', gIdx }));
+    };
+
+    const handleDrop = (e, targetIdx) => {
+        e.preventDefault();
         try {
-            const payload = {
-                user: auth.user?.userId,
-                pageid: pageId,
-                summaryItems: summaryItems,
+            const dataStr = e.dataTransfer.getData('text/plain');
+            if (!dataStr) return;
+            const data = JSON.parse(dataStr);
+
+            setColVars(prev => {
+                let next = [...prev.map(g => [...g])];
+                if (data.type === 'INTERNAL_ITEM') {
+                    const item = next[data.gIdx][data.iIdx];
+                    next[data.gIdx].splice(data.iIdx, 1);
+                    if (targetIdx === 'new') {
+                        if (next.length >= 10) {
+                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                            return prev;
+                        }
+                        next.push([item]);
+                    } else {
+                        if (!next[targetIdx].find(v => v.id === item.id)) {
+                            if (next[targetIdx].length >= 3) {
+                                modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
+                                return prev;
+                            }
+                            next[targetIdx].push(item);
+                        } else if (data.gIdx === targetIdx) {
+                            next[targetIdx].splice(data.iIdx, 0, item);
+                        }
+                    }
+                    return next.filter(g => g.length > 0);
+                }
+                if (data.type === 'INTERNAL_GROUP') {
+                    const group = next[data.gIdx];
+                    next.splice(data.gIdx, 1);
+                    if (targetIdx === 'new') {
+                        if (next.length >= 10) {
+                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                            return prev;
+                        }
+                        next.push(group);
+                    } else next.splice(targetIdx, 0, group);
+                    return next;
+                }
+                if (data.type === 'EXTERNAL') {
+                    const itemsToAdd = data.items;
+                    if (targetIdx === 'new') {
+                        // 새로 추가되면서 10개를 넘는지 체크
+                        if (next.length + itemsToAdd.length > 10) {
+                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                            // 가능힌 부분까지만 추가하거나 아예 안하거나 결정 (여기서는 안전하게 경고 후 중단)
+                            return prev;
+                        }
+                        next.push(...itemsToAdd.map(it => [it]));
+                    } else {
+                        const unique = itemsToAdd.filter(it => !next[targetIdx].find(v => v.id === it.id));
+                        if (next[targetIdx].length + unique.length > 3) {
+                            modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
+                            return prev;
+                        }
+                        next[targetIdx] = [...next[targetIdx], ...unique];
+                    }
+                }
+                return next;
+            });
+            setSelectedIds([]);
+        } catch (err) { console.error(err); }
+    };
+
+    const removeVar = (varId, groupIndex) => {
+        setColVars(prev => {
+            const next = prev.map(g => [...g]);
+            next[groupIndex] = next[groupIndex].filter(v => v.id !== varId);
+            return next.filter(g => g.length > 0);
+        });
+    };
+
+    const handleDeleteSummary = (e, summaryId) => {
+        e.stopPropagation();
+        modal.showConfirm('삭제 확인', `요약표(${summaryId})를 삭제하시겠습니까?`, {
+            btns: [
+                { title: "취소", click: () => { } },
+                {
+                    title: "삭제",
+                    click: async () => {
+                        const pageId = sessionStorage.getItem('pageId');
+                        if (!pageId) return;
+
+                        try {
+                            loadingSpinner.show();
+                            const requestData = {
+                                pageid: pageId,
+                                user: auth?.user?.userId,
+                                variables: {},
+                                delete_ids: [summaryId]
+                            };
+
+                            const result = await saveSummaryDetail.mutateAsync(requestData);
+                            if (result?.success === "777") {
+                                modal.showAlert('알림', '요약표가 삭제되었습니다.');
+                                await fetchSummaryData();
+                            }
+                        } catch (error) {
+                            console.error('Delete error:', error);
+                            modal.showAlert('오류', '요약표 삭제 중 문제가 발생했습니다.');
+                        } finally {
+                            loadingSpinner.hide();
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
+    // --- 데이터 로직 ---
+    const fetchSummaryData = async (isFresh = false) => {
+        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746"; // 임시 pageId
+        const userId = "sbbok"; // 임시 user
+        
+        try {
+            loadingSpinner.show();
+            const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
+            if (result?.success === '777' && result.resultjson) {
+                if (result.resultjson.base_variables) {
+                    const baseVars = result.resultjson.base_variables;
+                    setBaseVariables(Array.isArray(baseVars) ? baseVars : Object.values(baseVars));
+                }
+                if (result.resultjson.dp_request_summary_folders) {
+                    setFolders(result.resultjson.dp_request_summary_folders);
+                }
+                if (result.resultjson.recoded_variables) {
+                    const raw = result.resultjson.recoded_variables;
+                    const recodes = Array.isArray(raw) ? raw : Object.values(raw);
+                    const formatted = recodes.map((v, i) => ({
+                        id: v.id || `var_${i}`,
+                        label: v.name || v.label,
+                        subId: v.id || `summary_0${i + 1}`,
+                        info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
+                    }));
+                    setSummaries(formatted);
+                    history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
+
+                    // 서버에서 온 원본 ID들 보관
+                    const ids = formatted.map(b => b.id);
+                    setOriginalSummaryIds(ids);
+                    setDeletedSummaryIds([]); // 삭제 목록 초기화
+
+                    if (formatted.length > 0) {
+                        const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
+                        if (isFresh || !selectedSummary) {
+                            setSelectedSummary(target.id);
+                            setCurrentLabel(target.label);
+                        }
+                    }
+                }
+            }
+        } catch (error) { console.error(error); }
+        finally { loadingSpinner.hide(); }
+    };
+
+    const handleCreateSummary = async (name) => {
+        if (!name?.trim()) return modal.showAlert('알림', '요약표명을 입력해 주세요.');
+        if (colVars.length === 0) return modal.showAlert('알림', '구성된 문항이 없습니다.');
+        const pageId = sessionStorage.getItem('pageId');
+        const formula = colVars.map(group => group.map(v => v.id).join('*')).join('+');
+        try {
+            loadingSpinner.show();
+            const result = await generateSummary.mutateAsync({ pageid: pageId, formula, label: name, user: auth?.user?.userId });
+            if (result?.success === "777") {
+                await fetchSummaryData(true);
+                setColVars([]);
+                setIsWizardOpen(false);
+                modal.showAlert('알림', '요약표가 생성되었습니다.');
+            }
+        } catch (error) { console.error(error); }
+        finally { loadingSpinner.hide(); }
+    };
+
+    const updateSummaryInfo = useCallback((newInfo) => {
+        setSummaries(prev => prev.map(b => b.id === selectedSummary ? { ...b, info: newInfo } : b));
+    }, [selectedSummary]);
+
+    const summaryVariables = useMemo(() => {
+        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => 
+            v.type === 'scale' || v.type === 'double'
+        ).map(v => {
+            const scalePoints = v.scale_points || (v.info && v.info.filter(row => row.type && row.type !== 'mean' && row.type !== 'median' && row.type !== 'mode' && !row.type.includes('base')).length) || null;
+            return {
+                ...v,
+                base_id: v.id,
+                scale_points: scalePoints
             };
-            console.log("Saving summary with payload:", payload);
-            
-            modal.showAlert('알림', '요약표 설정이 저장되었습니다.');
-            if (onUnsavedChange) onUnsavedChange(false);
-            return true;
-        } catch (err) {
-            console.error(err);
-            modal.showAlert('오류', '저장 중 오류가 발생했습니다.');
+        });
+    }, [baseVariables]);
+
+    const filteredSummaryVariables = useMemo(() => {
+        const search = summarySearch.toLowerCase();
+        return summaryVariables.filter(v =>
+            (v.label || '').toLowerCase().includes(search) || (v.base_id || '').toLowerCase().includes(search)
+        );
+    }, [summaryVariables, summarySearch]);
+
+    // 요약표 목록 필터링 (일단 유지)
+    const filteredSummaries = useMemo(() => {
+        const search = summarySearch.toLowerCase();
+        return summaries.filter(b =>
+            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
+        );
+    }, [summaries, summarySearch]);
+
+    useEffect(() => { fetchSummaryData(); }, [auth?.user?.userId]);
+
+    useEffect(() => {
+        const fetchBaseVariables = async () => {
+            const pageId = sessionStorage.getItem('pageId');
+            if (!pageId || !auth?.user?.userId) return;
+            try {
+                const result = await getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
+                if (result?.success === '777' && result.resultjson) setBaseVariables(Object.values(result.resultjson));
+            } catch (error) { }
+        };
+        fetchBaseVariables();
+    }, [auth?.user?.userId]);
+
+    const handleSaveSummary = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!selectedSummary || !pageId) return;
+
+        const currentSummaryData = summaries.find(b => b.id === selectedSummary);
+        if (!currentSummaryData) return;
+
+        // API 명세서 형식에 맞게 데이터 가공
+        const requestData = {
+            pageid: pageId,
+            user: auth?.user?.userId, // 사용자ID 추가
+            variables: {
+                [currentSummaryData.id]: {
+                    id: currentSummaryData.id,
+                    label: currentLabel, // 수정된 라벨 사용
+                    type: "single", // 기본값
+                    recoded_type: "recoded",
+                    info: currentSummaryData.info.map(it => ({
+                        label3: it.label3,
+                        label2: it.label2,
+                        label: it.label,
+                        logic: it.logic
+                    }))
+                }
+            },
+            delete_ids: []
+        };
+
+        try {
+            loadingSpinner.show();
+            const result = await saveSummaryDetail.mutateAsync(requestData);
+            if (result?.success === "777") {
+                modal.showAlert('알림', '요약표 정보가 저장되었습니다.');
+                if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
+                await fetchSummaryData();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Save error:', error);
+            modal.showAlert('오류', '요약표 저장 중 문제가 발생했습니다.');
             return false;
         } finally {
             loadingSpinner.hide();
         }
     };
 
-    const handleDataChange = (newData) => {
-        setSummaryItems(newData);
-        if (onUnsavedChange) onUnsavedChange(true);
-    };
-
     return (
-        <div className="dp-request-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* 상단 통합 제어 바 */}
-            <div className="dp-setting-card" style={{ marginBottom: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div className="dp-step-badge">Step 4</div>
-                        <div>
-                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>요약표(Summary) 구성 설정</h3>
-                            <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>보고서 상단에 위치할 핵심 요약 지표 정보를 구성합니다.</p>
-                        </div>
-                    </div>
+        <div className="dp-request-container" onClick={() => updateSummaryInfo(summaries.find(b => b.id === selectedSummary)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
+            {/* 1. 상단 요약표 관리 카드 */}
+            <div className="dp-setting-card" style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '16px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                        <div className="dp-search-input-wrapper" style={{ width: '220px' }}>
-                            <Search size={14} className="dp-search-input-icon" />
-                            <input 
-                                type="text" 
-                                placeholder="요약표 검색..." 
-                                className="dp-search-input"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <button className="dp-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Plus size={16} />
-                            <span>요약표 추가</span>
+                        <button className="dp-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px' }}>
+                            <Wand2 size={14} />
+                            <span>척도형 자동 요약표 생성</span>
                         </button>
-                        <button className="dp-primary-btn" onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Save size={16} />
-                            <span>최종 저장</span>
+                        <button className="dp-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px' }}>
+                            <Plus size={14} />
+                            <span>빈도 요약표 추가</span>
+                        </button>
+                        <button className="dp-btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px' }}>
+                            <Plus size={14} />
+                            <span>통계 요약표 추가</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            {/* 메인 리스트 카드 */}
-            <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div className="dp-setting-card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ListCheck size={16} />
-                        <span>요약표 구문 목록 ({filteredItems.length})</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#64748b' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Info size={12} /> 설정된 문항들이 자동으로 집계됩니다</span>
+            {/* 2. 메인 레이아웃 */}
+            <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
+                <div className={`dp-sidebar-container ${!isSummarySidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
+                    {!isSummarySidebarOpen && (
+                        <div className="dp-sidebar-collapsed-bar" onClick={() => setIsSummarySidebarOpen(true)}>
+                            <div className="dp-collapsed-header">
+                                <ChevronRight size={16} />
+                            </div>
+                        </div>
+                    )}
+                    <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+                        <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
+                            <span>원본 변수 목록 ({filteredSummaryVariables.length})</span>
+                            <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsSummarySidebarOpen(false)}>
+                                <ChevronLeft size={16} />
+                            </button>
+                        </div>
+                        <div className="dp-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                            <DropDownList
+                                className="dp-summary-dropdown"
+                                data={folders}
+                                    textField="name"
+                                    dataItemKey="id"
+                                    value={folders.find(f => f.id === selectedFolderId) || null}
+                                    defaultItem={{ id: '', name: '추가할 폴더 선택' }}
+                                    onChange={(e) => {
+                                        if (e.target.value?.id) {
+                                            setSelectedFolderId(e.target.value.id);
+                                        } else {
+                                            setSelectedFolderId('');
+                                        }
+                                    }}
+                                    style={{ width: '100%', height: '32px' }}
+                            />
+                            <div className="dp-search-input-wrapper" style={{ width: '100%' }}>
+                                <Search size={14} className="dp-search-input-icon" />
+                                <input
+                                    type="text"
+                                    placeholder="변수명 또는 ID 검색"
+                                    value={summarySearch}
+                                    onChange={(e) => setSummarySearch(e.target.value)}
+                                    className="dp-search-input"
+                                />
+                            </div>
+                        </div>
+                        <div className="dp-summary-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
+                            {filteredSummaryVariables.map(variable => (
+                                <div key={variable.base_id}
+                                    style={{ 
+                                        display: 'flex', alignItems: 'center', gap: '8px', 
+                                        padding: '8px', border: '1px solid #e2e8f0', 
+                                        borderRadius: '6px', marginBottom: '8px', background: '#fff' 
+                                    }}
+                                >
+                                    <span style={{ width: '40px', fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{variable.base_id}</span>
+                                    <div style={{ width: '1px', height: '12px', backgroundColor: '#e2e8f0' }} />
+                                    <span style={{ flex: 1, fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{variable.label}</span>
+                                    <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                                        {variable.type === 'scale' ? (variable.scale_points ? `${variable.scale_points}점 척도` : '척도형') : '숫자형'}
+                                    </span>
+                                    <button className="dp-btn-outline" style={{ height: '24px', padding: '0 8px', fontSize: '10px' }}
+                                        onClick={() => {
+                                            // TODO: 요약표 폴더에 변수 추가 로직 연결
+                                        }}
+                                    >추가</button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
-                <div className="dp-grid-wrapper" style={{ flex: 1, padding: '12px' }}>
-                    <KendoGridV2 
-                        data={filteredItems}
-                        reorderable
-                        addable
-                        deletable
-                        showNo
-                        onDataChange={handleDataChange}
-                        style={{ height: '100%' }}
-                    >
-                        <Column field="id" title="요약 ID" width="100px" editable={false} />
-                        <Column field="name" title="요약표 명칭" width="400px" />
-                        <Column field="type" title="유형" width="150px" 
-                            cell={(props) => (
-                                <td style={{ textAlign: 'center' }}>
-                                    <span className="dp-badge-mini gray">{props.dataItem.type}</span>
-                                </td>
-                            )}
-                        />
-                        <Column field="target" title="대상 문항" width="250px" />
-                        <Column 
-                            field="active" 
-                            title="활성화" 
-                            width="100px" 
-                            cell={(props) => (
-                                <td style={{ textAlign: 'center' }}>
-                                    <input 
-                                        type="checkbox" 
-                                        checked={props.dataItem.active} 
-                                        onChange={(e) => {
-                                            const next = summaryItems.map(item => item.id === props.dataItem.id ? { ...item, active: e.target.checked } : item);
-                                            handleDataChange(next);
-                                        }}
-                                        style={{ cursor: 'pointer' }}
-                                    />
-                                </td>
-                            )} 
-                        />
-                    </KendoGridV2>
+
+                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                        <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700 }}>요약표 라벨</span>
+                            <input
+                                type="text"
+                                value={currentLabel}
+                                onChange={(e) => {
+                                    setCurrentLabel(e.target.value);
+                                    if (onUnsavedChange) onUnsavedChange(true); // 라벨 변경 시 더티 표시
+                                }}
+                                className="dp-input"
+                                style={{ width: '600px' }}
+                            />
+                        </div>
+                        <div className="dp-content-actions" style={{ marginLeft: 'auto' }}>
+                            {/* 저장 버튼이 상단 글로벌 헤더로 통합되어 이곳에서는 제거됨 */}
+                        </div>
+                    </div>
+                    <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                        <KendoGridV2
+                            data={summaries.find(b => b.id === selectedSummary)?.info || []}
+                            reorderable addable showNo deletable editField="inEdit"
+                            onDataChange={updateSummaryInfo}
+                            onRowClick={(e) => updateSummaryInfo(summaries.find(b => b.id === selectedSummary).info.map(it => ({ ...it, inEdit: it === e.dataItem })))}
+                            newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
+                        >
+                            <Column field="label3" title="라벨3" width="150px" />
+                            <Column field="label2" title="라벨2" width="150px" />
+                            <Column field="label" title="라벨" />
+                            <Column field="logic" title="조건" width="180px" />
+                        </KendoGridV2>
+                    </div>
                 </div>
             </div>
         </div>
