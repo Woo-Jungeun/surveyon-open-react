@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2 } from 'lucide-react';
+import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -538,38 +538,103 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                 </div>
 
-                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                    <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                        <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700 }}>요약표 라벨</span>
-                            <input
-                                type="text"
-                                value={currentLabel}
-                                onChange={(e) => {
-                                    setCurrentLabel(e.target.value);
-                                    if (onUnsavedChange) onUnsavedChange(true); // 라벨 변경 시 더티 표시
-                                }}
-                                className="dp-input"
-                                style={{ width: '600px' }}
-                            />
-                        </div>
-                        <div className="dp-content-actions" style={{ marginLeft: 'auto' }}>
-                            {/* 저장 버튼이 상단 글로벌 헤더로 통합되어 이곳에서는 제거됨 */}
-                        </div>
-                    </div>
-                    <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                        <KendoGridV2
-                            data={summaries.find(b => b.id === selectedSummary)?.info || []}
-                            reorderable addable showNo deletable editField="inEdit"
-                            onDataChange={updateSummaryInfo}
-                            onRowClick={(e) => updateSummaryInfo(summaries.find(b => b.id === selectedSummary).info.map(it => ({ ...it, inEdit: it === e.dataItem })))}
-                            newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
-                        >
-                            <Column field="label3" title="라벨3" width="150px" />
-                            <Column field="label2" title="라벨2" width="150px" />
-                            <Column field="label" title="라벨" />
-                            <Column field="logic" title="조건" width="180px" />
-                        </KendoGridV2>
+                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, paddingLeft: '16px' }}>
+                    <div className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
+                        {folders.map((folder) => (
+                            <div key={folder.id} style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '16px', background: '#fff' }}>
+                                {/* Folder Header */}
+                                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
+                                    <Folder size={18} color="#64748b" />
+                                    <input 
+                                        type="text" 
+                                        value={folder.name} 
+                                        onChange={(e) => {
+                                            setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
+                                            if (onUnsavedChange) onUnsavedChange(true);
+                                        }}
+                                        style={{ fontSize: '14px', fontWeight: 700, color: '#1d4ed8', marginLeft: '8px', border: 'none', background: 'transparent', outline: 'none', width: '250px' }}
+                                    />
+                                    <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
+                                        <span style={{ padding: '2px 8px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', color: '#64748b' }}>
+                                            {folder.type === 'statistics' ? '통계 요약' : '빈도 요약'}
+                                        </span>
+                                        {folder.id.includes('auto') && (
+                                            <span style={{ padding: '2px 8px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', color: '#64748b' }}>
+                                                자동 생성됨
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', color: '#64748b' }}>
+                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                            <Copy size={16} />
+                                        </button>
+                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                            <X size={16} />
+                                        </button>
+                                    </div>
+                                </div>
+                                {/* Folder Body */}
+                                <div style={{ padding: '16px' }}>
+                                    {folder.type === 'frequency' ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
+                                            <span style={{ fontWeight: 600, color: '#475569', marginRight: '16px' }}>포함 코드</span>
+                                            <input
+                                                type="text"
+                                                placeholder="예: 4,5"
+                                                value={folder.include_codes || ''}
+                                                onChange={(e) => {
+                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: e.target.value } : f));
+                                                    if (onUnsavedChange) onUnsavedChange(true);
+                                                }}
+                                                style={{ color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', outline: 'none', width: '200px' }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px', gap: '20px' }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={folder.mean || false} onChange={(e) => {
+                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
+                                                    if (onUnsavedChange) onUnsavedChange(true);
+                                                }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                <span style={{ fontWeight: 600, color: '#475569' }}>평균</span>
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={folder.mode || false} onChange={(e) => {
+                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: e.target.checked } : f));
+                                                    if (onUnsavedChange) onUnsavedChange(true);
+                                                }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                <span style={{ fontWeight: 600, color: '#475569' }}>최빈값</span>
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                <input type="checkbox" checked={folder.median || false} onChange={(e) => {
+                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: e.target.checked } : f));
+                                                    if (onUnsavedChange) onUnsavedChange(true);
+                                                }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                <span style={{ fontWeight: 600, color: '#475569' }}>중앙값</span>
+                                            </label>
+                                        </div>
+                                    )}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '6px' }}>
+                                        {/* items 매핑 로직 (folder.items 배열 값이 문자열 id라고 가정) */}
+                                        {(folder.items || []).length > 0 ? (folder.items || []).map(itemId => {
+                                            const itemInfo = summaryVariables.find(v => v.base_id === itemId);
+                                            const label = itemInfo ? itemInfo.label : '';
+                                            return (
+                                                <div key={itemId} style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '16px', background: '#fff', gap: '6px' }}>
+                                                    <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '13px', flexShrink: 0 }}>{itemId}</span>
+                                                    <span title={label} style={{ color: '#64748b', fontSize: '13px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', color: '#94a3b8', flexShrink: 0 }}>
+                                                        <X size={13} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        }) : (
+                                            <div style={{ fontSize: '12px', color: '#94a3b8', padding: '8px 0' }}>변수가 추가되지 않았습니다.</div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </div>
             </div>
