@@ -548,12 +548,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                 </div>
 
-                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, paddingLeft: '16px' }}>
-                    <div className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '8px' }}>
+                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <div className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '16px' }}>
                         {folders.map((folder) => (
                             <div key={folder.id} style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '16px', background: '#fff' }}>
                                 {/* Folder Header */}
-                                <div style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
                                     <Folder size={18} color="#64748b" />
                                     <input
                                         type="text"
@@ -637,9 +637,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                                 {/* Folder Body */}
                                 {!collapsedFolders.has(folder.id) && (
-                                    <div style={{ padding: '12px' }}>
+                                    <div style={{ padding: '16px' }}>
                                         {folder.type === 'frequency' ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', fontSize: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
                                                 <span style={{ fontWeight: 600, color: '#475569', marginRight: '16px' }}>포함 코드</span>
                                                 <input
                                                     type="text"
@@ -679,7 +679,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         )}
                                         <div
                                             style={{
-                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '4px', minHeight: '40px', padding: '6px',
+                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px', minHeight: '60px', padding: '16px',
                                                 border: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? '2px solid #3b82f6' : '1px dashed #cbd5e1',
                                                 borderRadius: '8px',
                                                 background: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? 'rgba(59, 130, 246, 0.05)' : '#f8fafc',
