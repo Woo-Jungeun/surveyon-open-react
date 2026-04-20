@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { ChevronDown, Check, Search, X } from 'lucide-react';
+import { ChevronDown, Check, Search, X, Info } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
 import { DropDownList, MultiSelect } from '@progress/kendo-react-dropdowns';
@@ -16,6 +16,57 @@ const STAT_OPTIONS = [
     { id: 'mode', label: '최빈값 (mode)' },
     { id: 'median', label: '중앙값 (median)' },
 ];
+
+const ConditionHeaderCell = (props) => {
+    const anchorRef = useRef(null);
+    const [show, setShow] = useState(false);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <span>{props.title}</span>
+            <div
+                ref={anchorRef}
+                onMouseEnter={() => setShow(true)}
+                onMouseLeave={() => setShow(false)}
+                style={{ cursor: 'pointer', display: 'flex' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <Info size={14} color="#94a3b8" />
+            </div>
+
+            <Popup
+                anchor={anchorRef.current}
+                show={show}
+                animate={false}
+                popupClass="condition-tooltip-popup"
+                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
+            >
+                <div style={{
+                    padding: '12px 16px',
+                    background: '#ffffff',
+                    width: 'max-content',
+                    minWidth: '160px',
+                    lineHeight: '1.6',
+                    color: '#334155',
+                    textAlign: 'left' // 헤더 중앙정렬 영향을 받지 않도록 분리
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                        <div style={{
+                            width: '18px', height: '18px', borderRadius: '50%',
+                            background: '#e2e8f0', color: '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '11px', fontWeight: 'bold'
+                        }}>i</div>
+                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                    </div>
+                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div>• <span style={{ fontWeight: 600 }}>설명 표출 예정</span></div>
+                    </div>
+                </div>
+            </Popup>
+        </div>
+    );
+};
 
 // ============================================================================
 // [커스텀 셀 다중 선택(드래그) 및 일괄 변경 제어 모듈]
@@ -97,7 +148,7 @@ const handleStubPointerDownCapture = (e, rowId, field) => {
     // 2. [캡처 차단]
     // 사용자가 Ctrl 클릭 시 단순 다중 선택만 하고 싶어 하므로, 드롭다운이 열리지 않게 자식으로 전파를 끊어냅니다.
     if (e.ctrlKey || e.metaKey) {
-        e.stopPropagation(); 
+        e.stopPropagation();
     }
 
     // 3. 상태 저장 및 초기화
@@ -139,7 +190,7 @@ const handleStubPointerEnter = (e, rowId, field) => {
         }
         stubDragLastEnteredId = String(rowId);
         stubDragLastEnteredField = field;
-        
+
         // 1. 현재 컬럼(Field) 전체 셀을 찾아서 시작점과 현재 위치(끝점)의 인덱스를 파악
         const cells = Array.from(document.querySelectorAll(`td[data-field="${field}"]`));
         const startIndex = cells.findIndex(c => c.getAttribute('data-row-id') === String(stubDragStartId));
@@ -668,13 +719,13 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleCellUpdate = useCallback((item, field, value) => {
         const targetIdStr = String(item.source_var_id);
-        
+
         if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(targetIdStr)) {
             setStubs(prev => prev.map(s => stubDragSelectedIds.has(String(s.source_var_id)) ? { ...s, [field]: value } : s));
         } else {
             setStubs(prev => prev.map(s => s.source_var_id === item.source_var_id ? { ...s, [field]: value } : s));
         }
-        
+
         // 작업 후 선택 초기화
         stubDragSelectedIds.clear();
         stubDragBaseSelectedIds.clear();
@@ -831,9 +882,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}
                             />
                             <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
+                                headerCell={ConditionHeaderCell}
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="condition" onUpdate={handleCellUpdate} />}
                             />
-                            <Column field="x_info" title="배너(x_info)" width="150px" headerClassName="k-text-center"
+                            <Column field="x_info" title="배너" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
                             />
                             <Column field="group_preset_name" title="그룹" width="150px" headerClassName="k-text-center"

@@ -1,11 +1,64 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X } from 'lucide-react';
+import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Info } from 'lucide-react';
+import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
+
+// --- 커스텀 헤더 셀 (조건 아이콘) ---
+const ConditionHeaderCell = (props) => {
+    const anchorRef = useRef(null);
+    const [show, setShow] = useState(false);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <span>{props.title}</span>
+            <div
+                ref={anchorRef}
+                onMouseEnter={() => setShow(true)}
+                onMouseLeave={() => setShow(false)}
+                style={{ cursor: 'pointer', display: 'flex' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <Info size={14} color="#94a3b8" />
+            </div>
+
+            <Popup
+                anchor={anchorRef.current}
+                show={show}
+                animate={false}
+                popupClass="condition-tooltip-popup"
+                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
+            >
+                <div style={{
+                    padding: '12px 16px',
+                    background: '#ffffff',
+                    width: 'max-content',
+                    minWidth: '160px',
+                    lineHeight: '1.6',
+                    color: '#334155',
+                    textAlign: 'left' // 헤더 중앙정렬 영향을 받지 않도록 분리
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                        <div style={{
+                            width: '18px', height: '18px', borderRadius: '50%',
+                            background: '#e2e8f0', color: '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '11px', fontWeight: 'bold'
+                        }}>i</div>
+                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                    </div>
+                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div>• <span style={{ fontWeight: 600 }}>설명 표출 예정</span></div>
+                    </div>
+                </div>
+            </Popup>
+        </div>
+    );
+};
 
 // --- (성능 개선) 개별 아이템 메모이제이션 ---
 const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
@@ -631,7 +684,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Column field="label3" title="라벨3" width="150px" />
                             <Column field="label2" title="라벨2" width="150px" />
                             <Column field="label" title="라벨" />
-                            <Column field="logic" title="조건" width="180px" />
+                            <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
                         </KendoGridV2>
                     </div>
                 </div>
