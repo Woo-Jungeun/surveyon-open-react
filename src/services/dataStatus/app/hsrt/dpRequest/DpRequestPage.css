@@ -216,7 +216,7 @@
 }
 
 .variable-panel {
-    width: 340px;
+    width: 280px;
     background: #fff;
     border-right: 1px solid #e2e8f0;
     display: flex;
@@ -498,7 +498,7 @@
 /* Sidebar Container (Collapsible) */
 .dp-sidebar-container {
     position: relative;
-    width: 340px;
+    width: 280px;
     flex-shrink: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
