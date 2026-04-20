@@ -653,8 +653,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 const label = itemInfo ? itemInfo.label : '';
                                                 return (
                                                     <div key={itemId} style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '16px', background: '#fff', gap: '6px' }}>
-                                                        <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '13px', flexShrink: 0 }}>{itemId}</span>
-                                                        <span title={label} style={{ color: '#64748b', fontSize: '13px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                                                        <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '11px', flexShrink: 0 }}>{itemId}</span>
+                                                        <span title={label} style={{ color: '#64748b', fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
                                                         <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', color: '#94a3b8', flexShrink: 0 }}>
                                                             <X size={13} />
                                                         </button>
