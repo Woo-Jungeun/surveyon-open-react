@@ -78,6 +78,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** DP 의뢰서 - 요약표 자동 생성 (척도형) */
+    const generateSummaryAuto = useMutation(
+        async (data) => await api.post(data, "/dp-request/summary/auto-generate", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
@@ -88,6 +97,7 @@ export function DpRequestPageApi() {
         generateBanner,
         saveBannerDetail,
         getSummaryDetail,
+        generateSummaryAuto,
         getRecodedOverview,
         saveRecodedOverview,
     };

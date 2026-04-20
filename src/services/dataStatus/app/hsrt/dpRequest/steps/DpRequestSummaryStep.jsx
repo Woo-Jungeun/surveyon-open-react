@@ -1,81 +1,16 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, memo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, Trash2, ChevronDown, ChevronUp, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Wand2, Folder, Copy } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
-import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
-import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 
-// --- (성능 개선) 개별 아이템 메모이제이션 ---
-const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
-    <div
-        className={`variable-item ${isSelected ? 'selected' : ''}`}
-        draggable
-        onDragStart={(e) => onDragStart(e, v)}
-        onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
-        style={{ borderRadius: '6px' }}
-    >
-        <div className="variable-item-header">
-            <div className="variable-item__name">{v.id}</div>
-            {v.type && <span className={`question-type-badge ${String(v.type).toLowerCase()}`}>{v.type}</span>}
-        </div>
-        <div className="variable-item__label">{v.label}</div>
-    </div>
-));
 
-// --- (컴팩트 디자인 & 여유로운 패딩) 요약표 생성 전용 푸터 바 ---
-const SummaryActionFooter = memo(({ onCreateSummary }) => {
-    const [localName, setLocalName] = useState('');
-    return (
-        <div style={{
-            padding: '14px 16px 0px',
-            background: '#ffffff',
-            borderTop: '1px solid #e2e8f0',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '12px'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>요약표명</span>
-                <input
-                    type="text"
-                    placeholder="요약표명을 입력하세요"
-                    value={localName}
-                    onChange={(e) => setLocalName(e.target.value)}
-                    className="dp-input"
-                    style={{ flex: 1, maxWidth: '500px' }}
-                />
-            </div>
-            <button
-                className="dp-primary-btn"
-                onClick={() => onCreateSummary(localName)}
-                style={{
-                    height: '32px',
-                    padding: '0 20px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    borderRadius: '6px',
-                    background: '#2563eb',
-                    color: '#fff',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                }}
-            >
-                요약표 생성
-            </button>
-        </div>
-    );
-});
 
 const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getSummaryDetail, getBaseVariableList, generateSummary, saveSummaryDetail } = DpRequestPageApi();
+    const { getSummaryDetail, getBaseVariableList, generateSummaryAuto, saveSummaryDetail } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -383,8 +318,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         try {
             loadingSpinner.show();
-            // TODO: 추후 임시로 하드코딩한 pageid와 user를 원래대로 (pageId, userId) 복구해야 합니다.
-            //   const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
+            // TODO: 임시 하드코딩
+            //const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
             const result = await getSummaryDetail.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok" });
             if (result?.success === '777' && result.resultjson) {
                 if (result.resultjson.base_variables) {
@@ -431,15 +366,32 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const formula = colVars.map(group => group.map(v => v.id).join('*')).join('+');
         try {
             loadingSpinner.show();
-            const result = await generateSummary.mutateAsync({ pageid: pageId, formula, label: name, user: auth?.user?.userId });
-            if (result?.success === "777") {
-                await fetchSummaryData(true);
-                setColVars([]);
-                setIsWizardOpen(false);
-                modal.showAlert('알림', '요약표가 생성되었습니다.');
-            }
+            // TODO: 기존 generateSummary 가 미구현 상태였음 일단 유지
+            modal.showAlert('알림', '기존 수동 생성 API는 정의되지 않았습니다');
         } catch (error) { console.error(error); }
         finally { loadingSpinner.hide(); }
+    };
+
+    const handleAutoGenerateSummary = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId) return;
+        try {
+            loadingSpinner.show();
+            // TODO: 임시 하드코딩
+            // const result = await generateSummaryAuto.mutateAsync({ pageid: pageId, user: auth?.user?.userId, append_mode: true });
+            const result = await generateSummaryAuto.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok", append_mode: true });
+
+            if (result && result.folders) {
+                setFolders(prev => [...prev, ...result.folders]);
+                if (onUnsavedChange) onUnsavedChange(true);
+                modal.showAlert('알림', `${result.generated_folder_count}개의 척도형 요약표가 자동 생성되었습니다.`);
+            }
+        } catch (error) {
+            console.error('Auto generate error:', error);
+            modal.showAlert('오류', '척도형 요약표 자동 생성 중 문제가 발생했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
     };
 
     const updateSummaryInfo = useCallback((newInfo) => {
@@ -541,14 +493,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             <div className="dp-setting-card" style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', padding: '16px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                        <button style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                        <button
+                            onClick={handleAutoGenerateSummary}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
                             onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
                         >
                             <Wand2 size={14} />
                             <span>척도형 자동 요약표 생성</span>
                         </button>
-                        <button 
+                        <button
                             onClick={() => {
                                 const count = folders.filter(f => f.type === 'frequency').length + 1;
                                 const newFolder = {
@@ -568,7 +522,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Plus size={14} />
                             <span>빈도 요약표 추가</span>
                         </button>
-                        <button 
+                        <button
                             onClick={() => {
                                 const count = folders.filter(f => f.type === 'statistics').length + 1;
                                 const newFolder = {
@@ -651,9 +605,13 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         readOnly
                                         style={{ cursor: 'pointer', margin: 0, width: '14px', height: '14px' }}
                                     />
-                                    <span style={{ width: '40px', fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{variable.base_id}</span>
-                                    <div style={{ width: '1px', height: '12px', backgroundColor: '#e2e8f0' }} />
-                                    <span style={{ flex: 1, fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{variable.label}</span>
+                                    <span
+                                        style={{ maxWidth: '100px', flexShrink: 0, fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                        title={variable.base_id}
+                                    >
+                                        {variable.base_id}
+                                    </span>
+                                    <span style={{ flex: 1, fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingLeft: '4px' }}>{variable.label}</span>
                                     <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                         {variable.type === 'scale' ? (variable.scale_points ? `${variable.scale_points}점 척도` : '척도형') : '숫자형'}
                                     </span>
@@ -690,12 +648,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         )}
                                     </div>
                                     <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', color: '#64748b', alignItems: 'center' }}>
-                                        <button 
+                                        <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 const baseMatch = folder.name.match(/^(.*?)(?:_복사본(?:\s+\d+)?)?$/);
                                                 const baseName = baseMatch ? baseMatch[1] : folder.name;
-                                                
+
                                                 const copyNames = folders.map(f => f.name).filter(n => n.startsWith(baseName + "_복사본"));
                                                 let maxNum = 0;
                                                 copyNames.forEach(name => {
@@ -706,7 +664,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                     }
                                                 });
                                                 const newName = `${baseName}_복사본 ${maxNum + 1}`;
-                                                
+
                                                 const newId = `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
                                                 const newFolder = { ...folder, id: newId, name: newName, items: [...(folder.items || [])] };
                                                 setFolders(prev => [...prev, newFolder]);
@@ -716,12 +674,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         >
                                             <Copy size={16} />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 modal.showConfirm('확인', '요약표를 삭제하시겠습니까?', {
                                                     btns: [
-                                                        { title: "취소", click: () => {} },
+                                                        { title: "취소", click: () => { } },
                                                         {
                                                             title: "삭제",
                                                             click: () => {
