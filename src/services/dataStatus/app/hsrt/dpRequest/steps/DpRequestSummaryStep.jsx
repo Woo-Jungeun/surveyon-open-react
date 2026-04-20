@@ -662,10 +662,50 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         )}
                                     </div>
                                     <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', color: '#64748b', alignItems: 'center' }}>
-                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                const baseMatch = folder.name.match(/^(.*?)(?:_복사본(?:\s+\d+)?)?$/);
+                                                const baseName = baseMatch ? baseMatch[1] : folder.name;
+                                                
+                                                const copyNames = folders.map(f => f.name).filter(n => n.startsWith(baseName + "_복사본"));
+                                                let maxNum = 0;
+                                                copyNames.forEach(name => {
+                                                    const numMatch = name.match(/_복사본(?:\s+(\d+))?$/);
+                                                    if (numMatch) {
+                                                        const num = numMatch[1] ? parseInt(numMatch[1], 10) : 1;
+                                                        if (num > maxNum) maxNum = num;
+                                                    }
+                                                });
+                                                const newName = `${baseName}_복사본 ${maxNum + 1}`;
+                                                
+                                                const newId = `folder_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                                                const newFolder = { ...folder, id: newId, name: newName, items: [...(folder.items || [])] };
+                                                setFolders(prev => [...prev, newFolder]);
+                                                if (onUnsavedChange) onUnsavedChange(true);
+                                            }}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                        >
                                             <Copy size={16} />
                                         </button>
-                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}>
+                                        <button 
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                modal.showConfirm('확인', '요약표를 삭제하시겠습니까?', {
+                                                    btns: [
+                                                        { title: "취소", click: () => {} },
+                                                        {
+                                                            title: "삭제",
+                                                            click: () => {
+                                                                setFolders(prev => prev.filter(f => f.id !== folder.id));
+                                                                if (onUnsavedChange) onUnsavedChange(true);
+                                                            }
+                                                        }
+                                                    ]
+                                                });
+                                            }}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                                        >
                                             <X size={16} />
                                         </button>
                                         <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
