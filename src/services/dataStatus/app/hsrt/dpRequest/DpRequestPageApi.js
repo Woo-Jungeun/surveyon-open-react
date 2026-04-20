@@ -95,6 +95,14 @@ export function DpRequestPageApi() {
             onSettled: () => { loadingSpinner.hide(); }
         }
     );
+    /** DP 의뢰서 - 표 순서 상세 조회 */
+    const getOrderDetail = useMutation(
+        async (data) => await api.post(data, "/dp-request/order/detail", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
 
     return {
         getBannerDetail,
@@ -110,5 +118,6 @@ export function DpRequestPageApi() {
         saveSummaryDetail,
         getRecodedOverview,
         saveRecodedOverview,
+        getOrderDetail
     };
 }

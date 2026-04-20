@@ -28,9 +28,10 @@ const DpRequestPage = () => {
     const step2Ref = useRef(null);
     const step3Ref = useRef(null);
     const step4Ref = useRef(null);
+    const step5Ref = useRef(null);
 
     // 더티 상태 관리
-    const [unsaved, setUnsaved] = useState({ 'table': false, 'banner': false, 'recoded': false, 'summary': false });
+    const [unsaved, setUnsaved] = useState({ 'table': false, 'banner': false, 'recoded': false, 'summary': false, 'order': false });
     const markUnsaved = useCallback((key, v) => setUnsaved(prev => ({ ...prev, [key]: v })), []);
 
     // 공용 모달로 확인창 (취소 | 이동 | 저장 후 이동)
@@ -40,7 +41,7 @@ const DpRequestPage = () => {
                 btns: [
                     { title: "취소", click: () => resolve("cancel") },
                     { title: "이동", click: () => resolve("go") },
-                    // 저장 가능한 탭(1,2)에서만 노출
+                    // 저장 가능한 탭에서 노출
                     ...(canSave ? [{ title: "저장 후 이동", click: () => resolve("saveThenGo") }] : [])
                 ],
             });
@@ -84,18 +85,17 @@ const DpRequestPage = () => {
         if (isDirty) {
             const action = await confirmNavigate(
                 "저장하지 않은 변경 사항이 있습니다.\n이동하시겠습니까?",
-                (currentKey === 'table' || currentKey === 'banner' || currentKey === 'recoded')
+                (currentKey === 'table' || currentKey === 'banner' || currentKey === 'recoded' || currentKey === 'summary' || currentKey === 'order')
             );
 
             if (action === "cancel") return;
 
             if (action === "saveThenGo") {
-                // 현재 스텝의 저장 함수 호출
-                let success = false;
                 if (currentKey === 'table') success = await step1Ref.current?.save?.();
                 else if (currentKey === 'banner') success = await step2Ref.current?.save?.();
                 else if (currentKey === 'recoded') success = await step3Ref.current?.save?.();
                 else if (currentKey === 'summary') success = await step4Ref.current?.save?.();
+                else if (currentKey === 'order') success = await step5Ref.current?.save?.();
 
                 if (!success) return; // 저장 실패 시 이동 중단
                 setUnsaved(prev => ({ ...prev, [currentKey]: false }));
@@ -140,7 +140,7 @@ const DpRequestPage = () => {
             case 1: return <DpRequestBannerStep ref={step2Ref} onUnsavedChange={(v) => markUnsaved('banner', v)} />;
             case 2: return <DpRequestTableStep ref={step3Ref} onUnsavedChange={(v) => markUnsaved('recoded', v)} />;
             case 3: return <DpRequestSummaryStep ref={step4Ref} onUnsavedChange={(v) => markUnsaved('summary', v)} />;
-            case 4: return <DpRequestDetailStep />;
+            case 4: return <DpRequestDetailStep ref={step5Ref} onUnsavedChange={(v) => markUnsaved('order', v)} />;
             default: return <DpRequestSettingStep />;
         }
     };
@@ -206,21 +206,19 @@ const DpRequestPage = () => {
                             <span>초기화</span>
                         </button>
                     )}
-                    {currentStep < steps.length - 1 && (
-                        <button
-                            className="dp-primary-btn"
-                            onClick={async () => {
-                                const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : currentStep === 2 ? step3Ref : currentStep === 3 ? step4Ref : null;
-                                if (currentRef?.current?.save) {
-                                    await currentRef.current.save();
-                                }
-                            }}
-                            style={{ height: '36px' }}
-                        >
-                            <Save size={16} />
-                            <span>저장</span>
-                        </button>
-                    )}
+                    <button
+                        className="dp-primary-btn"
+                        onClick={async () => {
+                            const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : currentStep === 2 ? step3Ref : currentStep === 3 ? step4Ref : currentStep === 4 ? step5Ref : null;
+                            if (currentRef?.current?.save) {
+                                await currentRef.current.save();
+                            }
+                        }}
+                        style={{ height: '36px' }}
+                    >
+                        <Save size={16} />
+                        <span>저장</span>
+                    </button>
                     {currentStep < steps.length - 1 && (
                         <button
                             style={{
@@ -230,7 +228,7 @@ const DpRequestPage = () => {
                                 height: '36px'
                             }}
                             onClick={() => {
-                                if (currentStep < steps.length - 1) handleStepChange(currentStep + 1);
+                                handleStepChange(currentStep + 1);
                             }}
                         >
                             <span>다음 단계로</span>

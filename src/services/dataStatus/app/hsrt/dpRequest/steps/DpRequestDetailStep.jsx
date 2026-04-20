@@ -1,16 +1,18 @@
-import React, { useState, useContext, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, RefreshCw, Layers, Search, Filter, ListOrdered, TableProperties, Info } from 'lucide-react';
+import { Save, RefreshCw, ListOrdered, ChevronRight, ChevronLeft, GripVertical } from 'lucide-react';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
+import { DpRequestPageApi } from '../DpRequestPageApi';
 
 const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
+    const { getOrderDetail } = DpRequestPageApi();
 
-    const [searchTerm, setSearchTerm] = useState('');
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     // 부모 컴포넌트에서 호출할 수 있도록 기능 노출
     useImperativeHandle(ref, () => ({
@@ -19,26 +21,116 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }));
 
-    // --- 상태 관리 ---
-    const [tableOrder, setTableOrder] = useState([
-        { seq: 1, id: 'T001', name: '요약표: 주요 지표 요약', banner: 'Summary', stub: 'KPIs', type: 'Summary' },
-        { seq: 2, id: 'T002', name: '표 1: 성별 x 이용 경험', banner: 'B1. 성별', stub: 'Q1', type: 'Cross' },
-        { seq: 3, id: 'T003', name: '표 2: 연령 x 이용 경험', banner: 'B2. 연령', stub: 'Q1', type: 'Cross' },
-        { seq: 4, id: 'T004', name: '표 3: 거주 지역 x 이용 경험', banner: 'B3. 거주지', stub: 'Q1', type: 'Cross' },
-        { seq: 5, id: 'T005', name: '표 4: 직업 x 브랜드 선호도', banner: 'B4. 직업', stub: 'Q4', type: 'Cross' },
-        { seq: 6, id: 'T006', name: '표 5: 소득 x 브랜드 선호도', banner: 'B5. 소득', stub: 'Q4', type: 'Cross' },
-    ]);
+    const [tableOrder, setTableOrder] = useState([]);
+    const [draggedIdx, setDraggedIdx] = useState(null);
+    const [dragOverIdx, setDragOverIdx] = useState(null);
+    const [dragPos, setDragPos] = useState(null); // 'top' or 'bottom'
 
-    // 필터링
-    const filteredOrder = useMemo(() => {
-        if (!searchTerm) return tableOrder;
-        return tableOrder.filter(item => 
-            item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.banner.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.stub.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [tableOrder, searchTerm]);
+    // API 호출로 초기 데이터 로드
+    useEffect(() => {
+        const fetchOrderData = async () => {
+            // const pageId = sessionStorage.getItem('pageId');
+            // if (!pageId || !auth?.user?.userId) return;
+            // const user = auth.user.userId;
+
+            // 테스트를 위해 하드코딩 적용
+            const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+            const user = "sbbok";
+
+            loadingSpinner.show();
+            try {
+                const res = await getOrderDetail.mutateAsync({ pageid: pageId, user: user });
+
+                if (res && res.success === '777') {
+                    const data = res.resultjson || {};
+                    const ids = data.dp_request_order_ids || [];
+                    const metaList = data.ordered_item_meta || [];
+                    const vars = data.recoded_variables || {};
+
+                    const parsedData = ids.map((id, idx) => {
+                        const meta = metaList.find(m => m.id === id) || {};
+                        const varInfo = vars[meta.source_var_id || id] || vars[id] || {};
+
+                        return {
+                            seq: idx + 1,
+                            id: id,
+                            name: varInfo.label || id,
+                            type: meta.kind || varInfo.type || 'Unknown'
+                        };
+                    });
+                    setTableOrder(parsedData);
+                }
+            } catch (err) {
+                console.error("Order load failed:", err);
+            } finally {
+                loadingSpinner.hide();
+            }
+        };
+        fetchOrderData();
+    }, [auth?.user?.userId]);
+
+    // --- 드래그 앤 드롭 핸들러 ---
+    const handleDragStart = (e, index) => {
+        setDraggedIdx(index);
+        e.dataTransfer.effectAllowed = 'move';
+        // HTML5 기본 잔상만 사용
+    };
+
+    const handleDragOver = (e, index) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        if (y < rect.height / 2) {
+            setDragOverIdx(index);
+            setDragPos('top');
+        } else {
+            setDragOverIdx(index);
+            setDragPos('bottom');
+        }
+    };
+
+    const handleDrop = (e, targetIndex) => {
+        e.preventDefault();
+        if (draggedIdx === null) return;
+
+        let insertIndex = targetIndex;
+        if (dragPos === 'bottom') {
+            insertIndex += 1;
+        }
+
+        if (draggedIdx === insertIndex || draggedIdx === insertIndex - 1) {
+            setDraggedIdx(null);
+            setDragOverIdx(null);
+            return;
+        }
+
+        const newOrder = [...tableOrder];
+        const [removed] = newOrder.splice(draggedIdx, 1);
+
+        // splice removes an element, so if dragged was BEFORE insert target, the target shifts down by 1
+        if (draggedIdx < insertIndex) {
+            insertIndex -= 1;
+        }
+
+        newOrder.splice(insertIndex, 0, removed);
+
+        // 순번 갱신
+        newOrder.forEach((item, idx) => {
+            item.seq = idx + 1;
+        });
+
+        setTableOrder(newOrder);
+        setDraggedIdx(null);
+        setDragOverIdx(null);
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIdx(null);
+        setDragOverIdx(null);
+    };
 
     // --- 저장 로직 ---
     const handleSave = async () => {
@@ -53,7 +145,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
                 tableOrder: tableOrder,
             };
             console.log("Final saving table order with payload:", payload);
-            
+
             modal.showAlert('완료', '모든 DP 의뢰 설정이 저장되었습니다.');
             if (onUnsavedChange) onUnsavedChange(false);
             return true;
@@ -71,95 +163,119 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
-    const handleRefresh = () => {
-        loadingSpinner.show();
-        // 시뮬레이션: 배너와 문항의 모든 조합을 다시 계산하여 리스트를 갱신하는 로직
-        setTimeout(() => {
-            modal.showAlert('알림', '배너와 스터브 설정에 기반하여 표 조합이 최신화되었습니다.');
-            loadingSpinner.hide();
-        }, 800);
-    };
+    // --- 우측 프리뷰 그리드 메모이제이션 (드래그 시 렌더링 지연 방지) ---
+    const gridPreview = useMemo(() => (
+        <KendoGridV2
+            data={tableOrder}
+            showNo
+            style={{ height: '100%' }}
+        >
+            <Column field="id" title="표 코드" width="150px" editable={false} />
+            <Column field="name" title="표 명칭 (Table Name)" width="400px" editable={false} />
+            <Column field="type" title="유형" width="120px" editable={false}
+                cell={(props) => (
+                    <td style={{ textAlign: 'center' }}>
+                        <span className={`dp-badge-mini ${props.dataItem.type === 'summary' ? 'blue' : 'gray'}`}>
+                            {props.dataItem.type}
+                        </span>
+                    </td>
+                )}
+            />
+        </KendoGridV2>
+    ), [tableOrder]);
 
     return (
-        <div className="dp-request-container" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* 상단 통합 제어 바 */}
-            <div className="dp-setting-card" style={{ marginBottom: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div className="dp-step-badge">Step 5</div>
-                        <div>
-                            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#1e293b' }}>최종 표 순서(Table Order) 설정</h3>
-                            <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#64748b' }}>결과 보고서 및 엑셀에 출력될 산출물 표의 최종 순서를 조정합니다.</p>
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <div className="dp-search-input-wrapper" style={{ width: '220px' }}>
-                            <Search size={14} className="dp-search-input-icon" />
-                            <input 
-                                type="text" 
-                                placeholder="표 명칭/ID/배너 검색..." 
-                                className="dp-search-input"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <button className="dp-btn-outline" onClick={handleRefresh} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <RefreshCw size={16} />
-                            <span>조합 업데이트</span>
-                        </button>
-                        <button className="dp-primary-btn" onClick={handleSave} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <Save size={16} />
-                            <span>최종 완료 및 저장</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
+        <div className="dp-request-container">
+            {/* 메인 레이아웃 */}
+            <div className="dp-main-layout" style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
 
-            {/* 메인 순서 카드 */}
-            <div className="dp-setting-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div className="dp-setting-card-header" style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ListOrdered size={16} />
-                        <span>산출물 표 목록 ({filteredOrder.length})</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#64748b' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Info size={12} /> 드래그하여 엑셀 시트 순서를 조정하세요</span>
-                    </div>
-                </div>
-                <div className="dp-grid-wrapper" style={{ flex: 1, padding: '12px' }}>
-                    <KendoGridV2 
-                        data={filteredOrder}
-                        reorderable
-                        addable
-                        deletable
-                        showNo
-                        onDataChange={handleDataChange}
-                        style={{ height: '100%' }}
-                    >
-                        <Column field="id" title="표 코드" width="100px" editable={false} />
-                        <Column field="name" title="표 명칭 (Table Name)" width="400px" />
-                        <Column field="type" title="유형" width="120px" editable={false} 
-                            cell={(props) => (
-                                <td style={{ textAlign: 'center' }}>
-                                    <span className={`dp-badge-mini ${props.dataItem.type === 'Summary' ? 'blue' : 'gray'}`}>
-                                        {props.dataItem.type}
-                                    </span>
-                                </td>
-                            )}
-                        />
-                        <Column field="banner" title="적용 배너" width="180px" editable={false} 
-                            cell={(props) => (
-                                <td style={{ verticalAlign: 'middle' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <TableProperties size={12} style={{ color: '#94a3b8' }} />
-                                        <span>{props.dataItem.banner}</span>
+                {/* Left Sidebar */}
+                <div className={`dp-sidebar-container ${!isSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0, width: '280px' }}>
+                    {!isSidebarOpen && (
+                        <div className="dp-sidebar-collapsed-bar" onClick={() => setIsSidebarOpen(true)}>
+                            <div className="dp-collapsed-header">
+                                <ChevronRight size={16} />
+                            </div>
+                        </div>
+                    )}
+                    <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
+                        <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '12px' }}>
+                            <span>표 순서</span>
+                            <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsSidebarOpen(false)}>
+                                <ChevronLeft size={16} />
+                            </button>
+                        </div>
+                        <div className="dp-summary-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
+                            {tableOrder.map((item, index) => (
+                                <div key={item.id} style={{ position: 'relative' }}>
+                                    {/* 상단 파란색 삽입선 인디케이터 */}
+                                    {dragOverIdx === index && dragPos === 'top' && draggedIdx !== index && (
+                                        <div style={{ position: 'absolute', top: '-4px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
+                                    )}
+
+                                    <div
+                                        draggable={true}
+                                        onDragStart={(e) => handleDragStart(e, index)}
+                                        onDragOver={(e) => handleDragOver(e, index)}
+                                        onDrop={(e) => handleDrop(e, index)}
+                                        onDragEnd={handleDragEnd}
+                                        onDragLeave={() => setDragOverIdx(null)}
+                                        className="dp-variable-row"
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '8px',
+                                            padding: '6px 10px', border: '1px solid',
+                                            borderRadius: '4px', marginBottom: '4px',
+                                            background: '#fff',
+                                            borderColor: '#cbd5e1',
+                                            cursor: 'grab',
+                                            boxShadow: '0 1px 2px rgba(0,0,0,0.02)',
+                                            opacity: draggedIdx === index ? 0.4 : 1,
+                                        }}
+                                    >
+                                        <GripVertical size={14} color="#94a3b8" style={{ flexShrink: 0, cursor: 'grab' }} />
+                                        <span style={{
+                                            flex: 1,
+                                            fontSize: '12px',
+                                            color: '#334155',
+                                            fontWeight: 600,
+                                            whiteSpace: 'nowrap',
+                                            overflow: 'hidden',
+                                            textOverflow: 'ellipsis'
+                                        }}>
+                                            {item.name}
+                                        </span>
                                     </div>
-                                </td>
-                            )}
-                        />
-                        <Column field="stub" title="적용 문항" width="180px" editable={false} />
-                    </KendoGridV2>
+
+                                    {/* 하단 파란색 삽입선 인디케이터 */}
+                                    {dragOverIdx === index && dragPos === 'bottom' && draggedIdx !== index && (
+                                        <div style={{ position: 'absolute', bottom: '0px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
                 </div>
+
+                {/* Right Content */}
+                <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    <div className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '16px' }}>
+                        <div style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '16px', background: '#fff', display: 'flex', flexDirection: 'column', height: '100%' }}>
+                            {/* Folder Header 형식 */}
+                            <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
+                                <ListOrdered size={18} color="#64748b" />
+                                <span style={{ fontSize: '14px', fontWeight: 700, color: '#1d4ed8', marginLeft: '8px' }}>
+                                    최종 표 순서 (Preview)
+                                </span>
+                            </div>
+
+                            {/* 그리드 영역 */}
+                            <div style={{ flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                                {gridPreview}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     );
