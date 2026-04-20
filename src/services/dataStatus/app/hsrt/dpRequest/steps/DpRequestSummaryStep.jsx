@@ -548,14 +548,42 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Wand2 size={14} />
                             <span>척도형 자동 요약표 생성</span>
                         </button>
-                        <button style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                        <button 
+                            onClick={() => {
+                                const count = folders.filter(f => f.type === 'frequency').length + 1;
+                                const newFolder = {
+                                    id: `folder_freq_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                    name: `빈도 요약표 ${count}`,
+                                    type: 'frequency',
+                                    include_codes: '',
+                                    items: []
+                                };
+                                setFolders(prev => [...prev, newFolder]);
+                                if (onUnsavedChange) onUnsavedChange(true);
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
                             onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
                         >
                             <Plus size={14} />
                             <span>빈도 요약표 추가</span>
                         </button>
-                        <button style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
+                        <button 
+                            onClick={() => {
+                                const count = folders.filter(f => f.type === 'statistics').length + 1;
+                                const newFolder = {
+                                    id: `folder_stat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                                    name: `통계 요약표 ${count}`,
+                                    type: 'statistics',
+                                    mean: true,
+                                    mode: false,
+                                    median: false,
+                                    items: []
+                                };
+                                setFolders(prev => [...prev, newFolder]);
+                                if (onUnsavedChange) onUnsavedChange(true);
+                            }}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
                             onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
                             onMouseLeave={(e) => { e.currentTarget.style.background = '#fff'; }}
                         >
