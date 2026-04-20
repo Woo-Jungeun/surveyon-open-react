@@ -19,66 +19,111 @@ const STAT_OPTIONS = [
 ];
 
 const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
-    const selected = Array.isArray(selectedValues)
-        ? selectedValues
-        : (selectedValues ? String(selectedValues).split(',').map(s => s.trim()).filter(Boolean) : []);
+    // 1. Parse outer props
+    const getParsedValues = useCallback((vals) => {
+        return Array.isArray(vals) ? vals : (vals ? String(vals).split(',').map(s => s.trim()).filter(Boolean) : []);
+    }, []);
 
+    // 2. Local state for fast toggling without triggering KendoGrid renders
+    const [selected, setSelected] = useState(() => getParsedValues(selectedValues));
+    const [show, setShow] = useState(false);
+    const anchor = useRef(null);
+    const latestSelectedRef = useRef(selected);
+
+    // Sync from parent if changed externally while closed
+    useEffect(() => {
+        if (!show) {
+            const parsed = getParsedValues(selectedValues);
+            setSelected(parsed);
+            latestSelectedRef.current = parsed;
+        }
+    }, [selectedValues, show, getParsedValues]);
+
+    // Handle local toggle lightning-fast!
     const handleChange = (id, checked) => {
-        let nextSelected;
-        if (checked) {
-            nextSelected = [...selected, id];
-        } else {
-            nextSelected = selected.filter(v => v !== id);
+        setSelected(prev => {
+            const next = checked ? [...prev, id] : prev.filter(v => v !== id);
+            latestSelectedRef.current = next;
+            return next;
+        });
+    };
+
+    // Flush changes to parent
+    const handleClose = useCallback(() => {
+        setShow(false);
+        const currentStr = latestSelectedRef.current.join(',');
+        const originalStr = getParsedValues(selectedValues).join(',');
+        if (currentStr !== originalStr) {
+            onUpdate(dataItem, 'stat_summary', currentStr);
         }
-        onUpdate(dataItem, 'stat_summary', nextSelected.join(','));
-    };
+    }, [selectedValues, getParsedValues, dataItem, onUpdate]);
 
-    const itemRender = (li, itemProps) => {
-        const itemData = itemProps.dataItem;
-        const isChecked = selected.includes(itemData.id);
+    // 팝업 외부 클릭 시 닫기
+    useEffect(() => {
+        if (!show) return;
+        const handleClickOutside = (e) => {
+            // Popup 자체 영역(k-popup) 내부 클릭인지 확인
+            if (e.target.closest('.k-popup')) return;
+            if (anchor.current && !anchor.current.contains(e.target)) {
+                handleClose();
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [show, handleClose]);
 
-        return React.cloneElement(li, { ...li.props, onClick: undefined }, (
-            <div
-                style={{ display: 'flex', alignItems: 'center', width: '100%', padding: '4px 0', cursor: 'pointer' }}
-                onMouseDown={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }}
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    handleChange(itemData.id, !isChecked);
-                }}
-            >
-                <label className="dp-checkbox-label" style={{ margin: '0 8px 0 0', pointerEvents: 'none' }}>
-                    <input type="checkbox" className="dp-checkbox-input" checked={isChecked} readOnly />
-                    <span className="dp-checkbox-box" />
-                </label>
-                <span style={{ fontSize: '13px' }}>{itemData.label}</span>
-            </div>
-        ));
-    };
-
-    const valueRender = (element, value) => {
-        if (selected.length === 0) {
-            return <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>;
-        }
-        const displayText = selected.join(',');
-        return <span style={{ whiteSpace: 'nowrap' }}>{displayText}</span>;
-    };
+    let displayText = <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>;
+    if (selected.length > 0) {
+        displayText = selected.join(',');
+    }
 
     return (
         <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
-            <DropDownList
-                className="k-dropdown-solid dp-mini-dropdown"
-                data={STAT_OPTIONS}
-                textField="label"
-                dataItemKey="id"
-                value={null}
-                itemRender={itemRender}
-                valueRender={valueRender}
-                style={{ width: '100%', height: '22px', fontSize: '13px' }}
-            />
+            <div
+                ref={anchor}
+                className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
+                style={{ width: '100%', height: '22px', border: '1px solid #cbd5e1', cursor: 'pointer', display: 'flex' }}
+                onClick={(e) => { 
+                    e.preventDefault(); 
+                    if (show) handleClose();
+                    else setShow(true);
+                }}
+            >
+                <div className="k-input-inner" style={{ flex: 1, padding: '0 8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {displayText}
+                </div>
+                <button className="k-select" style={{ border: 'none', background: 'transparent' }}>
+                    <ChevronDown size={14} style={{ color: '#64748b' }} />
+                </button>
+            </div>
+            {show && (
+                <Popup anchor={anchor.current} show={show} popupClass="k-list-container k-popup k-group k-reset k-state-border-up" style={{ minWidth: anchor.current?.offsetWidth }}>
+                    <div className="k-list-scroller" style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                        <ul className="k-list k-reset">
+                            {STAT_OPTIONS.map(itemData => {
+                                const isChecked = selected.includes(itemData.id);
+                                return (
+                                    <li
+                                        key={itemData.id}
+                                        className="k-list-item dp-custom-list-item"
+                                        style={{ display: 'flex', alignItems: 'center', padding: '6px 12px', cursor: 'pointer' }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleChange(itemData.id, !isChecked);
+                                        }}
+                                    >
+                                        <label className="dp-checkbox-label" style={{ margin: '0 8px 0 0', pointerEvents: 'none', display: 'flex', alignItems: 'center' }}>
+                                            <input type="checkbox" className="dp-checkbox-input" checked={isChecked} readOnly />
+                                            <span className="dp-checkbox-box" />
+                                        </label>
+                                        <span style={{ fontSize: '13px', color: '#1e293b' }}>{itemData.label}</span>
+                                    </li>
+                                );
+                            })}
+                        </ul>
+                    </div>
+                </Popup>
+            )}
         </td>
     );
 });

@@ -1736,3 +1736,11 @@
 .dp-mini-dropdown {
     justify-content: space-between;
 }
+
+/* Custom Popup Dropdown Items */
+.dp-custom-list-item {
+    transition: background-color 0.2s;
+}
+.dp-custom-list-item:hover {
+    background-color: #f1f5f9;
+}
