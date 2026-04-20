@@ -17,6 +17,167 @@ const STAT_OPTIONS = [
     { id: 'median', label: '중앙값 (median)' },
 ];
 
+// ============================================================================
+// [커스텀 셀 다중 선택(드래그) 및 일괄 변경 제어 모듈]
+// React 상태(useState) 렌더링으로 인한 표(Grid) 전체 렉(Lag) 현상을 방지하기 위해,
+// 순수 자바스크립트 전역 변수와 DOM 직접 제어(classList)를 활용해 60fps의 부드러운 드래그를 구현합니다.
+// ============================================================================
+let isDraggingStubGrid = false;           // 현재 마우스를 클릭한 채로 드래그(Drag) 중인지 여부
+let stubDragStartId = null;               // 드래그를 처음 시작한 최초 셀의 행(Row) ID
+let stubDragLastEnteredId = null;         // 드래그 도중, 가장 마지막에 마우스가 도착한 셀의 행 ID
+let stubDragLastEnteredField = null;      // 현재 조작 중인 컬럼(Field) 이름 (예: var_type, x_info 등)
+let stubDragHasMoved = false;             // 단순 0.1초 클릭이 아니라, '실제로 다른 셀로 마우스가 이동'했는지 판별
+const stubDragSelectedIds = new Set();    // 현재 하늘색으로 강조(하이라이트)된 모든 행 ID 보관
+let stubDragBaseSelectedIds = new Set();  // Ctrl 키를 누르고 추가 다중 선택 시, 기존에 이미 선택된 영역을 날리지 않고 보존하는 징검다리 셋
+
+// 마우스를 뗐을 때 (드래그 종료) 처리하는 전역 이벤트
+const handleGlobalPointerUpStub = (e) => {
+    if (isDraggingStubGrid) {
+        // [자동 열기 로직]
+        // 단순 클릭이 아니라 실제 화면 상 '드래그(이동)'를 한 직후 마우스 버튼을 떼면,
+        // 마지막 셀의 드롭다운을 즉시 자동으로 열어주어 사용자가 바로 일괄 변경을 선택할 수 있게 돕습니다.
+        if (stubDragHasMoved && e && !e.ctrlKey && !e.metaKey && stubDragLastEnteredId && stubDragLastEnteredField) {
+            const targetCell = document.querySelector(`td[data-row-id="${stubDragLastEnteredId}"][data-field="${stubDragLastEnteredField}"]`);
+            if (targetCell) {
+                const dropdown = targetCell.querySelector('.dp-mini-dropdown');
+                if (dropdown) {
+                    setTimeout(() => dropdown.click(), 50); // React 렌더링 사이클을 배려하여 50ms 후 클릭 트리거
+                }
+            }
+        }
+    }
+    // 상태 초기화
+    isDraggingStubGrid = false;
+    stubDragStartId = null;
+    stubDragHasMoved = false;
+};
+if (typeof window !== 'undefined') {
+    // 중복 등록 방지를 위해 기존 것 제거
+    window.removeEventListener('mouseup', handleGlobalPointerUpStub);
+    window.removeEventListener('pointerup', handleGlobalPointerUpStub);
+    window.addEventListener('mouseup', handleGlobalPointerUpStub);
+    window.addEventListener('pointerup', handleGlobalPointerUpStub);
+}
+
+const STUB_INLINE_STYLE = `
+.stub-cell-selected {
+    background-color: #e0f2fe !important;
+}
+`;
+if (typeof document !== 'undefined') {
+    let style = document.getElementById('stub-inline-style');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'stub-inline-style';
+        document.head.appendChild(style);
+    }
+    if (style.innerHTML !== STUB_INLINE_STYLE) {
+        style.innerHTML = STUB_INLINE_STYLE;
+    }
+}
+
+// 자식 요소(Kendo DropdownList 등)가 클릭 이벤트를 받아 팝업을 여는 것을 막기 위한 캡처 핸들러
+// td 래퍼에 부착되어 이벤트가 아래로(자식으로) 내려가기 전(Capture Phase)에 미리 낚아챕니다.
+const preventCtrlEvent = (e) => {
+    if (e.ctrlKey || e.metaKey) {
+        e.stopPropagation(); // 이벤트를 낚아채서 소멸시킴 (자식은 클릭이 된지 모름)
+        e.preventDefault();
+    }
+};
+
+// 마우스를 클릭했을 때 (Capture 단계에서 수신)
+const handleStubPointerDownCapture = (e, rowId, field) => {
+    // 1. [포탈 버블링 방어] 
+    // Kendo 드롭다운 팝업 리스트는 React Portal을 사용해 document.body 끝에 렌더링되지만, 
+    // 이벤트는 React 트리를 따라 td까지 거슬러 올라옵니다. 이 경우를 무시합니다.
+    if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dp-dropdown-popup'))) {
+        return;
+    }
+
+    // 2. [캡처 차단]
+    // 사용자가 Ctrl 클릭 시 단순 다중 선택만 하고 싶어 하므로, 드롭다운이 열리지 않게 자식으로 전파를 끊어냅니다.
+    if (e.ctrlKey || e.metaKey) {
+        e.stopPropagation(); 
+    }
+
+    // 3. 상태 저장 및 초기화
+    const idStr = String(rowId);
+    isDraggingStubGrid = true;
+    stubDragStartId = idStr;
+    stubDragLastEnteredId = idStr;
+    stubDragLastEnteredField = field;
+    stubDragHasMoved = false;
+
+    // 4. 단일 / 다중 선택 로직 분기
+    const isMultiSelect = e.ctrlKey || e.metaKey;
+    if (!isMultiSelect) {
+        // [단일 클릭의 경우] - 이미 다중선택으로 칠해진 영역 안에서 드롭다운을 열기 위해 클릭한 경우는 초기화 우회
+        if (!stubDragSelectedIds.has(idStr)) {
+            stubDragSelectedIds.clear();
+            document.querySelectorAll('.stub-cell-selected').forEach(el => el.classList.remove('stub-cell-selected'));
+        }
+    } else if (stubDragSelectedIds.has(idStr)) {
+        // [다중 클릭의 경우] - Ctrl 누르고 이미 파랗게 칠해진 것을 클릭하면 토글(해제) 처리
+        stubDragSelectedIds.delete(idStr);
+        e.currentTarget.classList.remove('stub-cell-selected');
+        isDraggingStubGrid = false;
+        stubDragBaseSelectedIds = new Set(stubDragSelectedIds);
+        return;
+    }
+
+    // 5. 선택 상태 갱신
+    stubDragBaseSelectedIds = new Set(stubDragSelectedIds);
+    stubDragSelectedIds.add(idStr);
+    e.currentTarget.classList.add('stub-cell-selected');
+};
+
+// 마우스가 눌린 상태로 다른 셀을 훑고 지나갈 때 (드래그 다중 범위 선택)
+const handleStubPointerEnter = (e, rowId, field) => {
+    if (isDraggingStubGrid && stubDragStartId && e.currentTarget) {
+        if (String(rowId) !== stubDragStartId) {
+            stubDragHasMoved = true; // 최초 클릭 지점을 벗어났음을 기록 (= 단순 클릭이 아님)
+        }
+        stubDragLastEnteredId = String(rowId);
+        stubDragLastEnteredField = field;
+        
+        // 1. 현재 컬럼(Field) 전체 셀을 찾아서 시작점과 현재 위치(끝점)의 인덱스를 파악
+        const cells = Array.from(document.querySelectorAll(`td[data-field="${field}"]`));
+        const startIndex = cells.findIndex(c => c.getAttribute('data-row-id') === String(stubDragStartId));
+        const currentIndex = cells.findIndex(c => c.getAttribute('data-row-id') === String(rowId));
+
+        if (startIndex !== -1 && currentIndex !== -1) {
+            const min = Math.min(startIndex, currentIndex);
+            const max = Math.max(startIndex, currentIndex);
+
+            // 2. 범위를 벗어난 셀들의 시각적 효과 제거 (이전 베이스 스냅샷 제외)
+            document.querySelectorAll(`td[data-field="${field}"]`).forEach(el => {
+                const idStr = el.getAttribute('data-row-id');
+                if (!stubDragBaseSelectedIds.has(idStr)) {
+                    el.classList.remove('stub-cell-selected');
+                }
+            });
+
+            // 3. Set 데이터 롤백 및 동기화
+            stubDragSelectedIds.clear();
+            stubDragBaseSelectedIds.forEach(id => stubDragSelectedIds.add(id));
+
+            // 4. 새로운 드래그 범위 내 셀들에 시각적 효과 및 Set 추가
+            for (let i = min; i <= max; i++) {
+                const targetCell = cells[i];
+                if (targetCell) {
+                    targetCell.classList.add('stub-cell-selected');
+                    const rowIdStr = targetCell.getAttribute('data-row-id');
+                    stubDragSelectedIds.add(rowIdStr);
+                }
+            }
+        }
+    }
+};
+
+const getStubDragClasses = (rowId) => {
+    return stubDragSelectedIds.has(String(rowId)) ? 'stub-cell-selected' : '';
+};
+
 const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     // 1. Parse outer props
     const getParsedValues = useCallback((vals) => {
@@ -77,7 +238,17 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     }
 
     return (
-        <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
+        <td
+            data-field="stat_summary"
+            data-row-id={dataItem.source_var_id}
+            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'stat_summary')}
+            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'stat_summary')}
+            onMouseDownCapture={preventCtrlEvent}
+            onClickCapture={preventCtrlEvent}
+            onMouseDown={e => e.stopPropagation()}
+            className={getStubDragClasses(dataItem.source_var_id)}
+            style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
+        >
             <div
                 ref={anchor}
                 className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
@@ -209,7 +380,17 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
     };
 
     return (
-        <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
+        <td
+            data-field={field}
+            data-row-id={dataItem.source_var_id}
+            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, field)}
+            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, field)}
+            onMouseDownCapture={preventCtrlEvent}
+            onClickCapture={preventCtrlEvent}
+            onMouseDown={e => e.stopPropagation()}
+            className={getStubDragClasses(dataItem.source_var_id)}
+            style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
+        >
             <DropDownList
                 className="k-dropdown-solid dp-mini-dropdown"
                 data={options}
@@ -297,7 +478,17 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
 
     if (isNew) {
         return (
-            <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
+            <td
+                data-field="var_type"
+                data-row-id={dataItem.source_var_id}
+                onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'var_type')}
+                onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'var_type')}
+                onMouseDownCapture={preventCtrlEvent}
+                onClickCapture={preventCtrlEvent}
+                onMouseDown={e => e.stopPropagation()}
+                className={getStubDragClasses(dataItem.source_var_id)}
+                style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
+            >
                 <DropDownList
                     className="k-dropdown-solid dp-mini-dropdown"
                     data={VAR_TYPE_OPTIONS}
@@ -313,7 +504,17 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
 
     const { color, displayType } = getQuestionTypeInfo(val);
     return (
-        <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+        <td
+            data-field="var_type"
+            data-row-id={dataItem.source_var_id}
+            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'var_type')}
+            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'var_type')}
+            onMouseDownCapture={preventCtrlEvent}
+            onClickCapture={preventCtrlEvent}
+            onMouseDown={e => e.stopPropagation()}
+            className={getStubDragClasses(dataItem.source_var_id)}
+            style={{ textAlign: 'center', verticalAlign: 'middle', userSelect: 'none' }}
+        >
             <span className={`question-type-badge ${color}`}>{displayType}</span>
         </td>
     );
@@ -466,7 +667,20 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, [onUnsavedChange]);
 
     const handleCellUpdate = useCallback((item, field, value) => {
-        setStubs(prev => prev.map(s => s.source_var_id === item.source_var_id ? { ...s, [field]: value } : s));
+        const targetIdStr = String(item.source_var_id);
+        
+        if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(targetIdStr)) {
+            setStubs(prev => prev.map(s => stubDragSelectedIds.has(String(s.source_var_id)) ? { ...s, [field]: value } : s));
+        } else {
+            setStubs(prev => prev.map(s => s.source_var_id === item.source_var_id ? { ...s, [field]: value } : s));
+        }
+        
+        // 작업 후 선택 초기화
+        stubDragSelectedIds.clear();
+        stubDragBaseSelectedIds.clear();
+        stubDragStartId = null;
+        document.querySelectorAll('.stub-cell-selected').forEach(el => el.classList.remove('stub-cell-selected'));
+
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
     // 행 추가 시 고유 ID 생성 (counter 방식으로 중복 방지)
