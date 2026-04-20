@@ -42,6 +42,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 삭제 관리용 스테이트 추가 ---
     const [deletedSummaryIds, setDeletedSummaryIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
     const [originalSummaryIds, setOriginalSummaryIds] = useState([]); // 초기 로딩된 요약표 ID 목록 (신규 구분용)
+    const [originalFolderIds, setOriginalFolderIds] = useState([]); // 초기 로딩된 폴더 ID 목록 (신규 생성 구분용)
     const [collapsedFolders, setCollapsedFolders] = useState(new Set()); // 아코디언 상태 관리용
     const [dragOverTarget, setDragOverTarget] = useState({ folderId: null, idx: null }); // 드래그 오버 상태 관리
 
@@ -254,6 +255,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
                 if (result.resultjson.dp_request_summary_folders) {
                     setFolders(result.resultjson.dp_request_summary_folders);
+                    setOriginalFolderIds(result.resultjson.dp_request_summary_folders.map(f => f.id));
                 }
                 if (result.resultjson.recoded_variables) {
                     const raw = result.resultjson.recoded_variables;
@@ -320,7 +322,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     };
 
-    const handleSaveSummary = async () => {
+    const handleSaveSummary = async (overrideFolders = null, overrideDeleteIds = null, successMessage = '요약표가 저장되었습니다.') => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId) return false;
 
@@ -340,9 +342,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             // user: auth?.user?.userId,
             pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
             user: "sbbok",
-            folders: folders,
+            folders: overrideFolders || folders,
             variables: variablesPayload,
-            delete_ids: deletedSummaryIds
+            delete_ids: overrideDeleteIds || deletedSummaryIds
         };
 
         try {
@@ -350,7 +352,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await saveSummaryDetail.mutateAsync(payload);
             if (result?.success === "777" || result?.message) {
                 if (onUnsavedChange) onUnsavedChange(false);
-                modal.showAlert('알림', '요약표가 저장되었습니다.');
+                modal.showAlert('알림', successMessage);
                 await fetchSummaryData(); // 재조회 실행
                 return true;
             }
@@ -607,9 +609,17 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         { title: "취소", click: () => { } },
                                                         {
                                                             title: "삭제",
-                                                            click: () => {
-                                                                setFolders(prev => prev.filter(f => f.id !== folder.id));
-                                                                if (onUnsavedChange) onUnsavedChange(true);
+                                                            click: async () => {
+                                                                const newFolders = folders.filter(f => f.id !== folder.id);
+                                                                setFolders(newFolders);
+
+                                                                if (originalFolderIds.includes(folder.id)) {
+                                                                    const newDeletedIds = [...deletedSummaryIds, folder.id];
+                                                                    setDeletedSummaryIds(newDeletedIds);
+                                                                    await handleSaveSummary(newFolders, newDeletedIds, '요약표가 삭제되었습니다.');
+                                                                } else {
+                                                                    if (onUnsavedChange) onUnsavedChange(true);
+                                                                }
                                                             }
                                                         }
                                                     ]
