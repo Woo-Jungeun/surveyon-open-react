@@ -26,6 +26,22 @@ const KendoGridV2 = (props) => {
 
     const [draggedItemIndex, setDraggedItemIndex] = useState(null);
 
+    // --- 가상 스크롤 (Virtual Scrolling) 자체 지원 ---
+    const isVirtual = rest.scrollable === 'virtual';
+    const [skip, setSkip] = useState(0);
+    const [take, setTake] = useState(200);
+
+    const handlePageChange = (event) => {
+        setSkip(event.page.skip);
+        setTake(event.page.take);
+    };
+
+    // 가상 스크롤 사용 시 묶어줄 Grid Props
+    const displayData = isVirtual ? data.slice(skip, skip + take) : data;
+    const gridProps = isVirtual 
+        ? { skip, take, total: data.length, onPageChange: handlePageChange, ...rest }
+        : rest;
+
     // --- 내부 데이터 조작 로직 ---
     const handleReorder = (from, to) => {
         if (from === to || !onDataChange) return;
@@ -100,14 +116,14 @@ const KendoGridV2 = (props) => {
 
     return (
         <Grid
-            data={data}
+            data={displayData}
             className={`dp-excel-grid-v2 ${className} ${reorderable ? 'reorderable' : ''}`}
             style={{ height }}
             onItemChange={onItemChange}
             editField={editField}
             onRowClick={onRowClick}
             rowRender={internalRowRender}
-            {...rest}
+            {...gridProps}
         >
             <GridNoRecords>
                 <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: "14px" }}>

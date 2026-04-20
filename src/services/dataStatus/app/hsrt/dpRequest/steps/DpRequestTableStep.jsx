@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { ChevronDown } from 'lucide-react';
-import { Check } from 'lucide-react';
+import { ChevronDown, Check, Search, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
 import { DropDownList, MultiSelect } from '@progress/kendo-react-dropdowns';
@@ -549,8 +548,37 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     return (
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
             <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
-                <div style={{ padding: '8px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '13px', flexShrink: 0 }}>
-                    전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length}</span>건
+                <div style={{ padding: '8px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', fontSize: '13px', flexShrink: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                        전체 <span style={{ color: '#2563eb', fontWeight: 600 }}>{filteredStubs.length}</span>건
+                    </div>
+                    <div style={{ position: 'relative', width: '300px' }}>
+                        <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
+                        <input
+                            type="text"
+                            placeholder="변수 또는 라벨을 검색하세요."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%', height: '28px', padding: '0 30px',
+                                border: '1px solid #cbd5e1', borderRadius: '4px',
+                                fontSize: '12px', outline: 'none',
+                                boxSizing: 'border-box'
+                            }}
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={() => setSearchTerm('')}
+                                style={{
+                                    position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                                    display: 'flex', alignItems: 'center', color: '#94a3b8'
+                                }}
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
                 </div>
                 <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
@@ -560,7 +588,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             rowHeight={24}
                             onDataChange={handleDataChange}
                             style={{ height: '100%', width: '100%' }}
-                            scrollable="scrollable"
+                            scrollable="virtual"
                             addable
                             deletable
                             newRowTemplate={newRowTemplate}
