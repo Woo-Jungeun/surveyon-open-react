@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Grid, GridColumn as Column, GridNoRecords } from "@progress/kendo-react-grid";
 import PropTypes from "prop-types";
-import { GripVertical, Plus, Trash2, ArrowUp, ArrowDown } from "lucide-react";
+import { GripVertical, Plus, Trash2, ArrowUp, ArrowDown, Copy } from "lucide-react";
 
 /**
  * H-SRT 전용 Smart Excel-Style Grid (Version 2)
@@ -19,6 +19,8 @@ const KendoGridV2 = (props) => {
         showNo = false,
         editField = "inEdit",
         newRowTemplate = {},
+        copyable = false,
+        duplicateRowTemplate,
         onDataChange,
         onRowClick,
         ...rest
@@ -60,6 +62,15 @@ const KendoGridV2 = (props) => {
         } else {
             newData.push(newRow);
         }
+        onDataChange(newData);
+    };
+
+    const handleCopy = (idx) => {
+        if (!onDataChange || idx === undefined || idx === null) return;
+        const newData = [...data];
+        const targetObj = newData[idx];
+        const newRow = duplicateRowTemplate ? duplicateRowTemplate(targetObj) : { ...targetObj, [editField]: false };
+        newData.splice(idx + 1, 0, newRow);
         onDataChange(newData);
     };
 
@@ -166,16 +177,29 @@ const KendoGridV2 = (props) => {
                 />
             )}
 
-            {/* 행 추가 컬럼 */}
-            {addable && (
+            {/* 행 추가/복사 컬럼 */}
+            {(addable || copyable) && (
                 <Column
-                    title="추가"
-                    width="45px"
+                    title={addable && copyable ? "추가/복사" : "추가"}
+                    width={addable && copyable ? "75px" : "45px"}
+                    headerClassName="k-text-center"
                     cell={(cellProps) => (
                         <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
-                            <button className="dp-grid-add-row-btn" onClick={() => handleAdd(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent' }}>
-                                <Plus size={18} color="#3b82f6" strokeWidth={3} />
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '24px', width: '100%' }}>
+                                {addable && (
+                                    <button title="빈 행 추가" className="dp-grid-add-row-btn" onClick={() => handleAdd(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
+                                        <Plus size={18} color="#3b82f6" strokeWidth={3} />
+                                    </button>
+                                )}
+                                {addable && copyable && (
+                                    <div style={{ width: '1px', height: '12px', background: '#cbd5e1' }} />
+                                )}
+                                {copyable && (
+                                    <button title="현재 행 복사" className="dp-grid-copy-row-btn" onClick={() => handleCopy(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
+                                        <Copy size={15} color="#94a3b8" strokeWidth={2} />
+                                    </button>
+                                )}
+                            </div>
                         </td>
                     )}
                 />
@@ -223,9 +247,11 @@ KendoGridV2.propTypes = {
     reorderable: PropTypes.bool,
     addable: PropTypes.bool,
     deletable: PropTypes.bool,
+    copyable: PropTypes.bool,
     showNo: PropTypes.bool,
     editField: PropTypes.string,
     newRowTemplate: PropTypes.object,
+    duplicateRowTemplate: PropTypes.func,
     onDataChange: PropTypes.func,
     onRowClick: PropTypes.func
 };

@@ -485,6 +485,14 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     }), []);
 
 
+    const duplicateRowTemplate = useCallback((targetRow) => {
+        return {
+            ...targetRow,
+            source_var_id: `new_${Date.now()}_${newRowIdRef.current++}`
+        };
+    }, []);
+
+
     const handleSave = async () => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId || !auth?.user?.userId) {
@@ -590,8 +598,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             style={{ height: '100%', width: '100%' }}
                             scrollable="virtual"
                             addable
+                            copyable
                             deletable
                             newRowTemplate={newRowTemplate}
+                            duplicateRowTemplate={duplicateRowTemplate}
                         >
                             <Column field="recoded_var_id" title="변수" width="100px" headerClassName="k-text-center"
                                 cell={(p) => (
