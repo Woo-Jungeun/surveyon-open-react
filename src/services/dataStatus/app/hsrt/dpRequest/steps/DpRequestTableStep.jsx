@@ -83,8 +83,8 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                 ref={anchor}
                 className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
                 style={{ width: '100%', height: '22px', border: '1px solid #cbd5e1', cursor: 'pointer', display: 'flex' }}
-                onClick={(e) => { 
-                    e.preventDefault(); 
+                onClick={(e) => {
+                    e.preventDefault();
                     if (show) handleClose();
                     else setShow(true);
                 }}
@@ -546,7 +546,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             deletable
                             newRowTemplate={newRowTemplate}
                         >
-                            <Column field="recoded_var_id" title="ID" width="100px" headerClassName="k-text-center"
+                            <Column field="recoded_var_id" title="변수" width="100px" headerClassName="k-text-center"
                                 cell={(p) => (
                                     <td style={{ padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', userSelect: 'none' }}>
                                         {p.dataItem.recoded_var_id || <span style={{ fontSize: '11px', opacity: 0.7 }}>(자동 생성)</span>}
@@ -565,7 +565,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Column field="x_info" title="배너(x_info)" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
                             />
-                            <Column field="group_preset_name" title="그룹 프리셋" width="150px" headerClassName="k-text-center"
+                            <Column field="group_preset_name" title="그룹" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseGroupPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
@@ -581,7 +581,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     return <StatSettingCell dataItem={p.dataItem} selectedValues={p.dataItem.stat_summary} onUpdate={handleCellUpdate} />;
                                 }}
                             />
-                            <Column field="scale_preset_name" title="척도 프리셋" width="150px" headerClassName="k-text-center"
+                            <Column field="scale_preset_name" title="척도" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseScalePreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
@@ -589,7 +589,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     return <PresetDropdownCell field="scale_preset_name" dataItem={p.dataItem} presets={scalePresets} onChange={handleCellUpdate} />;
                                 }}
                             />
-                            <Column field="rank_preset_name" title="순위 프리셋" width="150px" headerClassName="k-text-center"
+                            <Column field="rank_preset_name" title="순위" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseRankPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
