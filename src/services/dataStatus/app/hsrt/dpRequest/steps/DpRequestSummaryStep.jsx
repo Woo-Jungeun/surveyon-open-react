@@ -265,9 +265,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (data.type === 'EXTERNAL') {
                 const itemsToAdd = data.items.map(it => it.base_id || it.id);
                 const targetFolder = folders.find(f => f.id === folderId);
-                
+
                 if (!targetFolder) return;
-                
+
                 const existingItems = targetFolder.items || [];
                 const hasDuplicates = itemsToAdd.some(id => existingItems.includes(id));
                 const uniqueItemsToAdd = itemsToAdd.filter(id => !existingItems.includes(id));
@@ -295,7 +295,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         modal.showAlert('알림', '이미 등록된 항목을 제외하고 추가했습니다.');
                     }
                 }
-                
+
                 setSelectedIds([]);
             } else if (data.type === 'INTERNAL_FOLDER_ITEM') {
                 const { folderId: sourceFolderId, itemId } = data;
@@ -303,17 +303,17 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     let next = prev.map(f => ({ ...f, items: [...(f.items || [])] }));
                     const srcF = next.find(f => f.id === sourceFolderId);
                     const tgtF = next.find(f => f.id === folderId);
-                    
+
                     if (!srcF || !tgtF) return prev;
                     if (sourceFolderId !== folderId && tgtF.items.includes(itemId)) {
                         return prev; // 중복 이동 방지
                     }
-                    
+
                     const srcIdx = srcF.items.indexOf(itemId);
                     if (srcIdx === -1) return prev;
-                    
+
                     srcF.items.splice(srcIdx, 1);
-                    
+
                     let insertIdx = targetIdx;
                     if (insertIdx === -1) {
                         tgtF.items.push(itemId);
@@ -323,7 +323,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }
                         tgtF.items.splice(insertIdx, 0, itemId);
                     }
-                    
+
                     return next;
                 });
                 if (onUnsavedChange) onUnsavedChange(true);
@@ -584,8 +584,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </button>
                         </div>
                         <div className="dp-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
-
-                            <div className="dp-search-input-wrapper" style={{ width: '100%', marginBottom: '8px' }}>
+                            <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', padding: '4px 0', background: '#f8fafc', borderRadius: '4px' }}>
+                                클릭 및 드래그하여 우측 표에 추가하세요. (다중 선택 가능)
+                            </div>
+                            <div className="dp-search-input-wrapper" style={{ width: '100%', marginBottom: '6px' }}>
                                 <Search size={14} className="dp-search-input-icon" />
                                 <input
                                     type="text"
@@ -594,9 +596,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     onChange={(e) => setSummarySearch(e.target.value)}
                                     className="dp-search-input"
                                 />
-                            </div>
-                            <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', padding: '4px 0', background: '#f8fafc', borderRadius: '4px' }}>
-                                🖱️ 클릭 및 드래그하여 우측 표에 추가하세요.
                             </div>
                         </div>
                         <div className="dp-summary-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
@@ -610,16 +609,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         toggleSelection(variable.id);
                                     }}
                                     style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '8px', border: '1px solid',
-                                        borderRadius: '6px', marginBottom: '8px', 
+                                        display: 'flex', alignItems: 'center', gap: '6px',
+                                        padding: '4px 8px', border: '1px solid',
+                                        borderRadius: '6px', marginBottom: '4px',
                                         background: selectedIds.includes(variable.id) ? '#eff6ff' : '#fff',
                                         borderColor: selectedIds.includes(variable.id) ? '#3b82f6' : '#e2e8f0',
                                         cursor: 'grab'
                                     }}
                                 >
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         checked={selectedIds.includes(variable.id)}
                                         readOnly
                                         style={{ cursor: 'pointer', margin: 0, width: '14px', height: '14px' }}
@@ -641,7 +640,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                         {folders.map((folder) => (
                             <div key={folder.id} style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '16px', background: '#fff' }}>
                                 {/* Folder Header */}
-                                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
                                     <Folder size={18} color="#64748b" />
                                     <input
                                         type="text"
@@ -677,9 +676,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                                 {/* Folder Body */}
                                 {!collapsedFolders.has(folder.id) && (
-                                    <div style={{ padding: '16px' }}>
+                                    <div style={{ padding: '12px' }}>
                                         {folder.type === 'frequency' ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', fontSize: '12px' }}>
                                                 <span style={{ fontWeight: 600, color: '#475569', marginRight: '16px' }}>포함 코드</span>
                                                 <input
                                                     type="text"
@@ -717,12 +716,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 </label>
                                             </div>
                                         )}
-                                        <div 
-                                            style={{ 
-                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '6px', minHeight: '60px', padding: '8px', 
-                                                border: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? '2px solid #3b82f6' : '1px dashed #cbd5e1', 
-                                                borderRadius: '8px', 
-                                                background: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? 'rgba(59, 130, 246, 0.05)' : '#f8fafc', 
+                                        <div
+                                            style={{
+                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '4px', minHeight: '40px', padding: '6px',
+                                                border: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? '2px solid #3b82f6' : '1px dashed #cbd5e1',
+                                                borderRadius: '8px',
+                                                background: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? 'rgba(59, 130, 246, 0.05)' : '#f8fafc',
                                                 transition: 'all 0.2s ease-out'
                                             }}
                                             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDragOverTarget({ folderId: folder.id, idx: -1 }); }}
@@ -734,16 +733,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 const itemInfo = summaryVariables.find(v => v.base_id === itemId);
                                                 const label = itemInfo ? itemInfo.label : '';
                                                 return (
-                                                    <div key={itemId} 
+                                                    <div key={itemId}
                                                         draggable
                                                         onDragStart={(e) => {
                                                             e.stopPropagation();
                                                             e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_FOLDER_ITEM', folderId: folder.id, itemId }));
                                                         }}
-                                                        onDragOver={(e) => { 
-                                                            e.preventDefault(); 
+                                                        onDragOver={(e) => {
+                                                            e.preventDefault();
                                                             e.stopPropagation();
-                                                            e.dataTransfer.dropEffect = 'move'; 
+                                                            e.dataTransfer.dropEffect = 'move';
                                                             if (dragOverTarget.folderId !== folder.id || dragOverTarget.idx !== idx) {
                                                                 setDragOverTarget({ folderId: folder.id, idx });
                                                             }
@@ -756,20 +755,24 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             e.stopPropagation();
                                                             handleFolderDrop(e, folder.id, idx);
                                                         }}
-                                                        style={{ 
-                                                            display: 'flex', alignItems: 'center', padding: '6px 10px', 
+                                                        style={{
+                                                            position: 'relative',
+                                                            display: 'flex', alignItems: 'center',
+                                                            padding: '4px 8px',
                                                             border: '1px solid #cbd5e1',
-                                                            borderRadius: '16px', background: '#fff', gap: '6px', cursor: 'grab',
-                                                            transform: dragOverTarget.folderId === folder.id && dragOverTarget.idx === idx ? 'translateX(6px)' : 'translateX(0)',
-                                                            boxShadow: dragOverTarget.folderId === folder.id && dragOverTarget.idx === idx 
-                                                                ? '-4px 0 0 0 #3b82f6, 0 4px 6px -1px rgba(59, 130, 246, 0.2)' 
-                                                                : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-                                                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                            borderRadius: '16px',
+                                                            background: '#fff',
+                                                            gap: '4px', cursor: 'grab',
+                                                            transition: 'all 0.1s'
                                                         }}
                                                     >
+                                                        {/* 드롭 인디케이터 라인 (기존 항목들 사이에 끼워넣는다는 걸 명확히 표시) */}
+                                                        {dragOverTarget.folderId === folder.id && dragOverTarget.idx === idx && (
+                                                            <div style={{ position: 'absolute', left: '-4px', top: '10%', bottom: '10%', width: '3px', backgroundColor: '#3b82f6', borderRadius: '3px', zIndex: 10 }} />
+                                                        )}
                                                         <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '11px', flexShrink: 0 }}>{itemId}</span>
                                                         <span title={label} style={{ color: '#64748b', fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-                                                        <button 
+                                                        <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
                                                                 setFolders(prev => prev.map(f => {
