@@ -583,11 +583,11 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <ChevronLeft size={16} />
                             </button>
                         </div>
-                        <div className="dp-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                        <div className="dp-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 12px 8px 12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                             <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', padding: '4px 0', background: '#f8fafc', borderRadius: '4px' }}>
                                 클릭 및 드래그하여 우측 표에 추가하세요. (다중 선택 가능)
                             </div>
-                            <div className="dp-search-input-wrapper" style={{ width: '100%', marginBottom: '6px' }}>
+                            <div className="dp-search-input-wrapper" style={{ width: '100%', marginBottom: '0' }}>
                                 <Search size={14} className="dp-search-input-icon" />
                                 <input
                                     type="text"
