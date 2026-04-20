@@ -72,7 +72,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [show, handleClose]);
 
-    let displayText = <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>;
+    let displayText = <span style={{ color: '#94a3b8' }}>미설정</span>;
     if (selected.length > 0) {
         displayText = selected.join(',');
     }
@@ -89,7 +89,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                     else setShow(true);
                 }}
             >
-                <div className="k-input-inner" style={{ flex: 1, padding: '0 8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="k-input-inner" style={{ flex: 1, padding: '0 8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
                     {displayText}
                 </div>
                 <button className="k-select" style={{ border: 'none', background: 'transparent' }}>
@@ -200,9 +200,13 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
 
     const valueRender = (element, value) => {
         if (!value || !value.id) {
-            return <span style={{ color: '#94a3b8' }}>선택 (미설정)</span>;
+            return <span style={{ color: '#94a3b8', fontSize: '13px' }}>미설정</span>;
         }
-        return element;
+        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px' }}>{value.text}</span>);
+    };
+
+    const itemRender = (li, itemProps) => {
+        return React.cloneElement(li, li.props, <span style={{ fontSize: '13px' }}>{itemProps.dataItem.text}</span>);
     };
 
     return (
@@ -217,8 +221,9 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
                     const selectedId = e.value ? e.value.id : '';
                     onChange(dataItem, field, selectedId);
                 }}
-                defaultItem={{ text: "선택 (미설정)", id: "" }}
+                defaultItem={{ text: "미설정", id: "" }}
                 valueRender={valueRender}
+                itemRender={itemRender}
                 style={{ width: '100%', height: '22px', fontSize: '13px' }}
             />
         </td>
@@ -280,6 +285,17 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
         onUpdate(dataItem, 'var_type', e.value);
     };
 
+    const valueRender = (element, value) => {
+        if (!value) {
+            return <span style={{ color: '#94a3b8', fontSize: '13px' }}>미설정</span>;
+        }
+        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px' }}>{value}</span>);
+    };
+
+    const itemRender = (li, itemProps) => {
+        return React.cloneElement(li, li.props, <span style={{ fontSize: '13px' }}>{itemProps.dataItem}</span>);
+    };
+
     if (isNew) {
         return (
             <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
@@ -288,6 +304,8 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
                     data={VAR_TYPE_OPTIONS}
                     value={val}
                     onChange={handleChange}
+                    itemRender={itemRender}
+                    valueRender={valueRender}
                     style={{ width: '100%', height: '22px', fontSize: '13px' }}
                 />
             </td>
@@ -556,7 +574,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
                             />
-                            <Column field="var_type" title="유형" width="150px" headerClassName="k-text-center"
+                            <Column field="var_type" title="유형" width="140px" headerClassName="k-text-center"
                                 cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}
                             />
                             <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
