@@ -302,10 +302,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const fetchSummaryData = async (isFresh = false) => {
         const pageId = sessionStorage.getItem('pageId');
         const userId = auth?.user?.userId || '';
-        
+
         try {
             loadingSpinner.show();
-            const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
+            // TODO: 추후 임시로 하드코딩한 pageid와 user를 원래대로 (pageId, userId) 복구해야 합니다.
+            //   const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
+            const result = await getSummaryDetail.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok" });
             if (result?.success === '777' && result.resultjson) {
                 if (result.resultjson.base_variables) {
                     const baseVars = result.resultjson.base_variables;
@@ -367,7 +369,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, [selectedSummary]);
 
     const summaryVariables = useMemo(() => {
-        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => 
+        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v =>
             v.type === 'scale' || v.type === 'double'
         ).map(v => {
             const scalePoints = v.scale_points || (v.info && v.info.filter(row => row.type && row.type !== 'mean' && row.type !== 'median' && row.type !== 'mode' && !row.type.includes('base')).length) || null;
@@ -507,18 +509,18 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <DropDownList
                                 className="dp-summary-dropdown"
                                 data={folders}
-                                    textField="name"
-                                    dataItemKey="id"
-                                    value={folders.find(f => f.id === selectedFolderId) || null}
-                                    defaultItem={{ id: '', name: '추가할 폴더 선택' }}
-                                    onChange={(e) => {
-                                        if (e.target.value?.id) {
-                                            setSelectedFolderId(e.target.value.id);
-                                        } else {
-                                            setSelectedFolderId('');
-                                        }
-                                    }}
-                                    style={{ width: '100%', height: '32px' }}
+                                textField="name"
+                                dataItemKey="id"
+                                value={folders.find(f => f.id === selectedFolderId) || null}
+                                defaultItem={{ id: '', name: '추가할 폴더 선택' }}
+                                onChange={(e) => {
+                                    if (e.target.value?.id) {
+                                        setSelectedFolderId(e.target.value.id);
+                                    } else {
+                                        setSelectedFolderId('');
+                                    }
+                                }}
+                                style={{ width: '100%', height: '32px' }}
                             />
                             <div className="dp-search-input-wrapper" style={{ width: '100%' }}>
                                 <Search size={14} className="dp-search-input-icon" />
@@ -535,10 +537,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             {filteredSummaryVariables.map(variable => (
                                 <div key={variable.base_id}
                                     className="dp-variable-row"
-                                    style={{ 
-                                        display: 'flex', alignItems: 'center', gap: '8px', 
-                                        padding: '8px', border: '1px solid #e2e8f0', 
-                                        borderRadius: '6px', marginBottom: '8px', background: '#fff' 
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        padding: '8px', border: '1px solid #e2e8f0',
+                                        borderRadius: '6px', marginBottom: '8px', background: '#fff'
                                     }}
                                 >
                                     <span style={{ width: '40px', fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{variable.base_id}</span>
@@ -570,9 +572,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 {/* Folder Header */}
                                 <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
                                     <Folder size={18} color="#64748b" />
-                                    <input 
-                                        type="text" 
-                                        value={folder.name} 
+                                    <input
+                                        type="text"
+                                        value={folder.name}
                                         onChange={(e) => {
                                             setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, name: e.target.value } : f));
                                             if (onUnsavedChange) onUnsavedChange(true);
@@ -604,65 +606,65 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                                 {/* Folder Body */}
                                 {!collapsedFolders.has(folder.id) && (
-                                <div style={{ padding: '16px' }}>
-                                    {folder.type === 'frequency' ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
-                                            <span style={{ fontWeight: 600, color: '#475569', marginRight: '16px' }}>포함 코드</span>
-                                            <input
-                                                type="text"
-                                                placeholder="예: 4,5"
-                                                value={folder.include_codes || ''}
-                                                onChange={(e) => {
-                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: e.target.value } : f));
-                                                    if (onUnsavedChange) onUnsavedChange(true);
-                                                }}
-                                                style={{ color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', outline: 'none', width: '200px' }}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px', gap: '20px' }}>
-                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                                <input type="checkbox" checked={folder.mean || false} onChange={(e) => {
-                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
-                                                    if (onUnsavedChange) onUnsavedChange(true);
-                                                }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
-                                                <span style={{ fontWeight: 600, color: '#475569' }}>평균</span>
-                                            </label>
-                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                                <input type="checkbox" checked={folder.mode || false} onChange={(e) => {
-                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: e.target.checked } : f));
-                                                    if (onUnsavedChange) onUnsavedChange(true);
-                                                }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
-                                                <span style={{ fontWeight: 600, color: '#475569' }}>최빈값</span>
-                                            </label>
-                                            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                                <input type="checkbox" checked={folder.median || false} onChange={(e) => {
-                                                    setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: e.target.checked } : f));
-                                                    if (onUnsavedChange) onUnsavedChange(true);
-                                                }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
-                                                <span style={{ fontWeight: 600, color: '#475569' }}>중앙값</span>
-                                            </label>
-                                        </div>
-                                    )}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '6px' }}>
-                                        {/* items 매핑 로직 (folder.items 배열 값이 문자열 id라고 가정) */}
-                                        {(folder.items || []).length > 0 ? (folder.items || []).map(itemId => {
-                                            const itemInfo = summaryVariables.find(v => v.base_id === itemId);
-                                            const label = itemInfo ? itemInfo.label : '';
-                                            return (
-                                                <div key={itemId} style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '16px', background: '#fff', gap: '6px' }}>
-                                                    <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '13px', flexShrink: 0 }}>{itemId}</span>
-                                                    <span title={label} style={{ color: '#64748b', fontSize: '13px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-                                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', color: '#94a3b8', flexShrink: 0 }}>
-                                                        <X size={13} />
-                                                    </button>
-                                                </div>
-                                            );
-                                        }) : (
-                                            <div style={{ fontSize: '12px', color: '#94a3b8', padding: '8px 0' }}>변수가 추가되지 않았습니다.</div>
+                                    <div style={{ padding: '16px' }}>
+                                        {folder.type === 'frequency' ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
+                                                <span style={{ fontWeight: 600, color: '#475569', marginRight: '16px' }}>포함 코드</span>
+                                                <input
+                                                    type="text"
+                                                    placeholder="예: 4,5"
+                                                    value={folder.include_codes || ''}
+                                                    onChange={(e) => {
+                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: e.target.value } : f));
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }}
+                                                    style={{ color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', outline: 'none', width: '200px' }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px', gap: '20px' }}>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                    <input type="checkbox" checked={folder.mean || false} onChange={(e) => {
+                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                    <span style={{ fontWeight: 600, color: '#475569' }}>평균</span>
+                                                </label>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                    <input type="checkbox" checked={folder.mode || false} onChange={(e) => {
+                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: e.target.checked } : f));
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                    <span style={{ fontWeight: 600, color: '#475569' }}>최빈값</span>
+                                                </label>
+                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                                                    <input type="checkbox" checked={folder.median || false} onChange={(e) => {
+                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: e.target.checked } : f));
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                    <span style={{ fontWeight: 600, color: '#475569' }}>중앙값</span>
+                                                </label>
+                                            </div>
                                         )}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '6px' }}>
+                                            {/* items 매핑 로직 (folder.items 배열 값이 문자열 id라고 가정) */}
+                                            {(folder.items || []).length > 0 ? (folder.items || []).map(itemId => {
+                                                const itemInfo = summaryVariables.find(v => v.base_id === itemId);
+                                                const label = itemInfo ? itemInfo.label : '';
+                                                return (
+                                                    <div key={itemId} style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '16px', background: '#fff', gap: '6px' }}>
+                                                        <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '13px', flexShrink: 0 }}>{itemId}</span>
+                                                        <span title={label} style={{ color: '#64748b', fontSize: '13px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', color: '#94a3b8', flexShrink: 0 }}>
+                                                            <X size={13} />
+                                                        </button>
+                                                    </div>
+                                                );
+                                            }) : (
+                                                <div style={{ fontSize: '12px', color: '#94a3b8', padding: '8px 0' }}>변수가 추가되지 않았습니다.</div>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
                                 )}
                             </div>
                         ))}
