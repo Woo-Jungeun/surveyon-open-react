@@ -87,6 +87,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** DP 의뢰서 - 요약표 저장 */
+    const saveSummaryDetail = useMutation(
+        async (data) => await api.post(data, "/dp-request/summary/save", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
@@ -98,6 +107,7 @@ export function DpRequestPageApi() {
         saveBannerDetail,
         getSummaryDetail,
         generateSummaryAuto,
+        saveSummaryDetail,
         getRecodedOverview,
         saveRecodedOverview,
     };

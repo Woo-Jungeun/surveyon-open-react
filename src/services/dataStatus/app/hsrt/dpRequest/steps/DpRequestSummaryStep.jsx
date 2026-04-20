@@ -113,81 +113,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'EXTERNAL', items: targets }));
     }, [selectedIds, baseVariables]);
 
-    const handleInternalItemDragStart = (e, gIdx, iIdx) => {
-        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_ITEM', gIdx, iIdx }));
-    };
 
-    const handleInternalGroupDragStart = (e, gIdx) => {
-        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_GROUP', gIdx }));
-    };
-
-    const handleDrop = (e, targetIdx) => {
-        e.preventDefault();
-        try {
-            const dataStr = e.dataTransfer.getData('text/plain');
-            if (!dataStr) return;
-            const data = JSON.parse(dataStr);
-
-            setColVars(prev => {
-                let next = [...prev.map(g => [...g])];
-                if (data.type === 'INTERNAL_ITEM') {
-                    const item = next[data.gIdx][data.iIdx];
-                    next[data.gIdx].splice(data.iIdx, 1);
-                    if (targetIdx === 'new') {
-                        if (next.length >= 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
-                            return prev;
-                        }
-                        next.push([item]);
-                    } else {
-                        if (!next[targetIdx].find(v => v.id === item.id)) {
-                            if (next[targetIdx].length >= 3) {
-                                modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
-                                return prev;
-                            }
-                            next[targetIdx].push(item);
-                        } else if (data.gIdx === targetIdx) {
-                            next[targetIdx].splice(data.iIdx, 0, item);
-                        }
-                    }
-                    return next.filter(g => g.length > 0);
-                }
-                if (data.type === 'INTERNAL_GROUP') {
-                    const group = next[data.gIdx];
-                    next.splice(data.gIdx, 1);
-                    if (targetIdx === 'new') {
-                        if (next.length >= 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
-                            return prev;
-                        }
-                        next.push(group);
-                    } else next.splice(targetIdx, 0, group);
-                    return next;
-                }
-                if (data.type === 'EXTERNAL') {
-                    const itemsToAdd = data.items;
-                    if (targetIdx === 'new') {
-                        // 새로 추가되면서 10개를 넘는지 체크
-                        if (next.length + itemsToAdd.length > 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
-                            // 가능힌 부분까지만 추가하거나 아예 안하거나 결정 (여기서는 안전하게 경고 후 중단)
-                            return prev;
-                        }
-                        next.push(...itemsToAdd.map(it => [it]));
-                    } else {
-                        const unique = itemsToAdd.filter(it => !next[targetIdx].find(v => v.id === it.id));
-                        if (next[targetIdx].length + unique.length > 3) {
-                            modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
-                            return prev;
-                        }
-                        next[targetIdx] = [...next[targetIdx], ...unique];
-                    }
-                }
-                return next;
-            });
-            setSelectedIds([]);
-        } catch (err) { console.error(err); }
-    };
 
     const handleFolderDrop = useCallback((e, folderId, targetIdx = -1) => {
         e.preventDefault();
@@ -394,6 +320,50 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     };
 
+    const handleSaveSummary = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId) return false;
+
+        const variablesPayload = {};
+        summaries.forEach(s => {
+            variablesPayload[s.id] = {
+                id: s.id,
+                label: s.label,
+                type: s.type,
+                info: s.info || []
+            };
+        });
+
+        const payload = {
+            // TODO: 임시 하드코딩
+            // pageid: pageId,
+            // user: auth?.user?.userId,
+            pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
+            user: "sbbok",
+            folders: folders,
+            variables: variablesPayload,
+            delete_ids: deletedSummaryIds
+        };
+
+        try {
+            loadingSpinner.show();
+            const result = await saveSummaryDetail.mutateAsync(payload);
+            if (result?.success === "777" || result?.message) {
+                if (onUnsavedChange) onUnsavedChange(false);
+                modal.showAlert('알림', '요약표가 저장되었습니다.');
+                await fetchSummaryData(); // 재조회 실행
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Save error:', error);
+            modal.showAlert('오류', '요약표 저장 중 문제가 발생했습니다.');
+            return false;
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
+
     const updateSummaryInfo = useCallback((newInfo) => {
         setSummaries(prev => prev.map(b => b.id === selectedSummary ? { ...b, info: newInfo } : b));
     }, [selectedSummary]);
@@ -440,52 +410,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         fetchBaseVariables();
     }, [auth?.user?.userId]);
 
-    const handleSaveSummary = async () => {
-        const pageId = sessionStorage.getItem('pageId');
-        if (!selectedSummary || !pageId) return;
 
-        const currentSummaryData = summaries.find(b => b.id === selectedSummary);
-        if (!currentSummaryData) return;
-
-        // API 명세서 형식에 맞게 데이터 가공
-        const requestData = {
-            pageid: pageId,
-            user: auth?.user?.userId, // 사용자ID 추가
-            variables: {
-                [currentSummaryData.id]: {
-                    id: currentSummaryData.id,
-                    label: currentLabel, // 수정된 라벨 사용
-                    type: "single", // 기본값
-                    recoded_type: "recoded",
-                    info: currentSummaryData.info.map(it => ({
-                        label3: it.label3,
-                        label2: it.label2,
-                        label: it.label,
-                        logic: it.logic
-                    }))
-                }
-            },
-            delete_ids: []
-        };
-
-        try {
-            loadingSpinner.show();
-            const result = await saveSummaryDetail.mutateAsync(requestData);
-            if (result?.success === "777") {
-                modal.showAlert('알림', '요약표 정보가 저장되었습니다.');
-                if (onUnsavedChange) onUnsavedChange(false); // 저장 성공 시 더티 해제
-                await fetchSummaryData();
-                return true;
-            }
-            return false;
-        } catch (error) {
-            console.error('Save error:', error);
-            modal.showAlert('오류', '요약표 저장 중 문제가 발생했습니다.');
-            return false;
-        } finally {
-            loadingSpinner.hide();
-        }
-    };
 
     return (
         <div className="dp-request-container" onClick={() => updateSummaryInfo(summaries.find(b => b.id === selectedSummary)?.info.map(it => ({ ...it, inEdit: false })) || [])}>

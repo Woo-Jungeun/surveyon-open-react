@@ -27,9 +27,10 @@ const DpRequestPage = () => {
     const step1Ref = useRef(null);
     const step2Ref = useRef(null);
     const step3Ref = useRef(null);
+    const step4Ref = useRef(null);
 
     // 더티 상태 관리
-    const [unsaved, setUnsaved] = useState({ 'table': false, 'banner': false, 'recoded': false });
+    const [unsaved, setUnsaved] = useState({ 'table': false, 'banner': false, 'recoded': false, 'summary': false });
     const markUnsaved = useCallback((key, v) => setUnsaved(prev => ({ ...prev, [key]: v })), []);
 
     // 공용 모달로 확인창 (취소 | 이동 | 저장 후 이동)
@@ -94,6 +95,7 @@ const DpRequestPage = () => {
                 if (currentKey === 'table') success = await step1Ref.current?.save?.();
                 else if (currentKey === 'banner') success = await step2Ref.current?.save?.();
                 else if (currentKey === 'recoded') success = await step3Ref.current?.save?.();
+                else if (currentKey === 'summary') success = await step4Ref.current?.save?.();
 
                 if (!success) return; // 저장 실패 시 이동 중단
                 setUnsaved(prev => ({ ...prev, [currentKey]: false }));
@@ -137,7 +139,7 @@ const DpRequestPage = () => {
             case 0: return <DpRequestSettingStep ref={step1Ref} onUnsavedChange={(v) => markUnsaved('table', v)} />;
             case 1: return <DpRequestBannerStep ref={step2Ref} onUnsavedChange={(v) => markUnsaved('banner', v)} />;
             case 2: return <DpRequestTableStep ref={step3Ref} onUnsavedChange={(v) => markUnsaved('recoded', v)} />;
-            case 3: return <DpRequestSummaryStep />;
+            case 3: return <DpRequestSummaryStep ref={step4Ref} onUnsavedChange={(v) => markUnsaved('summary', v)} />;
             case 4: return <DpRequestDetailStep />;
             default: return <DpRequestSettingStep />;
         }
@@ -208,7 +210,7 @@ const DpRequestPage = () => {
                         <button
                             className="dp-primary-btn"
                             onClick={async () => {
-                                const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : step3Ref;
+                                const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : currentStep === 2 ? step3Ref : currentStep === 3 ? step4Ref : null;
                                 if (currentRef?.current?.save) {
                                     await currentRef.current.save();
                                 }
