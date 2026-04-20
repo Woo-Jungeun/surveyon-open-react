@@ -829,7 +829,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                         <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
                         <input
                             type="text"
-                            placeholder="변수 또는 라벨을 검색하세요."
+                            placeholder="변수 또는 라벨 검색"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
