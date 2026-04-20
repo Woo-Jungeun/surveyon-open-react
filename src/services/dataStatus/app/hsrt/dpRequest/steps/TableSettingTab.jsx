@@ -204,18 +204,18 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 }}>
                                     {/* Header Row */}
                                     <div style={{ display: 'flex', height: '48px', textAlign: 'center', fontWeight: 'bold', backgroundColor: settings.render.theme_primary, color: settings.render.theme_primary_fg }}>
-                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Stub Label</div>
+                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Stub</div>
                                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Total / Header</div>
                                     </div>
                                     {/* Data Row 1 */}
                                     <div style={{ display: 'flex', flex: 1, backgroundColor: settings.render.theme_bg }}>
-                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Category 1</div>
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>54% | 23%</div>
+                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Value1</div>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>54%</div>
                                     </div>
                                     {/* Data Row 2 */}
                                     <div style={{ display: 'flex', flex: 1, backgroundColor: settings.render.theme_stripe }}>
-                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Category 2</div>
-                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>46% | 77%</div>
+                                        <div style={{ width: '100px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: settings.render.theme_bg_alt, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>Value2</div>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: settings.render.theme_text_muted, fontFamily: settings.render.font_family, fontSize: `${settings.render.font_size}px` }}>46%</div>
                                     </div>
 
                                     {/* Clickable Overlays */}
