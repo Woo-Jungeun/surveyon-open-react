@@ -141,8 +141,8 @@ const KendoGridV2 = (props) => {
                     title="순서 변경"
                     width="65px"
                     cell={(cellProps) => (
-                        <td style={{ textAlign: 'center' }}>
-                            <div className="dp-grid-handle">
+                        <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
+                            <div className="dp-grid-handle" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <GripVertical size={16} />
                             </div>
                         </td>
@@ -156,8 +156,8 @@ const KendoGridV2 = (props) => {
                     title="추가"
                     width="45px"
                     cell={(cellProps) => (
-                        <td style={{ textAlign: 'center' }}>
-                            <button className="dp-grid-add-row-btn" onClick={() => handleAdd(cellProps.dataIndex)}>
+                        <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
+                            <button className="dp-grid-add-row-btn" onClick={() => handleAdd(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent' }}>
                                 <Plus size={18} color="#3b82f6" strokeWidth={3} />
                             </button>
                         </td>
@@ -171,7 +171,7 @@ const KendoGridV2 = (props) => {
                     title="No"
                     width="45px"
                     cell={(cellProps) => (
-                        <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600 }}>
+                        <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600, padding: '0 4px', verticalAlign: 'middle' }}>
                             {cellProps.dataIndex + 1}
                         </td>
                     )}
@@ -187,9 +187,9 @@ const KendoGridV2 = (props) => {
                     title="삭제"
                     width="50px"
                     cell={(cellProps) => (
-                        <td style={{ textAlign: 'center' }}>
-                            <button className="dp-row-del-btn" onClick={() => handleDelete(cellProps.dataIndex)}>
-                                <Trash2 size={16} />
+                        <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
+                            <button className="dp-row-del-btn" onClick={() => handleDelete(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent' }}>
+                                <Trash2 size={16} color="#94a3b8" />
                             </button>
                         </td>
                     )}

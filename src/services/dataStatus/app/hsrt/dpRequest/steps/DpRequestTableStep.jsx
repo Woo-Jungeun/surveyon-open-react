@@ -78,7 +78,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     }
 
     return (
-        <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
+        <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
             <div
                 ref={anchor}
                 className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
@@ -210,7 +210,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
     };
 
     return (
-        <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
+        <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
             <DropDownList
                 className="k-dropdown-solid dp-mini-dropdown"
                 data={options}
@@ -298,7 +298,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
 
     if (isNew) {
         return (
-            <td style={{ padding: '2px 4px', verticalAlign: 'middle' }}>
+            <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
                 <DropDownList
                     className="k-dropdown-solid dp-mini-dropdown"
                     data={VAR_TYPE_OPTIONS}
@@ -555,8 +555,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
                         <KendoGridV2
+                            className="dp-compact-stub-grid"
                             data={filteredStubs}
-                            rowHeight={28}
+                            rowHeight={24}
                             onDataChange={handleDataChange}
                             style={{ height: '100%', width: '100%' }}
                             scrollable="scrollable"

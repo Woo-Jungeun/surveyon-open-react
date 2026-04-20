@@ -1744,3 +1744,13 @@
 .dp-custom-list-item:hover {
     background-color: #f1f5f9;
 }
+
+/* Aggressive Compact Stub Grid */
+.dp-compact-stub-grid .k-grid-table tr {
+    height: 24px !important;
+}
+.dp-compact-stub-grid .k-grid-table td {
+    padding: 0 4px !important;
+    height: 24px !important;
+    line-height: normal !important;
+}
