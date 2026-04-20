@@ -50,7 +50,7 @@ const MENU_ITEMS = [
     items: [
       { label: "문항추가", path: "/data_status/hsrt/add_question", icon: PlusCircle },
       { label: "DP의뢰서", path: "/data_status/hsrt/dp_request", icon: FileCog },
-      { label: "스터브 생성", path: "/data_status/hsrt/stub", icon: Wand2 },
+      // { label: "스터브 생성", path: "/data_status/hsrt/stub", icon: Wand2 },
     ]
   },
   {
