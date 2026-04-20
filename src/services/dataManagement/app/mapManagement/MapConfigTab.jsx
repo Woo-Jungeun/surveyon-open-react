@@ -297,8 +297,8 @@ const handleGlobalPointerUp = (e) => {
             isPendingCtrlRelease = true;
         } else {
             typeDragJustEnded = true;
-            if (globalSetEditingRowId !== null && dragLastEnteredId !== null) {
-                globalSetEditingRowId(dragLastEnteredId);
+            if (dragLastEnteredId !== null) {
+                window.dispatchEvent(new CustomEvent('openTypeCell', { detail: dragLastEnteredId }));
             }
         }
     }
@@ -314,8 +314,8 @@ window.addEventListener('keyup', (e) => {
         if (isPendingCtrlRelease) {
             isPendingCtrlRelease = false;
             typeDragJustEnded = true;
-            if (globalSetEditingRowId !== null && dragLastEnteredId !== null) {
-                globalSetEditingRowId(dragLastEnteredId);
+            if (dragLastEnteredId !== null) {
+                window.dispatchEvent(new CustomEvent('openTypeCell', { detail: dragLastEnteredId }));
             }
         }
     }
@@ -360,8 +360,19 @@ const TypeCell = memo((props) => {
         userSelect: 'none'
     };
 
-    const isEditing = dataItem.id === editingRowId || dataItem.isNew;
+    const [isLocalEditing, setIsLocalEditing] = useState(false);
+    const isEditing = dataItem.id === editingRowId || dataItem.isNew || isLocalEditing;
     const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        const handler = (e) => {
+            if (String(e.detail) === String(dataItem.id)) {
+                setIsLocalEditing(true);
+            }
+        };
+        window.addEventListener('openTypeCell', handler);
+        return () => window.removeEventListener('openTypeCell', handler);
+    }, [dataItem.id]);
 
     useEffect(() => {
         if (isEditing && typeDragJustEnded) {
@@ -380,6 +391,7 @@ const TypeCell = memo((props) => {
 
     const handleChange = (e) => {
         setIsOpen(false);
+        setIsLocalEditing(false);
         const newType = String(e.target.value).toLowerCase();
         setVariables(prev => prev.map(v => {
             const isTarget = v.id === dataItem.id || dragSelectedIds.has(v.id) || dragSelectedIds.has(String(v.id));
@@ -404,6 +416,11 @@ const TypeCell = memo((props) => {
 
     const handlePointerDown = (e) => {
         if (!isEditing) {
+            // Portal 내부 클릭 시 무시
+            if (e.target && (e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dm-dropdown-popup'))) {
+                return;
+            }
+
             e.preventDefault();
             e.stopPropagation(); // Kendo Grid 행 선택 방지
 
@@ -478,7 +495,11 @@ const TypeCell = memo((props) => {
                 data-row-id={dataItem.id}
                 onPointerDown={handlePointerDown}
                 onPointerEnter={handlePointerEnter}
-                onMouseDown={e => e.stopPropagation()}
+                onMouseDown={e => {
+                    e.stopPropagation();
+                    if (e.ctrlKey || e.metaKey) e.preventDefault();
+                }}
+                onClick={e => e.stopPropagation()}
             >
                 <div className="variable-text-readonly" style={{ background: 'transparent', border: '1px solid transparent', pointerEvents: 'none' }}>
                     {dataItem.type}
@@ -488,7 +509,12 @@ const TypeCell = memo((props) => {
     }
 
     return (
-        <td style={cellStyle} className={`${className || ''} dm-type-cell ${isSelectedManually ? 'type-cell-selected' : ''}`}>
+        <td 
+            style={cellStyle} 
+            className={`${className || ''} dm-type-cell ${isSelectedManually ? 'type-cell-selected' : ''}`}
+            onMouseDown={e => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
+        >
             <DropDownList
                 data={typeOptions}
                 value={dataItem.type}
