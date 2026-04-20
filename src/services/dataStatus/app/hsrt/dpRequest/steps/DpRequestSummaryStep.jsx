@@ -108,6 +108,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [deletedSummaryIds, setDeletedSummaryIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
     const [originalSummaryIds, setOriginalSummaryIds] = useState([]); // 초기 로딩된 요약표 ID 목록 (신규 구분용)
     const [collapsedFolders, setCollapsedFolders] = useState(new Set()); // 아코디언 상태 관리용
+    const [dragOverTarget, setDragOverTarget] = useState({ folderId: null, idx: null }); // 드래그 오버 상태 관리
 
     const toggleFolderCollapse = (folderId) => {
         setCollapsedFolders(prev => {
@@ -252,6 +253,83 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             setSelectedIds([]);
         } catch (err) { console.error(err); }
     };
+
+    const handleFolderDrop = useCallback((e, folderId, targetIdx = -1) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOverTarget({ folderId: null, idx: null });
+        try {
+            const dataStr = e.dataTransfer.getData('text/plain');
+            if (!dataStr) return;
+            const data = JSON.parse(dataStr);
+            if (data.type === 'EXTERNAL') {
+                const itemsToAdd = data.items.map(it => it.base_id || it.id);
+                const targetFolder = folders.find(f => f.id === folderId);
+                
+                if (!targetFolder) return;
+                
+                const existingItems = targetFolder.items || [];
+                const hasDuplicates = itemsToAdd.some(id => existingItems.includes(id));
+                const uniqueItemsToAdd = itemsToAdd.filter(id => !existingItems.includes(id));
+
+                if (uniqueItemsToAdd.length > 0) {
+                    setFolders(prev => prev.map(f => {
+                        if (f.id === folderId) {
+                            const newItems = [...(f.items || [])];
+                            if (targetIdx === -1) {
+                                newItems.push(...uniqueItemsToAdd);
+                            } else {
+                                newItems.splice(targetIdx, 0, ...uniqueItemsToAdd);
+                            }
+                            return { ...f, items: newItems };
+                        }
+                        return f;
+                    }));
+                    if (onUnsavedChange) onUnsavedChange(true);
+                }
+
+                if (hasDuplicates) {
+                    if (uniqueItemsToAdd.length === 0) {
+                        modal.showAlert('알림', '이미 추가된 문항입니다.');
+                    } else {
+                        modal.showAlert('알림', '이미 등록된 항목을 제외하고 추가했습니다.');
+                    }
+                }
+                
+                setSelectedIds([]);
+            } else if (data.type === 'INTERNAL_FOLDER_ITEM') {
+                const { folderId: sourceFolderId, itemId } = data;
+                setFolders(prev => {
+                    let next = prev.map(f => ({ ...f, items: [...(f.items || [])] }));
+                    const srcF = next.find(f => f.id === sourceFolderId);
+                    const tgtF = next.find(f => f.id === folderId);
+                    
+                    if (!srcF || !tgtF) return prev;
+                    if (sourceFolderId !== folderId && tgtF.items.includes(itemId)) {
+                        return prev; // 중복 이동 방지
+                    }
+                    
+                    const srcIdx = srcF.items.indexOf(itemId);
+                    if (srcIdx === -1) return prev;
+                    
+                    srcF.items.splice(srcIdx, 1);
+                    
+                    let insertIdx = targetIdx;
+                    if (insertIdx === -1) {
+                        tgtF.items.push(itemId);
+                    } else {
+                        if (sourceFolderId === folderId && targetIdx > srcIdx) {
+                            insertIdx = targetIdx - 1;
+                        }
+                        tgtF.items.splice(insertIdx, 0, itemId);
+                    }
+                    
+                    return next;
+                });
+                if (onUnsavedChange) onUnsavedChange(true);
+            }
+        } catch (err) { console.error(err); }
+    }, [folders, onUnsavedChange, modal]);
 
     const removeVar = (varId, groupIndex) => {
         setColVars(prev => {
@@ -506,23 +584,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </button>
                         </div>
                         <div className="dp-sidebar-header" style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
-                            <DropDownList
-                                className="dp-summary-dropdown"
-                                data={folders}
-                                textField="name"
-                                dataItemKey="id"
-                                value={folders.find(f => f.id === selectedFolderId) || null}
-                                defaultItem={{ id: '', name: '추가할 폴더 선택' }}
-                                onChange={(e) => {
-                                    if (e.target.value?.id) {
-                                        setSelectedFolderId(e.target.value.id);
-                                    } else {
-                                        setSelectedFolderId('');
-                                    }
-                                }}
-                                style={{ width: '100%', height: '32px' }}
-                            />
-                            <div className="dp-search-input-wrapper" style={{ width: '100%' }}>
+
+                            <div className="dp-search-input-wrapper" style={{ width: '100%', marginBottom: '8px' }}>
                                 <Search size={14} className="dp-search-input-icon" />
                                 <input
                                     type="text"
@@ -532,33 +595,41 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     className="dp-search-input"
                                 />
                             </div>
+                            <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', padding: '4px 0', background: '#f8fafc', borderRadius: '4px' }}>
+                                🖱️ 클릭 및 드래그하여 우측 표에 추가하세요.
+                            </div>
                         </div>
                         <div className="dp-summary-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
                             {filteredSummaryVariables.map(variable => (
                                 <div key={variable.base_id}
-                                    className="dp-variable-row"
+                                    className={`dp-variable-row ${selectedIds.includes(variable.id) ? 'selected' : ''}`}
+                                    draggable
+                                    onDragStart={(e) => handleDragStart(e, variable)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleSelection(variable.id);
+                                    }}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '8px',
-                                        padding: '8px', border: '1px solid #e2e8f0',
-                                        borderRadius: '6px', marginBottom: '8px', background: '#fff'
+                                        padding: '8px', border: '1px solid',
+                                        borderRadius: '6px', marginBottom: '8px', 
+                                        background: selectedIds.includes(variable.id) ? '#eff6ff' : '#fff',
+                                        borderColor: selectedIds.includes(variable.id) ? '#3b82f6' : '#e2e8f0',
+                                        cursor: 'grab'
                                     }}
                                 >
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selectedIds.includes(variable.id)}
+                                        readOnly
+                                        style={{ cursor: 'pointer', margin: 0, width: '14px', height: '14px' }}
+                                    />
                                     <span style={{ width: '40px', fontSize: '12px', fontWeight: 700, color: '#1e293b' }}>{variable.base_id}</span>
                                     <div style={{ width: '1px', height: '12px', backgroundColor: '#e2e8f0' }} />
                                     <span style={{ flex: 1, fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{variable.label}</span>
                                     <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '10px', background: '#f1f5f9', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                         {variable.type === 'scale' ? (variable.scale_points ? `${variable.scale_points}점 척도` : '척도형') : '숫자형'}
                                     </span>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s', borderRadius: '4px' }}
-                                        onMouseEnter={(e) => { e.currentTarget.style.color = '#3b82f6'; e.currentTarget.style.background = '#eff6ff'; }}
-                                        onMouseLeave={(e) => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'none'; }}
-                                        onClick={() => {
-                                            // TODO: 요약표 폴더에 변수 추가 로직 연결
-                                        }}
-                                        title="변수 추가"
-                                    >
-                                        <Plus size={16} />
-                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -646,22 +717,77 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 </label>
                                             </div>
                                         )}
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '6px' }}>
+                                        <div 
+                                            style={{ 
+                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '6px', minHeight: '60px', padding: '8px', 
+                                                border: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? '2px solid #3b82f6' : '1px dashed #cbd5e1', 
+                                                borderRadius: '8px', 
+                                                background: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? 'rgba(59, 130, 246, 0.05)' : '#f8fafc', 
+                                                transition: 'all 0.2s ease-out'
+                                            }}
+                                            onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDragOverTarget({ folderId: folder.id, idx: -1 }); }}
+                                            onDragLeave={() => setDragOverTarget({ folderId: null, idx: null })}
+                                            onDrop={(e) => handleFolderDrop(e, folder.id)}
+                                        >
                                             {/* items 매핑 로직 (folder.items 배열 값이 문자열 id라고 가정) */}
-                                            {(folder.items || []).length > 0 ? (folder.items || []).map(itemId => {
+                                            {(folder.items || []).length > 0 ? (folder.items || []).map((itemId, idx) => {
                                                 const itemInfo = summaryVariables.find(v => v.base_id === itemId);
                                                 const label = itemInfo ? itemInfo.label : '';
                                                 return (
-                                                    <div key={itemId} style={{ display: 'flex', alignItems: 'center', padding: '6px 10px', border: '1px solid #cbd5e1', borderRadius: '16px', background: '#fff', gap: '6px' }}>
+                                                    <div key={itemId} 
+                                                        draggable
+                                                        onDragStart={(e) => {
+                                                            e.stopPropagation();
+                                                            e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_FOLDER_ITEM', folderId: folder.id, itemId }));
+                                                        }}
+                                                        onDragOver={(e) => { 
+                                                            e.preventDefault(); 
+                                                            e.stopPropagation();
+                                                            e.dataTransfer.dropEffect = 'move'; 
+                                                            if (dragOverTarget.folderId !== folder.id || dragOverTarget.idx !== idx) {
+                                                                setDragOverTarget({ folderId: folder.id, idx });
+                                                            }
+                                                        }}
+                                                        onDragLeave={(e) => {
+                                                            e.stopPropagation();
+                                                            setDragOverTarget({ folderId: null, idx: null });
+                                                        }}
+                                                        onDrop={(e) => {
+                                                            e.stopPropagation();
+                                                            handleFolderDrop(e, folder.id, idx);
+                                                        }}
+                                                        style={{ 
+                                                            display: 'flex', alignItems: 'center', padding: '6px 10px', 
+                                                            border: '1px solid #cbd5e1',
+                                                            borderRadius: '16px', background: '#fff', gap: '6px', cursor: 'grab',
+                                                            transform: dragOverTarget.folderId === folder.id && dragOverTarget.idx === idx ? 'translateX(6px)' : 'translateX(0)',
+                                                            boxShadow: dragOverTarget.folderId === folder.id && dragOverTarget.idx === idx 
+                                                                ? '-4px 0 0 0 #3b82f6, 0 4px 6px -1px rgba(59, 130, 246, 0.2)' 
+                                                                : '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                                                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                        }}
+                                                    >
                                                         <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '11px', flexShrink: 0 }}>{itemId}</span>
                                                         <span title={label} style={{ color: '#64748b', fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-                                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', color: '#94a3b8', flexShrink: 0 }}>
+                                                        <button 
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setFolders(prev => prev.map(f => {
+                                                                    if (f.id === folder.id) {
+                                                                        return { ...f, items: f.items.filter(id => id !== itemId) };
+                                                                    }
+                                                                    return f;
+                                                                }));
+                                                                if (onUnsavedChange) onUnsavedChange(true);
+                                                            }}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0', display: 'flex', alignItems: 'center', color: '#94a3b8', flexShrink: 0 }}
+                                                        >
                                                             <X size={13} />
                                                         </button>
                                                     </div>
                                                 );
                                             }) : (
-                                                <div style={{ fontSize: '12px', color: '#94a3b8', padding: '8px 0' }}>변수가 추가되지 않았습니다.</div>
+                                                <div style={{ fontSize: '12px', color: '#94a3b8', padding: '8px 0', pointerEvents: 'none' }}>변수가 추가되지 않았습니다.</div>
                                             )}
                                         </div>
                                     </div>
