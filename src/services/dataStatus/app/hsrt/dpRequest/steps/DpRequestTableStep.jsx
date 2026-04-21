@@ -123,7 +123,7 @@ const STUB_INLINE_STYLE = `
     border-radius: 8px !important;
     box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1) !important;
     padding: 4px 0 !important;
-    border: 1px solid #cbd5e1 !important;
+    border: 1px solid var(--primary-color, #4f46e5) !important;
 }
 .dp-custom-list-item {
     font-size: 12px !important;
@@ -322,7 +322,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
             <div
                 ref={anchor}
                 className={`dp-mini-dropdown k-dropdownlist k-picker k-picker-md k-rounded-md k-picker-solid ${show ? 'k-focus' : ''}`}
-                style={{ width: '100%', height: '22px', border: '1px solid #cbd5e1', cursor: 'pointer', display: 'flex' }}
+                style={{ width: '100%', height: '22px', cursor: 'pointer', display: 'flex' }}
                 onClick={(e) => {
                     e.preventDefault();
                     if (show) handleClose();
@@ -334,9 +334,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                         {displayText}
                     </span>
                 </div>
-                <button className="k-select" style={{ border: 'none', background: 'transparent', flexShrink: 0, width: '24px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ChevronDown size={14} style={{ color: '#64748b' }} />
-                </button>
+                <button className="k-select k-input-button k-button k-icon-button" style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
             </div>
             {show && (
                 <Popup anchor={anchor.current} show={show} popupClass="k-list-container k-popup k-group k-reset dp-custom-popup" style={{ minWidth: anchor.current?.offsetWidth, marginTop: '4px' }}>
@@ -906,7 +904,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
                                 }}
                             />
-                            <Column field="stat_summary" title="통계 설정" width="205px" headerClassName="k-text-center"
+                            <Column field="stat_summary" title="통계 설정" width="215px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseStatPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
