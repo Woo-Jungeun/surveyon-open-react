@@ -114,6 +114,14 @@ const STUB_INLINE_STYLE = `
 .stub-cell-selected {
     background-color: #e0f2fe !important;
 }
+.dp-mini-dropdown-popup .k-list-item-text {
+    font-size: 12px !important;
+}
+.dp-mini-dropdown-popup .k-list-item,
+.dp-mini-dropdown-popup .k-list-optionlabel {
+    font-size: 12px !important;
+    min-height: 24px !important;
+}
 `;
 if (typeof document !== 'undefined') {
     let style = document.getElementById('stub-inline-style');
@@ -292,12 +300,6 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
         <td
             data-field="stat_summary"
             data-row-id={dataItem.source_var_id}
-            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'stat_summary')}
-            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'stat_summary')}
-            onMouseDownCapture={preventCtrlEvent}
-            onClickCapture={preventCtrlEvent}
-            onMouseDown={e => e.stopPropagation()}
-            className={getStubDragClasses(dataItem.source_var_id)}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
             <div
@@ -434,12 +436,12 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
         <td
             data-field={field}
             data-row-id={dataItem.source_var_id}
-            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, field)}
-            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, field)}
-            onMouseDownCapture={preventCtrlEvent}
-            onClickCapture={preventCtrlEvent}
-            onMouseDown={e => e.stopPropagation()}
-            className={getStubDragClasses(dataItem.source_var_id)}
+            onPointerDownCapture={field === 'x_info' ? e => handleStubPointerDownCapture(e, dataItem.source_var_id, field) : undefined}
+            onPointerEnter={field === 'x_info' ? e => handleStubPointerEnter(e, dataItem.source_var_id, field) : undefined}
+            onMouseDownCapture={field === 'x_info' ? preventCtrlEvent : undefined}
+            onClickCapture={field === 'x_info' ? preventCtrlEvent : undefined}
+            onMouseDown={field === 'x_info' ? e => e.stopPropagation() : undefined}
+            className={field === 'x_info' ? getStubDragClasses(dataItem.source_var_id) : ''}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
             <DropDownList
@@ -533,12 +535,6 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
             <td
                 data-field="var_type"
                 data-row-id={dataItem.source_var_id}
-                onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'var_type')}
-                onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'var_type')}
-                onMouseDownCapture={preventCtrlEvent}
-                onClickCapture={preventCtrlEvent}
-                onMouseDown={e => e.stopPropagation()}
-                className={getStubDragClasses(dataItem.source_var_id)}
                 style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
             >
                 <DropDownList
@@ -560,12 +556,6 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
         <td
             data-field="var_type"
             data-row-id={dataItem.source_var_id}
-            onPointerDownCapture={e => handleStubPointerDownCapture(e, dataItem.source_var_id, 'var_type')}
-            onPointerEnter={e => handleStubPointerEnter(e, dataItem.source_var_id, 'var_type')}
-            onMouseDownCapture={preventCtrlEvent}
-            onClickCapture={preventCtrlEvent}
-            onMouseDown={e => e.stopPropagation()}
-            className={getStubDragClasses(dataItem.source_var_id)}
             style={{ textAlign: 'center', verticalAlign: 'middle', userSelect: 'none' }}
         >
             <span className={`question-type-badge ${color}`}>{displayType}</span>
