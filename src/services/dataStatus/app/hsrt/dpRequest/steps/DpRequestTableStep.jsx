@@ -114,13 +114,27 @@ const STUB_INLINE_STYLE = `
 .stub-cell-selected {
     background-color: #e0f2fe !important;
 }
-.dp-mini-dropdown-popup .k-list-item-text {
-    font-size: 12px !important;
-}
 .dp-mini-dropdown-popup .k-list-item,
 .dp-mini-dropdown-popup .k-list-optionlabel {
     font-size: 12px !important;
     min-height: 24px !important;
+}
+.dp-custom-popup {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1) !important;
+    padding: 4px 0 !important;
+    border: 1px solid #cbd5e1 !important;
+}
+.dp-custom-list-item {
+    font-size: 12px !important;
+    padding: 4px 12px !important;
+    min-height: 24px !important;
+    display: flex !important;
+    align-items: center !important;
+    cursor: pointer !important;
+}
+.dp-custom-list-item:hover {
+    background-color: #f1f5f9 !important;
 }
 `;
 if (typeof document !== 'undefined') {
@@ -281,14 +295,17 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
     useEffect(() => {
         if (!show) return;
         const handleClickOutside = (e) => {
-            // Popup 자체 영역(k-popup) 내부 클릭인지 확인
             if (e.target.closest('.k-popup')) return;
             if (anchor.current && !anchor.current.contains(e.target)) {
                 handleClose();
             }
         };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('mousedown', handleClickOutside, true);
+        document.addEventListener('pointerdown', handleClickOutside, true);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside, true);
+            document.removeEventListener('pointerdown', handleClickOutside, true);
+        };
     }, [show, handleClose]);
 
     let displayText = <span style={{ color: '#94a3b8', fontSize: '13px' }}>미설정</span>;
@@ -312,15 +329,17 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                     else setShow(true);
                 }}
             >
-                <div className="k-input-inner" style={{ flex: 1, padding: '0 8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'flex-start' }}>
-                    {displayText}
+                <div className="k-input-inner" style={{ flex: 1, padding: '0 8px', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', overflow: 'hidden' }}>
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', width: '100%', textAlign: 'left' }}>
+                        {displayText}
+                    </span>
                 </div>
-                <button className="k-select" style={{ border: 'none', background: 'transparent' }}>
+                <button className="k-select" style={{ border: 'none', background: 'transparent', flexShrink: 0, width: '24px', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <ChevronDown size={14} style={{ color: '#64748b' }} />
                 </button>
             </div>
             {show && (
-                <Popup anchor={anchor.current} show={show} popupClass="k-list-container k-popup k-group k-reset k-state-border-up" style={{ minWidth: anchor.current?.offsetWidth }}>
+                <Popup anchor={anchor.current} show={show} popupClass="k-list-container k-popup k-group k-reset dp-custom-popup" style={{ minWidth: anchor.current?.offsetWidth, marginTop: '4px' }}>
                     <div className="k-list-scroller" style={{ maxHeight: '200px', overflowY: 'auto' }}>
                         <ul className="k-list k-reset">
                             {STAT_OPTIONS.map(itemData => {
@@ -329,7 +348,6 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                                     <li
                                         key={itemData.id}
                                         className="k-list-item dp-custom-list-item"
-                                        style={{ display: 'flex', alignItems: 'center', padding: '2px 8px', minHeight: '18px', cursor: 'pointer' }}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleChange(itemData.id, !isChecked);
@@ -867,7 +885,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     </td>
                                 )}
                             />
-                            <Column field="var_label" title="라벨" width="300px" headerClassName="k-text-center"
+                            <Column field="var_label" title="라벨" width="250px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
                             />
                             <Column field="var_type" title="유형" width="140px" headerClassName="k-text-center"
@@ -888,7 +906,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
                                 }}
                             />
-                            <Column field="stat_summary" title="통계 설정" width="180px" headerClassName="k-text-center"
+                            <Column field="stat_summary" title="통계 설정" width="205px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseStatPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
