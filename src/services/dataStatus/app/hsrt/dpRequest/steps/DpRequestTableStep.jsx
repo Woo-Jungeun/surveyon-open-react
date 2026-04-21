@@ -283,9 +283,9 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [show, handleClose]);
 
-    let displayText = <span style={{ color: '#94a3b8' }}>미설정</span>;
+    let displayText = <span style={{ color: '#94a3b8', fontSize: '13px' }}>미설정</span>;
     if (selected.length > 0) {
-        displayText = selected.join(',');
+        displayText = <span style={{ color: '#1e293b', fontSize: '13px' }}>{selected.join(',')}</span>;
     }
 
     return (
@@ -327,7 +327,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                                     <li
                                         key={itemData.id}
                                         className="k-list-item dp-custom-list-item"
-                                        style={{ display: 'flex', alignItems: 'center', padding: '6px 12px', cursor: 'pointer' }}
+                                        style={{ display: 'flex', alignItems: 'center', padding: '2px 8px', minHeight: '18px', cursor: 'pointer' }}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             handleChange(itemData.id, !isChecked);
@@ -337,7 +337,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
                                             <input type="checkbox" className="dp-checkbox-input" checked={isChecked} readOnly />
                                             <span className="dp-checkbox-box" />
                                         </label>
-                                        <span style={{ fontSize: '13px', color: '#1e293b' }}>{itemData.label}</span>
+                                        <span style={{ fontSize: '12px', color: '#1e293b' }}>{itemData.label}</span>
                                     </li>
                                 );
                             })}
@@ -427,7 +427,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
     };
 
     const itemRender = (li, itemProps) => {
-        return React.cloneElement(li, li.props, <span style={{ fontSize: '13px' }}>{itemProps.dataItem.text}</span>);
+        return React.cloneElement(li, li.props, <span style={{ fontSize: '12px' }}>{itemProps.dataItem.text}</span>);
     };
 
     return (
@@ -444,6 +444,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
         >
             <DropDownList
                 className="k-dropdown-solid dp-mini-dropdown"
+                popupSettings={{ className: "dp-mini-dropdown-popup" }}
                 data={options}
                 textField="text"
                 dataItemKey="id"
@@ -524,7 +525,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
     };
 
     const itemRender = (li, itemProps) => {
-        return React.cloneElement(li, li.props, <span style={{ fontSize: '13px' }}>{itemProps.dataItem}</span>);
+        return React.cloneElement(li, li.props, <span style={{ fontSize: '12px' }}>{itemProps.dataItem}</span>);
     };
 
     if (isNew) {
@@ -542,6 +543,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
             >
                 <DropDownList
                     className="k-dropdown-solid dp-mini-dropdown"
+                    popupSettings={{ className: "dp-mini-dropdown-popup" }}
                     data={VAR_TYPE_OPTIONS}
                     value={val}
                     onChange={handleChange}

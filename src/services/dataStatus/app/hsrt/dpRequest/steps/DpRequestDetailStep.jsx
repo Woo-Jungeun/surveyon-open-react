@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
+import React, { useState, useEffect, useContext, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Save, RefreshCw, ListOrdered, ChevronRight, ChevronLeft, GripVertical, Play, X, Info, ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { ChevronRight, ChevronLeft, GripVertical, Play, Info, ChevronUp, ChevronDown, Check } from 'lucide-react';
+import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { Popup } from '@progress/kendo-react-popup';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -111,7 +112,8 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
                             seq: idx + 1,
                             id: id,
                             name: varInfo.label || id,
-                            type: meta.kind || varInfo.type || 'Unknown'
+                            type: meta.kind || varInfo.type || 'Unknown',
+                            info: varInfo.info || []
                         };
                     });
                     setTableOrder(parsedData);
@@ -326,23 +328,57 @@ const DetailEditPreview = ({ item, onClose }) => {
     useEffect(() => {
         setEditLabel(item?.name || '');
         setEditBanner('banner_01');
-        
-        // 목업 데이터 준비
-        setCategoryData([
-            { label: 'Base', type: 'base', condition: `${item?.id || 'VAR'} is not null`, targetVar: '', val: '' },
-            { label: '└ 기아', type: 'OPTION', condition: `${item?.id || 'VAR'} in [1]`, targetVar: '', val: '1' },
-            { label: '└ 르노코리아', type: 'OPTION', condition: `${item?.id || 'VAR'} in [2]`, targetVar: '', val: '2' },
-            { label: '└ 쉐보레', type: 'OPTION', condition: `${item?.id || 'VAR'} in [3]`, targetVar: '', val: '3' },
-            { label: '└ KG 모빌리티 (쌍용)', type: 'OPTION', condition: `${item?.id || 'VAR'} in [4]`, targetVar: '', val: '4' },
-            { label: '└ 현대', type: 'OPTION', condition: `${item?.id || 'VAR'} in [5]`, targetVar: '', val: '5' },
-        ]);
+
+        // 실제 API 데이터 기반으로 카테고리 구성 (우선 Base 포함)
+        const baseRow = { label: 'Base', type: 'base', logic: `${item?.id || 'VAR'} is not null`, target_var: '', value: '' };
+
+        if (item?.info && item.info.length > 0) {
+            // 이미 포맷팅된 완성형 데이터인지 확인 (type이나 logic/condition 필드를 가지는지 여부)
+            const isFormatted = item.info.some(opt => opt.type !== undefined || opt.logic !== undefined || opt.condition !== undefined);
+
+            if (isFormatted) {
+                // 이미 구성된 상세 표 데이터라면 내부 속성명 동기화 처리 (condition -> logic, val -> value 등 혼용 대비)
+                const standardizedInfo = item.info.map(opt => ({
+                    ...opt,
+                    logic: opt.logic !== undefined ? opt.logic : opt.condition,
+                    value: opt.value !== undefined ? opt.value : opt.val,
+                    target_var: opt.target_var !== undefined ? opt.target_var : opt.targetVar,
+                    postfix: opt.postfix !== undefined ? opt.postfix : opt.suffix,
+                    line: opt.line !== undefined ? opt.line : opt.separator,
+                    color: opt.color !== undefined ? opt.color : opt.bgColor
+                }));
+                setCategoryData(standardizedInfo);
+            } else {
+                // 가공되지 않은 raw 변수 속성값일 경우 기본 포맷팅
+                const apiRows = item.info.map((opt, i) => {
+                    // 값(val) 필드 추출 (value, row_id 등 파편화 대응)
+                    const val = opt.val !== undefined ? opt.val : (opt.value !== undefined ? opt.value : (opt.row_id !== undefined ? opt.row_id : i + 1));
+                    return {
+                        ...opt,
+                        label: opt.label ? (String(opt.label).startsWith('└') ? opt.label : `└ ${opt.label}`) : `└ ${val}`,
+                        type: 'single', // API default
+                        logic: `${item.id} in [${val}]`,
+                        target_var: '',
+                        value: val
+                    };
+                });
+                setCategoryData([baseRow, ...apiRows]);
+            }
+        } else {
+            // 정보가 전혀 없을 경우 빈 배열 또는 baseRow만 기본 세팅
+            setCategoryData([baseRow]);
+        }
     }, [item]);
 
-    const resultData = [
-        { gubun: 'Base', val1: { n: 185, p: '100.0%' }, val2: { n: 22, p: '100.0%' }, val3: { n: 88, p: '100.0%' }, val4: { n: 106, p: '100.0%' } },
-        { gubun: '기아', val1: { n: 53, p: '28.6%' }, val2: { n: 9, p: '40.9%' }, val3: { n: 31, p: '35.2%' }, val4: { n: 26, p: '24.5%' } },
-        { gubun: '르노코리아', val1: { n: 1, p: '0.5%' }, val2: { n: 0, p: '0.0%' }, val3: { n: 0, p: '0.0%' }, val4: { n: 1, p: '0.9%' } },
-    ];
+    const handleCategoryCellUpdate = (dataIndex, field, value) => {
+        setCategoryData(prev => {
+            const next = [...prev];
+            next[dataIndex] = { ...next[dataIndex], [field]: value };
+            return next;
+        });
+    };
+
+    const resultData = [];
 
     const DataCellTemplate = (props) => (
         <td style={{ textAlign: 'center', padding: '6px 8px', verticalAlign: 'middle' }}>
@@ -404,18 +440,18 @@ const DetailEditPreview = ({ item, onClose }) => {
                                             <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#fff', position: 'absolute', left: isDetailSetting ? 'calc(100% - 16px)' : '2px', transition: 'left 0.2s' }} />
                                         </div>
                                     </div>
-                                    <button 
-                                        style={{ 
-                                            background: '#fff', 
-                                            border: '1px solid #3b82f6', 
-                                            color: '#3b82f6', 
-                                            fontSize: '13px', 
-                                            fontWeight: 700, 
-                                            padding: '4px 12px', 
-                                            borderRadius: '4px', 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            gap: '6px', 
+                                    <button
+                                        style={{
+                                            background: '#fff',
+                                            border: '1px solid #3b82f6',
+                                            color: '#3b82f6',
+                                            fontSize: '13px',
+                                            fontWeight: 700,
+                                            padding: '4px 12px',
+                                            borderRadius: '4px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
                                             cursor: 'pointer',
                                             transition: 'all 0.2s'
                                         }}
@@ -434,19 +470,75 @@ const DetailEditPreview = ({ item, onClose }) => {
                     {/* Content */}
                     {isCategoryOpen && (
                         <div style={{ padding: '12px 16px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                            <KendoGridV2 data={categoryData} onDataChange={setCategoryData} reorderable={true} showNo style={{ flex: 1, height: '100%', width: '100%' }}>
-                                <Column field="label" title="라벨" width="200px" />
-                                <Column field="type" title="형식" width="120px" />
-                                <Column field="condition" title="조건" width="250px" headerCell={ConditionHeaderCell} />
-                                <Column field="targetVar" title="저장될 변수" width="100px" />
-                                <Column field="val" title="값" width="60px" headerClassName="k-text-center" cell={(p) => <td style={{ textAlign: 'center' }}>{p.dataItem.val}</td>} />
-                                {isDetailSetting && <Column field="label2" title="라벨2" width="100px" />}
-                                {isDetailSetting && <Column field="label3" title="라벨3" width="100px" />}
-                                {isDetailSetting && <Column field="prefix" title="앞문자" width="80px" />}
-                                {isDetailSetting && <Column field="suffix" title="뒷문자" width="80px" />}
-                                {isDetailSetting && <Column field="hide" title="숨기기" width="80px" />}
-                                {isDetailSetting && <Column field="separator" title="구분선" width="120px" />}
-                                {isDetailSetting && <Column field="bgColor" title="배경색" width="100px" />}
+                            <KendoGridV2 
+                                data={categoryData} 
+                                onDataChange={setCategoryData} 
+                                reorderable={true} 
+                                addable={true}
+                                copyable={true}
+                                deletable={true}
+                                showNo 
+                                newRowTemplate={{ label: '', type: 'single', logic: '', target_var: '', value: '' }}
+                                style={{ flex: 1, height: '100%', width: '100%' }}
+                            >
+                                <Column field="label" title="라벨" width="250px" />
+                                <Column field="type" title="형식" width="150px" cell={(p) => (
+                                    <td style={{ padding: '4px' }}>
+                                        <DropDownList
+                                            className="k-dropdown-solid dp-mini-dropdown"
+                                            popupSettings={{ className: "dp-mini-dropdown-popup" }}
+                                            data={["base", "base end(count)", "OPTION", "single", "double", "mean", "median", "mode", "min", "max", "std", "sum", "variance", "rse"]}
+                                            value={p.dataItem.type || ''}
+                                            onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'type', e.value)}
+                                            style={{ width: '100%', height: '28px', fontSize: '13px' }}
+                                        />
+                                    </td>
+                                )} />
+                                <Column field="logic" title="조건" width="300px" headerCell={ConditionHeaderCell} />
+                                <Column field="target_var" title="저장될 변수" width="150px" />
+                                <Column field="value" title="값" width="80px" headerClassName="k-text-center" cell={(p) => <td style={{ textAlign: 'center' }}>{p.dataItem.value}</td>} />
+                                {isDetailSetting && <Column field="label2" title="라벨2" width="150px" />}
+                                {isDetailSetting && <Column field="label3" title="라벨3" width="150px" />}
+                                {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" />}
+                                {isDetailSetting && <Column field="postfix" title="뒷문자" width="120px" />}
+                                {isDetailSetting && <Column field="hide" title="숨기기" width="100px" headerClassName="k-text-center" cell={(p) => (
+                                    <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '4px' }}>
+                                        <div
+                                            onClick={() => handleCategoryCellUpdate(p.dataIndex, 'hide', !p.dataItem.hide)}
+                                            style={{
+                                                width: '16px', height: '16px', border: '1px solid #94a3b8', borderRadius: '4px',
+                                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                cursor: 'pointer', background: p.dataItem.hide ? '#2563eb' : '#fff', margin: '0 auto'
+                                            }}
+                                        >
+                                            {p.dataItem.hide && <Check size={12} color="#fff" strokeWidth={3} />}
+                                        </div>
+                                    </td>
+                                )} />}
+                                {isDetailSetting && <Column field="line" title="구분선" width="150px" cell={(p) => (
+                                    <td style={{ padding: '4px' }}>
+                                        <DropDownList
+                                            className="k-dropdown-solid dp-mini-dropdown"
+                                            popupSettings={{ className: "dp-mini-dropdown-popup" }}
+                                            data={["선택 안함", "일반선", "굵은선", "이중선"]}
+                                            value={p.dataItem.line === "" ? "선택 안함" : (p.dataItem.line || "선택 안함")}
+                                            onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'line', e.value === "선택 안함" ? "" : e.value)}
+                                            style={{ width: '100%', height: '28px', fontSize: '13px' }}
+                                        />
+                                    </td>
+                                )} />}
+                                {isDetailSetting && <Column field="color" title="배경색" width="150px" cell={(p) => (
+                                    <td style={{ padding: '4px' }}>
+                                        <DropDownList
+                                            className="k-dropdown-solid dp-mini-dropdown"
+                                            popupSettings={{ className: "dp-mini-dropdown-popup" }}
+                                            data={["선택 안함", "gray", "blue", "red", "green", "yellow", "orange", "purple", "pink", "mint"]}
+                                            value={p.dataItem.color === "" ? "선택 안함" : (p.dataItem.color || "선택 안함")}
+                                            onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'color', e.value === "선택 안함" ? "" : e.value)}
+                                            style={{ width: '100%', height: '28px', fontSize: '13px' }}
+                                        />
+                                    </td>
+                                )} />}
                             </KendoGridV2>
                         </div>
                     )}
@@ -464,7 +556,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                             {isResultOpen && (
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '16px', overflow: 'hidden', fontSize: '12px', background: '#fff' }}>
-                                        <div 
+                                        <div
                                             onClick={() => setShowN(!showN)}
                                             style={{ background: showN ? '#eff6ff' : '#f8fafc', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', borderRight: '1px solid #cbd5e1', cursor: 'pointer', userSelect: 'none', transition: 'all 0.2s' }}
                                         >
@@ -478,7 +570,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '16px', overflow: 'hidden', fontSize: '12px', background: '#fff' }}>
-                                        <div 
+                                        <div
                                             onClick={() => setShowP(!showP)}
                                             style={{ background: showP ? '#eff6ff' : '#f8fafc', padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', borderRight: '1px solid #cbd5e1', cursor: 'pointer', userSelect: 'none', transition: 'all 0.2s' }}
                                         >

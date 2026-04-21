@@ -92,6 +92,7 @@ const AnalysisSettingTab = ({
                                     <td style={{ padding: '2px 4px' }}>
                                         <DropDownList
                                             className="k-dropdown-solid dp-mini-dropdown"
+                                            popupSettings={{ className: "dp-mini-dropdown-popup" }}
                                             data={['single', 'multi', 'rank', 'minrank', 'maxrank', 'scale', 'dummy', 'custom', 'open(문자)', 'open(숫자)']}
                                             value={props.dataItem[props.field] || ''}
                                             onChange={(e) => {
