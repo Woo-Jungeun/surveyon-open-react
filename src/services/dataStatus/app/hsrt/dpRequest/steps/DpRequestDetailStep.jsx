@@ -83,53 +83,58 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [dragPos, setDragPos] = useState(null); // 'top' or 'bottom'
     const [selectedItemId, setSelectedItemId] = useState(null);
 
+    // API 호출을 위한 재조회 함수 추출
+    const fetchOrderData = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) return;
+        const user = auth.user.userId;
+
+        // 테스트를 위해 하드코딩 적용
+        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        // const user = "sbbok";
+
+        loadingSpinner.show();
+        try {
+            const res = await getOrderDetail.mutateAsync({ pageid: pageId, user: user });
+
+            if (res && res.success === '777') {
+                const data = res.resultjson || {};
+                const ids = data.dp_request_order_ids || [];
+                const metaList = data.ordered_item_meta || [];
+                const vars = data.recoded_variables || {};
+
+                const parsedData = ids.map((id, idx) => {
+                    const meta = metaList.find(m => m.id === id) || {};
+                    const varInfo = vars[meta.source_var_id || id] || vars[id] || {};
+
+                    return {
+                        seq: idx + 1,
+                        id: id,
+                        name: varInfo.label || id,
+                        type: meta.kind || varInfo.type || 'Unknown',
+                        info: varInfo.info || []
+                    };
+                });
+                setTableOrder(parsedData);
+            }
+        } catch (err) {
+            console.error("Order load failed:", err);
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
+
     // API 호출로 초기 데이터 로드
     useEffect(() => {
-        const fetchOrderData = async () => {
-            const pageId = sessionStorage.getItem('pageId');
-            if (!pageId || !auth?.user?.userId) return;
-            const user = auth.user.userId;
-
-            // 테스트를 위해 하드코딩 적용
-            // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-            // const user = "sbbok";
-
-            loadingSpinner.show();
-            try {
-                const res = await getOrderDetail.mutateAsync({ pageid: pageId, user: user });
-
-                if (res && res.success === '777') {
-                    const data = res.resultjson || {};
-                    const ids = data.dp_request_order_ids || [];
-                    const metaList = data.ordered_item_meta || [];
-                    const vars = data.recoded_variables || {};
-
-                    const parsedData = ids.map((id, idx) => {
-                        const meta = metaList.find(m => m.id === id) || {};
-                        const varInfo = vars[meta.source_var_id || id] || vars[id] || {};
-
-                        return {
-                            seq: idx + 1,
-                            id: id,
-                            name: varInfo.label || id,
-                            type: meta.kind || varInfo.type || 'Unknown',
-                            info: varInfo.info || []
-                        };
-                    });
-                    setTableOrder(parsedData);
-                    if (parsedData.length > 0) {
-                        setSelectedItemId(parsedData[0].id);
-                    }
+        fetchOrderData().then(() => {
+            setTableOrder(prev => {
+                if (prev.length > 0 && !selectedItemId) {
+                    setSelectedItemId(prev[0].id);
                 }
-            } catch (err) {
-                console.error("Order load failed:", err);
-            } finally {
-                loadingSpinner.hide();
-            }
-        };
-        fetchOrderData();
+                return prev;
+            });
+        });
     }, [auth?.user?.userId]);
-
     // --- 드래그 앤 드롭 핸들러 ---
     const handleDragStart = (e, index) => {
         setDraggedIdx(index);
@@ -215,6 +220,9 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             // saveOrderDetail API 연동 (DpRequestPageApi에서 가져옴)
             await saveOrderDetail.mutateAsync(payload);
+
+            // 재조회 수행
+            await fetchOrderData();
 
             modal.showAlert('완료', '표 순서가 저장되었습니다.');
             if (onUnsavedChange) onUnsavedChange(false);
