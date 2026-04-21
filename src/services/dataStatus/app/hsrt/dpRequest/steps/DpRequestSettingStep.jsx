@@ -1,23 +1,7 @@
 import React, { useState, useEffect, useContext, forwardRef, useImperativeHandle } from 'react';
 import { useSelector } from 'react-redux';
-import {
-    AlertCircle,
-    Settings,
-    Palette,
-    Layers,
-    ChevronDown,
-    Plus,
-    Trash2,
-    Type,
-    Layout,
-    Save,
-    Info,
-    CheckCircle2,
-    AlertTriangle
-} from 'lucide-react';
+import { Settings, Layout } from 'lucide-react';
 import { DpRequestPageApi } from '../DpRequestPageApi';
-import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
-import { DropDownList } from '@progress/kendo-react-dropdowns';
 import AnalysisSettingTab from './AnalysisSettingTab';
 import TableSettingTab from './TableSettingTab';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -99,132 +83,132 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     // --- 데이터 fetch 로직 ---
     const fetchInitialData = async () => {
-            const pageId = sessionStorage.getItem('pageId');
-            if (!pageId || !auth?.user?.userId) return;
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) return;
 
-            loadingSpinner.show();
-            try {
-                // 1. 설정 정보 조회
-                const contextPromise = getTableRenderContext.mutateAsync({ pageid: pageId, user: auth.user.userId });
-                const detailPromise = getTableDetail.mutateAsync({ pageid: pageId, user: auth.user.userId });
-                // 2. 가중치 선택을 위한 기본 변수 목록 조회
-                const variablesPromise = getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
-                const [renderContext, tableDetail, varList] = await Promise.all([contextPromise, detailPromise, variablesPromise]);
+        loadingSpinner.show();
+        try {
+            // 1. 설정 정보 조회
+            const contextPromise = getTableRenderContext.mutateAsync({ pageid: pageId, user: auth.user.userId });
+            const detailPromise = getTableDetail.mutateAsync({ pageid: pageId, user: auth.user.userId });
+            // 2. 가중치 선택을 위한 기본 변수 목록 조회
+            const variablesPromise = getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
+            const [renderContext, tableDetail, varList] = await Promise.all([contextPromise, detailPromise, variablesPromise]);
 
-                if (renderContext) {
-                    setContextData(renderContext);
-                }
-
-                let nextSettings = { ...settings };
-                let nextScaleData = scaleData;
-                let nextRankData = rankData;
-                let nextGroupData = groupData;
-
-                let actualTableDetail = tableDetail?.resultjson || tableDetail;
-
-                if (actualTableDetail?.id || renderContext?.id) {
-                    const ui = actualTableDetail?.ui_settings || {};
-
-                    const initDisplay = { ...settings.display, ...renderContext?.effective_display_policy };
-                    if (ui.format_show_n !== undefined) initDisplay.show_n = ui.format_show_n;
-                    if (ui.format_show_percent !== undefined) initDisplay.show_percent = ui.format_show_percent;
-                    if (ui.format_percent_round !== undefined) initDisplay.percent_digits = ui.format_percent_round;
-                    if (ui.format_mean_round !== undefined) initDisplay.mean_digits = ui.format_mean_round;
-                    if (ui.format_std_round !== undefined) initDisplay.std_digits = ui.format_std_round;
-                    if (ui.format_var_round !== undefined) initDisplay.var_digits = ui.format_var_round;
-                    if (ui.format_median_round !== undefined) initDisplay.median_digits = ui.format_median_round;
-                    if (ui.format_min_round !== undefined) initDisplay.min_digits = ui.format_min_round;
-                    if (ui.format_max_round !== undefined) initDisplay.max_digits = ui.format_max_round;
-
-                    let mergedRender = { ...settings.render, ...renderContext?.effective_render_settings, ...ui };
-
-                    nextSettings = {
-                        weight_variable: actualTableDetail?.weight_variable || renderContext?.weight_variable || '없음',
-                        confidence_level: actualTableDetail?.confidence_level || renderContext?.confidence_level || 95,
-                        render: mergedRender,
-                        display: initDisplay
-                    };
-
-                    setSettings(nextSettings);
-
-                    if (actualTableDetail?.scale_presets) {
-                        nextScaleData = actualTableDetail.scale_presets.map(item => {
-                            let top = '', mid = '', bot = '';
-                            const options = item.options || {};
-                            if (Array.isArray(options.bands)) {
-                                options.bands.forEach(band => {
-                                    const lbl = (band.label || '').toLowerCase();
-                                    const vals = (band.values || []).join(',');
-                                    if (lbl.includes('top')) top = vals;
-                                    else if (lbl.includes('mid')) mid = vals;
-                                    else if (lbl.includes('bot')) bot = vals;
-                                });
-                            }
-                            return {
-                                id: item.id,
-                                name: item.name || '',
-                                type: item.type || 'scale',
-                                min: options.min ?? '',
-                                max: options.max ?? '',
-                                recode: !!options.reverse,
-                                top: top,
-                                mid: mid,
-                                bot: bot
-                            };
-                        });
-                        setScaleData(nextScaleData);
-                    }
-                    if (actualTableDetail?.rank_presets) {
-                        nextRankData = actualTableDetail.rank_presets.map(item => {
-                            let selection = '';
-                            if (Array.isArray(item.ranks)) {
-                                selection = item.ranks.map(n => {
-                                    if (n === 1) return '1';
-                                    return Array.from({ length: n }, (_, i) => i + 1).join('+');
-                                }).join(', ');
-                            }
-                            return {
-                                id: item.id,
-                                name: item.name || '',
-                                selection: selection
-                            };
-                        });
-                        setRankData(nextRankData);
-                    }
-                    if (actualTableDetail?.group_presets) {
-                        nextGroupData = actualTableDetail.group_presets.map(item => {
-                            let selection = '';
-                            if (Array.isArray(item.groups)) {
-                                selection = item.groups.map(g => `${g.label || ''}=${(g.values || []).join(',')}`).join(' | ');
-                            }
-                            return {
-                                id: item.id,
-                                name: item.name || '',
-                                selection: selection
-                            };
-                        });
-                        setGroupData(nextGroupData);
-                    }
-                }
-
-                if (Array.isArray(varList)) {
-                    const weightOpt = ['없음', ...varList.map(v => v.name || v.label)];
-                    setWeightOptions(weightOpt);
-
-                    // 초기 히스토리 기준점 설정 (서버 데이터)
-                    history.reset({
-                        settings: nextSettings,
-                        scaleData: nextScaleData,
-                        rankData: nextRankData,
-                        groupData: nextGroupData
-                    });
-                }
-            } catch (err) {
-                console.error("Failed to fetch initial setting data:", err);
-            } finally {
-                loadingSpinner.hide();
+            if (renderContext) {
+                setContextData(renderContext);
             }
-        };
+
+            let nextSettings = { ...settings };
+            let nextScaleData = scaleData;
+            let nextRankData = rankData;
+            let nextGroupData = groupData;
+
+            let actualTableDetail = tableDetail?.resultjson || tableDetail;
+
+            if (actualTableDetail?.id || renderContext?.id) {
+                const ui = actualTableDetail?.ui_settings || {};
+
+                const initDisplay = { ...settings.display, ...renderContext?.effective_display_policy };
+                if (ui.format_show_n !== undefined) initDisplay.show_n = ui.format_show_n;
+                if (ui.format_show_percent !== undefined) initDisplay.show_percent = ui.format_show_percent;
+                if (ui.format_percent_round !== undefined) initDisplay.percent_digits = ui.format_percent_round;
+                if (ui.format_mean_round !== undefined) initDisplay.mean_digits = ui.format_mean_round;
+                if (ui.format_std_round !== undefined) initDisplay.std_digits = ui.format_std_round;
+                if (ui.format_var_round !== undefined) initDisplay.var_digits = ui.format_var_round;
+                if (ui.format_median_round !== undefined) initDisplay.median_digits = ui.format_median_round;
+                if (ui.format_min_round !== undefined) initDisplay.min_digits = ui.format_min_round;
+                if (ui.format_max_round !== undefined) initDisplay.max_digits = ui.format_max_round;
+
+                let mergedRender = { ...settings.render, ...renderContext?.effective_render_settings, ...ui };
+
+                nextSettings = {
+                    weight_variable: actualTableDetail?.weight_variable || renderContext?.weight_variable || '없음',
+                    confidence_level: actualTableDetail?.confidence_level || renderContext?.confidence_level || 95,
+                    render: mergedRender,
+                    display: initDisplay
+                };
+
+                setSettings(nextSettings);
+
+                if (actualTableDetail?.scale_presets) {
+                    nextScaleData = actualTableDetail.scale_presets.map(item => {
+                        let top = '', mid = '', bot = '';
+                        const options = item.options || {};
+                        if (Array.isArray(options.bands)) {
+                            options.bands.forEach(band => {
+                                const lbl = (band.label || '').toLowerCase();
+                                const vals = (band.values || []).join(',');
+                                if (lbl.includes('top')) top = vals;
+                                else if (lbl.includes('mid')) mid = vals;
+                                else if (lbl.includes('bot')) bot = vals;
+                            });
+                        }
+                        return {
+                            id: item.id,
+                            name: item.name || '',
+                            type: item.type || 'scale',
+                            min: options.min ?? '',
+                            max: options.max ?? '',
+                            recode: !!options.reverse,
+                            top: top,
+                            mid: mid,
+                            bot: bot
+                        };
+                    });
+                    setScaleData(nextScaleData);
+                }
+                if (actualTableDetail?.rank_presets) {
+                    nextRankData = actualTableDetail.rank_presets.map(item => {
+                        let selection = '';
+                        if (Array.isArray(item.ranks)) {
+                            selection = item.ranks.map(n => {
+                                if (n === 1) return '1';
+                                return Array.from({ length: n }, (_, i) => i + 1).join('+');
+                            }).join(', ');
+                        }
+                        return {
+                            id: item.id,
+                            name: item.name || '',
+                            selection: selection
+                        };
+                    });
+                    setRankData(nextRankData);
+                }
+                if (actualTableDetail?.group_presets) {
+                    nextGroupData = actualTableDetail.group_presets.map(item => {
+                        let selection = '';
+                        if (Array.isArray(item.groups)) {
+                            selection = item.groups.map(g => `${g.label || ''}=${(g.values || []).join(',')}`).join(' | ');
+                        }
+                        return {
+                            id: item.id,
+                            name: item.name || '',
+                            selection: selection
+                        };
+                    });
+                    setGroupData(nextGroupData);
+                }
+            }
+
+            if (Array.isArray(varList)) {
+                const weightOpt = ['없음', ...varList.map(v => v.name || v.label)];
+                setWeightOptions(weightOpt);
+
+                // 초기 히스토리 기준점 설정 (서버 데이터)
+                history.reset({
+                    settings: nextSettings,
+                    scaleData: nextScaleData,
+                    rankData: nextRankData,
+                    groupData: nextGroupData
+                });
+            }
+        } catch (err) {
+            console.error("Failed to fetch initial setting data:", err);
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
 
     useEffect(() => {
         fetchInitialData();

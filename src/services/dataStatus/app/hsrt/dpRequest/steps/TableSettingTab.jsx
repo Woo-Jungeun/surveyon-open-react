@@ -8,7 +8,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
         <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9' }}>
             <div className="dp-setting-card" style={{ marginBottom: '24px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                    <Layout size={16} color="#475569" /> 테이블 표시 정책 재정의 (Overrides)
+                    <Layout size={16} /> 테이블 표시 정책 재정의 (Overrides)
                 </div>
                 <div className="dp-setting-card-body" style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
@@ -96,7 +96,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
 
             <div className="dp-setting-card" style={{ marginBottom: '24px', background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                    <Type size={16} color="#8B5CF6" /> 표 서식 및 렌더링 설정 (미리보기)
+                    <Type size={16} /> 표 서식 및 렌더링 설정 (미리보기)
                 </div>
                 <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'stretch' }}>
 
@@ -339,7 +339,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             </div>
             <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                    <Palette size={16} color="#10B981" /> 전체 테마 색상 (커스텀/프리셋)
+                    <Palette size={16} /> 전체 테마 색상 (커스텀/프리셋)
                 </div>
                 <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {/* Presets */}

@@ -62,7 +62,7 @@ const AnalysisSettingTab = ({
 
             <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                    <Layers size={16} color="#F59E0B" /> 고급 분석 설정 (응답 묶기 및 재정의)
+                    <Layers size={16} /> 고급 분석 설정 (응답 묶기 및 재정의)
                 </div>
                 <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
