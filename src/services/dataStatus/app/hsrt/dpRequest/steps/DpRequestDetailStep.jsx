@@ -470,14 +470,14 @@ const DetailEditPreview = ({ item, onClose }) => {
                     {/* Content */}
                     {isCategoryOpen && (
                         <div style={{ padding: '12px 16px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                            <KendoGridV2 
-                                data={categoryData} 
-                                onDataChange={setCategoryData} 
-                                reorderable={true} 
+                            <KendoGridV2
+                                data={categoryData}
+                                onDataChange={setCategoryData}
+                                reorderable={true}
                                 addable={true}
                                 copyable={true}
                                 deletable={true}
-                                showNo 
+                                showNo
                                 newRowTemplate={{ label: '', type: 'single', logic: '', target_var: '', value: '' }}
                                 style={{ flex: 1, height: '100%', width: '100%' }}
                             >
@@ -552,7 +552,6 @@ const DetailEditPreview = ({ item, onClose }) => {
                             <div style={{ fontWeight: 700, fontSize: '14px', color: '#1d4ed8', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 검사 결과 출력 영역
                             </div>
-                            <div style={{ fontSize: '11px', color: '#64748b', background: '#e2e8f0', padding: '4px 8px', borderRadius: '4px', fontWeight: 600 }}>기본 모드</div>
                             {isResultOpen && (
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '16px', overflow: 'hidden', fontSize: '12px', background: '#fff' }}>
