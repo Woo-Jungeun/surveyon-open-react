@@ -21,6 +21,15 @@
     padding: 2px 8px !important;
 }
 
+/* KendoGridV2 Drag Indicator */
+.dp-excel-grid-v2 table tr.drag-over-top td {
+    border-top: 2px solid #3b82f6 !important;
+}
+
+.dp-excel-grid-v2 table tr.drag-over-bottom td {
+    border-bottom: 2px solid #3b82f6 !important;
+}
+
 /* Compact Stepper for DataHeader */
 .dp-stepper-compact {
     display: flex;

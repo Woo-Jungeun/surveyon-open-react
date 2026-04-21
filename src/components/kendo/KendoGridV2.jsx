@@ -109,16 +109,42 @@ const KendoGridV2 = (props) => {
             onDragOver: (e) => {
                 e.preventDefault();
                 e.dataTransfer.dropEffect = "move";
-                e.currentTarget.classList.add("drag-over");
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                
+                if (y < rect.height / 2) {
+                    e.currentTarget.classList.add("drag-over-top");
+                    e.currentTarget.classList.remove("drag-over-bottom");
+                } else {
+                    e.currentTarget.classList.add("drag-over-bottom");
+                    e.currentTarget.classList.remove("drag-over-top");
+                }
             },
             onDragLeave: (e) => {
-                e.currentTarget.classList.remove("drag-over");
+                e.currentTarget.classList.remove("drag-over-top");
+                e.currentTarget.classList.remove("drag-over-bottom");
             },
             onDrop: (e) => {
                 e.preventDefault();
-                e.currentTarget.classList.remove("drag-over");
+                e.currentTarget.classList.remove("drag-over-top");
+                e.currentTarget.classList.remove("drag-over-bottom");
+                
                 if (draggedItemIndex !== null) {
-                    handleReorder(draggedItemIndex, index);
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const y = e.clientY - rect.top;
+                    let targetIndex = index;
+                    
+                    if (y >= rect.height / 2) {
+                        targetIndex += 1;
+                    }
+                    
+                    if (draggedItemIndex < targetIndex) {
+                        targetIndex -= 1;
+                    }
+                    
+                    if (draggedItemIndex !== targetIndex) {
+                        handleReorder(draggedItemIndex, targetIndex);
+                    }
                 }
             }
         };
