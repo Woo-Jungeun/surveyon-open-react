@@ -66,7 +66,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
-    const { getOrderDetail } = DpRequestPageApi();
+    const { getOrderDetail, saveOrderDetail } = DpRequestPageApi();
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
@@ -86,13 +86,13 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
     // API 호출로 초기 데이터 로드
     useEffect(() => {
         const fetchOrderData = async () => {
-            // const pageId = sessionStorage.getItem('pageId');
-            // if (!pageId || !auth?.user?.userId) return;
-            // const user = auth.user.userId;
+            const pageId = sessionStorage.getItem('pageId');
+            if (!pageId || !auth?.user?.userId) return;
+            const user = auth.user.userId;
 
             // 테스트를 위해 하드코딩 적용
-            const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-            const user = "sbbok";
+            // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+            // const user = "sbbok";
 
             loadingSpinner.show();
             try {
@@ -193,21 +193,30 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
         setDragOverIdx(null);
     };
 
-    // --- 저장 로직 ---
+    // --- 표 순서 상세 저장 로직 ---
     const handleSave = async () => {
         const pageId = sessionStorage.getItem('pageId');
-        if (!pageId) return false;
+        if (!pageId || !auth?.user?.userId) return;
+        const user = auth.user.userId;
+
+        // 테스트를 위해 하드코딩 적용
+        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        // const user = "sbbok";
 
         loadingSpinner.show();
         try {
             const payload = {
-                user: auth.user?.userId,
+                user: user,
                 pageid: pageId,
-                tableOrder: tableOrder,
+                ordered_ids: tableOrder.map(item => item.id),
+                delete_ids: [] // UI상에서 삭제된 항목이 있다면 이곳에 포함
             };
             console.log("Final saving table order with payload:", payload);
 
-            modal.showAlert('완료', '모든 DP 의뢰 설정이 저장되었습니다.');
+            // saveOrderDetail API 연동 (DpRequestPageApi에서 가져옴)
+            await saveOrderDetail.mutateAsync(payload);
+
+            modal.showAlert('완료', '표 순서가 저장되었습니다.');
             if (onUnsavedChange) onUnsavedChange(false);
             return true;
         } catch (err) {
@@ -473,6 +482,12 @@ const DetailEditPreview = ({ item, onClose }) => {
                             <KendoGridV2
                                 data={categoryData}
                                 onDataChange={setCategoryData}
+                                onRowClick={(e) => {
+                                    setCategoryData(prev => prev.map(item => ({
+                                        ...item,
+                                        inEdit: item === e.dataItem
+                                    })));
+                                }}
                                 reorderable={true}
                                 addable={true}
                                 copyable={true}
@@ -496,7 +511,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                 )} />
                                 <Column field="logic" title="조건" width="300px" headerCell={ConditionHeaderCell} />
                                 <Column field="target_var" title="저장될 변수" width="150px" />
-                                <Column field="value" title="값" width="80px" headerClassName="k-text-center" cell={(p) => <td style={{ textAlign: 'center' }}>{p.dataItem.value}</td>} />
+                                <Column field="value" title="값" width="80px" headerClassName="k-text-center" className="k-text-center" />
                                 {isDetailSetting && <Column field="label2" title="라벨2" width="150px" />}
                                 {isDetailSetting && <Column field="label3" title="라벨3" width="150px" />}
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" />}

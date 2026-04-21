@@ -246,8 +246,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             // TODO: 임시 하드코딩
-            //const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
-            const result = await getSummaryDetail.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok" });
+            const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
+            // const result = await getSummaryDetail.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok" });
             if (result?.success === '777' && result.resultjson) {
                 if (result.resultjson.base_variables) {
                     const baseVars = result.resultjson.base_variables;
@@ -306,8 +306,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             // TODO: 임시 하드코딩
-            // const result = await generateSummaryAuto.mutateAsync({ pageid: pageId, user: auth?.user?.userId, append_mode: true });
-            const result = await generateSummaryAuto.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok", append_mode: true });
+            const result = await generateSummaryAuto.mutateAsync({ pageid: pageId, user: auth?.user?.userId, append_mode: true });
+            // const result = await generateSummaryAuto.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok", append_mode: true });
 
             if (result && result.folders) {
                 setFolders(prev => [...prev, ...result.folders]);
@@ -338,10 +338,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         const payload = {
             // TODO: 임시 하드코딩
-            // pageid: pageId,
-            // user: auth?.user?.userId,
-            pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
-            user: "sbbok",
+            pageid: pageId,
+            user: auth?.user?.userId,
+            // pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
+            // user: "sbbok",
             folders: overrideFolders || folders,
             variables: variablesPayload,
             delete_ids: overrideDeleteIds || deletedSummaryIds

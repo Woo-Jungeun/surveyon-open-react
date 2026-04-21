@@ -104,6 +104,24 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** DP 의뢰서 - 표 순서 상세 변경 내역 저장 */
+    const saveOrderDetail = useMutation(
+        async (data) => await api.post(data, "/dp-request/order/save", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
+    /** 개별 변수(카테고리) 평가 수행 */
+    const evaluateVariable = useMutation(
+        async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
@@ -118,6 +136,8 @@ export function DpRequestPageApi() {
         saveSummaryDetail,
         getRecodedOverview,
         saveRecodedOverview,
-        getOrderDetail
+        getOrderDetail,
+        saveOrderDetail,
+        evaluateVariable
     };
 }
