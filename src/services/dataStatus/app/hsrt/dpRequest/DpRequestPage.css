@@ -1757,3 +1757,12 @@
     height: 24px !important;
     line-height: normal !important;
 }
+/* Hide number input spin buttons */
+.dp-decimal-input::-webkit-outer-spin-button,
+.dp-decimal-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.dp-decimal-input {
+    -moz-appearance: textfield;
+}
