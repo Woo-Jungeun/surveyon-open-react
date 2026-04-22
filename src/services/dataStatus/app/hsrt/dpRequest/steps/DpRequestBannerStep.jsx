@@ -586,11 +586,11 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         className="dropped-tag grouped"
                                                         draggable
                                                         onDragStart={(e) => { e.stopPropagation(); handleInternalItemDragStart(e, groupIndex, itemIndex); }}
-                                                        style={{ marginBottom: '3px', borderRadius: '4px' }}
+                                                        style={{ marginBottom: '3px', borderRadius: '4px', height: 'auto', minHeight: '26px', alignItems: 'flex-start', padding: '6px 4px' }}
                                                     >
-                                                        <div className="item-drag-handle"><GripVertical size={10} /></div>
-                                                        <span className="tag-text" style={{ fontSize: '11px' }}>{v.label}</span>
-                                                        <X size={12} className="remove" onClick={() => removeVar(v.id, groupIndex)} />
+                                                        <div className="item-drag-handle" style={{ marginTop: '2px' }}><GripVertical size={10} /></div>
+                                                        <span className="tag-text" style={{ fontSize: '11px', whiteSpace: 'normal', wordBreak: 'break-all', lineHeight: 1.3, flex: 1 }}>{v.label}</span>
+                                                        <X size={12} className="remove" onClick={() => removeVar(v.id, groupIndex)} style={{ marginTop: '2px', flexShrink: 0 }} />
                                                     </div>
                                                 ))}
                                             </div>
