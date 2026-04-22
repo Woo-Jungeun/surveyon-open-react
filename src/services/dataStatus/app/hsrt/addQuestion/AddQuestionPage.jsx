@@ -153,7 +153,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         // 2. 이미 서버에 존재하는 경우 (확인창 띄우고 API 호출)
-        modal.showConfirm('알림', `문항(${bannerId})을 삭제하시겠습니까?`, {
+        modal.showConfirm('알림', <span style={{ wordBreak: 'break-all' }}>문항({bannerId})을 삭제하시겠습니까?</span>, {
             btns: [
                 { title: "취소", click: () => { } },
                 {

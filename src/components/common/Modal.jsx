@@ -386,9 +386,11 @@ function Modal(props) {
                                     {props.type !== "error" ? null : <p className="popSubTit">{props.code}</p>}
                                     <p className="popTxt">
                                         {props?.content !== undefined
-                                            ? props?.content?.split("\n")?.map((item, idx) => {
-                                                return (<Fragment key={idx}>{item}<br /></Fragment>)
-                                            })
+                                            ? (typeof props.content === 'string'
+                                                ? props.content.split("\n").map((item, idx) => {
+                                                    return (<Fragment key={idx}>{item}<br /></Fragment>)
+                                                })
+                                                : props.content)
                                             : <Fragment key={"error"}> 요청한 서비스에 문제가 발생했습니다.<br /> 잠시 후에 다시 시도해 주세요.<br /></Fragment>
                                         }
                                     </p>
