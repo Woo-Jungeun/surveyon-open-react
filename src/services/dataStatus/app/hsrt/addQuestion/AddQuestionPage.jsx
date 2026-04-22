@@ -159,13 +159,16 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 {
                     title: "삭제",
                     click: async () => {
+                        // const pageId = sessionStorage.getItem('pageId');
+                        // const user = auth?.user?.userId;
+                        // if (!pageId || !auth?.user?.userId) return;
                         const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-                        const testUser = "sbbok";
+                        const user = "sbbok";
 
                         try {
                             const result = await deleteBaseVariable.mutateAsync({
                                 pageid: pageId,
-                                user: testUser,
+                                user: user,
                                 variables: [bannerId]
                             });
 
@@ -230,7 +233,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     id: v.id || `var_${i}`,
                     label: v.name || v.label,
                     type: v.type === 'single' ? '단일 응답형 (Single)' :
-                        v.type === 'multi' ? '다중 응답형 (Double)' :
+                        v.type === 'double' ? '다중 응답형 (Double)' :
                             v.type === 'numeric' ? '숫자형 (Numeric / Scale)' : (v.type || '단일 응답형 (Single)'),
                     subId: v.id || `banner_0${i + 1}`,
                     info: Array.isArray(v.info) ? v.info.map(item => ({
@@ -276,7 +279,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleSaveBanner = async () => {
         // const pageId = sessionStorage.getItem('pageId');
-        // if (!selectedBanner || !pageId) return;
+        // const user = auth?.user?.userId;
+        // if (!pageId || !user) return;
         const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
         const testUser = "sbbok";
 
@@ -414,7 +418,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             setSelectedBanner(banner.id);
                                             setCurrentLabel(banner.label);
                                             setCurrentId(banner.id.startsWith('NEW_') ? '' : banner.id);
-                                            setCurrentXInfo(banner.x_info || '');
+                                            setCurrentXInfo(banner.type || '단일 응답형 (Single)');
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
                                     >

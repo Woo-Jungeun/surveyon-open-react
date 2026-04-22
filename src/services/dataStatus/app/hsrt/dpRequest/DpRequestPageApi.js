@@ -22,9 +22,9 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/variables/computed/list", "API_BASE_URL_DATASTATUS")
     );
 
-    /** 파생 문항 저장 */
+    /** 파생 문항 저장 (실제로는 base/merge 지만 computed 저장에 사용) */
     const saveComputedVariable = useMutation(
-        async (data) => await api.post(data, "/variables/computed/save", "API_BASE_URL_DATASTATUS"),
+        async (data) => await api.post(data, "/variables/base/merge", "API_BASE_URL_DATASTATUS"),
         {
             onMutate: () => { loadingSpinner.show(); },
             onSettled: () => { loadingSpinner.hide(); }
