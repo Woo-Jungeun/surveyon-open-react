@@ -559,8 +559,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 onRowClick={handleRowClick}
                                 newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
                             >
-                                <Column field="label2" title="할당될 값" width="200px" />
-                                <Column field="label" title="보기 라벨" width="300px" />
+                                <Column field="label2" title="할당될 값" width="120px" />
+                                <Column field="label" title="보기 라벨" width="500px" />
                                 <Column field="logic" title="조건" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
                             </KendoGridV2>
                         </div>
@@ -579,7 +579,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         label2: rule.label2,
                         label: rule.label,
                         logic: rule.logic,
-                        inEdit: true // 강제 편집 상태를 주어 저장 대상이 되게 함
+                        inEdit: false // 삽입 시 일단 텍스트 모드(닫힌 상태)로 표출되게 함
                     }));
 
                     if (selectedBanner) {

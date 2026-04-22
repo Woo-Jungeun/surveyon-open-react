@@ -39,7 +39,15 @@ function generateCartesianRules(selectedVarIds, variablesMap) {
 
         const logics = comboItems.map((item, idx) => {
             const varId = selectedVarIds[idx];
-            return `${varId} == ${item.value}`;
+            let val = item.value;
+            
+            // 숫자로만 이루어지지 않은 일반 문자열인 경우, 안전을 위해 홑따옴표 처리 ('Seoul', 'GroupA' 등)
+            // (ANY 예약어나, 이미 숫자형인 경우 그대로 둠)
+            if (val !== 'ANY' && isNaN(Number(val))) {
+                val = `'${val}'`;
+            }
+            
+            return `${varId} == ${val}`;
         });
 
         return {
