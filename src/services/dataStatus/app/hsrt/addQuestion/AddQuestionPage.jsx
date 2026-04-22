@@ -140,14 +140,22 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const handleDeleteBanner = (e, bannerId) => {
         e.stopPropagation();
 
-        // 1. 저장하지 않은 임시 신규 문항일 경우 (확인창 없이 즉시 삭제)
         if (bannerId.startsWith('NEW_')) {
-            setBanners(prev => prev.filter(b => b.id !== bannerId));
+            const nextBanners = banners.filter(b => b.id !== bannerId);
+            setBanners(nextBanners);
+
             if (selectedBanner === bannerId) {
-                setSelectedBanner('');
-                setCurrentId('');
-                setCurrentLabel('');
-                setCurrentXInfo('');
+                if (nextBanners.length > 0) {
+                    setSelectedBanner(nextBanners[0].id);
+                    setCurrentId(nextBanners[0].id);
+                    setCurrentLabel(nextBanners[0].label);
+                    setCurrentXInfo(nextBanners[0].type || '단일 응답형 (Single)');
+                } else {
+                    setSelectedBanner('');
+                    setCurrentId('');
+                    setCurrentLabel('');
+                    setCurrentXInfo('');
+                }
             }
             return;
         }
@@ -174,13 +182,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                             if (result?.success === '777') {
                                 modal.showAlert('알림', '삭제되었습니다.');
-                                await fetchVariablesData(false); // 리스트 갱신
-                                // 현재 보고 있는 아이템이 삭제되었다면 우측 에디터 비우기
+                                // 현재 보고 있는 아이템이 삭제되었다면 'delete' 모드로 패치하여 첫번째 아이템 강제 선택
                                 if (selectedBanner === bannerId) {
-                                    setSelectedBanner('');
-                                    setCurrentId('');
-                                    setCurrentLabel('');
-                                    setCurrentXInfo('');
+                                    await fetchVariablesData('delete');
+                                } else {
+                                    await fetchVariablesData('normal');
                                 }
                             } else {
                                 modal.showAlert('오류', result?.Message || '삭제 중 문제가 발생했습니다.');
@@ -211,7 +217,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     // --- 데이터 로직 ---
-    const fetchVariablesData = async (isFresh = false) => {
+    const fetchVariablesData = async (mode = 'normal', targetIdToSelect = null) => {
+        // mode: 'fresh'(방금 추가됨 -> 마지막 요소 선택), 'delete'(현재요소 삭제됨 -> 첫요소 선택), 'select'(특정 ID 지정), 'normal'(일반 갱신)
         // const pageId = sessionStorage.getItem('pageId');
         // if (!pageId || !auth?.user?.userId) return;
         const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
@@ -249,17 +256,34 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 history.reset(formatted); // 초기 데이터를 히스토리에 설정
 
                 if (formatted.length > 0) {
-                    const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
-                    if (isFresh || !selectedBanner) {
+                    const isFresh = mode === 'fresh';
+                    const isDelete = mode === 'delete';
+                    let target = isFresh ? formatted[formatted.length - 1] : formatted[0];
+
+                    if (targetIdToSelect) {
+                        const foundTarget = formatted.find(f => f.id === targetIdToSelect);
+                        if (foundTarget) target = foundTarget;
+                    }
+
+                    if (isFresh || isDelete || targetIdToSelect || !selectedBanner) {
                         setSelectedBanner(target.id);
                         setCurrentLabel(target.label);
                         setCurrentId(target.id);
                         setCurrentXInfo(target.type || '단일 응답형 (Single)');
                     }
+                } else {
+                    setSelectedBanner('');
+                    setCurrentLabel('');
+                    setCurrentId('');
+                    setCurrentXInfo('');
                 }
             } else {
                 setBanners([]);
                 history.reset([]);
+                setSelectedBanner('');
+                setCurrentLabel('');
+                setCurrentId('');
+                setCurrentXInfo('');
             }
         } catch (error) { console.error(error); }
         finally { loadingSpinner.hide(); }
@@ -304,6 +328,20 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             return modal.showAlert('알림', '최소 1개의 조건문을 작성해야 합니다.');
         }
 
+        // '할당될 값' 및 '보기 라벨' 필수 검사 기능 추가
+        const hasEmptyLabel2 = validRules.some(r => String(r.label2 || '').trim() === '');
+        if (hasEmptyLabel2) {
+            return modal.showAlert('알림', '"할당될 값"은 필수입니다.');
+        }
+
+        const hasNonNumericLabel2 = validRules.some(r => {
+            const val = String(r.label2 || '').trim();
+            return val !== '' && isNaN(Number(val));
+        });
+        if (hasNonNumericLabel2) {
+            return modal.showAlert('알림', '"할당될 값"은 숫자만 입력 가능합니다.');
+        }
+
         const nextId = currentId.trim().toUpperCase();
 
         const typeMapReverse = {
@@ -344,7 +382,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             if (result?.success === '777') {
                 modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
-                await fetchVariablesData(false); // 리스트 갱신
+                await fetchVariablesData('select', nextId); // 방금 저장한 문항으로 포커싱 갱신
                 return true;
             } else {
                 modal.showAlert('오류', result?.Message || '저장 중 문제가 발생했습니다.');

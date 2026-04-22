@@ -167,7 +167,8 @@ const KendoGridV2 = (props) => {
                     <div style={{ marginBottom: addable ? '16px' : '0' }}>조회된 데이터가 없습니다.</div>
                     {addable && (
                         <button 
-                            onClick={() => handleAdd()}
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(); }}
                             style={{ 
                                 padding: '5px 16px', 
                                 borderRadius: '4px', 
@@ -213,7 +214,7 @@ const KendoGridV2 = (props) => {
                         <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '24px', width: '100%' }}>
                                 {addable && (
-                                    <button title="빈 행 추가" className="dp-grid-add-row-btn" onClick={() => handleAdd(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
+                                    <button type="button" title="빈 행 추가" className="dp-grid-add-row-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
                                         <Plus size={18} color="#3b82f6" strokeWidth={3} />
                                     </button>
                                 )}
@@ -221,7 +222,7 @@ const KendoGridV2 = (props) => {
                                     <div style={{ width: '1px', height: '12px', background: '#cbd5e1' }} />
                                 )}
                                 {copyable && (
-                                    <button title="현재 행 복사" className="dp-grid-copy-row-btn" onClick={() => handleCopy(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
+                                    <button type="button" title="현재 행 복사" className="dp-grid-copy-row-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
                                         <Copy size={15} color="#94a3b8" strokeWidth={2} />
                                     </button>
                                 )}
@@ -254,7 +255,7 @@ const KendoGridV2 = (props) => {
                     width="50px"
                     cell={(cellProps) => (
                         <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
-                            <button className="dp-row-del-btn" onClick={() => handleDelete(cellProps.dataIndex)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent' }}>
+                            <button type="button" className="dp-row-del-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent' }}>
                                 <Trash2 size={16} color="#94a3b8" />
                             </button>
                         </td>
