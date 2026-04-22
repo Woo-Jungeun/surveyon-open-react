@@ -153,7 +153,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         }
 
         // 2. 이미 서버에 존재하는 경우 (확인창 띄우고 API 호출)
-        modal.showConfirm('삭제 확인', `문항(${bannerId})을 삭제하시겠습니까?`, {
+        modal.showConfirm('알림', `문항(${bannerId})을 삭제하시겠습니까?`, {
             btns: [
                 { title: "취소", click: () => { } },
                 {
@@ -246,6 +246,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     })) : []
                 }));
                 setBanners(formatted);
+                history.reset(formatted); // 초기 데이터를 히스토리에 설정
 
                 if (formatted.length > 0) {
                     const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
@@ -258,6 +259,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             } else {
                 setBanners([]);
+                history.reset([]);
             }
         } catch (error) { console.error(error); }
         finally { loadingSpinner.hide(); }
