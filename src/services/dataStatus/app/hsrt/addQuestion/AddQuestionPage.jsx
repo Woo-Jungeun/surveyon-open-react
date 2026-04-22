@@ -358,6 +358,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     return (
         <>
+            <style>
+                {`
+                .dp-add-question-dropdown .k-input-value-text {
+                    font-weight: 400 !important;
+                }
+                `}
+            </style>
             <DataHeader title="문항추가" onSave={handleSaveBanner}>
                 <Button
                     className="dp-btn"
@@ -381,7 +388,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         )}
                         <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                             <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
-                                <span>생성된 배너 목록 ({filteredBanners.length})</span>
+                                <span>추가된 문항 목록 ({filteredBanners.length})</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <button
                                         onClick={handleAddNew}
@@ -482,6 +489,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     <DropDownList
                                         data={['단일 응답형 (Single)', '다중 응답형 (Double)', '숫자형 (Numeric / Scale)']}
                                         value={currentXInfo || ''}
+                                        className="dp-add-question-dropdown"
                                         onChange={(e) => {
                                             setCurrentXInfo(e.value);
                                             setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
