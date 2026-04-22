@@ -291,6 +291,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const updateBannerInfo = useCallback((newInfo) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo, isDirty: true } : b));
+        if (onUnsavedChange) onUnsavedChange(true);
+    }, [selectedBanner, onUnsavedChange]);
+
+    const handleRowClick = useCallback((e) => {
+        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: it === e.dataItem })) } : b));
     }, [selectedBanner]);
 
     // 배너 목록 필터링
@@ -548,7 +553,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 data={banners.find(b => b.id === selectedBanner)?.info || []}
                                 reorderable addable showNo deletable editField="inEdit"
                                 onDataChange={updateBannerInfo}
-                                onRowClick={(e) => updateBannerInfo(banners.find(b => b.id === selectedBanner).info.map(it => ({ ...it, inEdit: it === e.dataItem })))}
+                                onRowClick={handleRowClick}
                                 newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
                             >
                                 <Column field="label2" title="할당될 값" width="200px" />
