@@ -289,6 +289,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
         if (!currentId.trim()) return modal.showAlert('알림', '문항 ID를 입력해주세요.');
         if (!currentLabel.trim()) return modal.showAlert('알림', '문항 라벨을 입력해주세요.');
+        if (!currentXInfo || !currentXInfo.trim()) return modal.showAlert('알림', '문항 유형을 선택해주세요.');
 
         // 유효한 규칙만 필터링 (비어있는 그리드 행 제거)
         const validRules = currentBannerData.info.filter(r =>
@@ -339,7 +340,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             });
 
             if (result?.success === '777') {
-                modal.showAlert('알림', '파생 문항이 저장되었습니다.');
+                modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
                 await fetchVariablesData(false); // 리스트 갱신
                 return true;
