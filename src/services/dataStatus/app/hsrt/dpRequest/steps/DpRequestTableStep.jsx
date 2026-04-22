@@ -59,8 +59,11 @@ const ConditionHeaderCell = (props) => {
                         }}>i</div>
                         <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
                     </div>
-                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <div>• <span style={{ fontWeight: 600 }}>설명 표출 예정</span></div>
+                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == 'A'</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
                     </div>
                 </div>
             </Popup>
