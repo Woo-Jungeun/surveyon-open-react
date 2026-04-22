@@ -424,10 +424,10 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
                                     >
                                         <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
-                                            <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px' }}>
+                                            <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', wordBreak: 'break-all' }}>
                                                 {banner.id.startsWith('NEW_') ? (banner.label || '(새 문항 작성 중)') : banner.label}
                                             </span>
-                                            <span className="dp-banner-sub" style={{ fontSize: '11px', opacity: 0.6 }}>
+                                            <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6, wordBreak: 'break-all', lineHeight: 1.3 }}>
                                                 {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
                                                 {!banner.id.startsWith('NEW_') && banner.isDirty && (
                                                     <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
@@ -487,7 +487,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
                                             if (onUnsavedChange) onUnsavedChange(true);
                                         }}
-                                        style={{ flex: 1, minWidth: 0, height: '32px', fontSize: '13px', borderRadius: '6px' }}
+                                        style={{ flex: 1, minWidth: 0, height: '32px', fontSize: '13px', fontWeight: 400, borderRadius: '6px' }}
                                     />
                                 </div>
                             </div>
