@@ -355,13 +355,25 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
                 if (result.resultjson.recoded_variables) {
                     const raw = result.resultjson.recoded_variables;
-                    const recodes = Array.isArray(raw) ? raw : Object.values(raw);
-                    const formatted = recodes.map((v, i) => ({
-                        id: v.id || `var_${i}`,
-                        label: v.name || v.label,
-                        subId: v.id || `banner_0${i + 1}`,
-                        info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
-                    }));
+                    const recodes = Array.isArray(raw)
+                        ? raw
+                        : Object.entries(raw).map(([key, val]) => ({ id: val.id || key, ...val }));
+
+                    const formatted = recodes
+                        .filter(v => String(v.id || '').toLowerCase().startsWith("banner"))
+                        .sort((a, b) => {
+                            const orderA = typeof a.recoded_order === 'number' ? a.recoded_order : 999999;
+                            const orderB = typeof b.recoded_order === 'number' ? b.recoded_order : 999999;
+                            if (orderA !== orderB) return orderA - orderB;
+                            return String(a.id || '').localeCompare(String(b.id || ''));
+                        })
+                        .map((v, i) => ({
+                            ...v,
+                            id: v.id || `var_${i}`,
+                            label: v.name || v.label,
+                            subId: v.id || `banner_0${i + 1}`,
+                            info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
+                        }));
                     setBanners(formatted);
                     history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
 
@@ -516,9 +528,9 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                                 {isVariablePanelOpen && (
                                     <div className="variable-list custom-scrollbar">
-                                        {filteredVariables.map(v => (
+                                        {filteredVariables.map((v, index) => (
                                             <VariableItem
-                                                key={v.id}
+                                                key={`${v.id}-${index}`}
                                                 v={v}
                                                 isSelected={selectedIds.includes(v.id)}
                                                 onDragStart={handleDragStart}
@@ -635,8 +647,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                         </div>
                         <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
-                            {filteredBanners.map(banner => (
-                                <div key={banner.id}
+                            {filteredBanners.map((banner, index) => (
+                                <div key={`${banner.id}-${index}`}
                                     className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
                                     onClick={() => { setSelectedBanner(banner.id); setCurrentLabel(banner.label); }}
                                     style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
