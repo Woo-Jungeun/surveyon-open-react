@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { X, Search, GripVertical, Plus } from 'lucide-react';
+import { X, Search, GripVertical, Plus, Check } from 'lucide-react';
 import '@/components/common/popup/ConditionBuilderPopup.css';
 
 let nextId = 0;
@@ -56,11 +56,10 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
 
-    // Drag & Drop State
+    // Drag & Drop State (Right Canvas Reordering Only)
     const [draggedItemIdx, setDraggedItemIdx] = useState(null);
     const [dragOverItemIdx, setDragOverItemIdx] = useState(null);
     const [dragPos, setDragPos] = useState(null); // 'top' or 'bottom'
-    const [isDragOverCanvas, setIsDragOverCanvas] = useState(false);
 
     const availableVars = useMemo(() => {
         const list = variables || [];
@@ -69,34 +68,6 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
             (v.label && v.label.toLowerCase().includes(searchTerm.toLowerCase()))
         );
     }, [variables, searchTerm]);
-
-    // --- Sidebar Drag Methods ---
-    const handleDragStartSidebar = (e, varId) => {
-        e.dataTransfer.setData('source', 'sidebar');
-        e.dataTransfer.setData('varId', varId);
-        e.dataTransfer.effectAllowed = 'copyMove';
-    };
-
-    // --- Canvas (빈 공간) Drop Methods ---
-    const handleDragOverCanvas = (e) => {
-        e.preventDefault();
-        setIsDragOverCanvas(true);
-    };
-    const handleDragLeaveCanvas = () => {
-        setIsDragOverCanvas(false);
-    };
-    const handleDropCanvas = (e) => {
-        e.preventDefault();
-        setIsDragOverCanvas(false);
-        const source = e.dataTransfer.getData('source');
-
-        if (source === 'sidebar') {
-            const varId = e.dataTransfer.getData('varId');
-            if (varId && !selectedItems.some(i => i.varId === varId)) {
-                setSelectedItems(prev => [...prev, { uid: getUniqueId(), varId }]);
-            }
-        }
-    };
 
     // --- List Items Drag & Drop Methods ---
     const handleDragStartCanvasItem = (e, index) => {
@@ -127,16 +98,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
 
         const source = e.dataTransfer.getData('source');
 
-        if (source === 'sidebar') {
-            // 사이드바에서 끌어다 특정 항목 사이에 넣는 경우
-            const varId = e.dataTransfer.getData('varId');
-            if (varId && !selectedItems.some(i => i.varId === varId)) {
-                const newItems = [...selectedItems];
-                let insertIdx = dragPos === 'bottom' ? targetIndex + 1 : targetIndex;
-                newItems.splice(insertIdx, 0, { uid: getUniqueId(), varId });
-                setSelectedItems(newItems);
-            }
-        } else if (source === 'canvas') {
+        if (source === 'canvas') {
             // 위아래 순서 변경 기능
             if (draggedItemIdx === null) return;
             let insertIndex = targetIndex;
@@ -194,7 +156,10 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                 <div className="filter-popup-header-cbp">
                     <div className="header-title-cbp">
                         <h3>변수 조합기 (Cartesian Generator)</h3>
-                        <p>좌측에서 변수를 드래그 앤 드롭으로 우측 영역에 가져오세요. 선택된 변수들의 모든 보기 조합(교차)을 자동 생성합니다.</p>
+                        <p>
+                            목록에서 변수를 클릭하여 우측에 추가하고, 우측에서 순위를 변경하세요.
+                            선택된 변수들의 모든 보기 조합(교차)을 자동 생성합니다.
+                        </p>
                     </div>
                     <div className="header-actions-cbp">
                         <button onClick={onClose} className="close-btn-cbp"><X size={20} /></button>
@@ -205,10 +170,10 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                 <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'row', padding: '16px', gap: '16px', background: '#f0f7ff', boxSizing: 'border-box' }}>
 
                     {/* 왼쪽: 변수 목록 */}
-                    <div style={{ flex: 1, width: '50%', minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', padding: '12px', boxSizing: 'border-box' }}>
+                    <div style={{ flex: 'none', width: 'calc(50% - 8px)', minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', padding: '12px', boxSizing: 'border-box' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                             <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>변수 목록</span>
-                            <span style={{ fontSize: '12px', color: '#94a3b8', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>Drag</span>
+                            <span style={{ fontSize: '12px', color: '#1d4ed8', background: '#eff6ff', padding: '2px 6px', borderRadius: '4px' }}>Click</span>
                         </div>
 
                         <div style={{ position: 'relative', marginBottom: '12px' }}>
@@ -223,28 +188,40 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                         </div>
 
                         <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
-                            {availableVars.map((v) => (
-                                <div
-                                    key={v.id}
-                                    draggable={true}
-                                    onDragStart={(e) => handleDragStartSidebar(e, v.id)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', backgroundColor: '#ffffff',
-                                        border: '1px solid #e2e8f0', borderRadius: '4px', padding: '8px 10px',
-                                        cursor: 'grab', transition: 'all 0.2s', boxSizing: 'border-box'
-                                    }}
-                                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; }}
-                                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; }}
-                                >
-                                    <GripVertical size={16} color="#94a3b8" style={{ marginRight: '8px', flexShrink: 0 }} />
-                                    <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
-                                        <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{v.label}</span>
-                                        <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                                            {v.id || ''}
-                                        </span>
+                            {availableVars.map((v) => {
+                                const isSelected = selectedItems.some(item => item.varId === v.id);
+                                return (
+                                    <div
+                                        key={v.id}
+                                        onClick={() => {
+                                            if (isSelected) {
+                                                setSelectedItems(prev => prev.filter(item => item.varId !== v.id));
+                                            } else {
+                                                setSelectedItems(prev => [...prev, { uid: getUniqueId(), varId: v.id }]);
+                                            }
+                                        }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
+                                            border: isSelected ? '1px solid #3b82f6' : '1px solid #e2e8f0', borderRadius: '4px', padding: '8px 10px',
+                                            cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box'
+                                        }}
+                                        onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                                        onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.borderColor = '#e2e8f0'; }}
+                                    >
+                                        {isSelected ? (
+                                            <Check size={16} color="#3b82f6" style={{ marginRight: '8px', flexShrink: 0 }} />
+                                        ) : (
+                                            <Plus size={16} color="#cbd5e1" style={{ marginRight: '8px', flexShrink: 0 }} />
+                                        )}
+                                        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: isSelected ? '#1d4ed8' : '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{v.label}</span>
+                                            <span style={{ fontSize: '11px', color: isSelected ? '#3b82f6' : '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                                                {v.id || ''}
+                                            </span>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {availableVars.length === 0 && (
                                 <div style={{ textAlign: 'center', fontSize: '12px', color: '#94a3b8', padding: '20px' }}>검색 결과가 없습니다.</div>
                             )}
@@ -252,7 +229,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                     </div>
 
                     {/* 오른쪽: 조합 영역 */}
-                    <div style={{ flex: 1, width: '50%', display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', overflow: 'hidden', boxSizing: 'border-box' }}>
+                    <div style={{ flex: 'none', width: 'calc(50% - 8px)', minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', overflow: 'hidden', boxSizing: 'border-box' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', background: '#fafafa' }}>
                             <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>
                                 조합할 변수들 <span style={{ color: '#3b82f6', fontWeight: '600', marginLeft: '4px' }}>({selectedItems.length}개)</span>
@@ -261,15 +238,12 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
 
                         {/* 캔버스 (Drop Zone) */}
                         <div
-                            onDragOver={handleDragOverCanvas}
-                            onDragLeave={handleDragLeaveCanvas}
-                            onDrop={handleDropCanvas}
                             className="custom-scrollbar"
                             style={{
                                 flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center',
                                 justifyContent: selectedItems.length === 0 ? 'center' : 'flex-start',
                                 overflowY: 'auto', transition: 'background 0.2s', minHeight: '100px',
-                                background: isDragOverCanvas ? '#e0f2fe' : '#f8fafc'
+                                background: '#f8fafc'
                             }}
                         >
                             {selectedItems.length === 0 ? (
@@ -277,7 +251,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                     <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' }}>
                                         <Plus size={32} color="#94a3b8" />
                                     </div>
-                                    여기에 변수를 드래그 앤 드롭 하세요.
+                                    좌측에서 변수를 클릭하여 추가하세요.
                                 </div>
                             ) : (
                                 selectedItems.map((item, index) => {
