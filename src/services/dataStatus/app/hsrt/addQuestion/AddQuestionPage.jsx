@@ -8,6 +8,7 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
+import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 
@@ -83,6 +84,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }));
 
+    const [isCartesianModalOpen, setIsCartesianModalOpen] = useState(false);
     const [banners, setBanners] = useState([]);
     const [selectedBanner, setSelectedBanner] = useState('');
     const [baseVariables, setBaseVariables] = useState([]);
@@ -298,7 +300,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: it === e.dataItem })) } : b));
     }, [selectedBanner]);
 
-    // 배너 목록 필터링
+    // 문항 목록 필터링
     const filteredBanners = useMemo(() => {
         const search = bannerSearch.toLowerCase();
         return banners.filter(b =>
@@ -412,6 +414,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             </style>
             <DataHeader title="문항추가" onSave={handleSaveBanner}>
                 <Button
+                    onClick={() => setIsCartesianModalOpen(true)}
                     className="dp-btn"
                     style={{ color: '#2563eb', border: '1px solid #2563eb', background: '#ffffff', height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
                 >
@@ -456,7 +459,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     <Search size={14} className="dp-search-input-icon" />
                                     <input
                                         type="text"
-                                        placeholder="배너명 또는 ID 검색"
+                                        placeholder="문항명 또는 ID 검색"
                                         value={bannerSearch}
                                         onChange={(e) => setBannerSearch(e.target.value)}
                                         className="dp-search-input"
@@ -564,6 +567,40 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                 </div>
             </div>
+
+            {/* 변수 조합기 모달 */}
+            <CartesianGeneratorModal
+                show={isCartesianModalOpen}
+                onClose={() => setIsCartesianModalOpen(false)}
+                variables={baseVariables}
+                onApply={(rules) => {
+                    const mappedRules = rules.map(rule => ({
+                        label3: '',
+                        label2: rule.label2,
+                        label: rule.label,
+                        logic: rule.logic,
+                        inEdit: true // 강제 편집 상태를 주어 저장 대상이 되게 함
+                    }));
+
+                    if (selectedBanner) {
+                        setBanners(prev => prev.map(b => {
+                            if (b.id === selectedBanner) {
+                                // 기존 info 뒷부분에 규칙들을 추가하거나 덮어쓸 수 있는데,
+                                // 이 부분에서는 기존 빈 규칙(length 1, empty properties)을 제거하고 추가
+                                const currentInfo = b.info;
+                                let newInfo = [...currentInfo];
+                                if (newInfo.length === 1 && !newInfo[0].label2 && !newInfo[0].label && !newInfo[0].logic) {
+                                    newInfo = mappedRules;
+                                } else {
+                                    newInfo = [...newInfo, ...mappedRules];
+                                }
+                                return { ...b, info: newInfo };
+                            }
+                            return b;
+                        }));
+                    }
+                }}
+            />
         </>
     );
 });
