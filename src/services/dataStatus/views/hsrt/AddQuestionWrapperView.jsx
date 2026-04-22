@@ -151,20 +151,12 @@ const AddQuestionWrapperView = forwardRef(({ onUnsavedChange }, ref) => {
     const [banners, setBanners] = useState([]);
     const [selectedBanner, setSelectedBanner] = useState('');
     const [baseVariables, setBaseVariables] = useState([]);
-    const [isWizardOpen, setIsWizardOpen] = useState(false);
-    const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [isBannerSidebarOpen, setIsBannerSidebarOpen] = useState(true);
-    const [wizardSearch, setWizardSearch] = useState('');
     const [bannerSearch, setBannerSearch] = useState('');
-    const [colVars, setColVars] = useState([]);
     const [currentLabel, setCurrentLabel] = useState('');
     const [currentId, setCurrentId] = useState('');
     const [currentXInfo, setCurrentXInfo] = useState('');
-    const [selectedIds, setSelectedIds] = useState([]);
 
-    // --- 삭제 관리용 스테이트 추가 ---
-    const [deletedBannerIds, setDeletedBannerIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
-    const [originalBannerIds, setOriginalBannerIds] = useState([]); // 초기 로딩된 배너 ID 목록 (신규 구분용)
 
     // 키보드 이벤트 (Undo/Redo)
     useEffect(() => {
@@ -209,105 +201,6 @@ const AddQuestionWrapperView = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }, [banners, history]);
 
-    // --- Interaction Logic ---
-    const toggleSelection = useCallback((id) => {
-        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-    }, []);
-
-    const handleDragStart = useCallback((e, draggedVar) => {
-        let targets = [];
-        if (selectedIds.includes(draggedVar.id)) {
-            targets = baseVariables.filter(v => selectedIds.includes(v.id));
-        } else {
-            targets = [draggedVar];
-            setSelectedIds([draggedVar.id]);
-        }
-        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'EXTERNAL', items: targets }));
-    }, [selectedIds, baseVariables]);
-
-    const handleInternalItemDragStart = (e, gIdx, iIdx) => {
-        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_ITEM', gIdx, iIdx }));
-    };
-
-    const handleInternalGroupDragStart = (e, gIdx) => {
-        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_GROUP', gIdx }));
-    };
-
-    const handleDrop = (e, targetIdx) => {
-        e.preventDefault();
-        try {
-            const dataStr = e.dataTransfer.getData('text/plain');
-            if (!dataStr) return;
-            const data = JSON.parse(dataStr);
-
-            setColVars(prev => {
-                let next = [...prev.map(g => [...g])];
-                if (data.type === 'INTERNAL_ITEM') {
-                    const item = next[data.gIdx][data.iIdx];
-                    next[data.gIdx].splice(data.iIdx, 1);
-                    if (targetIdx === 'new') {
-                        if (next.length >= 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
-                            return prev;
-                        }
-                        next.push([item]);
-                    } else {
-                        if (!next[targetIdx].find(v => v.id === item.id)) {
-                            if (next[targetIdx].length >= 3) {
-                                modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
-                                return prev;
-                            }
-                            next[targetIdx].push(item);
-                        } else if (data.gIdx === targetIdx) {
-                            next[targetIdx].splice(data.iIdx, 0, item);
-                        }
-                    }
-                    return next.filter(g => g.length > 0);
-                }
-                if (data.type === 'INTERNAL_GROUP') {
-                    const group = next[data.gIdx];
-                    next.splice(data.gIdx, 1);
-                    if (targetIdx === 'new') {
-                        if (next.length >= 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
-                            return prev;
-                        }
-                        next.push(group);
-                    } else next.splice(targetIdx, 0, group);
-                    return next;
-                }
-                if (data.type === 'EXTERNAL') {
-                    const itemsToAdd = data.items;
-                    if (targetIdx === 'new') {
-                        // 새로 추가되면서 10개를 넘는지 체크
-                        if (next.length + itemsToAdd.length > 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
-                            // 가능힌 부분까지만 추가하거나 아예 안하거나 결정 (여기서는 안전하게 경고 후 중단)
-                            return prev;
-                        }
-                        next.push(...itemsToAdd.map(it => [it]));
-                    } else {
-                        const unique = itemsToAdd.filter(it => !next[targetIdx].find(v => v.id === it.id));
-                        if (next[targetIdx].length + unique.length > 3) {
-                            modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
-                            return prev;
-                        }
-                        next[targetIdx] = [...next[targetIdx], ...unique];
-                    }
-                }
-                return next;
-            });
-            setSelectedIds([]);
-        } catch (err) { console.error(err); }
-    };
-
-    const removeVar = (varId, groupIndex) => {
-        setColVars(prev => {
-            const next = prev.map(g => [...g]);
-            next[groupIndex] = next[groupIndex].filter(v => v.id !== varId);
-            return next.filter(g => g.length > 0);
-        });
-    };
 
     const handleDeleteBanner = (e, bannerId) => {
         e.stopPropagation();
@@ -361,12 +254,6 @@ const AddQuestionWrapperView = forwardRef(({ onUnsavedChange }, ref) => {
                     })) : []
                 }));
                 setBanners(formatted);
-                history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
-
-                // 서버에서 온 원본 ID들 보관
-                const ids = formatted.map(b => b.id);
-                setOriginalBannerIds(ids);
-                setDeletedBannerIds([]); // 삭제 목록 초기화
 
                 if (formatted.length > 0) {
                     const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
@@ -384,21 +271,9 @@ const AddQuestionWrapperView = forwardRef(({ onUnsavedChange }, ref) => {
         finally { loadingSpinner.hide(); }
     };
 
-    const handleCreateBanner = async (name) => {
-        console.log('TODO: Create computed variable', name, colVars);
-        modal.showAlert('알림', '기능이 추후 지원될 예정입니다.');
-    };
-
     const updateBannerInfo = useCallback((newInfo) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo } : b));
     }, [selectedBanner]);
-
-    const filteredVariables = useMemo(() => {
-        const search = wizardSearch.toLowerCase();
-        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v =>
-            (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search)
-        );
-    }, [baseVariables, wizardSearch]);
 
     // 배너 목록 필터링
     const filteredBanners = useMemo(() => {
