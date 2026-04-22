@@ -202,7 +202,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                         }}
                                         style={{
                                             display: 'flex', alignItems: 'center', backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
-                                            border: isSelected ? '1px solid #3b82f6' : '1px solid #e2e8f0', borderRadius: '4px', padding: '8px 10px',
+                                            border: isSelected ? '1px solid #3b82f6' : '1px solid #e2e8f0', borderRadius: '4px', padding: '6px 10px',
                                             cursor: 'pointer', transition: 'all 0.2s', boxSizing: 'border-box'
                                         }}
                                         onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.borderColor = '#cbd5e1'; }}
@@ -213,10 +213,10 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                         ) : (
                                             <Plus size={16} color="#cbd5e1" style={{ marginRight: '8px', flexShrink: 0 }} />
                                         )}
-                                        <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
+                                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'hidden', gap: '6px' }}>
                                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: isSelected ? '#1d4ed8' : '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{v.label}</span>
-                                            <span style={{ fontSize: '11px', color: isSelected ? '#3b82f6' : '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                                                {v.id || ''}
+                                            <span style={{ fontSize: '11px', color: isSelected ? '#60a5fa' : '#94a3b8', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0 }}>
+                                                ({v.id})
                                             </span>
                                         </div>
                                     </div>
