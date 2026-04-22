@@ -310,6 +310,25 @@
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
+/* Kendo Dropdown Focus Override (Remove Orange) */
+.k-dropdown:focus,
+.k-dropdown.k-state-focused,
+.k-dropdown.k-focus,
+.k-dropdown:focus-within,
+.k-dropdownlist:focus,
+.k-dropdownlist.k-state-focused,
+.k-dropdownlist.k-focus,
+.k-dropdownlist:focus-within,
+.k-picker:focus,
+.k-picker.k-state-focused,
+.k-picker.k-focus,
+.k-picker:focus-within {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+    outline: none !important;
+}
+
+
 .variable-list {
     flex: 1;
     overflow-y: auto;

@@ -17,6 +17,20 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/variables/base/list", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 파생 문항 목록 조회 */
+    const getComputedVariableList = useMutation(
+        async (data) => await api.post(data, "/variables/computed/list", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** 파생 문항 저장 */
+    const saveComputedVariable = useMutation(
+        async (data) => await api.post(data, "/variables/computed/save", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** DP 의뢰서 - 테이블 설정 초기 맥락 조회 */
     const getTableRenderContext = useMutation(
         async (data) => await api.post(data, "/dp-request/table/render-context", "API_BASE_URL_DATASTATUS")
@@ -125,6 +139,8 @@ export function DpRequestPageApi() {
     return {
         getBannerDetail,
         getBaseVariableList,
+        getComputedVariableList,
+        saveComputedVariable,
         getTableRenderContext,
         getTableDetail,
         saveTableSettings,
