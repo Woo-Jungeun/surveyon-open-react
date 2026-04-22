@@ -188,7 +188,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
 
     return (
         <div className="advanced-filter-overlay-cbp theme-blue">
-            <div className="advanced-filter-content-cbp" onClick={(e) => e.stopPropagation()} style={{ width: '850px', height: '650px' }}>
+            <div className="advanced-filter-content-cbp" onClick={(e) => e.stopPropagation()} style={{ width: '800px', height: '700px' }}>
 
                 {/* 헤더 영역 */}
                 <div className="filter-popup-header-cbp">
@@ -202,27 +202,27 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                 </div>
 
                 {/* 컨텐츠 영역 */}
-                <div className="filter-popup-container-cbp" style={{ padding: '24px', gap: '20px', background: '#f0f7ff' }}>
+                <div className="filter-popup-container-cbp" style={{ display: 'flex', flexDirection: 'row', padding: '16px', gap: '16px', background: '#f0f7ff', boxSizing: 'border-box' }}>
 
                     {/* 왼쪽: 변수 목록 */}
-                    <div style={{ width: '280px', display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', padding: '16px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ flex: 1, width: '50%', minWidth: 0, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', padding: '12px', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                             <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>변수 목록</span>
                             <span style={{ fontSize: '12px', color: '#94a3b8', background: '#f1f5f9', padding: '2px 6px', borderRadius: '4px' }}>Drag</span>
                         </div>
 
-                        <div style={{ position: 'relative', marginBottom: '16px' }}>
+                        <div style={{ position: 'relative', marginBottom: '12px' }}>
                             <Search size={14} color="#94a3b8" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
                             <input
                                 type="text"
                                 placeholder="변수명 또는 라벨 검색"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ width: '100%', height: '34px', padding: '0 10px 0 30px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box', outline: 'none' }}
+                                style={{ width: '100%', height: '32px', padding: '0 10px 0 30px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box', outline: 'none' }}
                             />
                         </div>
 
-                        <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+                        <div className="custom-scrollbar" style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '6px', paddingRight: '4px' }}>
                             {availableVars.map((v) => (
                                 <div
                                     key={v.id}
@@ -230,13 +230,13 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                     onDragStart={(e) => handleDragStartSidebar(e, v.id)}
                                     style={{
                                         display: 'flex', alignItems: 'center', backgroundColor: '#ffffff',
-                                        border: '1px solid #e2e8f0', borderRadius: '4px', padding: '10px 12px',
-                                        cursor: 'grab', transition: 'all 0.2s'
+                                        border: '1px solid #e2e8f0', borderRadius: '4px', padding: '8px 10px',
+                                        cursor: 'grab', transition: 'all 0.2s', boxSizing: 'border-box'
                                     }}
                                     onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; }}
                                     onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#e2e8f0'; }}
                                 >
-                                    <GripVertical size={16} color="#94a3b8" style={{ marginRight: '10px', flexShrink: 0 }} />
+                                    <GripVertical size={16} color="#94a3b8" style={{ marginRight: '8px', flexShrink: 0 }} />
                                     <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', minWidth: 0 }}>
                                         <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{v.label}</span>
                                         <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
@@ -252,8 +252,8 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                     </div>
 
                     {/* 오른쪽: 조합 영역 */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px', borderBottom: '1px solid #e2e8f0', background: '#fafafa' }}>
+                    <div style={{ flex: 1, width: '50%', display: 'flex', flexDirection: 'column', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#ffffff', overflow: 'hidden', boxSizing: 'border-box' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #e2e8f0', background: '#fafafa' }}>
                             <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#1e293b' }}>
                                 조합할 변수들 <span style={{ color: '#3b82f6', fontWeight: '600', marginLeft: '4px' }}>({selectedItems.length}개)</span>
                             </span>
@@ -266,13 +266,14 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                             onDrop={handleDropCanvas}
                             className="custom-scrollbar"
                             style={{
-                                flex: 1, padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                flex: 1, padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                justifyContent: selectedItems.length === 0 ? 'center' : 'flex-start',
                                 overflowY: 'auto', transition: 'background 0.2s', minHeight: '100px',
                                 background: isDragOverCanvas ? '#e0f2fe' : '#f8fafc'
                             }}
                         >
                             {selectedItems.length === 0 ? (
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px', marginTop: '60px', gap: '16px', pointerEvents: 'none' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '14px', gap: '16px', pointerEvents: 'none' }}>
                                     <div style={{ width: '64px', height: '64px', borderRadius: '50%', border: '2px dashed #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' }}>
                                         <Plus size={32} color="#94a3b8" />
                                     </div>
@@ -282,16 +283,16 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                 selectedItems.map((item, index) => {
                                     const v = variables.find(x => x.id === item.varId) || {};
                                     return (
-                                        <div key={item.uid} style={{ position: 'relative', width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <div key={item.uid} style={{ position: 'relative', width: '100%', maxWidth: '300px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                             {/* 상단 삽입선 인디케이터 (순서 변경 시) */}
                                             {dragOverItemIdx === index && dragPos === 'top' && draggedItemIdx !== index && (
-                                                <div style={{ position: 'absolute', top: index > 0 ? '14px' : '-2px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
+                                                <div style={{ position: 'absolute', top: index > 0 ? '8px' : '-2px', left: 0, right: 0, height: '4px', background: '#3b82f6', borderRadius: '2px', zIndex: 10 }} />
                                             )}
 
                                             {index > 0 && (
-                                                <div style={{ height: '32px', display: 'flex', alignItems: 'center', position: 'relative', margin: '4px 0', pointerEvents: 'none' }}>
+                                                <div style={{ height: '16px', display: 'flex', alignItems: 'center', position: 'relative', margin: '2px 0', pointerEvents: 'none' }}>
                                                     <div style={{ height: '100%', width: '1px', borderLeft: '1px dashed #94a3b8', position: 'absolute', left: '50%' }}></div>
-                                                    <span style={{ background: '#f8fafc', padding: '4px', fontSize: '12px', color: '#64748b', zIndex: 1, border: '1px solid #cbd5e1', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>×</span>
+                                                    <span style={{ background: '#f8fafc', padding: '2px', fontSize: '11px', color: '#64748b', zIndex: 1, border: '1px solid #cbd5e1', borderRadius: '50%', width: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>×</span>
                                                 </div>
                                             )}
 
@@ -303,18 +304,18 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                 onDragEnd={handleDragEnd}
                                                 onDragLeave={() => setDragOverItemIdx(null)}
                                                 style={{
-                                                    width: '100%', padding: '16px', background: '#ffffff',
+                                                    width: '100%', padding: '8px 12px', background: '#ffffff',
                                                     border: draggedItemIdx === index ? '1px dashed #3b82f6' : '1px solid #cbd5e1',
                                                     borderRadius: '6px', display: 'flex', alignItems: 'center',
                                                     boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
                                                     opacity: draggedItemIdx === index ? 0.4 : 1,
-                                                    boxSizing: 'border-box'
+                                                    boxSizing: 'border-box', gap: '8px'
                                                 }}
                                             >
-                                                <GripVertical size={16} color="#cbd5e1" style={{ marginRight: '12px', cursor: 'grab' }} />
-                                                <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                                                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{item.varId}</div>
-                                                    <div style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{item.varId}. {v.label || ''}</div>
+                                                <GripVertical size={16} color="#cbd5e1" style={{ cursor: 'grab', flexShrink: 0 }} />
+                                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'hidden', gap: '6px' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{v.label || item.varId}</span>
+                                                    <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0 }}>({item.varId})</span>
                                                 </div>
                                                 <button
                                                     type="button"
@@ -342,7 +343,7 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                 <div className="filter-popup-footer-cbp">
                     <div className="footer-right-cbp">
                         <button className="btn-cancel-cbp" onClick={onClose}>취소</button>
-                        <button className="btn-apply-cbp" onClick={handleGenerate} disabled={selectedItems.length === 0} style={{ opacity: selectedItems.length === 0 ? 0.5 : 1 }}>조합 생성 (적용)</button>
+                        <button className="btn-apply-cbp" onClick={handleGenerate} disabled={selectedItems.length === 0} style={{ opacity: selectedItems.length === 0 ? 0.5 : 1 }}>조합 생성</button>
                     </div>
                 </div>
 
