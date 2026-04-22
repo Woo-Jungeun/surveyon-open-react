@@ -264,7 +264,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const updateBannerInfo = useCallback((newInfo) => {
-        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo } : b));
+        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo, isDirty: true } : b));
     }, [selectedBanner]);
 
     // 배너 목록 필터링
@@ -429,6 +429,9 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             </span>
                                             <span className="dp-banner-sub" style={{ fontSize: '11px', opacity: 0.6 }}>
                                                 {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
+                                                {!banner.id.startsWith('NEW_') && banner.isDirty && (
+                                                    <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
+                                                )}
                                             </span>
                                         </div>
                                         <button className="dp-banner-delete"
@@ -453,6 +456,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         value={currentId}
                                         onChange={(e) => {
                                             setCurrentId(e.target.value);
+                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
                                             if (onUnsavedChange) onUnsavedChange(true);
                                         }}
                                         className="dp-input"
@@ -466,6 +470,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         value={currentLabel}
                                         onChange={(e) => {
                                             setCurrentLabel(e.target.value);
+                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
                                             if (onUnsavedChange) onUnsavedChange(true);
                                         }}
                                         className="dp-input"
@@ -479,6 +484,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         value={currentXInfo || ''}
                                         onChange={(e) => {
                                             setCurrentXInfo(e.value);
+                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
                                             if (onUnsavedChange) onUnsavedChange(true);
                                         }}
                                         style={{ flex: 1, minWidth: 0, height: '32px', fontSize: '13px', borderRadius: '6px' }}
