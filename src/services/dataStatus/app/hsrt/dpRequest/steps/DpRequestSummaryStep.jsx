@@ -38,6 +38,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [colVars, setColVars] = useState([]);
     const [currentLabel, setCurrentLabel] = useState('');
     const [selectedIds, setSelectedIds] = useState([]);
+    const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
 
     // --- 삭제 관리용 스테이트 추가 ---
     const [deletedSummaryIds, setDeletedSummaryIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
@@ -99,9 +100,6 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, [summaries, history]);
 
     // --- Interaction Logic ---
-    const toggleSelection = useCallback((id) => {
-        setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-    }, []);
 
     const handleDragStart = useCallback((e, draggedVar) => {
         let targets = [];
@@ -390,6 +388,24 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         );
     }, [summaryVariables, summarySearch]);
 
+    const toggleSelection = useCallback((e, index, id) => {
+        if (e.shiftKey && lastSelectedIndex !== null && lastSelectedIndex !== index) {
+            const start = Math.min(lastSelectedIndex, index);
+            const end = Math.max(lastSelectedIndex, index);
+            const rangeIds = filteredSummaryVariables.slice(start, end + 1).map(v => v.id || v.base_id);
+            
+            setSelectedIds(prev => {
+                const next = new Set(prev);
+                rangeIds.forEach(rid => next.add(rid));
+                return Array.from(next);
+            });
+            setLastSelectedIndex(index);
+        } else {
+            setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+            setLastSelectedIndex(index);
+        }
+    }, [filteredSummaryVariables, lastSelectedIndex]);
+
     // 요약표 목록 필터링 (일단 유지)
     const filteredSummaries = useMemo(() => {
         const search = summarySearch.toLowerCase();
@@ -508,14 +524,14 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                         </div>
                         <div className="dp-summary-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0, padding: '8px' }}>
-                            {filteredSummaryVariables.map(variable => (
+                            {filteredSummaryVariables.map((variable, idx) => (
                                 <div key={variable.base_id}
                                     className={`dp-variable-row ${selectedIds.includes(variable.id) ? 'selected' : ''}`}
                                     draggable
                                     onDragStart={(e) => handleDragStart(e, variable)}
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        toggleSelection(variable.id);
+                                        toggleSelection(e, idx, variable.id);
                                     }}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '6px',
