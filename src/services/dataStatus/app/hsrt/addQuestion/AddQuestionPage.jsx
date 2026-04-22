@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Info, Wand2 } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Info, Wand2, Plus } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
@@ -68,7 +68,7 @@ const ConditionHeaderCell = (props) => {
 
 const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBaseVariableList, getComputedVariableList, saveComputedVariable } = DpRequestPageApi();
+    const { getBaseVariableList, getComputedVariableList, saveComputedVariable, deleteBaseVariable } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -139,18 +139,72 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleDeleteBanner = (e, bannerId) => {
         e.stopPropagation();
+
+        // 1. 저장하지 않은 임시 신규 문항일 경우 (확인창 없이 즉시 삭제)
+        if (bannerId.startsWith('NEW_')) {
+            setBanners(prev => prev.filter(b => b.id !== bannerId));
+            if (selectedBanner === bannerId) {
+                setSelectedBanner('');
+                setCurrentId('');
+                setCurrentLabel('');
+                setCurrentXInfo('');
+            }
+            return;
+        }
+
+        // 2. 이미 서버에 존재하는 경우 (확인창 띄우고 API 호출)
         modal.showConfirm('삭제 확인', `문항(${bannerId})을 삭제하시겠습니까?`, {
             btns: [
                 { title: "취소", click: () => { } },
                 {
                     title: "삭제",
                     click: async () => {
-                        console.log('TODO: Delete computed variable', bannerId);
-                        modal.showAlert('알림', '삭제 기능은 추후 구현될 예정입니다.');
+                        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+                        const testUser = "sbbok";
+
+                        try {
+                            const result = await deleteBaseVariable.mutateAsync({
+                                pageid: pageId,
+                                user: testUser,
+                                variables: [bannerId]
+                            });
+
+                            if (result?.success === '777') {
+                                modal.showAlert('알림', '삭제되었습니다.');
+                                await fetchVariablesData(false); // 리스트 갱신
+                                // 현재 보고 있는 아이템이 삭제되었다면 우측 에디터 비우기
+                                if (selectedBanner === bannerId) {
+                                    setSelectedBanner('');
+                                    setCurrentId('');
+                                    setCurrentLabel('');
+                                    setCurrentXInfo('');
+                                }
+                            } else {
+                                modal.showAlert('오류', result?.Message || '삭제 중 문제가 발생했습니다.');
+                            }
+                        } catch (error) {
+                            console.error('Delete error:', error);
+                            modal.showAlert('오류', '삭제 요청에 실패했습니다.');
+                        }
                     }
                 }
             ]
         });
+    };
+
+    const handleAddNew = () => {
+        const tempId = `NEW_${Date.now()}`;
+        const newBanner = {
+            id: tempId,
+            label: '',
+            type: '',
+            info: [{ label3: '', label2: '', label: '', logic: '', inEdit: true }]
+        };
+        setBanners(prev => [newBanner, ...prev]);
+        setSelectedBanner(tempId);
+        setCurrentId('');
+        setCurrentLabel('');
+        setCurrentXInfo('');
     };
 
     // --- 데이터 로직 ---
@@ -167,7 +221,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 const baseVars = Array.isArray(baseRes.resultjson) ? baseRes.resultjson : Object.values(baseRes.resultjson);
                 setBaseVariables(baseVars);
             }
-            
+
             // 2. Computed Variables
             const compRes = await getComputedVariableList.mutateAsync({ pageid: pageId, user: testUser });
             if (compRes?.success === '777' && compRes.resultjson) {
@@ -175,17 +229,17 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 const formatted = compVars.map((v, i) => ({
                     id: v.id || `var_${i}`,
                     label: v.name || v.label,
-                    type: v.type === 'single' ? '단일 응답형 (Single)' : 
-                          v.type === 'multi' ? '다중 응답형 (Double)' : 
-                          v.type === 'numeric' ? '숫자형 (Numeric / Scale)' : (v.type || '단일 응답형 (Single)'),
+                    type: v.type === 'single' ? '단일 응답형 (Single)' :
+                        v.type === 'multi' ? '다중 응답형 (Double)' :
+                            v.type === 'numeric' ? '숫자형 (Numeric / Scale)' : (v.type || '단일 응답형 (Single)'),
                     subId: v.id || `banner_0${i + 1}`,
-                    info: Array.isArray(v.info) ? v.info.map(item => ({ 
+                    info: Array.isArray(v.info) ? v.info.map(item => ({
                         ...item,
-                        label3: item.label3 || '', 
-                        label2: item.value || item.label2 || '', 
-                        label: item.label || '', 
-                        logic: item.logic || '', 
-                        inEdit: false 
+                        label3: item.label3 || '',
+                        label2: item.value || item.label2 || '',
+                        label: item.label || '',
+                        logic: item.logic || '',
+                        inEdit: false
                     })) : []
                 }));
                 setBanners(formatted);
@@ -233,9 +287,9 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         if (!currentLabel.trim()) return modal.showAlert('알림', '문항 라벨을 입력해주세요.');
 
         // 유효한 규칙만 필터링 (비어있는 그리드 행 제거)
-        const validRules = currentBannerData.info.filter(r => 
-            String(r.label2 || '').trim() !== '' || 
-            String(r.label || '').trim() !== '' || 
+        const validRules = currentBannerData.info.filter(r =>
+            String(r.label2 || '').trim() !== '' ||
+            String(r.label || '').trim() !== '' ||
             String(r.logic || '').trim() !== ''
         );
 
@@ -274,12 +328,12 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         try {
             loadingSpinner.show();
             // 파생 문항 저장 API 호출 (임시: saveComputedVariable)
-            const result = await saveComputedVariable.mutateAsync({ 
-                pageid: pageId, 
+            const result = await saveComputedVariable.mutateAsync({
+                pageid: pageId,
                 user: testUser,
-                variables: payloadVariables 
+                variables: payloadVariables
             });
-            
+
             if (result?.success === '777') {
                 modal.showAlert('알림', '파생 문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
@@ -323,9 +377,22 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                             <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
                                 <span>생성된 배너 목록 ({filteredBanners.length})</span>
-                                <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)}>
-                                    <ChevronLeft size={16} />
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <button
+                                        onClick={handleAddNew}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                                            height: '24px', padding: '0 8px', borderRadius: '4px',
+                                            border: '1px solid #2563eb', color: '#2563eb', background: '#eff6ff',
+                                            fontSize: '12px', fontWeight: 600, cursor: 'pointer'
+                                        }}
+                                    >
+                                        <Plus size={12} /> 추가
+                                    </button>
+                                    <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)} style={{ display: 'flex', alignItems: 'center' }}>
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                </div>
                             </div>
                             <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                                 <div className="dp-search-input-wrapper" style={{ flex: 1, width: '100%' }}>
@@ -346,14 +413,18 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         onClick={() => {
                                             setSelectedBanner(banner.id);
                                             setCurrentLabel(banner.label);
-                                            setCurrentId(banner.id);
+                                            setCurrentId(banner.id.startsWith('NEW_') ? '' : banner.id);
                                             setCurrentXInfo(banner.x_info || '');
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
                                     >
                                         <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
-                                            <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px' }}>{banner.label}</span>
-                                            <span className="dp-banner-sub" style={{ fontSize: '11px', opacity: 0.6 }}>{banner.id}</span>
+                                            <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px' }}>
+                                                {banner.id.startsWith('NEW_') ? (banner.label || '(새 문항 작성 중)') : banner.label}
+                                            </span>
+                                            <span className="dp-banner-sub" style={{ fontSize: '11px', opacity: 0.6 }}>
+                                                {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
+                                            </span>
                                         </div>
                                         <button className="dp-banner-delete"
                                             onClick={(e) => handleDeleteBanner(e, banner.id)}

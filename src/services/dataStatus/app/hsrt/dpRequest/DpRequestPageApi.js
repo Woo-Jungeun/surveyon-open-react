@@ -31,6 +31,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 변수 삭제 */
+    const deleteBaseVariable = useMutation(
+        async (data) => await api.post(data, "/variables/base/delete", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** DP 의뢰서 - 테이블 설정 초기 맥락 조회 */
     const getTableRenderContext = useMutation(
         async (data) => await api.post(data, "/dp-request/table/render-context", "API_BASE_URL_DATASTATUS")
@@ -141,6 +150,7 @@ export function DpRequestPageApi() {
         getBaseVariableList,
         getComputedVariableList,
         saveComputedVariable,
+        deleteBaseVariable,
         getTableRenderContext,
         getTableDetail,
         saveTableSettings,
