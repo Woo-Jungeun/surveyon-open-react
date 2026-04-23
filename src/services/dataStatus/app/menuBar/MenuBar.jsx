@@ -402,7 +402,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
     <>
       <Sidebar
         brand={{
-          title: "데이터 현황",
+          title: "",
           logoText: "H-SRT",
           logoClass: "menu-bar-logo",
           onClick: () => navigate("/data_status/hsrt/add_question")
