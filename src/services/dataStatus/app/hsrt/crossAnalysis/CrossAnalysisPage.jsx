@@ -880,9 +880,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             </span>
                                             <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6, wordBreak: 'break-all', lineHeight: 1.3 }}>
                                                 {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
-                                                {!banner.id.startsWith('NEW_') && banner.isDirty && (
-                                                    <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
-                                                )}
                                             </span>
                                         </div>
                                     </div>
