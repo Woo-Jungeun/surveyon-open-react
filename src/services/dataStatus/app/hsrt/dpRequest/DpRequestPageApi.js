@@ -145,6 +145,21 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 교차분석 - 초기 문맥 조회 */
+    const getOverviewContext = useMutation(
+        async (data) => await api.post(data, "/datasets/overview/context", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** 교차분석 - 전체표 결과 조회 */
+    const getOverview = useMutation(
+        async (data) => await api.post(data, "/datasets/overview", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** 교차분석 - 표시 옵션 저장 */
+    const savePageSettings = useMutation(
+        async (data) => await api.post(data, "/pages/set", "API_BASE_URL_DATASTATUS")
+    );
+
     return {
         getBannerDetail,
         getBaseVariableList,
@@ -164,6 +179,9 @@ export function DpRequestPageApi() {
         saveRecodedOverview,
         getOrderDetail,
         saveOrderDetail,
-        evaluateVariable
+        evaluateVariable,
+        getOverviewContext,
+        getOverview,
+        savePageSettings
     };
 }

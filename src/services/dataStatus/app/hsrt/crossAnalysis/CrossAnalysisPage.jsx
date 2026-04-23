@@ -82,7 +82,7 @@ const ConditionHeaderCell = (props) => {
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBaseVariableList, getComputedVariableList, saveComputedVariable, deleteBaseVariable } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, savePageSettings } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -153,6 +153,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [currentLabel, setCurrentLabel] = useState('');
     const [currentId, setCurrentId] = useState('');
     const [currentXInfo, setCurrentXInfo] = useState('');
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalTables, setTotalTables] = useState(0);
+    const PAGE_SIZE = 20;
 
 
     // 키보드 이벤트 (Undo/Redo)
@@ -264,59 +268,75 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     // --- 데이터 로직 ---
-    const fetchVariablesData = async (mode = 'normal', targetIdToSelect = null) => {
-        // mode: 'fresh'(방금 추가됨 -> 마지막 요소 선택), 'delete'(현재요소 삭제됨 -> 첫요소 선택), 'select'(특정 ID 지정), 'normal'(일반 갱신)
+    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage) => {
+        // 실제 데이터 연동 시 사용할 주석:
         // const pageId = sessionStorage.getItem('pageId');
-        // if (!pageId || !auth?.user?.userId) return;
+        // const testUser = auth?.user?.userId;
+        // if (!pageId || !testUser) return;
+
         const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
         const testUser = "sbbok";
         try {
             loadingSpinner.show();
-            // 1. Base Variables
-            const baseRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user: testUser });
-            if (baseRes?.success === '777' && baseRes.resultjson) {
-                const baseVars = Array.isArray(baseRes.resultjson) ? baseRes.resultjson : Object.values(baseRes.resultjson);
-                setBaseVariables(baseVars);
-            }
+            
+            // 1. Context 데이터 가져오기
+            const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: testUser });
+            // (차후 ui_settings 및 base_variables 연동 시 사용)
 
-            // 2. Computed Variables
-            const compRes = await getComputedVariableList.mutateAsync({ pageid: pageId, user: testUser });
-            if (compRes?.success === '777' && compRes.resultjson) {
-                const compVars = Array.isArray(compRes.resultjson) ? compRes.resultjson : Object.values(compRes.resultjson);
-                const formatted = compVars.map((v, i) => ({
-                    id: v.id || `var_${i}`,
-                    label: v.name || v.label,
-                    type: v.type === 'single' ? '단일 응답형 (Single)' :
-                        v.type === 'double' ? '다중 응답형 (Double)' :
-                            v.type === 'numeric' ? '숫자형 (Numeric / Scale)' : (v.type || '단일 응답형 (Single)'),
-                    subId: v.id || `banner_0${i + 1}`,
-                    info: Array.isArray(v.info) ? v.info.map(item => ({
-                        ...item,
-                        label3: item.label3 || '',
-                        label2: item.value || item.label2 || '',
-                        label: item.label || '',
-                        logic: item.logic || '',
-                        inEdit: false
-                    })) : []
+            // 2. 전체표 목록 (Overview) 가져오기
+            const overviewRes = await getOverview.mutateAsync({
+                pageid: pageId,
+                user: testUser,
+                x_info: [], // 현재는 빈 배열
+                start: (targetPage - 1) * PAGE_SIZE,
+                limit: PAGE_SIZE,
+                search: bannerSearch, // API 검색 연동
+                filter_expression: "",
+                use_recoded: true
+            });
+
+            // 응답 포맷 대응 (resultjson 래핑 여부)
+            const payload = overviewRes?.resultjson || overviewRes || {};
+            const tablesList = payload.tables || [];
+
+            if (tablesList.length > 0 || (overviewRes?.success === '777')) {
+                const formatted = tablesList.map((t, i) => ({
+                    id: t.id || `table_${i}`,
+                    label: t.name || t.label || t.id,
+                    type: t.type === 'single' ? '단일 응답형 (Single)' :
+                          t.type === 'double' ? '다중 응답형 (Double)' :
+                          t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
+                    subId: t.id,
+                    info: [] // 테이블 그리드에 당장 출력할 조건 정보는 비워둠
                 }));
                 setBanners(formatted);
-                history.reset(formatted); // 초기 데이터를 히스토리에 설정
+                history.reset(formatted);
+
+                // 총 테이블 개수 갱신
+                let total = payload.total !== undefined ? payload.total : 0;
+                if (payload.total === undefined) {
+                    if (targetPage === 1 && formatted.length < PAGE_SIZE) {
+                        total = formatted.length;
+                    } else if (targetPage === 1) {
+                        total = 1000; // 예상 fallback (서버에서 total을 안내려줄 경우)
+                    } else {
+                        total = totalTables; // 기존 유지
+                    }
+                }
+                setTotalTables(total);
 
                 if (formatted.length > 0) {
                     const isFresh = mode === 'fresh';
-                    const isDelete = mode === 'delete';
                     let target = isFresh ? formatted[formatted.length - 1] : formatted[0];
-
                     if (targetIdToSelect) {
                         const foundTarget = formatted.find(f => f.id === targetIdToSelect);
                         if (foundTarget) target = foundTarget;
                     }
-
-                    if (isFresh || isDelete || targetIdToSelect || !selectedBanner) {
+                    if (isFresh || targetIdToSelect || !selectedBanner) {
                         setSelectedBanner(target.id);
                         setCurrentLabel(target.label);
                         setCurrentId(target.id);
-                        setCurrentXInfo(target.type || '단일 응답형 (Single)');
+                        setCurrentXInfo(target.type);
                     }
                 } else {
                     setSelectedBanner('');
@@ -332,8 +352,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setCurrentId('');
                 setCurrentXInfo('');
             }
-        } catch (error) { console.error(error); }
-        finally { loadingSpinner.hide(); }
+        } catch (error) { 
+            console.error('Fetch Overview Error:', error); 
+        } finally { 
+            loadingSpinner.hide(); 
+        }
     };
 
     const updateBannerInfo = useCallback((newInfo) => {
@@ -345,15 +368,25 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: it === e.dataItem })) } : b));
     }, [selectedBanner]);
 
-    // 문항 목록 필터링
-    const filteredBanners = useMemo(() => {
-        const search = bannerSearch.toLowerCase();
-        return banners.filter(b =>
-            (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
-        );
-    }, [banners, bannerSearch]);
+    // 문항 목록 필터링 (서버사이드 필터링 사용)
+    const filteredBanners = banners;
 
-    useEffect(() => { fetchVariablesData(); }, [auth?.user?.userId]);
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage !== 1) {
+                setCurrentPage(1); // currentPage useEffect가 fetch를 수행함
+            } else {
+                fetchCrossAnalysisData('normal', null, 1);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [bannerSearch, auth?.user?.userId]);
+
+    useEffect(() => {
+        if (currentPage !== 1) {
+            fetchCrossAnalysisData('normal', null, currentPage);
+        }
+    }, [currentPage]);
 
     return (
         <>
@@ -596,7 +629,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         )}
                         <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                             <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
-                                <span>테이블 목록 ({filteredBanners.length})</span>
+                                <span>테이블 목록 ({totalTables})</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)} style={{ display: 'flex', alignItems: 'center' }}>
                                         <ChevronLeft size={16} />
@@ -638,15 +671,44 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 )}
                                             </span>
                                         </div>
-                                        <button className="dp-banner-delete"
-                                            onClick={(e) => handleDeleteBanner(e, banner.id)}
-                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px' }}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
                                     </div>
                                 ))}
                             </div>
+                            
+                            {/* 페이징 UI */}
+                            {totalTables > 0 && (
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', padding: '10px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 }}>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage <= 1}
+                                        style={{ 
+                                            width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px', 
+                                            background: currentPage <= 1 ? '#f8fafc' : '#ffffff',
+                                            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer', 
+                                            color: currentPage <= 1 ? '#cbd5e1' : '#475569' 
+                                        }}
+                                    >
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', userSelect: 'none' }}>
+                                        <span style={{ color: '#1e3a8a' }}>{currentPage}</span> / <span style={{ color: '#0f172a' }}>{Math.ceil(totalTables / PAGE_SIZE)}</span>
+                                    </div>
+                                    <button
+                                        onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalTables / PAGE_SIZE), p + 1))}
+                                        disabled={currentPage >= Math.ceil(totalTables / PAGE_SIZE)}
+                                        style={{ 
+                                            width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px', 
+                                            background: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? '#f8fafc' : '#ffffff',
+                                            cursor: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? 'not-allowed' : 'pointer', 
+                                            color: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? '#cbd5e1' : '#475569' 
+                                        }}
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
 
