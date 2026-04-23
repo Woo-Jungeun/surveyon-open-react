@@ -10,20 +10,8 @@ import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 
-const MOCK_FILTERS = [
-    { id: '1', label: '남성 * 20~29세', subLabel: '성별x연령' },
-    { id: '2', label: '남성 * 30~39세', subLabel: '성별x연령' },
-    { id: '3', label: '남성 * 40~49세', subLabel: '성별x연령' },
-    { id: '4', label: '남성 * 50~59세', subLabel: '성별x연령' },
-    { id: '5', label: '남성 * 60세 이상', subLabel: '성별x연령' },
-    { id: '6', label: '보기1', subLabel: 'test_label2' },
-    { id: '7', label: '보기2', subLabel: 'test_label2' },
-    { id: '8', label: '여성 * 20~29세', subLabel: '성별x연령' },
-    { id: '9', label: '여성 * 30~39세', subLabel: '성별x연령' },
-    { id: '10', label: '여성 * 40~49세', subLabel: '성별x연령' },
-    { id: '11', label: '여성 * 50~59세', subLabel: '성별x연령' },
-    { id: '12', label: '여성 * 60세 이상', subLabel: '성별x연령' },
-];
+// --- 상수 ---
+const CROSS_FILTER_ALL_ID = "__all__";
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
@@ -98,11 +86,20 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
     const [xInfoOptions, setXInfoOptions] = useState([]);
 
-    const [selectedFilters, setSelectedFilters] = useState(['5', '11']);
+    const [selectedComputedFilterIds, setSelectedComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
+    const [draftComputedFilterIds, setDraftComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
+    const [computedFilterOptions, setComputedFilterOptions] = useState([]);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const filterAnchorRef = useRef(null);
     const filterPopupRef = useRef(null);
     const [filterPopupWidth, setFilterPopupWidth] = useState(180);
+
+    const filterExpression = useMemo(() => {
+        if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return "";
+        const activeOptions = computedFilterOptions.filter(o => selectedComputedFilterIds.includes(o.id));
+        if (activeOptions.length === 0) return "";
+        return activeOptions.map(o => `(${o.logic})`).join(" or ");
+    }, [selectedComputedFilterIds, computedFilterOptions]);
 
     useEffect(() => {
         if (isFilterOpen && filterAnchorRef.current) {
@@ -115,6 +112,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 !filterAnchorRef.current.contains(event.target) &&
                 filterPopupRef.current &&
                 !filterPopupRef.current.contains(event.target)) {
+                setSelectedComputedFilterIds(draftComputedFilterIds);
                 setIsFilterOpen(false);
             }
         };
@@ -123,28 +121,42 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         return () => {
             document.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [isFilterOpen, selectedFilters]);
+    }, [isFilterOpen, draftComputedFilterIds]);
+
+    const handleTogglePopup = () => {
+        if (!isFilterOpen) {
+            setDraftComputedFilterIds(selectedComputedFilterIds);
+        }
+        setIsFilterOpen(!isFilterOpen);
+    };
+
+    const applyFilterAndClose = () => {
+        setSelectedComputedFilterIds(draftComputedFilterIds);
+        setIsFilterOpen(false);
+    };
 
     const toggleFilter = (id) => {
-        setSelectedFilters(prev =>
-            prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
-        );
+        setDraftComputedFilterIds(prev => {
+            if (id === CROSS_FILTER_ALL_ID) {
+                return [CROSS_FILTER_ALL_ID];
+            }
+            const next = prev.filter(x => x !== CROSS_FILTER_ALL_ID);
+            const isChecked = prev.includes(id);
+            const updated = isChecked ? next.filter(x => x !== id) : [...next, id];
+            return updated.length > 0 ? updated : [CROSS_FILTER_ALL_ID];
+        });
     };
 
     const toggleAllFilters = () => {
-        if (selectedFilters.length === MOCK_FILTERS.length) {
-            setSelectedFilters([]);
-        } else {
-            setSelectedFilters(MOCK_FILTERS.map(f => f.id));
-        }
+        setDraftComputedFilterIds([CROSS_FILTER_ALL_ID]);
     };
 
     const getFilterButtonText = () => {
-        if (selectedFilters.length === 0) return '전체'; // Or '선택 안됨' based on specific requirement
-        if (selectedFilters.length === MOCK_FILTERS.length) return '전체';
-        const first = MOCK_FILTERS.find(f => f.id === selectedFilters[0]);
-        if (selectedFilters.length === 1) return first?.label || '선택됨';
-        return `${first?.label} 외 ${selectedFilters.length - 1}건`;
+        if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return '전체'; 
+        const activeOptions = computedFilterOptions.filter(f => selectedComputedFilterIds.includes(f.id));
+        if (activeOptions.length === 0) return '전체';
+        if (activeOptions.length === 1) return activeOptions[0].label;
+        return `${activeOptions[0].label} 외 ${activeOptions.length - 1}건`;
     };
 
     const [selectedBanner, setSelectedBanner] = useState('');
@@ -269,7 +281,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     // --- 데이터 로직 ---
-    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage) => {
+    const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression) => {
         // 실제 데이터 연동 시 사용할 주석:
         // const pageId = sessionStorage.getItem('pageId');
         // const testUser = auth?.user?.userId;
@@ -283,9 +295,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             // 1. Context 데이터 가져오기
             const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: testUser });
             
-            // X 정보 (기준변수) 리스트 세팅
+            // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
             const ctxPayload = contextRes?.resultjson || contextRes || {};
             const recodedVars = ctxPayload.recoded_variables || {};
+            const baseVars = ctxPayload.base_variables || {};
             
             const dynamicXInfoOptions = Object.entries(recodedVars)
                 .filter(([key, value]) => {
@@ -305,6 +318,32 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 { text: '없음 (순수 빈도)', value: '__none__' },
                 ...dynamicXInfoOptions
             ]);
+            
+            const filterOpts = Object.entries(baseVars)
+                .filter(([, value]) => String(value?.recoded_type ?? "").toLowerCase() === "computed")
+                .flatMap(([key, value]) => {
+                    const variableId = String(value?.id ?? key);
+                    const variableLabel = String(value?.label ?? key).trim() || variableId;
+                    const infoList = Array.isArray(value?.info) ? value.info : [];
+                    return infoList
+                        .map((info, index) => {
+                            const label = String(info?.label ?? "").trim();
+                            const logic = String(info?.logic ?? "").trim();
+                            if (!label || !logic) return null;
+                            const rawValue = info?.value ?? index + 1;
+                            return {
+                                id: `${variableId}::${String(rawValue).trim() || String(index + 1)}`,
+                                label,
+                                logic,
+                                variableId,
+                                variableLabel,
+                            };
+                        })
+                        .filter(Boolean);
+                })
+                .sort((a, b) => a.label.localeCompare(b.label, "ko") || a.id.localeCompare(b.id, "en"));
+            
+            setComputedFilterOptions(filterOpts);
 
             // 2. 전체표 목록 (Overview) 가져오기
             const overviewRes = await getOverview.mutateAsync({
@@ -314,7 +353,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
                 search: bannerSearch, // API 검색 연동
-                filter_expression: "",
+                filter_expression: currentFilterExp,
                 use_recoded: true
             });
 
@@ -399,15 +438,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             if (currentPage !== 1) {
                 setCurrentPage(1); // currentPage useEffect가 fetch를 수행함
             } else {
-                fetchCrossAnalysisData('normal', null, 1);
+                fetchCrossAnalysisData('normal', null, 1, filterExpression);
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [bannerSearch, selectedXInfo, auth?.user?.userId]);
+    }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId]);
 
     useEffect(() => {
         if (currentPage !== 1) {
-            fetchCrossAnalysisData('normal', null, currentPage);
+            fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
         }
     }, [currentPage]);
 
@@ -488,7 +527,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
                         <div ref={filterAnchorRef} style={{ padding: '0', display: 'flex', alignItems: 'center', background: '#ffffff', height: '100%' }}>
                             <div
-                                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                                onClick={handleTogglePopup}
                                 style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                     background: 'transparent', color: '#1e293b',
@@ -819,52 +858,58 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div
                             onClick={toggleAllFilters}
                             style={{ padding: '8px 14px', fontSize: '12px', color: '#1e293b', cursor: 'pointer', borderBottom: '1px solid #e2e8f0', fontWeight: 400, display: 'flex', alignItems: 'center' }}
-                            className={`filter-item-row ${selectedFilters.length === MOCK_FILTERS.length ? 'filter-item-selected' : ''}`}
+                            className={`filter-item-row ${draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID) ? 'filter-item-selected' : ''}`}
                         >
                             <div style={{ width: '22px', display: 'flex', justifyContent: 'flex-start' }}>
                                 <div style={{
-                                    width: '13px', height: '13px', border: selectedFilters.length === MOCK_FILTERS.length ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                    width: '13px', height: '13px', border: draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID) ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
                                     borderRadius: '3px', background: '#fff',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}>
-                                    {selectedFilters.length === MOCK_FILTERS.length && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                    {draftComputedFilterIds.includes(CROSS_FILTER_ALL_ID) && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                 </div>
                             </div>
                             <span>전체</span>
                         </div>
 
                         <div style={{ padding: '2px 0' }}>
-                            {MOCK_FILTERS.map(f => {
-                                const isSelected = selectedFilters.includes(f.id);
-                                return (
-                                    <div
-                                        key={f.id}
-                                        onClick={() => toggleFilter(f.id)}
-                                        className={`filter-item-row ${isSelected ? 'filter-item-selected' : ''}`}
-                                        style={{ display: 'flex', alignItems: 'flex-start', padding: '6px 14px', cursor: 'pointer', transition: 'background 0.1s' }}
-                                    >
-                                        <div style={{ width: '22px', display: 'flex', justifyContent: 'flex-start', marginTop: '1px' }}>
-                                            <div style={{
-                                                width: '13px', height: '13px', border: isSelected ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
-                                                borderRadius: '3px', background: '#fff',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                            }}>
-                                                {isSelected && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                            {computedFilterOptions.length === 0 ? (
+                                <div style={{ padding: '12px', fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>
+                                    등록된 파생 문항이 없습니다.
+                                </div>
+                            ) : (
+                                computedFilterOptions.map(f => {
+                                    const isSelected = draftComputedFilterIds.includes(f.id);
+                                    return (
+                                        <div
+                                            key={f.id}
+                                            onClick={() => toggleFilter(f.id)}
+                                            className={`filter-item-row ${isSelected ? 'filter-item-selected' : ''}`}
+                                            style={{ display: 'flex', alignItems: 'flex-start', padding: '6px 14px', cursor: 'pointer', transition: 'background 0.1s' }}
+                                        >
+                                            <div style={{ width: '22px', display: 'flex', justifyContent: 'flex-start', marginTop: '1px' }}>
+                                                <div style={{
+                                                    width: '13px', height: '13px', border: isSelected ? '1.5px solid #3b82f6' : '1px solid #cbd5e1',
+                                                    borderRadius: '3px', background: '#fff',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}>
+                                                    {isSelected && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: '0.5px' }}><polyline points="20 6 9 17 4 12"></polyline></svg>}
+                                                </div>
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontSize: '12px', color: '#1e293b', fontWeight: 400, marginBottom: '2px', wordBreak: 'break-all', lineHeight: 1.3 }}>{f.label}</div>
+                                                <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>{f.variableLabel}</div>
                                             </div>
                                         </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ fontSize: '12px', color: '#1e293b', fontWeight: 400, marginBottom: '2px' }}>{f.label}</div>
-                                            <div style={{ fontSize: '10.5px', color: '#94a3b8' }}>{f.subLabel}</div>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            )}
                         </div>
                     </div>
 
                     <div style={{ padding: '8px 10px', borderTop: '1px solid #e2e8f0', background: '#fff' }}>
                         <button
-                            onClick={() => setIsFilterOpen(false)}
+                            onClick={applyFilterAndClose}
                             style={{ width: '100%', height: '30px', background: '#3b5bdb', color: '#fff', borderRadius: '4px', border: 'none', fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'background 0.15s' }}
                             onMouseOver={(e) => e.target.style.background = '#364fc7'}
                             onMouseOut={(e) => e.target.style.background = '#3b5bdb'}
