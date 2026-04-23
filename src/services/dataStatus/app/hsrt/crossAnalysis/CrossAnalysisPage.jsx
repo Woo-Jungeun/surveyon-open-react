@@ -95,7 +95,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [decimalN, setDecimalN] = useState(0);
     const [showPct, setShowPct] = useState(true);
     const [decimalPct, setDecimalPct] = useState(1);
-    const [selectedXInfo, setSelectedXInfo] = useState('없음 (순수 빈도)');
+    const [selectedXInfo, setSelectedXInfo] = useState('__none__');
+    const [xInfoOptions, setXInfoOptions] = useState([]);
 
     const [selectedFilters, setSelectedFilters] = useState(['5', '11']);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -281,13 +282,35 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             
             // 1. Context 데이터 가져오기
             const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: testUser });
-            // (차후 ui_settings 및 base_variables 연동 시 사용)
+            
+            // X 정보 (기준변수) 리스트 세팅
+            const ctxPayload = contextRes?.resultjson || contextRes || {};
+            const recodedVars = ctxPayload.recoded_variables || {};
+            
+            const dynamicXInfoOptions = Object.entries(recodedVars)
+                .filter(([key, value]) => {
+                    const id = String(value?.id ?? key).trim().toLowerCase();
+                    if (!id) return false;
+                    if (id === "banner" || id.startsWith("banner_")) return true;
+                    return id.startsWith("overview_");
+                })
+                .map(([key]) => key)
+                .sort((a, b) => a.localeCompare(b, "ko"))
+                .map(key => ({
+                    text: recodedVars[key]?.label || key,
+                    value: key
+                }));
+
+            setXInfoOptions([
+                { text: '없음 (순수 빈도)', value: '__none__' },
+                ...dynamicXInfoOptions
+            ]);
 
             // 2. 전체표 목록 (Overview) 가져오기
             const overviewRes = await getOverview.mutateAsync({
                 pageid: pageId,
                 user: testUser,
-                x_info: [], // 현재는 빈 배열
+                x_info: selectedXInfo !== '__none__' ? [selectedXInfo] : [], 
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
                 search: bannerSearch, // API 검색 연동
@@ -380,7 +403,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             }
         }, 300);
         return () => clearTimeout(timer);
-    }, [bannerSearch, auth?.user?.userId]);
+    }, [bannerSearch, selectedXInfo, auth?.user?.userId]);
 
     useEffect(() => {
         if (currentPage !== 1) {
@@ -489,9 +512,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
                         <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
                             <DropDownList
-                                data={['없음 (순수 빈도)', 'DQ3', '기본배너', 'SQ', 'SQ2 + SQ1 + SQ3', 'SQ1 * SQ3']}
-                                value={selectedXInfo}
-                                onChange={(e) => setSelectedXInfo(e.value)}
+                                data={xInfoOptions}
+                                textField="text"
+                                dataItemKey="value"
+                                value={xInfoOptions.find(o => o.value === selectedXInfo) || xInfoOptions[0]}
+                                onChange={(e) => setSelectedXInfo(e.value.value)}
                                 style={{ width: '160px', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
                                 className="custom-xinfo-dropdown"
                                 popupSettings={{ className: "custom-xinfo-popup" }}
