@@ -167,6 +167,78 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
+const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct }) => {
+    const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(true);
+    const [isGridOpen, setIsGridOpen] = useState(true);
+    const [isChartOpen, setIsChartOpen] = useState(true);
+
+    return (
+        <React.Fragment>
+            {index > 0 && (
+                <div style={{ width: '100%', borderBottom: '2px dashed #cbd5e1', margin: '10px 0 10px 0' }} />
+            )}
+            <div id={`banner_block_${banner.id}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: isLast ? '10px' : '0' }}>
+                {/* Title Indicator */}
+                <div style={{
+                    alignSelf: 'flex-start',
+                    display: 'inline-flex', alignItems: 'center',
+                    background: '#e0e7ff',
+                    padding: '6px 16px',
+                    borderRadius: '24px'
+                }}>
+                    <span style={{ fontSize: '14px', fontWeight: 800, color: '#1e3a8a', lineHeight: 1.3 }}>
+                        {banner.label}
+                    </span>
+                </div>
+                {/* 1. AI Summary */}
+                <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={16} /> AI 데이터 요약</div>
+                        {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                    </div>
+                    {isAiSummaryOpen && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
+                            <span style={{ fontSize: '13px' }}>AI 분석 요약 결과 표출 영역</span>
+                        </div>
+                    )}
+                </div>
+
+                {/* 2. Data Grid */}
+                <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isGridOpen ? '10px' : '8px 10px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <div onClick={() => setIsGridOpen(!isGridOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isGridOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Table2 size={16} /> 교차 분석표</div>
+                        {isGridOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                    </div>
+                    {isGridOpen && (
+                        <div style={{ height: '400px' }}>
+                            <CrossTableGrid
+                                dataItem={banner}
+                                showN={showN}
+                                showPct={showPct}
+                                decimalN={decimalN}
+                                decimalPct={decimalPct}
+                            />
+                        </div>
+                    )}
+                </div>
+
+                {/* 3. Chart */}
+                <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isChartOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <div onClick={() => setIsChartOpen(!isChartOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isChartOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart3 size={16} /> 데이터 시각화 (차트)</div>
+                        {isChartOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                    </div>
+                    {isChartOpen && (
+                        <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
+                            <span style={{ fontSize: '13px' }}>차트 표출 영역</span>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </React.Fragment>
+    );
+});
+
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
     const { getOverviewContext, getOverview, savePageSettings } = DpRequestPageApi();
@@ -184,10 +256,6 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [decimalPct, setDecimalPct] = useState(1);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
     const [xInfoOptions, setXInfoOptions] = useState([]);
-
-    const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(true);
-    const [isGridOpen, setIsGridOpen] = useState(true);
-    const [isChartOpen, setIsChartOpen] = useState(true);
 
     const [selectedComputedFilterIds, setSelectedComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
     const [draftComputedFilterIds, setDraftComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
@@ -983,71 +1051,18 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 표시할 데이터가 없습니다.
                             </div>
                         )}
-                        {useMemo(() => filteredBanners.map((banner, index) => (
-                            <React.Fragment key={banner.id}>
-                                {index > 0 && (
-                                    <div style={{ width: '100%', borderBottom: '2px dashed #cbd5e1', margin: '10px 0 10px 0' }} />
-                                )}
-                                <div id={`banner_block_${banner.id}`} style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingBottom: index === filteredBanners.length - 1 ? '10px' : '0' }}>
-                                    {/* Title Indicator */}
-                                    <div style={{
-                                        alignSelf: 'flex-start',
-                                        display: 'inline-flex', alignItems: 'center',
-                                        background: '#e0e7ff',
-                                        padding: '6px 16px',
-                                        borderRadius: '24px'
-                                    }}>
-                                        <span style={{ fontSize: '14px', fontWeight: 800, color: '#1e3a8a', lineHeight: 1.3 }}>
-                                            {banner.label}
-                                        </span>
-                                    </div>
-                                    {/* 1. AI Summary */}
-                                    <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                                        <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={16} /> AI 데이터 요약</div>
-                                            {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
-                                        </div>
-                                        {isAiSummaryOpen && (
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                                                <span style={{ fontSize: '13px' }}>AI 분석 요약 결과 표출 영역</span>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* 2. Data Grid */}
-                                    <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isGridOpen ? '10px' : '8px 10px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                                        <div onClick={() => setIsGridOpen(!isGridOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isGridOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Table2 size={16} /> 교차 분석표</div>
-                                            {isGridOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
-                                        </div>
-                                        {isGridOpen && (
-                                            <div style={{ height: '400px' }}>
-                                                <CrossTableGrid
-                                                    dataItem={banner}
-                                                    showN={showN}
-                                                    showPct={showPct}
-                                                    decimalN={decimalN}
-                                                    decimalPct={decimalPct}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* 3. Chart */}
-                                    <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isChartOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                                        <div onClick={() => setIsChartOpen(!isChartOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isChartOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart3 size={16} /> 데이터 시각화 (차트)</div>
-                                            {isChartOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
-                                        </div>
-                                        {isChartOpen && (
-                                            <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                                                <span style={{ fontSize: '13px' }}>차트 표출 영역</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </React.Fragment>
-                        )), [filteredBanners, isAiSummaryOpen, isGridOpen, isChartOpen, showN, showPct, decimalN, decimalPct])}
+                        {filteredBanners.map((banner, index) => (
+                            <BannerBlock 
+                                key={banner.id}
+                                banner={banner}
+                                index={index}
+                                isLast={index === filteredBanners.length - 1}
+                                showN={showN}
+                                showPct={showPct}
+                                decimalN={decimalN}
+                                decimalPct={decimalPct}
+                            />
+                        ))}
                     </div>
                 </div>
             </div>
