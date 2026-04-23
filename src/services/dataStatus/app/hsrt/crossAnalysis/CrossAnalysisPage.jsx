@@ -505,11 +505,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         const foundTarget = formatted.find(f => f.id === targetIdToSelect);
                         if (foundTarget) target = foundTarget;
                     }
-                    if (isFresh || targetIdToSelect || !selectedBanner) {
+                    if (isFresh || targetIdToSelect || !selectedBanner || !formatted.some(f => f.id === selectedBanner)) {
                         setSelectedBanner(target.id);
                         setCurrentLabel(target.label);
                         setCurrentId(target.id);
-                        setCurrentXInfo(target.type);
+                        setCurrentXInfo(target.type || '단일 응답형 (Single)');
                     }
                 } else {
                     setSelectedBanner('');
