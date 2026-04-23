@@ -25,53 +25,64 @@ const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
     const gridColumns = useMemo(() => {
         const _cols = [];
         _cols.push(
-            <Column 
-                key="__base_label_col__" 
-                field="label" 
-                title="구분" 
-                width="160px" 
-                locked 
-                headerClassName="k-text-center" 
-                className="k-text-center" 
+            <Column
+                key="__base_label_col__"
+                field="label"
+                title="구분"
+                width="120px"
+                locked
+                headerClassName="k-text-center"
+                className="k-text-center"
                 cell={(props) => {
                     const { dataItem, field, ...tdProps } = props;
                     return (
-                        <td {...tdProps} className={`${tdProps.className || ''} k-text-center`} style={{ ...(tdProps.style || {}), fontWeight: 600, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }}>
-                            {dataItem.label || dataItem.var_label || dataItem.name || dataItem.key || '-'}
+                        <td {...tdProps} className={`${tdProps.className || ''} k-text-center`} style={{ ...(tdProps.style || {}), fontWeight: 500, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }}>
+                            <div style={{
+                                display: '-webkit-box',
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: 'hidden',
+                                whiteSpace: 'normal',
+                                wordBreak: 'break-word',
+                                lineHeight: '1.4',
+                                fontSize: '12px'
+                            }}>
+                                {dataItem.label || dataItem.var_label || dataItem.name || dataItem.key || '-'}
+                            </div>
                         </td>
                     );
-                }} 
+                }}
             />
         );
         columns.forEach((col, idx) => {
             const fieldKey = col.key || `c${idx}`;
             const colTitle = col.label || col.var_label || col.name || col.key || fieldKey;
-            
+
             _cols.push(
-                <Column 
-                    key={`col_${fieldKey}_${idx}`} 
-                    field={fieldKey} 
-                    title={colTitle} 
+                <Column
+                    key={`col_${fieldKey}_${idx}`}
+                    field={fieldKey}
+                    title={colTitle}
                     width="120px"
                     headerClassName="k-text-center"
                     cell={(props) => {
                         const { dataItem, field, ...tdProps } = props;
                         const cellBox = dataItem.cells?.[fieldKey] || {};
-                        
+
                         const nValue = cellBox.count !== undefined ? cellBox.count : cellBox.n;
                         const pValue = cellBox.percent !== undefined ? cellBox.percent : cellBox.pct;
-                        
+
                         const mergedClassName = [tdProps.className || '', "k-text-right"].filter(Boolean).join(" ");
 
                         if (nValue === undefined && pValue === undefined) {
-                            return <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 8px', fontSize: '12px' }}>-</td>;
+                            return <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 10px', fontSize: '12px' }}>-</td>;
                         }
-                        
+
                         const nDecimals = decimalN !== '' && decimalN !== undefined ? decimalN : 0;
                         const pctDecimals = decimalPct !== '' && decimalPct !== undefined ? decimalPct : 1;
 
                         return (
-                            <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 8px' }}>
+                            <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 10px' }}>
                                 {showN !== false && nValue !== undefined && <div style={{ fontSize: '12px', fontWeight: 500, color: '#1e293b' }}>{Number(nValue).toFixed(nDecimals)}</div>}
                                 {showPct !== false && pValue !== undefined && <div style={{ fontSize: '11px', color: '#64748b' }}>{Number(pValue).toFixed(pctDecimals)}%</div>}
                             </td>
@@ -85,21 +96,21 @@ const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
 
     return (
         <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-           <div style={{ padding: '0 8px 12px 8px', fontSize: '15.5px', fontWeight: 800, color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ padding: '0 8px 12px 8px', fontSize: '15.5px', fontWeight: 800, color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span>{metadata.title || metadata.label || metadata.name || dataItem.label}</span>
-           </div>
-           {columns.length > 0 || rows.length > 0 ? (
-               <div style={{ flex: 1, minHeight: 0 }} className="dp-table-container">
-                   <KendoGridV2 data={rows}>
-                       {gridColumns}
-                   </KendoGridV2>
-               </div>
-           ) : (
-               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
-                   <span>API 응답 데이터 구조 확인 필요 (결과 데이터 없음)</span>
-                   <span style={{ fontSize: '12px', marginTop: '4px' }}>(선택된 X 기준변수와 매칭되는 교차표 값이 비어있습니다)</span>
-               </div>
-           )}
+            </div>
+            {columns.length > 0 || rows.length > 0 ? (
+                <div style={{ flex: 1, minHeight: 0 }} className="dp-table-container">
+                    <KendoGridV2 data={rows}>
+                        {gridColumns}
+                    </KendoGridV2>
+                </div>
+            ) : (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
+                    <span>API 응답 데이터 구조 확인 필요 (결과 데이터 없음)</span>
+                    <span style={{ fontSize: '12px', marginTop: '4px' }}>(선택된 X 기준변수와 매칭되는 교차표 값이 비어있습니다)</span>
+                </div>
+            )}
         </div>
     );
 };
@@ -243,7 +254,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const getFilterButtonText = () => {
-        if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return '전체'; 
+        if (selectedComputedFilterIds.includes(CROSS_FILTER_ALL_ID)) return '전체';
         const activeOptions = computedFilterOptions.filter(f => selectedComputedFilterIds.includes(f.id));
         if (activeOptions.length === 0) return '전체';
         if (activeOptions.length === 1) return activeOptions[0].label;
@@ -382,15 +393,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         const testUser = "sbbok";
         try {
             loadingSpinner.show();
-            
+
             // 1. Context 데이터 가져오기
             const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: testUser });
-            
+
             // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
             const ctxPayload = contextRes?.resultjson || contextRes || {};
             const recodedVars = ctxPayload.recoded_variables || {};
             const baseVars = ctxPayload.base_variables || {};
-            
+
             const dynamicXInfoOptions = Object.entries(recodedVars)
                 .filter(([key, value]) => {
                     const id = String(value?.id ?? key).trim().toLowerCase();
@@ -409,7 +420,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 { text: '없음 (순수 빈도)', value: '__none__' },
                 ...dynamicXInfoOptions
             ]);
-            
+
             const filterOpts = Object.entries(baseVars)
                 .filter(([, value]) => String(value?.recoded_type ?? "").toLowerCase() === "computed")
                 .flatMap(([key, value]) => {
@@ -433,14 +444,14 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         .filter(Boolean);
                 })
                 .sort((a, b) => a.label.localeCompare(b.label, "ko") || a.id.localeCompare(b.id, "en"));
-            
+
             setComputedFilterOptions(filterOpts);
 
             // 2. 전체표 목록 (Overview) 가져오기
             const overviewRes = await getOverview.mutateAsync({
                 pageid: pageId,
                 user: testUser,
-                x_info: selectedXInfo !== '__none__' ? [selectedXInfo] : [], 
+                x_info: selectedXInfo !== '__none__' ? [selectedXInfo] : [],
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
                 search: bannerSearch, // API 검색 연동
@@ -462,12 +473,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         id: t.table_id || t.id || `table_${i}`,
                         label: t.title || t.label || t.name || t.id,
                         type: t.type === 'single' ? '단일 응답형 (Single)' :
-                              t.type === 'double' ? '다중 응답형 (Double)' :
-                              t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
+                            t.type === 'double' ? '다중 응답형 (Double)' :
+                                t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
                         subId: t.table_id || t.id,
                         raw: t,
                         dataResult: dataResult,
-                        info: [] 
+                        info: []
                     };
                 });
                 setBanners(formatted);
@@ -513,10 +524,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setCurrentId('');
                 setCurrentXInfo('');
             }
-        } catch (error) { 
-            console.error('Fetch Overview Error:', error); 
-        } finally { 
-            loadingSpinner.hide(); 
+        } catch (error) {
+            console.error('Fetch Overview Error:', error);
+        } finally {
+            loadingSpinner.hide();
         }
     };
 
@@ -568,11 +579,18 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                 .dp-table-container .k-grid-header th.k-header {
                     font-size: 12px !important;
-                    padding: 8px 8px !important;
+                    padding: 8px 12px !important;
                 }
                 .dp-table-container .k-grid-header th.k-header .k-column-title {
                     font-size: 12px !important;
                     font-weight: 600;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 2;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    white-space: normal !important;
+                    word-break: break-all;
+                    line-height: 1.3;
                 }
 
                 .custom-xinfo-dropdown.k-dropdownlist,
@@ -870,19 +888,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     </div>
                                 ))}
                             </div>
-                            
+
                             {/* 페이징 UI */}
                             {totalTables > 0 && (
                                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', padding: '10px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 }}>
                                     <button
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         disabled={currentPage <= 1}
-                                        style={{ 
+                                        style={{
                                             width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px', 
+                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px',
                                             background: currentPage <= 1 ? '#f8fafc' : '#ffffff',
-                                            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer', 
-                                            color: currentPage <= 1 ? '#cbd5e1' : '#475569' 
+                                            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                            color: currentPage <= 1 ? '#cbd5e1' : '#475569'
                                         }}
                                     >
                                         <ChevronLeft size={16} />
@@ -893,12 +911,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     <button
                                         onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalTables / PAGE_SIZE), p + 1))}
                                         disabled={currentPage >= Math.ceil(totalTables / PAGE_SIZE)}
-                                        style={{ 
+                                        style={{
                                             width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px', 
+                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px',
                                             background: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? '#f8fafc' : '#ffffff',
-                                            cursor: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? 'not-allowed' : 'pointer', 
-                                            color: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? '#cbd5e1' : '#475569' 
+                                            cursor: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? 'not-allowed' : 'pointer',
+                                            color: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? '#cbd5e1' : '#475569'
                                         }}
                                     >
                                         <ChevronRight size={16} />
@@ -909,12 +927,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
 
                     <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '24px' }}>
-                        <CrossTableGrid 
-                            dataItem={banners.find(b => b.id === selectedBanner)} 
-                            showN={showN} 
-                            showPct={showPct} 
-                            decimalN={decimalN} 
-                            decimalPct={decimalPct} 
+                        <CrossTableGrid
+                            dataItem={banners.find(b => b.id === selectedBanner)}
+                            showN={showN}
+                            showPct={showPct}
+                            decimalN={decimalN}
+                            decimalPct={decimalPct}
                         />
                     </div>
                 </div>
