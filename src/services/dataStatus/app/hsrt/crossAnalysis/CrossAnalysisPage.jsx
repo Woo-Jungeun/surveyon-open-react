@@ -13,6 +13,97 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 // --- 상수 ---
 const CROSS_FILTER_ALL_ID = "__all__";
 
+const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
+    if (!dataItem) return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>선택된 표가 없습니다. 좌측에서 항목을 선택해주세요.</div>;
+
+    const metadata = dataItem.raw || {};
+    const resultData = dataItem.dataResult || {};
+
+    const columns = resultData.columns || [];
+    const rows = resultData.rows || [];
+
+    const gridColumns = useMemo(() => {
+        const _cols = [];
+        _cols.push(
+            <Column 
+                key="__base_label_col__" 
+                field="label" 
+                title="구분" 
+                width="160px" 
+                locked 
+                headerClassName="k-text-center" 
+                className="k-text-center" 
+                cell={(props) => {
+                    const { dataItem, field, ...tdProps } = props;
+                    return (
+                        <td {...tdProps} className={`${tdProps.className || ''} k-text-center`} style={{ ...(tdProps.style || {}), fontWeight: 600, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }}>
+                            {dataItem.label || dataItem.var_label || dataItem.name || dataItem.key || '-'}
+                        </td>
+                    );
+                }} 
+            />
+        );
+        columns.forEach((col, idx) => {
+            const fieldKey = col.key || `c${idx}`;
+            const colTitle = col.label || col.var_label || col.name || col.key || fieldKey;
+            
+            _cols.push(
+                <Column 
+                    key={`col_${fieldKey}_${idx}`} 
+                    field={fieldKey} 
+                    title={colTitle} 
+                    width="120px"
+                    headerClassName="k-text-center"
+                    cell={(props) => {
+                        const { dataItem, field, ...tdProps } = props;
+                        const cellBox = dataItem.cells?.[fieldKey] || {};
+                        
+                        const nValue = cellBox.count !== undefined ? cellBox.count : cellBox.n;
+                        const pValue = cellBox.percent !== undefined ? cellBox.percent : cellBox.pct;
+                        
+                        const mergedClassName = [tdProps.className || '', "k-text-right"].filter(Boolean).join(" ");
+
+                        if (nValue === undefined && pValue === undefined) {
+                            return <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 8px', fontSize: '12px' }}>-</td>;
+                        }
+                        
+                        const nDecimals = decimalN !== '' && decimalN !== undefined ? decimalN : 0;
+                        const pctDecimals = decimalPct !== '' && decimalPct !== undefined ? decimalPct : 1;
+
+                        return (
+                            <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 8px' }}>
+                                {showN !== false && nValue !== undefined && <div style={{ fontSize: '12px', fontWeight: 500, color: '#1e293b' }}>{Number(nValue).toFixed(nDecimals)}</div>}
+                                {showPct !== false && pValue !== undefined && <div style={{ fontSize: '11px', color: '#64748b' }}>{Number(pValue).toFixed(pctDecimals)}%</div>}
+                            </td>
+                        );
+                    }}
+                />
+            );
+        });
+        return _cols;
+    }, [columns, showN, showPct, decimalN, decimalPct]);
+
+    return (
+        <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+           <div style={{ padding: '0 8px 12px 8px', fontSize: '15.5px', fontWeight: 800, color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>{metadata.title || metadata.label || metadata.name || dataItem.label}</span>
+           </div>
+           {columns.length > 0 || rows.length > 0 ? (
+               <div style={{ flex: 1, minHeight: 0 }} className="dp-table-container">
+                   <KendoGridV2 data={rows}>
+                       {gridColumns}
+                   </KendoGridV2>
+               </div>
+           ) : (
+               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
+                   <span>API 응답 데이터 구조 확인 필요 (결과 데이터 없음)</span>
+                   <span style={{ fontSize: '12px', marginTop: '4px' }}>(선택된 X 기준변수와 매칭되는 교차표 값이 비어있습니다)</span>
+               </div>
+           )}
+        </div>
+    );
+};
+
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
     const anchorRef = useRef(null);
@@ -360,17 +451,25 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             // 응답 포맷 대응 (resultjson 래핑 여부)
             const payload = overviewRes?.resultjson || overviewRes || {};
             const tablesList = payload.tables || [];
+            const resultsList = payload.results || [];
 
             if (tablesList.length > 0 || (overviewRes?.success === '777')) {
-                const formatted = tablesList.map((t, i) => ({
-                    id: t.id || `table_${i}`,
-                    label: t.name || t.label || t.id,
-                    type: t.type === 'single' ? '단일 응답형 (Single)' :
-                          t.type === 'double' ? '다중 응답형 (Double)' :
-                          t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
-                    subId: t.id,
-                    info: [] // 테이블 그리드에 당장 출력할 조건 정보는 비워둠
-                }));
+                const formatted = tablesList.map((t, i) => {
+                    const matchedResult = resultsList.find(r => r.table_id === (t.table_id || t.id));
+                    const dataResult = matchedResult ? matchedResult.result : null;
+
+                    return {
+                        id: t.table_id || t.id || `table_${i}`,
+                        label: t.title || t.label || t.name || t.id,
+                        type: t.type === 'single' ? '단일 응답형 (Single)' :
+                              t.type === 'double' ? '다중 응답형 (Double)' :
+                              t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
+                        subId: t.table_id || t.id,
+                        raw: t,
+                        dataResult: dataResult,
+                        info: [] 
+                    };
+                });
                 setBanners(formatted);
                 history.reset(formatted);
 
@@ -465,6 +564,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 }
                 input[type="number"] {
                     -moz-appearance: textfield;
+                }
+
+                .dp-table-container .k-grid-header th.k-header {
+                    font-size: 12px !important;
+                    padding: 8px 8px !important;
+                }
+                .dp-table-container .k-grid-header th.k-header .k-column-title {
+                    font-size: 12px !important;
+                    font-weight: 600;
                 }
 
                 .custom-xinfo-dropdown.k-dropdownlist,
@@ -597,11 +705,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             }}>
                                 <input
                                     type="text"
-                                    maxLength="1"
                                     value={decimalN}
                                     onChange={(e) => {
-                                        const val = e.target.value.replace(/[^0-5]/g, '');
-                                        setDecimalN(val !== '' ? parseInt(val) : 0);
+                                        let val = e.target.value.replace(/[^0-5]/g, '');
+                                        if (val.length > 1) val = val.slice(-1); // 마지막 입력 문자만 유지
+                                        setDecimalN(val !== '' ? parseInt(val) : '');
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'ArrowUp') {
+                                            e.preventDefault();
+                                            setDecimalN(prev => Math.min(5, (prev === '' ? 0 : prev) + 1));
+                                        } else if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            setDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (decimalN === '') setDecimalN(0);
                                     }}
                                     style={{
                                         width: '100%', height: '100%', border: 'none', background: 'transparent',
@@ -646,11 +766,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             }}>
                                 <input
                                     type="text"
-                                    maxLength="1"
                                     value={decimalPct}
                                     onChange={(e) => {
-                                        const val = e.target.value.replace(/[^0-5]/g, '');
-                                        setDecimalPct(val !== '' ? parseInt(val) : 0);
+                                        let val = e.target.value.replace(/[^0-5]/g, '');
+                                        if (val.length > 1) val = val.slice(-1);
+                                        setDecimalPct(val !== '' ? parseInt(val) : '');
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'ArrowUp') {
+                                            e.preventDefault();
+                                            setDecimalPct(prev => Math.min(5, (prev === '' ? 1 : prev) + 1));
+                                        } else if (e.key === 'ArrowDown') {
+                                            e.preventDefault();
+                                            setDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                        }
+                                    }}
+                                    onBlur={() => {
+                                        if (decimalPct === '') setDecimalPct(1);
                                     }}
                                     style={{
                                         width: '100%', height: '100%', border: 'none', background: 'transparent',
@@ -776,69 +908,14 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         </div>
                     </div>
 
-                    <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                        <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                            <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '24px', flex: 1, minWidth: 0 }}>
-                                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>문항 ID</span>
-                                    <input
-                                        type="text"
-                                        value={currentId}
-                                        onChange={(e) => {
-                                            setCurrentId(e.target.value);
-                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
-                                            if (onUnsavedChange) onUnsavedChange(true);
-                                        }}
-                                        className="dp-input"
-                                        style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #e2e8f0', borderRadius: '6px' }}
-                                    />
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>문항 라벨</span>
-                                    <input
-                                        type="text"
-                                        value={currentLabel}
-                                        onChange={(e) => {
-                                            setCurrentLabel(e.target.value);
-                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
-                                            if (onUnsavedChange) onUnsavedChange(true);
-                                        }}
-                                        className="dp-input"
-                                        style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #e2e8f0', borderRadius: '6px' }}
-                                    />
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>문항 유형</span>
-                                    <DropDownList
-                                        data={['단일 응답형 (Single)', '다중 응답형 (Double)', '숫자형 (Numeric / Scale)']}
-                                        value={currentXInfo || ''}
-                                        className="dp-add-question-dropdown"
-                                        onChange={(e) => {
-                                            setCurrentXInfo(e.value);
-                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, isDirty: true } : b));
-                                            if (onUnsavedChange) onUnsavedChange(true);
-                                        }}
-                                        style={{ flex: 1, minWidth: 0, height: '32px', fontSize: '13px', fontWeight: 400, borderRadius: '6px' }}
-                                    />
-                                </div>
-                            </div>
-                            <div className="dp-content-actions" style={{ marginLeft: 'auto' }}>
-                                {/* 저장 버튼이 상단 글로벌 헤더로 통합되어 이곳에서는 제거됨 */}
-                            </div>
-                        </div>
-                        <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                            <KendoGridV2
-                                data={banners.find(b => b.id === selectedBanner)?.info || []}
-                                reorderable addable showNo deletable editField="inEdit"
-                                onDataChange={updateBannerInfo}
-                                onRowClick={handleRowClick}
-                                newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
-                            >
-                                <Column field="label2" title="할당될 값" width="120px" />
-                                <Column field="label" title="보기 라벨" width="500px" />
-                                <Column field="logic" title="조건" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
-                            </KendoGridV2>
-                        </div>
+                    <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '24px' }}>
+                        <CrossTableGrid 
+                            dataItem={banners.find(b => b.id === selectedBanner)} 
+                            showN={showN} 
+                            showPct={showPct} 
+                            decimalN={decimalN} 
+                            decimalPct={decimalPct} 
+                        />
                     </div>
                 </div>
             </div>
