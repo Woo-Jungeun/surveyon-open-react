@@ -34,9 +34,9 @@ const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
                 headerClassName="k-text-center"
                 className="k-text-center"
                 cell={(props) => {
-                    const { dataItem, field, ...tdProps } = props;
+                    const { dataItem, className, style, colSpan, rowSpan } = props;
                     return (
-                        <td {...tdProps} className={`${tdProps.className || ''} k-text-center`} style={{ ...(tdProps.style || {}), fontWeight: 500, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }}>
+                        <td className={`${className || ''} k-text-center`} style={{ ...(style || {}), fontWeight: 500, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }} colSpan={colSpan} rowSpan={rowSpan}>
                             <div style={{
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
@@ -66,23 +66,23 @@ const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
                     width="120px"
                     headerClassName="k-text-center"
                     cell={(props) => {
-                        const { dataItem, field, ...tdProps } = props;
+                        const { dataItem, field, className, style, colSpan, rowSpan } = props;
                         const cellBox = dataItem.cells?.[fieldKey] || {};
 
                         const nValue = cellBox.count !== undefined ? cellBox.count : cellBox.n;
                         const pValue = cellBox.percent !== undefined ? cellBox.percent : cellBox.pct;
 
-                        const mergedClassName = [tdProps.className || '', "k-text-right"].filter(Boolean).join(" ");
+                        const mergedClassName = [className || '', "k-text-right"].filter(Boolean).join(" ");
 
                         if (nValue === undefined && pValue === undefined) {
-                            return <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 10px', fontSize: '12px' }}>-</td>;
+                            return <td className={mergedClassName} style={{ ...(style || {}), padding: '4px 10px', fontSize: '12px' }} colSpan={colSpan} rowSpan={rowSpan}>-</td>;
                         }
 
                         const nDecimals = decimalN !== '' && decimalN !== undefined ? decimalN : 0;
                         const pctDecimals = decimalPct !== '' && decimalPct !== undefined ? decimalPct : 1;
 
                         return (
-                            <td {...tdProps} className={mergedClassName} style={{ ...(tdProps.style || {}), padding: '4px 10px' }}>
+                            <td className={mergedClassName} style={{ ...(style || {}), padding: '4px 10px' }} colSpan={colSpan} rowSpan={rowSpan}>
                                 {showN !== false && nValue !== undefined && <div style={{ fontSize: '12px', fontWeight: 500, color: '#1e293b' }}>{Number(nValue).toFixed(nDecimals)}</div>}
                                 {showPct !== false && pValue !== undefined && <div style={{ fontSize: '11px', color: '#64748b' }}>{Number(pValue).toFixed(pctDecimals)}%</div>}
                             </td>
