@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Info, Wand2, Plus, Copy, ChevronDown } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3 } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
@@ -96,11 +96,8 @@ const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
 
     return (
         <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '0 8px 12px 8px', fontSize: '15.5px', fontWeight: 800, color: '#1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>{metadata.title || metadata.label || metadata.name || dataItem.label}</span>
-            </div>
             {columns.length > 0 || rows.length > 0 ? (
-                <div style={{ flex: 1, minHeight: 0 }} className="dp-table-container">
+                <div style={{ flex: 1, minHeight: 0, padding: 0 }} className="dp-table-container">
                     <KendoGridV2 data={rows}>
                         {gridColumns}
                     </KendoGridV2>
@@ -187,6 +184,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [decimalPct, setDecimalPct] = useState(1);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
     const [xInfoOptions, setXInfoOptions] = useState([]);
+
+    const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(true);
+    const [isGridOpen, setIsGridOpen] = useState(true);
+    const [isChartOpen, setIsChartOpen] = useState(true);
 
     const [selectedComputedFilterIds, setSelectedComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
     const [draftComputedFilterIds, setDraftComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
@@ -923,14 +924,51 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         </div>
                     </div>
 
-                    <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '24px' }}>
-                        <CrossTableGrid
-                            dataItem={banners.find(b => b.id === selectedBanner)}
-                            showN={showN}
-                            showPct={showPct}
-                            decimalN={decimalN}
-                            decimalPct={decimalPct}
-                        />
+                    <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '10px', gap: '10px', backgroundColor: '#f1f5f9' }}>
+                        {/* 1. AI Summary */}
+                        <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                            <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={16} /> AI 데이터 요약</div>
+                                {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                            </div>
+                            {isAiSummaryOpen && (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
+                                    <span style={{ fontSize: '13px' }}>AI 분석 요약 결과 표출 영역</span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 2. Data Grid */}
+                        <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isGridOpen ? '10px' : '8px 10px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', ...(isGridOpen ? { flex: 1.2, minHeight: 0 } : { flexShrink: 0 }) }}>
+                            <div onClick={() => setIsGridOpen(!isGridOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isGridOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Table2 size={16} /> 교차 분석표</div>
+                                {isGridOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                            </div>
+                            {isGridOpen && (
+                                <div style={{ flex: 1, minHeight: 0 }}>
+                                    <CrossTableGrid
+                                        dataItem={banners.find(b => b.id === selectedBanner)}
+                                        showN={showN}
+                                        showPct={showPct}
+                                        decimalN={decimalN}
+                                        decimalPct={decimalPct}
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 3. Chart */}
+                        <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isChartOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', ...(isChartOpen ? { flex: 1, minHeight: 0 } : { flexShrink: 0 }) }}>
+                            <div onClick={() => setIsChartOpen(!isChartOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isChartOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart3 size={16} /> 데이터 시각화 (차트)</div>
+                                {isChartOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                            </div>
+                            {isChartOpen && (
+                                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', minHeight: 0 }}>
+                                    <span style={{ fontSize: '13px' }}>차트 표출 영역</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
