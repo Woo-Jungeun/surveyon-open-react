@@ -4,6 +4,8 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import { FileText, Play, X, CheckCircle, ChevronLeft, ChevronRight, SmilePlus, Bot, FileDown, Database, ChevronUp, ChevronDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { SurveyTestPageApi } from './SurveyTestPageApi';
+import SurveyTestProgressModal from './SurveyTestProgressModal';
+import * as signalR from "@microsoft/signalr";
 import './SurveyTestPage.css';
 
 // ─── QA 섹션 정의 ────────────────────────────────────
@@ -53,6 +55,12 @@ const SurveyTestPage = () => {
         cross: true
     });
 
+    // Progress Modal States
+    const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+    const [progressPercentage, setProgressPercentage] = useState(0);
+    const [progressMessage, setProgressMessage] = useState('요청을 준비하고 있습니다...');
+    const [isProgressComplete, setIsProgressComplete] = useState(false);
+
     const fileInputRef = useRef(null);
     const tabContentRef = useRef(null);
     const auth = useSelector(store => store.auth);
@@ -81,7 +89,7 @@ const SurveyTestPage = () => {
     };
     const handleRemoveFile = () => setUploadedFile(null);
     const handleSectionClick = (key) => setActiveSection(prev => prev === key ? null : key);
-    
+
     const toggleSection = (key) => {
         setExpandedSections(prev => ({
             ...prev,
@@ -96,16 +104,93 @@ const SurveyTestPage = () => {
             return;
         }
 
+        // 로딩바 초기화 및 모달 띄우기
+        setProgressPercentage(0);
+        setProgressMessage('연결 준비 중...');
+        setIsProgressComplete(false);
+        setIsProgressModalOpen(true);
+
         const pn = sessionStorage.getItem('projectnum') || '';
         const user = auth?.user?.userId || '';
 
+        // 1. 소켓 연결 및 아이디 발급
+        let myConnectionId = null;
+        let connection = null;
+        try {
+            const baseUrl = window.API_CONFIG?.API_BASE_URL_DATAMANAGEMENT || "";
+            let hubUrl = baseUrl.replace(/\/+$/, '') + "/hubs/task-progress";
+            if (!hubUrl.startsWith('http')) {
+                hubUrl = window.location.origin + hubUrl;
+            }
+
+            console.log(`[SignalR 디버그] 📡 연결 시도 중... 허브 주소: ${hubUrl}`);
+
+            connection = new signalR.HubConnectionBuilder()
+                .withUrl(hubUrl)
+                .withAutomaticReconnect()
+                .configureLogging(signalR.LogLevel.Information) // SignalR 내부 로그 활성화
+                .build();
+
+            // --- 생명주기 이벤트 로깅 ---
+            connection.onreconnecting(error => {
+                console.warn(`[SignalR 디버그] ⚠️ 연결 끊김! 재연결 시도 중... Error:`, error);
+            });
+            connection.onreconnected(connectionId => {
+                console.log(`[SignalR 디버그] 🔗 재연결 성공! 새 Connection ID: ${connectionId}`);
+            });
+            connection.onclose(error => {
+                if (error) console.error(`[SignalR 디버그] ❌ 비정상 연결 종료 Error:`, error);
+                else console.log(`[SignalR 디버그] 🛑 정상적으로 연결이 해제되었습니다.`);
+            });
+
+            // 2. 이벤트 수신 등록
+            connection.on("ReceiveProgress", (...args) => {
+                console.log(`[SignalR 원본 수신 데이터]:`, args);
+
+                let percent = 0;
+                let msg = '';
+
+                // 백엔드가 (message, percent) 2개의 인자로 쏘는지, { message, percent } 1개의 객체로 쏘는지 모두 대응
+                if (args.length >= 2 && typeof args[1] === 'number') {
+                    msg = args[0];
+                    percent = args[1];
+                } else if (args.length === 1 && typeof args[0] === 'object') {
+                    msg = args[0].message || args[0].Message;
+                    percent = args[0].percent || args[0].Percent || args[0].percentage || args[0].Percentage;
+                } else if (args.length >= 2 && typeof args[0] === 'number') {
+                    percent = args[0];
+                    msg = args[1];
+                }
+
+                console.log(`[분석 로그] 🚀 ${percent}% 완료: ${msg}`);
+                setProgressPercentage(percent || 0);
+                setProgressMessage(msg || '');
+            });
+
+            await connection.start();
+            myConnectionId = connection.connectionId;
+            console.log(`[SignalR] 🟢 소켓 연결 성공! Connection ID: ${myConnectionId}`);
+        } catch (e) {
+            console.error("SignalR Connection Error:", e);
+            setProgressMessage("오류: 실시간 연결 실패 (분석 진행 가능)");
+        }
+
         const fd = new FormData();
-        fd.append('pn', pn);
+        fd.append('Pn', pn);
         fd.append('documentFile', uploadedFile);
         fd.append('user', user);
+        if (myConnectionId) {
+            fd.append('ConnectionId', myConnectionId);
+        }
 
         try {
             const res = await analyzeAll.mutateAsync(fd);
+
+            // 응답 완료 시 100% 로깅
+            setProgressPercentage(100);
+            setProgressMessage('교차 검증이 완벽하게 끝났습니다!');
+            setTimeout(() => setIsProgressComplete(true), 500);
+
             if (res?.success === '777') {
                 setResultJson(res.resultjson);
                 setActiveTab('qaReport');
@@ -116,6 +201,11 @@ const SurveyTestPage = () => {
             }
         } catch (e) {
             modal.showErrorAlert("오류", '서버 통신 중 오류가 발생했습니다.');
+            setIsProgressModalOpen(false);
+        } finally {
+            if (connection) {
+                connection.stop();
+            }
         }
     };
 
@@ -325,6 +415,14 @@ const SurveyTestPage = () => {
                 </div>
 
             </div>
+
+            <SurveyTestProgressModal
+                isOpen={isProgressModalOpen}
+                onClose={() => setIsProgressModalOpen(false)}
+                percentage={progressPercentage}
+                message={progressMessage}
+                isComplete={isProgressComplete}
+            />
         </div>
     );
 };

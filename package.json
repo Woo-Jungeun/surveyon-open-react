@@ -13,6 +13,7 @@
         "deploy": "npm run build && \"C:\\Program Files\\IIS\\Microsoft Web Deploy V3\\msdeploy.exe\" -verb:sync -source:contentPath=\"%cd%\\dist\" -dest:contentPath=\"SurveyON_TEST\",ComputerName=\"https://10.0.12.91:8172/msdeploy.axd?site=SurveyON_TEST\",UserName=\"aisol\",Password=\"0D367A80aisol&&^^F5EB3A15BDF5\",AuthType=\"Basic\" -allowUntrusted -enableRule:AppOffline -enableRule:DoNotDeleteRule -skip:objectName=filePath,absolutePath=.*\\\\web\\.config -disableLink:AppPoolExtension -disableLink:ContentExtension -disableLink:CertificateExtension"
     },
     "dependencies": {
+        "@microsoft/signalr": "^10.0.0",
         "@progress/kendo-data-query": "1.7.0",
         "@progress/kendo-drawing": "1.21.2",
         "@progress/kendo-react-buttons": "7.3.0",
