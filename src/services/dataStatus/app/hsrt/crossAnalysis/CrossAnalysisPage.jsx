@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3 } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
+import KendoChart from '../../../components/KendoChart';
+import '../../frequency/FrequencyAnalysisPage.css';
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { saveAs } from '@progress/kendo-file-saver';
+import { CHART_THEME_OPTIONS } from '../../../constants/chartThemes';
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
@@ -13,7 +17,7 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 // --- 상수 ---
 const CROSS_FILTER_ALL_ID = "__all__";
 
-const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
+const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimalPct }) => {
     if (!dataItem) return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>선택된 표가 없습니다. 좌측에서 항목을 선택해주세요.</div>;
 
     const metadata = dataItem.raw || {};
@@ -110,7 +114,7 @@ const CrossTableGrid = ({ dataItem, showN, showPct, decimalN, decimalPct }) => {
             )}
         </div>
     );
-};
+});
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
@@ -171,6 +175,234 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(true);
     const [isGridOpen, setIsGridOpen] = useState(true);
     const [isChartOpen, setIsChartOpen] = useState(true);
+    const [chartMode, setChartMode] = useState('column');
+    const [paletteId, setPaletteId] = useState('default');
+
+    const [showDownloadMenu, setShowDownloadMenu] = useState(false);
+    const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
+    const chartContainerRef = useRef(null);
+    const downloadMenuRef = useRef(null);
+    const paletteMenuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
+                setShowDownloadMenu(false);
+            }
+            if (paletteMenuRef.current && !paletteMenuRef.current.contains(event.target)) {
+                setIsPaletteMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const getChartTypeName = (mode) => {
+        const typeMap = {
+            'column': 'column',
+            'bar': 'bar',
+            'stackedColumn': 'stacked_column',
+            'stacked100Column': 'stacked_100_column',
+            'line': 'line',
+            'pie': 'pie',
+            'donut': 'donut',
+            'radarArea': 'radar',
+            'funnel': 'funnel',
+            'scatterPoint': 'scatter',
+            'area': 'area',
+            'heatmap': 'heatmap'
+        };
+        return typeMap[mode] || 'chart';
+    };
+
+    const handleDownload = async (format) => {
+        if (!chartContainerRef.current) {
+            alert('차트를 찾을 수 없습니다.');
+            return;
+        }
+
+        try {
+            const chartElement = chartContainerRef.current.querySelector('.k-chart');
+            if (!chartElement) {
+                alert('차트를 찾을 수 없습니다.');
+                return;
+            }
+
+            const svgElement = chartElement.querySelector('svg');
+            if (!svgElement) {
+                alert('차트 SVG를 찾을 수 없습니다.');
+                return;
+            }
+
+            const bbox = svgElement.getBBox();
+            const viewBox = svgElement.getAttribute('viewBox');
+            const rect = svgElement.getBoundingClientRect();
+
+            const padding = 20;
+            let width, height;
+            let minX = 0, minY = 0;
+
+            if (viewBox) {
+                const [vx, vy, vbWidth, vbHeight] = viewBox.split(' ').map(Number);
+                minX = vx;
+                minY = vy;
+                width = vbWidth;
+                height = vbHeight;
+            } else {
+                minX = Math.min(0, bbox.x) - padding;
+                minY = Math.min(0, bbox.y) - padding;
+                width = Math.max(bbox.width, rect.width) + padding * 2;
+                height = Math.max(bbox.height, rect.height) + padding * 2;
+            }
+
+            const clonedSvg = svgElement.cloneNode(true);
+            let finalWidth = width;
+            let finalHeight = height;
+
+            const legendDiv = chartContainerRef.current.querySelector('.custom-kendo-legend');
+            if (legendDiv) {
+                const legendItems = Array.from(legendDiv.children);
+                if (legendItems.length > 0) {
+                    const canvasHelper = document.createElement('canvas');
+                    const ctxWrapper = canvasHelper.getContext('2d');
+                    ctxWrapper.font = '12px sans-serif';
+
+                    const legendGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    legendGroup.setAttribute('transform', `translate(${minX + 10}, ${minY + height + 15})`);
+
+                    let curX = 0;
+                    let curY = 0;
+                    let maxLegendWidth = finalWidth - 20;
+
+                    legendItems.forEach(item => {
+                        const box = item.querySelector('div');
+                        const span = item.querySelector('span');
+                        if (!box || !span) return;
+
+                        const color = box.style.backgroundColor;
+                        const text = span.textContent || span.innerText || '';
+                        const textWidth = ctxWrapper.measureText(text).width;
+                        const itemWidth = 10 + 6 + textWidth + 16;
+
+                        if (curX + itemWidth > maxLegendWidth && curX > 0) {
+                            curX = 0;
+                            curY += 20;
+                        }
+
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', curX);
+                        rect.setAttribute('y', curY + 2);
+                        rect.setAttribute('width', 10);
+                        rect.setAttribute('height', 10);
+                        rect.setAttribute('fill', color);
+                        rect.setAttribute('rx', 2);
+
+                        const textNode = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        textNode.setAttribute('x', curX + 16);
+                        textNode.setAttribute('y', curY + 11);
+                        textNode.setAttribute('font-size', '12px');
+                        textNode.setAttribute('fill', item.style.opacity === '0.4' ? '#94a3b8' : '#334155');
+                        textNode.setAttribute('font-family', 'sans-serif');
+                        textNode.textContent = text;
+
+                        legendGroup.appendChild(rect);
+                        legendGroup.appendChild(textNode);
+
+                        curX += itemWidth;
+                    });
+
+                    finalHeight += (curY + 30);
+                    clonedSvg.appendChild(legendGroup);
+                }
+            }
+
+            clonedSvg.setAttribute('viewBox', `${minX} ${minY} ${finalWidth} ${finalHeight}`);
+            clonedSvg.setAttribute('width', finalWidth);
+            clonedSvg.setAttribute('height', finalHeight);
+
+            const svgString = new XMLSerializer().serializeToString(clonedSvg);
+
+            if (format === 'svg') {
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const chartTypeName = getChartTypeName(chartMode);
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `chart_${banner.id}_${chartTypeName}.svg`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else if (format === 'png') {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+
+                img.onload = () => {
+                    canvas.width = finalWidth * 2;
+                    canvas.height = finalHeight * 2;
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                    canvas.toBlob((blob) => {
+                        const chartTypeName = getChartTypeName(chartMode);
+                        saveAs(blob, `chart_${banner.id}_${chartTypeName}.png`);
+                    });
+                };
+
+                img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
+            }
+
+            setShowDownloadMenu(false);
+        } catch (error) {
+            console.error('Chart export error:', error);
+            alert('차트 다운로드 중 오류가 발생했습니다.');
+        }
+    };
+
+
+    // Data extraction for chart
+    const resultData = banner.dataResult || {};
+    const columns = resultData.columns || [];
+    const rows = resultData.rows || [];
+
+    const chartData = useMemo(() => {
+        return rows.map(row => {
+            const flatRow = { label: row.label || row.name || '-', name: row.label || row.name || '-' };
+            columns.forEach((col, idx) => {
+                const fieldKey = col.key || `c${idx}`;
+                const cellBox = row.cells?.[fieldKey] || {};
+                flatRow[`${fieldKey}_n`] = cellBox.count !== undefined ? cellBox.count : (cellBox.n || 0);
+                flatRow[`${fieldKey}_pct`] = cellBox.percent !== undefined ? cellBox.percent : (cellBox.pct || 0);
+            });
+            return flatRow;
+        });
+    }, [rows, columns]);
+
+    const usePercentFields = ['donut', 'funnel', 'pie'].includes(chartMode);
+
+    const chartSeries = useMemo(() => {
+        return columns.map((col, idx) => {
+            const fieldKey = col.key || `c${idx}`;
+            const label = col.label || col.name || fieldKey;
+            return {
+                field: usePercentFields ? `${fieldKey}_pct` : `${fieldKey}_n`,
+                name: String(label).replace(/\n/g, ' ')
+            };
+        });
+    }, [columns, usePercentFields]);
+
+    const allowedTypes = useMemo(() => {
+        let types = [chartMode];
+        if (chartMode === 'column' || chartMode === 'bar') {
+            types = ['column', 'bar'];
+        } else if (chartMode === 'stackedColumn' || chartMode === 'stacked100Column') {
+            types = ['stackedColumn', 'stacked100Column'];
+        }
+        return types;
+    }, [chartMode]);
 
     return (
         <React.Fragment>
@@ -224,13 +456,92 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
                 {/* 3. Chart */}
                 <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isChartOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                    <div onClick={() => setIsChartOpen(!isChartOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isChartOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><BarChart3 size={16} /> 데이터 시각화 (차트)</div>
-                        {isChartOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: isChartOpen ? '8px' : 0 }}>
+                        <div onClick={() => setIsChartOpen(!isChartOpen)} style={{ cursor: 'pointer', flex: 1, display: 'flex', alignItems: 'center', height: '100%' }}>
+                            <div style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <BarChart3 size={16} /> 데이터 시각화 (차트)
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            {/* 차트 리모콘 */}
+                            {isChartOpen && (
+                                <div className="view-options">
+                                    <div className="download-menu-container" ref={downloadMenuRef}>
+                                        <button className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }} title="차트 다운로드">
+                                            <Download size={16} />
+                                        </button>
+                                        {showDownloadMenu && (
+                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, position: 'absolute', background: '#fff', border: '1px solid #e2e8f0', borderRadius:'8px', padding:'0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDownload('png'); }}>PNG (이미지)</button>
+                                                <button onClick={(e) => { e.stopPropagation(); handleDownload('svg'); }}>SVG (PPT용)</button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="download-menu-container" ref={paletteMenuRef}>
+                                        <button className={`view-option-btn ${isPaletteMenuOpen ? 'active' : ''}`} onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }} title="색상 테마 설정">
+                                            {(() => {
+                                                const theme = CHART_THEME_OPTIONS.find(opt => opt.id === paletteId) || CHART_THEME_OPTIONS[0];
+                                                const colors = theme.preview;
+                                                return (<div style={{ width: '16px', height: '16px', borderRadius: '50%', background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`, border: '1px solid #e2e8f0' }}></div>);
+                                            })()}
+                                        </button>
+                                        {isPaletteMenuOpen && (
+                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, position: 'absolute', background: '#fff', border: '1px solid #e2e8f0', borderRadius:'8px', padding:'0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                                                {CHART_THEME_OPTIONS.map((option) => (
+                                                    <button key={option.id} onClick={(e) => { e.stopPropagation(); setPaletteId(option.id); setIsPaletteMenuOpen(false); }} className={paletteId === option.id ? 'active' : ''} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{ display: 'flex', gap: '2px' }}>
+                                                            {option.preview.map((color, idx) => (
+                                                                <div key={idx} style={{ width: '8px', height: '8px', borderRadius: '1px', background: color }}></div>
+                                                            ))}
+                                                        </div>
+                                                        {option.name}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+
+                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+
+                                    <button className={`view-option-btn ${chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형"><BarChart2 size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형"><LineChart size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형"><PieChart size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형"><Donut size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => setChartMode('radarArea')} title="방사형"><Aperture size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => setChartMode('scatterPoint')} title="점도표"><MoreHorizontal size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'area' ? 'active' : ''}`} onClick={() => setChartMode('area')} title="영역형"><AreaChart size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => setChartMode('heatmap')} title="히트맵"><LayoutGrid size={16} /></button>
+                                </div>
+                            )}
+
+                            {/* 열기/닫기 토글 아이콘 */}
+                            <div onClick={() => setIsChartOpen(!isChartOpen)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                                {isChartOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                            </div>
+                        </div>
                     </div>
                     {isChartOpen && (
-                        <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                            <span style={{ fontSize: '13px' }}>차트 표출 영역</span>
+                        <div className="agg-chart-container" style={{ height: '350px', position: 'relative', marginTop: '10px' }} ref={chartContainerRef}>
+                            {columns.length > 0 || rows.length > 0 ? (
+                                <KendoChart
+                                    key={`${banner.id}-${chartMode}-${paletteId}`}
+                                    data={chartData}
+                                    seriesNames={chartSeries}
+                                    initialType={chartMode}
+                                    labelLimit={20}
+                                    suffix={usePercentFields ? "%" : ""}
+                                    paletteId={paletteId}
+                                    allowedTypes={allowedTypes}
+                                />
+                            ) : (
+                                <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>
+                                    표시할 차트 데이터가 없습니다.
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>

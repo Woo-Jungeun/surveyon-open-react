@@ -722,4 +722,4 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     );
 };
 
-export default KendoChart;
+export default React.memo(KendoChart);
