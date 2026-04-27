@@ -12,21 +12,28 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 
-// 메뉴 아이템 정의
-const MENU_ITEMS = [
-  {
-    label: "데이터설정",
-    items: [
-      { label: "맵 관리", path: "/data_management/setting/map", icon: MapIcon }
-    ]
-  },
-  {
-    label: "",
-    items: [
-      { label: "설문 테스트", path: "/data_management/survey_test", icon: ClipboardCheck }
-    ]
+const getMenuItems = () => {
+  const serverName = sessionStorage.getItem("servername");
+  const items = [
+    {
+      label: "데이터설정",
+      items: [
+        { label: "맵 관리", path: "/data_management/setting/map", icon: MapIcon }
+      ]
+    }
+  ];
+
+  if (serverName !== "NEW") {
+    items.push({
+      label: "",
+      items: [
+        { label: "설문 테스트", path: "/data_management/survey_test", icon: ClipboardCheck }
+      ]
+    });
   }
-];
+
+  return items;
+};
 
 const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   const modal = useContext(modalContext);
@@ -169,7 +176,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           logoClass: "menu-bar-logo",
           onClick: () => navigate("/data_management/setting/map")
         }}
-        menuGroups={MENU_ITEMS}
+        menuGroups={getMenuItems()}
         projectInfo={projectInfoData}
         theme="green"
         moduleItems={moduleItems}
