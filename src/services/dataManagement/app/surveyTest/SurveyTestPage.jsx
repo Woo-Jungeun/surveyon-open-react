@@ -1,7 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
-import { FileText, Play, X, CheckCircle, ChevronLeft, ChevronRight, SmilePlus, Bot, FileDown, Database, ChevronUp, ChevronDown } from 'lucide-react';
+import { FileText, Play, X, CheckCircle, AlertTriangle, ChevronLeft, ChevronRight, SmilePlus, Bot, FileDown, Database, ChevronUp, ChevronDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { SurveyTestPageApi } from './SurveyTestPageApi';
 import SurveyTestProgressModal from './SurveyTestProgressModal';
@@ -45,7 +45,7 @@ const ErrorCard = ({ item }) => {
 // ─── 메인 컴포넌트 ────────────────────────────────────────
 const SurveyTestPage = () => {
     const [activeTab, setActiveTab] = useState('qaReport');
-    const [activeSection, setActiveSection] = useState(null);
+    const [activeSection, setActiveSection] = useState('logic');
     const [uploadedFile, setUploadedFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [resultJson, setResultJson] = useState(null);
@@ -88,7 +88,8 @@ const SurveyTestPage = () => {
         e.target.value = '';
     };
     const handleRemoveFile = () => setUploadedFile(null);
-    const handleSectionClick = (key) => setActiveSection(prev => prev === key ? null : key);
+    // 탭을 다시 누르면 null이 되지 않도록 토글 기능 제거
+    const handleSectionClick = (key) => setActiveSection(key);
 
     const toggleSection = (key) => {
         setExpandedSections(prev => ({
@@ -210,7 +211,7 @@ const SurveyTestPage = () => {
     };
 
     // 카운트 헬퍼
-    const getCount = (section) => resultJson?.[section.countKey] ?? null;
+    const getCount = (section) => resultJson?.[section.countKey] ?? 0;
 
     const visibleSections = activeSection
         ? QA_SECTIONS.filter(s => s.key === activeSection)
@@ -279,115 +280,140 @@ const SurveyTestPage = () => {
 
                     <div className="survey-test-tab-content" ref={tabContentRef}>
                         {activeTab === 'qaReport' ? (
-                            <div className="qa-report-wrapper">
+                            <div className="qa-report-wrapper" style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', height: '100%' }}>
 
-                                {/* ── 필터 버튼 ── */}
-                                <div className="qa-filter-bar">
-                                    <button
-                                        className={`qa-filter-btn qa-filter-all ${!activeSection ? 'active' : ''}`}
-                                        onClick={() => setActiveSection(null)}>
-                                        <span className="qa-filter-num all-icon">합</span>
-                                        전체 검증 결과
-                                        {resultJson && (
-                                            <span className={`qa-filter-count ${(resultJson.totalCriticalCount + resultJson.totalErrorCount) > 0 ? 'has-error' : ''}`}>
-                                                {resultJson.documentErrorCount + resultJson.scriptErrorCount + resultJson.mismatchErrorCount}
-                                            </span>
-                                        )}
-                                    </button>
-
-                                    <div className="qa-filter-divider" />
-
-                                    {QA_SECTIONS.map((s, i) => {
-                                        const cnt = getCount(s);
-                                        return (
-                                            <button key={s.key}
-                                                className={`qa-filter-btn ${activeSection === s.key ? 'active' : ''}`}
-                                                onClick={() => handleSectionClick(s.key)}>
-                                                <span className="qa-filter-num">{i + 1}</span>
-                                                {s.label}
-                                                {cnt !== null && (
-                                                    <span className={`qa-filter-count ${cnt > 0 ? 'has-error' : ''}`}>
-                                                        {cnt}
-                                                    </span>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-
-                                    {/* ── 상단 요약 뱃지 (우측 정렬) ── */}
+                                {/* ── 좌측 사이드바 (요약 대시보드 & 네비게이션) ── */}
+                                <div className="qa-sidebar" style={{
+                                    width: '260px', flexShrink: 0,
+                                    background: '#f8fafc', borderRight: '1px solid #e2e8f0',
+                                    display: 'flex', flexDirection: 'column', overflowY: 'auto'
+                                }}>
+                                    {/* 상단: 전체 검증 요약 */}
                                     {resultJson && (
-                                        <div className="qa-top-summary">
-                                            <div className="qa-ts-box critical">
-                                                <span className="qa-ts-label">심각</span>
-                                                <span className="qa-ts-count">{resultJson.totalCriticalCount}</span>
-                                            </div>
-                                            <div className="qa-ts-box error">
-                                                <span className="qa-ts-label">오류</span>
-                                                <span className="qa-ts-count">{resultJson.totalErrorCount}</span>
-                                            </div>
-                                            <div className="qa-ts-box warning">
-                                                <span className="qa-ts-label">확인</span>
-                                                <span className="qa-ts-count">{resultJson.totalWarningCount}</span>
+                                        <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0' }}>
+                                            <span style={{
+                                                fontSize: '12px', fontWeight: 700, color: '#475569',
+                                                display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '10px'
+                                            }}>
+                                                <AlertTriangle size={14} color="#94a3b8" />
+                                                전체 검증 현황
+                                            </span>
+                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>심각 {resultJson.totalCriticalCount}</span>
+                                                <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>오류 {resultJson.totalErrorCount}</span>
+                                                <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>확인 {resultJson.totalWarningCount}</span>
                                             </div>
                                         </div>
                                     )}
-                                </div>
 
-                                {/* ── 섹션 목록 ── */}
-                                <div className="qa-sections" key={activeSection || 'all'}>
-                                    {visibleSections.map((s) => {
-                                        const items = resultJson?.[s.dataKey] || [];
-                                        const cnt = getCount(s);
-                                        const isExpanded = expandedSections[s.key];
-                                        const isAllTab = activeSection === null;
-                                        const showBody = isAllTab ? isExpanded : true;
-
-                                        return (
-                                            <div key={s.key} className={`qa-section-block ${items.length === 0 ? 'is-empty' : ''} ${isAllTab && !isExpanded ? 'is-collapsed' : ''}`}>
-                                                <div className="qa-section-header" onClick={() => isAllTab && toggleSection(s.key)} style={{ cursor: isAllTab ? 'pointer' : 'default' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                                                        <span className="qa-section-seq">
-                                                            {QA_SECTIONS.findIndex(x => x.key === s.key) + 1}.
-                                                        </span>
-                                                        <span className="qa-section-label">{s.label}</span>
-                                                        {cnt !== null ? (
-                                                            <span className={`qa-section-badge ${cnt > 0 ? 'found' : ''}`}>
-                                                                {cnt}건 발견
-                                                            </span>
-                                                        ) : (
-                                                            <span className="qa-section-badge">0건 발견</span>
-                                                        )}
+                                    {/* 하단: 항목별 네비게이션 리스트 */}
+                                    <div style={{ padding: '16px 12px' }}>
+                                        {QA_SECTIONS.map((s, i) => {
+                                            const cnt = getCount(s);
+                                            const isActive = activeSection === s.key;
+                                            return (
+                                                <button key={s.key}
+                                                    onClick={() => handleSectionClick(s.key)}
+                                                    style={{
+                                                        width: '100%', display: 'flex', alignItems: 'flex-start', gap: '10px',
+                                                        padding: '10px 12px', borderRadius: '6px', textAlign: 'left',
+                                                        background: isActive ? '#e2e8f0' : 'transparent',
+                                                        color: isActive ? '#0f172a' : '#64748b',
+                                                        marginBottom: '2px', transition: 'all 0.15s ease', cursor: 'pointer', border: 'none'
+                                                    }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ fontSize: '13px', fontWeight: isActive ? 700 : 500, lineHeight: '1.4' }}>
+                                                            {i + 1}. {s.label}
+                                                        </div>
                                                     </div>
-                                                    {isAllTab && (
-                                                        <span className="qa-section-toggle" style={{ color: '#94a3b8' }}>
-                                                            {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                                    {cnt !== null && (
+                                                        <span style={{
+                                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                            minWidth: '22px', height: '22px', padding: '0px 6px 0px 5px',
+                                                            borderRadius: '11px', fontSize: '11.5px', fontWeight: 800,
+                                                            background: cnt > 0 ? (isActive ? '#ef4444' : '#fee2e2') : (isActive ? '#cbd5e1' : '#f1f5f9'),
+                                                            color: cnt > 0 ? (isActive ? '#fff' : '#ef4444') : (isActive ? '#475569' : '#94a3b8'),
+                                                            boxSizing: 'border-box'
+                                                        }}>
+                                                            {cnt}
                                                         </span>
                                                     )}
-                                                </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
 
-                                                {showBody && (
-                                                    <div className="qa-section-body">
+                                {/* ── 우측 메인 (오류 리스트) ── */}
+                                <div className="qa-main-view" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', height: '100%', background: '#fff' }}>
+                                    <div className="qa-sections" key={activeSection || 'all'} style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                                        {visibleSections.map((s) => {
+                                            const items = resultJson?.[s.dataKey] || [];
+                                            const cnt = getCount(s);
+                                            const sectionIndex = QA_SECTIONS.findIndex(x => x.key === s.key) + 1;
+
+                                            const localCriticalCnt = items.filter(x => x.type === 'critical').length;
+                                            const localErrorCnt = items.filter(x => x.type === 'error').length;
+                                            const localWarningCnt = items.filter(x => x.type === 'warning').length;
+
+                                            return (
+                                                <div key={s.key} className={`qa-section-block ${items.length === 0 ? 'is-empty' : ''}`} style={{ border: 'none', background: 'transparent' }}>
+
+                                                    {/* 우측 본문 헤더 (앵커 역할 & 개별 탭 상세 요약) */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid #f1f5f9' }}>
+                                                        <h3 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', margin: 0, marginRight: '4px' }}>{s.label}</h3>
+
+                                                        {cnt > 0 && (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                {/* 심각/오류/확인 세부 카운트 (개별 탭 안에서의 요약) */}
+                                                                {(localCriticalCnt > 0 || localErrorCnt > 0 || localWarningCnt > 0) && (
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginLeft: '4px' }}>
+                                                                        {localCriticalCnt > 0 && (
+                                                                            <span style={{ padding: '3px 8px', background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>심각 {localCriticalCnt}</span>
+                                                                        )}
+                                                                        {localErrorCnt > 0 && (
+                                                                            <span style={{ padding: '3px 8px', background: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>오류 {localErrorCnt}</span>
+                                                                        )}
+                                                                        {localWarningCnt > 0 && (
+                                                                            <span style={{ padding: '3px 8px', background: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>확인 {localWarningCnt}</span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div className="qa-section-body" style={{ padding: 0 }}>
                                                         {items.length > 0 ? (
-                                                            <div className="qa-error-list">
+                                                            <div className="qa-error-list" style={{ padding: 0, gap: '16px' }}>
                                                                 {items.map((item, idx) => (
                                                                     <ErrorCard key={idx} item={item} />
                                                                 ))}
                                                             </div>
                                                         ) : (
-                                                            <div className="qa-empty-state">
-                                                                <SmilePlus size={22} className="qa-empty-icon" />
-                                                                <p className="qa-empty-text">
-                                                                    {resultJson ? '발견된 오류가 없습니다.' : '분석 결과가 없습니다.'}
-                                                                </p>
+                                                            <div className="qa-empty-state" style={{
+                                                                background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '12px',
+                                                                padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                                                            }}>
+                                                                {resultJson ? (
+                                                                    <>
+                                                                        <CheckCircle size={32} color="#10b981" style={{ marginBottom: '16px' }} />
+                                                                        <span style={{ fontSize: '15px', fontWeight: 600, color: '#059669' }}>이 항목은 오류 없이 완벽하게 검증되었습니다.</span>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <SmilePlus size={32} className="qa-empty-icon" style={{ marginBottom: '16px', color: '#cbd5e1' }} />
+                                                                        <p className="qa-empty-text" style={{ fontSize: '14px', color: '#64748b' }}>분석 결과가 없습니다.</p>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>
-                                                )}
-                                            </div>
-                                        );
-                                    })}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-
                             </div>
                         ) : (
                             <div className="st-virtual-data-wrapper">
