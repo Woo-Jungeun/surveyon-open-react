@@ -54,6 +54,8 @@ const SurveyTestPage = () => {
         syntax: true,
         cross: true
     });
+    const [isNavExpanded, setIsNavExpanded] = useState(true);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
     // Progress Modal States
     const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
@@ -88,8 +90,8 @@ const SurveyTestPage = () => {
         e.target.value = '';
     };
     const handleRemoveFile = () => setUploadedFile(null);
-    // 탭을 다시 누르면 null이 되지 않도록 토글 기능 제거
-    const handleSectionClick = (key) => setActiveSection(key);
+    // 탭을 다시 누르면 전체 보기 모드(null)로 돌아가는 토글 기능 부활
+    const handleSectionClick = (key) => setActiveSection(prev => prev === key ? null : key);
 
     const toggleSection = (key) => {
         setExpandedSections(prev => ({
@@ -280,67 +282,104 @@ const SurveyTestPage = () => {
 
                     <div className="survey-test-tab-content" ref={tabContentRef}>
                         {activeTab === 'qaReport' ? (
-                            <div className="qa-report-wrapper" style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', height: '100%' }}>
+                            <div className="qa-report-wrapper" style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', height: '100%', position: 'relative' }}>
+                                {/* 사이드바 토글 버튼 */}
+                                <button
+                                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                    style={{
+                                        position: 'absolute',
+                                        top: '16px',
+                                        left: isSidebarOpen ? '260px' : '20px',
+                                        zIndex: 10,
+                                        background: '#fff',
+                                        border: '1px solid #cbd5e1',
+                                        borderRadius: '50%',
+                                        width: '24px',
+                                        height: '24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                        transition: 'all 0.3s ease',
+                                        transform: 'translateX(-50%)',
+                                    }}
+                                    title={isSidebarOpen ? "사이드바 닫기" : "사이드바 열기"}
+                                >
+                                    {isSidebarOpen ? <ChevronLeft size={16} color="#475569" /> : <ChevronRight size={16} color="#475569" />}
+                                </button>
 
                                 {/* ── 좌측 사이드바 (요약 대시보드 & 네비게이션) ── */}
                                 <div className="qa-sidebar" style={{
-                                    width: '260px', flexShrink: 0,
-                                    background: '#f8fafc', borderRight: '1px solid #e2e8f0',
-                                    display: 'flex', flexDirection: 'column', overflowY: 'auto'
+                                    width: isSidebarOpen ? '260px' : '20px',
+                                    flexShrink: 0,
+                                    background: '#f8fafc',
+                                    borderRight: '1px solid #e2e8f0',
+                                    display: 'flex', flexDirection: 'column', overflowX: 'hidden', overflowY: 'auto',
+                                    transition: 'all 0.3s ease'
                                 }}>
                                     {/* 상단: 전체 검증 요약 */}
-                                    {resultJson && (
-                                        <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0' }}>
-                                            <span style={{
-                                                fontSize: '12px', fontWeight: 700, color: '#475569',
-                                                display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '10px'
-                                            }}>
-                                                <AlertTriangle size={14} color="#94a3b8" />
-                                                전체 검증 현황
-                                            </span>
-                                            <div style={{ display: 'flex', gap: '6px' }}>
-                                                <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>심각 {resultJson.totalCriticalCount}</span>
-                                                <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>오류 {resultJson.totalErrorCount}</span>
-                                                <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>확인 {resultJson.totalWarningCount}</span>
+                                    <div style={{ opacity: isSidebarOpen ? 1 : 0, transition: 'opacity 0.2s ease', whiteSpace: 'nowrap' }}>
+                                        {resultJson && (
+                                            <div style={{ padding: '16px', borderBottom: '1px solid #e2e8f0' }}>
+                                                <span style={{
+                                                    fontSize: '12px', fontWeight: 700, color: '#475569',
+                                                    display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '10px'
+                                                }}>
+                                                    <AlertTriangle size={14} color="#94a3b8" />
+                                                    전체 검증 현황
+                                                </span>
+                                                <div style={{ display: 'flex', gap: '6px' }}>
+                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>심각 {resultJson.totalCriticalCount}</span>
+                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>오류 {resultJson.totalErrorCount}</span>
+                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>확인 {resultJson.totalWarningCount}</span>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
-                                    {/* 하단: 항목별 네비게이션 리스트 */}
-                                    <div style={{ padding: '16px 12px' }}>
-                                        {QA_SECTIONS.map((s, i) => {
-                                            const cnt = getCount(s);
-                                            const isActive = activeSection === s.key;
-                                            return (
-                                                <button key={s.key}
-                                                    onClick={() => handleSectionClick(s.key)}
-                                                    style={{
-                                                        width: '100%', display: 'flex', alignItems: 'flex-start', gap: '10px',
-                                                        padding: '10px 12px', borderRadius: '6px', textAlign: 'left',
-                                                        background: isActive ? '#e2e8f0' : 'transparent',
-                                                        color: isActive ? '#0f172a' : '#64748b',
-                                                        marginBottom: '2px', transition: 'all 0.15s ease', cursor: 'pointer', border: 'none'
-                                                    }}>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: isActive ? 700 : 500, lineHeight: '1.4' }}>
-                                                            {i + 1}. {s.label}
-                                                        </div>
-                                                    </div>
-                                                    {cnt !== null && (
-                                                        <span style={{
-                                                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                                            minWidth: '22px', height: '22px', padding: '0px 6px 0px 5px',
-                                                            borderRadius: '11px', fontSize: '11.5px', fontWeight: 800,
-                                                            background: cnt > 0 ? (isActive ? '#ef4444' : '#fee2e2') : (isActive ? '#cbd5e1' : '#f1f5f9'),
-                                                            color: cnt > 0 ? (isActive ? '#fff' : '#ef4444') : (isActive ? '#475569' : '#94a3b8'),
-                                                            boxSizing: 'border-box'
+                                        {/* 하단: 항목별 네비게이션 리스트 */}
+                                        <div style={{ padding: '16px 12px' }}>
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                                padding: '4px 8px', marginBottom: '12px',
+                                                userSelect: 'none'
+                                            }}>
+                                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#64748b' }}>검증 항목 상세</span>
+                                            </div>
+
+                                            {QA_SECTIONS.map((s, i) => {
+                                                const cnt = getCount(s);
+                                                const isActive = activeSection === s.key;
+                                                return (
+                                                    <button key={s.key}
+                                                        onClick={() => handleSectionClick(s.key)}
+                                                        style={{
+                                                            width: '100%', display: 'flex', alignItems: 'center', gap: '10px',
+                                                            padding: '10px 12px', borderRadius: '6px', textAlign: 'left',
+                                                            background: isActive ? '#e2e8f0' : 'transparent',
+                                                            color: isActive ? '#0f172a' : '#64748b', transition: 'all 0.15s ease', cursor: 'pointer', border: 'none'
                                                         }}>
-                                                            {cnt}
-                                                        </span>
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <div style={{ fontSize: '13px', fontWeight: isActive ? 700 : 500, lineHeight: '1.4', whiteSpace: 'normal', wordBreak: 'keep-all' }}>
+                                                                {i + 1}. {s.label}
+                                                            </div>
+                                                        </div>
+                                                        {cnt !== null && (
+                                                            <span style={{
+                                                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                                minWidth: '22px', height: '22px', padding: '0px 6px 0px 5px',
+                                                                borderRadius: '11px', fontSize: '11.5px', fontWeight: 800,
+                                                                background: cnt > 0 ? (isActive ? '#ef4444' : '#fee2e2') : (isActive ? '#cbd5e1' : '#f1f5f9'),
+                                                                color: cnt > 0 ? (isActive ? '#fff' : '#ef4444') : (isActive ? '#475569' : '#94a3b8'),
+                                                                boxSizing: 'border-box'
+                                                            }}>
+                                                                {cnt}
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 </div>
 
