@@ -214,6 +214,19 @@ const SurveyTestPage = () => {
 
     // 카운트 헬퍼
     const getCount = (section) => resultJson?.[section.countKey] ?? 0;
+    
+    // 전체 현황 집계 헬퍼 (로컬 데이터 기반 수작업 집계로 정확성 보장)
+    const getGlobalCounts = (json) => {
+        if (!json) return { critical: 0, error: 0, warning: 0 };
+        return QA_SECTIONS.reduce((acc, s) => {
+            const items = json[s.dataKey] || [];
+            acc.critical += items.filter(x => x.type === 'critical').length;
+            acc.error += items.filter(x => x.type === 'error').length;
+            acc.warning += items.filter(x => x.type === 'warning').length;
+            return acc;
+        }, { critical: 0, error: 0, warning: 0 });
+    };
+    const globalCounts = getGlobalCounts(resultJson);
 
     const visibleSections = activeSection
         ? QA_SECTIONS.filter(s => s.key === activeSection)
@@ -330,9 +343,9 @@ const SurveyTestPage = () => {
                                                     전체 검증 현황
                                                 </span>
                                                 <div style={{ display: 'flex', gap: '6px' }}>
-                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>심각 {resultJson.totalCriticalCount}</span>
-                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>오류 {resultJson.totalErrorCount}</span>
-                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>확인 {resultJson.totalWarningCount}</span>
+                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff1f1', color: '#dc2626', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>심각 {globalCounts.critical}</span>
+                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fff7ed', color: '#ea580c', border: '1px solid #fed7aa', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>오류 {globalCounts.error}</span>
+                                                    <span style={{ flex: 1, textAlign: 'center', padding: '5px 0', background: '#fefce8', color: '#ca8a04', border: '1px solid #fef08a', borderRadius: '6px', fontSize: '12px', fontWeight: 600 }}>확인 {globalCounts.warning}</span>
                                                 </div>
                                             </div>
                                         )}
