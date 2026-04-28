@@ -247,9 +247,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await getSummaryDetail.mutateAsync({ pageid: pageId, user: userId });
             // const result = await getSummaryDetail.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok" });
             if (result?.success === '777' && result.resultjson) {
-                if (result.resultjson.base_variables) {
-                    const baseVars = result.resultjson.base_variables;
-                    setBaseVariables(Array.isArray(baseVars) ? baseVars : Object.values(baseVars));
+                if (result.resultjson.summary_source_variables) {
+                    const sourceVars = result.resultjson.summary_source_variables;
+                    setBaseVariables(Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars));
                 }
                 if (result.resultjson.dp_request_summary_folders) {
                     setFolders(result.resultjson.dp_request_summary_folders);
@@ -369,13 +369,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, [selectedSummary]);
 
     const summaryVariables = useMemo(() => {
-        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v =>
-            v.type === 'scale' || v.type === 'double'
-        ).map(v => {
+        return (Array.isArray(baseVariables) ? baseVariables : []).map(v => {
             const scalePoints = v.scale_points || (v.info && v.info.filter(row => row.type && row.type !== 'mean' && row.type !== 'median' && row.type !== 'mode' && !row.type.includes('base')).length) || null;
             return {
                 ...v,
-                base_id: v.id,
+                id: v.id || v.base_id,
+                base_id: v.base_id || v.id,
                 scale_points: scalePoints
             };
         });
@@ -393,7 +392,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             const start = Math.min(lastSelectedIndex, index);
             const end = Math.max(lastSelectedIndex, index);
             const rangeIds = filteredSummaryVariables.slice(start, end + 1).map(v => v.id || v.base_id);
-            
+
             setSelectedIds(prev => {
                 const next = new Set(prev);
                 rangeIds.forEach(rid => next.add(rid));
@@ -417,15 +416,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     useEffect(() => { fetchSummaryData(); }, [auth?.user?.userId]);
 
     useEffect(() => {
-        const fetchBaseVariables = async () => {
-            const pageId = sessionStorage.getItem('pageId');
-            if (!pageId || !auth?.user?.userId) return;
-            try {
-                const result = await getBaseVariableList.mutateAsync({ pageid: pageId, user: auth.user.userId });
-                if (result?.success === '777' && result.resultjson) setBaseVariables(Object.values(result.resultjson));
-            } catch (error) { }
-        };
-        fetchBaseVariables();
+        // 백엔드에서 summary_source_variables 로 한 번에 가져오므로
+        // 개별 원본 목록 조회 API(getBaseVariableList)는 주석 처리합니다.
     }, [auth?.user?.userId]);
 
 
@@ -549,7 +541,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         style={{ cursor: 'pointer', margin: 0, width: '14px', height: '14px' }}
                                     />
                                     <span
-                                        style={{ maxWidth: '100px', flexShrink: 0, fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                                        style={{ flexShrink: 0, fontSize: '12px', fontWeight: 700, color: '#1e293b', whiteSpace: 'nowrap' }}
                                         title={variable.base_id}
                                     >
                                         {variable.base_id}
