@@ -484,7 +484,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
 });
 
 // --- 텍스트 편집 셀: 자체 로컬 state로 타이핑 즉각 반응, onBlur에만 stubs 업데이트 ---
-const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left' }) => {
+const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', placeholder = '' }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
 
@@ -503,6 +503,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left' }) 
             <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
                 <input
                     autoFocus
+                    placeholder={placeholder}
                     value={localVal}
                     onChange={e => setLocalVal(e.target.value)}
                     onBlur={commit}
@@ -524,7 +525,7 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left' }) 
                 color: localVal ? '#1e293b' : '#94a3b8', userSelect: 'none'
             }}
         >
-            {localVal || '-'}
+            {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
         </td>
     );
 });
@@ -715,6 +716,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const merged = Object.entries(baseVars).map(([id, base]) => {
                 const saved = savedMap.get(id);
+                if (saved) savedMap.delete(String(id));
                 return {
                     ...base, ...saved,
                     source_var_id: id,
@@ -728,6 +730,23 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     rank_preset_name: saved?.rank_preset_id || '',
                     group_preset_name: saved?.group_preset_id || '',
                 };
+            });
+
+            // baseVars에 없는, 순수하게 추가된 파생 항목(커스텀 스터브) 병합
+            savedMap.forEach((saved, id) => {
+                merged.push({
+                    ...saved,
+                    source_var_id: id,
+                    recoded_var_id: saved.recoded_var_id || id,
+                    var_label: saved.var_label || id,
+                    var_type: saved.var_type || 'unknown',
+                    condition: saved.filter_expression || '',
+                    x_info: saved.x_info || [],
+                    stat_summary: saved.stat_preset_id || '',
+                    scale_preset_name: saved.scale_preset_id || '',
+                    rank_preset_name: saved.rank_preset_id || '',
+                    group_preset_name: saved.group_preset_id || '',
+                });
             });
 
             setStubs(merged);
@@ -805,10 +824,23 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         // 2. Variables 객체 구성
         const variables = {};
-        stubs.forEach(stub => {
-            variables[stub.source_var_id] = {
-                source_var_id: stub.source_var_id,
-                recoded_var_id: stub.recoded_var_id,
+        for (const stub of stubs) {
+            let effSourceId = stub.source_var_id;
+            let effRecodedId = stub.recoded_var_id;
+
+            // 새로 추가한 항일 경우, 사용자가 입력한 변수(recoded_var_id)값을 source_var_id로도 사용합니다.
+            if (String(stub.source_var_id).startsWith('new_')) {
+                if (!stub.recoded_var_id || !stub.recoded_var_id.trim()) {
+                    modal.showAlert('알림', '새로 추가한 열의 "변수" 필드를 입력해주세요.');
+                    return false;
+                }
+                effSourceId = stub.recoded_var_id.trim();
+                effRecodedId = stub.recoded_var_id.trim();
+            }
+
+            variables[effSourceId] = {
+                source_var_id: effSourceId,
+                recoded_var_id: effRecodedId,
                 var_label: stub.var_label,
                 var_type: stub.var_type,
                 filter_expression: stub.condition || '',
@@ -818,7 +850,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 rank_preset_id: stub.rank_preset_name || '',
                 group_preset_id: stub.group_preset_name || ''
             };
-        });
+        }
 
         // 3. 삭제될 ID 추출 (원본에 있었지만 현재는 없는 recoded_var_id)
         const currentRecodedIds = stubs.map(s => s.recoded_var_id).filter(Boolean);
@@ -907,11 +939,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             duplicateRowTemplate={duplicateRowTemplate}
                         >
                             <Column field="recoded_var_id" title="변수" width="100px" headerClassName="k-text-center"
-                                cell={(p) => (
-                                    <td style={{ padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', userSelect: 'none' }}>
-                                        {p.dataItem.recoded_var_id || <span style={{ fontSize: '11px', opacity: 0.7 }}>(자동 생성)</span>}
-                                    </td>
-                                )}
+                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="(작성가능)" />}
                             />
                             <Column field="var_label" title="라벨" width="250px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
