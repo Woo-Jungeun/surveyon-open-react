@@ -566,6 +566,33 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [showPct, setShowPct] = useState(true);
     const [decimalPct, setDecimalPct] = useState(1);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
+
+    const isInitialSetupRef = useRef(true);
+
+    useEffect(() => {
+        if (isInitialSetupRef.current) return;
+        
+        const timeoutId = setTimeout(() => {
+            // const pageId = sessionStorage.getItem('pageId');
+            // const user = auth?.user?.userId;
+            const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+            const user = "sbbok";
+            
+            savePageSettings.mutateAsync({
+                pageid: pageId,
+                user: user,
+                ui_settings: {
+                    format_show_n: showN,
+                    format_n_round: decimalN === '' ? 0 : decimalN,
+                    format_show_percent: showPct,
+                    format_percent_round: decimalPct === '' ? 0 : decimalPct
+                }
+            }).catch(e => console.error("Setting save error", e));
+        }, 500);
+        
+        return () => clearTimeout(timeoutId);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showN, decimalN, showPct, decimalPct]);
     const [xInfoOptions, setXInfoOptions] = useState([]);
 
     const [selectedComputedFilterIds, setSelectedComputedFilterIds] = useState([CROSS_FILTER_ALL_ID]);
@@ -779,6 +806,18 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
             const ctxPayload = contextRes?.resultjson || contextRes || {};
+            
+            if (ctxPayload) {
+                const ui = ctxPayload.ui_settings || {};
+                setShowN(ui.format_show_n ?? true);
+                setDecimalN(ui.format_n_round ?? ctxPayload.n_digits ?? 0);
+                setShowPct(ui.format_show_percent ?? true);
+                setDecimalPct(ui.format_percent_round ?? ctxPayload.percent_digits ?? 1);
+            }
+            
+            // 데이터 세팅 후 초기화 플래그 해제 (setTimeout을 통해 setState 이후 반영 보장)
+            setTimeout(() => { isInitialSetupRef.current = false; }, 100);
+
             const recodedVars = ctxPayload.recoded_variables || {};
             const baseVars = ctxPayload.base_variables || {};
 
@@ -1142,15 +1181,16 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>N</span>
                         </div>
                         <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: '#ffffff' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>소수점</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showN ? '#ffffff' : '#f8fafc' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: showN ? '#1e293b' : '#94a3b8' }}>소수점</span>
                             <div style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 width: '32px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
-                                background: '#ffffff'
+                                background: showN ? '#ffffff' : '#f1f5f9'
                             }}>
                                 <input
                                     type="text"
+                                    disabled={!showN}
                                     value={decimalN}
                                     onChange={(e) => {
                                         let val = e.target.value.replace(/[^0-5]/g, '');
@@ -1171,7 +1211,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     }}
                                     style={{
                                         width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: '#1e3a8a',
+                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showN ? '#1e3a8a' : '#94a3b8',
                                         outline: 'none', padding: 0
                                     }}
                                 />
@@ -1203,15 +1243,16 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <span style={{ fontSize: '14px', fontWeight: 800, color: '#3730a3', userSelect: 'none' }}>%</span>
                         </div>
                         <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: '#ffffff' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>소수점</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 10px', height: '100%', background: showPct ? '#ffffff' : '#f8fafc' }}>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: showPct ? '#1e293b' : '#94a3b8' }}>소수점</span>
                             <div style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 width: '32px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
-                                background: '#ffffff'
+                                background: showPct ? '#ffffff' : '#f1f5f9'
                             }}>
                                 <input
                                     type="text"
+                                    disabled={!showPct}
                                     value={decimalPct}
                                     onChange={(e) => {
                                         let val = e.target.value.replace(/[^0-5]/g, '');
@@ -1232,7 +1273,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     }}
                                     style={{
                                         width: '100%', height: '100%', border: 'none', background: 'transparent',
-                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: '#1e3a8a',
+                                        textAlign: 'center', fontSize: '13px', fontWeight: 800, color: showPct ? '#1e3a8a' : '#94a3b8',
                                         outline: 'none', padding: 0
                                     }}
                                 />
