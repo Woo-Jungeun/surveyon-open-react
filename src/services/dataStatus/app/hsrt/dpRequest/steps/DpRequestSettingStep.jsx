@@ -161,7 +161,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (actualTableDetail?.rank_presets) {
                     nextRankData = actualTableDetail.rank_presets.map(item => {
                         let selection = '';
-                        if (Array.isArray(item.ranks)) {
+                        if (Array.isArray(item.combinations) && item.combinations.length > 0) {
+                            selection = item.combinations.join(', ');
+                        } else if (Array.isArray(item.ranks)) {
                             selection = item.ranks.map(n => {
                                 if (n === 1) return '1';
                                 return Array.from({ length: n }, (_, i) => i + 1).join('+');
@@ -268,7 +270,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
     const handleSave = async () => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId || !auth?.user?.userId) {
-            alert("저장할 수 없습니다. 다시 로그인하거나 페이지를 새로고침 해주세요.");
+            modal.showAlert("알림", "저장할 수 없습니다. 다시 로그인하거나 페이지를 새로고침 해주세요.");
             return false;
         }
 
@@ -300,19 +302,78 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 };
             });
 
-            const rankDataPayload = rankData.map(item => {
-                const ranks = [];
-                if (item.selection) {
-                    String(item.selection).split(',').forEach(part => {
-                        const match = part.match(/\d+/g);
-                        if (match) ranks.push(match.length);
-                    });
+            for (let i = 0; i < rankData.length; i++) {
+                const item = rankData[i];
+                if (!item.selection || String(item.selection).trim() === '') {
+                    modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 조합 선언이 비어있습니다.`);
+                    loadingSpinner.hide();
+                    return false;
                 }
+
+                const combinations = [];
+                const rawParts = String(item.selection).split(',');
+
+                for (let j = 0; j < rawParts.length; j++) {
+                    const rawPart = rawParts[j];
+                    const part = rawPart.replace(/\s+/g, '');
+                    if (!part) continue;
+
+                    const nums = part.split('+');
+                    const numSet = new Set();
+                    let formatValid = true;
+
+                    for (let k = 0; k < nums.length; k++) {
+                        const strVal = nums[k];
+                        if (!/^-?\d+$/.test(strVal)) {
+                            formatValid = false;
+                            break;
+                        }
+                        
+                        const numVal = parseInt(strVal, 10);
+                        if (numVal < 1) {
+                            modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}'에 1 이상의 정수만 허용됩니다.`);
+                            loadingSpinner.hide();
+                            return false;
+                        }
+                        if (numSet.has(strVal)) {
+                            modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}'에 중복된 숫자가 있습니다.`);
+                            loadingSpinner.hide();
+                            return false;
+                        }
+                        numSet.add(strVal);
+                    }
+                    
+                    if (!formatValid) {
+                        modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}' 형식이 올바르지 않습니다. 숫자와 '+' 조합만 허용됩니다.`);
+                        loadingSpinner.hide();
+                        return false;
+                    }
+
+                    const normalizedPart = nums.join('+');
+                    if (combinations.includes(normalizedPart)) {
+                        modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'에 '${normalizedPart}' 조합이 중복 선언되었습니다.`);
+                        loadingSpinner.hide();
+                        return false;
+                    }
+                    combinations.push(normalizedPart);
+                }
+
+                if (combinations.length === 0) {
+                    modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'에 유효한 조합이 하나 이상 있어야 합니다.`);
+                    loadingSpinner.hide();
+                    return false;
+                }
+
+                item._processedCombinations = combinations;
+            }
+
+            const rankDataPayload = rankData.map(item => {
                 return {
                     id: item.id || `preset_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
                     name: item.name,
                     type: 'multi',
-                    ranks: ranks.length > 0 ? ranks : [1]
+                    combinations: item._processedCombinations,
+                    ranks: []
                 };
             });
 
