@@ -567,6 +567,31 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [decimalPct, setDecimalPct] = useState(1);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
 
+    const [localDecimalN, setLocalDecimalN] = useState(0);
+    const [localDecimalPct, setLocalDecimalPct] = useState(1);
+
+    useEffect(() => {
+        setLocalDecimalN(decimalN);
+    }, [decimalN]);
+
+    useEffect(() => {
+        setLocalDecimalPct(decimalPct);
+    }, [decimalPct]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setDecimalN(localDecimalN);
+        }, 400);
+        return () => clearTimeout(timeoutId);
+    }, [localDecimalN]);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            setDecimalPct(localDecimalPct);
+        }, 400);
+        return () => clearTimeout(timeoutId);
+    }, [localDecimalPct]);
+
     const isInitialSetupRef = useRef(true);
 
     useEffect(() => {
@@ -1191,23 +1216,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <input
                                     type="text"
                                     disabled={!showN}
-                                    value={decimalN}
+                                    value={localDecimalN}
                                     onChange={(e) => {
                                         let val = e.target.value.replace(/[^0-5]/g, '');
                                         if (val.length > 1) val = val.slice(-1); // 마지막 입력 문자만 유지
-                                        setDecimalN(val !== '' ? parseInt(val) : '');
+                                        setLocalDecimalN(val !== '' ? parseInt(val) : '');
                                     }}
                                     onKeyDown={(e) => {
                                         if (e.key === 'ArrowUp') {
                                             e.preventDefault();
-                                            setDecimalN(prev => Math.min(5, (prev === '' ? 0 : prev) + 1));
+                                            setLocalDecimalN(prev => Math.min(5, (prev === '' ? 0 : prev) + 1));
                                         } else if (e.key === 'ArrowDown') {
                                             e.preventDefault();
-                                            setDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
+                                            setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
                                         }
                                     }}
                                     onBlur={() => {
-                                        if (decimalN === '') setDecimalN(0);
+                                        if (localDecimalN === '') setLocalDecimalN(0);
                                     }}
                                     style={{
                                         width: '100%', height: '100%', border: 'none', background: 'transparent',
@@ -1253,23 +1278,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <input
                                     type="text"
                                     disabled={!showPct}
-                                    value={decimalPct}
+                                    value={localDecimalPct}
                                     onChange={(e) => {
                                         let val = e.target.value.replace(/[^0-5]/g, '');
                                         if (val.length > 1) val = val.slice(-1);
-                                        setDecimalPct(val !== '' ? parseInt(val) : '');
+                                        setLocalDecimalPct(val !== '' ? parseInt(val) : '');
                                     }}
                                     onKeyDown={(e) => {
                                         if (e.key === 'ArrowUp') {
                                             e.preventDefault();
-                                            setDecimalPct(prev => Math.min(5, (prev === '' ? 1 : prev) + 1));
+                                            setLocalDecimalPct(prev => Math.min(5, (prev === '' ? 1 : prev) + 1));
                                         } else if (e.key === 'ArrowDown') {
                                             e.preventDefault();
-                                            setDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                            setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
                                         }
                                     }}
                                     onBlur={() => {
-                                        if (decimalPct === '') setDecimalPct(1);
+                                        if (localDecimalPct === '') setLocalDecimalPct(1);
                                     }}
                                     style={{
                                         width: '100%', height: '100%', border: 'none', background: 'transparent',
