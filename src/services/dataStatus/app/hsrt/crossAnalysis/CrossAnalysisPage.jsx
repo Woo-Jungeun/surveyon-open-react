@@ -172,9 +172,9 @@ const ConditionHeaderCell = (props) => {
 };
 
 const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct }) => {
-    const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(true);
+    const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(false);
     const [isGridOpen, setIsGridOpen] = useState(true);
-    const [isChartOpen, setIsChartOpen] = useState(true);
+    const [isChartOpen, setIsChartOpen] = useState(false);
     const [chartMode, setChartMode] = useState('column');
     const [paletteId, setPaletteId] = useState('default');
 
@@ -422,20 +422,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                         {banner.label}
                     </span>
                 </div>
-                {/* 1. AI Summary */}
-                <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                    <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={16} /> AI 데이터 요약</div>
-                        {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
-                    </div>
-                    {isAiSummaryOpen && (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                            <span style={{ fontSize: '13px' }}>AI 분석 요약 결과 표출 영역</span>
-                        </div>
-                    )}
-                </div>
-
-                {/* 2. Data Grid */}
+                {/* 1. Data Grid (Moved up) */}
                 <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isGridOpen ? '10px' : '8px 10px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                     <div onClick={() => setIsGridOpen(!isGridOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isGridOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Table2 size={16} /> 교차 분석표</div>
@@ -450,6 +437,19 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                 decimalN={decimalN}
                                 decimalPct={decimalPct}
                             />
+                        </div>
+                    )}
+                </div>
+
+                {/* 2. AI Summary (Moved down) */}
+                <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={16} /> AI 데이터 요약</div>
+                        {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
+                    </div>
+                    {isAiSummaryOpen && (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
+                            <span style={{ fontSize: '13px' }}>AI 분석 요약 결과 표출 영역</span>
                         </div>
                     )}
                 </div>
