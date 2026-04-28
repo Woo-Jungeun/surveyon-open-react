@@ -223,7 +223,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         // mode: 'fresh'(방금 추가됨 -> 마지막 요소 선택), 'delete'(현재요소 삭제됨 -> 첫요소 선택), 'select'(특정 ID 지정), 'normal'(일반 갱신)
         const pageId = sessionStorage.getItem('pageId');
         const user = auth?.user?.userId;
-        if (!pageId || !auth?.user?.userId) return;
+        if (!pageId || pageId === "null" || pageId === "undefined" || !user) return;
         // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
         // const user = "sbbok";
         try {
@@ -309,7 +309,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         );
     }, [banners, bannerSearch]);
 
-    useEffect(() => { fetchVariablesData(); }, [auth?.user?.userId]);
+    useEffect(() => { 
+        fetchVariablesData(); 
+        
+        const handlePageUpdate = () => fetchVariablesData('normal');
+        window.addEventListener("pageSelected", handlePageUpdate);
+        return () => window.removeEventListener("pageSelected", handlePageUpdate);
+    }, [auth?.user?.userId]);
 
     const handleSaveBanner = async () => {
         const pageId = sessionStorage.getItem('pageId');
