@@ -169,11 +169,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 {
                     title: "삭제",
                     click: async () => {
-                        // const pageId = sessionStorage.getItem('pageId');
-                        // const user = auth?.user?.userId;
-                        // if (!pageId || !auth?.user?.userId) return;
-                        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-                        const user = "sbbok";
+                        const pageId = sessionStorage.getItem('pageId');
+                        const user = auth?.user?.userId;
+                        if (!pageId || !auth?.user?.userId) return;
+                        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+                        // const user = "sbbok";
 
                         try {
                             const result = await deleteBaseVariable.mutateAsync({
@@ -221,21 +221,22 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 데이터 로직 ---
     const fetchVariablesData = async (mode = 'normal', targetIdToSelect = null) => {
         // mode: 'fresh'(방금 추가됨 -> 마지막 요소 선택), 'delete'(현재요소 삭제됨 -> 첫요소 선택), 'select'(특정 ID 지정), 'normal'(일반 갱신)
-        // const pageId = sessionStorage.getItem('pageId');
-        // if (!pageId || !auth?.user?.userId) return;
-        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-        const testUser = "sbbok";
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !auth?.user?.userId) return;
+        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        // const user = "sbbok";
         try {
             loadingSpinner.show();
             // 1. Base Variables
-            const baseRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user: testUser });
+            const baseRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user: user });
             if (baseRes?.success === '777' && baseRes.resultjson) {
                 const baseVars = Array.isArray(baseRes.resultjson) ? baseRes.resultjson : Object.values(baseRes.resultjson);
                 setBaseVariables(baseVars);
             }
 
             // 2. Computed Variables
-            const compRes = await getComputedVariableList.mutateAsync({ pageid: pageId, user: testUser });
+            const compRes = await getComputedVariableList.mutateAsync({ pageid: pageId, user: user });
             if (compRes?.success === '777' && compRes.resultjson) {
                 const compVars = Array.isArray(compRes.resultjson) ? compRes.resultjson : Object.values(compRes.resultjson);
                 const formatted = compVars.map((v, i) => ({
@@ -311,11 +312,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     useEffect(() => { fetchVariablesData(); }, [auth?.user?.userId]);
 
     const handleSaveBanner = async () => {
-        // const pageId = sessionStorage.getItem('pageId');
-        // const user = auth?.user?.userId;
-        // if (!pageId || !user) return;
-        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-        const testUser = "sbbok";
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) return;
+        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        // const user = "sbbok";
 
         const currentBannerData = banners.find(b => b.id === selectedBanner);
         if (!currentBannerData) return;
@@ -382,7 +383,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             // 파생 문항 저장 API 호출 (임시: saveComputedVariable)
             const result = await saveComputedVariable.mutateAsync({
                 pageid: pageId,
-                user: testUser,
+                user: user,
                 variables: payloadVariables
             });
 

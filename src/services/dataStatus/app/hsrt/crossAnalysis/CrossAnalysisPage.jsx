@@ -472,7 +472,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                             <Download size={16} />
                                         </button>
                                         {showDownloadMenu && (
-                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, position: 'absolute', background: '#fff', border: '1px solid #e2e8f0', borderRadius:'8px', padding:'0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, position: 'absolute', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                                                 <button onClick={(e) => { e.stopPropagation(); handleDownload('png'); }}>PNG (이미지)</button>
                                                 <button onClick={(e) => { e.stopPropagation(); handleDownload('svg'); }}>SVG (PPT용)</button>
                                             </div>
@@ -488,7 +488,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                             })()}
                                         </button>
                                         {isPaletteMenuOpen && (
-                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, position: 'absolute', background: '#fff', border: '1px solid #e2e8f0', borderRadius:'8px', padding:'0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+                                            <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, position: 'absolute', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
                                                 {CHART_THEME_OPTIONS.map((option) => (
                                                     <button key={option.id} onClick={(e) => { e.stopPropagation(); setPaletteId(option.id); setIsPaletteMenuOpen(false); }} className={paletteId === option.id ? 'active' : ''} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         <div style={{ display: 'flex', gap: '2px' }}>
@@ -766,16 +766,16 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression) => {
         // 실제 데이터 연동 시 사용할 주석:
         // const pageId = sessionStorage.getItem('pageId');
-        // const testUser = auth?.user?.userId;
-        // if (!pageId || !testUser) return;
+        // const user = auth?.user?.userId;
+        // if (!pageId || !user) return;
 
         const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-        const testUser = "sbbok";
+        const user = "sbbok";
         try {
             loadingSpinner.show();
 
             // 1. Context 데이터 가져오기
-            const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: testUser });
+            const contextRes = await getOverviewContext.mutateAsync({ pageid: pageId, user: user });
 
             // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
             const ctxPayload = contextRes?.resultjson || contextRes || {};
@@ -830,7 +830,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             // 2. 전체표 목록 (Overview) 가져오기
             const overviewRes = await getOverview.mutateAsync({
                 pageid: pageId,
-                user: testUser,
+                user: user,
                 x_info: selectedXInfo !== '__none__' ? [selectedXInfo] : [],
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
@@ -953,7 +953,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             setCurrentId(banner.id);
                             setCurrentXInfo(banner.type || '단일 응답형 (Single)');
                         }
-                        
+
                         // 사이드바 목록 자동 스크롤 동기화
                         setTimeout(() => {
                             const sidebarItem = document.getElementById(`sidebar_item_${id}`);
@@ -1363,7 +1363,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                         )}
                         {filteredBanners.map((banner, index) => (
-                            <BannerBlock 
+                            <BannerBlock
                                 key={banner.id}
                                 banner={banner}
                                 index={index}
