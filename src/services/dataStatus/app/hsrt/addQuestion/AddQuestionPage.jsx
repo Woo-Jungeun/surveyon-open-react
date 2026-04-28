@@ -243,8 +243,10 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     id: v.id || `var_${i}`,
                     label: v.name || v.label,
                     type: v.type === 'single' ? '단일 응답형 (Single)' :
-                        v.type === 'double' ? '다중 응답형 (Double)' :
-                            v.type === 'numeric' ? '숫자형 (Numeric / Scale)' : (v.type || '단일 응답형 (Single)'),
+                        (v.type === 'multi' || v.type === 'double') ? '다중 응답형 (Multi)' :
+                            v.type === 'scale' ? '척도형 (Scale)' :
+                                v.type === 'numeric' ? '숫자형 (Numeric)' :
+                                    v.type === 'string' ? '문자형 (String)' : (v.type || '단일 응답형 (Single)'),
                     subId: v.id || `banner_0${i + 1}`,
                     info: Array.isArray(v.info) ? v.info.map(item => ({
                         ...item,
@@ -359,9 +361,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         const nextId = currentId.trim().toUpperCase();
 
         const typeMapReverse = {
-            '단일 응답형 (Single)': 'single',
-            '다중 응답형 (Double)': 'double',
-            '숫자형 (Numeric / Scale)': 'numeric'
+            "단일 응답형 (Single)": "single",
+            "다중 응답형 (Multi)": "multi",
+            "척도형 (Scale)": "scale",
+            "숫자형 (Numeric)": "numeric",
+            "문자형 (String)": "string"
         };
 
         const mappedType = typeMapReverse[currentXInfo] || currentXInfo || 'single';
@@ -542,7 +546,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>문항 유형</span>
                                     <DropDownList
-                                        data={['단일 응답형 (Single)', '다중 응답형 (Double)', '숫자형 (Numeric / Scale)']}
+                                        data={["단일 응답형 (Single)", "다중 응답형 (Multi)", "척도형 (Scale)", "숫자형 (Numeric)", "문자형 (String)"]}
                                         value={currentXInfo || ''}
                                         className="dp-add-question-dropdown"
                                         onChange={(e) => {
