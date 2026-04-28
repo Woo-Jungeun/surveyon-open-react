@@ -402,15 +402,42 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         const formula = colVars.map(group => group.map(v => v.id).join('*')).join('+');
         try {
             loadingSpinner.show();
+            // 1. Generate (미리보기 연산)
             const result = await generateBanner.mutateAsync({ pageid: pageId, formula, label: name, user: auth?.user?.userId });
-            if (result?.success === "777") {
-                await fetchBannerData(true);
-                setColVars([]);
-                setIsWizardOpen(false);
-                modal.showAlert('알림', '배너가 생성되었습니다.');
+            
+            if (result?.success === "777" && result?.resultjson?.variable) {
+                const generatedVar = result.resultjson.variable;
+                
+                // 2. 받은 variable 객체를 그대로 사용하여 Save (실제 DB 저장)
+                const saveRequestData = {
+                    pageid: pageId,
+                    user: auth?.user?.userId,
+                    variables: {
+                        [generatedVar.id]: generatedVar
+                    },
+                    delete_ids: []
+                };
+
+                const saveResult = await saveBannerDetail.mutateAsync(saveRequestData);
+
+                if (saveResult?.success === "777") {
+                    // 3. 완료 후 재조회
+                    await fetchBannerData(true);
+                    setColVars([]);
+                    setIsWizardOpen(false);
+                    modal.showAlert('알림', '배너가 정상적으로 생성 및 저장되었습니다.');
+                } else {
+                    modal.showAlert('오류', '배너 저장에 실패했습니다.');
+                }
+            } else {
+                modal.showAlert('오류', '배너 정보를 생성할 수 없습니다.');
             }
-        } catch (error) { console.error(error); }
-        finally { loadingSpinner.hide(); }
+        } catch (error) { 
+            console.error(error); 
+            modal.showAlert('오류', '배너 생성 중 오류가 발생했습니다.');
+        } finally { 
+            loadingSpinner.hide(); 
+        }
     };
 
     const updateBannerInfo = useCallback((newInfo) => {
