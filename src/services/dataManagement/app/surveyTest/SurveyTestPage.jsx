@@ -126,30 +126,22 @@ const SurveyTestPage = () => {
                 hubUrl = window.location.origin + hubUrl;
             }
 
-            console.log(`[SignalR 디버그] 📡 연결 시도 중... 허브 주소: ${hubUrl}`);
-
             connection = new signalR.HubConnectionBuilder()
                 .withUrl(hubUrl)
                 .withAutomaticReconnect()
-                .configureLogging(signalR.LogLevel.Information) // SignalR 내부 로그 활성화
+                .configureLogging(signalR.LogLevel.None) // 내부 로그 불필요시 차단 (선택)
                 .build();
 
             // --- 생명주기 이벤트 로깅 ---
             connection.onreconnecting(error => {
-                console.warn(`[SignalR 디버그] ⚠️ 연결 끊김! 재연결 시도 중... Error:`, error);
-            });
-            connection.onreconnected(connectionId => {
-                console.log(`[SignalR 디버그] 🔗 재연결 성공! 새 Connection ID: ${connectionId}`);
+                if (error) console.error(`[SignalR] ⚠️ 연결 끊김! Error:`, error);
             });
             connection.onclose(error => {
-                if (error) console.error(`[SignalR 디버그] ❌ 비정상 연결 종료 Error:`, error);
-                else console.log(`[SignalR 디버그] 🛑 정상적으로 연결이 해제되었습니다.`);
+                if (error) console.error(`[SignalR] ❌ 비정상 연결 종료:`, error);
             });
 
             // 2. 이벤트 수신 등록
             connection.on("ReceiveProgress", (...args) => {
-                console.log(`[SignalR 원본 수신 데이터]:`, args);
-
                 let percent = 0;
                 let msg = '';
 
@@ -165,14 +157,12 @@ const SurveyTestPage = () => {
                     msg = args[1];
                 }
 
-                console.log(`[분석 로그] 🚀 ${percent}% 완료: ${msg}`);
                 setProgressPercentage(percent || 0);
                 setProgressMessage(msg || '');
             });
 
             await connection.start();
             myConnectionId = connection.connectionId;
-            console.log(`[SignalR] 🟢 소켓 연결 성공! Connection ID: ${myConnectionId}`);
         } catch (e) {
             console.error("SignalR Connection Error:", e);
             setProgressMessage("오류: 실시간 연결 실패 (분석 진행 가능)");
@@ -214,7 +204,7 @@ const SurveyTestPage = () => {
 
     // 카운트 헬퍼
     const getCount = (section) => resultJson?.[section.countKey] ?? 0;
-    
+
     // 전체 현황 집계 헬퍼 (로컬 데이터 기반 수작업 집계로 정확성 보장)
     const getGlobalCounts = (json) => {
         if (!json) return { critical: 0, error: 0, warning: 0 };
