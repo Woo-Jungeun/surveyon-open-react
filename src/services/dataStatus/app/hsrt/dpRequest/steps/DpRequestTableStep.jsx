@@ -646,7 +646,34 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     useImperativeHandle(ref, () => ({
         save: async () => await handleSave(),
-        reset: () => fetchOverview()
+        reset: async () => {
+            const pageId = sessionStorage.getItem('pageId');
+            if (!pageId || !auth?.user?.userId) return;
+            try {
+                loadingSpinner.show();
+                const requestData = {
+                    pageid: pageId,
+                    user: auth.user.userId,
+                    variables: {},
+                    dp_request_recoded_items: [],
+                    delete_ids: originalRecodedIds,
+                    auto_recode: false
+                };
+                const result = await saveRecodedOverview.mutateAsync(requestData);
+                if (result?.success === "777") {
+                    modal.showAlert('알림', '스터브 초기화가 완료되었습니다.');
+                    if (onUnsavedChange) onUnsavedChange(false);
+                    await fetchOverview();
+                } else {
+                    modal.showAlert('오류', '초기화 작업에 실패했습니다.');
+                }
+            } catch (err) {
+                console.error(err);
+                modal.showAlert('오류', '초기화 중 문제가 발생했습니다.');
+            } finally {
+                loadingSpinner.hide();
+            }
+        }
     }));
 
     const fetchOverview = useCallback(async () => {

@@ -196,10 +196,15 @@ const DpRequestPage = () => {
                                 height: '36px'
                             }}
                             onClick={() => {
-                                modal.showConfirm('초기화', '설정을 초기화하시겠습니까?', () => {
-                                    if (step3Ref.current && step3Ref.current.reset) {
-                                        step3Ref.current.reset();
-                                    }
+                                modal.showConfirm('초기화', '설정을 초기화하시겠습니까?', {
+                                    btns: [
+                                        { title: '취소', click: () => {} },
+                                        { title: '초기화', click: () => {
+                                            if (step3Ref.current && step3Ref.current.reset) {
+                                                step3Ref.current.reset();
+                                            }
+                                        }}
+                                    ]
                                 });
                             }}
                         >
