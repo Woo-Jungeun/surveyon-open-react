@@ -173,7 +173,8 @@ const DpRequestPage = () => {
                                     </div>
                                     <div className="dp-step-label-group">
                                         <span className="dp-step-text">{step.label}</span>
-                                        {count > 0 && <span className="dp-step-count">{count}</span>}
+                                        {/* 개수 표출 임시 숨김 처리 */}
+                                        {/* {count > 0 && <span className="dp-step-count">{count}</span>} */}
                                     </div>
                                 </div>
                                 {idx < steps.length - 1 && (
