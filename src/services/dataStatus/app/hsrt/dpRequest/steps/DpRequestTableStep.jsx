@@ -937,6 +937,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             addable
                             copyable
                             deletable
+                            deletePos="start"
                             newRowTemplate={newRowTemplate}
                             duplicateRowTemplate={duplicateRowTemplate}
                         >
