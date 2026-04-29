@@ -39,8 +39,9 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 className="k-text-center"
                 cell={(props) => {
                     const { dataItem, className, style, colSpan, rowSpan } = props;
+                    const labelText = dataItem.label || dataItem.var_label || dataItem.name || dataItem.key || '-';
                     return (
-                        <td className={`${className || ''} k-text-center`} style={{ ...(style || {}), fontWeight: 500, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }} colSpan={colSpan} rowSpan={rowSpan}>
+                        <td title={labelText} className={`${className || ''} k-text-center`} style={{ ...(style || {}), fontWeight: 500, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }} colSpan={colSpan} rowSpan={rowSpan}>
                             <div style={{
                                 display: '-webkit-box',
                                 WebkitLineClamp: 2,
@@ -51,7 +52,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                 lineHeight: '1.4',
                                 fontSize: '12px'
                             }}>
-                                {dataItem.label || dataItem.var_label || dataItem.name || dataItem.key || '-'}
+                                {labelText}
                             </div>
                         </td>
                     );
