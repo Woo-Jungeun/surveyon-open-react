@@ -214,6 +214,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     useEffect(() => {
         fetchInitialData();
+        const handlePageUpdate = () => fetchInitialData();
+        window.addEventListener("pageSelected", handlePageUpdate);
+        return () => window.removeEventListener("pageSelected", handlePageUpdate);
     }, [auth?.user?.userId]);
 
     // 키보드 이벤트 (Undo/Redo)

@@ -762,7 +762,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }, [getRecodedOverview, history, loadingSpinner, modal, onUnsavedChange]);
 
-    useEffect(() => { fetchOverview(); }, []);
+    useEffect(() => { 
+        fetchOverview(); 
+        const handlePageUpdate = () => fetchOverview();
+        window.addEventListener("pageSelected", handlePageUpdate);
+        return () => window.removeEventListener("pageSelected", handlePageUpdate);
+    }, [fetchOverview]);
 
     const filteredStubs = useMemo(() => {
         if (!searchTerm) return stubs;

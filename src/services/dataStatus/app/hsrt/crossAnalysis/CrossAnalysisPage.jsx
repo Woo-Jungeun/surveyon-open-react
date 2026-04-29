@@ -1000,6 +1000,18 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     }, [bannerSearch, selectedXInfo, filterExpression, auth?.user?.userId]);
 
     useEffect(() => {
+        const handlePageUpdate = () => {
+            if (currentPage !== 1) {
+                setCurrentPage(1);
+            } else {
+                fetchCrossAnalysisData('normal', null, 1, filterExpression);
+            }
+        };
+        window.addEventListener("pageSelected", handlePageUpdate);
+        return () => window.removeEventListener("pageSelected", handlePageUpdate);
+    }, [currentPage, filterExpression]);
+
+    useEffect(() => {
         if (currentPage !== 1) {
             fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
         }

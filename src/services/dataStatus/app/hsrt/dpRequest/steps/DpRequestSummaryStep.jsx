@@ -432,7 +432,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         );
     }, [summaries, summarySearch]);
 
-    useEffect(() => { fetchSummaryData(); }, [auth?.user?.userId]);
+    useEffect(() => { 
+        fetchSummaryData(); 
+        const handlePageUpdate = () => fetchSummaryData();
+        window.addEventListener("pageSelected", handlePageUpdate);
+        return () => window.removeEventListener("pageSelected", handlePageUpdate);
+    }, [auth?.user?.userId]);
 
     useEffect(() => {
         // 백엔드에서 summary_source_variables 로 한 번에 가져오므로

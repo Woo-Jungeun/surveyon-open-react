@@ -516,7 +516,12 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         );
     }, [banners, bannerSearch]);
 
-    useEffect(() => { fetchBannerData(); }, [auth?.user?.userId]);
+    useEffect(() => { 
+        fetchBannerData(); 
+        const handlePageUpdate = () => fetchBannerData();
+        window.addEventListener("pageSelected", handlePageUpdate);
+        return () => window.removeEventListener("pageSelected", handlePageUpdate);
+    }, [auth?.user?.userId]);
 
     useEffect(() => {
         const fetchBaseVariables = async () => {
@@ -528,6 +533,10 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             } catch (error) { }
         };
         fetchBaseVariables();
+        
+        const handlePageUpdate = () => fetchBaseVariables();
+        window.addEventListener("pageSelected", handlePageUpdate);
+        return () => window.removeEventListener("pageSelected", handlePageUpdate);
     }, [auth?.user?.userId]);
 
     const handleSaveBanner = async () => {

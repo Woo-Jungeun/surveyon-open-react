@@ -127,16 +127,21 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     };
 
-    // API 호출로 초기 데이터 로드
     useEffect(() => {
-        fetchOrderData().then(() => {
-            setTableOrder(prev => {
-                if (prev.length > 0 && !selectedItemId) {
-                    setSelectedItemId(prev[0].id);
-                }
-                return prev;
+        const loadAndSelect = () => {
+            fetchOrderData().then(() => {
+                setTableOrder(prev => {
+                    if (prev.length > 0 && !selectedItemId) {
+                        setSelectedItemId(prev[0].id);
+                    }
+                    return prev;
+                });
             });
-        });
+        };
+        loadAndSelect();
+        
+        window.addEventListener("pageSelected", loadAndSelect);
+        return () => window.removeEventListener("pageSelected", loadAndSelect);
     }, [auth?.user?.userId]);
     // --- 드래그 앤 드롭 핸들러 ---
     const handleDragStart = (e, index) => {

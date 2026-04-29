@@ -131,6 +131,9 @@ const DpRequestPage = () => {
         };
 
         fetchContext();
+        
+        window.addEventListener("pageSelected", fetchContext);
+        return () => window.removeEventListener("pageSelected", fetchContext);
     }, [currentStep, auth?.user?.userId]);
 
     // 단계별 컴포넌트 렌더링

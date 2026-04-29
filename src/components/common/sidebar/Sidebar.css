@@ -401,7 +401,7 @@
     padding: 8px 16px 10px 16px;
 }
 
-.project-info-box + .project-info-box {
+.project-info-box+.project-info-box {
     padding-top: 0;
 }
 
@@ -503,7 +503,7 @@
     -webkit-line-clamp: 3;
     line-clamp: 3;
     -webkit-box-orient: vertical;
-    overflow: hidden;
+    /* overflow: hidden; */
     text-overflow: ellipsis;
     word-break: break-all;
     min-width: 0;
