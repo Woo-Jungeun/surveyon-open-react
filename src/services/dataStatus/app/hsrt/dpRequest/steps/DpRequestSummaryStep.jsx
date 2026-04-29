@@ -271,8 +271,19 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     setBaseVariables(Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars));
                 }
                 if (result.resultjson.dp_request_summary_folders) {
-                    setFolders(result.resultjson.dp_request_summary_folders);
-                    setOriginalFolderIds(result.resultjson.dp_request_summary_folders.map(f => f.id));
+                    const uniqueFolders = [];
+                    const idSet = new Set();
+                    result.resultjson.dp_request_summary_folders.forEach(f => {
+                        let fId = f.id;
+                        let counter = 1;
+                        while (idSet.has(fId)) {
+                            fId = `${f.id}_dup${counter++}`;
+                        }
+                        idSet.add(fId);
+                        uniqueFolders.push({ ...f, id: fId });
+                    });
+                    setFolders(uniqueFolders);
+                    setOriginalFolderIds(uniqueFolders.map(f => f.id));
                 }
                 if (result.resultjson.recoded_variables) {
                     const raw = result.resultjson.recoded_variables;
