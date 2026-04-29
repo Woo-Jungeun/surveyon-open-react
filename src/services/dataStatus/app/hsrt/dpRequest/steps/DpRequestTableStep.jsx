@@ -394,7 +394,7 @@ const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', 'minrank', 'maxrank', 'scal
 
 const canUseScalePreset = (type) => {
     const t = String(type || '').toLowerCase();
-    return t === 'scale' || t === 'single';
+    return t === 'scale';
 };
 
 const canUseRankPreset = (type) => {
@@ -404,13 +404,12 @@ const canUseRankPreset = (type) => {
 
 const canUseStatPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'dummy' || t === 'multi' || t.includes('문자') || t === 'open-text' || t === 'open') return false;
-    return true;
+    return t === 'scale' || t === 'open(숫자)' || t === 'double' || t === 'open-num' || t === 'dummy' || t === 'custom';
 };
 
 const canUseGroupPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'double' || t.includes('문자') || t.includes('숫자') || t === 'open' || t === 'open-text' || t === 'open-num') return false;
+    if (t === 'open(숫자)' || t === 'double' || t === 'open-num') return false;
     return true;
 };
 
