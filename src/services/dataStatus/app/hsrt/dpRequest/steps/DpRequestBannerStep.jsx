@@ -89,8 +89,7 @@ const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
 ));
 
 // --- (컴팩트 디자인 & 여유로운 패딩) 배너 생성 전용 푸터 바 ---
-const BannerActionFooter = memo(({ onCreateBanner }) => {
-    const [localName, setLocalName] = useState('');
+const BannerActionFooter = memo(({ onCreateBanner, name, onNameChange }) => {
     return (
         <div style={{
             padding: '14px 16px 0px',
@@ -106,15 +105,15 @@ const BannerActionFooter = memo(({ onCreateBanner }) => {
                 <input
                     type="text"
                     placeholder="배너명을 입력하세요"
-                    value={localName}
-                    onChange={(e) => setLocalName(e.target.value)}
+                    value={name}
+                    onChange={(e) => onNameChange(e.target.value)}
                     className="dp-input"
                     style={{ flex: 1, maxWidth: '500px' }}
                 />
             </div>
             <button
                 className="dp-primary-btn"
-                onClick={() => onCreateBanner(localName)}
+                onClick={() => onCreateBanner(name)}
                 style={{
                     height: '32px',
                     padding: '0 20px',
@@ -211,6 +210,30 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             history.commit(banners);
         }
     }, [banners, history]);
+
+    // --- Banner Management ---
+    const handleAddBanner = () => {
+        let maxNum = 0;
+        banners.forEach(b => {
+            const match = b.id.match(/^banner_(\d+)$/);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) maxNum = num;
+            }
+        });
+        const newId = `banner_${String(maxNum + 1).padStart(2, '0')}`;
+
+        const newBanner = {
+            id: newId,
+            label: '',
+            info: [],
+            isNew: true
+        };
+        setBanners(prev => [newBanner, ...prev]);
+        setSelectedBanner(newId);
+        setCurrentLabel('');
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
 
     // --- Interaction Logic ---
     const toggleSelection = useCallback((id) => {
@@ -314,12 +337,29 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleDeleteBanner = (e, bannerId) => {
         e.stopPropagation();
-        modal.showConfirm('삭제 확인', `배너(${bannerId})를 삭제하시겠습니까?`, {
+        const bannerToDelete = banners.find(b => b.id === bannerId);
+        
+        modal.showConfirm('삭제 확인', `배너(${bannerToDelete?.label || bannerId})를 삭제하시겠습니까?`, {
             btns: [
                 { title: "취소", click: () => { } },
                 {
                     title: "삭제",
                     click: async () => {
+                        // 1. 만약 저장되지 않은 새 배너라면 로컬에서만 제거
+                        if (bannerToDelete?.isNew) {
+                            setBanners(prev => prev.filter(b => b.id !== bannerId));
+                            const nextBanners = banners.filter(b => b.id !== bannerId);
+                            if (nextBanners.length > 0) {
+                                setSelectedBanner(nextBanners[0].id);
+                                setCurrentLabel(nextBanners[0].label);
+                            } else {
+                                setSelectedBanner(null);
+                                setCurrentLabel('');
+                            }
+                            return;
+                        }
+
+                        // 2. 서버에 저장된 배너라면 API 호출
                         const pageId = sessionStorage.getItem('pageId');
                         if (!pageId) return;
 
@@ -335,7 +375,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             const result = await saveBannerDetail.mutateAsync(requestData);
                             if (result?.success === "777") {
                                 modal.showAlert('알림', '배너가 삭제되었습니다.');
-                                await fetchBannerData();
+                                await fetchBannerData(false, true); // 삭제 시 무조건 첫 번째 배너 선택
                             }
                         } catch (error) {
                             console.error('Delete error:', error);
@@ -350,7 +390,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     // --- 데이터 로직 ---
-    const fetchBannerData = async (isFresh = false) => {
+    const fetchBannerData = async (isFresh = false, forceSelectFirst = false) => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId || !auth?.user?.userId) return;
         try {
@@ -392,10 +432,13 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                     if (formatted.length > 0) {
                         const target = isFresh ? formatted[formatted.length - 1] : formatted[0];
-                        if (isFresh || !selectedBanner) {
+                        if (isFresh || !selectedBanner || forceSelectFirst) {
                             setSelectedBanner(target.id);
                             setCurrentLabel(target.label);
                         }
+                    } else if (forceSelectFirst || !selectedBanner) {
+                        setSelectedBanner(null);
+                        setCurrentLabel('');
                     }
                 }
             }
@@ -430,7 +473,9 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 if (saveResult?.success === "777") {
                     // 3. 완료 후 재조회
-                    await fetchBannerData(true);
+                    await fetchBannerData(false);
+                    setSelectedBanner(generatedVar.id);
+                    setCurrentLabel(generatedVar.name || generatedVar.label);
                     setColVars([]);
                     setIsWizardOpen(false);
                     modal.showAlert('알림', '배너가 정상적으로 생성 및 저장되었습니다.');
@@ -449,7 +494,11 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     const updateBannerInfo = useCallback((newInfo) => {
-        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo } : b));
+        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo, isDirty: true } : b));
+    }, [selectedBanner]);
+
+    const handleRowClick = useCallback((e) => {
+        setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: it === e.dataItem })) } : b));
     }, [selectedBanner]);
 
     const filteredVariables = useMemo(() => {
@@ -530,128 +579,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     return (
         <div className="dp-request-container" style={{ gap: '12px' }} onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
-            {/* 1. 자동 배너 구성 마법사 */}
-            <div className="dp-wizard-accordion" onClick={(e) => { e.stopPropagation(); setSelectedIds([]); }}>
-                <div className="dp-accordion-header" onClick={() => setIsWizardOpen(prev => !prev)}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b' }}>자동 배너 구성</span>
-                    </div>
-                    <ChevronDown size={16} />
-                </div>
-
-                {isWizardOpen && (
-                    <div className="dp-wizard-body" onClick={(e) => e.stopPropagation()}>
-                        <div className="dp-wizard-setup" style={{ height: '380px' }}>
-                            {/* 좌측 변수 목록 */}
-                            <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
-                                <div className="variable-panel-header">
-                                    {isVariablePanelOpen && (
-                                        <div className="dp-search-input-wrapper">
-                                            <Search size={14} className="dp-search-input-icon" />
-                                            <input
-                                                type="text"
-                                                placeholder="변수명 검색"
-                                                value={wizardSearch}
-                                                onChange={(e) => setWizardSearch(e.target.value)}
-                                                className="dp-search-input"
-                                            />
-                                        </div>
-                                    )}
-                                    <button onClick={() => setIsVariablePanelOpen(prev => !prev)} className="dp-sidebar-toggle-btn-compact">
-                                        {isVariablePanelOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
-                                    </button>
-                                </div>
-                                {isVariablePanelOpen && (
-                                    <div className="variable-list custom-scrollbar">
-                                        {filteredVariables.map((v, index) => (
-                                            <VariableItem
-                                                key={`${v.id}-${index}`}
-                                                v={v}
-                                                isSelected={selectedIds.includes(v.id)}
-                                                onDragStart={handleDragStart}
-                                                onClick={toggleSelection}
-                                            />
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* 우측 가로축 드롭존 (개선: 5개씩 2줄 그리드) */}
-                            <div className="drop-zones-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                                <div className="axis-header" style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>가로축 (열)</span>
-                                        <span className="group-count-badge" style={{ fontSize: '10px' }}>{colVars.length} / 10</span>
-                                    </div>
-                                    <button onClick={() => setColVars([])} className="axis-clear-btn" title="모두 비우기" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                                        <X size={14} color="#94a3b8" />
-                                    </button>
-                                </div>
-
-                                <div className="drop-zone-scroll-area custom-scrollbar"
-                                    style={{
-                                        flex: 1,
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(5, 1fr)',
-                                        gap: '12px',
-                                        padding: '16px',
-                                        background: '#eff6ff',
-                                        overflowY: 'auto',
-                                        alignContent: 'start',
-                                        position: 'relative'
-                                    }}
-                                    onDragOver={(e) => e.preventDefault()}
-                                    onDrop={(e) => handleDrop(e, 'new')}
-                                >
-                                    {colVars.map((group, groupIndex) => (
-                                        <div
-                                            key={groupIndex}
-                                            className="col-group"
-                                            draggable
-                                            onDragStart={(e) => handleInternalGroupDragStart(e, groupIndex)}
-                                            onDragOver={(e) => e.preventDefault()}
-                                            onDrop={(e) => { e.stopPropagation(); handleDrop(e, groupIndex); }}
-                                            style={{ width: '100%', marginBottom: '0', borderRadius: '8px' }}
-                                        >
-                                            <div className="group-drag-handle" style={{ padding: '2px 0' }}><GripVertical size={14} /></div>
-                                            <div className="col-group-items" style={{ minHeight: '30px', paddingBottom: '4px' }}>
-                                                {group.map((v, itemIndex) => (
-                                                    <div
-                                                        key={`${v.id}-${itemIndex}`}
-                                                        className="dropped-tag grouped"
-                                                        draggable
-                                                        onDragStart={(e) => { e.stopPropagation(); handleInternalItemDragStart(e, groupIndex, itemIndex); }}
-                                                        style={{ marginBottom: '3px', borderRadius: '4px', height: 'auto', minHeight: '26px', alignItems: 'flex-start', padding: '6px 4px' }}
-                                                    >
-                                                        <div className="item-drag-handle" style={{ marginTop: '2px' }}><GripVertical size={10} /></div>
-                                                        <span className="tag-text" style={{ fontSize: '11px', whiteSpace: 'normal', wordBreak: 'break-all', lineHeight: 1.3, flex: 1 }}>{v.label}</span>
-                                                        <X size={12} className="remove" onClick={() => removeVar(v.id, groupIndex)} style={{ marginTop: '2px', flexShrink: 0 }} />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    {colVars.length === 0 && (
-                                        <div style={{
-                                            position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8'
-                                        }}>
-                                            <Plus size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-                                            <div style={{ fontSize: '13px', fontWeight: 600 }}>여기에 문항을 끌어다 놓으세요</div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* 하단 스티키 액션 바 */}
-                                {colVars.length > 0 && (
-                                    <BannerActionFooter onCreateBanner={handleCreateBanner} />
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
-
             {/* 2. 메인 레이아웃 */}
             <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
                 <div className={`dp-sidebar-container ${!isBannerSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
@@ -665,9 +592,22 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                         <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
                             <span>생성된 배너 목록 ({filteredBanners.length})</span>
-                            <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)}>
-                                <ChevronLeft size={16} />
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <button
+                                    onClick={handleAddBanner}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        padding: '4px 8px', borderRadius: '4px',
+                                        border: '1px solid #3b82f6', background: '#eff6ff',
+                                        color: '#3b82f6', fontSize: '12px', fontWeight: 600, cursor: 'pointer'
+                                    }}
+                                >
+                                    <Plus size={14} strokeWidth={3} /> 추가
+                                </button>
+                                <button className="dp-sidebar-toggle-btn-compact" onClick={() => setIsBannerSidebarOpen(false)}>
+                                    <ChevronLeft size={16} />
+                                </button>
+                            </div>
                         </div>
                         <div className="dp-sidebar-header" style={{ display: 'flex', alignItems: 'center', padding: '12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
                             <div className="dp-search-input-wrapper" style={{ flex: 1, width: '100%' }}>
@@ -689,8 +629,15 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
                                 >
                                     <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
-                                        <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px' }}>{banner.label}</span>
-                                        <span className="dp-banner-sub" style={{ fontSize: '11px', opacity: 0.6 }}>{banner.id}</span>
+                                        <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', wordBreak: 'break-all', fontWeight: banner.isNew ? 700 : 'normal' }}>
+                                            {banner.isNew ? (banner.label || '(새 배너 작성중)') : banner.label}
+                                        </span>
+                                        <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6, wordBreak: 'break-all', lineHeight: 1.3, fontWeight: banner.isNew ? 600 : 'normal' }}>
+                                            {banner.isNew ? '저장 대기' : banner.id}
+                                            {!banner.isNew && banner.isDirty && (
+                                                <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
+                                            )}
+                                        </span>
                                     </div>
                                     <button className="dp-banner-delete"
                                         onClick={(e) => handleDeleteBanner(e, banner.id)}
@@ -705,14 +652,152 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
 
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                    {banners.find(b => b.id === selectedBanner)?.isNew ? (
+                            <>
+                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, padding: '0 16px', borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
+                                <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>배너명</span>
+                                    <input
+                                        type="text"
+                                        value={currentLabel}
+                                        placeholder="배너명을 입력하세요"
+                                        onChange={(e) => {
+                                            setCurrentLabel(e.target.value);
+                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, label: e.target.value } : b));
+                                            if (onUnsavedChange) onUnsavedChange(true);
+                                        }}
+                                        className="dp-input"
+                                        style={{ width: '800px' }}
+                                    />
+                                </div>
+                                <div className="dp-content-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                                    <button
+                                        onClick={() => handleCreateBanner(currentLabel)}
+                                        className="dp-primary-btn"
+                                        style={{ height: '32px', padding: '0 20px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, border: 'none', background: '#3b82f6', color: '#fff', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                    >
+                                        배너 생성
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="dp-wizard-setup" style={{ height: '100%', flex: 1, minHeight: 0 }}>
+                                {/* 좌측 변수 목록 */}
+                                <div className={`variable-panel ${!isVariablePanelOpen ? 'collapsed' : ''}`}>
+                                    <div className="variable-panel-header">
+                                        {isVariablePanelOpen && (
+                                            <div className="dp-search-input-wrapper">
+                                                <Search size={14} className="dp-search-input-icon" />
+                                                <input
+                                                    type="text"
+                                                    placeholder="변수명 검색"
+                                                    value={wizardSearch}
+                                                    onChange={(e) => setWizardSearch(e.target.value)}
+                                                    className="dp-search-input"
+                                                />
+                                            </div>
+                                        )}
+                                        <button onClick={() => setIsVariablePanelOpen(prev => !prev)} className="dp-sidebar-toggle-btn-compact">
+                                            {isVariablePanelOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
+                                        </button>
+                                    </div>
+                                    {isVariablePanelOpen && (
+                                        <div className="variable-list custom-scrollbar" style={{ paddingTop: '6px' }}>
+                                            {filteredVariables.map((v, index) => (
+                                                <VariableItem
+                                                    key={`${v.id}-${index}`}
+                                                    v={v}
+                                                    isSelected={selectedIds.includes(v.id)}
+                                                    onDragStart={handleDragStart}
+                                                    onClick={toggleSelection}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+    
+                                {/* 우측 가로축 드롭존 (개선: 5개씩 2줄 그리드) */}
+                                <div className="drop-zones-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+
+                                    <div className="axis-header" style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>가로축 (열)</span>
+                                            <span className="group-count-badge" style={{ fontSize: '10px' }}>{colVars.length} / 10</span>
+                                        </div>
+                                        <button onClick={() => setColVars([])} className="axis-clear-btn" title="모두 비우기" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                                            <X size={14} color="#94a3b8" />
+                                        </button>
+                                    </div>
+    
+                                    <div className="drop-zone-scroll-area custom-scrollbar"
+                                        style={{
+                                            flex: 1,
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(5, 1fr)',
+                                            gap: '12px',
+                                            padding: '16px',
+                                            background: '#eff6ff',
+                                            overflowY: 'auto',
+                                            alignContent: 'start',
+                                            position: 'relative'
+                                        }}
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => handleDrop(e, 'new')}
+                                    >
+                                        {colVars.map((group, groupIndex) => (
+                                            <div
+                                                key={groupIndex}
+                                                className="col-group"
+                                                draggable
+                                                onDragStart={(e) => handleInternalGroupDragStart(e, groupIndex)}
+                                                onDragOver={(e) => e.preventDefault()}
+                                                onDrop={(e) => { e.stopPropagation(); handleDrop(e, groupIndex); }}
+                                                style={{ width: '100%', marginBottom: '0', borderRadius: '8px' }}
+                                            >
+                                                <div className="group-drag-handle" style={{ padding: '2px 0' }}><GripVertical size={14} /></div>
+                                                <div className="col-group-items" style={{ minHeight: '30px', paddingBottom: '4px' }}>
+                                                    {group.map((v, itemIndex) => (
+                                                        <div
+                                                            key={`${v.id}-${itemIndex}`}
+                                                            className="dropped-tag grouped"
+                                                            draggable
+                                                            onDragStart={(e) => { e.stopPropagation(); handleInternalItemDragStart(e, groupIndex, itemIndex); }}
+                                                            style={{ marginBottom: '3px', borderRadius: '4px', height: 'auto', minHeight: '26px', alignItems: 'flex-start', padding: '6px 4px' }}
+                                                        >
+                                                            <div className="item-drag-handle" style={{ marginTop: '2px' }}><GripVertical size={10} /></div>
+                                                            <span className="tag-text" style={{ fontSize: '11px', whiteSpace: 'normal', wordBreak: 'break-all', lineHeight: 1.3, flex: 1 }}>{v.label}</span>
+                                                            <X size={12} className="remove" onClick={() => removeVar(v.id, groupIndex)} style={{ marginTop: '2px', flexShrink: 0 }} />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {colVars.length === 0 && (
+                                            <div style={{
+                                                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8'
+                                            }}>
+                                                <Plus size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
+                                                <div style={{ fontSize: '13px', fontWeight: 600 }}>여기에 문항을 끌어다 놓으세요</div>
+                                            </div>
+                                        )}
+                                    </div>
+    
+                                    {/* 하단 스티키 액션 바 제거됨 (상단 헤더로 이동) */}
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
                     <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
                         <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700 }}>배너 라벨</span>
+                            <span style={{ fontSize: '13px', fontWeight: 700 }}>배너명</span>
                             <input
                                 type="text"
                                 value={currentLabel}
+                                placeholder="배너명을 입력하세요"
                                 onChange={(e) => {
                                     setCurrentLabel(e.target.value);
+                                    setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, label: e.target.value, isDirty: true } : b));
                                     if (onUnsavedChange) onUnsavedChange(true); // 라벨 변경 시 더티 표시
                                 }}
                                 className="dp-input"
@@ -798,7 +883,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             data={banners.find(b => b.id === selectedBanner)?.info || []}
                             reorderable addable deletable editField="inEdit"
                             onDataChange={updateBannerInfo}
-                            onRowClick={(e) => updateBannerInfo(banners.find(b => b.id === selectedBanner).info.map(it => ({ ...it, inEdit: it === e.dataItem })))}
+                            onRowClick={handleRowClick}
                             newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
                         >
                             <Column field="label3" title="라벨3" width="150px" />
@@ -807,6 +892,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
                         </KendoGridV2>
                     </div>
+                        </>
+                    )}
                 </div>
             </div>
         </div>

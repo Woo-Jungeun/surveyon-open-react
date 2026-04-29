@@ -1132,7 +1132,7 @@
    (mirrors .cross-tab-page rules without parent)
    ============================================ */
 
-.dp-wizard-body .col-group {
+.dp-wizard-setup .col-group {
     display: flex;
     flex-direction: row;
     align-items: stretch;
@@ -1145,14 +1145,14 @@
     flex-shrink: 0;
 }
 
-.dp-wizard-body .col-group-items {
+.dp-wizard-setup .col-group-items {
     display: flex;
     flex-direction: column;
     gap: 6px;
     flex: 1;
 }
 
-.dp-wizard-body .group-drag-handle {
+.dp-wizard-setup .group-drag-handle {
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -1164,11 +1164,11 @@
     flex-shrink: 0;
 }
 
-.dp-wizard-body .group-drag-handle:hover {
+.dp-wizard-setup .group-drag-handle:hover {
     color: #64748b;
 }
 
-.dp-wizard-body .dropped-tag.grouped {
+.dp-wizard-setup .dropped-tag.grouped {
     display: flex;
     align-items: center;
     border-radius: 6px;
@@ -1182,7 +1182,7 @@
     box-sizing: border-box;
 }
 
-.dp-wizard-body .dropped-tag.grouped .item-drag-handle {
+.dp-wizard-setup .dropped-tag.grouped .item-drag-handle {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1197,7 +1197,7 @@
     flex-shrink: 0;
 }
 
-.dp-wizard-body .dropped-tag.grouped .tag-text {
+.dp-wizard-setup .dropped-tag.grouped .tag-text {
     flex: 1;
     font-size: 13px;
     font-weight: 600;
@@ -1207,14 +1207,14 @@
     white-space: nowrap;
 }
 
-.dp-wizard-body .dropped-tag.grouped .remove {
+.dp-wizard-setup .dropped-tag.grouped .remove {
     cursor: pointer;
     color: #94a3b8;
     flex-shrink: 0;
     margin-left: 4px;
 }
 
-.dp-wizard-body .empty-slot {
+.dp-wizard-setup .empty-slot {
     height: 32px;
     border-radius: 6px;
     background: #dbeafe;
