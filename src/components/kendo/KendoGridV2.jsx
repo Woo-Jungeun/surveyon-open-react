@@ -3,6 +3,31 @@ import { Grid, GridColumn as Column, GridNoRecords } from "@progress/kendo-react
 import PropTypes from "prop-types";
 import { GripVertical, Plus, Trash2, ArrowUp, ArrowDown, Copy } from "lucide-react";
 
+const GRID_INLINE_STYLE = `
+.dp-row-del-hover td {
+    background-color: #fee2e2 !important;
+    transition: background-color 0.2s;
+}
+.dp-row-del-btn {
+    color: #94a3b8;
+    transition: color 0.2s;
+}
+.dp-row-del-hover .dp-row-del-btn {
+    color: #ef4444 !important;
+}
+`;
+if (typeof document !== 'undefined') {
+    let style = document.getElementById('kendo-grid-v2-style');
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'kendo-grid-v2-style';
+        document.head.appendChild(style);
+    }
+    if (style.innerHTML !== GRID_INLINE_STYLE) {
+        style.innerHTML = GRID_INLINE_STYLE;
+    }
+}
+
 /**
  * H-SRT 전용 Smart Excel-Style Grid (Version 2)
  * 행 추가, 삭제, 드래그 이동, 인라인 편집 기능을 내장한 공통 컴포넌트입니다.
@@ -255,8 +280,21 @@ const KendoGridV2 = (props) => {
                     width="50px"
                     cell={(cellProps) => (
                         <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
-                            <button type="button" className="dp-row-del-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent' }}>
-                                <Trash2 size={16} color="#94a3b8" />
+                            <button 
+                                type="button" 
+                                className="dp-row-del-btn" 
+                                onMouseEnter={(e) => {
+                                    const tr = e.currentTarget.closest('tr');
+                                    if (tr) tr.classList.add('dp-row-del-hover');
+                                }}
+                                onMouseLeave={(e) => {
+                                    const tr = e.currentTarget.closest('tr');
+                                    if (tr) tr.classList.remove('dp-row-del-hover');
+                                }}
+                                onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(cellProps.dataIndex); }} 
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '24px', padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                            >
+                                <Trash2 size={16} color="currentColor" />
                             </button>
                         </td>
                     )}
