@@ -113,7 +113,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
                     return {
                         seq: idx + 1,
                         id: id,
-                        name: varInfo.label || id,
+                        name: meta.label || varInfo.label || id,
                         type: meta.kind || varInfo.type || 'Unknown',
                         info: varInfo.info || []
                     };
