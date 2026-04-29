@@ -122,11 +122,21 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             const dataStr = e.dataTransfer.getData('text/plain');
             if (!dataStr) return;
             const data = JSON.parse(dataStr);
-            if (data.type === 'EXTERNAL') {
-                const itemsToAdd = data.items.map(it => it.base_id || it.id);
-                const targetFolder = folders.find(f => f.id === folderId);
+            const targetFolder = folders.find(f => f.id === folderId);
+            if (!targetFolder) return;
 
-                if (!targetFolder) return;
+            const isFrequencyFolder = targetFolder.type !== 'statistics';
+
+            if (data.type === 'EXTERNAL') {
+                if (isFrequencyFolder) {
+                    const hasNumeric = data.items.some(it => it.type === 'double' || it.type === 'numeric');
+                    if (hasNumeric) {
+                        modal.showAlert('알림', '숫자형 변수는 빈도 요약 폴더에 추가할 수 없습니다.');
+                        return;
+                    }
+                }
+
+                const itemsToAdd = data.items.map(it => it.base_id || it.id);
 
                 const existingItems = targetFolder.items || [];
                 const hasDuplicates = itemsToAdd.some(id => existingItems.includes(id));
@@ -159,6 +169,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 setSelectedIds([]);
             } else if (data.type === 'INTERNAL_FOLDER_ITEM') {
                 const { folderId: sourceFolderId, itemId } = data;
+
+                if (isFrequencyFolder) {
+                    const varData = baseVariables.find(v => v.id === itemId);
+                    if (varData && (varData.type === 'double' || varData.type === 'numeric')) {
+                        modal.showAlert('알림', '숫자형 변수는 빈도 요약 폴더에 추가할 수 없습니다.');
+                        return;
+                    }
+                }
+
                 setFolders(prev => {
                     let next = prev.map(f => ({ ...f, items: [...(f.items || [])] }));
                     const srcF = next.find(f => f.id === sourceFolderId);
