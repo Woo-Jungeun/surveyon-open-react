@@ -767,7 +767,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         const handlePageUpdate = () => fetchOverview();
         window.addEventListener("pageSelected", handlePageUpdate);
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
-    }, [fetchOverview]);
+    }, [auth?.user?.userId]);
 
     const filteredStubs = useMemo(() => {
         if (!searchTerm) return stubs;
