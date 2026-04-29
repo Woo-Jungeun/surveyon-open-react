@@ -64,6 +64,14 @@ const ConditionHeaderCell = (props) => {
 };
 
 // --- (성능 개선) 개별 아이템 메모이제이션 ---
+const getTypeClass = (type) => {
+    if (!type) return '';
+    const lower = String(type).toLowerCase();
+    if (lower === 'open(문자)') return 'open-text';
+    if (lower === 'open(숫자)') return 'open-num';
+    return lower;
+};
+
 const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
     <div
         className={`variable-item ${isSelected ? 'selected' : ''}`}
@@ -74,7 +82,7 @@ const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
     >
         <div className="variable-item-header">
             <div className="variable-item__name">{v.label}</div>
-            {v.type && <span className={`question-type-badge ${String(v.type).toLowerCase()}`}>{v.type}</span>}
+            {v.type && <span className={`question-type-badge ${getTypeClass(v.type)}`} style={{ marginBottom: '-12.5px' }}>{v.type}</span>}
         </div>
         <div className="variable-item__label">{v.id}</div>
     </div>
@@ -404,10 +412,10 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             loadingSpinner.show();
             // 1. Generate (미리보기 연산)
             const result = await generateBanner.mutateAsync({ pageid: pageId, formula, label: name, user: auth?.user?.userId });
-            
+
             if (result?.success === "777" && result?.resultjson?.variable) {
                 const generatedVar = result.resultjson.variable;
-                
+
                 // 2. 받은 variable 객체를 그대로 사용하여 Save (실제 DB 저장)
                 const saveRequestData = {
                     pageid: pageId,
@@ -432,11 +440,11 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             } else {
                 modal.showAlert('오류', '배너 정보를 생성할 수 없습니다.');
             }
-        } catch (error) { 
-            console.error(error); 
+        } catch (error) {
+            console.error(error);
             modal.showAlert('오류', '배너 생성 중 오류가 발생했습니다.');
-        } finally { 
-            loadingSpinner.hide(); 
+        } finally {
+            loadingSpinner.hide();
         }
     };
 
@@ -708,11 +716,81 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     if (onUnsavedChange) onUnsavedChange(true); // 라벨 변경 시 더티 표시
                                 }}
                                 className="dp-input"
-                                style={{ width: '600px' }}
+                                style={{ width: '800px' }}
                             />
                         </div>
-                        <div className="dp-content-actions" style={{ marginLeft: 'auto' }}>
-                            {/* 저장 버튼이 상단 글로벌 헤더로 통합되어 이곳에서는 제거됨 */}
+                        <div className="dp-content-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={() => {
+                                    const banner = banners.find(b => b.id === selectedBanner);
+                                    if (!banner) {
+                                        modal.showAlert('알림', '선택된 배너가 없습니다.');
+                                        return;
+                                    }
+                                    if (!banner.info || banner.info.length === 0) {
+                                        modal.showAlert('알림', '배너 조건이 없습니다.');
+                                        return;
+                                    }
+
+                                    // 유효한 조건식 필터링 (HSRTapi 방식 적용)
+                                    const validInfo = banner.info.filter(c =>
+                                        (c.label && c.label.toString().trim() !== "") ||
+                                        (c.logic && c.logic.toString().trim() !== "") ||
+                                        (typeof c.value === "number" && !Number.isNaN(c.value))
+                                    );
+
+                                    if (validInfo.length === 0) {
+                                        modal.showAlert('알림', '유효한 배너 조건(라벨 또는 조건식)이 없습니다.');
+                                        return;
+                                    }
+
+                                    const variablesPayload = {};
+                                    baseVariables.forEach(bv => {
+                                        variablesPayload[bv.id] = bv;
+                                    });
+                                    variablesPayload[banner.id] = {
+                                        id: banner.id,
+                                        label: currentLabel || banner.label,
+                                        type: 'single',
+                                        info: validInfo
+                                    };
+
+                                    const payload = {
+                                        pageid: sessionStorage.getItem('pageId') || auth.user.userId,
+                                        user: auth.user.userId,
+                                        table: {
+                                            id: `__var__${banner.id}`,
+                                            name: currentLabel || banner.label,
+                                            x_info: [],
+                                            y_info: [banner.id]
+                                        },
+                                        variables: variablesPayload,
+                                        include_stats: ["mean", "std", "min", "max", "n"]
+                                    };
+
+                                    localStorage.setItem('dp_preview_payload', JSON.stringify(payload));
+                                    window.open('/dp_request_preview', '_blank', 'width=600,height=700,left=200,top=100');
+                                }}
+                                style={{
+                                    background: '#fff',
+                                    border: '1px solid #3b82f6',
+                                    color: '#3b82f6',
+                                    height: '32px',
+                                    padding: '0 16px',
+                                    borderRadius: '4px',
+                                    fontSize: '13px',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
+                                onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
+                            >
+                                미리보기 계산
+                            </button>
                         </div>
                     </div>
                     <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

@@ -1,4 +1,4 @@
-﻿import { useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import Login from "@/services/login/Login.jsx";
 import HomePage from "@/services/homePage/HomePage.jsx";
 import { Navigate, Route, Routes } from "react-router-dom";
@@ -21,6 +21,7 @@ import BoardWrite from "@/services/board/BoardWrite";
 import InquiryList from "@/services/inquiry/InquiryList";
 import InquiryDetail from "@/services/inquiry/InquiryDetail";
 import InquiryWrite from "@/services/inquiry/InquiryWrite";
+import DpRequestPreviewPopup from "@/services/dataStatus/app/hsrt/dpRequest/steps/DpRequestPreviewPopup";
 
 function App() {
   const [cookies] = useCookies();
@@ -100,6 +101,7 @@ function App() {
         <Route path="/manual" element={<ManualPage />} />
         <Route path="/manual/editor" element={<ManualEditor />} />
         <Route path="/excel_guide" element={<ExcelGuidePage />} />
+        <Route path="/dp_request_preview" element={<DpRequestPreviewPopup />} />
       </Routes>
     </Fragment>
   );

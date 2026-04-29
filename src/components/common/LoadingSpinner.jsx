@@ -115,7 +115,7 @@ function LoadingSpinner(props) {
     const getThemeClass = (path) => {
         if (!path || path === "/" || path === "/login") return "purple-theme";
         if (path.startsWith("/survey_creation")) return "survey-create-theme";
-        if (path.startsWith("/data_status")) return "data-dashboard-theme";
+        if (path.startsWith("/data_status") || path.startsWith("/dp_request_preview")) return "data-dashboard-theme";
         if (path.startsWith("/data_management")) return "data-management-theme";
         if (path.startsWith("/field_management")) return "field-management-theme";
         if (path.startsWith("/respondent_management")) return "respondent-theme";
