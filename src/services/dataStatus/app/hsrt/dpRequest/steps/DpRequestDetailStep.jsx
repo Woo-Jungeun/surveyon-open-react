@@ -344,10 +344,146 @@ const DetailEditPreview = ({ item, onClose }) => {
     const [showP, setShowP] = useState(true);
 
     const [categoryData, setCategoryData] = useState([]);
+    const [resultData, setResultData] = useState([]);
+    const [resultColumns, setResultColumns] = useState([]);
+
+    const auth = useSelector(state => state.auth);
+    const modal = useContext(modalContext);
+    const loadingSpinner = useContext(loadingSpinnerContext);
+    const { saveRecodedSet, getBaseVariableList, evaluateVariable, getOrderDetail } = DpRequestPageApi();
+
+    const handleSaveAndEvaluate = async () => {
+        try {
+            const pageId = sessionStorage.getItem('pageId') || auth?.user?.userId;
+            const userId = auth?.user?.userId;
+
+            // 테스트를 위해 하드코딩 적용
+            // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+            // const userId = "sbbok";
+
+            // 1. Prepare Save payload
+            const stubId = item?.id;
+            const infoArray = categoryData.filter(opt => opt.type !== 'base').map((opt, i) => ({
+                index: i + 1,
+                label: opt.label ? opt.label.replace(/^└\s*/, '') : '',
+                label2: opt.label2 || '',
+                label3: opt.label3 || '',
+                type: opt.type,
+                logic: opt.logic || '',
+                target_var: opt.target_var || null,
+                value: opt.value || null,
+                prefix: opt.prefix || '',
+                postfix: opt.postfix || '',
+                hide: opt.hide ? 'Y' : '',
+                round: opt.round || null,
+                line: opt.line === '선택 안함' ? '' : (opt.line || ''),
+                color: opt.color || ''
+            }));
+
+            const savePayload = {
+                pageid: pageId,
+                user: userId,
+                variables: {
+                    [stubId]: {
+                        id: stubId,
+                        label: editLabel || item?.name || '테스트 스터브',
+                        type: 'single',
+                        recoded_type: 'recoded',
+                        x_info: [editBanner],
+                        variable_role: 'stub',
+                        stub_kind: 'custom',
+                        info: infoArray
+                    }
+                },
+                recoded_type: {
+                    [stubId]: 'recoded'
+                }
+            };
+
+            const saveResult = await saveRecodedSet.mutateAsync(savePayload);
+
+            if (saveResult?.success === "777") {
+                // Fetch full variables to include in evaluate payload
+                const varResult = await getOrderDetail.mutateAsync({ pageid: pageId, user: userId });
+                const fullVars = varResult?.success === "777" ? (varResult?.resultjson?.recoded_variables || {}) : {};
+
+                // 2. Prepare Preview Evaluate payload
+                const evalVariables = {
+                    ...fullVars,
+                    [stubId]: savePayload.variables[stubId]
+                };
+
+                const evalPayload = {
+                    pageid: pageId,
+                    user: userId,
+                    include_stats: ["mean", "std", "min", "max", "n"],
+                    table: {
+                        id: `__var__${stubId}`,
+                        name: editLabel || item?.name || '테스트 스터브',
+                        x_info: [editBanner],
+                        y_info: [stubId]
+                    },
+                    variables: evalVariables
+                };
+
+                const evalRes = await evaluateVariable.mutateAsync(evalPayload);
+                if (evalRes?.success === "777" && evalRes?.resultjson) {
+                    setResultColumns(evalRes.resultjson.columns || []);
+                    setResultData(evalRes.resultjson.rows || evalRes.resultjson.data || []);
+                    setIsResultOpen(true);
+                } else {
+                    modal.showAlert('오류', '검사 결과를 가져오지 못했습니다.');
+                }
+            } else {
+                modal.showAlert('오류', '저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error(error);
+            modal.showAlert('오류', '오류가 발생했습니다.');
+        }
+    };
+
+    const evaluateCurrentItem = async (currentItem, bannerStr) => {
+        try {
+            const pageId = sessionStorage.getItem('pageId') || auth?.user?.userId;
+            const userId = auth?.user?.userId;
+
+            // 테스트를 위해 하드코딩 적용
+            // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+            // const userId = "sbbok";
+
+            // Fetch full variables for evaluation
+            const varResult = await getOrderDetail.mutateAsync({ pageid: pageId, user: userId });
+            const fullVars = varResult?.success === "777" ? (varResult?.resultjson?.recoded_variables || {}) : {};
+
+            const evalPayload = {
+                pageid: pageId,
+                user: userId,
+                include_stats: ["mean", "std", "min", "max", "n"],
+                table: {
+                    id: `__var__${currentItem.id}`,
+                    name: currentItem.name || '테스트 스터브',
+                    x_info: [bannerStr],
+                    y_info: [currentItem.id]
+                },
+                variables: fullVars
+            };
+
+            const evalRes = await evaluateVariable.mutateAsync(evalPayload);
+            if (evalRes?.success === "777" && evalRes?.resultjson) {
+                setResultColumns(evalRes.resultjson.columns || []);
+                setResultData(evalRes.resultjson.rows || evalRes.resultjson.data || []);
+                setIsResultOpen(true);
+            }
+        } catch (error) {
+            console.error('초기 평가 실패:', error);
+        }
+    };
 
     useEffect(() => {
         setEditLabel(item?.name || '');
-        setEditBanner('banner_01');
+        const initBanner = Array.isArray(item?.x_info) && item.x_info.length > 0 ? item.x_info[0] : 'banner_01';
+        setEditBanner(initBanner);
 
         // 실제 API 데이터 기반으로 카테고리 구성 (우선 Base 포함)
         const baseRow = { label: 'Base', type: 'base', logic: `${item?.id || 'VAR'} is not null`, target_var: '', value: '' };
@@ -388,6 +524,11 @@ const DetailEditPreview = ({ item, onClose }) => {
             // 정보가 전혀 없을 경우 빈 배열 또는 baseRow만 기본 세팅
             setCategoryData([baseRow]);
         }
+
+        // 선택하자마자 자동 평가 실행
+        if (item) {
+            evaluateCurrentItem(item, initBanner);
+        }
     }, [item]);
 
     const handleCategoryCellUpdate = (dataIndex, field, value) => {
@@ -398,14 +539,23 @@ const DetailEditPreview = ({ item, onClose }) => {
         });
     };
 
-    const resultData = [];
+    const DataCellTemplate = (props) => {
+        const cellBox = props.dataItem.cells ? props.dataItem.cells[props.field] : props.dataItem[props.field];
+        if (!cellBox) return <td style={{ textAlign: 'center', padding: '6px 8px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0' }}>-</td>;
 
-    const DataCellTemplate = (props) => (
-        <td style={{ textAlign: 'center', padding: '6px 8px', verticalAlign: 'middle' }}>
-            {showN && <div style={{ fontWeight: 'bold', color: '#0f172a' }}>{props.dataItem[props.field]?.n}</div>}
-            {showP && <div style={{ color: '#94a3b8', fontSize: '11px' }}>{props.dataItem[props.field]?.p}</div>}
-        </td>
-    );
+        const nValue = cellBox.count !== undefined ? cellBox.count : cellBox.n;
+        const pValue = cellBox.percent !== undefined ? cellBox.percent : cellBox.p;
+
+        const formattedN = nValue !== undefined && nValue !== null ? Number(nValue).toFixed(decimalN) : null;
+        const formattedP = pValue !== undefined && pValue !== null ? Number(pValue).toFixed(decimalP) : null;
+
+        return (
+            <td style={{ textAlign: 'center', padding: '6px 8px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0' }}>
+                {showN && formattedN !== null && <div style={{ fontWeight: 'bold', color: '#0f172a' }}>{formattedN}</div>}
+                {showP && formattedP !== null && <div style={{ color: '#94a3b8', fontSize: '11px' }}>{formattedP}%</div>}
+            </td>
+        );
+    };
 
     return (
         <div style={{ flex: 1, background: '#fff', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
@@ -461,6 +611,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                         </div>
                                     </div>
                                     <button
+                                        onClick={handleSaveAndEvaluate}
                                         style={{
                                             background: '#fff',
                                             border: '1px solid #3b82f6',
@@ -621,11 +772,25 @@ const DetailEditPreview = ({ item, onClose }) => {
                     {isResultOpen && (
                         <div style={{ padding: '12px 16px', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                             <KendoGridV2 data={resultData} style={{ flex: 1, height: '100%', width: '100%' }}>
-                                <Column field="gubun" title="구분" width="80px" headerClassName="k-text-center" cell={(p) => <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{p.dataItem.gubun}</td>} />
-                                <Column field="val1" title="전문직(의사, 법조인 등)" headerClassName="k-text-center" cell={DataCellTemplate} />
-                                <Column field="val2" title="예술가(화가, 가수 등)" headerClassName="k-text-center" cell={DataCellTemplate} />
-                                <Column field="val3" title="교직(교사, 학원강사 등)" headerClassName="k-text-center" cell={DataCellTemplate} />
-                                <Column field="val4" title="공무원" headerClassName="k-text-center" cell={DataCellTemplate} />
+                                <Column field="label" title="구분" width="150px" headerClassName="k-text-center" cell={(p) => <td title={p.dataItem.label} style={{ padding: '8px 8px', textAlign: 'center', fontWeight: 'bold', color: '#334155', borderBottom: '1px solid #e2e8f0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.dataItem.label}</td>} />
+                                {resultColumns.map((col, idx) => {
+                                    const colField = col.key || col.id || `col_${idx}`;
+                                    return (
+                                        <Column
+                                            key={colField}
+                                            field={colField}
+                                            title={col.label}
+                                            headerClassName="k-text-center"
+                                            width="120px"
+                                            headerCell={(props) => (
+                                                <div style={{ padding: '0 0px', textAlign: 'center', whiteSpace: 'normal', wordBreak: 'keep-all', lineHeight: '1.4' }}>
+                                                    {props.title}
+                                                </div>
+                                            )}
+                                            cell={DataCellTemplate}
+                                        />
+                                    );
+                                })}
                             </KendoGridV2>
                         </div>
                     )}

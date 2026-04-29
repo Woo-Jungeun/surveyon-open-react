@@ -101,6 +101,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 변수 리코딩(스터브 등) 저장 API */
+    const saveRecodedSet = useMutation(
+        async (data) => await api.post(data, "/variables/recoded/set", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** DP 의뢰서 - 요약표 자동 생성 (척도형) */
     const generateSummaryAuto = useMutation(
         async (data) => await api.post(data, "/dp-request/summary/auto-generate", "API_BASE_URL_DATASTATUS"),
@@ -177,6 +186,7 @@ export function DpRequestPageApi() {
         saveSummaryDetail,
         getRecodedOverview,
         saveRecodedOverview,
+        saveRecodedSet,
         getOrderDetail,
         saveOrderDetail,
         evaluateVariable,
