@@ -698,9 +698,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (bannerRes?.resultjson?.recoded_variables || bannerRes?.data?.resultjson?.recoded_variables) {
                     const raw = bannerRes?.resultjson?.recoded_variables || bannerRes?.data?.resultjson?.recoded_variables;
                     const recodes = Array.isArray(raw) ? raw : Object.values(raw);
-                    const formattedBanners = recodes.map((v, i) => {
+
+                    const bannerRecodes = recodes.filter(v => v.id && v.id.startsWith('banner'));
+
+                    const formattedBanners = bannerRecodes.map((v, i) => {
                         const labelString = v.name || v.label || v.id || `banner_0${i + 1}`;
-                        return { id: labelString, label: labelString };
+                        return { id: v.id, label: labelString };
                     });
                     setBanners(formattedBanners);
                 }
