@@ -796,7 +796,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                         <KendoGridV2
                             data={banners.find(b => b.id === selectedBanner)?.info || []}
-                            reorderable addable showNo deletable editField="inEdit"
+                            reorderable addable deletable editField="inEdit"
                             onDataChange={updateBannerInfo}
                             onRowClick={(e) => updateBannerInfo(banners.find(b => b.id === selectedBanner).info.map(it => ({ ...it, inEdit: it === e.dataItem })))}
                             newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
