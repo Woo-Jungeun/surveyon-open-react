@@ -311,7 +311,7 @@ const StatSettingCell = React.memo(({ dataItem, selectedValues, onUpdate }) => {
         };
     }, [show, handleClose]);
 
-    let displayText = <span style={{ color: '#94a3b8', fontSize: '13px' }}>미설정</span>;
+    let displayText = <span style={{ color: '#94a3b8', fontSize: '13px' }}></span>;
     if (selected.length > 0) {
         displayText = <span style={{ color: '#1e293b', fontSize: '13px' }}>{selected.join(',')}</span>;
     }
@@ -441,7 +441,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
 
     const valueRender = (element, value) => {
         if (!value || !value.id) {
-            return <span style={{ color: '#94a3b8', fontSize: '13px' }}>미설정</span>;
+            return <span style={{ color: '#94a3b8', fontSize: '13px' }}></span>;
         }
         return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px' }}>{value.text}</span>);
     };
@@ -540,7 +540,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
 
     const valueRender = (element, value) => {
         if (!value) {
-            return <span style={{ color: '#94a3b8', fontSize: '13px' }}>미설정</span>;
+            return <span style={{ color: '#94a3b8', fontSize: '13px' }}></span>;
         }
         return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px' }}>{value}</span>);
     };
