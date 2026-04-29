@@ -598,10 +598,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         if (isInitialSetupRef.current) return;
         
         const timeoutId = setTimeout(() => {
-            // const pageId = sessionStorage.getItem('pageId');
-            // const user = auth?.user?.userId;
-            const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-            const user = "sbbok";
+            const pageId = sessionStorage.getItem('pageId');
+            const user = auth?.user?.userId;
+            // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+            // const user = "sbbok";
             
             savePageSettings.mutateAsync({
                 pageid: pageId,
@@ -780,11 +780,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 {
                     title: "삭제",
                     click: async () => {
-                        // const pageId = sessionStorage.getItem('pageId');
-                        // const user = auth?.user?.userId;
-                        // if (!pageId || !auth?.user?.userId) return;
-                        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-                        const user = "sbbok";
+                        const pageId = sessionStorage.getItem('pageId');
+                        const user = auth?.user?.userId;
+                        if (!pageId || !auth?.user?.userId) return;
+                        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+                        // const user = "sbbok";
 
                         try {
                             const result = await deleteBaseVariable.mutateAsync({
@@ -817,12 +817,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 데이터 로직 ---
     const fetchCrossAnalysisData = async (mode = 'normal', targetIdToSelect = null, targetPage = currentPage, currentFilterExp = filterExpression) => {
         // 실제 데이터 연동 시 사용할 주석:
-        // const pageId = sessionStorage.getItem('pageId');
-        // const user = auth?.user?.userId;
-        // if (!pageId || !user) return;
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) return;
 
-        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-        const user = "sbbok";
+        // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        // const user = "sbbok";
         try {
             loadingSpinner.show();
 
