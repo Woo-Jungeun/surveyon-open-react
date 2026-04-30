@@ -405,7 +405,8 @@ const getQuestionTypeInfo = (type) => {
     return { color, displayType };
 };
 
-const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', 'minrank', 'maxrank', 'scale', 'dummy', 'custom', 'open(문자)', 'open(숫자)'];
+// const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', 'minrank', 'maxrank', 'scale', 'dummy', 'custom', 'open(문자)', 'open(숫자)'];
+const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', /* 'minrank', 'maxrank', */ 'scale', /* 'dummy', 'custom', */ 'open(문자)', 'open(숫자)'];
 
 const canUseScalePreset = (type) => {
     const t = String(type || '').toLowerCase();
