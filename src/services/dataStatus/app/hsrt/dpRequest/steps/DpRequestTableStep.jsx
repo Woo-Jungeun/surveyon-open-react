@@ -140,6 +140,20 @@ const STUB_INLINE_STYLE = `
 .dp-custom-list-item:hover {
     background-color: #f1f5f9 !important;
 }
+.dp-mini-dropdown .k-input-inner,
+.dp-mini-dropdown .k-dropdown-wrap {
+    padding: 0 2px 0 4px !important;
+}
+.dp-mini-dropdown .k-input-button,
+.dp-mini-dropdown .k-select {
+    padding: 0 2px !important;
+    width: 20px !important;
+    min-width: 20px !important;
+}
+.dp-mini-dropdown .k-button-icon,
+.dp-mini-dropdown .k-icon {
+    font-size: 14px !important;
+}
 `;
 if (typeof document !== 'undefined') {
     let style = document.getElementById('stub-inline-style');
@@ -448,7 +462,7 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
         if (!value || !value.id) {
             return <span style={{ color: '#94a3b8', fontSize: '13px' }}></span>;
         }
-        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px' }}>{value.text}</span>);
+        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{value.text}</span>);
     };
 
     const itemRender = (li, itemProps) => {
@@ -549,7 +563,7 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
         if (!value) {
             return <span style={{ color: '#94a3b8', fontSize: '13px' }}></span>;
         }
-        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px' }}>{value}</span>);
+        return React.cloneElement(element, { ...element.props }, <span style={{ fontSize: '13px', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>{value}</span>);
     };
 
     const itemRender = (li, itemProps) => {
