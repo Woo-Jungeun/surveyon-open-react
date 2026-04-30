@@ -177,17 +177,38 @@ const KendoGridV2 = (props) => {
         return React.cloneElement(trElement, { ...extendedProps }, trElement.props.children);
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && onDataChange) {
+            // 엔터 입력 시 모든 행의 편집 모드(inEdit)를 false로 변경
+            const isAnyInEdit = data.some(item => item[editField]);
+            if (isAnyInEdit) {
+                if (e.target.tagName.toLowerCase() === 'textarea' && e.shiftKey) {
+                    return; // textarea에서 Shift+Enter는 줄바꿈 허용
+                }
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const newData = data.map(item => ({ ...item, [editField]: false }));
+                onDataChange(newData);
+            }
+        }
+        if (rest.onKeyDown) {
+            rest.onKeyDown(e);
+        }
+    };
+
     return (
-        <Grid
-            data={displayData}
-            className={`dp-excel-grid-v2 ${className} ${reorderable ? 'reorderable' : ''}`}
-            style={{ height }}
-            onItemChange={onItemChange}
-            editField={editField}
-            onRowClick={onRowClick}
-            rowRender={internalRowRender}
-            {...gridProps}
-        >
+        <div style={{ display: 'contents' }} onKeyDownCapture={handleKeyDown}>
+            <Grid
+                data={displayData}
+                className={`dp-excel-grid-v2 ${className} ${reorderable ? 'reorderable' : ''}`}
+                style={{ height }}
+                onItemChange={onItemChange}
+                editField={editField}
+                onRowClick={onRowClick}
+                rowRender={internalRowRender}
+                {...gridProps}
+            >
             <GridNoRecords>
                 <div style={{ textAlign: "center", padding: "40px 0", color: "#94a3b8", fontSize: "14px" }}>
                     <div style={{ marginBottom: addable ? '16px' : '0' }}>조회된 데이터가 없습니다.</div>
@@ -330,6 +351,7 @@ const KendoGridV2 = (props) => {
                 />
             )}
         </Grid>
+        </div>
     );
 };
 
