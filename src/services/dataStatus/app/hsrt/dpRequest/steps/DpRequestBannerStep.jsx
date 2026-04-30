@@ -375,6 +375,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             const result = await saveBannerDetail.mutateAsync(requestData);
                             if (result?.success === "777") {
                                 modal.showAlert('알림', '배너가 삭제되었습니다.');
+                                if (onUnsavedChange) onUnsavedChange(false);
                                 await fetchBannerData(false, true); // 삭제 시 무조건 첫 번째 배너 선택
                             }
                         } catch (error) {
@@ -478,6 +479,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     setCurrentLabel(generatedVar.name || generatedVar.label);
                     setColVars([]);
                     setIsWizardOpen(false);
+                    if (onUnsavedChange) onUnsavedChange(false); // 생성 성공 시 더티 해제
                     modal.showAlert('알림', '배너가 정상적으로 생성 및 저장되었습니다.');
                 } else {
                     modal.showAlert('오류', '배너 저장에 실패했습니다.');
