@@ -395,21 +395,25 @@ const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', 'minrank', 'maxrank', 'scal
 
 const canUseScalePreset = (type) => {
     const t = String(type || '').toLowerCase();
+    if (t === 'summary') return false;
     return t === 'scale';
 };
 
 const canUseRankPreset = (type) => {
     const t = String(type || '').toLowerCase();
+    if (t === 'summary') return false;
     return t === 'rank' || t === 'minrank' || t === 'maxrank' || t === 'multi';
 };
 
 const canUseStatPreset = (type) => {
     const t = String(type || '').toLowerCase();
+    if (t === 'summary') return false;
     return t === 'scale' || t === 'open(숫자)' || t === 'double' || t === 'open-num' || t === 'dummy' || t === 'custom';
 };
 
 const canUseGroupPreset = (type) => {
     const t = String(type || '').toLowerCase();
+    if (t === 'summary') return false;
     if (t === 'open(숫자)' || t === 'double' || t === 'open-num') return false;
     return true;
 };
@@ -519,10 +523,12 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
 
     return (
         <td
+            title={localVal}
             onClick={() => setIsEditing(true)}
             style={{
                 padding: '0 8px', fontSize: '13px', verticalAlign: 'middle', cursor: 'text', textAlign: align,
-                color: localVal ? '#1e293b' : '#94a3b8', userSelect: 'none'
+                color: localVal ? '#1e293b' : '#94a3b8', userSelect: 'none',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '1px'
             }}
         >
             {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
@@ -680,21 +686,25 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     }));
 
     const fetchOverview = useCallback(async () => {
-        const pageId = sessionStorage.getItem('pageId');
-        if (!pageId) return;
+        // const pageId = sessionStorage.getItem('pageId');
+        // if (!pageId) return;
+        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        const user = "sbbok";
+
         try {
             loadingSpinner.show();
-            const payload = { user: auth?.user?.userId || '', pageid: pageId };
+            // const payload = { user: auth?.user?.userId || '', pageid: pageId };
+            const payload = { user: user, pageid: pageId };
             const response = await getRecodedOverview.mutateAsync(payload);
             const resultData = response?.data?.resultjson || response?.resultjson || response || {};
 
             const updatePresets = (data, setter) => {
                 setter(Array.isArray(data) ? data : (typeof data === 'object' ? Object.values(data) : []));
             };
-            updatePresets(resultData.scale_presets, setScalePresets);
-            updatePresets(resultData.rank_presets, setRankPresets);
-            updatePresets(resultData.group_presets, setGroupPresets);
-            updatePresets(resultData.stat_presets, setStatPresets);
+            updatePresets(resultData.presets?.scale || [], setScalePresets);
+            updatePresets(resultData.presets?.rank || [], setRankPresets);
+            updatePresets(resultData.presets?.group || [], setGroupPresets);
+            updatePresets(resultData.presets?.stat || [], setStatPresets);
 
             try {
                 const bannerRes = await getBannerDetail.mutateAsync(payload);
@@ -705,57 +715,64 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const bannerRecodes = recodes.filter(v => v.id && v.id.startsWith('banner'));
 
                     const formattedBanners = bannerRecodes.map((v, i) => {
-                        const labelString = v.name || v.label || v.id || `banner_0${i + 1}`;
+                        const labelString = v.id || `banner_0${i + 1}`;
                         return { id: v.id, label: labelString };
                     });
                     setBanners(formattedBanners);
                 }
             } catch (e) { console.error('Failed to fetch banners', e); }
 
-            const baseVars = resultData.base_variables || {};
-            const savedItems = resultData.dp_request_recoded_items || [];
-            const savedMap = new Map(savedItems.map(item => [String(item.source_var_id), item]));
+            const stubItems = resultData.stub_grid_items || [];
+            const summaryFolders = resultData.summary_folders || [];
+            const orderIds = (resultData.order_ids && resultData.order_ids.length > 0)
+                ? resultData.order_ids
+                : (resultData.default_order_ids || []);
 
-            // 삭제 처리용 원본 ID 보관
-            setOriginalRecodedIds(savedItems.map(item => item.recoded_var_id).filter(Boolean));
+            setOriginalRecodedIds(stubItems.map(item => item.recoded_var_id).filter(Boolean));
 
-            const merged = Object.entries(baseVars).map(([id, base]) => {
-                const saved = savedMap.get(id);
-                if (saved) savedMap.delete(String(id));
-                return {
-                    ...base, ...saved,
-                    source_var_id: id,
-                    recoded_var_id: saved?.recoded_var_id || id,
-                    var_label: base.label || id,
-                    var_type: base.type || 'unknown',
-                    condition: saved?.filter_expression || '',
-                    x_info: saved?.x_info || [],
-                    stat_summary: saved?.stat_preset_id || '',
-                    scale_preset_name: saved?.scale_preset_id || '',
-                    rank_preset_name: saved?.rank_preset_id || '',
-                    group_preset_name: saved?.group_preset_id || '',
-                };
+            const mappedStubs = stubItems.map(item => ({
+                ...item,
+                source_var_id: item.source_var_id || item.recoded_var_id,
+                recoded_var_id: item.recoded_var_id,
+                var_label: item.label || '',
+                var_type: item.type || 'unknown',
+                condition: item.filter_expression || '',
+                x_info: item.banner ?? item.x_info ?? [],
+                stat_summary: item.stat_preset_id || '',
+                scale_preset_name: item.scale_preset_id || '',
+                rank_preset_name: item.rank_preset_id || '',
+                group_preset_name: item.group_preset_id || '',
+            }));
+
+            const mappedSummaries = summaryFolders.map(folder => ({
+                ...folder,
+                source_var_id: folder.id,
+                recoded_var_id: folder.stub_id,
+                var_label: folder.name || '',
+                var_type: 'summary',
+                condition: '',
+                x_info: folder.banner ?? folder.x_info ?? [],
+                stat_summary: '',
+                scale_preset_name: '',
+                rank_preset_name: '',
+                group_preset_name: '',
+            }));
+
+            const allItems = [...mappedStubs, ...mappedSummaries];
+            const itemMap = new Map(allItems.map(item => [item.recoded_var_id, item]));
+
+            const sorted = [];
+            orderIds.forEach(id => {
+                if (itemMap.has(id)) {
+                    sorted.push(itemMap.get(id));
+                    itemMap.delete(id);
+                }
             });
 
-            // baseVars에 없는, 순수하게 추가된 파생 항목(커스텀 스터브) 병합
-            savedMap.forEach((saved, id) => {
-                merged.push({
-                    ...saved,
-                    source_var_id: id,
-                    recoded_var_id: saved.recoded_var_id || id,
-                    var_label: saved.var_label || id,
-                    var_type: saved.var_type || 'unknown',
-                    condition: saved.filter_expression || '',
-                    x_info: saved.x_info || [],
-                    stat_summary: saved.stat_preset_id || '',
-                    scale_preset_name: saved.scale_preset_id || '',
-                    rank_preset_name: saved.rank_preset_id || '',
-                    group_preset_name: saved.group_preset_id || '',
-                });
-            });
+            itemMap.forEach(item => sorted.push(item));
 
-            setStubs(merged);
-            history.reset(merged);
+            setStubs(sorted);
+            history.reset(sorted);
             if (onUnsavedChange) onUnsavedChange(false);
         } catch (err) {
             console.error(err);
@@ -950,13 +967,13 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             newRowTemplate={newRowTemplate}
                             duplicateRowTemplate={duplicateRowTemplate}
                         >
-                            <Column field="recoded_var_id" title="변수" width="100px" headerClassName="k-text-center"
+                            <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
                             />
-                            <Column field="var_label" title="라벨" width="250px" headerClassName="k-text-center"
+                            <Column field="var_label" title="라벨" width="235px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
                             />
-                            <Column title="상세설정" width="70px" headerClassName="k-text-center"
+                            <Column title="상세 설정" width="70px" headerClassName="k-text-center"
                                 cell={(p) => (
                                     <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px' }}>
                                         <button
@@ -981,7 +998,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     </td>
                                 )}
                             />
-                            <Column field="var_type" title="유형" width="140px" headerClassName="k-text-center"
+                            <Column field="var_type" title="유형" width="100px" headerClassName="k-text-center"
                                 cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}
                             />
                             <Column field="condition" title="조건" width="150px" headerClassName="k-text-center"
@@ -999,7 +1016,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     return <PresetDropdownCell field="group_preset_name" dataItem={p.dataItem} presets={groupPresets} onChange={handleCellUpdate} />;
                                 }}
                             />
-                            <Column field="stat_summary" title="통계 설정" width="215px" headerClassName="k-text-center"
+                            <Column field="stat_summary" title="통계 설정" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseStatPreset(p.dataItem.var_type)) {
                                         return <td style={DISABLED_CELL_STYLE}>-</td>;
