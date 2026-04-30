@@ -659,6 +659,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                 addable={true}
                                 copyable={true}
                                 deletable={true}
+                                deletePos="start"
                                 showNo
                                 newRowTemplate={{ label: '', type: 'single', logic: '', target_var: '', value: '' }}
                                 style={{ flex: 1, height: '100%', width: '100%' }}

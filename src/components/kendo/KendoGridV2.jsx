@@ -279,19 +279,6 @@ const KendoGridV2 = (props) => {
                 />
             )}
 
-            {/* 순번 컬럼 */}
-            {showNo && (
-                <Column
-                    title="No"
-                    width="45px"
-                    cell={(cellProps) => (
-                        <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600, padding: '0 4px', verticalAlign: 'middle' }}>
-                            {cellProps.dataIndex + 1}
-                        </td>
-                    )}
-                />
-            )}
-
             {/* 삭제 버튼 컬럼 (앞쪽 배치) */}
             {deletable && deletePos === 'start' && (
                 <Column
@@ -319,6 +306,21 @@ const KendoGridV2 = (props) => {
                     )}
                 />
             )}
+
+            {/* 순번 컬럼 */}
+            {showNo && (
+                <Column
+                    title="No"
+                    width="45px"
+                    cell={(cellProps) => (
+                        <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600, padding: '0 4px', verticalAlign: 'middle' }}>
+                            {cellProps.dataIndex + 1}
+                        </td>
+                    )}
+                />
+            )}
+
+
 
             {/* 사용자 정의 컬럼들 */}
             {children}
