@@ -8,6 +8,7 @@ import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
+import DpRequestStubSettingModal from './DpRequestStubSettingModal';
 
 // --- 상수 및 유틸리티 ---
 const STAT_OPTIONS = [
@@ -598,6 +599,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [groupPresets, setGroupPresets] = useState([]);
     const [statPresets, setStatPresets] = useState([]);
 
+    const [selectedStubForModal, setSelectedStubForModal] = useState(null);
+
     const history = useUpdateHistory('dp-table');
     const isHistoryAction = useRef(false);
 
@@ -939,9 +942,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             onDataChange={handleDataChange}
                             style={{ height: '100%', width: '100%' }}
                             scrollable="virtual"
-                            addable
-                            copyable
-                            deletable
+                            addable={!searchTerm}
+                            copyable={!searchTerm}
+                            deletable={!searchTerm}
+                            reorderable={!searchTerm}
                             deletePos="start"
                             newRowTemplate={newRowTemplate}
                             duplicateRowTemplate={duplicateRowTemplate}
@@ -951,6 +955,31 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             />
                             <Column field="var_label" title="라벨" width="250px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
+                            />
+                            <Column title="상세설정" width="70px" headerClassName="k-text-center"
+                                cell={(p) => (
+                                    <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedStubForModal(p.dataItem)}
+                                            style={{
+                                                padding: '2px 8px',
+                                                border: '1px solid #3b82f6',
+                                                background: '#ffffff',
+                                                color: '#3b82f6',
+                                                borderRadius: '3px',
+                                                fontSize: '11px',
+                                                cursor: 'pointer',
+                                                fontWeight: 500,
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.background = '#eff6ff'}
+                                            onMouseLeave={(e) => e.currentTarget.style.background = '#ffffff'}
+                                        >
+                                            설정
+                                        </button>
+                                    </td>
+                                )}
                             />
                             <Column field="var_type" title="유형" width="140px" headerClassName="k-text-center"
                                 cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}
@@ -998,6 +1027,18 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                 </div>
             </div>
+
+            {/* 상세설정 팝업 렌더링 */}
+            <DpRequestStubSettingModal 
+                show={!!selectedStubForModal} 
+                onClose={() => setSelectedStubForModal(null)} 
+                rowData={selectedStubForModal} 
+                variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
+                onApply={(rules) => {
+                    console.log('Applied rules:', rules);
+                    // TODO: 적용된 룰을 데이터에 반영하는 로직
+                }}
+            />
         </div>
     );
 });
