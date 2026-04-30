@@ -671,17 +671,22 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     useImperativeHandle(ref, () => ({
         save: async () => await handleSave(),
         reset: async () => {
-            const pageId = sessionStorage.getItem('pageId');
-            if (!pageId || !auth?.user?.userId) return;
+            // const pageId = sessionStorage.getItem('pageId');
+            // if (!pageId || !auth?.user?.userId) return;
+            const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+            const user = "sbbok";
             try {
                 loadingSpinner.show();
                 const requestData = {
                     pageid: pageId,
-                    user: auth.user.userId,
+                    user: user,
                     variables: {},
                     dp_request_recoded_items: [],
+                    summary_folders: [],
                     delete_ids: originalRecodedIds,
-                    auto_recode: false
+                    auto_recode: true,
+                    auto_generate_summary: false,
+                    reset_to_default: true
                 };
                 const result = await saveRecodedOverview.mutateAsync(requestData);
                 if (result?.success === "777") {
@@ -858,11 +863,13 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
 
     const handleSave = async () => {
-        const pageId = sessionStorage.getItem('pageId');
-        if (!pageId || !auth?.user?.userId) {
-            modal.showAlert('알림', '사용자 정보나 페이지 정보를 확인할 수 없습니다.');
-            return false;
-        }
+        // const pageId = sessionStorage.getItem('pageId');
+        // if (!pageId || !auth?.user?.userId) {
+        //     modal.showAlert('알림', '사용자 정보나 페이지 정보를 확인할 수 없습니다.');
+        //     return false;
+        // }
+        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
+        const user = "sbbok";
 
         // 2. Variables 객체 구성
         const variables = {};
@@ -900,7 +907,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         const requestData = {
             pageid: pageId,
-            user: auth?.user?.userId || '',
+            user: user,
             variables: variables,
             delete_ids: deletedIds
         };
