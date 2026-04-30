@@ -765,8 +765,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         }
     }, [getRecodedOverview, history, loadingSpinner, modal, onUnsavedChange]);
 
-    useEffect(() => { 
-        fetchOverview(); 
+    useEffect(() => {
+        fetchOverview();
         const handlePageUpdate = () => fetchOverview();
         window.addEventListener("pageSelected", handlePageUpdate);
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
@@ -951,7 +951,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             duplicateRowTemplate={duplicateRowTemplate}
                         >
                             <Column field="recoded_var_id" title="변수" width="100px" headerClassName="k-text-center"
-                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="(작성가능)" />}
+                                cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
                             />
                             <Column field="var_label" title="라벨" width="250px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
@@ -1029,10 +1029,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             </div>
 
             {/* 상세설정 팝업 렌더링 */}
-            <DpRequestStubSettingModal 
-                show={!!selectedStubForModal} 
-                onClose={() => setSelectedStubForModal(null)} 
-                rowData={selectedStubForModal} 
+            <DpRequestStubSettingModal
+                show={!!selectedStubForModal}
+                onClose={() => setSelectedStubForModal(null)}
+                rowData={selectedStubForModal}
                 variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
                 onApply={(rules) => {
                     console.log('Applied rules:', rules);
