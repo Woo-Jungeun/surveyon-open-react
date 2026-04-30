@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { X, GripVertical, Plus, Trash2, Save, Copy } from 'lucide-react';
 import '@/components/common/popup/ConditionBuilderPopup.css';
 import KendoGridV2 from '@/components/kendo/KendoGridV2';
 import { GridColumn as Column } from '@progress/kendo-react-grid';
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
+import { modalContext } from "@/components/common/Modal.jsx";
+import { DpRequestPageApi } from '../DpRequestPageApi';
 
 let nextId = 0;
 function getUniqueId() {
@@ -15,16 +19,47 @@ const STUB_TYPE_OPTIONS = ["base", "base end(count)", "OPTION", "single", "doubl
 
 
 const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onApply }) => {
-    const [categories, setCategories] = useState([
-        {
-            id: getUniqueId(),
-            label: 'Base',
-            type: 'base',
-            logic: rowData?.source_var_id ? `${rowData.source_var_id} is not null` : '',
-            target_var: '',
-            value: ''
+    const auth = useSelector(state => state.auth);
+    const loadingSpinner = useContext(loadingSpinnerContext);
+    const modal = useContext(modalContext);
+    const { saveRecodedSet } = DpRequestPageApi();
+
+    const [categories, setCategories] = useState([]);
+
+    useEffect(() => {
+        if (show && rowData) {
+            if (rowData.info && rowData.info.length > 0) {
+                const isFormatted = rowData.info.some(opt => opt.type !== undefined || opt.logic !== undefined || opt.condition !== undefined);
+
+                if (isFormatted) {
+                    const standardizedInfo = rowData.info.map(opt => ({
+                        ...opt,
+                        id: opt.id || getUniqueId(),
+                        logic: opt.logic !== undefined ? opt.logic : opt.condition,
+                        value: opt.value !== undefined ? opt.value : opt.val,
+                        target_var: opt.target_var !== undefined ? opt.target_var : opt.targetVar,
+                    }));
+                    setCategories(standardizedInfo);
+                } else {
+                    const apiRows = rowData.info.map((opt, i) => {
+                        const val = opt.val !== undefined ? opt.val : (opt.value !== undefined ? opt.value : (opt.row_id !== undefined ? opt.row_id : i + 1));
+                        return {
+                            ...opt,
+                            id: getUniqueId(),
+                            label: opt.label ? (String(opt.label).startsWith('_') ? opt.label : `_${opt.label}`) : `_${val}`,
+                            type: 'single',
+                            logic: `${rowData.recoded_var_id || rowData.source_var_id} in [${val}]`,
+                            target_var: '',
+                            value: val
+                        };
+                    });
+                    setCategories(apiRows);
+                }
+            } else {
+                setCategories([]);
+            }
         }
-    ]);
+    }, [show, rowData]);
 
     const handleCategoryCellUpdate = (dataIndex, field, value) => {
         setCategories(prev => {
@@ -35,11 +70,56 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     };
 
     // 적용 이벤트
-    const handleGenerate = () => {
-        if (onApply) {
-            onApply(categories);
+    const handleGenerate = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) return;
+
+        const stubId = rowData?.recoded_var_id || rowData?.source_var_id;
+
+        const infoArray = categories.filter(opt => opt.type !== 'base').map((opt, i) => ({
+            index: i + 1,
+            label: opt.label ? opt.label.replace(/^\s*/, '') : '',
+            type: opt.type,
+            logic: opt.logic || '',
+            target_var: opt.target_var || null,
+            value: opt.value || null
+        }));
+
+        const baseCategory = categories.find(opt => opt.type === 'base');
+
+        const savePayload = {
+            pageid: pageId,
+            user: auth.user.userId,
+            variables: {
+                [stubId]: {
+                    label: rowData?.var_label || '테스트 스터브',
+                    filter_expression: baseCategory ? baseCategory.logic : '',
+                    info: infoArray
+                }
+            },
+            recoded_type: {
+                [stubId]: 'recoded'
+            }
+        };
+
+        try {
+            loadingSpinner.show();
+            const result = await saveRecodedSet.mutateAsync(savePayload);
+            if (result?.success === "777") {
+                modal.showAlert('알림', '상세설정이 저장되었습니다.');
+                if (onApply) {
+                    onApply(categories);
+                }
+                onClose(); // 처리 후 모달 닫기
+            } else {
+                modal.showAlert('오류', '상세설정 저장에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            modal.showAlert('오류', 'API 호출 중 에러가 발생했습니다.');
+        } finally {
+            loadingSpinner.hide();
         }
-        onClose(); // 처리 후 모달 닫기
     };
 
     if (!show) return null;
