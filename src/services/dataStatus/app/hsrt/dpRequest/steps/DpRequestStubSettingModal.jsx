@@ -152,22 +152,22 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                     {/* 상단 폼 영역 */}
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '60px' }}>이름(ID)</span>
-                            <input type="text" value={rowData?.source_var_id || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
+                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '60px' }}>변수</span>
+                            <input type="text" value={rowData?.recoded_var_id || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
                         <div style={{ flex: 2, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px' }}>라벨</span>
-                            <input type="text" value={rowData?.var_label || ''} readOnly style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', fontSize: '13px' }} />
+                            <input type="text" value={rowData?.var_label || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
                         <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569' }}>배너</span>
-                            <input type="text" value={rowData?.x_info?.join(', ') || ''} readOnly style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px', background: '#fff', fontSize: '13px' }} />
+                            <input type="text" value={rowData?.x_info?.join(', ') || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
                     </div>
 
                     {/* 하단 그리드 영역 */}
                     <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        
+
                         {/* 그리드 옵션 헤더 */}
                         <div style={{ padding: '10px 16px', borderBottom: '1px solid #e2e8f0', background: '#fafafa', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setIsDetailSetting(!isDetailSetting)}>
@@ -220,7 +220,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 <Column field="logic" title="조건" width="250px" />
                                 <Column field="target_var" title="저장될 변수" width="150px" />
                                 <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" />
-                                
+
                                 {isDetailSetting && <Column field="label2" title="라벨2" width="150px" />}
                                 {isDetailSetting && <Column field="label3" title="라벨3" width="150px" />}
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" />}
