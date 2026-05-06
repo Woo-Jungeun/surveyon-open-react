@@ -553,7 +553,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, savePageSettings } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -1321,9 +1321,60 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                     <button
                         className="dp-btn"
-                        onClick={() => {
-                            // TODO: Add actual HTML copy logic
-                            // modal.showAlert('알림', 'HTML이 클립보드에 복사되었습니다.');
+                        onClick={async () => {
+                            const pageId = sessionStorage.getItem('pageId');
+                            const user = auth?.user?.userId;
+                            if (!pageId || !user) return;
+
+                            try {
+                                loadingSpinner.show();
+                                const requestData = {
+                                    pageid: pageId,
+                                    user: user,
+                                    use_recoded: true,
+                                    banner_mode: "stub",
+                                    start: 0,
+                                    limit: 0,
+                                    search: bannerSearch,
+                                    filter_expression: filterExpression,
+                                    display_policy: {
+                                        n_digits: Number(decimalN === '' ? 0 : decimalN),
+                                        percent_digits: Number(decimalPct === '' ? 1 : decimalPct)
+                                    }
+                                };
+
+                                const result = await exportOverviewHtml.mutateAsync(requestData);
+                                const payload = result?.resultjson || result || {};
+
+                                if (result?.success === "777" && payload.html) {
+                                    try {
+                                        const htmlBlob = new Blob([payload.html], { type: 'text/html' });
+                                        const textBlob = new Blob([payload.html], { type: 'text/plain' });
+                                        const clipboardItem = new window.ClipboardItem({
+                                            'text/html': htmlBlob,
+                                            'text/plain': textBlob
+                                        });
+                                        await navigator.clipboard.write([clipboardItem]);
+                                        modal.showAlert('알림', `교차분석 결과(${payload.table_count || 0}개 표)가 클립보드에 복사되었습니다.`);
+                                    } catch (clipErr) {
+                                        // Fallback
+                                        const textArea = document.createElement("textarea");
+                                        textArea.value = payload.html;
+                                        document.body.appendChild(textArea);
+                                        textArea.select();
+                                        document.execCommand("copy");
+                                        document.body.removeChild(textArea);
+                                        modal.showAlert('알림', `교차분석 결과가 복사되었습니다.`);
+                                    }
+                                } else {
+                                    modal.showAlert('오류', 'HTML 데이터 생성에 실패했습니다.');
+                                }
+                            } catch (error) {
+                                console.error('HTML Export Error:', error);
+                                modal.showAlert('오류', 'HTML 복사 중 문제가 발생했습니다.');
+                            } finally {
+                                loadingSpinner.hide();
+                            }
                         }}
                         style={{
                             color: '#2563eb', border: '1px solid #2563eb', background: '#ffffff',
