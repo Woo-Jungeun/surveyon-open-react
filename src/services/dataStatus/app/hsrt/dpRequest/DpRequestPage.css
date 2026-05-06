@@ -30,6 +30,15 @@
     border-bottom: 2px solid #3b82f6 !important;
 }
 
+/* KendoGridV3 Merged Cell Drag Indicator */
+.dp-excel-grid-v2 table td.dp-drop-top {
+    box-shadow: inset 0 2px 0 0 #3b82f6 !important;
+}
+
+.dp-excel-grid-v2 table td.dp-drop-bottom {
+    box-shadow: inset 0 -2px 0 0 #3b82f6 !important;
+}
+
 /* Compact Stepper for DataHeader */
 .dp-stepper-compact {
     display: flex;

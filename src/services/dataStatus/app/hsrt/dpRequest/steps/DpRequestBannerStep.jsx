@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Save, Trash2, ChevronDown, Plus, Search, ChevronLeft, ChevronRight, GripVertical, X, Info } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../DpRequestPageApi';
-import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
+import KendoGridV3, { GridColumn as Column } from "@/components/kendo/KendoGridV3";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
@@ -62,6 +62,155 @@ const ConditionHeaderCell = (props) => {
         </div>
     );
 };
+
+// 드래그 상태를 React State가 아닌 전역 변수로 관리 (리렌더링으로 인한 드래그 취소 방지)
+let currentDragState = null;
+
+// --- 로컬 상태 기반 병합 편집 셀 ---
+const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, data, dependencies = [], align = 'left', placeholder = '', disableMerge = false, level, handleDrop }) => {
+    // 1. 병합(rowSpan) 계산 로직
+    let rowSpan = 1;
+    let isHidden = false;
+
+    if (!disableMerge && dataIndex > 0) {
+        let isSameAsPrev = data[dataIndex][field] === data[dataIndex - 1][field];
+        if (isSameAsPrev && dependencies.length > 0) {
+            for (let dep of dependencies) {
+                if (data[dataIndex][dep] !== data[dataIndex - 1][dep]) {
+                    isSameAsPrev = false;
+                    break;
+                }
+            }
+        }
+        if (isSameAsPrev) {
+            isHidden = true;
+            rowSpan = 0;
+        }
+    }
+
+    if (!disableMerge && !isHidden) {
+        for (let i = dataIndex + 1; i < data.length; i++) {
+            let isSame = data[i][field] === data[dataIndex][field];
+            if (isSame && dependencies.length > 0) {
+                for (let dep of dependencies) {
+                    if (data[i][dep] !== data[dataIndex][dep]) {
+                        isSame = false;
+                        break;
+                    }
+                }
+            }
+            if (isSame) rowSpan++;
+            else break;
+        }
+    }
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
+
+    useEffect(() => {
+        if (!isEditing) setLocalVal(String(dataItem[field] ?? ''));
+    }, [dataItem[field], isEditing]);
+
+    if (isHidden) return null; // 병합되어 숨겨지는 셀
+
+    const commit = () => {
+        setIsEditing(false);
+        if (localVal !== String(dataItem[field] ?? '')) {
+            onUpdate(dataIndex, rowSpan, field, localVal, data);
+        }
+    };
+
+    if (isEditing) {
+        return (
+            <td rowSpan={rowSpan} style={{ padding: '1px 4px', verticalAlign: 'middle', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
+                <input
+                    autoFocus
+                    placeholder={placeholder}
+                    value={localVal}
+                    onChange={e => setLocalVal(e.target.value)}
+                    onBlur={commit}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter') e.target.blur();
+                        if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
+                    }}
+                    style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid #3b82f6', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align, boxSizing: 'border-box' }}
+                />
+            </td>
+        );
+    }
+
+    return (
+        <td
+            rowSpan={rowSpan}
+            style={{ padding: '1px 4px', verticalAlign: 'middle', background: '#fff', textAlign: align, borderBottom: rowSpan > 1 ? '1px solid #e2e8f0' : undefined, position: 'relative' }}
+            onDragOver={(e) => {
+                if (!currentDragState || currentDragState.level !== level) return;
+                
+                // 제약조건 검사
+                if (level === 2 && dataItem.label3 !== currentDragState.parentLabel3) return;
+                if (level === 1 && (dataItem.label3 !== currentDragState.parentLabel3 || dataItem.label2 !== currentDragState.parentLabel2)) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = "move";
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                
+                if (y < rect.height / 2) {
+                    e.currentTarget.classList.add("dp-drop-top");
+                    e.currentTarget.classList.remove("dp-drop-bottom");
+                } else {
+                    e.currentTarget.classList.add("dp-drop-bottom");
+                    e.currentTarget.classList.remove("dp-drop-top");
+                }
+            }}
+            onDragLeave={(e) => {
+                e.currentTarget.classList.remove("dp-drop-top");
+                e.currentTarget.classList.remove("dp-drop-bottom");
+            }}
+            onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.currentTarget.classList.remove("dp-drop-top");
+                e.currentTarget.classList.remove("dp-drop-bottom");
+                const rect = e.currentTarget.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const position = y < rect.height / 2 ? 'top' : 'bottom';
+                handleDrop(level, dataIndex, position, rowSpan);
+            }}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', height: '100%', minHeight: '26px' }}>
+                {level && (
+                    <div 
+                        draggable
+                        onDragStart={(e) => {
+                            e.stopPropagation();
+                            e.dataTransfer.effectAllowed = "move";
+                            e.dataTransfer.setData("text/plain", String(level));
+                            currentDragState = {
+                                level,
+                                startIndex: dataIndex,
+                                rowSpan,
+                                parentLabel3: dataItem.label3,
+                                parentLabel2: dataItem.label2
+                            };
+                        }}
+                        onDragEnd={() => {
+                            currentDragState = null;
+                        }}
+                        style={{ cursor: 'grab', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', color: '#94a3b8' }}
+                        title="드래그하여 순서 변경"
+                    >
+                        <GripVertical size={14} />
+                    </div>
+                )}
+                <div style={{ flex: 1, minWidth: 0, paddingLeft: level ? '2px' : '0', cursor: 'text' }} onClick={() => setIsEditing(true)}>
+                    {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
+                </div>
+            </div>
+        </td>
+    );
+});
 
 // --- (성능 개선) 개별 아이템 메모이제이션 ---
 const getTypeClass = (type) => {
@@ -153,15 +302,15 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     }));
 
     const [banners, setBanners] = useState([]);
-    const [selectedBanner, setSelectedBanner] = useState('');
+    const [selectedBanner, setSelectedBanner] = useState(null); // id
     const [baseVariables, setBaseVariables] = useState([]);
+    const [currentLabel, setCurrentLabel] = useState('');
     const [isWizardOpen, setIsWizardOpen] = useState(false);
     const [isVariablePanelOpen, setIsVariablePanelOpen] = useState(true);
     const [isBannerSidebarOpen, setIsBannerSidebarOpen] = useState(true);
     const [wizardSearch, setWizardSearch] = useState('');
     const [bannerSearch, setBannerSearch] = useState('');
     const [colVars, setColVars] = useState([]);
-    const [currentLabel, setCurrentLabel] = useState('');
     const [selectedIds, setSelectedIds] = useState([]);
 
     // --- 삭제 관리용 스테이트 추가 ---
@@ -498,6 +647,43 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const updateBannerInfo = useCallback((newInfo) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo, isDirty: true } : b));
     }, [selectedBanner]);
+
+    const handleMergedUpdate = useCallback((dataIndex, rowSpan, field, value, data) => {
+        const newData = [...data];
+        for (let i = 0; i < rowSpan; i++) {
+            newData[dataIndex + i] = { ...newData[dataIndex + i], [field]: value };
+        }
+        updateBannerInfo(newData);
+    }, [updateBannerInfo]);
+
+    const handleReorderBlock = useCallback((level, targetIndex, position, targetRowSpan) => {
+        if (!currentDragState) return;
+        const { startIndex, rowSpan } = currentDragState;
+        
+        let actualTargetIndex = targetIndex;
+        if (position === 'bottom') {
+            actualTargetIndex = targetIndex + targetRowSpan;
+        }
+
+        // 목적지가 자신이 속한 블록 내부인 경우 무시
+        if (actualTargetIndex > startIndex && actualTargetIndex < startIndex + rowSpan) return;
+        // 목적지가 현재 위치와 완전히 동일한 경우 무시
+        if (actualTargetIndex === startIndex || actualTargetIndex === startIndex + rowSpan) return;
+
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        if (!currentBanner || !currentBanner.info) return;
+
+        const newData = [...currentBanner.info];
+        const block = newData.splice(startIndex, rowSpan);
+        
+        // 블록이 빠져나갔으므로 타겟 인덱스 조정 (아래쪽에서 위로 올릴 때)
+        if (actualTargetIndex > startIndex) {
+            actualTargetIndex -= rowSpan;
+        }
+        
+        newData.splice(actualTargetIndex, 0, ...block);
+        updateBannerInfo(newData);
+    }, [banners, selectedBanner, updateBannerInfo]);
 
     const handleRowClick = useCallback((e) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: it === e.dataItem })) } : b));
@@ -890,18 +1076,18 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                             </div>
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                                <KendoGridV2
+                                <KendoGridV3
                                     data={banners.find(b => b.id === selectedBanner)?.info || []}
-                                    reorderable addable deletable editField="inEdit"
+                                    addable deletable editField="inEdit"
                                     onDataChange={updateBannerInfo}
                                     onRowClick={handleRowClick}
                                     newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
                                 >
-                                    <Column field="label3" title="대분류" width="150px" />
-                                    <Column field="label2" title="중분류" width="150px" />
-                                    <Column field="label" title="소분류" />
-                                    <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
-                                </KendoGridV2>
+                                    <Column field="label3" title="대분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} onUpdate={handleMergedUpdate} level={3} handleDrop={handleReorderBlock} />} />
+                                    <Column field="label2" title="중분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3']} onUpdate={handleMergedUpdate} level={2} handleDrop={handleReorderBlock} />} />
+                                    <Column field="label" title="소분류" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3', 'label2']} onUpdate={handleMergedUpdate} level={1} handleDrop={handleReorderBlock} />} />
+                                    <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} onUpdate={handleMergedUpdate} disableMerge={true} />} />
+                                </KendoGridV3>
                             </div>
                         </>
                     )}
