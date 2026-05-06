@@ -71,6 +71,50 @@ const ConditionHeaderCell = (props) => {
         </div>
     );
 };
+
+// --- 로컬 상태 기반 텍스트 편집 셀 (성능 최적화용) ---
+const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', placeholder = '' }) => {
+    const [isEditing, setIsEditing] = useState(false);
+    const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
+
+    useEffect(() => {
+        if (!isEditing) setLocalVal(String(dataItem[field] ?? ''));
+    }, [dataItem.id, dataItem[field], isEditing]);
+
+    const commit = () => {
+        setIsEditing(false);
+        if (localVal !== String(dataItem[field] ?? '')) onUpdate(dataItem, field, localVal);
+    };
+
+    if (isEditing) {
+        return (
+            <td style={{ padding: '1px 4px', verticalAlign: 'middle' }}>
+                <input
+                    autoFocus
+                    placeholder={placeholder}
+                    value={localVal}
+                    onChange={e => setLocalVal(e.target.value)}
+                    onBlur={commit}
+                    onKeyDown={e => {
+                        if (e.key === 'Enter') e.target.blur();
+                        if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
+                    }}
+                    style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid #3b82f6', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align }}
+                />
+            </td>
+        );
+    }
+
+    return (
+        <td
+            onClick={() => setIsEditing(true)}
+            style={{ padding: '1px 4px', verticalAlign: 'middle', cursor: 'text', textAlign: align }}
+        >
+            {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
+        </td>
+    );
+});
+
 const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onApply }) => {
     const auth = useSelector(state => state.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -237,10 +281,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 data={categories}
                                 onDataChange={setCategories}
                                 onRowClick={(e) => {
-                                    setCategories(prev => prev.map(item => ({
-                                        ...item,
-                                        inEdit: item === e.dataItem
-                                    })));
+                                    // Row 클릭 시 inEdit 처리 제거 (셀 단위 TextEditCell로 로컬 상태 편집)
                                 }}
                                 reorderable={true}
                                 addable={true}
@@ -252,7 +293,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 style={{ flex: 1, height: '100%', width: '100%' }}
                                 scrollable="scrollable"
                             >
-                                <Column field="label" title="라벨" width="150px" />
+                                <Column field="label" title="라벨" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
                                 <Column
                                     field="type"
                                     title="형식"
@@ -270,14 +311,14 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         </td>
                                     )}
                                 />
-                                <Column field="logic" title="조건" width="250px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
-                                <Column field="target_var" title="저장될 변수" width="150px" />
-                                <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" />
+                                <Column field="logic" title="조건" width="250px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="logic" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="target_var" title="저장될 변수" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="value" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
 
-                                {isDetailSetting && <Column field="label2" title="라벨2" width="150px" />}
-                                {isDetailSetting && <Column field="label3" title="라벨3" width="150px" />}
-                                {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" />}
-                                {isDetailSetting && <Column field="postfix" title="뒷문자" width="120px" />}
+                                {isDetailSetting && <Column field="label2" title="라벨2" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="label3" title="라벨3" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="prefix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="postfix" title="뒷문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="postfix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="hide" title="숨기기" width="100px" headerClassName="k-text-center" cell={(p) => (
                                     <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '4px' }}>
                                         <div

@@ -338,7 +338,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const handleDeleteBanner = (e, bannerId) => {
         e.stopPropagation();
         const bannerToDelete = banners.find(b => b.id === bannerId);
-        
+
         modal.showConfirm('삭제 확인', `배너(${bannerToDelete?.label || bannerId})를 삭제하시겠습니까?`, {
             btns: [
                 { title: "취소", click: () => { } },
@@ -518,8 +518,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         );
     }, [banners, bannerSearch]);
 
-    useEffect(() => { 
-        fetchBannerData(); 
+    useEffect(() => {
+        fetchBannerData();
         const handlePageUpdate = () => fetchBannerData();
         window.addEventListener("pageSelected", handlePageUpdate);
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
@@ -535,7 +535,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             } catch (error) { }
         };
         fetchBaseVariables();
-        
+
         const handlePageUpdate = () => fetchBaseVariables();
         window.addEventListener("pageSelected", handlePageUpdate);
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
@@ -664,7 +664,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     {banners.find(b => b.id === selectedBanner)?.isNew ? (
-                            <>
+                        <>
                             <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, padding: '0 16px', borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
                                 <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>배너명</span>
@@ -725,7 +725,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         </div>
                                     )}
                                 </div>
-    
+
                                 {/* 우측 가로축 드롭존 (개선: 5개씩 2줄 그리드) */}
                                 <div className="drop-zones-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
@@ -738,7 +738,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             <X size={14} color="#94a3b8" />
                                         </button>
                                     </div>
-    
+
                                     <div className="drop-zone-scroll-area custom-scrollbar"
                                         style={{
                                             flex: 1,
@@ -792,117 +792,117 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             </div>
                                         )}
                                     </div>
-    
+
                                     {/* 하단 스티키 액션 바 제거됨 (상단 헤더로 이동) */}
                                 </div>
                             </div>
                         </>
                     ) : (
                         <>
-                    <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-                        <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 700 }}>배너명</span>
-                            <input
-                                type="text"
-                                value={currentLabel}
-                                placeholder="배너명을 입력하세요"
-                                onChange={(e) => {
-                                    setCurrentLabel(e.target.value);
-                                    setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, label: e.target.value, isDirty: true } : b));
-                                    if (onUnsavedChange) onUnsavedChange(true); // 라벨 변경 시 더티 표시
-                                }}
-                                className="dp-input"
-                                style={{ width: '800px' }}
-                            />
-                        </div>
-                        <div className="dp-content-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-                            <button
-                                onClick={() => {
-                                    const banner = banners.find(b => b.id === selectedBanner);
-                                    if (!banner) {
-                                        modal.showAlert('알림', '선택된 배너가 없습니다.');
-                                        return;
-                                    }
-                                    if (!banner.info || banner.info.length === 0) {
-                                        modal.showAlert('알림', '배너 조건이 없습니다.');
-                                        return;
-                                    }
+                            <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                                <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '13px', fontWeight: 700 }}>배너명</span>
+                                    <input
+                                        type="text"
+                                        value={currentLabel}
+                                        placeholder="배너명을 입력하세요"
+                                        onChange={(e) => {
+                                            setCurrentLabel(e.target.value);
+                                            setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, label: e.target.value, isDirty: true } : b));
+                                            if (onUnsavedChange) onUnsavedChange(true); // 라벨 변경 시 더티 표시
+                                        }}
+                                        className="dp-input"
+                                        style={{ width: '800px' }}
+                                    />
+                                </div>
+                                <div className="dp-content-actions" style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
+                                    <button
+                                        onClick={() => {
+                                            const banner = banners.find(b => b.id === selectedBanner);
+                                            if (!banner) {
+                                                modal.showAlert('알림', '선택된 배너가 없습니다.');
+                                                return;
+                                            }
+                                            if (!banner.info || banner.info.length === 0) {
+                                                modal.showAlert('알림', '배너 조건이 없습니다.');
+                                                return;
+                                            }
 
-                                    // 유효한 조건식 필터링 (HSRTapi 방식 적용)
-                                    const validInfo = banner.info.filter(c =>
-                                        (c.label && c.label.toString().trim() !== "") ||
-                                        (c.logic && c.logic.toString().trim() !== "") ||
-                                        (typeof c.value === "number" && !Number.isNaN(c.value))
-                                    );
+                                            // 유효한 조건식 필터링 (HSRTapi 방식 적용)
+                                            const validInfo = banner.info.filter(c =>
+                                                (c.label && c.label.toString().trim() !== "") ||
+                                                (c.logic && c.logic.toString().trim() !== "") ||
+                                                (typeof c.value === "number" && !Number.isNaN(c.value))
+                                            );
 
-                                    if (validInfo.length === 0) {
-                                        modal.showAlert('알림', '유효한 배너 조건(라벨 또는 조건식)이 없습니다.');
-                                        return;
-                                    }
+                                            if (validInfo.length === 0) {
+                                                modal.showAlert('알림', '유효한 배너 조건(라벨 또는 조건식)이 없습니다.');
+                                                return;
+                                            }
 
-                                    const variablesPayload = {};
-                                    baseVariables.forEach(bv => {
-                                        variablesPayload[bv.id] = bv;
-                                    });
-                                    variablesPayload[banner.id] = {
-                                        id: banner.id,
-                                        label: currentLabel || banner.label,
-                                        type: 'single',
-                                        info: validInfo
-                                    };
+                                            const variablesPayload = {};
+                                            baseVariables.forEach(bv => {
+                                                variablesPayload[bv.id] = bv;
+                                            });
+                                            variablesPayload[banner.id] = {
+                                                id: banner.id,
+                                                label: currentLabel || banner.label,
+                                                type: 'single',
+                                                info: validInfo
+                                            };
 
-                                    const payload = {
-                                        pageid: sessionStorage.getItem('pageId') || auth.user.userId,
-                                        user: auth.user.userId,
-                                        table: {
-                                            id: `__var__${banner.id}`,
-                                            name: currentLabel || banner.label,
-                                            x_info: [],
-                                            y_info: [banner.id]
-                                        },
-                                        variables: variablesPayload,
-                                        include_stats: ["mean", "std", "min", "max", "n"]
-                                    };
+                                            const payload = {
+                                                pageid: sessionStorage.getItem('pageId') || auth.user.userId,
+                                                user: auth.user.userId,
+                                                table: {
+                                                    id: `__var__${banner.id}`,
+                                                    name: currentLabel || banner.label,
+                                                    x_info: [],
+                                                    y_info: [banner.id]
+                                                },
+                                                variables: variablesPayload,
+                                                include_stats: ["mean", "std", "min", "max", "n"]
+                                            };
 
-                                    localStorage.setItem('dp_preview_payload', JSON.stringify(payload));
-                                    window.open('/dp_request_preview', '_blank', 'width=600,height=700,left=200,top=100');
-                                }}
-                                style={{
-                                    background: '#fff',
-                                    border: '1px solid #3b82f6',
-                                    color: '#3b82f6',
-                                    height: '32px',
-                                    padding: '0 16px',
-                                    borderRadius: '4px',
-                                    fontSize: '13px',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
-                                onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
-                            >
-                                미리보기 계산
-                            </button>
-                        </div>
-                    </div>
-                    <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-                        <KendoGridV2
-                            data={banners.find(b => b.id === selectedBanner)?.info || []}
-                            reorderable addable deletable editField="inEdit"
-                            onDataChange={updateBannerInfo}
-                            onRowClick={handleRowClick}
-                            newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
-                        >
-                            <Column field="label3" title="라벨3" width="150px" />
-                            <Column field="label2" title="라벨2" width="150px" />
-                            <Column field="label" title="라벨" />
-                            <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
-                        </KendoGridV2>
-                    </div>
+                                            localStorage.setItem('dp_preview_payload', JSON.stringify(payload));
+                                            window.open('/dp_request_preview', '_blank', 'width=600,height=700,left=200,top=100');
+                                        }}
+                                        style={{
+                                            background: '#fff',
+                                            border: '1px solid #3b82f6',
+                                            color: '#3b82f6',
+                                            height: '32px',
+                                            padding: '0 16px',
+                                            borderRadius: '4px',
+                                            fontSize: '13px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.background = '#eff6ff'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = '#fff'}
+                                    >
+                                        미리보기 계산
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+                                <KendoGridV2
+                                    data={banners.find(b => b.id === selectedBanner)?.info || []}
+                                    reorderable addable deletable editField="inEdit"
+                                    onDataChange={updateBannerInfo}
+                                    onRowClick={handleRowClick}
+                                    newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
+                                >
+                                    <Column field="label3" title="대분류" width="150px" />
+                                    <Column field="label2" title="중분류" width="150px" />
+                                    <Column field="label" title="소분류" />
+                                    <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
+                                </KendoGridV2>
+                            </div>
                         </>
                     )}
                 </div>
