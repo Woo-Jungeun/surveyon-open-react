@@ -65,9 +65,10 @@ const ConditionHeaderCell = (props) => {
 
 // 드래그 상태를 React State가 아닌 전역 변수로 관리 (리렌더링으로 인한 드래그 취소 방지)
 let currentDragState = null;
+const lastClickTracker = new Map(); // 더블 클릭 수동 감지용
 
 // --- 로컬 상태 기반 병합 편집 셀 ---
-const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, data, dependencies = [], align = 'left', placeholder = '', disableMerge = false, level, handleDrop }) => {
+const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, data, dependencies = [], align = 'left', placeholder = '', disableMerge = false, level, handleDrop, selectedCells = [], onCellMouseDown, onCellMouseEnter, onContextMenu }) => {
     // 1. 병합(rowSpan) 계산 로직
     let rowSpan = 1;
     let isHidden = false;
@@ -81,6 +82,10 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                     break;
                 }
             }
+        } // ADDED MISSING BRACE HERE
+        
+        if (isSameAsPrev && data[dataIndex][`_unmerged_${field}`]) {
+            isSameAsPrev = false;
         }
         if (isSameAsPrev) {
             isHidden = true;
@@ -99,23 +104,42 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                     }
                 }
             }
+            if (isSame && data[i][`_unmerged_${field}`]) {
+                isSame = false;
+            }
             if (isSame) rowSpan++;
             else break;
         }
     }
 
+    const getInitialVal = () => {
+        let val = String(dataItem[field] ?? '').trim();
+        if (field === 'logic' && (val === '0-' || val === '0')) return '';
+        return val;
+    };
+
     const [isEditing, setIsEditing] = useState(false);
-    const [localVal, setLocalVal] = useState(String(dataItem[field] ?? ''));
+    const [localVal, setLocalVal] = useState(getInitialVal());
+    const inputRef = useRef(null);
 
     useEffect(() => {
-        if (!isEditing) setLocalVal(String(dataItem[field] ?? ''));
+        if (!isEditing) {
+            setLocalVal(getInitialVal());
+        } else {
+            // 그리드의 focus stealing을 피하기 위해 약간 지연 후 포커스
+            setTimeout(() => {
+                if (inputRef.current) inputRef.current.focus();
+            }, 50);
+        }
     }, [dataItem[field], isEditing]);
 
     if (isHidden) return null; // 병합되어 숨겨지는 셀
 
     const commit = () => {
         setIsEditing(false);
+        // 원래 값이 '0-' 였는데 우리가 ''로 보여준 경우, 그대로 ''로 유지하게 됨 (0- 도 빈 값으로 취급하므로)
         if (localVal !== String(dataItem[field] ?? '')) {
+            // 만약 아무것도 안치고 닫았는데 기존이 '0-' 라면 ''로 업데이트 됨
             onUpdate(dataIndex, rowSpan, field, localVal, data);
         }
     };
@@ -124,13 +148,16 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
         return (
             <td rowSpan={rowSpan} style={{ padding: '1px 4px', verticalAlign: 'middle', background: '#fff', borderBottom: '1px solid #e2e8f0' }}>
                 <input
-                    autoFocus
+                    ref={inputRef}
                     placeholder={placeholder}
                     value={localVal}
                     onChange={e => setLocalVal(e.target.value)}
+                    onMouseDown={e => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
                     onBlur={commit}
                     onKeyDown={e => {
-                        if (e.key === 'Enter') e.target.blur();
+                        e.stopPropagation();
+                        if (e.key === 'Enter') commit();
                         if (e.key === 'Escape') { setLocalVal(String(dataItem[field] ?? '')); setIsEditing(false); }
                     }}
                     style={{ width: '100%', height: '22px', fontSize: '13px', border: '1px solid #3b82f6', outline: 'none', padding: '0 4px', borderRadius: '2px', textAlign: align, boxSizing: 'border-box' }}
@@ -139,10 +166,48 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
         );
     }
 
+    const isSelected = selectedCells.some(c => c.r >= dataIndex && c.r < dataIndex + rowSpan && c.c === field);
+
     return (
         <td
             rowSpan={rowSpan}
-            style={{ padding: '1px 4px', verticalAlign: 'middle', background: '#fff', textAlign: align, borderBottom: rowSpan > 1 ? '1px solid #e2e8f0' : undefined, position: 'relative' }}
+            style={{ 
+                padding: '1px 4px', 
+                verticalAlign: 'middle', 
+                background: isSelected ? '#e0f2fe' : '#fff', // Selected state background
+                textAlign: align, 
+                borderBottom: rowSpan > 1 ? '1px solid #e2e8f0' : undefined, 
+                position: 'relative',
+                userSelect: 'none' // 텍스트 드래그 선택 방지
+            }}
+            onMouseDown={(e) => {
+                if (isEditing) return;
+                if (e.button === 2) {
+                    onContextMenu && onContextMenu(e, dataIndex, field);
+                } else if (e.button === 0) {
+                    const cellKey = `${dataIndex}-${field}`;
+                    const now = Date.now();
+                    const lastClick = lastClickTracker.get(cellKey) || 0;
+                    
+                    if (now - lastClick < 500) { // 500ms로 시간 연장
+                        // Double click detected manually!
+                        setIsEditing(true);
+                        lastClickTracker.delete(cellKey);
+                    } else {
+                        lastClickTracker.set(cellKey, now);
+                        // 그리드 리렌더링으로 인해 기존 편집 셀의 input이 onBlur를 발생시키기 전에 파괴되는 것을 방지하기 위해 지연 실행
+                        setTimeout(() => {
+                            onCellMouseDown && onCellMouseDown(e, dataIndex, field);
+                        }, 0);
+                    }
+                }
+            }}
+            onMouseEnter={() => {
+                if (!isEditing) {
+                    onCellMouseEnter && onCellMouseEnter(dataIndex, field);
+                }
+            }}
+            onContextMenu={(e) => e.preventDefault()}
             onDragOver={(e) => {
                 if (!currentDragState || currentDragState.level !== level) return;
                 
@@ -180,9 +245,10 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
             }}
         >
             <div style={{ display: 'flex', alignItems: 'center', height: '100%', minHeight: '26px' }}>
-                {level && (
+                {level > 0 && (
                     <div 
                         draggable
+                        onMouseDown={(e) => e.stopPropagation()}
                         onDragStart={(e) => {
                             e.stopPropagation();
                             e.dataTransfer.effectAllowed = "move";
@@ -204,8 +270,8 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                         <GripVertical size={14} />
                     </div>
                 )}
-                <div style={{ flex: 1, minWidth: 0, paddingLeft: level ? '2px' : '0', cursor: 'text' }} onClick={() => setIsEditing(true)}>
-                    {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : '-')}
+                <div style={{ flex: 1, minWidth: 0, paddingLeft: level ? '2px' : '0', cursor: 'text' }} onDoubleClick={() => setIsEditing(true)}>
+                    {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : (field === 'logic' ? '' : '-'))}
                 </div>
             </div>
         </td>
@@ -313,6 +379,10 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [colVars, setColVars] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
 
+    const [selectedCells, setSelectedCells] = useState([]); // [{r, c}]
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [contextMenu, setContextMenu] = useState(null); // {x, y, r, c}
+
     // --- 삭제 관리용 스테이트 추가 ---
     const [deletedBannerIds, setDeletedBannerIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
     const [originalBannerIds, setOriginalBannerIds] = useState([]); // 초기 로딩된 배너 ID 목록 (신규 구분용)
@@ -345,8 +415,17 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
         };
 
+        const handleGlobalMouseUp = () => setIsSelecting(false);
+        const handleGlobalClick = () => setContextMenu(null);
+
         window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
+        window.addEventListener('mouseup', handleGlobalMouseUp);
+        window.addEventListener('click', handleGlobalClick);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('mouseup', handleGlobalMouseUp);
+            window.removeEventListener('click', handleGlobalClick);
+        };
     }, [history]);
 
     // 데이터 변경 감지 및 히스토리 커밋
@@ -574,6 +653,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }));
                     setBanners(formatted);
                     history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
+                    setSelectedCells([]); // 데이터 재조회 시 셀 선택 초기화
 
                     // 서버에서 온 원본 ID들 보관
                     const ids = formatted.map(b => b.id);
@@ -685,6 +765,118 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         updateBannerInfo(newData);
     }, [banners, selectedBanner, updateBannerInfo]);
 
+    const handleCellMouseDown = useCallback((e, rowIndex, field) => {
+        setIsSelecting(true);
+        setSelectedCells([{ r: rowIndex, c: field }]);
+        setContextMenu(null);
+    }, []);
+
+    const handleCellMouseEnter = useCallback((rowIndex, field) => {
+        if (!isSelecting) return;
+        
+        setSelectedCells(prev => {
+            if (prev.length === 0) return [{ r: rowIndex, c: field }];
+            const start = prev[0];
+            const newSelection = [];
+            
+            const colFields = ['label3', 'label2', 'label'];
+            const startColIdx = colFields.indexOf(start.c);
+            const currColIdx = colFields.indexOf(field);
+            
+            if (startColIdx === -1 || currColIdx === -1) return prev;
+
+            const minRow = Math.min(start.r, rowIndex);
+            const maxRow = Math.max(start.r, rowIndex);
+            const minCol = Math.min(startColIdx, currColIdx);
+            const maxCol = Math.max(startColIdx, currColIdx);
+
+            for (let r = minRow; r <= maxRow; r++) {
+                for (let c = minCol; c <= maxCol; c++) {
+                    newSelection.push({ r, c: colFields[c] });
+                }
+            }
+            return newSelection;
+        });
+    }, [isSelecting]);
+
+    const handleContextMenu = useCallback((e, rowIndex, field) => {
+        e.preventDefault();
+        
+        setSelectedCells(prev => {
+            const isSelected = prev.some(cell => cell.r === rowIndex && cell.c === field);
+            if (!isSelected) {
+                return [{ r: rowIndex, c: field }];
+            }
+            return prev;
+        });
+        
+        setContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            r: rowIndex,
+            c: field
+        });
+    }, []);
+
+    const handleMergeCells = useCallback(() => {
+        if (selectedCells.length < 2) return;
+        
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        if (!currentBanner || !currentBanner.info) return;
+
+        const newData = [...currentBanner.info];
+        const colFields = ['label3', 'label2', 'label'];
+        
+        let changed = false;
+        colFields.forEach(field => {
+            const cellsInCol = selectedCells.filter(c => c.c === field).map(c => c.r);
+            if (cellsInCol.length < 2) return;
+            
+            const minRow = Math.min(...cellsInCol);
+            const maxRow = Math.max(...cellsInCol);
+            const targetValue = newData[minRow][field];
+            
+            for (let i = minRow; i <= maxRow; i++) {
+                newData[i] = { ...newData[i], [field]: targetValue };
+                delete newData[i][`_unmerged_${field}`];
+                changed = true;
+            }
+        });
+        
+        if (changed) updateBannerInfo(newData);
+        setContextMenu(null);
+    }, [selectedCells, banners, selectedBanner, updateBannerInfo]);
+
+    const handleUnmergeCells = useCallback(() => {
+        if (selectedCells.length === 0) return;
+        
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        if (!currentBanner || !currentBanner.info) return;
+
+        const newData = [...currentBanner.info];
+        let changed = false;
+        
+        selectedCells.forEach(cell => {
+            const r = cell.r;
+            const field = cell.c;
+            
+            let val = newData[r][field];
+            newData[r] = { ...newData[r] };
+            
+            for (let i = r + 1; i < newData.length; i++) {
+                if (newData[i][field] === val) {
+                    newData[i] = { ...newData[i], [`_unmerged_${field}`]: true };
+                    changed = true;
+                } else {
+                    break;
+                }
+            }
+        });
+        
+        if (changed) updateBannerInfo(newData);
+        setContextMenu(null);
+    }, [selectedCells, banners, selectedBanner, updateBannerInfo]);
+
     const handleRowClick = useCallback((e) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: it === e.dataItem })) } : b));
     }, [selectedBanner]);
@@ -703,6 +895,11 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             (b.label || '').toLowerCase().includes(search) || (b.id || '').toLowerCase().includes(search)
         );
     }, [banners, bannerSearch]);
+
+    // 배너 탭이 변경될 때 셀 선택 상태 초기화
+    useEffect(() => {
+        setSelectedCells([]);
+    }, [selectedBanner]);
 
     useEffect(() => {
         fetchBannerData();
@@ -775,9 +972,9 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     };
 
     return (
-        <div className="dp-request-container" style={{ gap: '12px' }} onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
+        <div className="dp-request-container" style={{ gap: '12px' }} onClick={() => setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: b.info.map(it => ({ ...it, inEdit: false })) } : b))}>
             {/* 2. 메인 레이아웃 */}
-            <div className="dp-main-layout" onClick={(e) => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
+            <div className="dp-main-layout" onClick={(e) => { e.stopPropagation(); setContextMenu(null); }} style={{ flex: 1, minHeight: 0, display: 'flex', overflow: 'hidden' }}>
                 <div className={`dp-sidebar-container ${!isBannerSidebarOpen ? 'collapsed' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
                     {!isBannerSidebarOpen && (
                         <div className="dp-sidebar-collapsed-bar" onClick={() => setIsBannerSidebarOpen(true)}>
@@ -1083,13 +1280,25 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     onRowClick={handleRowClick}
                                     newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
                                 >
-                                    <Column field="label3" title="대분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} onUpdate={handleMergedUpdate} level={3} handleDrop={handleReorderBlock} />} />
-                                    <Column field="label2" title="중분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3']} onUpdate={handleMergedUpdate} level={2} handleDrop={handleReorderBlock} />} />
-                                    <Column field="label" title="소분류" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3', 'label2']} onUpdate={handleMergedUpdate} level={1} handleDrop={handleReorderBlock} />} />
+                                    <Column field="label3" title="대분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} onUpdate={handleMergedUpdate} level={3} handleDrop={handleReorderBlock} selectedCells={selectedCells} onCellMouseDown={handleCellMouseDown} onCellMouseEnter={handleCellMouseEnter} onContextMenu={handleContextMenu} />} />
+                                    <Column field="label2" title="중분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3']} onUpdate={handleMergedUpdate} level={2} handleDrop={handleReorderBlock} selectedCells={selectedCells} onCellMouseDown={handleCellMouseDown} onCellMouseEnter={handleCellMouseEnter} onContextMenu={handleContextMenu} />} />
+                                    <Column field="label" title="소분류" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3', 'label2']} onUpdate={handleMergedUpdate} level={1} handleDrop={handleReorderBlock} selectedCells={selectedCells} onCellMouseDown={handleCellMouseDown} onCellMouseEnter={handleCellMouseEnter} onContextMenu={handleContextMenu} />} />
                                     <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} onUpdate={handleMergedUpdate} disableMerge={true} />} />
                                 </KendoGridV3>
                             </div>
                         </>
+                    )}
+                    
+                    {/* Context Menu */}
+                    {contextMenu && (
+                        <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 100000, background: '#fff', border: '1px solid #ccc', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', padding: '4px 0', minWidth: '120px' }}>
+                            <div style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px' }} onClick={handleMergeCells} onMouseEnter={e => e.target.style.background = '#f1f5f9'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                                셀 병합
+                            </div>
+                            <div style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px' }} onClick={handleUnmergeCells} onMouseEnter={e => e.target.style.background = '#f1f5f9'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                                셀 분할
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
