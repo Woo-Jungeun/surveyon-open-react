@@ -270,17 +270,18 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const sourceVars = result.resultjson.summary_source_variables;
                     setBaseVariables(Array.isArray(sourceVars) ? sourceVars : Object.values(sourceVars));
                 }
-                if (result.resultjson.dp_request_summary_folders) {
+                if (result.resultjson.summary_folders) {
                     const uniqueFolders = [];
                     const idSet = new Set();
-                    result.resultjson.dp_request_summary_folders.forEach(f => {
-                        let fId = f.id;
+                    result.resultjson.summary_folders.forEach(f => {
+                        // 백엔드는 stub_id를 반환하므로 프론트엔드 id로 매핑
+                        let fId = f.stub_id || f.id;
                         let counter = 1;
                         while (idSet.has(fId)) {
-                            fId = `${f.id}_dup${counter++}`;
+                            fId = `${f.stub_id || f.id}_dup${counter++}`;
                         }
                         idSet.add(fId);
-                        uniqueFolders.push({ ...f, id: fId });
+                        uniqueFolders.push({ ...f, id: fId, name: f.label || f.name || fId });
                     });
                     setFolders(uniqueFolders);
                     setOriginalFolderIds(uniqueFolders.map(f => f.id));
@@ -337,10 +338,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await generateSummaryAuto.mutateAsync({ pageid: pageId, user: auth?.user?.userId, append_mode: true });
             // const result = await generateSummaryAuto.mutateAsync({ pageid: "446bd14c-d053-47c8-bf01-59384cb37746", user: "sbbok", append_mode: true });
 
-            if (result && result.folders) {
-                setFolders(prev => [...prev, ...result.folders]);
+            if (result && result.resultjson && result.resultjson.summary_folders) {
+                // 응답에서 새로 생성된 폴더 목록이 summary_folders 또는 다른 형태로 온다면
+                // 임시로 백엔드 스펙에 맞게 다시 조회하거나 매핑. 
+                // 명세엔 generated_folder_count 등만 보여서, 여기선 fetchSummaryData 호출을 추천.
+                await fetchSummaryData();
                 if (onUnsavedChange) onUnsavedChange(true);
-                modal.showAlert('알림', `${result.generated_folder_count}개의 척도형 요약표가 자동 생성되었습니다.`);
+                modal.showAlert('알림', `${result.resultjson.generated_folder_count || result.resultjson.summary_folders?.length || 0}개의 척도형 요약표가 자동 생성되었습니다.`);
+            } else if (result?.success === "777") {
+                await fetchSummaryData();
+                modal.showAlert('알림', `척도형 요약표 자동 생성이 완료되었습니다.`);
             }
         } catch (error) {
             console.error('Auto generate error:', error);
@@ -364,14 +371,16 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
             };
         });
 
+        const mappedFolders = (overrideFolders || folders).map(f => ({
+            stub_id: f.id,
+            label: f.name,
+            items: f.items || []
+        }));
+
         const payload = {
-            // TODO: 임시 하드코딩
             pageid: pageId,
             user: auth?.user?.userId,
-            // pageid: "446bd14c-d053-47c8-bf01-59384cb37746",
-            // user: "sbbok",
-            folders: overrideFolders || folders,
-            variables: variablesPayload,
+            summary_folders: mappedFolders,
             delete_ids: overrideDeleteIds || deletedSummaryIds
         };
 
