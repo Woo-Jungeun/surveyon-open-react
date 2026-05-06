@@ -776,7 +776,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         let minR = dataIndex;
         // find upwards
         for (let i = dataIndex - 1; i >= 0; i--) {
-            if (data[i][`_unmerged_${field}`]) break;
+            if (data[i + 1][`_unmerged_${field}`]) break;
             let isSame = data[i][field] === data[dataIndex][field];
             if (isSame && deps.length > 0) {
                 for (let dep of deps) {
