@@ -17,13 +17,18 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/variables/base/list", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 신규 문항 ID 채번 */
+    const getNextBaseVariableId = useMutation(
+        async (data) => await api.post(data, "/variables/base/next-id", "API_BASE_URL_DATASTATUS")
+    );
+
     /** 파생 문항 목록 조회 */
     const getComputedVariableList = useMutation(
         async (data) => await api.post(data, "/variables/computed/list", "API_BASE_URL_DATASTATUS")
     );
 
-    /** 파생 문항 저장 (실제로는 base/merge 지만 computed 저장에 사용) */
-    const saveComputedVariable = useMutation(
+    /** 기본 문항 추가 (merge) */
+    const saveBaseVariableMerge = useMutation(
         async (data) => await api.post(data, "/variables/base/merge", "API_BASE_URL_DATASTATUS"),
         {
             onMutate: () => { loadingSpinner.show(); },
@@ -172,8 +177,9 @@ export function DpRequestPageApi() {
     return {
         getBannerDetail,
         getBaseVariableList,
+        getNextBaseVariableId,
         getComputedVariableList,
-        saveComputedVariable,
+        saveBaseVariableMerge,
         deleteBaseVariable,
         getTableRenderContext,
         getTableDetail,

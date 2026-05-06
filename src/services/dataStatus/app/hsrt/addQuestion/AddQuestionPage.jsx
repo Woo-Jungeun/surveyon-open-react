@@ -11,65 +11,45 @@ import DataHeader from "@/services/dataStatus/components/DataHeader";
 import CartesianGeneratorModal from "./CartesianGeneratorModal";
 import { Button } from "@/components/ui/button";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { Input } from '@progress/kendo-react-inputs';
 
-// --- 커스텀 헤더 셀 (조건 아이콘) ---
-const ConditionHeaderCell = (props) => {
-    const anchorRef = useRef(null);
-    const [show, setShow] = useState(false);
+// ConditionHeaderCell is removed as it's not needed for base variables
 
+const NumericEditCell = (props) => {
+    const { dataItem, field, onChange } = props;
+    const value = dataItem[field] || '';
+    
+    if (!dataItem.inEdit) {
+        return (
+            <td style={{ ...props.style, padding: '0 12px' }}>
+                {value}
+            </td>
+        );
+    }
+    
     return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-            <span>{props.title}</span>
-            <div
-                ref={anchorRef}
-                onMouseEnter={() => setShow(true)}
-                onMouseLeave={() => setShow(false)}
-                style={{ cursor: 'pointer', display: 'flex' }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <Info size={14} color="#94a3b8" />
-            </div>
-
-            <Popup
-                anchor={anchorRef.current}
-                show={show}
-                animate={false}
-                popupClass="condition-tooltip-popup"
-                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
-            >
-                <div style={{
-                    padding: '12px 16px',
-                    background: '#ffffff',
-                    width: 'max-content',
-                    minWidth: '160px',
-                    lineHeight: '1.6',
-                    color: '#334155',
-                    textAlign: 'left' // 헤더 중앙정렬 영향을 받지 않도록 분리
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                        <div style={{
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            background: '#e2e8f0', color: '#64748b',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', fontWeight: 'bold'
-                        }}>i</div>
-                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
-                    </div>
-                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == 'A'</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
-                    </div>
-                </div>
-            </Popup>
-        </div>
+        <td style={{ ...props.style, padding: 0 }} className="k-grid-edit-cell">
+            <Input
+                type="number"
+                value={value}
+                onChange={(e) => {
+                    onChange({
+                        dataItem: dataItem,
+                        field: field,
+                        syntheticEvent: e.syntheticEvent,
+                        value: e.value
+                    });
+                }}
+                className="no-spin"
+                style={{ width: '100%', height: '100%' }}
+            />
+        </td>
     );
 };
 
 const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBaseVariableList, getComputedVariableList, saveComputedVariable, deleteBaseVariable } = DpRequestPageApi();
+    const { getBaseVariableList, getNextBaseVariableId, saveBaseVariableMerge, deleteBaseVariable } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -179,7 +159,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             const result = await deleteBaseVariable.mutateAsync({
                                 pageid: pageId,
                                 user: user,
-                                variables: [bannerId]
+                                ids: [bannerId]
                             });
 
                             if (result?.success === '777') {
@@ -203,19 +183,36 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         });
     };
 
-    const handleAddNew = () => {
-        const tempId = `NEW_${Date.now()}`;
-        const newBanner = {
-            id: tempId,
-            label: '',
-            type: '',
-            info: [{ label3: '', label2: '', label: '', logic: '', inEdit: true }]
-        };
-        setBanners(prev => [newBanner, ...prev]);
-        setSelectedBanner(tempId);
-        setCurrentId('');
-        setCurrentLabel('');
-        setCurrentXInfo('');
+    const handleAddNew = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) return;
+        
+        try {
+            loadingSpinner.show();
+            const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user: user });
+            if (res?.success === '777' && res.resultjson?.next_id) {
+                const tempId = res.resultjson.next_id;
+                const newBanner = {
+                    id: tempId,
+                    label: '',
+                    type: '',
+                    info: [{ label2: '', label: '', inEdit: true }]
+                };
+                setBanners(prev => [newBanner, ...prev]);
+                setSelectedBanner(tempId);
+                setCurrentId(tempId);
+                setCurrentLabel('');
+                setCurrentXInfo('single');
+            } else {
+                modal.showAlert('오류', '신규 문항 ID를 받아오지 못했습니다.');
+            }
+        } catch(e) { 
+            console.error(e);
+            modal.showAlert('오류', '신규 문항 추가 요청에 실패했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
     };
 
     // --- 데이터 로직 ---
@@ -228,45 +225,42 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         // const user = "sbbok";
         try {
             loadingSpinner.show();
-            // 1. Base Variables
+            // 1. Base Variables List
             const baseRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user: user });
             if (baseRes?.success === '777' && baseRes.resultjson) {
-                const baseVars = Array.isArray(baseRes.resultjson) ? baseRes.resultjson : Object.values(baseRes.resultjson);
+                const dataObj = baseRes.resultjson;
+                const baseVars = Object.entries(dataObj)
+                    .filter(([key]) => key !== 'count' && key !== 'first')
+                    .map(([key, v]) => ({
+                        id: v.id || key,
+                        label: v.label || v.name || key,
+                        type: v.type === 'single' ? 'single' :
+                            (v.type === 'multi' || v.type === 'double') ? 'multi' :
+                                v.type === 'scale' ? 'scale' :
+                                    v.type === 'rank' ? 'rank' :
+                                        v.type === 'numeric' ? 'open(숫자)' :
+                                            (v.type === 'string' || v.type === 'open') ? 'open(문자)' : (v.type || 'single'),
+                        subId: v.id || key,
+                        info: Array.isArray(v.info) ? v.info.map(item => ({
+                            ...item,
+                            label2: item.value || item.label2 || '',
+                            label: item.label || '',
+                            inEdit: false
+                        })) : []
+                    }));
+                
+                // baseVars를 사이드바 목록으로 사용
                 setBaseVariables(baseVars);
-            }
+                setBanners(baseVars);
+                history.reset(baseVars);
 
-            // 2. Computed Variables
-            const compRes = await getComputedVariableList.mutateAsync({ pageid: pageId, user: user });
-            if (compRes?.success === '777' && compRes.resultjson) {
-                const compVars = Array.isArray(compRes.resultjson) ? compRes.resultjson : Object.values(compRes.resultjson);
-                const formatted = compVars.map((v, i) => ({
-                    id: v.id || `var_${i}`,
-                    label: v.name || v.label,
-                    type: v.type === 'single' ? '단일 응답형 (Single)' :
-                        (v.type === 'multi' || v.type === 'double') ? '다중 응답형 (Multi)' :
-                            v.type === 'scale' ? '척도형 (Scale)' :
-                                v.type === 'numeric' ? '숫자형 (Numeric)' :
-                                    v.type === 'string' ? '문자형 (String)' : (v.type || '단일 응답형 (Single)'),
-                    subId: v.id || `banner_0${i + 1}`,
-                    info: Array.isArray(v.info) ? v.info.map(item => ({
-                        ...item,
-                        label3: item.label3 || '',
-                        label2: item.value || item.label2 || '',
-                        label: item.label || '',
-                        logic: item.logic || '',
-                        inEdit: false
-                    })) : []
-                }));
-                setBanners(formatted);
-                history.reset(formatted); // 초기 데이터를 히스토리에 설정
-
-                if (formatted.length > 0) {
+                if (baseVars.length > 0) {
                     const isFresh = mode === 'fresh';
                     const isDelete = mode === 'delete';
-                    let target = isFresh ? formatted[formatted.length - 1] : formatted[0];
+                    let target = isFresh ? baseVars[baseVars.length - 1] : baseVars[0];
 
                     if (targetIdToSelect) {
-                        const foundTarget = formatted.find(f => f.id === targetIdToSelect);
+                        const foundTarget = baseVars.find(f => f.id === targetIdToSelect);
                         if (foundTarget) target = foundTarget;
                     }
 
@@ -274,7 +268,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         setSelectedBanner(target.id);
                         setCurrentLabel(target.label);
                         setCurrentId(target.id);
-                        setCurrentXInfo(target.type || '단일 응답형 (Single)');
+                        setCurrentXInfo(target.type || 'single');
                     }
                 } else {
                     setSelectedBanner('');
@@ -283,6 +277,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     setCurrentXInfo('');
                 }
             } else {
+                setBaseVariables([]);
                 setBanners([]);
                 history.reset([]);
                 setSelectedBanner('');
@@ -336,8 +331,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         // 유효한 규칙만 필터링 (비어있는 그리드 행 제거)
         const validRules = currentBannerData.info.filter(r =>
             String(r.label2 || '').trim() !== '' ||
-            String(r.label || '').trim() !== '' ||
-            String(r.logic || '').trim() !== ''
+            String(r.label || '').trim() !== ''
         );
 
         if (validRules.length === 0) {
@@ -361,11 +355,12 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         const nextId = currentId.trim().toUpperCase();
 
         const typeMapReverse = {
-            "단일 응답형 (Single)": "single",
-            "다중 응답형 (Multi)": "multi",
-            "척도형 (Scale)": "scale",
-            "숫자형 (Numeric)": "numeric",
-            "문자형 (String)": "string"
+            "single": "single",
+            "scale": "scale",
+            "multi": "multi",
+            "rank": "rank",
+            "open(문자)": "string",
+            "open(숫자)": "numeric"
         };
 
         const mappedType = typeMapReverse[currentXInfo] || currentXInfo || 'single';
@@ -375,14 +370,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 id: nextId,
                 label: currentLabel.trim(),
                 type: mappedType,
-                recoded_type: 'computed',
-                info: validRules.map((r, idx) => {
+                info: validRules.map((r) => {
                     const parsedVal = parseFloat(r.label2);
                     return {
-                        index: idx + 1,
                         value: isNaN(parsedVal) ? String(r.label2 || '') : parsedVal,
-                        label: String(r.label || ''),
-                        logic: String(r.logic || '')
+                        label: String(r.label || '')
                     };
                 })
             }
@@ -390,8 +382,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
 
         try {
             loadingSpinner.show();
-            // 파생 문항 저장 API 호출 (임시: saveComputedVariable)
-            const result = await saveComputedVariable.mutateAsync({
+            // 기본 문항 저장 API 호출
+            const result = await saveBaseVariableMerge.mutateAsync({
                 pageid: pageId,
                 user: user,
                 variables: payloadVariables
@@ -421,6 +413,14 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 .dp-add-question-dropdown .k-input-value-text {
                     font-weight: 400 !important;
                 }
+                .no-spin::-webkit-inner-spin-button,
+                .no-spin::-webkit-outer-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                }
+                .no-spin {
+                    -moz-appearance: textfield;
+                }
                 `}
             </style>
             <DataHeader title="문항추가" onSave={handleSaveBanner}>
@@ -447,7 +447,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         )}
                         <div className="dp-sidebar custom-scrollbar" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
                             <div className="dp-sidebar-title" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingRight: '8px' }}>
-                                <span>추가된 문항 목록 ({filteredBanners.length})</span>
+                                <span>문항 목록 ({filteredBanners.length})</span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <button
                                         onClick={handleAddNew}
@@ -485,7 +485,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             setSelectedBanner(banner.id);
                                             setCurrentLabel(banner.label);
                                             setCurrentId(banner.id.startsWith('NEW_') ? '' : banner.id);
-                                            setCurrentXInfo(banner.type || '단일 응답형 (Single)');
+                                            setCurrentXInfo(banner.type || 'single');
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
                                     >
@@ -495,7 +495,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             </span>
                                             <span className="dp-banner-sub" style={{ display: 'block', fontSize: '11px', opacity: 0.6, wordBreak: 'break-all', lineHeight: 1.3 }}>
                                                 {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
-                                                {!banner.id.startsWith('NEW_') && banner.isDirty && (
+                                                {banner.isDirty && (
                                                     <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>
                                                 )}
                                             </span>
@@ -546,7 +546,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155', whiteSpace: 'nowrap' }}>문항 유형</span>
                                     <DropDownList
-                                        data={["단일 응답형 (Single)", "다중 응답형 (Multi)", "척도형 (Scale)", "숫자형 (Numeric)", "문자형 (String)"]}
+                                        data={["single", "scale", "multi", "rank", "open(문자)", "open(숫자)"]}
                                         value={currentXInfo || ''}
                                         className="dp-add-question-dropdown"
                                         onChange={(e) => {
@@ -568,11 +568,10 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 reorderable addable showNo deletable editField="inEdit"
                                 onDataChange={updateBannerInfo}
                                 onRowClick={handleRowClick}
-                                newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}
+                                newRowTemplate={{ label2: '', label: '' }}
                             >
-                                <Column field="label2" title="할당될 값" width="120px" />
+                                <Column field="label2" title="할당될 값" width="120px" cell={NumericEditCell} />
                                 <Column field="label" title="보기 라벨" width="500px" />
-                                <Column field="logic" title="조건" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
                             </KendoGridV2>
                         </div>
                     </div>
@@ -586,10 +585,8 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 variables={baseVariables}
                 onApply={(rules) => {
                     const mappedRules = rules.map(rule => ({
-                        label3: '',
                         label2: rule.label2,
                         label: rule.label,
-                        logic: rule.logic,
                         inEdit: false // 삽입 시 일단 텍스트 모드(닫힌 상태)로 표출되게 함
                     }));
 
@@ -600,7 +597,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 // 이 부분에서는 기존 빈 규칙(length 1, empty properties)을 제거하고 추가
                                 const currentInfo = b.info;
                                 let newInfo = [...currentInfo];
-                                if (newInfo.length === 1 && !newInfo[0].label2 && !newInfo[0].label && !newInfo[0].logic) {
+                                if (newInfo.length === 1 && !newInfo[0].label2 && !newInfo[0].label) {
                                     newInfo = mappedRules;
                                 } else {
                                     newInfo = [...newInfo, ...mappedRules];
