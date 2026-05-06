@@ -40,31 +40,64 @@ const ConditionHeaderCell = (props) => {
                 show={show}
                 animate={false}
                 popupClass="condition-tooltip-popup"
-                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
+                style={{ zIndex: 100000 }}
+                anchorAlign={{ horizontal: 'right', vertical: 'bottom' }}
+                popupAlign={{ horizontal: 'right', vertical: 'top' }}
+                margin={{ horizontal: 10, vertical: 4 }}
             >
                 <div style={{
-                    padding: '12px 16px',
+                    padding: '16px 20px',
                     background: '#ffffff',
                     width: 'max-content',
-                    minWidth: '160px',
+                    minWidth: '220px',
                     lineHeight: '1.6',
                     color: '#334155',
-                    textAlign: 'left' // 헤더 중앙정렬 영향을 받지 않도록 분리
+                    textAlign: 'left',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05)'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
                         <div style={{
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            background: '#e2e8f0', color: '#64748b',
+                            width: '20px', height: '20px', borderRadius: '50%',
+                            background: '#EFF6FF', color: '#3B82F6', border: '1px solid #BFDBFE',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', fontWeight: 'bold'
+                            fontSize: '12px', fontWeight: 'bold'
                         }}>i</div>
-                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                        <span style={{ color: '#1E293B', fontWeight: '700', fontSize: '14px' }}>스터브 조건 도움말</span>
                     </div>
-                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == 'A'</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
+
+                    <div style={{ fontSize: '13px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ lineHeight: '1.5' }}>
+                            스터브는 분석표의 행으로 사용할 재분류 조건입니다.<br />
+                            각 행의 조건식에 해당하는 응답자만 해당 스터브 항목에 집계됩니다.
+                        </div>
+
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#3B82F6', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '4px', height: '12px', background: '#3B82F6', borderRadius: '2px', display: 'inline-block' }}></span>
+                                작성 예시
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#F8FAFC', padding: '10px', borderRadius: '6px', border: '1px solid #E2E8F0', fontFamily: 'monospace', fontSize: '12px', color: '#334155', fontWeight: 500 }}>
+                                <div>SQ1 == 1</div>
+                                <div>SQ1 in [1, 2, 3]</div>
+                                <div>SQ1 not in [8, 9]</div>
+                                <div>SQ1 is not null</div>
+                                <div>AGE &gt;= 20 and AGE &lt; 30</div>
+                                <div>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#EF4444', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '4px', height: '12px', background: '#EF4444', borderRadius: '2px', display: 'inline-block' }}></span>
+                                주의
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px', color: '#334155', fontSize: '12px', lineHeight: '1.5' }}>
+                                <li>조건식이 비어 있으면 해당 행은 집계 조건으로 사용할 수 없습니다.</li>
+                                <li>같은 응답자가 여러 조건에 걸리면 여러 행에 <b>중복 포함</b>될 수 있습니다.</li>
+                                <li>필터 조건과 스터브 조건은 별개입니다.</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </Popup>
@@ -611,7 +644,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getRecodedOverview, saveRecodedOverview, getBannerDetail } = DpRequestPageApi();
+    const { getRecodedOverview, saveRecodedOverview, getTableDetail, getBannerDetail } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
@@ -673,10 +706,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     useImperativeHandle(ref, () => ({
         save: async () => await handleSave(),
         reset: async () => {
-            // const pageId = sessionStorage.getItem('pageId');
-            // if (!pageId || !auth?.user?.userId) return;
-            const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-            const user = "sbbok";
+            const pageId = sessionStorage.getItem('pageId');
+            const user = auth?.user?.userId;
+            if (!pageId || !user) return;
             try {
                 loadingSpinner.show();
                 const requestData = {
@@ -708,14 +740,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     }));
 
     const fetchOverview = useCallback(async () => {
-        // const pageId = sessionStorage.getItem('pageId');
-        // if (!pageId) return;
-        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-        const user = "sbbok";
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) return;
 
         try {
             loadingSpinner.show();
-            // const payload = { user: auth?.user?.userId || '', pageid: pageId };
             const payload = { user: user, pageid: pageId };
             const response = await getRecodedOverview.mutateAsync(payload);
             const resultData = response?.data?.resultjson || response?.resultjson || response || {};
@@ -729,19 +759,19 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             updatePresets(resultData.presets?.stat || [], setStatPresets);
 
             try {
-                const bannerRes = await getBannerDetail.mutateAsync(payload);
-                if (bannerRes?.resultjson?.recoded_variables || bannerRes?.data?.resultjson?.recoded_variables) {
-                    const raw = bannerRes?.resultjson?.recoded_variables || bannerRes?.data?.resultjson?.recoded_variables;
-                    const recodes = Array.isArray(raw) ? raw : Object.values(raw);
-
-                    const bannerRecodes = recodes.filter(v => v.id && v.id.startsWith('banner'));
-
-                    const formattedBanners = bannerRecodes.map((v, i) => {
-                        const labelString = v.id || `banner_0${i + 1}`;
-                        return { id: v.id, label: labelString };
-                    });
-                    setBanners(formattedBanners);
-                }
+                // banner/detail은 banner_ids만 내려줌 → table/detail에서 label 보충
+                const [bannerRes, tableRes] = await Promise.all([
+                    getBannerDetail.mutateAsync({ pageid: pageId, user }),
+                    getTableDetail.mutateAsync({ pageid: pageId, user })
+                ]);
+                const bannerIds = bannerRes?.resultjson?.banner_ids || bannerRes?.data?.resultjson?.banner_ids || [];
+                const recodedVars = tableRes?.resultjson?.recoded_variables || tableRes?.data?.resultjson?.recoded_variables || {};
+                const recodesArr = Array.isArray(recodedVars) ? recodedVars : Object.values(recodedVars);
+                const formattedBanners = bannerIds.map(bid => {
+                    const found = recodesArr.find(v => v.id === bid);
+                    return { id: bid, label: found?.name || found?.label || bid };
+                });
+                setBanners(formattedBanners);
             } catch (e) { console.error('Failed to fetch banners', e); }
 
             const stubItems = resultData.stub_grid_items || [];
@@ -759,7 +789,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 var_label: item.label || '',
                 var_type: item.type || 'unknown',
                 condition: item.filter_expression || '',
-                x_info: item.banner ?? item.x_info ?? [],
+                x_info: Array.isArray(item.banner) ? item.banner : (item.banner ? [item.banner] : (item.x_info ?? [])),
                 stat_summary: item.stat_preset_id === 'default_double' ? '' : (item.stat_preset_id || ''),
                 scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
                 rank_preset_name: item.rank_preset_id || '',
@@ -865,13 +895,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
 
     const handleSave = async () => {
-        // const pageId = sessionStorage.getItem('pageId');
-        // if (!pageId || !auth?.user?.userId) {
-        //     modal.showAlert('알림', '사용자 정보나 페이지 정보를 확인할 수 없습니다.');
-        //     return false;
-        // }
-        const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-        const user = "sbbok";
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) {
+            modal.showAlert('알림', '사용자 정보나 페이지 정보를 확인할 수 없습니다.');
+            return false;
+        }
 
         // 2. Variables 객체 구성
         const variables = {};
@@ -892,10 +921,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             variables[effSourceId] = {
                 source_var_id: effSourceId,
                 recoded_var_id: effRecodedId,
-                var_label: stub.var_label,
-                var_type: stub.var_type,
+                label: stub.var_label,
+                type: stub.var_type,
                 filter_expression: stub.condition || '',
-                x_info: Array.isArray(stub.x_info) ? stub.x_info : (stub.x_info ? [stub.x_info] : []),
+                banner: Array.isArray(stub.x_info) ? stub.x_info : (stub.x_info ? [stub.x_info] : []),
                 stat_preset_id: stub.stat_summary || '',
                 scale_preset_id: stub.scale_preset_name || '',
                 rank_preset_id: stub.rank_preset_name || '',
