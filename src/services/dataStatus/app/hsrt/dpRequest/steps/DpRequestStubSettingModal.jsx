@@ -1,7 +1,8 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
-import { X, GripVertical, Plus, Trash2, Save, Copy, Check } from 'lucide-react';
+import { X, GripVertical, Plus, Trash2, Save, Copy, Check, Info } from 'lucide-react';
+import { Popup } from '@progress/kendo-react-popup';
 import '@/components/common/popup/ConditionBuilderPopup.css';
 import KendoGridV2 from '@/components/kendo/KendoGridV2';
 import { GridColumn as Column } from '@progress/kendo-react-grid';
@@ -16,8 +17,60 @@ function getUniqueId() {
 
 const STUB_TYPE_OPTIONS = ["base", "base end(count)", "OPTION", "single", "double", "mean", "median", "mode", "min", "max", "std", "sum", "variance", "rse"];
 
+// --- 커스텀 헤더 셀 (조건 아이콘) ---
+const ConditionHeaderCell = (props) => {
+    const anchorRef = useRef(null);
+    const [show, setShow] = useState(false);
 
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <span>{props.title}</span>
+            <div
+                ref={anchorRef}
+                onMouseEnter={() => setShow(true)}
+                onMouseLeave={() => setShow(false)}
+                style={{ cursor: 'pointer', display: 'flex' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <Info size={14} color="#94a3b8" />
+            </div>
 
+            <Popup
+                anchor={anchorRef.current}
+                show={show}
+                animate={false}
+                popupClass="condition-tooltip-popup"
+                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
+            >
+                <div style={{
+                    padding: '12px 16px',
+                    background: '#ffffff',
+                    width: 'max-content',
+                    minWidth: '160px',
+                    lineHeight: '1.6',
+                    color: '#334155',
+                    textAlign: 'left' // 헤더 중앙정렬 영향을 받지 않도록 분리
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                        <div style={{
+                            width: '18px', height: '18px', borderRadius: '50%',
+                            background: '#e2e8f0', color: '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '11px', fontWeight: 'bold'
+                        }}>i</div>
+                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                    </div>
+                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == 'A'</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
+                    </div>
+                </div>
+            </Popup>
+        </div>
+    );
+};
 const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onApply }) => {
     const auth = useSelector(state => state.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -217,7 +270,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         </td>
                                     )}
                                 />
-                                <Column field="logic" title="조건" width="250px" />
+                                <Column field="logic" title="조건" width="250px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" />
                                 <Column field="target_var" title="저장될 변수" width="150px" />
                                 <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" />
 
