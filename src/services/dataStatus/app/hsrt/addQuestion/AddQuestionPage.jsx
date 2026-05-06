@@ -160,7 +160,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         const user = auth?.user?.userId;
                         if (!pageId || !user) return;
                         try {
-                            const result = await deleteBaseVariable.mutateAsync({ pageid: pageId, user, ids: [bannerId] });
+                            const result = await deleteBaseVariable.mutateAsync({ pageid: pageId, user, variables: [bannerId] });
                             if (result?.success === '777') {
                                 modal.showAlert('알림', '삭제되었습니다.');
                                 await fetchVariablesData(selectedBanner === bannerId ? 'delete' : 'normal');
