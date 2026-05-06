@@ -758,8 +758,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 var_type: item.type || 'unknown',
                 condition: item.filter_expression || '',
                 x_info: item.banner ?? item.x_info ?? [],
-                stat_summary: item.stat_preset_id || '',
-                scale_preset_name: item.scale_preset_id || '',
+                stat_summary: item.stat_preset_id === 'default_double' ? '' : (item.stat_preset_id || ''),
+                scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
                 rank_preset_name: item.rank_preset_id || '',
                 group_preset_name: item.group_preset_id || '',
             }));
