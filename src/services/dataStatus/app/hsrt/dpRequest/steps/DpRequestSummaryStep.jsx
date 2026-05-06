@@ -46,6 +46,8 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [originalFolderIds, setOriginalFolderIds] = useState([]); // 초기 로딩된 폴더 ID 목록 (신규 생성 구분용)
     const [collapsedFolders, setCollapsedFolders] = useState(new Set()); // 아코디언 상태 관리용
     const [dragOverTarget, setDragOverTarget] = useState({ folderId: null, idx: null }); // 드래그 오버 상태 관리
+    
+    const scrollContainerRef = useRef(null);
 
     const toggleFolderCollapse = (folderId) => {
         setCollapsedFolders(prev => {
@@ -493,6 +495,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 };
                                 setFolders(prev => [...prev, newFolder]);
                                 if (onUnsavedChange) onUnsavedChange(true);
+                                
+                                setTimeout(() => {
+                                    if (scrollContainerRef.current) {
+                                        scrollContainerRef.current.scrollTo({
+                                            top: scrollContainerRef.current.scrollHeight,
+                                            behavior: 'smooth'
+                                        });
+                                    }
+                                }, 100);
                             }}
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
                             onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
@@ -515,6 +526,15 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 };
                                 setFolders(prev => [...prev, newFolder]);
                                 if (onUnsavedChange) onUnsavedChange(true);
+                                
+                                setTimeout(() => {
+                                    if (scrollContainerRef.current) {
+                                        scrollContainerRef.current.scrollTo({
+                                            top: scrollContainerRef.current.scrollHeight,
+                                            behavior: 'smooth'
+                                        });
+                                    }
+                                }, 100);
                             }}
                             style={{ display: 'flex', alignItems: 'center', gap: '6px', height: '32px', fontSize: '13px', background: '#fff', color: '#2563eb', border: '1px solid #2563eb', borderRadius: '4px', padding: '0 16px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s' }}
                             onMouseEnter={(e) => { e.currentTarget.style.background = '#eff6ff'; }}
@@ -601,7 +621,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
 
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                    <div className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '16px' }}>
+                    <div ref={scrollContainerRef} className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '16px' }}>
                         {folders.map((folder) => (
                             <div key={folder.id} style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '16px', background: '#fff' }}>
                                 {/* Folder Header */}
