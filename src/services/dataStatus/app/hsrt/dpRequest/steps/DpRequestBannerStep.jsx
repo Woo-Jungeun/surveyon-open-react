@@ -384,7 +384,7 @@ const BannerActionFooter = memo(({ onCreateBanner, name, onNameChange }) => {
 
 const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBannerDetail, getBaseVariableList, generateBanner, saveBannerDetail } = DpRequestPageApi();
+    const { getBannerDetail, getBaseVariableList, generateBanner, saveBannerDetail, getTableDetail } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -657,33 +657,59 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (!pageId || !auth?.user?.userId) return;
         try {
             loadingSpinner.show();
-            const result = await getBannerDetail.mutateAsync({ pageid: pageId, user: auth.user.userId });
-            if (result?.success === '777' && result.resultjson) {
-                if (result.resultjson.base_variables) {
-                    const baseVars = result.resultjson.base_variables;
+            const [bannerResult, tableResult] = await Promise.all([
+                getBannerDetail.mutateAsync({ pageid: pageId, user: auth.user.userId }),
+                getTableDetail.mutateAsync({ pageid: pageId, user: auth.user.userId })
+            ]);
+
+            let activeBannerIds = [];
+            if (bannerResult?.success === '777' && bannerResult.resultjson) {
+                activeBannerIds = bannerResult.resultjson.banner_ids || [];
+            }
+
+            if (tableResult?.success === '777' && tableResult.resultjson) {
+                if (tableResult.resultjson.base_variables) {
+                    const baseVars = tableResult.resultjson.base_variables;
                     setBaseVariables(Array.isArray(baseVars) ? baseVars : Object.values(baseVars));
                 }
-                if (result.resultjson.recoded_variables) {
-                    const raw = result.resultjson.recoded_variables;
+                if (tableResult.resultjson.recoded_variables) {
+                    const raw = tableResult.resultjson.recoded_variables;
                     const recodes = Array.isArray(raw)
                         ? raw
                         : Object.entries(raw).map(([key, val]) => ({ id: val.id || key, ...val }));
 
-                    const formatted = recodes
-                        .filter(v => String(v.id || '').toLowerCase().startsWith("banner"))
-                        .sort((a, b) => {
-                            const orderA = typeof a.recoded_order === 'number' ? a.recoded_order : 999999;
-                            const orderB = typeof b.recoded_order === 'number' ? b.recoded_order : 999999;
-                            if (orderA !== orderB) return orderA - orderB;
-                            return String(a.id || '').localeCompare(String(b.id || ''));
-                        })
-                        .map((v, i) => ({
-                            ...v,
-                            id: v.id || `var_${i}`,
-                            label: v.name || v.label,
-                            subId: v.id || `banner_0${i + 1}`,
-                            info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
-                        }));
+                    let formatted = [];
+                    if (activeBannerIds.length > 0) {
+                        formatted = activeBannerIds.map((bid) => {
+                            const found = recodes.find(r => r.id === bid) || {};
+                            return {
+                                ...found,
+                                id: bid,
+                                label: found.name || found.label || bid,
+                                subId: bid,
+                                type: 'banner',
+                                info: (found.info || found.categories || []).map(item => ({ ...item, inEdit: false }))
+                            };
+                        });
+                    } else {
+                        formatted = recodes
+                            .filter(v => String(v.id || '').toLowerCase().startsWith("banner"))
+                            .sort((a, b) => {
+                                const orderA = typeof a.recoded_order === 'number' ? a.recoded_order : 999999;
+                                const orderB = typeof b.recoded_order === 'number' ? b.recoded_order : 999999;
+                                if (orderA !== orderB) return orderA - orderB;
+                                return String(a.id || '').localeCompare(String(b.id || ''));
+                            })
+                            .map((v, i) => ({
+                                ...v,
+                                id: v.id || `var_${i}`,
+                                label: v.name || v.label,
+                                subId: v.id || `banner_0${i + 1}`,
+                                type: 'banner',
+                                info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
+                            }));
+                    }
+                    
                     setBanners(formatted);
                     history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
                     setSelectedCells([]); // 데이터 재조회 시 셀 선택 초기화
@@ -1041,8 +1067,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 [currentBannerData.id]: {
                     id: currentBannerData.id,
                     label: currentLabel, // 수정된 라벨 사용
-                    type: "single", // 기본값
-                    recoded_type: "recoded",
+                    type: "banner", // 명세에 따라 banner로 설정
                     info: currentBannerData.info.map(it => ({
                         label3: it.label3,
                         label2: it.label2,
