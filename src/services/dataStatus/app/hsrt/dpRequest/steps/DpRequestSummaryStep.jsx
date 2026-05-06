@@ -774,8 +774,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         {dragOverTarget.folderId === folder.id && dragOverTarget.idx === idx && (
                                                             <div style={{ position: 'absolute', left: '-4px', top: '10%', bottom: '10%', width: '3px', backgroundColor: '#3b82f6', borderRadius: '3px', zIndex: 10 }} />
                                                         )}
-                                                        <span style={{ fontWeight: 700, color: '#1e293b', fontSize: '11px', flexShrink: 0 }}>{itemId}</span>
-                                                        <span title={label} style={{ color: '#64748b', fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                                                        <span title={itemId} style={{ fontWeight: 700, color: '#1e293b', fontSize: '11px', flexShrink: label ? 0 : 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{itemId}</span>
+                                                        {label && (
+                                                            <span title={label} style={{ color: '#64748b', fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+                                                        )}
                                                         <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
