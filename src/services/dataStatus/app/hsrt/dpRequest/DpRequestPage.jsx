@@ -191,29 +191,54 @@ const DpRequestPage = () => {
                 {/* 우측 액션 버튼 */}
                 <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                     {currentStep === 2 && (
-                        <button
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                background: '#fff', border: '1px solid #ef4444', color: '#ef4444',
-                                padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-                                height: '36px'
-                            }}
-                            onClick={() => {
-                                modal.showConfirm('초기화', '설정을 초기화하시겠습니까?', {
-                                    btns: [
-                                        { title: '취소', click: () => {} },
-                                        { title: '초기화', click: () => {
-                                            if (step3Ref.current && step3Ref.current.reset) {
-                                                step3Ref.current.reset();
-                                            }
-                                        }}
-                                    ]
-                                });
-                            }}
-                        >
-                            <RotateCcw size={14} />
-                            <span>초기화</span>
-                        </button>
+                        <>
+                            <button
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                    background: '#fff', border: '1px solid #f59e0b', color: '#f59e0b',
+                                    padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                                    height: '36px'
+                                }}
+                                onClick={() => {
+                                    modal.showConfirm('기본 재적용', '수정되지 않은 항목들을 최신 프리셋으로 일괄 재적용하시겠습니까?', {
+                                        btns: [
+                                            { title: '취소', click: () => {} },
+                                            { title: '재적용', click: () => {
+                                                if (step3Ref.current && step3Ref.current.reapplyDefault) {
+                                                    step3Ref.current.reapplyDefault();
+                                                }
+                                            }}
+                                        ]
+                                    });
+                                }}
+                            >
+                                <RotateCcw size={14} />
+                                <span>기본 재적용</span>
+                            </button>
+                            <button
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                    background: '#fff', border: '1px solid #ef4444', color: '#ef4444',
+                                    padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                                    height: '36px'
+                                }}
+                                onClick={() => {
+                                    modal.showConfirm('초기화', '설정을 초기화하시겠습니까?', {
+                                        btns: [
+                                            { title: '취소', click: () => {} },
+                                            { title: '초기화', click: () => {
+                                                if (step3Ref.current && step3Ref.current.reset) {
+                                                    step3Ref.current.reset();
+                                                }
+                                            }}
+                                        ]
+                                    });
+                                }}
+                            >
+                                <RotateCcw size={14} />
+                                <span>초기화</span>
+                            </button>
+                        </>
                     )}
                     <button
                         className="dp-primary-btn"

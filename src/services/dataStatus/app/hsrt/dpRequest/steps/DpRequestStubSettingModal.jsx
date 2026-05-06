@@ -15,7 +15,7 @@ function getUniqueId() {
     return `combo-item-${nextId++}`;
 }
 
-const STUB_TYPE_OPTIONS = ["base", "base end(count)", "OPTION", "single", "double", "mean", "median", "mode", "min", "max", "std", "sum", "variance", "rse"];
+const STUB_TYPE_OPTIONS = ["base", "scale", "option", "mean", "std", "median", "mode", "min", "max", "var", "sum", "variance", "rse"];
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
@@ -171,57 +171,11 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     };
 
     // 적용 이벤트
-    const handleGenerate = async () => {
-        const pageId = sessionStorage.getItem('pageId');
-        if (!pageId || !auth?.user?.userId) return;
-
-        const stubId = rowData?.recoded_var_id || rowData?.source_var_id;
-
-        const infoArray = categories.filter(opt => opt.type !== 'base').map((opt, i) => ({
-            ...opt,
-            index: i + 1,
-            label: opt.label ? opt.label.replace(/^\s*/, '') : '',
-            type: opt.type,
-            logic: opt.logic || '',
-            target_var: opt.target_var || null,
-            value: opt.value || null
-        }));
-
-        const baseCategory = categories.find(opt => opt.type === 'base');
-
-        const savePayload = {
-            pageid: pageId,
-            user: auth.user.userId,
-            variables: {
-                [stubId]: {
-                    label: rowData?.var_label || '테스트 스터브',
-                    filter_expression: baseCategory ? baseCategory.logic : '',
-                    info: infoArray
-                }
-            },
-            recoded_type: {
-                [stubId]: 'recoded'
-            }
-        };
-
-        try {
-            loadingSpinner.show();
-            const result = await saveRecodedSet.mutateAsync(savePayload);
-            if (result?.success === "777") {
-                modal.showAlert('알림', '상세설정이 저장되었습니다.');
-                if (onApply) {
-                    onApply(categories);
-                }
-                onClose(); // 처리 후 모달 닫기
-            } else {
-                modal.showAlert('오류', '상세설정 저장에 실패했습니다.');
-            }
-        } catch (e) {
-            console.error(e);
-            modal.showAlert('오류', 'API 호출 중 에러가 발생했습니다.');
-        } finally {
-            loadingSpinner.hide();
+    const handleGenerate = () => {
+        if (onApply) {
+            onApply(categories);
         }
+        onClose(); // 처리 후 모달 닫기
     };
 
     if (!show) return null;
@@ -319,6 +273,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 {isDetailSetting && <Column field="label3" title="라벨3" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="prefix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="postfix" title="뒷문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="postfix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="round" title="소수점" width="100px" headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="round" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="hide" title="숨기기" width="100px" headerClassName="k-text-center" cell={(p) => (
                                     <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '4px' }}>
                                         <div

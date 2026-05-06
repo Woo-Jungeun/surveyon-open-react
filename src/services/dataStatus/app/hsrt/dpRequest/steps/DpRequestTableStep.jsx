@@ -644,7 +644,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getRecodedOverview, saveRecodedOverview, getTableDetail, getBannerDetail } = DpRequestPageApi();
+    const { getRecodedOverview, saveRecodedOverview, getTableDetail, getBannerDetail, createStub } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
@@ -714,13 +714,14 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const requestData = {
                     pageid: pageId,
                     user: user,
-                    variables: {},
+                    reset_to_default: true,
                     dp_request_recoded_items: [],
                     summary_folders: [],
-                    delete_ids: originalRecodedIds,
+                    order_ids: [],
+                    delete_ids: [],
+                    variables: {},
                     auto_recode: true,
-                    auto_generate_summary: false,
-                    reset_to_default: true
+                    auto_generate_summary: false
                 };
                 const result = await saveRecodedOverview.mutateAsync(requestData);
                 if (result?.success === "777") {
@@ -736,6 +737,23 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             } finally {
                 loadingSpinner.hide();
             }
+        },
+        reapplyDefault: async () => {
+            const targetIds = stubs.filter(s => {
+                const isSummary = s.var_type === 'summary';
+                const isCustom = s.stub_kind === 'custom' || (!s.stub_kind && !s.source_var_id);
+                const isCopied = String(s.recoded_var_id).includes('_copy_');
+                const hasCustomizedFields = s.customized_fields && s.customized_fields.length > 0;
+                
+                return !isSummary && !isCustom && !isCopied && s.preset_dirty && !hasCustomizedFields;
+            }).map(s => s.recoded_var_id);
+
+            if (targetIds.length === 0) {
+                modal.showAlert('알림', '기본 재적용 대상 항목이 없습니다.');
+                return;
+            }
+
+            await handleSave(targetIds);
         }
     }));
 
@@ -784,6 +802,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const mappedStubs = stubItems.map(item => ({
                 ...item,
+                _row_id: `row_${Date.now()}_${Math.random()}`,
                 source_var_id: item.source_var_id || item.recoded_var_id,
                 recoded_var_id: item.recoded_var_id,
                 var_label: item.label || '',
@@ -798,6 +817,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             const mappedSummaries = summaryFolders.map(folder => ({
                 ...folder,
+                _row_id: `row_${Date.now()}_${Math.random()}`,
                 source_var_id: folder.id,
                 recoded_var_id: folder.stub_id,
                 var_label: folder.name || '',
@@ -854,12 +874,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, [onUnsavedChange]);
 
     const handleCellUpdate = useCallback((item, field, value) => {
-        const targetIdStr = String(item.source_var_id);
-
-        if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(targetIdStr)) {
+        const targetId = item._row_id;
+        if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(String(item.source_var_id))) {
             setStubs(prev => prev.map(s => stubDragSelectedIds.has(String(s.source_var_id)) ? { ...s, [field]: value } : s));
         } else {
-            setStubs(prev => prev.map(s => s.source_var_id === item.source_var_id ? { ...s, [field]: value } : s));
+            setStubs(prev => prev.map(s => s._row_id === targetId ? { ...s, [field]: value } : s));
         }
 
         // 작업 후 선택 초기화
@@ -870,31 +889,74 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
-    // 행 추가 시 고유 ID 생성 (counter 방식으로 중복 방지)
-    const newRowIdRef = useRef(0);
-    const newRowTemplate = useMemo(() => ({
-        get source_var_id() { return `new_${Date.now()}_${newRowIdRef.current++}`; },
-        recoded_var_id: '',
-        var_label: '',
-        var_type: '',
-        condition: '',
-        x_info: [],
-        stat_summary: '',
-        scale_preset_name: '',
-        rank_preset_name: '',
-        group_preset_name: '',
-    }), []);
+    const handleRowAdd = async (insertAfterIdx) => {
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        const insertAfterId = insertAfterIdx !== undefined && insertAfterIdx !== null ? stubs[insertAfterIdx].recoded_var_id : null;
+
+        try {
+            loadingSpinner.show();
+            const res = await createStub.mutateAsync({
+                pageid: pageId,
+                user: user,
+                insert_after_id: insertAfterId,
+                label: "새 스터브"
+            });
+            const newStub = res?.resultjson?.stub_item || res?.data?.resultjson?.stub_item;
+            if (!newStub) throw new Error("No stub item returned");
+
+            const newRow = {
+                ...newStub,
+                _row_id: `row_${Date.now()}_${Math.random()}`,
+                source_var_id: newStub.source_var_id ?? null,
+                recoded_var_id: newStub.recoded_var_id,
+                var_label: newStub.label || '',
+                var_type: newStub.type || 'unknown',
+                condition: newStub.filter_expression || '',
+                x_info: Array.isArray(newStub.banner) ? newStub.banner : (newStub.banner ? [newStub.banner] : (newStub.x_info ?? [])),
+                stat_summary: newStub.stat_preset_id || '',
+                scale_preset_name: newStub.scale_preset_id || '',
+                rank_preset_name: newStub.rank_preset_id || '',
+                group_preset_name: newStub.group_preset_id || '',
+            };
+
+            setStubs(prev => {
+                const next = [...prev];
+                if (insertAfterIdx !== undefined && insertAfterIdx !== null) {
+                    next.splice(insertAfterIdx + 1, 0, newRow);
+                } else {
+                    next.push(newRow);
+                }
+                return next;
+            });
+            if (onUnsavedChange) onUnsavedChange(true);
+        } catch (err) {
+            console.error(err);
+            modal.showAlert('오류', '새 스터브 생성에 실패했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
+
+    const handleRowCopy = (idx) => {
+        if (idx === undefined || idx === null) return;
+        setStubs(prev => {
+            const target = prev[idx];
+            const next = [...prev];
+            const newRow = {
+                ...target,
+                _row_id: `row_${Date.now()}_${Math.random()}`,
+                recoded_var_id: `${target.recoded_var_id}_copy_${Math.floor(Math.random() * 1000)}`,
+                var_label: `${target.var_label}_copy`,
+            };
+            next.splice(idx + 1, 0, newRow);
+            return next;
+        });
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
 
 
-    const duplicateRowTemplate = useCallback((targetRow) => {
-        return {
-            ...targetRow,
-            source_var_id: `new_${Date.now()}_${newRowIdRef.current++}`
-        };
-    }, []);
-
-
-    const handleSave = async () => {
+    const handleSave = async (forceReapplyIds = []) => {
         const pageId = sessionStorage.getItem('pageId');
         const user = auth?.user?.userId;
         if (!pageId || !user) {
@@ -902,45 +964,98 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             return false;
         }
 
-        // 2. Variables 객체 구성
-        const variables = {};
+        // 2. stub 목록과 summary 목록 분리
+        const stubItems = [];
+        const summaryFolders = [];
+
         for (const stub of stubs) {
+            // summary 타입은 summary_folders로 분리
+            if (stub.var_type === 'summary') {
+                summaryFolders.push({
+                    stub_id: stub.recoded_var_id,
+                    label: stub.var_label || '',
+                    items: Array.isArray(stub.items) ? stub.items : []
+                });
+                continue;
+            }
+
             let effSourceId = stub.source_var_id;
             let effRecodedId = stub.recoded_var_id;
 
-            // 새로 추가한 항일 경우, 사용자가 입력한 변수(recoded_var_id)값을 source_var_id로도 사용합니다.
-            if (String(stub.source_var_id).startsWith('new_')) {
-                if (!stub.recoded_var_id || !stub.recoded_var_id.trim()) {
-                    modal.showAlert('알림', '새로 추가한 열의 "변수" 필드를 입력해주세요.');
-                    return false;
-                }
-                effSourceId = stub.recoded_var_id.trim();
-                effRecodedId = stub.recoded_var_id.trim();
+            // 새로 추가한 항목인 경우 (이제 API로 추가되므로 이 로직은 사실상 쓰이지 않지만 복사/수동 추가를 위해 남김)
+            if (!stub.recoded_var_id || !stub.recoded_var_id.trim()) {
+                modal.showAlert('알림', '모든 열의 "변수" 필드를 입력해주세요.');
+                return false;
+            }
+            effRecodedId = stub.recoded_var_id.trim();
+            effSourceId = stub.source_var_id ?? null;
+
+            let filterExp = stub.condition || null;
+            let infoArray = undefined;
+
+            if (stub.info) {
+                const baseCategory = stub.info.find(opt => opt.type === 'base');
+                if (baseCategory) filterExp = baseCategory.logic || null;
+                
+                infoArray = stub.info.filter(opt => opt.type !== 'base').map((opt, i) => {
+                    const isStat = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"].includes(opt.type);
+                    const rowRole = isStat ? "stat" : (opt.row_role || "item");
+                    
+                    let mappedLine = null;
+                    if (opt.line === "일반선") mappedLine = "thin";
+                    else if (opt.line === "굵은선") mappedLine = "thick";
+                    else if (opt.line === "이중선") mappedLine = "double";
+                    else if (opt.line && opt.line !== "선택 안함") mappedLine = opt.line;
+
+                    return {
+                        ...opt,
+                        index: i + 1,
+                        label: opt.label ? opt.label.replace(/^\s*/, '') : '',
+                        type: opt.type,
+                        row_role: rowRole,
+                        target_var: opt.target_var || null,
+                        line: mappedLine,
+                        round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isStat ? 2 : undefined),
+                        logic: opt.logic || '',
+                        value: opt.value || null
+                    };
+                });
             }
 
-            variables[effSourceId] = {
+            stubItems.push({
                 source_var_id: effSourceId,
                 recoded_var_id: effRecodedId,
-                label: stub.var_label,
-                type: stub.var_type,
-                filter_expression: stub.condition || '',
+                label: stub.var_label || '',
+                stub_kind: effSourceId ? 'source_based' : 'custom',
+                scale_preset_id: stub.scale_preset_name || null,
+                rank_preset_id: stub.rank_preset_name || null,
+                group_preset_id: stub.group_preset_name || null,
+                stat_preset_id: stub.stat_summary || null,
+                filter_expression: filterExp,
                 banner: Array.isArray(stub.x_info) ? stub.x_info : (stub.x_info ? [stub.x_info] : []),
-                stat_preset_id: stub.stat_summary || '',
-                scale_preset_id: stub.scale_preset_name || '',
-                rank_preset_id: stub.rank_preset_name || '',
-                group_preset_id: stub.group_preset_name || ''
-            };
+                info: infoArray
+            });
         }
 
         // 3. 삭제될 ID 추출 (원본에 있었지만 현재는 없는 recoded_var_id)
         const currentRecodedIds = stubs.map(s => s.recoded_var_id).filter(Boolean);
         const deletedIds = originalRecodedIds.filter(id => !currentRecodedIds.includes(id));
 
+        // 4. 현재 순서 배열 (order_ids)
+        const orderIds = stubs.map(s => s.recoded_var_id?.trim()).filter(Boolean);
+
         const requestData = {
             pageid: pageId,
             user: user,
-            variables: variables,
-            delete_ids: deletedIds
+            dp_request_recoded_items: stubItems,
+            summary_folders: summaryFolders,
+            order_ids: orderIds,
+            delete_ids: deletedIds,
+            variables: {},
+            force_reapply_preset_ids: forceReapplyIds,
+            auto_recode: true,
+            auto_generate_summary: false,
+            reset_to_default: false
         };
 
         loadingSpinner.show();
@@ -1017,8 +1132,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             deletable={!searchTerm}
                             reorderable={!searchTerm}
                             deletePos="start"
-                            newRowTemplate={newRowTemplate}
-                            duplicateRowTemplate={duplicateRowTemplate}
+                            onAdd={handleRowAdd}
+                            onCopy={handleRowCopy}
                         >
                             <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}

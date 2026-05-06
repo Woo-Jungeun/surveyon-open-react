@@ -49,6 +49,8 @@ const KendoGridV3 = (props) => {
         duplicateRowTemplate,
         onDataChange,
         onRowClick,
+        onAdd,
+        onCopy,
         ...rest
     } = props;
 
@@ -80,6 +82,10 @@ const KendoGridV3 = (props) => {
     };
 
     const handleAdd = (idx) => {
+        if (onAdd) {
+            onAdd(idx);
+            return;
+        }
         if (!onDataChange) return;
         const newData = [...data];
         const newRow = { ...newRowTemplate, [editField]: false };
@@ -92,6 +98,10 @@ const KendoGridV3 = (props) => {
     };
 
     const handleCopy = (idx) => {
+        if (onCopy) {
+            onCopy(idx);
+            return;
+        }
         if (!onDataChange || idx === undefined || idx === null) return;
         const newData = [...data];
         const targetObj = newData[idx];

@@ -115,6 +115,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 신규 스터브 생성 API */
+    const createStub = useMutation(
+        async (data) => await api.post(data, "/dp-request/recoded/stubs/create", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** DP 의뢰서 - 요약표 자동 생성 (척도형) */
     const generateSummaryAuto = useMutation(
         async (data) => await api.post(data, "/dp-request/summary/auto-generate", "API_BASE_URL_DATASTATUS"),
@@ -193,6 +202,7 @@ export function DpRequestPageApi() {
         getRecodedOverview,
         saveRecodedOverview,
         saveRecodedSet,
+        createStub,
         getOrderDetail,
         saveOrderDetail,
         evaluateVariable,
