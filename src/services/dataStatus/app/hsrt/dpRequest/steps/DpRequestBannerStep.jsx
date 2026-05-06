@@ -381,6 +381,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const [selectedCells, setSelectedCells] = useState([]); // [{r, c}]
     const [isSelecting, setIsSelecting] = useState(false);
+    const selectionAnchorRef = useRef(null);
     const [contextMenu, setContextMenu] = useState(null); // {x, y, r, c}
 
     // --- 삭제 관리용 스테이트 추가 ---
@@ -765,18 +766,70 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         updateBannerInfo(newData);
     }, [banners, selectedBanner, updateBannerInfo]);
 
+    const getCellRowSpanRange = useCallback((data, dataIndex, field) => {
+        if (!data || !data[dataIndex]) return { min: dataIndex, max: dataIndex };
+        
+        let deps = [];
+        if (field === 'label') deps = ['label3', 'label2'];
+        else if (field === 'label2') deps = ['label3'];
+        
+        let minR = dataIndex;
+        // find upwards
+        for (let i = dataIndex - 1; i >= 0; i--) {
+            if (data[i][`_unmerged_${field}`]) break;
+            let isSame = data[i][field] === data[dataIndex][field];
+            if (isSame && deps.length > 0) {
+                for (let dep of deps) {
+                    if (data[i][dep] !== data[dataIndex][dep]) {
+                        isSame = false; break;
+                    }
+                }
+            }
+            if (isSame) minR = i;
+            else break;
+        }
+        
+        let maxR = dataIndex;
+        // find downwards
+        for (let i = dataIndex + 1; i < data.length; i++) {
+            if (data[i][`_unmerged_${field}`]) break;
+            let isSame = data[i][field] === data[dataIndex][field];
+            if (isSame && deps.length > 0) {
+                for (let dep of deps) {
+                    if (data[i][dep] !== data[dataIndex][dep]) {
+                        isSame = false; break;
+                    }
+                }
+            }
+            if (isSame) maxR = i;
+            else break;
+        }
+        
+        return { min: minR, max: maxR };
+    }, []);
+
     const handleCellMouseDown = useCallback((e, rowIndex, field) => {
         setIsSelecting(true);
-        setSelectedCells([{ r: rowIndex, c: field }]);
+        selectionAnchorRef.current = { r: rowIndex, c: field };
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        const data = currentBanner?.info || [];
+        const range = getCellRowSpanRange(data, rowIndex, field);
+        
+        const newSelection = [];
+        for (let i = range.min; i <= range.max; i++) {
+            newSelection.push({ r: i, c: field });
+        }
+        setSelectedCells(newSelection);
         setContextMenu(null);
-    }, []);
+    }, [banners, selectedBanner, getCellRowSpanRange]);
 
     const handleCellMouseEnter = useCallback((rowIndex, field) => {
         if (!isSelecting) return;
         
         setSelectedCells(prev => {
-            if (prev.length === 0) return [{ r: rowIndex, c: field }];
-            const start = prev[0];
+            const start = selectionAnchorRef.current;
+            if (!start) return prev;
+            
             const newSelection = [];
             
             const colFields = ['label3', 'label2', 'label'];
@@ -785,19 +838,36 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             
             if (startColIdx === -1 || currColIdx === -1) return prev;
 
-            const minRow = Math.min(start.r, rowIndex);
-            const maxRow = Math.max(start.r, rowIndex);
             const minCol = Math.min(startColIdx, currColIdx);
             const maxCol = Math.max(startColIdx, currColIdx);
+            
+            const currentBanner = banners.find(b => b.id === selectedBanner);
+            const data = currentBanner?.info || [];
 
-            for (let r = minRow; r <= maxRow; r++) {
+            let expandedMinR = Math.min(start.r, rowIndex);
+            let expandedMaxR = Math.max(start.r, rowIndex);
+            let changing = true;
+            
+            // Expand vertically to cover the full rowSpan of any selected cells
+            while (changing) {
+                changing = false;
+                for (let r = expandedMinR; r <= expandedMaxR; r++) {
+                    for (let c = minCol; c <= maxCol; c++) {
+                        const range = getCellRowSpanRange(data, r, colFields[c]);
+                        if (range.min < expandedMinR) { expandedMinR = range.min; changing = true; }
+                        if (range.max > expandedMaxR) { expandedMaxR = range.max; changing = true; }
+                    }
+                }
+            }
+
+            for (let r = expandedMinR; r <= expandedMaxR; r++) {
                 for (let c = minCol; c <= maxCol; c++) {
                     newSelection.push({ r, c: colFields[c] });
                 }
             }
             return newSelection;
         });
-    }, [isSelecting]);
+    }, [isSelecting, banners, selectedBanner, getCellRowSpanRange]);
 
     const handleContextMenu = useCallback((e, rowIndex, field) => {
         e.preventDefault();
