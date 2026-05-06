@@ -270,7 +270,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                         <GripVertical size={14} />
                     </div>
                 )}
-                <div style={{ flex: 1, minWidth: 0, paddingLeft: level ? '2px' : '0', cursor: 'text' }} onDoubleClick={() => setIsEditing(true)}>
+                <div style={{ flex: 1, minWidth: 0, paddingLeft: level ? '2px' : '0', cursor: 'text', whiteSpace: 'pre-wrap', wordBreak: 'break-word' }} onDoubleClick={() => setIsEditing(true)}>
                     {localVal || (placeholder ? <span style={{ fontSize: '11px', opacity: 0.7 }}>{placeholder}</span> : (field === 'logic' ? '' : '-'))}
                 </div>
             </div>
