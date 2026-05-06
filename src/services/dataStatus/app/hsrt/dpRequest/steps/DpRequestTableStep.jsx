@@ -479,6 +479,8 @@ const PresetDropdownCell = React.memo(({ field, dataItem, presets, onChange }) =
             onMouseDownCapture={field === 'x_info' ? preventCtrlEvent : undefined}
             onClickCapture={field === 'x_info' ? preventCtrlEvent : undefined}
             onMouseDown={field === 'x_info' ? e => e.stopPropagation() : undefined}
+            draggable={field === 'x_info' ? true : undefined}
+            onDragStart={field === 'x_info' ? e => { e.stopPropagation(); e.preventDefault(); } : undefined}
             className={field === 'x_info' ? getStubDragClasses(dataItem.source_var_id) : ''}
             style={{ padding: '1px 4px', verticalAlign: 'middle', userSelect: 'none' }}
         >
