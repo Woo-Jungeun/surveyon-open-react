@@ -810,16 +810,61 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 ? resultData.order_ids
                 : (resultData.default_order_ids || []);
 
-            // variables에서 custom stub도 보완 (stub_grid_items에 없는 경우)
             const variablesMap = resultData.variables || {};
-            const stubItemIds = new Set(stubItems.map(s => s.recoded_var_id).filter(Boolean));
+
+            // [호환성 처리] 과거 데이터나 API에서 rank_child를 stub_grid_items에 주고 variablesMap에 안 준 경우 복원
+            const tempStubIdsSet = new Set([
+                ...stubItems.map(s => s.recoded_var_id).filter(Boolean),
+                ...Object.keys(variablesMap)
+            ]);
+
+            const applyRankChildFallback = (id, sourceItem) => {
+                if (!id) return;
+                const match = id.match(/^(.*)_\((.+)\)$/);
+                if (match) {
+                    const parentId = match[1];
+                    // 부모가 존재하는 경우에만 자식으로 인정 (예기치 않은 이름 매칭 방지)
+                    if (tempStubIdsSet.has(parentId)) {
+                        if (!variablesMap[id]) {
+                            variablesMap[id] = {
+                                id: id,
+                                source_var_id: sourceItem?.source_var_id || parentId.replace(/_stub$/, ''),
+                                label: sourceItem?.label || sourceItem?.var_label || '',
+                                generated_kind: 'rank_child',
+                                parent_stub_id: parentId,
+                                rank_output: match[2],
+                                condition: sourceItem?.condition || sourceItem?.filter_expression || '',
+                                info: sourceItem?.info || []
+                            };
+                        } else {
+                            variablesMap[id].generated_kind = 'rank_child';
+                            variablesMap[id].parent_stub_id = parentId;
+                            variablesMap[id].rank_output = variablesMap[id].rank_output || match[2];
+                        }
+                    }
+                }
+            };
+
+            stubItems.forEach(s => applyRankChildFallback(s.recoded_var_id, s));
+            Object.keys(variablesMap).forEach(k => applyRankChildFallback(k, variablesMap[k]));
+
+            // 서버에서 혹시 rank child를 메인 배열에 내려주는 경우를 대비해 메인 목록에서 강제 제외
+            const parentOnlyStubItems = stubItems.filter(s => {
+                const v = variablesMap[s.recoded_var_id];
+                return !(v && (v.generated_kind === 'rank_child' || v.parent_stub_id));
+            });
+
+            // variables에서 custom stub도 보완 (stub_grid_items에 없는 경우)
+            const stubItemIds = new Set(parentOnlyStubItems.map(s => s.recoded_var_id).filter(Boolean));
             const extraCustomStubs = Object.values(variablesMap).filter(v =>
                 v.variable_role === 'stub' &&
                 (v.stub_kind === 'custom' || !v.source_var_id) &&
-                !stubItemIds.has(v.id)
+                !stubItemIds.has(v.id) &&
+                v.generated_kind !== 'rank_child' &&
+                !v.parent_stub_id
             );
 
-            const allStubItems = [...stubItems, ...extraCustomStubs.map(v => ({
+            const allStubItems = [...parentOnlyStubItems, ...extraCustomStubs.map(v => ({
                 recoded_var_id: v.id,
                 source_var_id: null, // custom stub은 source_var_id를 null 유지
                 _is_custom: true,
@@ -834,46 +879,119 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 info: v.info || [],
             }))];
 
-            setOriginalRecodedIds(allStubItems.map(item => item.recoded_var_id).filter(Boolean));
+            // 1. 모든 원본 식별자 수집 (추후 삭제 감지용)
+            const allOriginalIds = new Set();
+            stubItems.forEach(s => s.recoded_var_id && allOriginalIds.add(s.recoded_var_id));
+            Object.keys(variablesMap).forEach(k => allOriginalIds.add(k));
+            summaryFolders.forEach(s => s.stub_id && allOriginalIds.add(s.stub_id));
+            setOriginalRecodedIds(Array.from(allOriginalIds));
 
-            const mappedStubs = allStubItems.map(item => ({
-                ...item,
-                _row_id: `row_${Date.now()}_${Math.random()}`,
-                _is_custom: item._is_custom || false,
-                // custom stub은 source_var_id를 null로 유지해야 handleSave에서 stub_kind:'custom'으로 저장됨
-                source_var_id: item._is_custom ? null : (item.source_var_id || item.recoded_var_id),
-                recoded_var_id: item.recoded_var_id,
-                var_label: item.label || '',
-                var_type: item.type || 'custom',
-                condition: item.filter_expression || item.condition || '',
-                x_info: Array.isArray(item.banner) ? item.banner[0] || '' : (item.banner || item.x_info || ''),
-                stat_summary: item.stat_preset_id === 'default_double' ? '' : (item.stat_preset_id || ''),
-                scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
-                rank_preset_name: item.rank_preset_id || '',
-                group_preset_name: item.group_preset_id || '',
-            }));
+            const mappedStubs = allStubItems.map(item => {
+                const v = variablesMap[item.recoded_var_id] || {};
+                const parentType = item.type || v.type || 'custom';
+                const isRankParent = parentType === 'rank' || parentType === 'multi' || parentType === 'minrank' || parentType === 'maxrank';
+                let infoArray = v.info || item.info || [];
+                
+                if (isRankParent) {
+                    const children = Object.values(variablesMap)
+                        .filter(child => child.parent_stub_id === item.recoded_var_id && child.generated_kind === 'rank_child')
+                        .sort((a, b) => {
+                            const valA = Number(a.rank_output || (a.info && a.info[0] ? a.info[0].value : 0));
+                            const valB = Number(b.rank_output || (b.info && b.info[0] ? b.info[0].value : 0));
+                            return valA - valB;
+                        });
+                    const childrenInfo = children.map(child => {
+                        const childOpt = child.info && child.info[0] ? child.info[0] : {};
+                        return {
+                            ...childOpt,
+                            id: child.id,
+                            label: childOpt.label || child.label,
+                            type: 'rank',
+                            logic: childOpt.logic !== undefined ? childOpt.logic : (child.condition || ''),
+                            value: childOpt.value !== undefined ? childOpt.value : (child.rank_output || '')
+                        };
+                    });
+                    if (childrenInfo.length > 0) {
+                        infoArray = [...infoArray.filter(i => i.type !== 'rank'), ...childrenInfo];
+                    }
+                }
 
-            const mappedSummaries = summaryFolders.map(folder => ({
-                ...folder,
-                _row_id: `row_${Date.now()}_${Math.random()}`,
-                source_var_id: folder.id,
-                recoded_var_id: folder.stub_id,
-                var_label: folder.name || '',
-                var_type: 'summary',
-                condition: '',
-                x_info: folder.banner ?? folder.x_info ?? [],
-                stat_summary: '',
-                scale_preset_name: '',
-                rank_preset_name: '',
-                group_preset_name: '',
-            }));
+                return {
+                    ...item,
+                    _row_id: `row_${Date.now()}_${Math.random()}`,
+                    _is_custom: item._is_custom || false,
+                    source_var_id: (() => {
+                        const vObj = variablesMap[item.recoded_var_id] || {};
+                        if (item._is_custom || vObj.stub_kind === 'custom' || parentType === 'custom' || String(item.recoded_var_id).startsWith('custom_stub_')) return null;
+                        
+                        let sid = item.source_var_id || item.recoded_var_id;
+                        if (isRankParent && String(sid).endsWith('_stub')) {
+                            return String(sid).replace(/_stub$/, '');
+                        }
+                        return sid;
+                    })(),
+                    recoded_var_id: item.recoded_var_id,
+                    var_label: item.label || '',
+                    var_type: parentType,
+                    condition: item.filter_expression || item.condition || '',
+                    x_info: Array.isArray(item.banner) ? item.banner[0] || '' : (item.banner || item.x_info || ''),
+                    stat_summary: item.stat_preset_id === 'default_double' ? '' : (item.stat_preset_id || ''),
+                    scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
+                    rank_preset_name: item.rank_preset_id || '',
+                    group_preset_name: item.group_preset_id || '',
+                    info: infoArray
+                };
+            });
+
+            const mappedSummaries = summaryFolders.map(folder => {
+                const varObj = variablesMap[folder.stub_id] || {};
+                const getFallbackLabel = (id) => {
+                    if (!id) return '';
+                    const parts = id.split('_');
+                    if (parts.length >= 3 && parts[0] === 'summary') {
+                        const prefix = parts[1].toUpperCase();
+                        const suffix = parts[2].toUpperCase();
+                        let suffixText = suffix;
+                        if (suffix === 'TOP') suffixText = 'Top';
+                        if (suffix === 'MID') suffixText = 'Mid';
+                        if (suffix === 'BOT') suffixText = 'Bot';
+                        if (suffix === 'MEAN') suffixText = '평균';
+                        return `${prefix} - ${suffixText} 요약`;
+                    }
+                    return id;
+                };
+
+                return {
+                    ...folder,
+                    _row_id: `row_${Date.now()}_${Math.random()}`,
+                    source_var_id: folder.id,
+                    recoded_var_id: folder.stub_id,
+                    var_label: folder.label || varObj.label || folder.name || folder.var_label || getFallbackLabel(folder.stub_id),
+                    var_type: 'summary',
+                    condition: '',
+                    x_info: folder.banner ?? folder.x_info ?? [],
+                    stat_summary: '',
+                    scale_preset_name: '',
+                    rank_preset_name: '',
+                    group_preset_name: '',
+                };
+            });
 
             const allItems = [...mappedStubs, ...mappedSummaries];
             const itemMap = new Map(allItems.map(item => [item.recoded_var_id, item]));
 
             const sorted = [];
+            const seenParent = new Set();
             orderIds.forEach(id => {
-                if (itemMap.has(id)) {
+                const childVar = variablesMap[id];
+                if (childVar && childVar.generated_kind === 'rank_child' && childVar.parent_stub_id) {
+                    const parentId = childVar.parent_stub_id;
+                    if (!seenParent.has(parentId) && itemMap.has(parentId)) {
+                        sorted.push(itemMap.get(parentId));
+                        itemMap.delete(parentId);
+                        seenParent.add(parentId);
+                    }
+                } else if (itemMap.has(id)) {
                     sorted.push(itemMap.get(id));
                     itemMap.delete(id);
                 }
@@ -968,11 +1086,6 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 return next;
             });
             if (onUnsavedChange) onUnsavedChange(true);
-
-            // 목록 하단으로 스크롤 이동
-            setTimeout(() => {
-                gridRef.current?.scrollToBottom();
-            }, 100);
         } catch (err) {
             console.error(err);
             modal.showAlert('오류', '새 스터브 생성에 실패했습니다.');
@@ -1017,6 +1130,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (stub.var_type === 'summary') {
                 summaryFolders.push({
                     stub_id: stub.recoded_var_id,
+                    name: stub.var_label || '',
                     label: stub.var_label || '',
                     items: Array.isArray(stub.items) ? stub.items : []
                 });
@@ -1034,10 +1148,18 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             effRecodedId = stub.recoded_var_id.trim();
             effSourceId = stub.source_var_id ?? null;
 
+            // 커스텀 스터브는 원본 변수가 없어야 함 (에러 방지)
+            if (stub.var_type === 'custom' || effRecodedId.startsWith('custom_stub_') || stub._is_custom) {
+                effSourceId = null;
+            }
+
+            const isRankParent = stub.var_type === 'rank' || stub.var_type === 'multi' || stub.var_type === 'minrank' || stub.var_type === 'maxrank';
+
             let filterExp = stub.condition || null;
             let infoArray = undefined;
 
             if (stub.info) {
+                let rankChildCount = 0;
                 infoArray = stub.info.map((opt, i) => {
                     const isBase = opt.type === 'base';
                     const isStat = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"].includes(opt.type);
@@ -1045,6 +1167,18 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                     if (isBase) {
                         filterExp = opt.logic || null;
+                    }
+
+                    // ID 보정 (임시 ID 제거 및 rank parent 형식 맞춤)
+                    const isTempId = opt.id && (String(opt.id).startsWith('combo-item-') || String(opt.id).startsWith('opt_'));
+                    let finalId = (!isTempId && opt.id) ? opt.id : undefined;
+
+                    if (isRankParent && opt.type === 'rank') {
+                        const rankVal = opt.value !== undefined && opt.value !== null && opt.value !== '' ? opt.value : (rankChildCount + 1);
+                        finalId = `${effRecodedId}_(${rankVal})`;
+                        rankChildCount++;
+                    } else if (!finalId) {
+                        finalId = `opt_${Date.now()}_${i}`;
                     }
 
                     let mappedLine = null;
@@ -1055,6 +1189,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
                     return {
                         ...opt,
+                        id: finalId,
                         index: i + 1,
                         label: opt.label ? opt.label.replace(/^\s*/, '') : '',
                         type: opt.type,
@@ -1063,7 +1198,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                         line: mappedLine,
                         round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isStat ? 2 : null),
                         logic: opt.logic || '',
-                        value: opt.value || null
+                        value: opt.value !== undefined && opt.value !== null && String(opt.value).trim() !== '' && !isNaN(Number(opt.value)) ? Number(opt.value) : null
                     };
                 });
             }
@@ -1074,7 +1209,6 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 : [];
 
             // 1) dp_request_recoded_items: 원본 base variable 기반인 경우만
-            //    source_var_id === recoded_var_id이면 rank preset 파생 변수 → 제외
             if (effSourceId && effSourceId !== effRecodedId) {
                 stubItems.push({
                     source_var_id: effSourceId,
@@ -1104,16 +1238,61 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 stat_preset_id: stub.stat_summary || null,
                 condition: filterExp || null,
                 banner: bannerArr,
-                info: infoArray
+                info: infoArray ? infoArray.filter(opt => !isRankParent || opt.type !== 'rank') : undefined
             };
+
+            // Rank 자식 별도 저장
+            if (isRankParent && infoArray) {
+                const rankOpts = infoArray.filter(opt => opt.type === 'rank');
+                rankOpts.forEach(opt => {
+                    variablesMap[opt.id] = {
+                        id: opt.id,
+                        source_var_id: effSourceId || null, // 부모의 source_var_id
+                        label: opt.label || '',
+                        type: stub.var_type,
+                        banner: bannerArr,
+                        generated_kind: 'rank_child',
+                        parent_stub_id: effRecodedId,
+                        rank_output: String(opt.value),
+                        info: [{ ...opt, row_role: 'option', id: undefined }],
+                        variable_role: 'stub',
+                        stub_kind: effSourceId ? 'source_based' : 'custom',
+                        managed_by: 'dp_request',
+                        metadata_status: 'explicit'
+                    };
+                });
+            }
         }
 
         // 3. 삭제될 ID 추출 (원본에 있었지만 현재는 없는 recoded_var_id)
-        const currentRecodedIds = stubs.map(s => s.recoded_var_id).filter(Boolean);
+        const currentRecodedIds = [];
+        Object.keys(variablesMap).forEach(k => currentRecodedIds.push(k));
+        summaryFolders.forEach(s => currentRecodedIds.push(s.stub_id));
         const deletedIds = originalRecodedIds.filter(id => !currentRecodedIds.includes(id));
 
         // 4. 현재 순서 배열 (order_ids)
-        const orderIds = stubs.map(s => s.recoded_var_id?.trim()).filter(Boolean);
+        const orderIds = [];
+        for (const s of stubs) {
+            if (s.recoded_var_id) {
+                const isRankParent = s.var_type === 'rank' || s.var_type === 'multi' || s.var_type === 'minrank' || s.var_type === 'maxrank';
+                if (isRankParent && s.info) {
+                    const rankOpts = s.info.filter(opt => opt.type === 'rank');
+                    if (rankOpts.length > 0) {
+                        let rankChildCount = 0;
+                        rankOpts.forEach(opt => {
+                            const rankVal = opt.value !== undefined && opt.value !== null && opt.value !== '' ? opt.value : (rankChildCount + 1);
+                            const childId = `${s.recoded_var_id}_(${rankVal})`;
+                            orderIds.push(childId);
+                            rankChildCount++;
+                        });
+                    } else {
+                        orderIds.push(s.recoded_var_id.trim());
+                    }
+                } else {
+                    orderIds.push(s.recoded_var_id.trim());
+                }
+            }
+        }
 
         const requestData = {
             pageid: pageId,

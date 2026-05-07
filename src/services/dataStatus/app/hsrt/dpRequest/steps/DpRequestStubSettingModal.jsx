@@ -15,7 +15,7 @@ function getUniqueId() {
     return `combo-item-${nextId++}`;
 }
 
-const STUB_TYPE_OPTIONS = ["base", "scale", "option", "mean", "std", "median", "mode", "min", "max", "var", "sum", "variance", "rse"];
+const STUB_TYPE_OPTIONS = ["base", "scale", "option", "mean", "std", "median", "mode", "min", "max", "var", "sum", "variance", "rse", "rank"];
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
