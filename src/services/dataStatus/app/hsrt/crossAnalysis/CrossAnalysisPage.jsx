@@ -983,7 +983,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setUiSettings(ui);
                 setShowN(ui.format_show_n ?? true);
                 setDecimalN(ui.format_n_round ?? ctxPayload.n_digits ?? 0);
-                setShowPct(ui.format_show_percent ?? ui.format_show_percent === false ? false : true);
+                setShowPct(ui.format_show_percent ?? true);
                 setDecimalPct(ui.format_percent_round ?? ctxPayload.percent_digits ?? 1);
             }
 
