@@ -119,14 +119,14 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             </div>
 
             {/* 1. 상단: 실시간 미리보기 (고정) */}
-            <div style={{ position: 'sticky', top: '-20px', zIndex: 10, background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', marginBottom: '-20px', paddingTop: '10px' }}>
+            <div style={{ position: 'sticky', top: '-20px', zIndex: 10, background: '#F1F5F9', margin: '-20px -24px -20px -24px', padding: '20px 24px' }}>
                 <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
                     <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Eye size={16} color="#3B82F6" /> 실시간 미리보기 (설정 시 즉시 반영됩니다)
+                            <Eye size={16} /> 실시간 미리보기
                         </div>
                     </div>
-                    <div className="dp-setting-card-body" style={{ padding: '16px 24px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px' }}>
+                    <div className="dp-setting-card-body" style={{ padding: '8px 16px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px' }}>
                         <table style={{
                             width: '100%', borderCollapse: 'separate', borderSpacing: 0,
                             fontFamily: settings.render.font_family || 'Arial',
@@ -140,7 +140,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             <thead>
                                 <tr style={{ background: settings.render.theme_primary || '#2F5597', color: settings.render.theme_primary_fg || '#FFFFFF' }}>
                                     <th style={{
-                                        padding: '8px',
+                                        padding: '4px 8px',
                                         borderRight: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                         borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
                                         textAlign: 'left',
@@ -150,7 +150,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     }}>구분</th>
                                     {previewCols.map(col => (
                                         <th key={col.label} style={{
-                                            padding: '8px', textAlign: 'right', fontWeight: 600,
+                                            padding: '4px 8px', textAlign: 'right', fontWeight: 600,
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
@@ -165,8 +165,8 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             <tbody>
                                 <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
-                                        padding: '6px 8px',
-                                        background: settings.render.theme_stub_header_bg || '#D9E1F2', 
+                                        padding: '3px 8px',
+                                        background: settings.render.theme_stub_header_bg || '#D9E1F2',
                                         color: settings.render.theme_stub_header_fg || '#000',
                                         fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
@@ -175,7 +175,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     }}>Base</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
-                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
+                                            padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
@@ -190,7 +190,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 ].map((row, idx) => (
                                     <tr key={row.label} style={{ background: idx % 2 === 1 ? (settings.render.theme_stripe || '#F1F5F9') : (settings.render.theme_bg || '#FFFFFF') }}>
                                         <td style={{
-                                            padding: '6px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000',
+                                            padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000',
                                             borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                             borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
@@ -198,7 +198,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         }}>{row.label}</td>
                                         {previewCols.map((col, i) => (
                                             <td key={i} style={{
-                                                padding: '6px 8px', textAlign: 'right',
+                                                padding: '3px 8px', textAlign: 'right',
                                                 borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                                 borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                                 fontFamily: settings.render.font_family || 'inherit',
@@ -212,7 +212,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 ))}
                                 <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
-                                        padding: '6px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
+                                        padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                         fontFamily: settings.render.font_family || 'inherit',
@@ -220,7 +220,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     }}>top2</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
-                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
+                                            padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
@@ -233,7 +233,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 </tr>
                                 <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
-                                        padding: '6px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
+                                        padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                         fontFamily: settings.render.font_family || 'inherit',
@@ -241,7 +241,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     }}>평균</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
-                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
+                                            padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
@@ -258,7 +258,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             </div>
 
             {/* 2. 하단: 설정 패널 (3단 그리드) */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', paddingTop: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
 
                 {/* 2-1. 테이블 표시 정책 */}
                 <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
@@ -328,7 +328,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 {/* 글꼴 */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 2 }}>
                                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>글꼴</label>
-                                    <select 
+                                    <select
                                         value={settings.render.font_family || "Arial, sans-serif"}
                                         onChange={(e) => handleChange('render.font_family', e.target.value)}
                                         style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
