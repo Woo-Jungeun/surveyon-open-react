@@ -443,25 +443,25 @@ const VAR_TYPE_OPTIONS = ['single', 'multi', 'rank', /* 'minrank', 'maxrank', */
 
 const canUseScalePreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'summary') return false;
+    if (t === 'summary' || t === 'custom') return false;
     return t === 'scale';
 };
 
 const canUseRankPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'summary') return false;
+    if (t === 'summary' || t === 'custom') return false;
     return t === 'rank' || t === 'minrank' || t === 'maxrank' || t === 'multi';
 };
 
 const canUseStatPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'summary') return false;
-    return t === 'scale' || t === 'open(숫자)' || t === 'double' || t === 'open-num' || t === 'dummy' || t === 'custom';
+    if (t === 'summary' || t === 'custom') return false;
+    return t === 'scale' || t === 'open(숫자)' || t === 'double' || t === 'open-num' || t === 'dummy';
 };
 
 const canUseGroupPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'summary') return false;
+    if (t === 'summary' || t === 'custom') return false;
     if (t === 'open(숫자)' || t === 'double' || t === 'open-num') return false;
     return true;
 };
@@ -650,6 +650,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [stubs, setStubs] = useState([]);
     const [banners, setBanners] = useState([]);
     const [originalRecodedIds, setOriginalRecodedIds] = useState([]);
+    const gridRef = useRef(null);
     const [scalePresets, setScalePresets] = useState([]);
     const [rankPresets, setRankPresets] = useState([]);
     const [groupPresets, setGroupPresets] = useState([]);
@@ -809,17 +810,42 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 ? resultData.order_ids
                 : (resultData.default_order_ids || []);
 
-            setOriginalRecodedIds(stubItems.map(item => item.recoded_var_id).filter(Boolean));
+            // variables에서 custom stub도 보완 (stub_grid_items에 없는 경우)
+            const variablesMap = resultData.variables || {};
+            const stubItemIds = new Set(stubItems.map(s => s.recoded_var_id).filter(Boolean));
+            const extraCustomStubs = Object.values(variablesMap).filter(v =>
+                v.variable_role === 'stub' &&
+                (v.stub_kind === 'custom' || !v.source_var_id) &&
+                !stubItemIds.has(v.id)
+            );
 
+            const allStubItems = [...stubItems, ...extraCustomStubs.map(v => ({
+                recoded_var_id: v.id,
+                source_var_id: null, // custom stub은 source_var_id를 null 유지
+                _is_custom: true,
+                label: v.label || '',
+                type: v.type || 'custom',
+                filter_expression: v.condition || null,
+                banner: v.banner || [],
+                scale_preset_id: v.scale_preset_id || null,
+                rank_preset_id: v.rank_preset_id || null,
+                group_preset_id: v.group_preset_id || null,
+                stat_preset_id: v.stat_preset_id || null,
+                info: v.info || [],
+            }))];
 
-            const mappedStubs = stubItems.map(item => ({
+            setOriginalRecodedIds(allStubItems.map(item => item.recoded_var_id).filter(Boolean));
+
+            const mappedStubs = allStubItems.map(item => ({
                 ...item,
                 _row_id: `row_${Date.now()}_${Math.random()}`,
-                source_var_id: item.source_var_id || item.recoded_var_id,
+                _is_custom: item._is_custom || false,
+                // custom stub은 source_var_id를 null로 유지해야 handleSave에서 stub_kind:'custom'으로 저장됨
+                source_var_id: item._is_custom ? null : (item.source_var_id || item.recoded_var_id),
                 recoded_var_id: item.recoded_var_id,
                 var_label: item.label || '',
-                var_type: item.type || 'unknown',
-                condition: item.filter_expression || '',
+                var_type: item.type || 'custom',
+                condition: item.filter_expression || item.condition || '',
                 x_info: Array.isArray(item.banner) ? item.banner[0] || '' : (item.banner || item.x_info || ''),
                 stat_summary: item.stat_preset_id === 'default_double' ? '' : (item.stat_preset_id || ''),
                 scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
@@ -942,6 +968,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 return next;
             });
             if (onUnsavedChange) onUnsavedChange(true);
+
+            // 목록 하단으로 스크롤 이동
+            setTimeout(() => {
+                gridRef.current?.scrollToBottom();
+            }, 100);
         } catch (err) {
             console.error(err);
             modal.showAlert('오류', '새 스터브 생성에 실패했습니다.');
@@ -1161,6 +1192,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <div style={{ flex: 1, position: 'relative', minHeight: 0 }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}>
                         <KendoGridV2
+                            ref={gridRef}
                             className="dp-compact-stub-grid"
                             data={filteredStubs}
                             rowHeight={24}
@@ -1260,8 +1292,40 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 rowData={selectedStubForModal}
                 variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
                 onApply={(rules) => {
-                    console.log('Applied rules:', rules);
-                    // TODO: 적용된 룰을 데이터에 반영하는 로직
+                    // 그리드 내부 필드 정리 + 필수 필드 정규화
+                    const STAT_TYPES = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"];
+                    const normalizedRules = rules.map((opt, i) => {
+                        const isBase = opt.type === 'base';
+                        const isStat = STAT_TYPES.includes(opt.type);
+                        const rowRole = isBase ? 'base' : (isStat ? 'stat' : (opt.row_role || 'option'));
+                        // 그리드 내부 필드(inEdit 등) 제거, 필수 필드 보충
+                        return {
+                            index: i + 1,
+                            label: opt.label || '',
+                            label2: opt.label2 || '',
+                            label3: opt.label3 || '',
+                            logic: opt.logic || '',
+                            type: opt.type || 'option',
+                            row_role: rowRole,
+                            is_internal: opt.is_internal ?? null,
+                            prefix: opt.prefix || null,
+                            postfix: opt.postfix || null,
+                            hide: opt.hide || null,
+                            round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isBase ? 0 : (isStat ? 2 : null)),
+                            value: opt.value !== '' && opt.value !== undefined && opt.value !== null ? opt.value : null,
+                            stat_type: opt.stat_type || null,
+                            target_var: opt.target_var || null,
+                            line: opt.line || null,
+                            color: opt.color || null,
+                        };
+                    });
+                    // 해당 stub의 info 업데이트
+                    setStubs(prev => prev.map(s =>
+                        s.recoded_var_id === selectedStubForModal?.recoded_var_id
+                            ? { ...s, info: normalizedRules }
+                            : s
+                    ));
+                    if (onUnsavedChange) onUnsavedChange(true);
                 }}
             />
         </div>
