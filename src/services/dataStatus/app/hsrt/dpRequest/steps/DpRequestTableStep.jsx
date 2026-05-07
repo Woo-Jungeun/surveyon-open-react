@@ -784,11 +784,22 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 ]);
                 const bannerIds = bannerRes?.resultjson?.banner_ids || bannerRes?.data?.resultjson?.banner_ids || [];
                 const recodedVars = tableRes?.resultjson?.recoded_variables || tableRes?.data?.resultjson?.recoded_variables || {};
-                const recodesArr = Array.isArray(recodedVars) ? recodedVars : Object.values(recodedVars);
-                const formattedBanners = bannerIds.map(bid => {
-                    const found = recodesArr.find(v => v.id === bid);
-                    return { id: bid, label: found?.name || found?.label || bid };
-                });
+                const recodesArr = Array.isArray(recodedVars) 
+                    ? recodedVars 
+                    : Object.entries(recodedVars).map(([key, val]) => ({ id: val.id || key, ...val }));
+                
+                let formattedBanners = [];
+                if (bannerIds.length > 0) {
+                    formattedBanners = bannerIds.map(bid => {
+                        const found = recodesArr.find(v => v.id === bid);
+                        return { id: bid, label: found?.name || found?.label || bid };
+                    });
+                } else {
+                    formattedBanners = recodesArr
+                        .filter(v => String(v.id || '').toLowerCase().startsWith("banner"))
+                        .sort((a, b) => String(a.id || '').localeCompare(String(b.id || '')))
+                        .map(v => ({ id: v.id, label: v.name || v.label || v.id }));
+                }
                 setBanners(formattedBanners);
             } catch (e) { console.error('Failed to fetch banners', e); }
 
@@ -800,6 +811,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
             setOriginalRecodedIds(stubItems.map(item => item.recoded_var_id).filter(Boolean));
 
+
             const mappedStubs = stubItems.map(item => ({
                 ...item,
                 _row_id: `row_${Date.now()}_${Math.random()}`,
@@ -808,7 +820,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 var_label: item.label || '',
                 var_type: item.type || 'unknown',
                 condition: item.filter_expression || '',
-                x_info: Array.isArray(item.banner) ? item.banner : (item.banner ? [item.banner] : (item.x_info ?? [])),
+                x_info: Array.isArray(item.banner) ? item.banner[0] || '' : (item.banner || item.x_info || ''),
                 stat_summary: item.stat_preset_id === 'default_double' ? '' : (item.stat_preset_id || ''),
                 scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
                 rank_preset_name: item.rank_preset_id || '',
@@ -913,7 +925,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 var_label: newStub.label || '',
                 var_type: newStub.type || 'unknown',
                 condition: newStub.filter_expression || '',
-                x_info: Array.isArray(newStub.banner) ? newStub.banner : (newStub.banner ? [newStub.banner] : (newStub.x_info ?? [])),
+                x_info: Array.isArray(newStub.banner) ? newStub.banner[0] : (newStub.banner || newStub.x_info || ''),
                 stat_summary: newStub.stat_preset_id || '',
                 scale_preset_name: newStub.scale_preset_id || '',
                 rank_preset_name: newStub.rank_preset_id || '',
@@ -964,10 +976,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             return false;
         }
 
-        // 2. stub 목록과 summary 목록 분리
+        // 2. 저장용 데이터 구성 (stubs -> dp_request_recoded_items & variables)
         const stubItems = [];
         const summaryFolders = [];
-
+        const variablesMap = {};
+        
         for (const stub of stubs) {
             // summary 타입은 summary_folders로 분리
             if (stub.var_type === 'summary') {
@@ -1022,11 +1035,20 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 });
             }
 
-            stubItems.push({
-                source_var_id: effSourceId,
-                recoded_var_id: effRecodedId,
+            // 1) 배열에는 최소 식별자만 추가 (source_var_id가 있는 경우만)
+            if (effSourceId) {
+                stubItems.push({
+                    source_var_id: effSourceId,
+                    recoded_var_id: effRecodedId
+                });
+            }
+
+            // 2) 상세 속성들은 variables 객체에 추가
+            variablesMap[effRecodedId] = {
+                id: effRecodedId,
                 label: stub.var_label || '',
-                stub_kind: effSourceId ? 'source_based' : 'custom',
+                type: stub.var_type || 'single',
+                recoded_type: effSourceId ? 'recoded' : 'custom',
                 scale_preset_id: stub.scale_preset_name || null,
                 rank_preset_id: stub.rank_preset_name || null,
                 group_preset_id: stub.group_preset_name || null,
@@ -1034,7 +1056,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 filter_expression: filterExp,
                 banner: Array.isArray(stub.x_info) ? stub.x_info : (stub.x_info ? [stub.x_info] : []),
                 info: infoArray
-            });
+            };
         }
 
         // 3. 삭제될 ID 추출 (원본에 있었지만 현재는 없는 recoded_var_id)
@@ -1051,7 +1073,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             summary_folders: summaryFolders,
             order_ids: orderIds,
             delete_ids: deletedIds,
-            variables: {},
+            variables: variablesMap,
             force_reapply_preset_ids: forceReapplyIds,
             auto_recode: true,
             auto_generate_summary: false,
