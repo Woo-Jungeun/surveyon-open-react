@@ -410,6 +410,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [bannerSearch, setBannerSearch] = useState('');
     const [colVars, setColVars] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
+    const listContainerRef = useRef(null);
 
     const [selectedCells, setSelectedCells] = useState([]); // [{r, c}]
     const [isSelecting, setIsSelecting] = useState(false);
@@ -461,6 +462,20 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         };
     }, [history]);
 
+    // 목록 하단으로 스크롤 이동
+    const scrollToBottom = useCallback(() => {
+        if (listContainerRef.current) {
+            listContainerRef.current.scrollTo({ top: listContainerRef.current.scrollHeight, behavior: 'smooth' });
+        }
+    }, []);
+
+    // 목록 상단으로 스크롤 이동
+    const scrollToTop = useCallback(() => {
+        if (listContainerRef.current) {
+            listContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, []);
+
     // 데이터 변경 감지 및 히스토리 커밋
     useEffect(() => {
         if (isHistoryAction.current) {
@@ -490,7 +505,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             info: [],
             isNew: true
         };
-        setBanners(prev => [newBanner, ...prev]);
+        setBanners(prev => [...prev, newBanner]);
+        setTimeout(scrollToBottom, 100);
         setSelectedBanner(newId);
         setCurrentLabel('');
         if (onUnsavedChange) onUnsavedChange(true);
@@ -613,6 +629,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             if (nextBanners.length > 0) {
                                 setSelectedBanner(nextBanners[0].id);
                                 setCurrentLabel(nextBanners[0].label);
+                                scrollToTop();
                             } else {
                                 setSelectedBanner(null);
                                 setCurrentLabel('');
@@ -724,6 +741,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                         if (isFresh || !selectedBanner || forceSelectFirst) {
                             setSelectedBanner(target.id);
                             setCurrentLabel(target.label);
+                            if (forceSelectFirst) scrollToTop();
                         }
                     } else if (forceSelectFirst || !selectedBanner) {
                         setSelectedBanner(null);
@@ -1142,7 +1160,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 />
                             </div>
                         </div>
-                        <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                            <div ref={listContainerRef} className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                             {filteredBanners.map((banner, index) => (
                                 <div key={`${banner.id}-${index}`}
                                     className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
