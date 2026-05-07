@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
@@ -1451,7 +1451,20 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
                             {/* 페이징 UI */}
                             {totalTables > 0 && (
-                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '16px', padding: '10px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 }}>
+                                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', padding: '10px', borderTop: '1px solid #e2e8f0', background: '#f8fafc', flexShrink: 0 }}>
+                                    <button
+                                        onClick={() => setCurrentPage(1)}
+                                        disabled={currentPage <= 1}
+                                        style={{
+                                            width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px',
+                                            background: currentPage <= 1 ? '#f8fafc' : '#ffffff',
+                                            cursor: currentPage <= 1 ? 'not-allowed' : 'pointer',
+                                            color: currentPage <= 1 ? '#cbd5e1' : '#475569'
+                                        }}
+                                    >
+                                        <ChevronsLeft size={16} />
+                                    </button>
                                     <button
                                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                                         disabled={currentPage <= 1}
@@ -1465,7 +1478,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     >
                                         <ChevronLeft size={16} />
                                     </button>
-                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', userSelect: 'none' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: 600, color: '#0f172a', userSelect: 'none', margin: '0 8px' }}>
                                         <span style={{ color: '#1e3a8a' }}>{currentPage}</span> / <span style={{ color: '#0f172a' }}>{Math.ceil(totalTables / PAGE_SIZE)}</span>
                                     </div>
                                     <button
@@ -1480,6 +1493,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         }}
                                     >
                                         <ChevronRight size={16} />
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(Math.ceil(totalTables / PAGE_SIZE))}
+                                        disabled={currentPage >= Math.ceil(totalTables / PAGE_SIZE)}
+                                        style={{
+                                            width: '26px', height: '26px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            padding: 0, border: '1px solid #e2e8f0', borderRadius: '6px',
+                                            background: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? '#f8fafc' : '#ffffff',
+                                            cursor: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? 'not-allowed' : 'pointer',
+                                            color: currentPage >= Math.ceil(totalTables / PAGE_SIZE) ? '#cbd5e1' : '#475569'
+                                        }}
+                                    >
+                                        <ChevronsRight size={16} />
                                     </button>
                                 </div>
                             )}
