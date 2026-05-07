@@ -17,7 +17,7 @@ const AnalysisSettingTab = ({
     onUnsavedChange
 }) => {
     return (
-        <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9' }}>
+        <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9', boxSizing: 'border-box', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
             {contextData?.issues?.length > 0 && (
                 <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '16px', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#1E293B', fontWeight: 600, marginBottom: '8px' }}>
