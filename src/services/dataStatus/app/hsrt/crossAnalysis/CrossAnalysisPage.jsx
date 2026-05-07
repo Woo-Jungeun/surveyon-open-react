@@ -75,7 +75,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
     const stubBorder = `${uiSettings?.theme_stub_divider_width || '1px'} ${uiSettings?.theme_stub_divider_style || 'solid'} ${uiSettings?.theme_stub_divider_color || '#cbd5e1'}`;
     const gridBorder = `${uiSettings?.theme_grid_width || '1px'} ${uiSettings?.theme_grid_style || 'solid'} ${uiSettings?.theme_grid_color || '#e2e8f0'}`;
     const sectionBorder = `${uiSettings?.theme_section_separator_width || '2px'} ${uiSettings?.theme_section_separator_style || 'dashed'} ${uiSettings?.theme_section_separator_color || '#000'}`;
-    
+
     // new outer edge logic
     const topOuter = `${uiSettings?.theme_table_outer_top_width || '0px'} ${uiSettings?.theme_table_outer_top_style || 'none'} ${uiSettings?.theme_table_outer_top_color || 'transparent'}`;
     const bottomOuter = `${uiSettings?.theme_table_outer_bottom_width || '0px'} ${uiSettings?.theme_table_outer_bottom_style || 'none'} ${uiSettings?.theme_table_outer_bottom_color || 'transparent'}`;
@@ -92,10 +92,10 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
     }
 
     return (
-        <div style={{ 
-            height: '100%', 
-            overflow: 'auto', 
-            background: uiSettings?.theme_bg || '#fff', 
+        <div style={{
+            height: '100%',
+            overflow: 'auto',
+            background: uiSettings?.theme_bg || '#fff',
             fontFamily: uiSettings?.font_family || 'inherit',
         }} className="dp-table-container">
             <style>{`
@@ -150,15 +150,15 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                     border-right: ${rightOuter} !important;
                 }
             `}</style>
-            <table className="dp-html-table" style={{ 
-                width: 'max-content', 
-                minWidth: '100%', 
-                borderCollapse: 'separate', 
-                borderSpacing: 0, 
-                margin: 0, 
-                padding: 0, 
-                fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px', 
-                tableLayout: 'fixed', 
+            <table className="dp-html-table" style={{
+                width: 'max-content',
+                minWidth: '100%',
+                borderCollapse: 'separate',
+                borderSpacing: 0,
+                margin: 0,
+                padding: 0,
+                fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px',
+                tableLayout: 'fixed',
                 color: uiSettings?.theme_text || '#0f172a'
             }}>
                 <colgroup>
@@ -167,12 +167,12 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         <col key={col.key || i} style={{ width: col.width || '100px' }} />
                     ))}
                 </colgroup>
-                <thead style={{ 
-                    position: 'sticky', 
-                    top: 0, 
-                    zIndex: 50, 
-                    background: uiSettings?.theme_primary || '#f8fafc', 
-                    color: uiSettings?.theme_primary_fg || 'inherit' 
+                <thead style={{
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 50,
+                    background: uiSettings?.theme_primary || '#f8fafc',
+                    color: uiSettings?.theme_primary_fg || 'inherit'
                 }}>
                     {showLabel3Header && (
                         <tr>
@@ -208,22 +208,22 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base";
                         const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? "").toLowerCase().includes(role));
                         const rowBg = (rowIndex % 2 === 1 ? (uiSettings?.theme_bg_alt || uiSettings?.theme_stripe || '#fafafa') : (uiSettings?.theme_bg || '#fff'));
-                        
+
                         const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
 
                         return (
-                            <tr key={row.key || rowIndex} style={{ 
+                            <tr key={row.key || rowIndex} style={{
                                 background: rowBg,
                                 color: uiSettings?.theme_text || 'inherit'
                             }}>
-                                <td className="stub-cell" style={{ 
+                                <td className="stub-cell" style={{
                                     borderTop: topBorderAttr,
                                     background: uiSettings?.theme_stub_header_bg || '#D9E1F2',
                                     color: uiSettings?.theme_stub_header_fg || '#000',
                                     padding: 0
                                 }}>
-                                    <div title={row.label} style={{ 
-                                        lineHeight: 1.2, 
+                                    <div title={row.label} style={{
+                                        lineHeight: 1.2,
                                         padding: '2px 8px',
                                         paddingLeft: row.indent ? '24px' : '8px',
                                         fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px'
@@ -240,22 +240,22 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                     const isBaseCell = cell.is_base || isBaseRow || String(cell.cell_type ?? "").toLowerCase() === "base";
 
                                     return (
-                                        <td key={col.key} style={{ 
+                                        <td key={col.key} style={{
                                             borderTop: topBorderAttr,
                                             borderLeft: i > 0 ? gridBorder : 'none',
-                                            padding: '2px 8px', 
-                                            textAlign: 'right' 
+                                            padding: '2px 8px',
+                                            textAlign: 'right'
                                         }}>
                                             {valN !== null && (showN || isBaseCell) && (
-                                                <div style={{ 
-                                                    fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px', 
+                                                <div style={{
+                                                    fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px',
                                                     fontWeight: 500,
                                                     color: uiSettings?.theme_text || 'inherit'
                                                 }}>{formatCountValue(valN, effectivePolicy)}</div>
                                             )}
                                             {valP !== null && showPct && !isBaseCell && (
-                                                <div style={{ 
-                                                    fontSize: '11px', 
+                                                <div style={{
+                                                    fontSize: '11px',
                                                     color: uiSettings?.theme_text_muted || '#64748b',
                                                     marginTop: '-2px'
                                                 }}>{formatPercentValue(valP, effectivePolicy)}%</div>
@@ -720,6 +720,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     // --- 히스토리 관리 (Undo/Redo) ---
     const history = useUpdateHistory('dp-banner');
     const isHistoryAction = useRef(false);
+    const isSidebarClickScrolling = useRef(false);
 
     const [banners, setBanners] = useState([]);
     const [showN, setShowN] = useState(true);
@@ -763,7 +764,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         const saveTimeout = setTimeout(() => {
             const pageId = sessionStorage.getItem('pageId');
             const user = auth?.user?.userId;
-            
+
             savePageSettings.mutateAsync({
                 pageid: pageId,
                 user: user,
@@ -959,9 +960,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 modal.showAlert('알림', '삭제되었습니다.');
                                 // 현재 보고 있는 아이템이 삭제되었다면 'delete' 모드로 패치하여 첫번째 아이템 강제 선택
                                 if (selectedBanner === bannerId) {
-                                    await fetchVariablesData('delete');
+                                    await fetchCrossAnalysisData('delete');
                                 } else {
-                                    await fetchVariablesData('normal');
+                                    await fetchCrossAnalysisData('normal');
                                 }
                             } else {
                                 modal.showAlert('오류', result?.Message || '삭제 중 문제가 발생했습니다.');
@@ -1093,6 +1094,18 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setBanners(formatted);
                 history.reset(formatted);
 
+                // 렌더링 후 스크롤 상단으로 완벽히 이동 (메인 화면 & 사이드바 모두)
+                setTimeout(() => {
+                    const scrollArea = document.getElementById('dp-content-scroll-area');
+                    if (scrollArea) {
+                        scrollArea.scrollTop = 0;
+                    }
+                    const sidebarList = document.querySelector('.dp-banner-list');
+                    if (sidebarList) {
+                        sidebarList.scrollTop = 0;
+                    }
+                }, 50);
+
                 // 총 테이블 개수 갱신
                 let total = payload.total !== undefined ? payload.total : 0;
                 if (payload.total === undefined) {
@@ -1183,6 +1196,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     useEffect(() => {
         const handleObserver = (entries) => {
+            if (isSidebarClickScrolling.current) return;
             const intersecting = entries.find(e => e.isIntersecting);
             if (intersecting) {
                 const id = intersecting.target.id.replace('banner_block_', '');
@@ -1341,7 +1355,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         display: 'flex', alignItems: 'center', borderRadius: '6px', border: '1px solid #cbd5e1', background: '#ffffff', height: '32px', overflow: 'hidden'
                     }}>
                         <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', height: '100%', background: '#f8fafc' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>X 정보 (기준변수)</span>
+                            <span style={{ fontSize: '13px', fontWeight: 600, color: '#475569' }}>배너</span>
                         </div>
                         <div style={{ width: '1px', height: '100%', background: '#cbd5e1' }} />
                         <div style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}>
@@ -1590,6 +1604,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         id={`sidebar_item_${banner.id}`}
                                         className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
                                         onClick={() => {
+                                            isSidebarClickScrolling.current = true;
                                             setSelectedBanner(banner.id);
                                             setCurrentLabel(banner.label);
                                             setCurrentId(banner.id.startsWith('NEW_') ? '' : banner.id);
@@ -1597,6 +1612,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             setTimeout(() => {
                                                 const el = document.getElementById(`banner_block_${banner.id}`);
                                                 if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                setTimeout(() => {
+                                                    isSidebarClickScrolling.current = false;
+                                                }, 800); // 부드러운 스크롤이 끝날 때까지 Observer 무시
                                             }, 50);
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
