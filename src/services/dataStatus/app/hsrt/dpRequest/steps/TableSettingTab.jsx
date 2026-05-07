@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Layout, Type, Palette, CheckCircle2 } from 'lucide-react';
+import { Layout, Type, Palette, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     const [activeBorderTarget, setActiveBorderTarget] = useState('top');
+    const [showAdvancedColors, setShowAdvancedColors] = useState(false);
 
     return (
         <div className="dp-setting-section" style={{ padding: '20px 24px', background: '#F1F5F9' }}>
@@ -339,10 +340,29 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                 </div>
             </div>
             <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                    <Palette size={16} /> 전체 테마 색상 (커스텀/프리셋)
+                <div 
+                    className="dp-setting-card-header" 
+                    onClick={() => setShowAdvancedColors(!showAdvancedColors)}
+                    style={{ 
+                        padding: '12px 20px', 
+                        borderBottom: showAdvancedColors ? '1px solid #E2E8F0' : 'none', 
+                        fontWeight: 600, 
+                        color: '#1E293B', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'space-between',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        userSelect: 'none'
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Palette size={16} /> 고급색상 설정
+                    </div>
+                    {showAdvancedColors ? <ChevronUp size={18} color="#64748B" /> : <ChevronDown size={18} color="#64748B" />}
                 </div>
-                <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {showAdvancedColors && (
+                    <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                     {/* Presets */}
                     <div style={{ background: '#F8FAFC', padding: '12px 20px', borderRadius: '6px', border: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569', whiteSpace: 'nowrap' }}>빠른 프리셋</span>
@@ -555,6 +575,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         </div>
                     </div>
                 </div>
+                )}
             </div>
         </div>
     );
