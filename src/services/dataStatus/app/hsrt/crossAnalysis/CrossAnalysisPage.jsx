@@ -17,102 +17,180 @@ import { DropDownList } from '@progress/kendo-react-dropdowns';
 // --- 상수 ---
 const CROSS_FILTER_ALL_ID = "__all__";
 
+const formatCountValue = (val, policy) => {
+    if (val === null || val === undefined || val === '') return '-';
+    const digits = policy?.n_digits ?? 0;
+    return Number(val).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+};
+
+const formatPercentValue = (val, policy) => {
+    if (val === null || val === undefined || val === '') return '-';
+    const digits = policy?.percent_digits ?? 1;
+    return Number(val).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+};
+
+const buildColumnHeaderGroups = (columns, key) => {
+    const groups = [];
+    columns.forEach((column, index) => {
+        const label = String(column[key] ?? "").trim();
+        const currentGroup = groups[groups.length - 1];
+        if (currentGroup && currentGroup.label === label) {
+            currentGroup.span += 1;
+            return;
+        }
+        groups.push({ label, startIndex: index, span: 1 });
+    });
+    return groups;
+};
+
 const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimalPct }) => {
     if (!dataItem) return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>선택된 표가 없습니다. 좌측에서 항목을 선택해주세요.</div>;
 
-    const metadata = dataItem.raw || {};
     const resultData = dataItem.dataResult || {};
-
     const columns = resultData.columns || [];
     const rows = resultData.rows || [];
 
-    const gridColumns = useMemo(() => {
-        const _cols = [];
-        _cols.push(
-            <Column
-                key="__base_label_col__"
-                field="label"
-                title="구분"
-                width="120px"
-                locked
-                headerClassName="k-text-center"
-                className="k-text-center"
-                cell={(props) => {
-                    const { dataItem, className, style, colSpan, rowSpan } = props;
-                    const labelText = dataItem.label || dataItem.var_label || dataItem.name || dataItem.key || '-';
-                    return (
-                        <td title={labelText} className={`${className || ''} k-text-center`} style={{ ...(style || {}), fontWeight: 500, color: '#334155', textAlign: 'center', background: '#f8fafc', padding: '4px 8px', fontSize: '12px' }} colSpan={colSpan} rowSpan={rowSpan}>
-                            <div style={{
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                                whiteSpace: 'normal',
-                                wordBreak: 'break-word',
-                                lineHeight: '1.4',
-                                fontSize: '12px'
-                            }}>
-                                {labelText}
-                            </div>
-                        </td>
-                    );
-                }}
-            />
+    const effectivePolicy = {
+        n_digits: decimalN === '' ? 0 : decimalN,
+        percent_digits: decimalPct === '' ? 1 : decimalPct
+    };
+
+    const showLabel3Header = columns.some(c => String(c.label3 ?? "").trim());
+    const showLabel2Header = columns.some(c => String(c.label2 ?? "").trim());
+    const label3Groups = showLabel3Header ? buildColumnHeaderGroups(columns, "label3") : [];
+    const label2Groups = showLabel2Header ? buildColumnHeaderGroups(columns, "label2") : [];
+    const hasGroupedHeaders = showLabel3Header || showLabel2Header;
+
+    const headerRowCount = 1 + (showLabel3Header ? 1 : 0) + (showLabel2Header ? 1 : 0);
+
+    if (columns.length === 0 && rows.length === 0) {
+        return (
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
+                <span>API 응답 데이터 구조 확인 필요 (결과 데이터 없음)</span>
+                <span style={{ fontSize: '12px', marginTop: '4px' }}>(선택된 X 기준변수와 매칭되는 교차표 값이 비어있습니다)</span>
+            </div>
         );
-        columns.forEach((col, idx) => {
-            const fieldKey = col.key || `c${idx}`;
-            const colTitle = col.label || col.var_label || col.name || col.key || fieldKey;
-
-            _cols.push(
-                <Column
-                    key={`col_${fieldKey}_${idx}`}
-                    field={fieldKey}
-                    title={colTitle}
-                    width="120px"
-                    headerClassName="k-text-center"
-                    cell={(props) => {
-                        const { dataItem, field, className, style, colSpan, rowSpan } = props;
-                        const cellBox = dataItem.cells?.[fieldKey] || {};
-
-                        const nValue = cellBox.count !== undefined ? cellBox.count : cellBox.n;
-                        const pValue = cellBox.percent !== undefined ? cellBox.percent : cellBox.pct;
-
-                        const mergedClassName = [className || '', "k-text-right"].filter(Boolean).join(" ");
-
-                        if (nValue === undefined && pValue === undefined) {
-                            return <td className={mergedClassName} style={{ ...(style || {}), padding: '4px 10px', fontSize: '12px' }} colSpan={colSpan} rowSpan={rowSpan}>-</td>;
-                        }
-
-                        const nDecimals = decimalN !== '' && decimalN !== undefined ? decimalN : 0;
-                        const pctDecimals = decimalPct !== '' && decimalPct !== undefined ? decimalPct : 1;
-
-                        return (
-                            <td className={mergedClassName} style={{ ...(style || {}), padding: '4px 10px' }} colSpan={colSpan} rowSpan={rowSpan}>
-                                {showN !== false && nValue !== undefined && <div style={{ fontSize: '12px', fontWeight: 500, color: '#1e293b' }}>{Number(nValue).toFixed(nDecimals)}</div>}
-                                {showPct !== false && pValue !== undefined && <div style={{ fontSize: '11px', color: '#64748b' }}>{Number(pValue).toFixed(pctDecimals)}%</div>}
-                            </td>
-                        );
-                    }}
-                />
-            );
-        });
-        return _cols;
-    }, [columns, showN, showPct, decimalN, decimalPct]);
+    }
 
     return (
-        <div style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            {columns.length > 0 || rows.length > 0 ? (
-                <div style={{ flex: 1, minHeight: 0, padding: 0 }} className="dp-table-container">
-                    <KendoGridV2 data={rows}>
-                        {gridColumns}
-                    </KendoGridV2>
-                </div>
-            ) : (
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', border: '1px dashed #cbd5e1', borderRadius: '8px' }}>
-                    <span>API 응답 데이터 구조 확인 필요 (결과 데이터 없음)</span>
-                    <span style={{ fontSize: '12px', marginTop: '4px' }}>(선택된 X 기준변수와 매칭되는 교차표 값이 비어있습니다)</span>
-                </div>
-            )}
+        <div style={{ height: '100%', overflow: 'auto', background: '#fff' }} className="dp-table-container">
+            <style>{`
+                .dp-table-container {
+                    padding: 0 !important;
+                }
+                .dp-html-table .stub-header,
+                .dp-html-table .stub-cell {
+                    position: sticky !important;
+                    left: 0 !important;
+                    z-index: 100 !important;
+                    min-width: 150px !important;
+                    width: 150px !important;
+                    max-width: 150px !important;
+                    background-color: #fff !important;
+                    border-right: 1px solid #cbd5e1 !important;
+                    margin: 0 !important;
+                    padding: 0 !important; /* 내부 div에서 패딩 조절 */
+                }
+                .dp-html-table .stub-cell > div {
+                    display: block !important;
+                    width: 100% !important;
+                    padding: 4px 8px !important;
+                    box-sizing: border-box !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                }
+                .dp-html-table .stub-header {
+                    z-index: 110 !important;
+                    background-color: #f8fafc !important;
+                }
+                /* 막기용 의사 요소 */
+                .dp-html-table .stub-header::before,
+                .dp-html-table .stub-cell::before {
+                    content: '';
+                    position: absolute;
+                    top: 0;
+                    left: -1px;
+                    width: 1px;
+                    height: 100%;
+                    background-color: inherit;
+                }
+            `}</style>
+            <table className="dp-html-table" style={{ width: 'max-content', minWidth: '100%', borderCollapse: 'separate', borderSpacing: 0, margin: 0, padding: 0, fontSize: '12px', tableLayout: 'fixed' }}>
+                <colgroup>
+                    <col style={{ width: '150px' }} />
+                    {columns.map((col, i) => (
+                        <col key={`col-def-${i}`} style={{ width: '100px' }} />
+                    ))}
+                </colgroup>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 50, background: '#f8fafc' }}>
+                    {showLabel3Header && (
+                        <tr>
+                            <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle' }}>구분</th>
+                            {label3Groups.map((g, i) => (
+                                <th key={`l3-${i}`} colSpan={g.span} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.label || '\u00A0'}</th>
+                            ))}
+                        </tr>
+                    )}
+                    {showLabel2Header && (
+                        <tr>
+                            {!showLabel3Header && <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '8px', fontWeight: 700, textAlign: 'center' }}>구분</th>}
+                            {label2Groups.map((g, i) => (
+                                <th key={`l2-${i}`} colSpan={g.span} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.label || '\u00A0'}</th>
+                            ))}
+                        </tr>
+                    )}
+                    <tr>
+                        {!hasGroupedHeaders && <th className="stub-header" style={{ borderBottom: '1px solid #e2e8f0', background: '#f8fafc', padding: '8px', fontWeight: 700, textAlign: 'center' }}>구분</th>}
+                        {columns.map((col, i) => {
+                            const columnTotal = col.column_total ?? col.total ?? null;
+                            return (
+                                <th key={col.key || i} style={{ border: '1px solid #e2e8f0', background: '#f8fafc', padding: '3px 8px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle' }}>
+                                    <div style={{ lineHeight: 1.1 }}>{col.label}</div>
+                                    {columnTotal !== null && <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 400, lineHeight: 1, marginTop: '1px' }}>total {formatCountValue(columnTotal, effectivePolicy)}</div>}
+                                </th>
+                            );
+                        })}
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows.map((row, rowIndex) => {
+                        const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base";
+                        return (
+                            <tr key={row.key || rowIndex} style={{ background: isBaseRow ? '#f0f9ff' : (rowIndex % 2 === 1 ? '#fafafa' : '#fff'), fontWeight: isBaseRow ? 700 : 400 }}>
+                                <td className="stub-cell" style={{ borderBottom: '1px solid #e2e8f0', background: isBaseRow ? '#f0f9ff' : (rowIndex % 2 === 1 ? '#fafafa' : '#fff') }}>
+                                    <div title={row.label} style={{ lineHeight: 1.3, paddingLeft: row.indent ? '24px' : '8px' }}>{row.label}</div>
+                                </td>
+                                {columns.map((col) => {
+                                    const cell = row.cells?.[col.key] || resultData.data?.[row.key]?.[col.key];
+                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ border: '1px solid #e2e8f0', padding: '4px 8px', textAlign: 'right', color: '#cbd5e1' }}>-</td>;
+
+                                    let valN = cell.count ?? cell.n ?? null;
+                                    let valP = cell.percent ?? cell.pct ?? null;
+                                    let singleVal = (valN === null && valP === null) ? cell.value ?? cell : null;
+
+                                    const isBaseCell = cell.is_base || isBaseRow || String(cell.cell_type ?? "").toLowerCase() === "base";
+
+                                    return (
+                                        <td key={col.key} style={{ border: '1px solid #e2e8f0', padding: '4px 8px', textAlign: 'right' }}>
+                                            {valN !== null && (showN || isBaseCell) && (
+                                                <div style={{ fontSize: '12px', fontWeight: isBaseCell ? 700 : 500 }}>{formatCountValue(valN, effectivePolicy)}</div>
+                                            )}
+                                            {valP !== null && showPct && !isBaseCell && (
+                                                <div style={{ fontSize: '11px', color: '#64748b' }}>{formatPercentValue(valP, effectivePolicy)}%</div>
+                                            )}
+                                            {singleVal !== null && typeof singleVal !== 'object' && (
+                                                <div style={{ fontSize: '12px' }}>{String(singleVal)}</div>
+                                            )}
+                                            {singleVal === null && valN === null && valP === null && <span style={{ color: '#cbd5e1' }}>-</span>}
+                                        </td>
+                                    );
+                                })}
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
         </div>
     );
 });
@@ -424,13 +502,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     </span>
                 </div>
                 {/* 1. Data Grid (Moved up) */}
-                <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isGridOpen ? '10px' : '8px 10px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
-                    <div onClick={() => setIsGridOpen(!isGridOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: isGridOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: 0, overflow: 'hidden', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+                    <div onClick={() => setIsGridOpen(!isGridOpen)} style={{ cursor: 'pointer', padding: '12px 16px', fontSize: '14px', fontWeight: 700, color: '#0f172a', borderBottom: isGridOpen ? '1px solid #e2e8f0' : 'none', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Table2 size={16} /> 교차 분석표</div>
                         {isGridOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
                     </div>
                     {isGridOpen && (
-                        <div style={{ height: '400px' }}>
+                        <div style={{ flex: 1, minHeight: 0, height: '450px' }}>
                             <CrossTableGrid
                                 dataItem={banner}
                                 showN={showN}
@@ -597,13 +675,13 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     useEffect(() => {
         if (isInitialSetupRef.current) return;
-        
+
         const timeoutId = setTimeout(() => {
             const pageId = sessionStorage.getItem('pageId');
             const user = auth?.user?.userId;
             // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
             // const user = "sbbok";
-            
+
             savePageSettings.mutateAsync({
                 pageid: pageId,
                 user: user,
@@ -615,7 +693,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             }).catch(e => console.error("Setting save error", e));
         }, 500);
-        
+
         return () => clearTimeout(timeoutId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showN, decimalN, showPct, decimalPct]);
@@ -832,7 +910,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
             // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
             const ctxPayload = contextRes?.resultjson || contextRes || {};
-            
+
             if (ctxPayload) {
                 const ui = ctxPayload.ui_settings || {};
                 setShowN(ui.format_show_n ?? true);
@@ -840,7 +918,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setShowPct(ui.format_show_percent ?? true);
                 setDecimalPct(ui.format_percent_round ?? ctxPayload.percent_digits ?? 1);
             }
-            
+
             // 데이터 세팅 후 초기화 플래그 해제 (setTimeout을 통해 setState 이후 반영 보장)
             setTimeout(() => { isInitialSetupRef.current = false; }, 100);
 
@@ -896,7 +974,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             const overviewRes = await getOverview.mutateAsync({
                 pageid: pageId,
                 user: user,
-                x_info: selectedXInfo !== '__none__' ? [selectedXInfo] : [],
+                banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
+                banner: selectedXInfo === '__none__' ? [] : [selectedXInfo],
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
                 search: bannerSearch, // API 검색 연동
