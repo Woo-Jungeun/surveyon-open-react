@@ -44,13 +44,14 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                                 {[
-                                    { label: '비율 (%)', field: 'percent_digits', suffix: '%' },
+                                    { label: '빈도 (N)', field: 'n_digits', suffix: '' },
                                     { label: '평균 (Mean)', field: 'mean_digits', suffix: '' },
-                                    { label: '표준편차 (Std)', field: 'std_digits', suffix: '' },
                                     { label: '변량 (Var)', field: 'var_digits', suffix: '' },
+                                    { label: '최소 (Min)', field: 'min_digits', suffix: '' },
+                                    { label: '비율 (%)', field: 'percent_digits', suffix: '%' },
+                                    { label: '표준편차 (Std)', field: 'std_digits', suffix: '' },
                                     { label: '중앙값 (Median)', field: 'median_digits', suffix: '' },
-                                    { label: '최대 (Max)', field: 'max_digits', suffix: '' },
-                                    { label: '최소 (Min)', field: 'min_digits', suffix: '' }
+                                    { label: '최대 (Max)', field: 'max_digits', suffix: '' }
                                 ].map((item) => {
                                     const val = settings.display[item.field] || 0;
                                     const previewText = val === 0 ? `12${item.suffix}` : `1.${'0'.repeat(val)}${item.suffix}`;

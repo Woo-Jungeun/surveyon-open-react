@@ -109,16 +109,22 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (actualTableDetail?.id || renderContext?.id) {
                 const ui = actualTableDetail?.ui_settings || {};
 
-                const initDisplay = { ...settings.display, ...renderContext?.effective_display_policy };
-                if (ui.format_show_n !== undefined) initDisplay.show_n = ui.format_show_n;
-                if (ui.format_show_percent !== undefined) initDisplay.show_percent = ui.format_show_percent;
-                if (ui.format_percent_round !== undefined) initDisplay.percent_digits = ui.format_percent_round;
-                if (ui.format_mean_round !== undefined) initDisplay.mean_digits = ui.format_mean_round;
-                if (ui.format_std_round !== undefined) initDisplay.std_digits = ui.format_std_round;
-                if (ui.format_var_round !== undefined) initDisplay.var_digits = ui.format_var_round;
-                if (ui.format_median_round !== undefined) initDisplay.median_digits = ui.format_median_round;
-                if (ui.format_min_round !== undefined) initDisplay.min_digits = ui.format_min_round;
-                if (ui.format_max_round !== undefined) initDisplay.max_digits = ui.format_max_round;
+                const initDisplay = { 
+                    ...settings.display, 
+                    ...renderContext?.effective_display_policy,
+                    ...actualTableDetail?.display_policy
+                };
+                
+                if (ui.format_show_n !== undefined && ui.format_show_n !== null) initDisplay.show_n = ui.format_show_n;
+                if (ui.format_show_percent !== undefined && ui.format_show_percent !== null) initDisplay.show_percent = ui.format_show_percent;
+                if (ui.format_n_round !== undefined && ui.format_n_round !== null) initDisplay.n_digits = ui.format_n_round;
+                if (ui.format_percent_round !== undefined && ui.format_percent_round !== null) initDisplay.percent_digits = ui.format_percent_round;
+                if (ui.format_mean_round !== undefined && ui.format_mean_round !== null) initDisplay.mean_digits = ui.format_mean_round;
+                if (ui.format_std_round !== undefined && ui.format_std_round !== null) initDisplay.std_digits = ui.format_std_round;
+                if (ui.format_var_round !== undefined && ui.format_var_round !== null) initDisplay.var_digits = ui.format_var_round;
+                if (ui.format_median_round !== undefined && ui.format_median_round !== null) initDisplay.median_digits = ui.format_median_round;
+                if (ui.format_min_round !== undefined && ui.format_min_round !== null) initDisplay.min_digits = ui.format_min_round;
+                if (ui.format_max_round !== undefined && ui.format_max_round !== null) initDisplay.max_digits = ui.format_max_round;
 
                 let mergedRender = { ...settings.render, ...renderContext?.effective_render_settings, ...ui };
 
@@ -434,6 +440,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_border_color: settings.render.theme_border_color || undefined,
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
+                    format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
                     format_percent_round: settings.display.percent_digits !== "" && settings.display.percent_digits !== null ? Number(settings.display.percent_digits) : undefined,
                     format_mean_round: settings.display.mean_digits !== "" && settings.display.mean_digits !== null ? Number(settings.display.mean_digits) : undefined,
                     format_std_round: settings.display.std_digits !== "" && settings.display.std_digits !== null ? Number(settings.display.std_digits) : undefined,
