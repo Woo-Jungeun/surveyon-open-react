@@ -54,7 +54,7 @@ const DpRequestPage = () => {
         { key: 'banner', label: '배너', desc: '[배너 설정] 분석 테이블 상단에 기준이 되는 배너를 설정합니다.' },
         { key: 'recoded', label: '스터브', desc: '[스터브 설정] DP 표 생성을 위한 recoded 메타데이터 설정. 이 화면에서 설정한 내용이 저장 시 실제 recoded 변수 및 필터로 생성됩니다.' },
         { key: 'summary', label: '요약표', desc: '[요약표 관리] 같은 척도끼리 묶어서 빈도/통계 요약표를 구성하고, 저장 시 summary stub으로 반영합니다.' },
-        { key: 'order', label: '표 순서', desc: '[표 순서] DP 결과 테이블에 표출될 스터브와 요약표의 순서를 조정하고, 필요한 항목은 마지막 단계에서 상세 편집합니다.' },
+        // { key: 'order', label: '표 순서', desc: '[표 순서] DP 결과 테이블에 표출될 스터브와 요약표의 순서를 조정하고, 필요한 항목은 마지막 단계에서 상세 편집합니다.' },
     ];
 
     // URL 파라미터 (dp_view)를 기준으로 현재 단계 결정
@@ -131,7 +131,7 @@ const DpRequestPage = () => {
         };
 
         fetchContext();
-        
+
         window.addEventListener("pageSelected", fetchContext);
         return () => window.removeEventListener("pageSelected", fetchContext);
     }, [currentStep, auth?.user?.userId]);
@@ -202,12 +202,14 @@ const DpRequestPage = () => {
                                 onClick={() => {
                                     modal.showConfirm('기본 재적용', '수정되지 않은 항목들을 최신 프리셋으로 일괄 재적용하시겠습니까?', {
                                         btns: [
-                                            { title: '취소', click: () => {} },
-                                            { title: '재적용', click: () => {
-                                                if (step3Ref.current && step3Ref.current.reapplyDefault) {
-                                                    step3Ref.current.reapplyDefault();
+                                            { title: '취소', click: () => { } },
+                                            {
+                                                title: '재적용', click: () => {
+                                                    if (step3Ref.current && step3Ref.current.reapplyDefault) {
+                                                        step3Ref.current.reapplyDefault();
+                                                    }
                                                 }
-                                            }}
+                                            }
                                         ]
                                     });
                                 }}
@@ -225,12 +227,14 @@ const DpRequestPage = () => {
                                 onClick={() => {
                                     modal.showConfirm('초기화', '설정을 초기화하시겠습니까?', {
                                         btns: [
-                                            { title: '취소', click: () => {} },
-                                            { title: '초기화', click: () => {
-                                                if (step3Ref.current && step3Ref.current.reset) {
-                                                    step3Ref.current.reset();
+                                            { title: '취소', click: () => { } },
+                                            {
+                                                title: '초기화', click: () => {
+                                                    if (step3Ref.current && step3Ref.current.reset) {
+                                                        step3Ref.current.reset();
+                                                    }
                                                 }
-                                            }}
+                                            }
                                         ]
                                     });
                                 }}
