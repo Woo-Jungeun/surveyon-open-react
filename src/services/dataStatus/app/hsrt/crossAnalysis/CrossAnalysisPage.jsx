@@ -163,28 +163,28 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 }}>
                     {showLabel3Header && (
                         <tr>
-                            <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle' }}>구분</th>
+                            <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>
                             {label3Groups.map((g, i) => (
-                                <th key={`l3-${i}`} colSpan={g.span} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.label || '\u00A0'}</th>
+                                <th key={`l3-${i}`} colSpan={g.span} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
                     {showLabel2Header && (
                         <tr>
-                            {!showLabel3Header && <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '8px', fontWeight: 700, textAlign: 'center' }}>구분</th>}
+                            {!showLabel3Header && <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                             {label2Groups.map((g, i) => (
-                                <th key={`l2-${i}`} colSpan={g.span} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{g.label || '\u00A0'}</th>
+                                <th key={`l2-${i}`} colSpan={g.span} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
                     <tr>
-                        {(!showLabel2Header && !showLabel3Header) && <th className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '8px', fontWeight: 700, textAlign: 'center' }}>구분</th>}
+                        {(!showLabel2Header && !showLabel3Header) && <th className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                         {columns.map((col, i) => {
                             const columnTotal = col.column_total ?? col.total ?? null;
                             return (
-                                <th key={col.key || i} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle' }}>
-                                    <div style={{ lineHeight: 1.1 }}>{col.label}</div>
-                                    {columnTotal !== null && <div style={{ fontSize: '10px', color: uiSettings?.theme_primary_fg ? 'rgba(255,255,255,0.7)' : '#64748b', fontWeight: 400, lineHeight: 1, marginTop: '1px' }}>total {formatCountValue(columnTotal, effectivePolicy)}</div>}
+                                <th key={col.key || i} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>
+                                    <div style={{ lineHeight: 1.1, fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{col.label}</div>
+                                    {columnTotal !== null && <div style={{ fontSize: uiSettings?.font_size ? `${Math.max(8, uiSettings.font_size - 2)}px` : '10px', color: uiSettings?.theme_primary_fg ? 'rgba(255,255,255,0.7)' : '#64748b', fontWeight: 400, lineHeight: 1, marginTop: '1px' }}>total {formatCountValue(columnTotal, effectivePolicy)}</div>}
                                 </th>
                             );
                         })}
