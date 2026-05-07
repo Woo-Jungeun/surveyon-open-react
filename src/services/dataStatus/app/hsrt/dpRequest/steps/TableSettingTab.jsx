@@ -89,13 +89,17 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
                                         textAlign: 'left',
-                                        fontWeight: 600
+                                        fontWeight: 600,
+                                        fontFamily: settings.render.font_family || 'inherit',
+                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>구분</th>
                                     {previewCols.map(col => (
                                         <th key={col.label} style={{
                                             padding: '8px', textAlign: 'right', fontWeight: 600,
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                            borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`
+                                            borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
+                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             <div>{col.label}</div>
                                             <div style={{ color: settings.render.theme_text_muted || '#CBD5E1', fontSize: '0.85em', marginTop: '2px', fontWeight: 400 }}>{col.subLabel}</div>
@@ -107,12 +111,16 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 <tr style={{ background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600 }}>
                                     <td style={{
                                         padding: '6px 8px',
-                                        borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`
+                                        borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
+                                        fontFamily: settings.render.font_family || 'inherit',
+                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>Base</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
                                             padding: '6px 8px', textAlign: 'right',
-                                            borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`
+                                            borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
+                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {formatN(col.base)}
                                         </td>
@@ -126,13 +134,17 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         <td style={{
                                             padding: '6px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000',
                                             borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                            borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`
+                                            borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
+                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>{row.label}</td>
                                         {previewCols.map((col, i) => (
                                             <td key={i} style={{
                                                 padding: '6px 8px', textAlign: 'right',
                                                 borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                                borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`
+                                                borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
+                                                fontFamily: settings.render.font_family || 'inherit',
+                                                fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                             }}>
                                                 {showN && <div>{formatN(col[row.vKey])}</div>}
                                                 {showPct && <div style={{ color: settings.render.theme_text_muted || '#64748B', fontSize: '0.9em', marginTop: '2px' }}>{formatPct(col[row.pKey])}</div>}
@@ -144,13 +156,17 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     <td style={{
                                         padding: '6px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                        borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`
+                                        borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
+                                        fontFamily: settings.render.font_family || 'inherit',
+                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>top2</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
                                             padding: '6px 8px', textAlign: 'right', fontWeight: 600,
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                            borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`
+                                            borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
+                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {showN && <div>{formatN(col.tV)}</div>}
                                             {showPct && <div style={{ color: settings.render.theme_text_muted || '#64748B', fontSize: '0.9em', marginTop: '2px' }}>{formatPct(col.tP)}</div>}
@@ -161,13 +177,17 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     <td style={{
                                         padding: '6px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                        borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`
+                                        borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
+                                        fontFamily: settings.render.font_family || 'inherit',
+                                        fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>평균</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
                                             padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_stub_header_fg || '#000',
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                            borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`
+                                            borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
+                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {formatMean(col.mean)}
                                         </td>
@@ -245,9 +265,33 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     </div>
                     <div className="dp-setting-card-body" style={{ padding: '16px', flex: 1 }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', height: '100%', alignContent: 'start' }}>
+                            {/* 글꼴 / 글자 크기 특별 처리 (같은 줄) */}
+                            <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'center', gap: '20px', borderBottom: '1px solid #F1F5F9', paddingBottom: '8px', paddingTop: '4px' }}>
+                                {/* 글꼴 */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 2 }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>글꼴</label>
+                                    <select 
+                                        value={settings.render.font_family || "Arial, sans-serif"}
+                                        onChange={(e) => handleChange('render.font_family', e.target.value)}
+                                        style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                    >
+                                        <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
+                                        <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+                                        <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+                                        <option value="Arial, sans-serif">Arial</option>
+                                    </select>
+                                </div>
+                                {/* 글자 크기 */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'flex-end' }}>
+                                    <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>크기</label>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid #CBD5E1', borderRadius: '4px', padding: '0 8px', background: '#fff', width: '80px', boxSizing: 'border-box' }}>
+                                        <input type="number" value={settings.render.font_size || 12} onChange={(e) => handleChange('render.font_size', Number(e.target.value))} style={{ width: '100%', padding: '5px 0', fontSize: '12px', border: 'none', outline: 'none', textAlign: 'center' }} />
+                                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             {[
-                                { label: '글꼴', field: 'font_family', type: 'text' },
-                                { label: '글자 크기', field: 'font_size', type: 'number' },
                                 { label: '헤더 상단 배경', field: 'theme_primary', type: 'color' },
                                 { label: '헤더 상단 글자', field: 'theme_primary_fg', type: 'color' },
                                 { label: '구분 헤더 배경', field: 'theme_stub_header_bg', type: 'color' },
