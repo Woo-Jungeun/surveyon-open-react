@@ -43,12 +43,20 @@ const buildColumnHeaderGroups = (columns, key) => {
     return groups;
 };
 
-const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimalPct, uiSettings }) => {
+const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimalPct, uiSettings, hideZeroBaseColumns }) => {
     if (!dataItem) return <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>선택된 표가 없습니다. 좌측에서 항목을 선택해주세요.</div>;
 
     const resultData = dataItem.dataResult || {};
-    const columns = resultData.columns || [];
+    const rawColumns = resultData.columns || [];
     const rows = resultData.rows || [];
+
+    const columns = React.useMemo(() => {
+        if (!hideZeroBaseColumns) return rawColumns;
+        return rawColumns.filter(col => {
+            const total = col.column_total ?? col.total ?? 0;
+            return total > 0;
+        });
+    }, [rawColumns, hideZeroBaseColumns]);
 
     const effectivePolicy = {
         n_digits: decimalN === '' ? 0 : decimalN,
@@ -63,16 +71,16 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
 
     const headerRowCount = 1 + (showLabel3Header ? 1 : 0) + (showLabel2Header ? 1 : 0);
 
-    const headerBorderStyle = uiSettings?.theme_border_header || 'solid';
-    const stubBorderStyle = uiSettings?.theme_border_stub || 'solid';
-    const gridBorderStyle = uiSettings?.theme_grid_style === 'n' ? 'none' : 'solid';
-    const borderColor = uiSettings?.theme_border_color || '#e2e8f0';
-    const headerBorderWidth = headerBorderStyle === 'double' ? '3px' : '1px';
-
-    const outerBorderTop = uiSettings?.theme_border_outer_top || 'none';
-    const outerBorderBottom = uiSettings?.theme_border_outer_bottom || 'none';
-    const outerBorderLeft = uiSettings?.theme_border_outer_left || 'none';
-    const outerBorderRight = uiSettings?.theme_border_outer_right || 'none';
+    const headerBorder = `${uiSettings?.theme_header_divider_width || '1px'} ${uiSettings?.theme_header_divider_style || 'solid'} ${uiSettings?.theme_header_divider_color || '#cbd5e1'}`;
+    const stubBorder = `${uiSettings?.theme_stub_divider_width || '1px'} ${uiSettings?.theme_stub_divider_style || 'solid'} ${uiSettings?.theme_stub_divider_color || '#cbd5e1'}`;
+    const gridBorder = `${uiSettings?.theme_grid_width || '1px'} ${uiSettings?.theme_grid_style || 'solid'} ${uiSettings?.theme_grid_color || '#e2e8f0'}`;
+    const sectionBorder = `${uiSettings?.theme_section_separator_width || '2px'} ${uiSettings?.theme_section_separator_style || 'dashed'} ${uiSettings?.theme_section_separator_color || '#000'}`;
+    
+    // new outer edge logic
+    const topOuter = `${uiSettings?.theme_table_outer_top_width || '0px'} ${uiSettings?.theme_table_outer_top_style || 'none'} ${uiSettings?.theme_table_outer_top_color || 'transparent'}`;
+    const bottomOuter = `${uiSettings?.theme_table_outer_bottom_width || '0px'} ${uiSettings?.theme_table_outer_bottom_style || 'none'} ${uiSettings?.theme_table_outer_bottom_color || 'transparent'}`;
+    const leftOuter = `${uiSettings?.theme_table_outer_left_width || '0px'} ${uiSettings?.theme_table_outer_left_style || 'none'} ${uiSettings?.theme_table_outer_left_color || 'transparent'}`;
+    const rightOuter = `${uiSettings?.theme_table_outer_right_width || '0px'} ${uiSettings?.theme_table_outer_right_style || 'none'} ${uiSettings?.theme_table_outer_right_color || 'transparent'}`;
 
     if (columns.length === 0 && rows.length === 0) {
         return (
@@ -89,10 +97,6 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
             overflow: 'auto', 
             background: uiSettings?.theme_bg || '#fff', 
             fontFamily: uiSettings?.font_family || 'inherit',
-            borderTop: outerBorderTop === 'none' ? 'none' : `1px ${outerBorderTop} ${borderColor}`,
-            borderBottom: outerBorderBottom === 'none' ? 'none' : `1px ${outerBorderBottom} ${borderColor}`,
-            borderLeft: outerBorderLeft === 'none' ? 'none' : `1px ${outerBorderLeft} ${borderColor}`,
-            borderRight: outerBorderRight === 'none' ? 'none' : `1px ${outerBorderRight} ${borderColor}`,
         }} className="dp-table-container">
             <style>{`
                 .dp-table-container {
@@ -107,7 +111,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                     width: 150px !important;
                     max-width: 150px !important;
                     background-color: ${uiSettings?.theme_bg || '#fff'} !important;
-                    border-right: ${headerBorderWidth} ${stubBorderStyle} ${borderColor} !important;
+                    border-right: ${stubBorder} !important;
                     margin: 0 !important;
                     padding: 0 !important; 
                     color: ${uiSettings?.theme_text || 'inherit'} !important;
@@ -123,9 +127,9 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 }
                 .dp-html-table .stub-header {
                     z-index: 110 !important;
-                    background-color: ${uiSettings?.theme_primary || '#f8fafc'} !important;
-                    color: ${uiSettings?.theme_primary_fg || 'inherit'} !important;
-                    border-bottom: ${headerBorderWidth} ${headerBorderStyle} ${borderColor} !important;
+                    background-color: ${uiSettings?.theme_stub_header_bg || uiSettings?.theme_primary || '#f8fafc'} !important;
+                    color: ${uiSettings?.theme_stub_header_fg || uiSettings?.theme_primary_fg || 'inherit'} !important;
+                    border-bottom: ${headerBorder} !important;
                 }
                 /* 막기용 의사 요소 */
                 .dp-html-table .stub-header::before,
@@ -135,6 +139,14 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                     top: 0; left: 0; right: 0; bottom: 0;
                     z-index: -1;
                     background-color: inherit;
+                }
+                
+                /* Outer Edge Borders */
+                .dp-html-table {
+                    border-top: ${topOuter} !important;
+                    border-bottom: ${bottomOuter} !important;
+                    border-left: ${leftOuter} !important;
+                    border-right: ${rightOuter} !important;
                 }
             `}</style>
             <table className="dp-html-table" style={{ 
@@ -163,26 +175,26 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 }}>
                     {showLabel3Header && (
                         <tr>
-                            <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>
+                            <th rowSpan={headerRowCount} className="stub-header" style={{ padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>
                             {label3Groups.map((g, i) => (
-                                <th key={`l3-${i}`} colSpan={g.span} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
+                                <th key={`l3-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
                     {showLabel2Header && (
                         <tr>
-                            {!showLabel3Header && <th rowSpan={headerRowCount} className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
+                            {!showLabel3Header && <th rowSpan={headerRowCount} className="stub-header" style={{ padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                             {label2Groups.map((g, i) => (
-                                <th key={`l2-${i}`} colSpan={g.span} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
+                                <th key={`l2-${i}`} colSpan={g.span} style={{ borderLeft: gridBorder, borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
                     <tr>
-                        {(!showLabel2Header && !showLabel3Header) && <th className="stub-header" style={{ borderBottom: `${headerBorderWidth} ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
+                        {(!showLabel2Header && !showLabel3Header) && <th className="stub-header" style={{ padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                         {columns.map((col, i) => {
                             const columnTotal = col.column_total ?? col.total ?? null;
                             return (
-                                <th key={col.key || i} style={{ border: `1px ${headerBorderStyle} ${borderColor}`, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>
+                                <th key={col.key || i} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>
                                     <div style={{ lineHeight: 1.1, fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{col.label}</div>
                                     {columnTotal !== null && <div style={{ fontSize: uiSettings?.font_size ? `${Math.max(8, uiSettings.font_size - 2)}px` : '10px', color: uiSettings?.theme_primary_fg ? 'rgba(255,255,255,0.7)' : '#64748b', fontWeight: 400, lineHeight: 1, marginTop: '1px' }}>total {formatCountValue(columnTotal, effectivePolicy)}</div>}
                                 </th>
@@ -193,29 +205,31 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 <tbody>
                     {rows.map((row, rowIndex) => {
                         const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base";
-                        // 첫 번째 사진처럼 일관된 배경을 위해 stripe를 매우 연하게 처리하거나 theme_bg 사용
+                        const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? "").toLowerCase().includes(role));
                         const rowBg = (rowIndex % 2 === 1 ? (uiSettings?.theme_bg_alt || uiSettings?.theme_stripe || '#fafafa') : (uiSettings?.theme_bg || '#fff'));
                         
+                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
+
                         return (
                             <tr key={row.key || rowIndex} style={{ 
                                 background: rowBg,
                                 color: uiSettings?.theme_text || 'inherit'
                             }}>
                                 <td className="stub-cell" style={{ 
-                                    borderBottom: `1px ${gridBorderStyle} ${borderColor}`, 
-                                    background: rowBg, // 행 배경과 일치시킴
-                                    padding: 0 // 내부 div에서 패딩 처리
+                                    borderTop: topBorderAttr,
+                                    background: rowBg,
+                                    padding: 0
                                 }}>
                                     <div title={row.label} style={{ 
                                         lineHeight: 1.2, 
-                                        padding: '2px 8px', // 더 촘촘하게
+                                        padding: '2px 8px',
                                         paddingLeft: row.indent ? '24px' : '8px',
                                         fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px'
                                     }}>{row.label}</div>
                                 </td>
-                                {columns.map((col) => {
+                                {columns.map((col, i) => {
                                     const cell = row.cells?.[col.key] || resultData.data?.[row.key]?.[col.key];
-                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ border: `1px ${gridBorderStyle} ${borderColor}`, padding: '2px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
+                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ borderTop: topBorderAttr, borderLeft: i > 0 ? gridBorder : 'none', padding: '2px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
 
                                     let valN = cell.count ?? cell.n ?? null;
                                     let valP = cell.percent ?? cell.pct ?? null;
@@ -225,7 +239,8 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
 
                                     return (
                                         <td key={col.key} style={{ 
-                                            border: `1px ${gridBorderStyle} ${borderColor}`, 
+                                            borderTop: topBorderAttr,
+                                            borderLeft: i > 0 ? gridBorder : 'none',
                                             padding: '2px 8px', 
                                             textAlign: 'right' 
                                         }}>
@@ -709,6 +724,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [decimalN, setDecimalN] = useState(0);
     const [showPct, setShowPct] = useState(true);
     const [decimalPct, setDecimalPct] = useState(1);
+    const [hideZeroBaseColumns, setHideZeroBaseColumns] = useState(false);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
     const [uiSettings, setUiSettings] = useState({});
 
@@ -742,12 +758,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     useEffect(() => {
         if (isInitialSetupRef.current) return;
 
-        const timeoutId = setTimeout(() => {
+        const saveTimeout = setTimeout(() => {
             const pageId = sessionStorage.getItem('pageId');
             const user = auth?.user?.userId;
-            // const pageId = "446bd14c-d053-47c8-bf01-59384cb37746";
-            // const user = "sbbok";
-
+            
             savePageSettings.mutateAsync({
                 pageid: pageId,
                 user: user,
@@ -985,6 +999,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setDecimalN(ui.format_n_round ?? ctxPayload.n_digits ?? 0);
                 setShowPct(ui.format_show_percent ?? true);
                 setDecimalPct(ui.format_percent_round ?? ctxPayload.percent_digits ?? 1);
+                setHideZeroBaseColumns(ui.hide_zero_base_columns ?? false);
             }
 
             // 데이터 세팅 후 초기화 플래그 해제 (setTimeout을 통해 setState 이후 반영 보장)
