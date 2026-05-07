@@ -1149,9 +1149,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             onDataChange={handleDataChange}
                             style={{ height: '100%', width: '100%' }}
                             scrollable="virtual"
-                            addable={!searchTerm}
-                            copyable={!searchTerm}
-                            deletable={!searchTerm}
+                            addable={true}
+                            copyable={true}
+                            deletable={true}
                             reorderable={!searchTerm}
                             deletePos="start"
                             onAdd={handleRowAdd}
