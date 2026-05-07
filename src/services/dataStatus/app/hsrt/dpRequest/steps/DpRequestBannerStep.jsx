@@ -1029,9 +1029,12 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const filteredVariables = useMemo(() => {
         const search = wizardSearch.toLowerCase();
-        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v =>
-            (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search)
-        );
+        const allowedTypes = ['single', 'multi', 'scale', 'rank'];
+        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => {
+            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search);
+            const isAllowedType = allowedTypes.includes((v.type || '').toLowerCase());
+            return matchesSearch && isAllowedType;
+        });
     }, [baseVariables, wizardSearch]);
 
     // 배너 목록 필터링
