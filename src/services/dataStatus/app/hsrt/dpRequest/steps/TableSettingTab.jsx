@@ -63,6 +63,61 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             overflowX: 'hidden'
         }}>
 
+            {/* 1.5 빠른 프리셋 */}
+            <div style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '16px' }}>
+                <div style={{ fontSize: '13px', fontWeight: 600, color: '#1E293B', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Palette size={16} color="#475569" /> 빠른 테마 프리셋
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', overflowX: 'auto', paddingBottom: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748B' }}>Light</span>
+                        {[
+                            { label: '블루 (기본)', bg: '#2F5597', fg: '#FFFFFF', colors: { theme_primary: "#2F5597", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#D9E1F2", theme_stub_header_fg: "#000000", theme_bg: "#FFFFFF", theme_stripe: "#F5F7FB", theme_text: "#000000", theme_text_muted: "#64748B", theme_grid_color: "#E2E8F0", theme_stub_divider_color: "#CBD5E1", theme_header_divider_color: "#172554", theme_section_separator_color: "#94A3B8", theme_table_outer_top_color: "#CBD5E1", theme_table_outer_bottom_color: "#CBD5E1", theme_table_outer_left_color: "#CBD5E1", theme_table_outer_right_color: "#CBD5E1", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
+                            { label: '플래티넘 실버', bg: '#FAFAFA', fg: '#18181B', border: '#E4E4E7', colors: { theme_primary: "#3F3F46", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#E4E4E7", theme_stub_header_fg: "#18181B", theme_bg: "#FFFFFF", theme_stripe: "#F7F7F8", theme_text: "#18181B", theme_text_muted: "#A1A1AA", theme_grid_color: "#E4E4E7", theme_stub_divider_color: "#D4D4D8", theme_header_divider_color: "#18181B", theme_section_separator_color: "#A1A1AA", theme_table_outer_top_color: "#D4D4D8", theme_table_outer_bottom_color: "#D4D4D8", theme_table_outer_left_color: "#D4D4D8", theme_table_outer_right_color: "#D4D4D8", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
+                            { label: 'Teams (Light)', bg: '#6264A7', fg: '#FFFFFF', colors: { theme_primary: "#6264A7", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#EBEBEB", theme_stub_header_fg: "#242424", theme_bg: "#FFFFFF", theme_stripe: "#FAFAFA", theme_text: "#242424", theme_text_muted: "#616161", theme_grid_color: "#EBEBEB", theme_stub_divider_color: "#E0E0E0", theme_header_divider_color: "#312E81", theme_section_separator_color: "#BDBDBD", theme_table_outer_top_color: "#E0E0E0", theme_table_outer_bottom_color: "#E0E0E0", theme_table_outer_left_color: "#E0E0E0", theme_table_outer_right_color: "#E0E0E0", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
+                            { label: '에메랄드 포레스트', bg: '#064E3B', fg: '#FFFFFF', colors: { theme_primary: "#064E3B", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#D1FAE5", theme_stub_header_fg: "#1C1917", theme_bg: "#FFFFFF", theme_stripe: "#F5F5F4", theme_text: "#1C1917", theme_text_muted: "#78716C", theme_grid_color: "#D1FAE5", theme_stub_divider_color: "#A7F3D0", theme_header_divider_color: "#022C22", theme_section_separator_color: "#6EE7B7", theme_table_outer_top_color: "#A7F3D0", theme_table_outer_bottom_color: "#A7F3D0", theme_table_outer_left_color: "#A7F3D0", theme_table_outer_right_color: "#A7F3D0", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
+                            { label: '보르도 와인', bg: '#701A75', fg: '#FFFFFF', colors: { theme_primary: "#701A75", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#FCE7F3", theme_stub_header_fg: "#18181B", theme_bg: "#FFFFFF", theme_stripe: "#F5F5F5", theme_text: "#18181B", theme_text_muted: "#71717A", theme_grid_color: "#FCE7F3", theme_stub_divider_color: "#FBCFE8", theme_header_divider_color: "#4A044E", theme_section_separator_color: "#F472B6", theme_table_outer_top_color: "#FBCFE8", theme_table_outer_bottom_color: "#FBCFE8", theme_table_outer_left_color: "#FBCFE8", theme_table_outer_right_color: "#FBCFE8", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
+                            { label: '미드나잇 네이비', bg: '#1E293B', fg: '#FFFFFF', colors: { theme_primary: "#1E293B", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#E2E8F0", theme_stub_header_fg: "#0F172A", theme_bg: "#FFFFFF", theme_stripe: "#F4F4F5", theme_text: "#0F172A", theme_text_muted: "#64748B", theme_grid_color: "#E2E8F0", theme_stub_divider_color: "#CBD5E1", theme_header_divider_color: "#020617", theme_section_separator_color: "#94A3B8", theme_table_outer_top_color: "#CBD5E1", theme_table_outer_bottom_color: "#CBD5E1", theme_table_outer_left_color: "#CBD5E1", theme_table_outer_right_color: "#CBD5E1", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } }
+                        ].map(preset => (
+                            <button
+                                key={preset.label}
+                                style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', background: preset.bg, color: preset.fg, border: preset.border ? `1px solid ${preset.border}` : 'none', whiteSpace: 'nowrap' }}
+                                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                                onMouseLeave={(e) => e.target.style.opacity = '1'}
+                                onClick={() => {
+                                    setSettings({ ...settings, render: { ...settings.render, ...preset.colors } });
+                                    if (onUnsavedChange) onUnsavedChange(true);
+                                }}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ width: '1px', height: '24px', background: '#E2E8F0', flexShrink: 0 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748B' }}>Dark</span>
+                        {[
+                            { label: '슬레이트 다크', bg: '#0F172A', fg: '#F8FAFC', border: '#1E293B', colors: { theme_primary: "#3B82F6", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#1E293B", theme_stub_header_fg: "#F8FAFC", theme_bg: "#0F172A", theme_stripe: "#172033", theme_text: "#F8FAFC", theme_text_muted: "#94A3B8", theme_grid_color: "#1E293B", theme_stub_divider_color: "#334155", theme_header_divider_color: "#60A5FA", theme_section_separator_color: "#475569", theme_table_outer_top_color: "#334155", theme_table_outer_bottom_color: "#334155", theme_table_outer_left_color: "#334155", theme_table_outer_right_color: "#334155", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
+                            { label: 'Discord (Dark)', bg: '#4752C4', fg: '#FFFFFF', colors: { theme_primary: "#4752C4", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#4F545C", theme_stub_header_fg: "#DCDDDE", theme_bg: "#36393F", theme_stripe: "#32353B", theme_text: "#DCDDDE", theme_text_muted: "#B9BBBE", theme_grid_color: "#2F3136", theme_stub_divider_color: "#40444B", theme_header_divider_color: "#7289DA", theme_section_separator_color: "#4F545C", theme_table_outer_top_color: "#40444B", theme_table_outer_bottom_color: "#40444B", theme_table_outer_left_color: "#40444B", theme_table_outer_right_color: "#40444B", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } },
+                            { label: 'Webull (Dark)', bg: '#0082FB', fg: '#FFFFFF', colors: { theme_primary: "#0082FB", theme_primary_fg: "#FFFFFF", theme_stub_header_bg: "#21232B", theme_stub_header_fg: "#F0F2F5", theme_bg: "#0E0F14", theme_stripe: "#12141A", theme_text: "#F0F2F5", theme_text_muted: "#808593", theme_grid_color: "#161821", theme_stub_divider_color: "#2C2F3A", theme_header_divider_color: "#3399FF", theme_section_separator_color: "#21232B", theme_table_outer_top_color: "#2C2F3A", theme_table_outer_bottom_color: "#2C2F3A", theme_table_outer_left_color: "#2C2F3A", theme_table_outer_right_color: "#2C2F3A", theme_grid_style: "solid", theme_stub_divider_style: "solid", theme_header_divider_style: "solid", theme_section_separator_style: "solid", theme_table_outer_top_style: "solid", theme_table_outer_bottom_style: "solid", theme_table_outer_left_style: "solid", theme_table_outer_right_style: "solid", theme_grid_width: "1px", theme_stub_divider_width: "1px", theme_header_divider_width: "1px", theme_section_separator_width: "1px", theme_table_outer_top_width: "1px", theme_table_outer_bottom_width: "1px", theme_table_outer_left_width: "1px", theme_table_outer_right_width: "1px" } }
+                        ].map(preset => (
+                            <button
+                                key={preset.label}
+                                style={{ fontSize: '11px', padding: '6px 12px', borderRadius: '4px', boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)', cursor: 'pointer', background: preset.bg, color: preset.fg, border: preset.border ? `1px solid ${preset.border}` : 'none', whiteSpace: 'nowrap' }}
+                                onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                                onMouseLeave={(e) => e.target.style.opacity = '1'}
+                                onClick={() => {
+                                    setSettings({ ...settings, render: { ...settings.render, ...preset.colors } });
+                                    if (onUnsavedChange) onUnsavedChange(true);
+                                }}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            </div>
+
             {/* 1. 상단: 실시간 미리보기 (고정) */}
             <div style={{ position: 'sticky', top: '-20px', zIndex: 10, background: '#F1F5F9', borderBottom: '1px solid #E2E8F0', marginBottom: '-20px', paddingTop: '10px' }}>
                 <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
@@ -86,7 +141,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 <tr style={{ background: settings.render.theme_primary || '#2F5597', color: settings.render.theme_primary_fg || '#FFFFFF' }}>
                                     <th style={{
                                         padding: '8px',
-                                        borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
+                                        borderRight: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                         borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
                                         textAlign: 'left',
                                         fontWeight: 600,
@@ -108,16 +163,19 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr style={{ background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600 }}>
+                                <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
                                         padding: '6px 8px',
+                                        background: settings.render.theme_stub_header_bg || '#D9E1F2', 
+                                        color: settings.render.theme_stub_header_fg || '#000',
+                                        fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         fontFamily: settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>Base</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
-                                            padding: '6px 8px', textAlign: 'right',
+                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
@@ -162,7 +220,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     }}>top2</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
-                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600,
+                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
@@ -173,7 +231,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         </td>
                                     ))}
                                 </tr>
-                                <tr style={{ background: settings.render.theme_stub_header_bg || '#D9E1F2' }}>
+                                <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
                                         padding: '6px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
@@ -183,7 +241,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     }}>평균</td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
-                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_stub_header_fg || '#000',
+                                            padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
@@ -346,7 +404,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                     <option value="double">double</option>
                                                     <option value="none">none</option>
                                                 </select>
-                                                <input type="text" value={settings.render[g.width] || ''} placeholder="1px" onChange={(e) => handleChange(`render.${g.width}`, e.target.value)} style={{ width: '36px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께" />
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <input type="number" min="0" max="10" value={(settings.render[g.width] || '').replace('px', '')} placeholder="1" onChange={(e) => handleChange(`render.${g.width}`, e.target.value ? `${e.target.value}px` : '')} style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께(숫자)" />
+                                                    <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}
@@ -375,7 +436,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                     <option value="double">double</option>
                                                     <option value="none">none</option>
                                                 </select>
-                                                <input type="text" value={settings.render[g.width] || ''} placeholder="1px" onChange={(e) => handleChange(`render.${g.width}`, e.target.value)} style={{ width: '36px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께" />
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <input type="number" min="0" max="10" value={(settings.render[g.width] || '').replace('px', '')} placeholder="1" onChange={(e) => handleChange(`render.${g.width}`, e.target.value ? `${e.target.value}px` : '')} style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께(숫자)" />
+                                                    <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                </div>
                                             </div>
                                         </div>
                                     ))}

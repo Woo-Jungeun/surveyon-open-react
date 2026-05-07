@@ -110,11 +110,11 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                     min-width: 150px !important;
                     width: 150px !important;
                     max-width: 150px !important;
-                    background-color: ${uiSettings?.theme_bg || '#fff'} !important;
+                    background-color: ${uiSettings?.theme_stub_header_bg || '#D9E1F2'} !important;
                     border-right: ${stubBorder} !important;
                     margin: 0 !important;
                     padding: 0 !important; 
-                    color: ${uiSettings?.theme_text || 'inherit'} !important;
+                    color: ${uiSettings?.theme_stub_header_fg || '#000'} !important;
                 }
                 .dp-html-table .stub-cell > div {
                     display: block !important;
@@ -127,9 +127,10 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 }
                 .dp-html-table .stub-header {
                     z-index: 110 !important;
-                    background-color: ${uiSettings?.theme_stub_header_bg || uiSettings?.theme_primary || '#f8fafc'} !important;
-                    color: ${uiSettings?.theme_stub_header_fg || uiSettings?.theme_primary_fg || 'inherit'} !important;
+                    background-color: ${uiSettings?.theme_primary || '#f8fafc'} !important;
+                    color: ${uiSettings?.theme_primary_fg || 'inherit'} !important;
                     border-bottom: ${headerBorder} !important;
+                    border-right: ${gridBorder} !important;
                 }
                 /* 막기용 의사 요소 */
                 .dp-html-table .stub-header::before,
@@ -185,7 +186,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         <tr>
                             {!showLabel3Header && <th rowSpan={headerRowCount} className="stub-header" style={{ padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                             {label2Groups.map((g, i) => (
-                                <th key={`l2-${i}`} colSpan={g.span} style={{ borderLeft: gridBorder, borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
+                                <th key={`l2-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
@@ -217,7 +218,8 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                             }}>
                                 <td className="stub-cell" style={{ 
                                     borderTop: topBorderAttr,
-                                    background: rowBg,
+                                    background: uiSettings?.theme_stub_header_bg || '#D9E1F2',
+                                    color: uiSettings?.theme_stub_header_fg || '#000',
                                     padding: 0
                                 }}>
                                     <div title={row.label} style={{ 
@@ -775,7 +777,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             }).catch(e => console.error("Setting save error", e));
         }, 500);
 
-        return () => clearTimeout(timeoutId);
+        return () => clearTimeout(saveTimeout);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [showN, decimalN, showPct, decimalPct]);
     const [xInfoOptions, setXInfoOptions] = useState([]);
