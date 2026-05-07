@@ -53,6 +53,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [currentLabel, setCurrentLabel] = useState('');
     const [currentId, setCurrentId] = useState('');
     const [currentXInfo, setCurrentXInfo] = useState('');
+    const listContainerRef = useRef(null);
 
     // ★ 핵심 최적화: 현재 선택된 문항의 info를 banners 배열에서 분리
     // → 셀 편집 시 banners 전체를 map()하지 않아도 됨 (성능 핵심)
@@ -145,7 +146,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             const nextBanners = banners.filter(b => b.id !== bannerId);
             setBanners(nextBanners);
             if (selectedBanner === bannerId) {
-                if (nextBanners.length > 0) selectBanner(nextBanners[0]);
+                if (nextBanners.length > 0) { selectBanner(nextBanners[0]); scrollToTop(); }
                 else { setSelectedBanner(''); setCurrentId(''); setCurrentLabel(''); setCurrentXInfo(''); setCurrentInfo([]); currentInfoRef.current = []; }
             }
             return;
@@ -188,8 +189,9 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 const prevId = selectedBannerRef.current;
                 setBanners(prev => {
                     const updated = prevId ? prev.map(b => b.id === prevId ? { ...b, info: currentInfoRef.current } : b) : prev;
-                    return [newBanner, ...updated];
+                    return [...updated, newBanner];
                 });
+                setTimeout(scrollToBottom, 100);
                 setSelectedBanner(tempId);
                 selectedBannerRef.current = tempId;
                 setCurrentId(tempId);
@@ -252,6 +254,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         setCurrentInfo(target.info || []);
                         currentInfoRef.current = target.info || [];
                     }
+                    if (mode === 'delete') scrollToTop();
                 } else {
                     setSelectedBanner(''); selectedBannerRef.current = '';
                     setCurrentLabel(''); setCurrentId(''); setCurrentXInfo('');
@@ -273,6 +276,20 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         currentInfoRef.current = newInfo;
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
+
+    // 목록 하단으로 스크롤 이동
+    const scrollToBottom = useCallback(() => {
+        if (listContainerRef.current) {
+            listContainerRef.current.scrollTo({ top: listContainerRef.current.scrollHeight, behavior: 'smooth' });
+        }
+    }, []);
+
+    // 목록 상단으로 스크롤 이동
+    const scrollToTop = useCallback(() => {
+        if (listContainerRef.current) {
+            listContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    }, []);
 
     const handleRowClick = useCallback((e) => {
         setCurrentInfo(prev => prev.map(it => ({ ...it, inEdit: it === e.dataItem })));
@@ -345,6 +362,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
                 await fetchVariablesData('select', nextId);
+                setTimeout(scrollToBottom, 100);
                 return true;
             } else {
                 modal.showAlert('오류', result?.Message || '저장 중 문제가 발생했습니다.');
@@ -398,7 +416,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     <input type="text" placeholder="문항명 또는 ID 검색" value={bannerSearch} onChange={(e) => setBannerSearch(e.target.value)} className="dp-search-input" />
                                 </div>
                             </div>
-                            <div className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                            <div ref={listContainerRef} className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                                 {filteredBanners.map(banner => (
                                     <div key={banner.id}
                                         className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}

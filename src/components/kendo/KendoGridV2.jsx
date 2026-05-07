@@ -32,7 +32,7 @@ if (typeof document !== 'undefined') {
  * H-SRT 전용 Smart Excel-Style Grid (Version 2)
  * 행 추가, 삭제, 드래그 이동, 인라인 편집 기능을 내장한 공통 컴포넌트입니다.
  */
-const KendoGridV2 = (props) => {
+const KendoGridV2 = React.forwardRef((props, ref) => {
     const {
         data = [],
         children,
@@ -54,7 +54,22 @@ const KendoGridV2 = (props) => {
         ...rest
     } = props;
 
+    const gridRef = React.useRef(null);
     const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+
+    React.useImperativeHandle(ref, () => ({
+        scrollToBottom: () => {
+            if (gridRef.current) {
+                const scrollElement = gridRef.current.querySelector(".k-grid-content");
+                if (scrollElement) {
+                    scrollElement.scrollTo({
+                        top: scrollElement.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }
+            }
+        }
+    }));
 
     // --- 가상 스크롤 (Virtual Scrolling) 자체 지원 ---
     const isVirtual = rest.scrollable === 'virtual';
@@ -208,7 +223,7 @@ const KendoGridV2 = (props) => {
     };
 
     return (
-        <div style={{ display: 'contents' }} onKeyDownCapture={handleKeyDown}>
+        <div ref={gridRef} style={{ display: 'contents' }} onKeyDownCapture={handleKeyDown}>
             <Grid
                 data={displayData}
                 className={`dp-excel-grid-v2 ${className} ${reorderable ? 'reorderable' : ''}`}
@@ -369,7 +384,7 @@ const KendoGridV2 = (props) => {
             </Grid>
         </div>
     );
-};
+});
 
 KendoGridV2.propTypes = {
     data: PropTypes.array,
