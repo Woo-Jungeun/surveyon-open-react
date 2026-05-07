@@ -1308,24 +1308,31 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             reset_to_default: false
         };
 
+        let isSuccess = false;
         loadingSpinner.show();
         try {
             const result = await saveRecodedOverview.mutateAsync(requestData);
             if (result?.success === "777") {
-                modal.showAlert('알림', '스터브가 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
                 await fetchOverview(); // 저장 후 목록 최신화
-                return true;
+                isSuccess = true;
             } else {
                 modal.showAlert('오류', '저장 처리에 실패했습니다.');
                 return false;
             }
         } catch (err) {
             console.error(err);
-            modal.showAlert('오류', '저장 중 서류 오류가 발생했습니다.');
+            modal.showAlert('오류', '저장 중 서버 오류가 발생했습니다.');
             return false;
         } finally {
             loadingSpinner.hide();
+        }
+
+        if (isSuccess) {
+            setTimeout(() => {
+                modal.showAlert('알림', '스터브가 저장되었습니다.');
+            }, 100);
+            return true;
         }
     };
 
