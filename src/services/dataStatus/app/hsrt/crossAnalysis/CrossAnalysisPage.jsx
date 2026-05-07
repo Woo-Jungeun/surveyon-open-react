@@ -193,22 +193,29 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 <tbody>
                     {rows.map((row, rowIndex) => {
                         const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base";
-                        const rowBg = (rowIndex % 2 === 1 ? (uiSettings?.theme_bg_alt || '#fafafa') : (uiSettings?.theme_bg || '#fff'));
+                        // 첫 번째 사진처럼 일관된 배경을 위해 stripe를 매우 연하게 처리하거나 theme_bg 사용
+                        const rowBg = (rowIndex % 2 === 1 ? (uiSettings?.theme_bg_alt || uiSettings?.theme_stripe || '#fafafa') : (uiSettings?.theme_bg || '#fff'));
                         
                         return (
                             <tr key={row.key || rowIndex} style={{ 
-                                background: rowBg, 
-                                fontWeight: isBaseRow ? 700 : 400 
+                                background: rowBg,
+                                color: uiSettings?.theme_text || 'inherit'
                             }}>
                                 <td className="stub-cell" style={{ 
                                     borderBottom: `1px ${gridBorderStyle} ${borderColor}`, 
-                                    background: rowBg 
+                                    background: rowBg, // 행 배경과 일치시킴
+                                    padding: 0 // 내부 div에서 패딩 처리
                                 }}>
-                                    <div title={row.label} style={{ lineHeight: 1.3, paddingLeft: row.indent ? '24px' : '8px' }}>{row.label}</div>
+                                    <div title={row.label} style={{ 
+                                        lineHeight: 1.2, 
+                                        padding: '2px 8px', // 더 촘촘하게
+                                        paddingLeft: row.indent ? '24px' : '8px',
+                                        fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px'
+                                    }}>{row.label}</div>
                                 </td>
                                 {columns.map((col) => {
                                     const cell = row.cells?.[col.key] || resultData.data?.[row.key]?.[col.key];
-                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ border: `1px ${gridBorderStyle} ${borderColor}`, padding: '4px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
+                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ border: `1px ${gridBorderStyle} ${borderColor}`, padding: '2px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
 
                                     let valN = cell.count ?? cell.n ?? null;
                                     let valP = cell.percent ?? cell.pct ?? null;
@@ -217,15 +224,27 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                     const isBaseCell = cell.is_base || isBaseRow || String(cell.cell_type ?? "").toLowerCase() === "base";
 
                                     return (
-                                        <td key={col.key} style={{ border: `1px ${gridBorderStyle} ${borderColor}`, padding: '4px 8px', textAlign: 'right', color: uiSettings?.theme_text || 'inherit' }}>
+                                        <td key={col.key} style={{ 
+                                            border: `1px ${gridBorderStyle} ${borderColor}`, 
+                                            padding: '2px 8px', 
+                                            textAlign: 'right' 
+                                        }}>
                                             {valN !== null && (showN || isBaseCell) && (
-                                                <div style={{ fontSize: '12px', fontWeight: isBaseCell ? 700 : 500 }}>{formatCountValue(valN, effectivePolicy)}</div>
+                                                <div style={{ 
+                                                    fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px', 
+                                                    fontWeight: 500,
+                                                    color: uiSettings?.theme_text || 'inherit'
+                                                }}>{formatCountValue(valN, effectivePolicy)}</div>
                                             )}
                                             {valP !== null && showPct && !isBaseCell && (
-                                                <div style={{ fontSize: '11px', color: uiSettings?.theme_text_muted || '#64748b' }}>{formatPercentValue(valP, effectivePolicy)}%</div>
+                                                <div style={{ 
+                                                    fontSize: '11px', 
+                                                    color: uiSettings?.theme_text_muted || '#64748b',
+                                                    marginTop: '-2px'
+                                                }}>{formatPercentValue(valP, effectivePolicy)}%</div>
                                             )}
                                             {singleVal !== null && typeof singleVal !== 'object' && (
-                                                <div style={{ fontSize: '12px' }}>{String(singleVal)}</div>
+                                                <div style={{ fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{String(singleVal)}</div>
                                             )}
                                             {singleVal === null && valN === null && valP === null && <span style={{ color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</span>}
                                         </td>
