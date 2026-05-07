@@ -1007,13 +1007,15 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             let infoArray = undefined;
 
             if (stub.info) {
-                const baseCategory = stub.info.find(opt => opt.type === 'base');
-                if (baseCategory) filterExp = baseCategory.logic || null;
-                
-                infoArray = stub.info.filter(opt => opt.type !== 'base').map((opt, i) => {
+                infoArray = stub.info.map((opt, i) => {
+                    const isBase = opt.type === 'base';
                     const isStat = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"].includes(opt.type);
-                    const rowRole = isStat ? "stat" : (opt.row_role || "item");
-                    
+                    const rowRole = isBase ? 'base' : (isStat ? "stat" : (opt.row_role || "item"));
+
+                    if (isBase) {
+                        filterExp = opt.logic || null;
+                    }
+
                     let mappedLine = null;
                     if (opt.line === "일반선") mappedLine = "thin";
                     else if (opt.line === "굵은선") mappedLine = "thick";
@@ -1028,33 +1030,49 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                         row_role: rowRole,
                         target_var: opt.target_var || null,
                         line: mappedLine,
-                        round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isStat ? 2 : undefined),
+                        round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isStat ? 2 : null),
                         logic: opt.logic || '',
                         value: opt.value || null
                     };
                 });
             }
 
-            // 1) 배열에는 최소 식별자만 추가 (source_var_id가 있는 경우만)
-            if (effSourceId) {
+            // banner 값: 항상 배열로
+            const bannerArr = stub.x_info
+                ? (Array.isArray(stub.x_info) ? stub.x_info : [stub.x_info])
+                : [];
+
+            // 1) dp_request_recoded_items: 원본 base variable 기반인 경우만
+            //    source_var_id === recoded_var_id이면 rank preset 파생 변수 → 제외
+            if (effSourceId && effSourceId !== effRecodedId) {
                 stubItems.push({
                     source_var_id: effSourceId,
-                    recoded_var_id: effRecodedId
+                    recoded_var_id: effRecodedId,
+                    scale_preset_id: stub.scale_preset_name || null,
+                    rank_preset_id: stub.rank_preset_name || null,
+                    group_preset_id: stub.group_preset_name || null,
+                    stat_preset_id: stub.stat_summary || null,
+                    filter_expression: filterExp || null,
+                    banner: bannerArr
                 });
             }
 
-            // 2) 상세 속성들은 variables 객체에 추가
+            // 2) variables: 상세 속성 전체 (info는 base 포함 전체)
             variablesMap[effRecodedId] = {
                 id: effRecodedId,
+                source_var_id: effSourceId || null,
                 label: stub.var_label || '',
                 type: stub.var_type || 'single',
-                recoded_type: effSourceId ? 'recoded' : 'custom',
+                stub_kind: effSourceId ? 'source_based' : 'custom',
+                variable_role: 'stub',
+                managed_by: 'dp_request',
+                metadata_status: 'explicit',
                 scale_preset_id: stub.scale_preset_name || null,
                 rank_preset_id: stub.rank_preset_name || null,
                 group_preset_id: stub.group_preset_name || null,
                 stat_preset_id: stub.stat_summary || null,
-                filter_expression: filterExp,
-                banner: Array.isArray(stub.x_info) ? stub.x_info : (stub.x_info ? [stub.x_info] : []),
+                condition: filterExp || null,
+                banner: bannerArr,
                 info: infoArray
             };
         }
