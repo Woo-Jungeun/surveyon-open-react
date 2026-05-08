@@ -777,6 +777,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             updatePresets(resultData.presets?.group || [], setGroupPresets);
             updatePresets(resultData.presets?.stat || [], setStatPresets);
 
+            let formattedBanners = [];
             try {
                 // banner/detail은 banner_ids만 내려줌 → table/detail에서 label 보충
                 const [bannerRes, tableRes] = await Promise.all([
@@ -789,7 +790,6 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     ? recodedVars 
                     : Object.entries(recodedVars).map(([key, val]) => ({ id: val.id || key, ...val }));
                 
-                let formattedBanners = [];
                 if (bannerIds.length > 0) {
                     formattedBanners = bannerIds.map(bid => {
                         const found = recodesArr.find(v => v.id === bid);
@@ -934,7 +934,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     var_label: item.label || '',
                     var_type: parentType,
                     condition: item.filter_expression || item.condition || '',
-                    x_info: Array.isArray(item.banner) ? item.banner[0] || '' : (item.banner || item.x_info || ''),
+                    x_info: (() => {
+                        let b = Array.isArray(item.banner) ? item.banner[0] || '' : (item.banner || item.x_info || '');
+                        if (!b && formattedBanners.length > 0) return formattedBanners[0].id;
+                        return b;
+                    })(),
                     stat_summary: item.stat_preset_id === 'default_double' ? '' : (item.stat_preset_id || ''),
                     scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
                     rank_preset_name: item.rank_preset_id || '',
@@ -969,7 +973,12 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     var_label: folder.label || varObj.label || folder.name || folder.var_label || getFallbackLabel(folder.stub_id),
                     var_type: 'summary',
                     condition: '',
-                    x_info: folder.banner ?? folder.x_info ?? [],
+                    x_info: (() => {
+                        let bArr = folder.banner ?? folder.x_info ?? [];
+                        if (!Array.isArray(bArr)) bArr = [bArr];
+                        if ((!bArr || bArr.length === 0 || !bArr[0]) && formattedBanners.length > 0) return [formattedBanners[0].id];
+                        return bArr;
+                    })(),
                     stat_summary: '',
                     scale_preset_name: '',
                     rank_preset_name: '',
@@ -1069,7 +1078,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 var_label: newStub.label || '',
                 var_type: newStub.type || 'unknown',
                 condition: newStub.filter_expression || '',
-                x_info: Array.isArray(newStub.banner) ? newStub.banner[0] : (newStub.banner || newStub.x_info || ''),
+                x_info: (() => {
+                    let b = Array.isArray(newStub.banner) ? newStub.banner[0] : (newStub.banner || newStub.x_info || '');
+                    if (!b && banners.length > 0) return banners[0].id;
+                    return b;
+                })(),
                 stat_summary: newStub.stat_preset_id || '',
                 scale_preset_name: newStub.scale_preset_id || '',
                 rank_preset_name: newStub.rank_preset_id || '',
