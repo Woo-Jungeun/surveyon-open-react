@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect, useRef } from 'react';
+import React, { useCallback, useState, useContext, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { ColorPicker } from '@progress/kendo-react-inputs';
@@ -22,9 +22,9 @@ const LineStylePicker = ({ value, onChange, color }) => {
     const [isOpen, setIsOpen] = useState(false);
     const [popupWidth, setPopupWidth] = useState('80px');
     const anchorRef = useRef(null);
-    
+
     useEffect(() => {
-        const handleClickOutside = (e) => { 
+        const handleClickOutside = (e) => {
             if (isOpen && anchorRef.current && !anchorRef.current.contains(e.target)) {
                 if (!e.target.closest('.dp-line-picker-popup')) {
                     setIsOpen(false);
@@ -38,22 +38,22 @@ const LineStylePicker = ({ value, onChange, color }) => {
     const options = ['solid', 'dashed', 'dotted', 'double', 'none'];
     return (
         <div style={{ position: 'relative', width: '100%' }}>
-            <div 
+            <div
                 ref={anchorRef}
-                onClick={(e) => { 
-                    e.stopPropagation(); 
+                onClick={(e) => {
+                    e.stopPropagation();
                     if (!isOpen && anchorRef.current) {
                         setPopupWidth(`${anchorRef.current.offsetWidth}px`);
                     }
-                    setIsOpen(!isOpen); 
+                    setIsOpen(!isOpen);
                 }}
                 style={{ width: '100%', height: '28px', padding: '0 8px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}
                 title="선 종류"
             >
                 {value === 'none' || !value ? (
-                     <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
+                    <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
                 ) : (
-                     <div style={{ width: '100%', borderTopStyle: value, borderTopWidth: value === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
+                    <div style={{ width: '100%', borderTopStyle: value, borderTopWidth: value === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
                 )}
             </div>
             <Popup
@@ -65,8 +65,8 @@ const LineStylePicker = ({ value, onChange, color }) => {
             >
                 <div style={{ background: '#fff', border: '1px solid #CBD5E1', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: popupWidth, padding: '4px 0', marginTop: '2px', boxSizing: 'border-box' }}>
                     {options.map(opt => (
-                        <div 
-                            key={opt} 
+                        <div
+                            key={opt}
                             onClick={(e) => { e.stopPropagation(); onChange(opt); setIsOpen(false); }}
                             style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: value === opt ? '#F1F5F9' : '#fff' }}
                             onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
@@ -183,6 +183,58 @@ const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', pl
     );
 });
 
+// --- 배경색 전용 셀 (Native Color Picker의 부드러운 드래그를 위해 컴포넌트 분리) ---
+const ColorEditCell = React.memo(({ p, onUpdate }) => {
+    const [localColor, setLocalColor] = useState(p.dataItem.color || '');
+
+    // 외부에서 데이터 변경 시 로컬 상태 동기화
+    useEffect(() => {
+        setLocalColor(p.dataItem.color || '');
+    }, [p.dataItem.color]);
+
+    // 로컬 상태만 즉시 업데이트 (드래그 지연 방지)
+    const handleChange = (e) => {
+        setLocalColor(e.target.value.toUpperCase());
+    };
+
+    // 150ms 디바운스를 적용하여 그리드 전체 리렌더링 최소화
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (localColor !== (p.dataItem.color || '')) {
+                onUpdate(p.dataIndex, 'color', localColor);
+            }
+        }, 150);
+        return () => clearTimeout(timer);
+    }, [localColor, p.dataItem.color, p.dataIndex, onUpdate]);
+
+    return (
+        <td style={{ padding: '4px', textAlign: 'center', verticalAlign: 'middle' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', padding: '2px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', position: 'relative', overflow: 'hidden' }} title="색상">
+                    {!localColor && (
+                        <div style={{ position: 'absolute', top: 2, left: 2, right: 2, bottom: 2, background: 'linear-gradient(to top right, transparent calc(50% - 1px), #ef4444 calc(50%), transparent calc(50% + 1px))', pointerEvents: 'none', borderRadius: '2px' }} />
+                    )}
+                    <input
+                        type="color"
+                        value={(localColor || '#FFFFFF').slice(0, 7)}
+                        onChange={handleChange}
+                        style={{ width: '20px', height: '20px', padding: 0, border: 'none', cursor: 'pointer', opacity: localColor ? 1 : 0 }}
+                    />
+                </div>
+                {localColor && (
+                    <div
+                        onClick={() => { setLocalColor(''); onUpdate(p.dataIndex, 'color', ''); }}
+                        style={{ cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        title="색상 초기화"
+                    >
+                        <X size={14} color="#ef4444" />
+                    </div>
+                )}
+            </div>
+        </td>
+    );
+});
+
 const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onApply }) => {
     const auth = useSelector(state => state.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -230,13 +282,17 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
         }
     }, [show, rowData]);
 
-    const handleCategoryCellUpdate = (dataIndex, field, value) => {
+    const handleCategoryCellUpdate = useCallback((dataIndex, field, value) => {
         setCategories(prev => {
             const next = [...prev];
             next[dataIndex] = { ...next[dataIndex], [field]: value };
             return next;
         });
-    };
+    }, []);
+
+    const renderColorCell = useCallback((p) => {
+        return <ColorEditCell p={p} onUpdate={handleCategoryCellUpdate} />;
+    }, [handleCategoryCellUpdate]);
 
     // 적용 이벤트
     const handleGenerate = () => {
@@ -315,7 +371,9 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 style={{ flex: 1, height: '100%', width: '100%' }}
                                 scrollable="scrollable"
                             >
-                                <Column field="label" title="라벨" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                {isDetailSetting && <Column field="label2" title="대분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="label3" title="중분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                <Column field="label" title="소분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
                                 <Column
                                     field="type"
                                     title="형식"
@@ -337,8 +395,6 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 <Column field="target_var" title="저장될 변수" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
                                 <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="value" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
 
-                                {isDetailSetting && <Column field="label2" title="대분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
-                                {isDetailSetting && <Column field="label3" title="중분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="prefix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="postfix" title="뒷문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="postfix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="round" title="소수점" width="100px" headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="round" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
@@ -364,29 +420,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         />
                                     </td>
                                 )} />}
-                                {isDetailSetting && <Column field="color" title="배경색" width="150px" cell={(p) => (
-                                    <td style={{ padding: '4px', textAlign: 'center', verticalAlign: 'middle' }}>
-                                        <div style={{ position: 'relative', display: 'inline-flex', width: '24px', height: '24px', alignItems: 'center', justifyContent: 'center' }}>
-                                            <div style={{
-                                                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-                                                borderRadius: '4px',
-                                                border: '1px solid #cbd5e1',
-                                                backgroundColor: p.dataItem.color || 'transparent',
-                                                backgroundImage: !p.dataItem.color ? 'linear-gradient(to top right, transparent calc(50% - 1px), #ef4444 calc(50%), transparent calc(50% + 1px))' : 'none',
-                                                pointerEvents: 'none',
-                                                zIndex: 1
-                                            }} />
-                                            <ColorPicker
-                                                className="dp-invisible-picker"
-                                                view="gradient"
-                                                format="hex"
-                                                value={p.dataItem.color || null}
-                                                onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'color', e.value || "")}
-                                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}
-                                            />
-                                        </div>
-                                    </td>
-                                )} />}
+                                {isDetailSetting && <Column field="color" title="배경색" width="100px" cell={renderColorCell} />}
                             </KendoGridV2>
                         </div>
                     </div>
