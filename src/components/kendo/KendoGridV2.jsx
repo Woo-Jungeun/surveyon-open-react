@@ -4,7 +4,17 @@ import PropTypes from "prop-types";
 import { GripVertical, Plus, Trash2, ArrowUp, ArrowDown, Copy } from "lucide-react";
 
 const GRID_INLINE_STYLE = `
-.dp-row-del-hover td {
+.dp-excel-grid-v2 tbody tr:hover td {
+    background-color: #e0f2fe !important;
+    transition: background-color 0.2s;
+}
+.dp-excel-grid-v2 tbody tr:hover td .k-input-inner,
+.dp-excel-grid-v2 tbody tr:hover td .k-dropdownlist,
+.dp-excel-grid-v2 tbody tr:hover td .k-picker,
+.dp-excel-grid-v2 tbody tr:hover td input {
+    background-color: transparent !important;
+}
+.dp-excel-grid-v2 tbody tr.dp-row-del-hover td {
     background-color: #fee2e2 !important;
     transition: background-color 0.2s;
 }
@@ -12,7 +22,7 @@ const GRID_INLINE_STYLE = `
     color: #94a3b8;
     transition: color 0.2s;
 }
-.dp-row-del-hover .dp-row-del-btn {
+.dp-excel-grid-v2 tbody tr.dp-row-del-hover .dp-row-del-btn {
     color: #ef4444 !important;
 }
 `;
