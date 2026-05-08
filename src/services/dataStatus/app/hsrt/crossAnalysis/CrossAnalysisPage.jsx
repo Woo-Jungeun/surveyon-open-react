@@ -197,7 +197,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                             return (
                                 <th key={col.key || i} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>
                                     <div style={{ lineHeight: 1.1, fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{col.label}</div>
-                                    {columnTotal !== null && <div style={{ fontSize: uiSettings?.font_size ? `${Math.max(8, uiSettings.font_size - 2)}px` : '10px', color: uiSettings?.theme_primary_fg ? 'rgba(255,255,255,0.7)' : '#64748b', fontWeight: 400, lineHeight: 1, marginTop: '1px' }}>total {formatCountValue(columnTotal, effectivePolicy)}</div>}
+                                    {/* {columnTotal !== null && <div style={{ fontSize: uiSettings?.font_size ? `${Math.max(8, uiSettings.font_size - 2)}px` : '10px', color: uiSettings?.theme_primary_fg ? 'rgba(255,255,255,0.7)' : '#64748b', fontWeight: 400, lineHeight: 1, marginTop: '1px' }}>total {formatCountValue(columnTotal, effectivePolicy)}</div>} */}
                                 </th>
                             );
                         })}
@@ -1026,7 +1026,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 }));
 
             setXInfoOptions([
-                { text: '없음 (순수 빈도)', value: '__none__' },
+                { text: '기본 (스터브 설정값) ', value: '__none__' },
                 ...dynamicXInfoOptions
             ]);
 
@@ -1365,7 +1365,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 dataItemKey="value"
                                 value={xInfoOptions.find(o => o.value === selectedXInfo) || xInfoOptions[0]}
                                 onChange={(e) => setSelectedXInfo(e.value.value)}
-                                style={{ width: '160px', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
+                                style={{ width: '180px', height: '100%', border: 'none', fontSize: '13px', color: '#1e293b' }}
                                 className="custom-xinfo-dropdown"
                                 popupSettings={{ className: "custom-xinfo-popup" }}
                             />
