@@ -1,5 +1,51 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Layout, Type, Palette, Eye } from 'lucide-react';
+
+const LineStylePicker = ({ value, onChange, color, direction = 'down' }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const ref = useRef(null);
+    useEffect(() => {
+        const handleClickOutside = (e) => { if (ref.current && !ref.current.contains(e.target)) setIsOpen(false); };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const options = ['solid', 'dashed', 'dotted', 'double', 'none'];
+    return (
+        <div ref={ref} style={{ position: 'relative' }}>
+            <div 
+                onClick={() => setIsOpen(!isOpen)}
+                style={{ width: '60px', height: '24px', padding: '0 8px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}
+                title="선 종류"
+            >
+                {value === 'none' ? (
+                     <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
+                ) : (
+                     <div style={{ width: '100%', borderTopStyle: value, borderTopWidth: value === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
+                )}
+            </div>
+            {isOpen && (
+                <div style={{ position: 'absolute', [direction === 'up' ? 'bottom' : 'top']: '100%', left: '-10px', zIndex: 50, background: '#fff', border: '1px solid #CBD5E1', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: '80px', [direction === 'up' ? 'marginBottom' : 'marginTop']: '4px', padding: '4px 0' }}>
+                    {options.map(opt => (
+                        <div 
+                            key={opt} 
+                            onClick={() => { onChange(opt); setIsOpen(false); }}
+                            style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: value === opt ? '#F1F5F9' : '#fff' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = value === opt ? '#F1F5F9' : '#fff'}
+                        >
+                            {opt === 'none' ? (
+                                <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
+                            ) : (
+                                <div style={{ width: '100%', borderTopStyle: opt, borderTopWidth: opt === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     const handleChange = (path, value) => {
@@ -126,9 +172,9 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             <Eye size={16} /> 실시간 미리보기
                         </div>
                     </div>
-                    <div className="dp-setting-card-body" style={{ padding: '8px 16px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px' }}>
+                    <div className="dp-setting-card-body" style={{ padding: '16px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px' }}>
                         <table style={{
-                            width: '100%', borderCollapse: 'separate', borderSpacing: 0,
+                            width: '100%', borderCollapse: 'separate', borderSpacing: 0, margin: '0 0 8px 0',
                             fontFamily: settings.render.font_family || 'Arial',
                             fontSize: `${settings.render.font_size || 12}px`,
                             color: settings.render.theme_text || '#000000',
@@ -390,20 +436,19 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         { group: '표 하단', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
                                         { group: '표 좌측', color: 'theme_table_outer_left_color', style: 'theme_table_outer_left_style', width: 'theme_table_outer_left_width' },
                                         { group: '표 우측', color: 'theme_table_outer_right_color', style: 'theme_table_outer_right_style', width: 'theme_table_outer_right_width' },
-                                    ].map((g) => (
+                                    ].map((g, i) => (
                                         <div key={g.group} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #F8FAFC' }}>
                                             <div style={{ fontSize: '11px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
                                                     <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
                                                 </div>
-                                                <select value={settings.render[g.style] || 'solid'} onChange={(e) => handleChange(`render.${g.style}`, e.target.value)} style={{ width: '60px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="종류">
-                                                    <option value="solid">solid</option>
-                                                    <option value="dashed">dashed</option>
-                                                    <option value="dotted">dotted</option>
-                                                    <option value="double">double</option>
-                                                    <option value="none">none</option>
-                                                </select>
+                                                <LineStylePicker 
+                                                    value={settings.render[g.style] || 'solid'} 
+                                                    onChange={(val) => handleChange(`render.${g.style}`, val)} 
+                                                    color={settings.render[g.color] || '#000000'} 
+                                                    direction={i >= 2 ? 'up' : 'down'}
+                                                />
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                     <input type="number" min="0" max="10" value={(settings.render[g.width] || '').replace('px', '')} placeholder="1" onChange={(e) => handleChange(`render.${g.width}`, e.target.value ? `${e.target.value}px` : '')} style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께(숫자)" />
                                                     <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
@@ -422,20 +467,19 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         { group: '스터브 구분선', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
                                         { group: '섹션 구분선', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
                                         { group: '데이터 기본선', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
-                                    ].map((g) => (
+                                    ].map((g, i) => (
                                         <div key={g.group} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #F8FAFC' }}>
                                             <div style={{ fontSize: '11px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
                                                     <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
                                                 </div>
-                                                <select value={settings.render[g.style] || 'solid'} onChange={(e) => handleChange(`render.${g.style}`, e.target.value)} style={{ width: '60px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="종류">
-                                                    <option value="solid">solid</option>
-                                                    <option value="dashed">dashed</option>
-                                                    <option value="dotted">dotted</option>
-                                                    <option value="double">double</option>
-                                                    <option value="none">none</option>
-                                                </select>
+                                                <LineStylePicker 
+                                                    value={settings.render[g.style] || 'solid'} 
+                                                    onChange={(val) => handleChange(`render.${g.style}`, val)} 
+                                                    color={settings.render[g.color] || '#000000'} 
+                                                    direction={i >= 2 ? 'up' : 'down'}
+                                                />
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                     <input type="number" min="0" max="10" value={(settings.render[g.width] || '').replace('px', '')} placeholder="1" onChange={(e) => handleChange(`render.${g.width}`, e.target.value ? `${e.target.value}px` : '')} style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께(숫자)" />
                                                     <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
