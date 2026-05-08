@@ -3,30 +3,7 @@ import { Grid, GridColumn as Column, GridNoRecords } from "@progress/kendo-react
 import PropTypes from "prop-types";
 import { GripVertical, Plus, Trash2, ArrowUp, ArrowDown, Copy } from "lucide-react";
 
-const GRID_INLINE_STYLE = `
-.dp-row-del-hover td {
-    background-color: #fee2e2 !important;
-    transition: background-color 0.2s;
-}
-.dp-row-del-btn {
-    color: #94a3b8;
-    transition: color 0.2s;
-}
-.dp-row-del-hover .dp-row-del-btn {
-    color: #ef4444 !important;
-}
-`;
-if (typeof document !== 'undefined') {
-    let style = document.getElementById('kendo-grid-v2-style');
-    if (!style) {
-        style = document.createElement('style');
-        style.id = 'kendo-grid-v2-style';
-        document.head.appendChild(style);
-    }
-    if (style.innerHTML !== GRID_INLINE_STYLE) {
-        style.innerHTML = GRID_INLINE_STYLE;
-    }
-}
+
 
 /**
  * H-SRT 전용 Smart Excel-Style Grid (Version 2)

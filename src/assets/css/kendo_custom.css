@@ -1,4 +1,4 @@
-﻿/* common */
+/* common */
 input.k-input,
 textarea.k-textarea {
   padding-inline-start: 12px;
@@ -1751,4 +1751,35 @@ input[type='checkbox']+label {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+}
+
+/* ===================================================
+     KendoGridV2 Custom Hover Styles
+=================================================== */
+html body .dp-excel-grid-v2 tbody tr:hover td,
+html body .dp-excel-grid-v2 tbody tr.k-hover td,
+html body .dp-excel-grid-v2 tbody tr.k-state-hover td {
+    background-color: #e0f2fe !important;
+    transition: background-color 0.2s;
+}
+html body .dp-excel-grid-v2 tbody tr:hover td .k-input-inner,
+html body .dp-excel-grid-v2 tbody tr:hover td .k-dropdownlist,
+html body .dp-excel-grid-v2 tbody tr:hover td .k-picker,
+html body .dp-excel-grid-v2 tbody tr:hover td input,
+html body .dp-excel-grid-v2 tbody tr.k-hover td .k-input-inner,
+html body .dp-excel-grid-v2 tbody tr.k-hover td .k-dropdownlist,
+html body .dp-excel-grid-v2 tbody tr.k-hover td .k-picker,
+html body .dp-excel-grid-v2 tbody tr.k-hover td input,
+html body .dp-excel-grid-v2 tbody tr.k-state-hover td .k-input-inner,
+html body .dp-excel-grid-v2 tbody tr.k-state-hover td .k-dropdownlist,
+html body .dp-excel-grid-v2 tbody tr.k-state-hover td .k-picker,
+html body .dp-excel-grid-v2 tbody tr.k-state-hover td input {
+    background-color: transparent !important;
+}
+html body .dp-excel-grid-v2 tbody tr.dp-row-del-hover td {
+    background-color: #fee2e2 !important;
+    transition: background-color 0.2s;
+}
+html body .dp-excel-grid-v2 tbody tr.dp-row-del-hover .dp-row-del-btn {
+    color: #ef4444 !important;
 }
