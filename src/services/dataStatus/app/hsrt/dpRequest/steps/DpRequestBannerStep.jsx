@@ -803,7 +803,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const updateBannerInfo = useCallback((newInfo) => {
         setBanners(prev => prev.map(b => b.id === selectedBanner ? { ...b, info: newInfo, isDirty: true } : b));
-    }, [selectedBanner]);
+        if (onUnsavedChange) onUnsavedChange(true);
+    }, [selectedBanner, onUnsavedChange]);
 
     const handleMergedUpdate = useCallback((dataIndex, rowSpan, field, value, data) => {
         const newData = [...data];
@@ -1423,7 +1424,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 <KendoGridV3
                                     data={banners.find(b => b.id === selectedBanner)?.info || []}
-                                    addable deletable editField="inEdit"
+                                    addable={!!selectedBanner} deletable={!!selectedBanner} editField="inEdit"
                                     onDataChange={updateBannerInfo}
                                     onRowClick={handleRowClick}
                                     newRowTemplate={{ label3: '', label2: '', label: '', logic: '' }}

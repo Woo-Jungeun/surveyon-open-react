@@ -91,13 +91,14 @@ const DpRequestPage = () => {
             if (action === "cancel") return;
 
             if (action === "saveThenGo") {
+                let success = false;
                 if (currentKey === 'table') success = await step1Ref.current?.save?.();
                 else if (currentKey === 'banner') success = await step2Ref.current?.save?.();
                 else if (currentKey === 'recoded') success = await step3Ref.current?.save?.();
                 else if (currentKey === 'summary') success = await step4Ref.current?.save?.();
                 else if (currentKey === 'order') success = await step5Ref.current?.save?.();
 
-                if (!success) return; // 저장 실패 시 이동 중단
+                if (success === false) return; // 저장 실패 시 이동 중단
                 setUnsaved(prev => ({ ...prev, [currentKey]: false }));
             } else if (action === "go") {
                 // 변경 사항 무시하고 이동
@@ -287,22 +288,7 @@ const DpRequestPage = () => {
                         <Save size={16} />
                         <span>저장</span>
                     </button>
-                    {currentStep < steps.length - 1 && (
-                        <button
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                background: '#FFFFFF', border: '1px solid #CBD5E1', color: '#475569',
-                                padding: '0 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
-                                height: '36px'
-                            }}
-                            onClick={() => {
-                                handleStepChange(currentStep + 1);
-                            }}
-                        >
-                            <span>다음 단계로</span>
-                            <ChevronRight size={16} />
-                        </button>
-                    )}
+
                 </div>
             </DataHeader>
 
