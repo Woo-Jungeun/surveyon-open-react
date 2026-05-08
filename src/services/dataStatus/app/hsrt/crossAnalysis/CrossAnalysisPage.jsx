@@ -210,6 +210,16 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         const customColor = infoItem.color;
                         const customLine = infoItem.line;
 
+                        // 이전 행이 커스텀 구분선을 가졌는지 확인 (중복 테두리 방지)
+                        let prevHasCustomLine = false;
+                        if (rowIndex > 0) {
+                            const prevRow = rows[rowIndex - 1];
+                            const prevInfoItem = dataItem?.raw?.info?.find(item => item.label === prevRow.label || item.key === prevRow.key) || {};
+                            if (prevInfoItem.line && prevInfoItem.line !== 'none') {
+                                prevHasCustomLine = true;
+                            }
+                        }
+
                         const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base";
                         const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? "").toLowerCase().includes(role));
                         
@@ -217,13 +227,13 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         const rowBg = customColor || defaultRowBg;
                         const stubBg = customColor || uiSettings?.theme_stub_header_bg || '#D9E1F2';
 
-                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
+                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : (prevHasCustomLine ? 'none' : gridBorder));
                         
                         let bottomBorderAttr = undefined;
                         if (customLine && customLine !== 'none') {
                             const lineStyle = customLine === 'thick' ? 'solid' : customLine;
-                            const lineWidth = customLine === 'thick' ? '2px' : '1.5px';
-                            bottomBorderAttr = `${lineWidth} ${lineStyle} ${uiSettings?.theme_grid_color || '#94a3b8'}`;
+                            const lineWidth = customLine === 'double' ? '3px' : '2px';
+                            bottomBorderAttr = `${lineWidth} ${lineStyle} #475569`; // 프리뷰와 동일한 진한 색상 사용
                         }
 
                         return (
@@ -1096,6 +1106,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     const matchedResult = resultsList.find(r => r.table_id === (t.table_id || t.id));
                     const dataResult = matchedResult ? matchedResult.result : null;
 
+                    // 스터브 설정값(색상, 선 등 info 정보)을 컨텍스트의 recodedVars에서 매핑
+                    const stubVarId = t.table_id || t.id;
+                    const stubVar = recodedVars[stubVarId] || {};
+                    const stubInfo = Array.isArray(stubVar.info) ? stubVar.info : (Array.isArray(t.info) ? t.info : []);
+
                     return {
                         id: t.table_id || t.id || `table_${i}`,
                         label: t.title || t.label || t.name || t.id,
@@ -1103,9 +1118,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             t.type === 'double' ? '다중 응답형 (Double)' :
                                 t.type === 'numeric' ? '숫자형 (Numeric)' : (t.type || '단일 응답형 (Single)'),
                         subId: t.table_id || t.id,
-                        raw: t,
+                        raw: { ...t, info: stubInfo },
                         dataResult: dataResult,
-                        info: []
+                        info: stubInfo
                     };
                 });
                 setBanners(formatted);
