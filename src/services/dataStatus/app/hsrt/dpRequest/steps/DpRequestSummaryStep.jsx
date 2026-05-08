@@ -667,6 +667,36 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 />
                                             </div>
                                         )}
+                                        {folder.type === 'statistics' && (
+                                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '4px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', height: '26px', boxSizing: 'border-box', overflow: 'hidden' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', padding: '0 8px', borderRight: '1px solid #e2e8f0', height: '100%', fontSize: '11px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
+                                                    포함 항목
+                                                </div>
+                                                <div style={{ display: 'flex', alignItems: 'center', padding: '0 12px', gap: '12px', height: '100%' }}>
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0 }}>
+                                                        <input type="checkbox" checked={folder.mean || false} onChange={(e) => {
+                                                            setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
+                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                        }} style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>평균</span>
+                                                    </label>
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0 }}>
+                                                        <input type="checkbox" checked={folder.mode || false} onChange={(e) => {
+                                                            setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: e.target.checked } : f));
+                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                        }} style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>최빈값</span>
+                                                    </label>
+                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', margin: 0 }}>
+                                                        <input type="checkbox" checked={folder.median || false} onChange={(e) => {
+                                                            setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: e.target.checked } : f));
+                                                            if (onUnsavedChange) onUnsavedChange(true);
+                                                        }} style={{ cursor: 'pointer', margin: 0, width: '13px', height: '13px', accentColor: '#3b82f6', appearance: 'checkbox', WebkitAppearance: 'checkbox', opacity: 1, display: 'inline-block', position: 'relative' }} />
+                                                        <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>중앙값</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                     <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', color: '#64748b', alignItems: 'center' }}>
                                         <button
@@ -732,31 +762,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 {/* Folder Body */}
                                 {!collapsedFolders.has(folder.id) && (
                                     <div style={{ padding: '12px' }}>
-                                        {folder.type === 'statistics' && (
-                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', fontSize: '12px', gap: '20px', paddingLeft: '4px' }}>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                                    <input type="checkbox" checked={folder.mean || false} onChange={(e) => {
-                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
-                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                    }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
-                                                    <span style={{ fontWeight: 600, color: '#475569' }}>평균</span>
-                                                </label>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                                    <input type="checkbox" checked={folder.mode || false} onChange={(e) => {
-                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mode: e.target.checked } : f));
-                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                    }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
-                                                    <span style={{ fontWeight: 600, color: '#475569' }}>최빈값</span>
-                                                </label>
-                                                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
-                                                    <input type="checkbox" checked={folder.median || false} onChange={(e) => {
-                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, median: e.target.checked } : f));
-                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                    }} style={{ cursor: 'pointer', appearance: 'checkbox', WebkitAppearance: 'checkbox', width: '16px', height: '16px', opacity: 1, display: 'inline-block', position: 'relative' }} />
-                                                    <span style={{ fontWeight: 600, color: '#475569' }}>중앙값</span>
-                                                </label>
-                                            </div>
-                                        )}
+
                                         <div
                                             style={{
                                                 display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px', minHeight: '40px',
