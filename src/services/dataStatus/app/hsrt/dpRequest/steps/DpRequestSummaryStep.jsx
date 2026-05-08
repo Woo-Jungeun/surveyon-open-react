@@ -376,7 +376,12 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
         const mappedFolders = (overrideFolders || folders).map(f => ({
             stub_id: f.id,
             label: f.name,
-            items: f.items || []
+            type: f.type,
+            items: f.items || [],
+            include_codes: typeof f.include_codes === 'string' ? f.include_codes.replace(/\s+/g, '') : f.include_codes,
+            mean: f.mean,
+            median: f.median,
+            mode: f.mode
         }));
 
         const payload = {
