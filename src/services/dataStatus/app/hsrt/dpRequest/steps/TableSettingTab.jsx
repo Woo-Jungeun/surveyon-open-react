@@ -43,7 +43,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
         { label: '여성 X 20~29세', subLabel: 'banner_02', base: 36, v1: 0, p1: 0.0, v2: 36, p2: 100.0, tV: 14, tP: 38.9, mean: 3.11 },
         { label: '서울', subLabel: 'banner_02', base: 977, v1: 503, p1: 51.5, v2: 474, p2: 48.5, tV: 460, tP: 47.1, mean: 3.44 },
         { label: '부산', subLabel: 'banner_02', base: 181, v1: 94, p1: 51.9, v2: 87, p2: 48.1, tV: 87, tP: 48.1, mean: 3.39 },
-        { label: 'Base 0 예시', subLabel: '숨김 대상', base: 0, v1: 0, p1: 0.0, v2: 0, p2: 0.0, tV: 0, tP: 0.0, mean: '-' }
+        { label: '빈 열 예시', subLabel: '숨김 대상', base: 0, v1: 0, p1: 0.0, v2: 0, p2: 0.0, tV: 0, tP: 0.0, mean: '-' }
     ].filter(col => !settings.display?.hide_zero_base_columns || col.base > 0);
 
     const showN = settings.display?.show_n ?? true;
@@ -273,7 +273,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 {[
                                     { label: '빈도 기본 표시', field: 'show_n' },
                                     { label: '비율 기본 표시', field: 'show_percent' },
-                                    { label: 'Base 0 열 숨기기', field: 'hide_zero_base_columns' }
+                                    { label: '빈 열 숨기기', field: 'hide_zero_base_columns' }
                                 ].map(item => (
                                     <div
                                         key={item.field}
