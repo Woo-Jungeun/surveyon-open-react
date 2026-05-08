@@ -546,9 +546,15 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                 const limit = labelLimit > 0 ? labelLimit : 12;
                                                 const text = String(e.value);
 
-                                                // 대/중/소분류 등 계층으로 인해 이미 줄바꿈이 적용되어 있는 경우 (각 줄 뒤에 ... 처리)
+                                                // 대/중/소분류 등 계층으로 인해 이미 줄바꿈이 적용되어 있는 경우에도 길면 자동 줄바꿈 처리
                                                 if (text.includes('\n')) {
-                                                    return text.split('\n').map(l => l.length > limit ? l.substring(0, limit) + '...' : l).join('\n');
+                                                    return text.split('\n').map(l => {
+                                                        const subChunks = [];
+                                                        for (let i = 0; i < l.length; i += limit) {
+                                                            subChunks.push(l.substring(i, i + limit));
+                                                        }
+                                                        return subChunks.join('\n');
+                                                    }).join('\n');
                                                 }
 
                                                 // 소분류만 있어서 한 줄로 길게 오는 경우 (일정 글자수 단위로 줄바꿈 처리하여 가로로 표출)
