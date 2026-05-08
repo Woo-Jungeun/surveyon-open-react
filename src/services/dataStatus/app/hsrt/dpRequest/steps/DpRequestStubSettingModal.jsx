@@ -18,6 +18,73 @@ function getUniqueId() {
 
 const STUB_TYPE_OPTIONS = ["base", "scale", "option", "mean", "std", "median", "mode", "min", "max", "var", "sum", "variance", "rse", "rank"];
 
+const LineStylePicker = ({ value, onChange, color }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [popupWidth, setPopupWidth] = useState('80px');
+    const anchorRef = useRef(null);
+    
+    useEffect(() => {
+        const handleClickOutside = (e) => { 
+            if (isOpen && anchorRef.current && !anchorRef.current.contains(e.target)) {
+                if (!e.target.closest('.dp-line-picker-popup')) {
+                    setIsOpen(false);
+                }
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [isOpen]);
+
+    const options = ['solid', 'dashed', 'dotted', 'double', 'none'];
+    return (
+        <div style={{ position: 'relative', width: '100%' }}>
+            <div 
+                ref={anchorRef}
+                onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (!isOpen && anchorRef.current) {
+                        setPopupWidth(`${anchorRef.current.offsetWidth}px`);
+                    }
+                    setIsOpen(!isOpen); 
+                }}
+                style={{ width: '100%', height: '28px', padding: '0 8px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}
+                title="선 종류"
+            >
+                {value === 'none' || !value ? (
+                     <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
+                ) : (
+                     <div style={{ width: '100%', borderTopStyle: value, borderTopWidth: value === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
+                )}
+            </div>
+            <Popup
+                anchor={anchorRef.current}
+                show={isOpen}
+                animate={false}
+                style={{ zIndex: 100000 }}
+                popupClass="dp-line-picker-popup"
+            >
+                <div style={{ background: '#fff', border: '1px solid #CBD5E1', borderRadius: '4px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)', width: popupWidth, padding: '4px 0', marginTop: '2px', boxSizing: 'border-box' }}>
+                    {options.map(opt => (
+                        <div 
+                            key={opt} 
+                            onClick={(e) => { e.stopPropagation(); onChange(opt); setIsOpen(false); }}
+                            style={{ padding: '8px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', background: value === opt ? '#F1F5F9' : '#fff' }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = value === opt ? '#F1F5F9' : '#fff'}
+                        >
+                            {opt === 'none' ? (
+                                <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: 600 }}>없음</span>
+                            ) : (
+                                <div style={{ width: '100%', borderTopStyle: opt, borderTopWidth: opt === 'double' ? '3px' : '2px', borderTopColor: color || '#475569' }} />
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </Popup>
+        </div>
+    );
+};
+
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
     const anchorRef = useRef(null);
@@ -270,8 +337,8 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 <Column field="target_var" title="저장될 변수" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
                                 <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="value" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
 
-                                {isDetailSetting && <Column field="label2" title="라벨2" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
-                                {isDetailSetting && <Column field="label3" title="라벨3" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="label2" title="대분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="label3" title="중분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="prefix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="postfix" title="뒷문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="postfix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 {isDetailSetting && <Column field="round" title="소수점" width="100px" headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="round" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
@@ -289,15 +356,11 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         </div>
                                     </td>
                                 )} />}
-                                {isDetailSetting && <Column field="line" title="구분선" width="150px" cell={(p) => (
-                                    <td style={{ padding: '4px' }}>
-                                        <DropDownList
-                                            className="k-dropdown-solid dp-mini-dropdown"
-                                            popupSettings={{ className: "dp-mini-dropdown-popup", animate: false }}
-                                            data={["solid", "dashed", "dotted", "double", "none"]}
+                                {isDetailSetting && <Column field="line" title="구분선" width="100px" cell={(p) => (
+                                    <td style={{ padding: '4px', overflow: 'visible' }}>
+                                        <LineStylePicker
                                             value={!p.dataItem.line ? "none" : p.dataItem.line}
-                                            onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'line', e.value === "none" ? "" : e.value)}
-                                            style={{ width: '100%', height: '28px', fontSize: '13px' }}
+                                            onChange={(val) => handleCategoryCellUpdate(p.dataIndex, 'line', val === "none" ? "" : val)}
                                         />
                                     </td>
                                 )} />}
