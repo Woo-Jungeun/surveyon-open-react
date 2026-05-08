@@ -1783,3 +1783,21 @@ html body .dp-excel-grid-v2 tbody tr.dp-row-del-hover td {
 html body .dp-excel-grid-v2 tbody tr.dp-row-del-hover .dp-row-del-btn {
     color: #ef4444 !important;
 }
+
+/* ===================================================
+     ColorPicker Custom Styles (Stub Grid)
+=================================================== */
+html body .dp-invisible-picker {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+html body .dp-invisible-picker .k-input-button {
+    opacity: 0 !important;
+    cursor: pointer !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+    border: none !important;
+}

@@ -130,7 +130,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                     background-color: ${uiSettings?.theme_primary || '#f8fafc'} !important;
                     color: ${uiSettings?.theme_primary_fg || 'inherit'} !important;
                     border-bottom: ${headerBorder} !important;
-                    border-right: ${gridBorder} !important;
+                    border-right: ${stubBorder} !important;
                 }
                 /* 막기용 의사 요소 */
                 .dp-html-table .stub-header::before,
@@ -205,11 +205,26 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 </thead>
                 <tbody>
                     {rows.map((row, rowIndex) => {
+                        // Find matching info item
+                        const infoItem = dataItem?.raw?.info?.find(item => item.label === row.label || item.key === row.key) || {};
+                        const customColor = infoItem.color;
+                        const customLine = infoItem.line;
+
                         const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base";
                         const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? "").toLowerCase().includes(role));
-                        const rowBg = (rowIndex % 2 === 1 ? (uiSettings?.theme_bg_alt || uiSettings?.theme_stripe || '#fafafa') : (uiSettings?.theme_bg || '#fff'));
+                        
+                        const defaultRowBg = (rowIndex % 2 === 1 ? (uiSettings?.theme_bg_alt || uiSettings?.theme_stripe || '#fafafa') : (uiSettings?.theme_bg || '#fff'));
+                        const rowBg = customColor || defaultRowBg;
+                        const stubBg = customColor || uiSettings?.theme_stub_header_bg || '#D9E1F2';
 
                         const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
+                        
+                        let bottomBorderAttr = undefined;
+                        if (customLine && customLine !== 'none') {
+                            const lineStyle = customLine === 'thick' ? 'solid' : customLine;
+                            const lineWidth = customLine === 'thick' ? '2px' : '1.5px';
+                            bottomBorderAttr = `${lineWidth} ${lineStyle} ${uiSettings?.theme_grid_color || '#94a3b8'}`;
+                        }
 
                         return (
                             <tr key={row.key || rowIndex} style={{
@@ -218,7 +233,8 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                             }}>
                                 <td className="stub-cell" style={{
                                     borderTop: topBorderAttr,
-                                    background: uiSettings?.theme_stub_header_bg || '#D9E1F2',
+                                    borderBottom: bottomBorderAttr,
+                                    background: stubBg,
                                     color: uiSettings?.theme_stub_header_fg || '#000',
                                     padding: 0
                                 }}>
@@ -231,7 +247,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                 </td>
                                 {columns.map((col, i) => {
                                     const cell = row.cells?.[col.key] || resultData.data?.[row.key]?.[col.key];
-                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ borderTop: topBorderAttr, borderLeft: i > 0 ? gridBorder : 'none', padding: '2px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
+                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ borderTop: topBorderAttr, borderBottom: bottomBorderAttr, borderLeft: i > 0 ? gridBorder : 'none', padding: '2px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
 
                                     let valN = cell.count ?? cell.n ?? null;
                                     let valP = cell.percent ?? cell.pct ?? null;
@@ -242,6 +258,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                     return (
                                         <td key={col.key} style={{
                                             borderTop: topBorderAttr,
+                                            borderBottom: bottomBorderAttr,
                                             borderLeft: i > 0 ? gridBorder : 'none',
                                             padding: '2px 8px',
                                             textAlign: 'right'

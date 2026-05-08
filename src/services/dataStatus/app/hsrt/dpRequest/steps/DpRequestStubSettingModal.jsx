@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
+import { ColorPicker } from '@progress/kendo-react-inputs';
 import { X, GripVertical, Plus, Trash2, Save, Copy, Check, Info } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import '@/components/common/popup/ConditionBuilderPopup.css';
@@ -292,24 +293,35 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     <td style={{ padding: '4px' }}>
                                         <DropDownList
                                             className="k-dropdown-solid dp-mini-dropdown"
-                                            popupSettings={{ className: "dp-mini-dropdown-popup" }}
-                                            data={["선택 안함", "일반선", "굵은선", "이중선"]}
-                                            value={p.dataItem.line === "" ? "선택 안함" : (p.dataItem.line || "선택 안함")}
-                                            onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'line', e.value === "선택 안함" ? "" : e.value)}
+                                            popupSettings={{ className: "dp-mini-dropdown-popup", animate: false }}
+                                            data={["solid", "dashed", "dotted", "double", "none"]}
+                                            value={!p.dataItem.line ? "none" : p.dataItem.line}
+                                            onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'line', e.value === "none" ? "" : e.value)}
                                             style={{ width: '100%', height: '28px', fontSize: '13px' }}
                                         />
                                     </td>
                                 )} />}
                                 {isDetailSetting && <Column field="color" title="배경색" width="150px" cell={(p) => (
-                                    <td style={{ padding: '4px' }}>
-                                        <DropDownList
-                                            className="k-dropdown-solid dp-mini-dropdown"
-                                            popupSettings={{ className: "dp-mini-dropdown-popup" }}
-                                            data={["선택 안함", "gray", "blue", "red", "green", "yellow", "orange", "purple", "pink", "mint"]}
-                                            value={p.dataItem.color === "" ? "선택 안함" : (p.dataItem.color || "선택 안함")}
-                                            onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'color', e.value === "선택 안함" ? "" : e.value)}
-                                            style={{ width: '100%', height: '28px', fontSize: '13px' }}
-                                        />
+                                    <td style={{ padding: '4px', textAlign: 'center', verticalAlign: 'middle' }}>
+                                        <div style={{ position: 'relative', display: 'inline-flex', width: '24px', height: '24px', alignItems: 'center', justifyContent: 'center' }}>
+                                            <div style={{
+                                                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                                                borderRadius: '4px',
+                                                border: '1px solid #cbd5e1',
+                                                backgroundColor: p.dataItem.color || 'transparent',
+                                                backgroundImage: !p.dataItem.color ? 'linear-gradient(to top right, transparent calc(50% - 1px), #ef4444 calc(50%), transparent calc(50% + 1px))' : 'none',
+                                                pointerEvents: 'none',
+                                                zIndex: 1
+                                            }} />
+                                            <ColorPicker
+                                                className="dp-invisible-picker"
+                                                view="gradient"
+                                                format="hex"
+                                                value={p.dataItem.color || null}
+                                                onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'color', e.value || "")}
+                                                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 2 }}
+                                            />
+                                        </div>
                                     </td>
                                 )} />}
                             </KendoGridV2>
