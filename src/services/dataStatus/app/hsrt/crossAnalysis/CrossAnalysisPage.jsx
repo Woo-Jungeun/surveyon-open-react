@@ -556,40 +556,54 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const rows = resultData.rows || [];
 
     const chartData = useMemo(() => {
-        return rows
-            .filter(row => {
+        const targetColumns = columns.filter(col => {
+            const lbl = String(col.label || col.name || '').trim();
+            return lbl !== '전체' && lbl.toLowerCase() !== 'base';
+        });
+
+        return targetColumns.map((col, cIdx) => {
+            const labelParts = [col.label3, col.label2, col.label || col.name || `c${cIdx}`];
+            const fullLabel = labelParts
+                .map(p => String(p || '').trim())
+                .filter(p => p !== '')
+                .join(' - ');
+
+            const flatCol = { label: fullLabel, name: fullLabel };
+            
+            rows.forEach((row, rIdx) => {
                 const role = String(row.row_role || '').toLowerCase();
-                const lbl = String(row.label || row.name || '').trim();
-                return role !== 'base' && lbl !== '전체' && lbl.toLowerCase() !== 'base';
-            })
-            .map(row => {
-                const flatRow = { label: row.label || row.name || '-', name: row.label || row.name || '-' };
-                columns.forEach((col, idx) => {
-                    const fieldKey = col.key || `c${idx}`;
-                    const cellBox = row.cells?.[fieldKey] || {};
-                    flatRow[`${fieldKey}_n`] = cellBox.count !== undefined ? cellBox.count : (cellBox.n || 0);
-                    flatRow[`${fieldKey}_pct`] = cellBox.percent !== undefined ? cellBox.percent : (cellBox.pct || 0);
-                });
-                return flatRow;
+                const rLbl = String(row.label || row.name || '').trim();
+                if (role === 'base' || rLbl === '전체' || rLbl.toLowerCase() === 'base') return;
+
+                const fieldKey = `r${rIdx}`;
+                const originalColKey = col.key || `c${columns.indexOf(col)}`;
+                const cellBox = row.cells?.[originalColKey] || {};
+                
+                flatCol[`${fieldKey}_n`] = cellBox.count !== undefined ? cellBox.count : (cellBox.n || 0);
+                flatCol[`${fieldKey}_pct`] = cellBox.percent !== undefined ? cellBox.percent : (cellBox.pct || 0);
             });
+            return flatCol;
+        });
     }, [rows, columns]);
 
     const usePercentFields = ['donut', 'funnel', 'pie'].includes(chartMode);
 
     const chartSeries = useMemo(() => {
-        return columns
-            .map((col, idx) => {
-                const fieldKey = col.key || `c${idx}`;
-                const label = col.label || col.name || fieldKey;
+        return rows
+            .map((row, rIdx) => {
+                const role = String(row.row_role || '').toLowerCase();
+                const rLbl = String(row.label || row.name || '').trim();
+                const fieldKey = `r${rIdx}`;
                 return {
-                    originalLabel: String(label).trim(),
+                    role,
+                    originalLabel: rLbl,
                     field: usePercentFields ? `${fieldKey}_pct` : `${fieldKey}_n`,
-                    name: String(label).replace(/\n/g, ' ')
+                    name: rLbl.replace(/\n/g, ' ')
                 };
             })
-            .filter(series => series.originalLabel !== '전체' && series.originalLabel.toLowerCase() !== 'base')
+            .filter(series => series.role !== 'base' && series.originalLabel !== '전체' && series.originalLabel.toLowerCase() !== 'base')
             .map(({ field, name }) => ({ field, name }));
-    }, [columns, usePercentFields]);
+    }, [rows, usePercentFields]);
 
     const allowedTypes = useMemo(() => {
         let types = [chartMode];
