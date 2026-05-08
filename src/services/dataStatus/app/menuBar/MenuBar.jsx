@@ -262,16 +262,16 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
       merge_pn: sessionStorage.getItem("merge_pn") || "-"
     });
 
-    try {
-      loadingSpinner.show();
-      // 대시보드 메타데이터 조회 API 호출
-      const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
-      loadingSpinner.hide();
-    } catch (error) {
-      console.error("API Error:", error);
-      loadingSpinner.hide();
-      modal.showErrorAlert("오류", "메타데이터 조회 중 오류가 발생했습니다.");
-    }
+    // try {
+    //   loadingSpinner.show();
+    //   // 대시보드 메타데이터 조회 API 호출
+    //   //const metadataResult = await getPageMetadata.mutateAsync({ user: userId, pageid: pageId });
+    //   loadingSpinner.hide();
+    // } catch (error) {
+    //   console.error("API Error:", error);
+    //   loadingSpinner.hide();
+    //   modal.showErrorAlert("오류", "메타데이터 조회 중 오류가 발생했습니다.");
+    // }
   };
 
   const handleProjectSelect = async (project) => {

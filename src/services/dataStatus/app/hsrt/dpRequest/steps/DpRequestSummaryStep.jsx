@@ -623,10 +623,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     <div ref={scrollContainerRef} className="dp-table-container custom-scrollbar" style={{ flex: 1, minHeight: 0, overflowY: 'auto', paddingRight: '16px' }}>
                         {folders.map((folder) => (
-                            <div key={folder.id} style={{ border: '1px solid #cbd5e1', borderRadius: '8px', marginBottom: '16px', background: '#fff' }}>
+                            <div key={folder.id} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', marginBottom: '16px', background: '#ffffff', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
                                 {/* Folder Header */}
-                                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
-                                    <Folder size={18} color="#64748b" />
+                                <div style={{ display: 'flex', alignItems: 'center', padding: '12px 16px', background: '#ffffff', borderBottom: '1px solid #e2e8f0', borderRadius: '8px 8px 0 0' }}>
+                                    <Folder size={18} color="#3b82f6" />
                                     <input
                                         type="text"
                                         value={folder.name}
@@ -636,14 +636,31 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         }}
                                         style={{ fontSize: '14px', fontWeight: 700, color: '#1d4ed8', marginLeft: '8px', border: 'none', background: 'transparent', outline: 'none', width: '250px' }}
                                     />
-                                    <div style={{ display: 'flex', gap: '6px', marginLeft: '12px' }}>
-                                        <span style={{ padding: '2px 8px', background: '#fff', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', color: '#64748b' }}>
+                                    <div style={{ display: 'flex', gap: '6px', marginLeft: '12px', alignItems: 'center' }}>
+                                        <span style={{ display: 'flex', alignItems: 'center', padding: '0 8px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '11px', color: '#475569', fontWeight: 600, height: '26px', boxSizing: 'border-box' }}>
                                             {folder.type === 'statistics' ? '통계 요약' : '빈도 요약'}
                                         </span>
                                         {folder.id.includes('auto') && (
-                                            <span style={{ padding: '2px 8px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '11px', color: '#64748b' }}>
+                                            <span style={{ display: 'flex', alignItems: 'center', padding: '0 8px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '4px', fontSize: '11px', color: '#64748b', height: '26px', boxSizing: 'border-box' }}>
                                                 자동 생성됨
                                             </span>
+                                        )}
+                                        {folder.type === 'frequency' && (
+                                            <div style={{ display: 'flex', alignItems: 'center', marginLeft: '4px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '4px', height: '26px', boxSizing: 'border-box', overflow: 'hidden' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', background: '#f8fafc', padding: '0 8px', borderRight: '1px solid #e2e8f0', height: '100%', fontSize: '11px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>
+                                                    포함 코드
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    placeholder="예: 4,5"
+                                                    value={folder.include_codes || ''}
+                                                    onChange={(e) => {
+                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: e.target.value } : f));
+                                                        if (onUnsavedChange) onUnsavedChange(true);
+                                                    }}
+                                                    style={{ border: 'none', outline: 'none', padding: '0 8px', fontSize: '12px', width: '120px', color: '#0f172a', height: '100%', background: 'transparent' }}
+                                                />
+                                            </div>
                                         )}
                                     </div>
                                     <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px', color: '#64748b', alignItems: 'center' }}>
@@ -701,7 +718,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         >
                                             <X size={16} />
                                         </button>
-                                        <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+                                        <div style={{ width: '1px', height: '16px', background: '#e2e8f0', margin: '0 4px' }} />
                                         <button onClick={() => toggleFolderCollapse(folder.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', transition: 'transform 0.2s' }}>
                                             {collapsedFolders.has(folder.id) ? <ChevronDown size={18} /> : <ChevronUp size={18} />}
                                         </button>
@@ -709,23 +726,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 </div>
                                 {/* Folder Body */}
                                 {!collapsedFolders.has(folder.id) && (
-                                    <div style={{ padding: '16px' }}>
-                                        {folder.type === 'frequency' ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px' }}>
-                                                <span style={{ fontWeight: 600, color: '#475569', marginRight: '16px' }}>포함 코드</span>
-                                                <input
-                                                    type="text"
-                                                    placeholder="예: 4,5"
-                                                    value={folder.include_codes || ''}
-                                                    onChange={(e) => {
-                                                        setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, include_codes: e.target.value } : f));
-                                                        if (onUnsavedChange) onUnsavedChange(true);
-                                                    }}
-                                                    style={{ color: '#64748b', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 8px', fontSize: '12px', outline: 'none', width: '200px' }}
-                                                />
-                                            </div>
-                                        ) : (
-                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', fontSize: '12px', gap: '20px' }}>
+                                    <div style={{ padding: '12px' }}>
+                                        {folder.type === 'statistics' && (
+                                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', fontSize: '12px', gap: '20px', paddingLeft: '4px' }}>
                                                 <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
                                                     <input type="checkbox" checked={folder.mean || false} onChange={(e) => {
                                                         setFolders(prev => prev.map(f => f.id === folder.id ? { ...f, mean: e.target.checked } : f));
@@ -751,10 +754,10 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                         )}
                                         <div
                                             style={{
-                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px', minHeight: '60px', padding: '16px',
-                                                border: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? '2px solid #3b82f6' : '1px dashed #cbd5e1',
+                                                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '8px', minHeight: '40px',
+                                                border: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? '2px dashed #3b82f6' : '2px dashed transparent',
                                                 borderRadius: '8px',
-                                                background: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? 'rgba(59, 130, 246, 0.05)' : '#f8fafc',
+                                                background: dragOverTarget.folderId === folder.id && dragOverTarget.idx === -1 ? 'rgba(59, 130, 246, 0.05)' : 'transparent',
                                                 transition: 'all 0.2s ease-out'
                                             }}
                                             onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; setDragOverTarget({ folderId: folder.id, idx: -1 }); }}
@@ -792,9 +795,9 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             position: 'relative',
                                                             display: 'flex', alignItems: 'center',
                                                             padding: '4px 8px',
-                                                            border: '1px solid #cbd5e1',
+                                                            border: '1px solid #e2e8f0',
                                                             borderRadius: '16px',
-                                                            background: '#fff',
+                                                            background: '#f1f5f9',
                                                             gap: '4px', cursor: 'grab',
                                                             transition: 'all 0.1s'
                                                         }}
@@ -805,7 +808,7 @@ const DpRequestSummaryStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                         )}
                                                         <span title={itemId} style={{ fontWeight: 700, color: '#1e293b', fontSize: '11px', flexShrink: label ? 0 : 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '2px' }}>{itemId}</span>
                                                         {label && (
-                                                            <span title={label} style={{ color: '#64748b', fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '2px' }}>{label}</span>
+                                                            <span title={label} style={{ color: '#475569', fontSize: '11px', flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '2px' }}>{label}</span>
                                                         )}
                                                         <button
                                                             onClick={(e) => {

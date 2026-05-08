@@ -115,26 +115,36 @@ const DpRequestPage = () => {
         }
     };
 
+    const fetchContext = useCallback(async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !auth?.user?.userId) return;
+
+        try {
+            // 상단 헤더 데이터는 spinner 없이 자연스럽게 로드
+            const result = await getDpContext.mutateAsync({ pageid: pageId, user: auth.user?.userId });
+            if (result?.resultjson) setContextData(result.resultjson);
+        } catch (err) {
+            console.error("Context load failed:", err);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth?.user?.userId]);
+
     // --- 컨텍스트 조회 (카운트 및 완료 상태) ---
     useEffect(() => {
-        const fetchContext = async () => {
-            const pageId = sessionStorage.getItem('pageId');
-            if (!pageId || !auth?.user?.userId) return;
-
-            try {
-                // 상단 헤더 데이터는 spinner 없이 자연스럽게 로드 (선택 사항)
-                const result = await getDpContext.mutateAsync({ pageid: pageId, user: auth.user?.userId });
-                if (result?.resultjson) setContextData(result.resultjson);
-            } catch (err) {
-                console.error("Context load failed:", err);
-            }
-        };
-
         fetchContext();
 
-        window.addEventListener("pageSelected", fetchContext);
-        return () => window.removeEventListener("pageSelected", fetchContext);
-    }, [currentStep, auth?.user?.userId]);
+        const handlePageSelected = () => {
+            fetchContext();
+            setCurrentStep(0);
+            setSearchParams(prev => {
+                prev.set('dp_view', 'table');
+                return prev;
+            });
+        };
+
+        window.addEventListener("pageSelected", handlePageSelected);
+        return () => window.removeEventListener("pageSelected", handlePageSelected);
+    }, [currentStep, fetchContext, setSearchParams]);
 
     // 단계별 컴포넌트 렌더링
     const renderStepContent = () => {
@@ -162,20 +172,29 @@ const DpRequestPage = () => {
                         const isCompleted = stepInfo?.completed;
                         const count = stepInfo?.count || 0;
                         const isActive = idx === currentStep;
+                        
+                        // 요약표 비활성화 조건: 스터브(recoded) 단계가 완료되지 않은 경우
+                        const isDisabled = step.key === 'summary' && contextData?.steps?.recoded?.completed !== true;
 
                         return (
                             <React.Fragment key={idx}>
                                 <div
                                     className={`dp-step-compact ${isActive ? 'active' : ''} ${isCompleted ? 'done' : ''}`}
-                                    onClick={() => handleStepChange(idx)}
-                                    style={{ cursor: 'pointer' }}
-                                    title={step.desc}
+                                    onClick={() => {
+                                        if (isDisabled) {
+                                            modal.showAlert('알림', '스터브 최초 저장 후 요약표를 설정할 수 있습니다.');
+                                            return;
+                                        }
+                                        handleStepChange(idx);
+                                    }}
+                                    style={{ cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.4 : 1 }}
+                                    title={isDisabled ? '스터브 최초 저장 후 이용 가능합니다.' : step.desc}
                                 >
-                                    <div className="dp-step-num-compact">
+                                    <div className="dp-step-num-compact" style={{ background: isDisabled ? '#cbd5e1' : undefined }}>
                                         {isCompleted && !isActive ? <Check size={12} strokeWidth={3} /> : idx + 1}
                                     </div>
                                     <div className="dp-step-label-group">
-                                        <span className="dp-step-text">{step.label}</span>
+                                        <span className="dp-step-text" style={{ color: isDisabled ? '#94a3b8' : undefined }}>{step.label}</span>
                                         {/* 개수 표출 임시 숨김 처리 */}
                                         {/* {count > 0 && <span className="dp-step-count">{count}</span>} */}
                                     </div>
@@ -249,7 +268,18 @@ const DpRequestPage = () => {
                         onClick={async () => {
                             const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : currentStep === 2 ? step3Ref : currentStep === 3 ? step4Ref : currentStep === 4 ? step5Ref : null;
                             if (currentRef?.current?.save) {
-                                await currentRef.current.save();
+                                const isSummaryClosed = contextData?.steps?.recoded?.completed !== true;
+                                const res = await currentRef.current.save();
+                                
+                                if (res !== false) {
+                                    // 저장 성공 시 컨텍스트 데이터 최신화 (완료 상태 및 카운트 갱신)
+                                    await fetchContext();
+                                    
+                                    // 요약표 단계가 닫혀있었는데 스터브(currentStep === 2) 저장이 성공했다면 요약표 단계로 자동 이동
+                                    if (currentStep === 2 && isSummaryClosed) {
+                                        handleStepChange(3);
+                                    }
+                                }
                             }
                         }}
                         style={{ height: '36px' }}
