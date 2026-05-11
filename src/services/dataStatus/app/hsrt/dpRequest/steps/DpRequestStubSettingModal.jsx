@@ -392,7 +392,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     )}
                                 />
                                 <Column field="logic" title="조건" width="250px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="logic" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
-                                <Column field="target_var" title="저장될 변수" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="target_var" title="대상 변수" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
                                 <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="value" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
 
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="prefix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}

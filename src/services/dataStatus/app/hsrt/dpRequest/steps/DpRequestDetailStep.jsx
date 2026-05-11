@@ -140,7 +140,7 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
             });
         };
         loadAndSelect();
-        
+
         window.addEventListener("pageSelected", loadAndSelect);
         return () => window.removeEventListener("pageSelected", loadAndSelect);
     }, [auth?.user?.userId]);
@@ -679,7 +679,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                     </td>
                                 )} />
                                 <Column field="logic" title="조건" width="300px" headerCell={ConditionHeaderCell} />
-                                <Column field="target_var" title="저장될 변수" width="150px" />
+                                <Column field="target_var" title="대상 변수" width="150px" />
                                 <Column field="value" title="값" width="80px" headerClassName="k-text-center" className="k-text-center" />
                                 {isDetailSetting && <Column field="label2" title="라벨2" width="150px" />}
                                 {isDetailSetting && <Column field="label3" title="라벨3" width="150px" />}
