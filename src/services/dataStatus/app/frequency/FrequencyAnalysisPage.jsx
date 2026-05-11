@@ -1500,6 +1500,7 @@ const FrequencyAnalysisPage = () => {
             {currentPageId && (
                 <div className="aggregation-layout">
                     <SideBar
+                        className="compact-sidebar"
                         // title="문항 목록"
                         items={sidebarItems}
                         selectedId={activeId}

@@ -139,7 +139,7 @@
 }
 
 .sidebar-item-name {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: var(--ds-text-main);
     margin-bottom: 4px;
@@ -154,6 +154,21 @@
     color: var(--ds-text-sub);
     word-break: break-word;
     line-height: 1.4;
+}
+
+/* Compact Mode */
+.sidebar-container.compact-sidebar .sidebar-item {
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+}
+.sidebar-container.compact-sidebar .sidebar-item-name {
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+.sidebar-container.compact-sidebar .sidebar-item-label,
+.sidebar-container.compact-sidebar .sidebar-item-label span {
+    font-size: 11px !important;
 }
 
 /* Delete Button */

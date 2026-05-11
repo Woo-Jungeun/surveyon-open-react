@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './SideBar.css';
 
-const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef, className = '' }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
-        <div className="sidebar-container" style={{ width: isOpen ? '280px' : '48px' }}>
+        <div className={`sidebar-container ${className}`} style={{ width: isOpen ? '280px' : '48px' }}>
             <div className="sidebar-header">
                 <div className="sidebar-title-row" style={{ justifyContent: isOpen ? 'space-between' : 'center', gap: '8px' }}>
                     {isOpen && (
