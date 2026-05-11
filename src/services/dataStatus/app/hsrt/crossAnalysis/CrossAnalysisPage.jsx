@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, BarChartHorizontal, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Check, LayoutList } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
@@ -364,12 +364,16 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const [isChartOpen, setIsChartOpen] = useState(false);
     const [chartMode, setChartMode] = useState('column');
     const [paletteId, setPaletteId] = useState('default');
+    const [selectedChartGroups, setSelectedChartGroups] = useState([]);
 
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
+    const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+    const [showLegend, setShowLegend] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const paletteMenuRef = useRef(null);
+    const filterMenuRef = useRef(null);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -378,6 +382,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             }
             if (paletteMenuRef.current && !paletteMenuRef.current.contains(event.target)) {
                 setIsPaletteMenuOpen(false);
+            }
+            if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
+                setIsFilterMenuOpen(false);
             }
         };
 
@@ -555,10 +562,33 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const columns = resultData.columns || [];
     const rows = resultData.rows || [];
 
+    const availableChartGroups = useMemo(() => {
+        const groups = new Set();
+        columns.forEach(col => {
+            const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
+            if (groupName && groupName !== '전체' && groupName.toLowerCase() !== 'base') {
+                groups.add(groupName);
+            }
+        });
+        return Array.from(groups);
+    }, [columns]);
+
+    useEffect(() => {
+        if (availableChartGroups.length > 0) {
+            setSelectedChartGroups(availableChartGroups);
+        }
+    }, [availableChartGroups.join(',')]);
+
     const chartData = useMemo(() => {
         const targetColumns = columns.filter(col => {
             const lbl = String(col.label || col.name || '').trim();
-            return lbl !== '전체' && lbl.toLowerCase() !== 'base';
+            const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
+            if (lbl === '전체' || lbl.toLowerCase() === 'base') return false;
+            
+            if (groupName && availableChartGroups.includes(groupName)) {
+                if (!selectedChartGroups.includes(groupName)) return false;
+            }
+            return true;
         });
 
         return targetColumns.map((col, cIdx) => {
@@ -584,7 +614,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             });
             return flatCol;
         });
-    }, [rows, columns]);
+    }, [rows, columns, selectedChartGroups]);
 
     const usePercentFields = ['donut', 'funnel', 'pie'].includes(chartMode);
 
@@ -715,11 +745,135 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         )}
                                     </div>
 
+                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+
+                                    <button
+                                        onClick={() => setShowLegend(!showLegend)}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '6px',
+                                            padding: '4px 8px', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                            background: showLegend ? '#eff6ff' : '#fff',
+                                            color: showLegend ? '#2563eb' : '#64748b',
+                                            fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%'
+                                        }}
+                                        title="범례 보기/숨기기"
+                                    >
+                                        <LayoutList size={14} style={{ flexShrink: 0 }} />
+                                        <span style={{ whiteSpace: 'nowrap' }}>범례</span>
+                                    </button>
 
                                     <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
 
-                                    <button className={`view-option-btn ${chartMode === 'column' || chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="막대형"><BarChart2 size={16} /></button>
-                                    <button className={`view-option-btn ${chartMode === 'stackedColumn' || chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
+                                    {availableChartGroups.length > 0 && (
+                                        <div style={{ position: 'relative' }} ref={filterMenuRef}>
+                                            <button 
+                                                onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                                    padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                                    background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
+                                                    color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
+                                                    fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%',
+                                                    maxWidth: '220px'
+                                                }}
+                                            >
+                                                <Filter size={14} style={{ flexShrink: 0 }} />
+                                                <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
+                                                    {selectedChartGroups.length === availableChartGroups.length ? (
+                                                        <span style={{ whiteSpace: 'nowrap' }}>그룹 필터 (전체)</span>
+                                                    ) : selectedChartGroups.length === 0 ? (
+                                                        <span style={{ whiteSpace: 'nowrap' }}>선택 없음</span>
+                                                    ) : selectedChartGroups.length === 1 ? (
+                                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {selectedChartGroups[0]}
+                                                        </span>
+                                                    ) : (
+                                                        <>
+                                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1 }}>
+                                                                {selectedChartGroups[0]}
+                                                            </span>
+                                                            <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                                                &nbsp;외 {selectedChartGroups.length - 1}개
+                                                            </span>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </button>
+                                            
+                                            {isFilterMenuOpen && (
+                                                <div style={{
+                                                    position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                                                    background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                                                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', zIndex: 1000,
+                                                    minWidth: '200px', padding: '8px',
+                                                    display: 'flex', flexDirection: 'column', gap: '4px'
+                                                }}>
+                                                    <div style={{ padding: '4px 8px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>X축 그룹 보기</span>
+                                                        <button 
+                                                            onClick={() => setSelectedChartGroups(availableChartGroups)} 
+                                                            style={{ fontSize: '12px', color: '#64748b', background: '#f1f5f9', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                                        >
+                                                            초기화
+                                                        </button>
+                                                    </div>
+                                                    <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <div 
+                                                            onClick={() => {
+                                                                if (selectedChartGroups.length === availableChartGroups.length) {
+                                                                    setSelectedChartGroups([]);
+                                                                } else {
+                                                                    setSelectedChartGroups(availableChartGroups);
+                                                                }
+                                                            }}
+                                                            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0f172a', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}
+                                                        >
+                                                            <div style={{ 
+                                                                width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`, 
+                                                                borderRadius: '3px', 
+                                                                background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff' 
+                                                            }}>
+                                                                {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
+                                                            </div>
+                                                            <span>전체 선택</span>
+                                                        </div>
+                                                        {availableChartGroups.map(group => {
+                                                            const isChecked = selectedChartGroups.includes(group);
+                                                            return (
+                                                                <div 
+                                                                    key={group} 
+                                                                    onClick={() => {
+                                                                        setSelectedChartGroups(prev => 
+                                                                            prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]
+                                                                        );
+                                                                    }}
+                                                                    style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', color: '#334155', borderRadius: '4px', background: isChecked ? '#f8fafc' : 'transparent', ':hover': { background: '#f8fafc' } }}
+                                                                >
+                                                                    <div style={{ 
+                                                                        width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                        border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`, 
+                                                                        borderRadius: '3px', 
+                                                                        background: isChecked ? '#2563eb' : '#fff' 
+                                                                    }}>
+                                                                        {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
+                                                                    </div>
+                                                                    <span style={{ wordBreak: 'keep-all', lineHeight: 1.2 }}>{group}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+
+                                    <button className={`view-option-btn ${chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setChartMode('stackedColumn')} title="누적 막대형"><Layers size={16} /></button>
+                                    <button className={`view-option-btn ${chartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setChartMode('stacked100Column')} title="100% 누적 막대형"><Percent size={16} /></button>
                                     <button className={`view-option-btn ${chartMode === 'line' ? 'active' : ''}`} onClick={() => setChartMode('line')} title="선형"><LineChart size={16} /></button>
                                     <button className={`view-option-btn ${chartMode === 'pie' ? 'active' : ''}`} onClick={() => setChartMode('pie')} title="원형"><PieChart size={16} /></button>
                                     <button className={`view-option-btn ${chartMode === 'donut' ? 'active' : ''}`} onClick={() => setChartMode('donut')} title="도넛형"><Donut size={16} /></button>
@@ -747,7 +901,9 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     labelLimit={12}
                                     suffix={usePercentFields ? "%" : ""}
                                     paletteId={paletteId}
-                                    allowedTypes={allowedTypes}
+                                    allowedTypes={[chartMode]}
+                                    hideHeader={true}
+                                    externalShowLegend={showLegend}
                                 />
                             ) : (
                                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>

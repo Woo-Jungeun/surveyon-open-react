@@ -80,10 +80,11 @@ const WordCloudFixer = ({ wordData, dimensions, activePalette, minVal, maxVal })
     return MemoizedWordCloud;
 };
 
-const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default' }) => {
+const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default', hideHeader = false, externalShowLegend = undefined }) => {
     const activePalette = CHART_PALETTES[paletteId] || CHART_PALETTES.default;
     const [chartType, setChartType] = useState(initialType || 'column');
-    const [showLegend, setShowLegend] = useState(false);
+    const [internalShowLegend, setInternalShowLegend] = useState(false);
+    const showLegend = externalShowLegend !== undefined ? externalShowLegend : internalShowLegend;
     const containerRef = useRef(null);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
 
@@ -384,10 +385,11 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
             <style>{tooltipGlobalStyle}</style>
-            <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '10px', flexShrink: 0 }}>
-                {!isHeatmap && (
-                    <button
-                        onClick={() => setShowLegend(!showLegend)}
+            {!hideHeader && (
+                <div className="chart-header" style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginBottom: '10px', flexShrink: 0 }}>
+                    {!isHeatmap && externalShowLegend === undefined && (
+                        <button
+                            onClick={() => setInternalShowLegend(!internalShowLegend)}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -435,7 +437,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                         <ArrowLeftRight size={14} />
                     </button>
                 )}
-            </div>
+                </div>
+            )}
 
             {showLegend && !isHeatmap && (
                 <div className="custom-kendo-legend" style={{
