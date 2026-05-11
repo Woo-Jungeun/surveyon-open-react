@@ -16,6 +16,7 @@ import {
     ChartArea
 } from "@progress/kendo-react-charts";
 import { ArrowLeftRight, LayoutList } from 'lucide-react';
+import { drawing } from '@progress/kendo-drawing';
 import WordCloud from 'react-d3-cloud';
 import ChoroplethMap from './ChoroplethMap';
 
@@ -31,6 +32,10 @@ const tooltipGlobalStyle = `
 `;
 
 import { CHART_PALETTES } from '../constants/chartThemes';
+
+// 텍스트 너비 측정을 위한 공용 캔버스 컨텍스트 (성능 최적화)
+const measureCanvas = document.createElement("canvas");
+const measureCtx = measureCanvas.getContext("2d");
 
 // Legacy support for single constant
 const CHART_COLORS = CHART_PALETTES.default;
@@ -600,7 +605,68 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                 }
                                                 return chunks.join('\n');
                                             },
-                                            font: "12px Pretendard, sans-serif"
+                                            visual: (e) => {
+                                                const rawText = String(e.value || '');
+                                                const originalLines = rawText.split('\n');
+                                                const limit = labelLimit > 0 ? labelLimit : 12;
+                                                
+                                                const chunkStr = (str, maxL) => {
+                                                    const chunks = [];
+                                                    for (let i = 0; i < str.length; i += limit) {
+                                                        chunks.push(str.substring(i, i + limit));
+                                                    }
+                                                    if (chunks.length > maxL) {
+                                                        const sliced = chunks.slice(0, maxL);
+                                                        const last = sliced[maxL - 1];
+                                                        sliced[maxL - 1] = last.length > limit - 2 ? last.substring(0, limit - 2) + '...' : last + '...';
+                                                        return sliced;
+                                                    }
+                                                    return chunks;
+                                                };
+
+                                                const hasGroup = originalLines.length > 1;
+                                                
+                                                // 소분류는 최대 2줄 허용
+                                                const subLabelLines = originalLines[0] ? chunkStr(originalLines[0], 2) : [];
+                                                
+                                                // 전체 3줄에 맞추기 위해, 대분류가 허용받는 최대 줄 수 계산
+                                                let maxGroupLines = 3 - subLabelLines.length;
+                                                if (maxGroupLines < 1) maxGroupLines = 1; // 최소 1줄 보장
+
+                                                const groupLabelLines = hasGroup ? chunkStr(originalLines[originalLines.length - 1], maxGroupLines) : [];
+
+                                                const group = new drawing.Group();
+                                                const centerX = e.rect.center().x;
+                                                let currentY = e.rect.origin.y; // 기본 위치
+                                                
+                                                subLabelLines.forEach(lineStr => {
+                                                    const fontStr = "bold 12px Pretendard, sans-serif";
+                                                    measureCtx.font = fontStr;
+                                                    const textWidth = measureCtx.measureText(lineStr).width;
+                                                    
+                                                    const textObj = new drawing.Text(lineStr, [centerX - textWidth / 2, currentY], {
+                                                        font: fontStr,
+                                                        fill: { color: "#334155" }
+                                                    });
+                                                    group.append(textObj);
+                                                    currentY += 16; // 줄간격
+                                                });
+
+                                                groupLabelLines.forEach(lineStr => {
+                                                    const fontStr = "12px Pretendard, sans-serif";
+                                                    measureCtx.font = fontStr;
+                                                    const textWidth = measureCtx.measureText(lineStr).width;
+                                                    
+                                                    const groupObj = new drawing.Text(lineStr, [centerX - textWidth / 2, currentY], {
+                                                        font: fontStr,
+                                                        fill: { color: "#64748b" }
+                                                    });
+                                                    group.append(groupObj);
+                                                    currentY += 15;
+                                                });
+
+                                                return group;
+                                            }
                                         }}
                                     />
                                 </ChartCategoryAxis>
