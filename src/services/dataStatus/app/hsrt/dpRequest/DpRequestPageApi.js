@@ -115,6 +115,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 변수 리코딩(스터브 등) 삭제 API */
+    const deleteRecodedSet = useMutation(
+        async (data) => await api.post(data, "/variables/recoded/delete", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** 신규 스터브 생성 API */
     const createStub = useMutation(
         async (data) => await api.post(data, "/dp-request/recoded/stubs/create", "API_BASE_URL_DATASTATUS"),
@@ -207,6 +216,7 @@ export function DpRequestPageApi() {
         getRecodedOverview,
         saveRecodedOverview,
         saveRecodedSet,
+        deleteRecodedSet,
         createStub,
         getOrderDetail,
         saveOrderDetail,

@@ -113,7 +113,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
     const modal = React.useContext(modalContext);
     const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
-    const { saveRecodedSet } = DpRequestPageApi();
+    const { saveRecodedSet, deleteRecodedSet } = DpRequestPageApi();
 
     const [variables, setVariables] = useState(initialVariables);
     const [originalVars, setOriginalVars] = useState(variablesList);
@@ -382,7 +382,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                 {
                     title: "삭제", click: async () => {
                         try {
-                            const result = await deleteRecodedVariable.mutateAsync({
+                            const result = await deleteRecodedSet.mutateAsync({
                                 user: auth.user.userId,
                                 pageid: pageId,
                                 variables: [varId]
