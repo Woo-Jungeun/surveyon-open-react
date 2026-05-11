@@ -3,6 +3,7 @@ import { Trash2, Plus, X, HelpCircle, Filter, Check, ChevronDown } from 'lucide-
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { VariablePageApi } from '../variable/VariablePageApi';
+import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import './AdvancedFilterPopup.css';
 
@@ -112,6 +113,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
     const modal = React.useContext(modalContext);
     const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
+    const { saveRecodedSet } = DpRequestPageApi();
 
     const [variables, setVariables] = useState(initialVariables);
     const [originalVars, setOriginalVars] = useState(variablesList);
@@ -551,6 +553,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     id: fullId,
                     label: varLabel,
                     type: "categorical",
+                    recoded_type: "recoded",
                     info: categories.map((cat, idx) => {
                         let categoryLogic = '';
                         cat.conditionSets.forEach((set, setIndex) => {
@@ -638,6 +641,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                         };
                     })
                 }
+            },
+            recoded_type: {
+                [fullId]: 'recoded'
             }
         };
 
@@ -655,7 +661,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     {
                         title: "저장", click: async () => {
                             try {
-                                const result = await setRecodedVariable.mutateAsync(payload);
+                                const result = await saveRecodedSet.mutateAsync(payload);
                                 if (result?.success === "777") {
                                     modal.showAlert("알림", "저장되었습니다.");
                                     setSelectedVarId(fullId); // 신규 저장 후 해당 변수 선택 상태로 변경
