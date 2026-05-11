@@ -426,8 +426,8 @@ const DetailEditPreview = ({ item, onClose }) => {
                     table: {
                         id: `__var__${stubId}`,
                         name: editLabel || item?.name || '테스트 스터브',
-                        x_info: [editBanner],
-                        y_info: [stubId]
+                        banner: [editBanner],
+                        stub: [stubId]
                     },
                     variables: evalVariables
                 };
@@ -469,8 +469,8 @@ const DetailEditPreview = ({ item, onClose }) => {
                 table: {
                     id: `__var__${currentItem.id}`,
                     name: currentItem.name || '테스트 스터브',
-                    x_info: [bannerStr],
-                    y_info: [currentItem.id]
+                    banner: [bannerStr],
+                    stub: [currentItem.id]
                 },
                 variables: fullVars
             };

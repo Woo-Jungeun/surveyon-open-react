@@ -1090,12 +1090,14 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     id: currentBannerData.id,
                     label: currentLabel, // 수정된 라벨 사용
                     type: "banner", // 명세에 따라 banner로 설정
-                    info: currentBannerData.info.map(it => ({
-                        label3: it.label3,
-                        label2: it.label2,
-                        label: it.label,
-                        logic: it.logic
-                    }))
+                    info: currentBannerData.info
+                        .filter(c => (c.label && c.label.toString().trim() !== "") || (c.logic && c.logic.toString().trim() !== ""))
+                        .map(it => ({
+                            label3: it.label3,
+                            label2: it.label2,
+                            label: it.label,
+                            logic: it.logic
+                        }))
                 }
             },
             delete_ids: []
@@ -1360,12 +1362,16 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 return;
                                             }
 
-                                            // 유효한 조건식 필터링 (HSRTapi 방식 적용)
-                                            const validInfo = banner.info.filter(c =>
-                                                (c.label && c.label.toString().trim() !== "") ||
-                                                (c.logic && c.logic.toString().trim() !== "") ||
-                                                (typeof c.value === "number" && !Number.isNaN(c.value))
-                                            );
+                                            // 유효한 조건식 필터링 및 깔끔한 데이터 매핑 (불필요한 내부 속성 제거)
+                                            const validInfo = banner.info
+                                                .filter(c => (c.label && c.label.toString().trim() !== "") || (c.logic && c.logic.toString().trim() !== ""))
+                                                .map((it, idx) => ({
+                                                    label3: it.label3 || '',
+                                                    label2: it.label2 || '',
+                                                    label: it.label || '',
+                                                    logic: it.logic || '',
+                                                    value: it.value !== undefined ? it.value : (idx + 1)
+                                                }));
 
                                             if (validInfo.length === 0) {
                                                 modal.showAlert('알림', '유효한 배너 조건(라벨 또는 조건식)이 없습니다.');
@@ -1376,8 +1382,12 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             baseVariables.forEach(bv => {
                                                 variablesPayload[bv.id] = bv;
                                             });
-                                            variablesPayload[banner.id] = {
-                                                id: banner.id,
+
+                                            // 저장 전 상태를 강제로 평가하게 하기 위해 임시 ID 사용
+                                            const previewId = `${banner.id}_preview_temp`;
+
+                                            variablesPayload[previewId] = {
+                                                id: previewId,
                                                 label: currentLabel || banner.label,
                                                 type: 'single',
                                                 info: validInfo
@@ -1387,10 +1397,10 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 pageid: sessionStorage.getItem('pageId') || auth.user.userId,
                                                 user: auth.user.userId,
                                                 table: {
-                                                    id: `__var__${banner.id}`,
+                                                    id: `__var__${previewId}`,
                                                     name: currentLabel || banner.label,
-                                                    x_info: [],
-                                                    y_info: [banner.id]
+                                                    banner: [previewId],
+                                                    stub: baseVariables.length > 0 ? [baseVariables[0].id] : []
                                                 },
                                                 variables: variablesPayload,
                                                 include_stats: ["mean", "std", "min", "max", "n"]

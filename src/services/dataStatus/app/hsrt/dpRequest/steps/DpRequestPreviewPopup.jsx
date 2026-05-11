@@ -22,7 +22,14 @@ const DpRequestPreviewPopup = () => {
                 const fetchData = async () => {
                     loadingSpinner.show();
                     try {
+                        console.log("=== API REQUEST PAYLOAD ===");
+                        console.log(JSON.stringify(payload, null, 2));
+                        
                         const res = await evaluateVariable.mutateAsync(payload);
+                        
+                        console.log("=== API RESPONSE ===");
+                        console.log(res);
+
                         if (res && res.success === '777' && res.resultjson) {
                             // API에서 내려주는 columns 배열 세팅 (예: [{ key: "total_auto", label: "?꿀겐", ... }])
                             const apiColumns = res.resultjson.columns || [];
