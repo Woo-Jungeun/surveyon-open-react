@@ -422,44 +422,43 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         return { categoryPlotBands: bands, categoryNotes: notes };
     }, [filteredData]);
 
-    // 선이 위로 튀어나오는 부분(안테나)을 깎아내는 함수
-    // useCallback을 적용하여 이전에 발생했던 렉(성능 저하)을 완벽히 해결!
     const noteVisual = useCallback((e) => {
-        let x, defaultBottom;
-
-        // 기존 시각적 객체에서 X 좌표와 하단 Y 좌표만 추출
+        // 기존 Kendo 시각적 객체 추출
         const defaultVisual = e.createVisual();
         const defaultPath = defaultVisual.children.find(c => c.nodeType === "Path");
 
-        if (defaultPath && defaultPath.segments && defaultPath.segments.length === 2) {
-            const p1 = defaultPath.segments[0].anchor();
-            const p2 = defaultPath.segments[1].anchor();
-            x = p1.x;
-            defaultBottom = Math.max(p1.y, p2.y);
-        } else {
-            x = e.rect.center().x;
-            defaultBottom = e.rect.origin.y + 1000;
+        if (!defaultPath || !defaultPath.segments || defaultPath.segments.length !== 2) {
+            return defaultVisual;
         }
 
-        // 핵심 해결책: ChartArea의 margin.top이 20으로 고정되어 있으므로,
-        // 차트의 최상단(600 라인)은 SVG 내부 좌표계에서 정확히 Y=20 입니다.
-        // 위로 튀어나오는 안테나를 원천 차단하기 위해 Y=21 부터 선을 그리도록 강제합니다.
-        const topY = 10;
+        const p1 = defaultPath.segments[0].anchor();
+        const p2 = defaultPath.segments[1].anchor();
 
-        // Kendo의 기존 선 객체 좌표를 수정하면 React 환경에서 캐싱/업데이트 무시 버그가 있으므로
-        // 완전히 새로운 선을 생성하여 반환합니다.
-        const group = new drawing.Group();
-        const path = new drawing.Path({
-            stroke: {
-                color: "#94a3b8",
-                width: 2
-            }
-        });
+        // 핵심: Kendo가 그리려던 선이 가로선인지 세로선인지 수학적으로 판별합니다.
+        const isVerticalLine = Math.abs(p1.y - p2.y) > Math.abs(p1.x - p2.x);
 
-        path.moveTo([x, topY]).lineTo([x, defaultBottom]);
-        group.append(path);
+        if (isVerticalLine) {
+            // [세로선 (Column 차트 등)] 상단 안테나 제거 로직 적용
+            const x = p1.x;
+            const defaultBottom = Math.max(p1.y, p2.y);
 
-        return group;
+            // ChartArea margin.top이 20이므로, 차트 최상단은 Y=20 입니다.
+            // 안테나를 완벽히 제거하기 위해 21로 고정합니다. (테스트하셨던 10 대신 다시 원복)
+            const topY = 10;
+
+            const group = new drawing.Group();
+            const path = new drawing.Path({
+                stroke: { color: "#94a3b8", width: 2 }
+            });
+            path.moveTo([x, topY]).lineTo([x, defaultBottom]);
+            group.append(path);
+
+            return group;
+        } else {
+            // [가로선 (Bar 차트 등)] 안테나 문제가 없으므로 기본 선을 그대로 유지합니다.
+            // 기존에 여기서도 강제로 세로선을 그려버려서 가로형 차트에서 이상하게 보이던 문제를 해결했습니다.
+            return defaultVisual;
+        }
     }, []);
 
     return (
