@@ -748,7 +748,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         )}
                                     </div>
 
-                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
 
                                     <button
                                         onClick={() => setShowLegend(!showLegend)}
@@ -765,7 +765,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         <span style={{ whiteSpace: 'nowrap' }}>범례</span>
                                     </button>
 
-                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
 
                                     {availableChartGroups.length > 0 && (
                                         <div style={{ position: 'relative' }} ref={filterMenuRef}>
@@ -871,7 +871,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                         </div>
                                     )}
 
-                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px' }} />
+                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
 
                                     <button className={`view-option-btn ${chartMode === 'column' ? 'active' : ''}`} onClick={() => setChartMode('column')} title="세로 막대형"><BarChart2 size={16} /></button>
                                     <button className={`view-option-btn ${chartMode === 'bar' ? 'active' : ''}`} onClick={() => setChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={16} /></button>
