@@ -15,7 +15,7 @@ const MENU_ITEMS = [
         label: "",
         items: [
             { label: "진행현황표", path: "/field_management/analysis/frequency", icon: Grid },
-            { label: "쿼터관리", path: "/field_management/analysis/quota", icon: ClipboardList },
+            { label: "쿼터관리", icon: ClipboardList, isPending: true },
             { label: "데이터 삭제(불량)", icon: Trash2, isPending: true },
         ]
     }
