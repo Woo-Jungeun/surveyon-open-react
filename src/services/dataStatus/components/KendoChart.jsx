@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useCallback, useState, useEffect, useRef, useMemo } from 'react';
 import {
     Chart,
     ChartSeries,
@@ -387,9 +387,10 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         calculatedHeight = Math.max(200, data.length * groupHeight + 50);
     }
 
-    // --- 그룹 시각화를 위한 PlotBands 계산 ---
-    const categoryPlotBands = useMemo(() => {
+    // --- 그룹 시각화를 위한 PlotBands 및 구분선(Notes) 계산 ---
+    const { categoryPlotBands, categoryNotes } = useMemo(() => {
         const bands = [];
+        const notes = [];
         let currentGroup = null;
         let startIndex = 0;
         let isAlt = false;
@@ -404,6 +405,10 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                 if (isAlt) {
                     bands.push({ from: startIndex, to: i, color: 'rgba(0, 0, 0, 0.03)' });
                 }
+
+                // 그룹이 변경되는 경계선에 진한 세로선을 긋기 위한 노트 추가
+                notes.push({ value: i - 0.5 });
+
                 currentGroup = groupName;
                 startIndex = i;
                 isAlt = !isAlt;
@@ -414,8 +419,48 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         if (isAlt && filteredData.length > 0) {
             bands.push({ from: startIndex, to: filteredData.length, color: 'rgba(0, 0, 0, 0.03)' });
         }
-        return bands;
+        return { categoryPlotBands: bands, categoryNotes: notes };
     }, [filteredData]);
+
+    // 선이 위로 튀어나오는 부분(안테나)을 깎아내는 함수
+    // useCallback을 적용하여 이전에 발생했던 렉(성능 저하)을 완벽히 해결!
+    const noteVisual = useCallback((e) => {
+        let x, defaultBottom;
+
+        // 기존 시각적 객체에서 X 좌표와 하단 Y 좌표만 추출
+        const defaultVisual = e.createVisual();
+        const defaultPath = defaultVisual.children.find(c => c.nodeType === "Path");
+
+        if (defaultPath && defaultPath.segments && defaultPath.segments.length === 2) {
+            const p1 = defaultPath.segments[0].anchor();
+            const p2 = defaultPath.segments[1].anchor();
+            x = p1.x;
+            defaultBottom = Math.max(p1.y, p2.y);
+        } else {
+            x = e.rect.center().x;
+            defaultBottom = e.rect.origin.y + 1000;
+        }
+
+        // 핵심 해결책: ChartArea의 margin.top이 20으로 고정되어 있으므로,
+        // 차트의 최상단(600 라인)은 SVG 내부 좌표계에서 정확히 Y=20 입니다.
+        // 위로 튀어나오는 안테나를 원천 차단하기 위해 Y=21 부터 선을 그리도록 강제합니다.
+        const topY = 10;
+
+        // Kendo의 기존 선 객체 좌표를 수정하면 React 환경에서 캐싱/업데이트 무시 버그가 있으므로
+        // 완전히 새로운 선을 생성하여 반환합니다.
+        const group = new drawing.Group();
+        const path = new drawing.Path({
+            stroke: {
+                color: "#94a3b8",
+                width: 2
+            }
+        });
+
+        path.moveTo([x, topY]).lineTo([x, defaultBottom]);
+        group.append(path);
+
+        return group;
+    }, []);
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
@@ -425,53 +470,53 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     {!isHeatmap && externalShowLegend === undefined && (
                         <button
                             onClick={() => setInternalShowLegend(!internalShowLegend)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '6px 12px',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
-                            backgroundColor: showLegend ? '#eff6ff' : 'white',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            color: showLegend ? '#2563eb' : '#475569',
-                            borderIColor: showLegend ? '#bfdbfe' : '#e2e8f0',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = '#f8fafc' }}
-                        onMouseLeave={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = 'white' }}
-                    >
-                        <span>범례 {showLegend ? '숨기기' : '보기'}</span>
-                        <LayoutList size={14} />
-                    </button>
-                )}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '6px 12px',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '6px',
+                                backgroundColor: showLegend ? '#eff6ff' : 'white',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                color: showLegend ? '#2563eb' : '#475569',
+                                borderIColor: showLegend ? '#bfdbfe' : '#e2e8f0',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = '#f8fafc' }}
+                            onMouseLeave={(e) => { if (!showLegend) e.currentTarget.style.backgroundColor = 'white' }}
+                        >
+                            <span>범례 {showLegend ? '숨기기' : '보기'}</span>
+                            <LayoutList size={14} />
+                        </button>
+                    )}
 
-                {showDropdown && (
-                    <button
-                        onClick={toggleChartType}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '6px 12px',
-                            border: '1px solid #e2e8f0',
-                            borderRadius: '6px',
-                            backgroundColor: 'white',
-                            fontSize: '13px',
-                            fontWeight: '500',
-                            color: '#475569',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s'
-                        }}
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
-                    >
-                        <span>{chartTypeOptions.find(opt => opt.value === chartType)?.text}</span>
-                        <ArrowLeftRight size={14} />
-                    </button>
-                )}
+                    {showDropdown && (
+                        <button
+                            onClick={toggleChartType}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '6px 12px',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '6px',
+                                backgroundColor: 'white',
+                                fontSize: '13px',
+                                fontWeight: '500',
+                                color: '#475569',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                        >
+                            <span>{chartTypeOptions.find(opt => opt.value === chartType)?.text}</span>
+                            <ArrowLeftRight size={14} />
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -558,16 +603,17 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     minWidth: typeof calculatedWidth === 'number' ? `${calculatedWidth}px` : '100%',
                     height: typeof calculatedHeight === 'number' ? `${calculatedHeight}px` : calculatedHeight,
                     minHeight: typeof calculatedHeight === 'number' ? `${calculatedHeight}px` : '100%',
-                    flex: isVerticalScrollType || isHorizontalScrollType ? 'none' : 1
+                    flex: isVerticalScrollType || isHorizontalScrollType ? 'none' : 1,
+                    paddingTop: '15px' /* 상단 라벨(예: 600)이 잘리지 않도록 공간 확보 */
                 }}>
                     <Chart
-                        style={{ width: '100%', height: '100%' }}
+                        style={{ width: '100%', height: '100%', overflow: 'visible' }}
                         key={`${chartType}-${JSON.stringify(visibleSeries)}`}
                         seriesColors={CHART_COLORS}
                         transitions={false}
                     >
-                        {/* 차트 여백 조정: 하단에 가로 스크롤과 레이블 공간 확보 */}
-                        <ChartArea background="none" margin={{ top: 20, bottom: 20, left: 10, right: 10 }} />
+                        {/* 차트 상단 여백을 0으로 설정하여 plotBand(구분선)가 600 라인에서 정확히 멈추도록 함 */}
+                        <ChartArea background="none" margin={{ top: 0, bottom: 20, left: 10, right: 10 }} />
                         <ChartLegend visible={false} />
 
                         {/* Axes for Standard Charts */}
@@ -577,6 +623,14 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                     <ChartCategoryAxisItem
                                         categories={filteredData.map(d => d.name)}
                                         plotBands={categoryPlotBands}
+                                        notes={{
+                                            data: categoryNotes,
+                                            position: "top",
+                                            line: { width: 2, color: "#94a3b8", length: 3000 },
+                                            icon: { visible: false },
+                                            label: { visible: false },
+                                            visual: noteVisual
+                                        }}
                                         labels={{
                                             rotation: 0,
                                             padding: { top: 10 },
@@ -609,7 +663,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                 const rawText = String(e.value || '');
                                                 const originalLines = rawText.split('\n');
                                                 const limit = labelLimit > 0 ? labelLimit : 12;
-                                                
+
                                                 const chunkStr = (str, maxL) => {
                                                     const chunks = [];
                                                     for (let i = 0; i < str.length; i += limit) {
@@ -625,10 +679,10 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                 };
 
                                                 const hasGroup = originalLines.length > 1;
-                                                
+
                                                 // 소분류는 최대 2줄 허용
                                                 const subLabelLines = originalLines[0] ? chunkStr(originalLines[0], 2) : [];
-                                                
+
                                                 // 전체 3줄에 맞추기 위해, 대분류가 허용받는 최대 줄 수 계산
                                                 let maxGroupLines = 3 - subLabelLines.length;
                                                 if (maxGroupLines < 1) maxGroupLines = 1; // 최소 1줄 보장
@@ -638,12 +692,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                 const group = new drawing.Group();
                                                 const centerX = e.rect.center().x;
                                                 let currentY = e.rect.origin.y; // 기본 위치
-                                                
+
                                                 subLabelLines.forEach(lineStr => {
                                                     const fontStr = "bold 12px Pretendard, sans-serif";
                                                     measureCtx.font = fontStr;
                                                     const textWidth = measureCtx.measureText(lineStr).width;
-                                                    
+
                                                     const textObj = new drawing.Text(lineStr, [centerX - textWidth / 2, currentY], {
                                                         font: fontStr,
                                                         fill: { color: "#334155" }
@@ -656,7 +710,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                     const fontStr = "12px Pretendard, sans-serif";
                                                     measureCtx.font = fontStr;
                                                     const textWidth = measureCtx.measureText(lineStr).width;
-                                                    
+
                                                     const groupObj = new drawing.Text(lineStr, [centerX - textWidth / 2, currentY], {
                                                         font: fontStr,
                                                         fill: { color: "#64748b" }
