@@ -593,10 +593,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
         return targetColumns.map((col, cIdx) => {
             const labelParts = [col.label3, col.label2, col.label || col.name || `c${cIdx}`];
-            const fullLabel = labelParts
+            const validParts = labelParts
                 .map(p => String(p || '').trim())
-                .filter(p => p !== '')
-                .join(' - ');
+                .filter(p => p !== '');
+            
+            // Reverse the array so the specific item (e.g., '남성') is on top, 
+            // and the group (e.g., '성별') is on the bottom, then join with newline.
+            const fullLabel = validParts.reverse().join('\n');
 
             const flatCol = { label: fullLabel, name: fullLabel };
             

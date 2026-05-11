@@ -382,6 +382,36 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         calculatedHeight = Math.max(200, data.length * groupHeight + 50);
     }
 
+    // --- 그룹 시각화를 위한 PlotBands 계산 ---
+    const categoryPlotBands = useMemo(() => {
+        const bands = [];
+        let currentGroup = null;
+        let startIndex = 0;
+        let isAlt = false;
+
+        filteredData.forEach((d, i) => {
+            const lines = String(d.name).split('\n');
+            const groupName = lines.length > 1 ? lines[lines.length - 1] : d.name; // 줄바꿈이 있으면 맨 마지막 줄이 그룹명
+
+            if (i === 0) {
+                currentGroup = groupName;
+            } else if (groupName !== currentGroup) {
+                if (isAlt) {
+                    bands.push({ from: startIndex, to: i, color: 'rgba(0, 0, 0, 0.03)' });
+                }
+                currentGroup = groupName;
+                startIndex = i;
+                isAlt = !isAlt;
+            }
+        });
+
+        // 마지막 그룹 처리
+        if (isAlt && filteredData.length > 0) {
+            bands.push({ from: startIndex, to: filteredData.length, color: 'rgba(0, 0, 0, 0.03)' });
+        }
+        return bands;
+    }, [filteredData]);
+
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>
             <style>{tooltipGlobalStyle}</style>
@@ -541,6 +571,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                 <ChartCategoryAxis>
                                     <ChartCategoryAxisItem
                                         categories={filteredData.map(d => d.name)}
+                                        plotBands={categoryPlotBands}
                                         labels={{
                                             rotation: 0,
                                             padding: { top: 10 },
@@ -551,11 +582,13 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
 
                                                 // 대/중/소분류 등 계층으로 인해 이미 줄바꿈이 적용되어 있는 경우에도 길면 자동 줄바꿈 처리
                                                 if (text.includes('\n')) {
-                                                    return text.split('\n').map(l => {
+                                                    return text.split('\n').map((l, idx, arr) => {
                                                         const subChunks = [];
                                                         for (let i = 0; i < l.length; i += limit) {
                                                             subChunks.push(l.substring(i, i + limit));
                                                         }
+                                                        // 그룹명(마지막 줄)은 좀 더 흐리게 표시하여 시각적 분리
+                                                        const isGroupLine = arr.length > 1 && idx === arr.length - 1;
                                                         return subChunks.join('\n');
                                                     }).join('\n');
                                                 }
@@ -566,7 +599,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                     chunks.push(text.substring(i, i + limit));
                                                 }
                                                 return chunks.join('\n');
-                                            }
+                                            },
+                                            font: "12px Pretendard, sans-serif"
                                         }}
                                     />
                                 </ChartCategoryAxis>
