@@ -1456,11 +1456,11 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             onAdd={handleRowAdd}
                             onCopy={handleRowCopy}
                         >
-                            {/* 재적용 버튼 컬럼 - source_based + 프리셋 적용된 행만 활성화 */}
+                            {/* 재적용 버튼 컬럼 - source_based + 설정 적용된 행만 활성화 */}
                             <Column width="45px" headerClassName="k-text-center"
                                 headerCell={() => (
                                     <div style={{ textAlign: 'center', lineHeight: '1.2', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                                        프리셋<br />재적용
+                                        설정<br />재적용
                                     </div>
                                 )}
                                 cell={(p) => {
