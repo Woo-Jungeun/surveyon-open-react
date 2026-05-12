@@ -152,7 +152,7 @@ const DpRequestPage = () => {
         switch (currentStep) {
             case 0: return <DpRequestSettingStep ref={step1Ref} onUnsavedChange={(v) => markUnsaved('table', v)} />;
             case 1: return <DpRequestBannerStep ref={step2Ref} onUnsavedChange={(v) => markUnsaved('banner', v)} />;
-            case 2: return <DpRequestTableStep ref={step3Ref} onUnsavedChange={(v) => markUnsaved('recoded', v)} />;
+            case 2: return <DpRequestTableStep ref={step3Ref} onUnsavedChange={(v) => markUnsaved('recoded', v)} onRefresh={fetchContext} />;
             case 3: return <DpRequestSummaryStep ref={step4Ref} onUnsavedChange={(v) => markUnsaved('summary', v)} />;
             case 4: return <DpRequestDetailStep ref={step5Ref} onUnsavedChange={(v) => markUnsaved('order', v)} />;
             default: return <DpRequestSettingStep />;

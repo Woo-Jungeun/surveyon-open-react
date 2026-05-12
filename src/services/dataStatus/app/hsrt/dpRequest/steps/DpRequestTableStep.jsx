@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { ChevronDown, Check, Search, X, Info } from 'lucide-react';
+import { ChevronDown, Check, Search, X, Info, RotateCcw } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
 import { DropDownList, MultiSelect } from '@progress/kendo-react-dropdowns';
@@ -9,6 +9,15 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DpRequestStubSettingModal from './DpRequestStubSettingModal';
+
+// 프리셋이 적용된 source_based 스터브인지 확인
+const canReapplyPreset = (stub) => {
+    if (!stub) return false;
+    if (stub._is_custom || stub.var_type === 'summary' || stub.var_type === 'custom') return false;
+    if (String(stub.recoded_var_id).includes('_copy_')) return false; // 복사된 행은 제외
+    const hasPreset = stub.rank_preset_name || stub.scale_preset_name || stub.group_preset_name || stub.stat_summary;
+    return !!hasPreset;
+};
 
 // --- 상수 및 유틸리티 ---
 const STAT_OPTIONS = [
@@ -639,11 +648,11 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
 });
 
 // --- 메인 컴포넌트 ---
-const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
+const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getRecodedOverview, saveRecodedOverview, getTableDetail, getBannerDetail, createStub } = DpRequestPageApi();
+    const { getRecodedOverview, saveRecodedOverview, getTableDetail, getBannerDetail, createStub, reapplyPreset } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
@@ -744,7 +753,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const isCustom = s.stub_kind === 'custom' || (!s.stub_kind && !s.source_var_id);
                 const isCopied = String(s.recoded_var_id).includes('_copy_');
                 const hasCustomizedFields = s.customized_fields && s.customized_fields.length > 0;
-                
+
                 return !isSummary && !isCustom && !isCopied && s.preset_dirty && !hasCustomizedFields;
             }).map(s => s.recoded_var_id);
 
@@ -785,10 +794,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 ]);
                 const bannerIds = bannerRes?.resultjson?.banner_ids || bannerRes?.data?.resultjson?.banner_ids || [];
                 const recodedVars = tableRes?.resultjson?.recoded_variables || tableRes?.data?.resultjson?.recoded_variables || {};
-                const recodesArr = Array.isArray(recodedVars) 
-                    ? recodedVars 
+                const recodesArr = Array.isArray(recodedVars)
+                    ? recodedVars
                     : Object.entries(recodedVars).map(([key, val]) => ({ id: val.id || key, ...val }));
-                
+
                 if (bannerIds.length > 0) {
                     formattedBanners = bannerIds.map(bid => {
                         const found = recodesArr.find(v => v.id === bid);
@@ -890,7 +899,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 const parentType = item.type || v.type || 'custom';
                 const isRankParent = parentType === 'rank' || parentType === 'multi' || parentType === 'minrank' || parentType === 'maxrank';
                 let infoArray = v.info || item.info || [];
-                
+
                 if (isRankParent) {
                     const children = Object.values(variablesMap)
                         .filter(child => child.parent_stub_id === item.recoded_var_id && child.generated_kind === 'rank_child')
@@ -922,7 +931,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                     source_var_id: (() => {
                         const vObj = variablesMap[item.recoded_var_id] || {};
                         if (item._is_custom || vObj.stub_kind === 'custom' || parentType === 'custom' || String(item.recoded_var_id).startsWith('custom_stub_')) return null;
-                        
+
                         let sid = item.source_var_id || item.recoded_var_id;
                         if (isRankParent && String(sid).endsWith('_stub')) {
                             return String(sid).replace(/_stub$/, '');
@@ -1102,6 +1111,31 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
+    const handleReapplyPreset = async (stubItem) => {
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) {
+            modal.showAlert('알림', '사용자 정보나 페이지 정보를 확인할 수 없습니다.');
+            return;
+        }
+        const varId = stubItem.recoded_var_id;
+        if (!varId) return;
+
+        try {
+            const res = await reapplyPreset.mutateAsync({ pageid: pageId, user, recoded_var_ids: [varId] });
+            if (res?.success === '777' || res?.success === 777) {
+                modal.showAlert('완료', `[${varId}] 프리셋이 재적용되었습니다.`);
+                // 성공 후 그리드 데이터 재조회 및 상단 컨텍스트 갱신
+                await fetchOverview();
+                if (typeof onRefresh === 'function') onRefresh();
+            } else {
+                modal.showAlert('오류', res?.message || '프리셋 재적용에 실패했습니다.');
+            }
+        } catch (err) {
+            console.error('reapplyPreset error', err);
+            modal.showAlert('오류', err?.message || '프리셋 재적용 중 오류가 발생했습니다.');
+        }
+    };
 
     const handleSave = async (forceReapplyIds = []) => {
         const pageId = sessionStorage.getItem('pageId');
@@ -1115,7 +1149,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
         const stubItems = [];
         const summaryFolders = [];
         const variablesMap = {};
-        
+
         for (const stub of stubs) {
             // summary 타입은 summary_folders로 분리
             if (stub.var_type === 'summary') {
@@ -1305,7 +1339,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await saveRecodedOverview.mutateAsync(requestData);
             if (result?.success === "777") {
                 if (onUnsavedChange) onUnsavedChange(false);
-                
+
                 // 가이드라인 13번: 임시 스터브 ID 교체
                 const payload = result?.resultjson || result?.data?.resultjson || {};
                 if (payload.created_custom_stubs && Array.isArray(payload.created_custom_stubs)) {
@@ -1315,7 +1349,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             idMap[mapping.client_id] = mapping.recoded_var_id;
                         }
                     });
-                    
+
                     setStubs(prevStubs => prevStubs.map(stub => {
                         if (idMap[stub.recoded_var_id]) {
                             return {
@@ -1332,7 +1366,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                         setSelectedStubForModal(idMap[selectedStubForModal]);
                     }
                 }
-                
+
                 await fetchOverview(); // 저장 후 목록 최신화
                 isSuccess = true;
             } else {
@@ -1412,13 +1446,47 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                             onAdd={handleRowAdd}
                             onCopy={handleRowCopy}
                         >
+                            {/* 재적용 버튼 컬럼 - source_based + 프리셋 적용된 행만 활성화 */}
+                            <Column width="45px" headerClassName="k-text-center"
+                                headerCell={() => (
+                                    <div style={{ textAlign: 'center', lineHeight: '1.2', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                        프리셋<br />재적용
+                                    </div>
+                                )}
+                                cell={(p) => {
+                                    const canReapply = canReapplyPreset(p.dataItem);
+                                    return (
+                                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 2px' }}>
+                                            <button
+                                                type="button"
+                                                title={canReapply && '프리셋 재적용'}
+                                                disabled={!canReapply}
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    await handleReapplyPreset(p.dataItem);
+                                                }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    width: '100%', height: '22px', padding: 0,
+                                                    border: 'none', background: 'transparent',
+                                                    cursor: canReapply ? 'pointer' : 'default',
+                                                    opacity: canReapply ? 1 : 0.25,
+                                                }}
+                                            >
+                                                <RotateCcw size={14} color={canReapply ? '#10b981' : '#94a3b8'} strokeWidth={3} />
+                                            </button>
+                                        </td>
+                                    );
+                                }}
+                            />
                             <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
                             />
-                            <Column field="var_label" title="라벨" width="235px" headerClassName="k-text-center"
+                            <Column field="var_label" title="라벨" width="200px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="var_label" onUpdate={handleCellUpdate} />}
                             />
-                            <Column title="상세 설정" width="70px" headerClassName="k-text-center"
+                            <Column title="상세 설정" width="65px" headerClassName="k-text-center"
                                 cell={(p) => (
                                     <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 4px' }}>
                                         <button
