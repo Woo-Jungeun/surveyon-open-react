@@ -247,7 +247,7 @@ const DpRequestPage = () => {
                                     height: '36px'
                                 }}
                                 onClick={() => {
-                                    modal.showConfirm('세팅 초기화', '설정을 초기화하시겠습니까?\n현재 스터브 및 요약표 설정이 모두 삭제되고 원본 변수 기준으로\n새로 생성됩니다.', {
+                                    modal.showConfirm('알림', '설정을 초기화하시겠습니까?\n현재 스터브 및 요약표 설정이 모두 삭제되고 원본 변수 기준으로\n새로 생성됩니다.', {
                                         btns: [
                                             { title: '취소', click: () => { } },
                                             {
