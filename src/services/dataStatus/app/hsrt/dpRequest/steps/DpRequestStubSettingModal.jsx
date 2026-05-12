@@ -148,6 +148,178 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
+// --- 커스텀 헤더 셀 (형식 아이콘 및 표 가이드) ---
+const TypeHeaderCell = (props) => {
+    const anchorRef = useRef(null);
+    const [show, setShow] = useState(false);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <span>{props.title}</span>
+            <div
+                ref={anchorRef}
+                onMouseEnter={() => setShow(true)}
+                onMouseLeave={() => setShow(false)}
+                style={{ cursor: 'pointer', display: 'flex' }}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <Info size={14} color="#94a3b8" />
+            </div>
+
+            <Popup
+                anchor={anchorRef.current}
+                show={show}
+                animate={false}
+                popupClass="type-tooltip-popup"
+                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
+            >
+                <div style={{
+                    padding: '6px 10px',
+                    background: '#ffffff',
+                    width: '940px',
+                    lineHeight: '1.15',
+                    color: '#334155',
+                    textAlign: 'left',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
+                        <div style={{
+                            width: '18px', height: '18px', borderRadius: '50%',
+                            background: '#e2e8f0', color: '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '11px', fontWeight: 'bold'
+                        }}>i</div>
+                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>형식</span>
+                    </div>
+                    <div style={{ fontSize: '8px', letterSpacing: '-0.4px', marginLeft: '2px', fontWeight: 400 }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
+                            <thead>
+                                <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}>
+                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>구분</th>
+                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>항목</th>
+                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>설명</th>
+                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>활용 지침</th>
+                                    <th style={{ padding: '1px 3px', textAlign: 'left', fontWeight: 400, color: '#475569' }}>조건/예시</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td rowSpan="2" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>표시 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>base</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>계산 기준 표본 수</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>가능하면 항상 첫 row. 해석 시 기준 모수</td>
+                                    <td style={{ padding: '1px 3px' }}><code>SQ1 is not null</code></td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>option</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 보기/구간/Top/Mid/Bot/rank 결과 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>single, multi, scale 보기, rank 등 모두 option</td>
+                                    <td style={{ padding: '1px 3px' }}>단일: Q1==1 / 복수: Q1 in [1]</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td rowSpan="2" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>동적 표시 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>open(숫자)</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>숫자형 open 문항의 실제 값을 펼치는 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>교차분석 시 distinct 숫자값을 동적으로 표시</td>
+                                    <td style={{ padding: '1px 3px' }}>logic / target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>open(문자)</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>문자형 open 문항의 실제 값을 펼치는 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 문자열을 distinct 값으로 표시. 정렬/제한 필요</td>
+                                    <td style={{ padding: '1px 3px' }}>logic / target_var: BRAND</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td rowSpan="10" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>통계 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>mean</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>scale/open(숫자)에서 기본 통계로 사용</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var는 보통 원본 변수 ID</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>mean (100)</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균 100</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}></td>
+                                    <td style={{ padding: '1px 3px' }}></td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>std</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>표준편차</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균 아래 보조 통계로 사용</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>median</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>중앙값</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균이 왜곡될 수 있는 분포에서 보조 지표</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>mode</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최빈값</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>가장 많이 선택/응답된 값 확인</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>min</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최소값</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 범위 하한 확인</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>max</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최대값</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 범위 상한 확인</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>var</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>분산</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>특수 검증/분석용. 일반 화면에서는 필요할 때만 노출</td>
+                                    <td style={{ padding: '1px 3px' }}>variance는 저장 시 var로 정규화</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>sum</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>합계</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>점수 총합/누적값 계산 시 사용</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>rse</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>상대표준오차</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>신뢰성 검토용. 표본이 작은 경우 참고</td>
+                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td rowSpan="3" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>내부 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>base_end</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>base/option block 종료 표시용 내부 row</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>기본 화면에서는 숨김. 계산 block 경계용</td>
+                                    <td style={{ padding: '1px 3px' }}>기존 base end는 base_end로 정규화</td>
+                                </tr>
+                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>score_map</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>보기 값 → 통계 점수 매핑</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균/std/median 등을 이 값 기준으로 계산</td>
+                                    <td style={{ padding: '1px 3px' }}>예: 1점=0, 5점=100</td>
+                                </tr>
+                                <tr>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>stat_source</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>통계 계산 원천값 지정</td>
+                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>직접 수치형 변수 값을 통계에 쓸 때 사용</td>
+                                    <td style={{ padding: '1px 3px' }}>고급 계산 row</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </Popup>
+        </div>
+    );
+};
+
 // --- 로컬 상태 기반 텍스트 편집 셀 (성능 최적화용) ---
 const TextEditCell = React.memo(({ dataItem, field, onUpdate, align = 'left', placeholder = '' }) => {
     const [isEditing, setIsEditing] = useState(false);
@@ -246,7 +418,7 @@ const ColorEditCell = React.memo(({ p, onUpdate }) => {
 const openTemplateGuide = () => {
     const newWin = window.open('', '_blank', 'width=1100,height=850,scrollbars=yes,resizable=yes,top=100,left=100');
     if (!newWin) return;
-    
+
     newWin.document.write(`
 <!DOCTYPE html>
 <html lang="ko">
@@ -586,10 +758,10 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                 <div className="filter-popup-header-cbp">
                     <div className="header-title-cbp" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
                         <h3 style={{ margin: 0 }}>표 상세설정</h3>
-                        <div 
+                        <div
                             title="유형별 추천 탬플릿"
                             onClick={openTemplateGuide}
-                            style={{ 
+                            style={{
                                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 width: '24px', height: '24px', borderRadius: '50%', background: '#eff6ff', border: '1px solid #bfdbfe'
                             }}
@@ -659,6 +831,8 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     field="type"
                                     title="형식"
                                     width="150px"
+                                    headerCell={TypeHeaderCell}
+                                    headerClassName="k-text-center"
                                     cell={(p) => (
                                         <td style={{ padding: '4px' }}>
                                             <DropDownList
