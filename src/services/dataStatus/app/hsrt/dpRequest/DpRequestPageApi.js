@@ -192,6 +192,11 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/datasets/overview/html-export", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 교차분석 - CSV 다운로드 (export) */
+    const exportOverviewCsv = useMutation(
+        async (data) => await api.post(data, "/datasets/overview/csv-export", "API_BASE_URL_DATASTATUS")
+    );
+
     /** 교차분석 - 표시 옵션 저장 */
     const savePageSettings = useMutation(
         async (data) => await api.post(data, "/pages/set", "API_BASE_URL_DATASTATUS")
@@ -224,6 +229,7 @@ export function DpRequestPageApi() {
         getOverviewContext,
         getOverview,
         exportOverviewHtml,
+        exportOverviewCsv,
         savePageSettings
     };
 }

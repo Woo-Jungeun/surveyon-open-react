@@ -55,23 +55,35 @@ const DpRequestPreviewPopup = () => {
         }
     }, []);
 
-    // 동적 생성된 컬럼들의 셀 데이터를 렌더링 (N과 %를 위아래로 표시)
+    // 동적 생성된 컬럼들의 셀 데이터를 렌더링 (N과 %를 위아래로 표시, stat_type인 경우 단일숫자 및 prefix/postfix 적용)
     const DataCellTemplate = (props) => {
         // 데이터가 cells 하위에 있거나 직접 필드명에 매핑되어 있을 수 있음
         const cellBox = props.dataItem.cells ? props.dataItem.cells[props.field] : props.dataItem[props.field];
-        if (!cellBox) return <td style={{ textAlign: 'right', padding: '6px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0' }}>-</td>;
+        if (cellBox === undefined || cellBox === null) return <td style={{ textAlign: 'right', padding: '6px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0' }}>-</td>;
         
-        const nValue = cellBox.count !== undefined ? cellBox.count : cellBox.n;
-        const pValue = cellBox.percent !== undefined ? cellBox.percent : cellBox.p;
-        
+        const isSingleVal = typeof cellBox !== 'object';
+        const singleVal = isSingleVal ? cellBox : null;
+        const nValue = !isSingleVal ? (cellBox.count !== undefined ? cellBox.count : cellBox.n) : null;
+        const pValue = !isSingleVal ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p) : null;
+
         return (
             <td style={{ textAlign: 'right', padding: '8px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0', background: '#fafafa' }}>
-                <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
-                    {nValue !== undefined && nValue !== null ? nValue.toLocaleString() : '-'}
-                </div>
-                <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
-                    {pValue !== undefined && pValue !== null ? `${Number(pValue).toFixed(1)}%` : '-'}
-                </div>
+                {isSingleVal ? (
+                    <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
+                        {props.dataItem.prefix || ''}
+                        {Number(singleVal).toLocaleString(undefined, { maximumFractionDigits: 1 })}
+                        {props.dataItem.postfix || ''}
+                    </div>
+                ) : (
+                    <React.Fragment>
+                        <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
+                            {nValue !== undefined && nValue !== null ? nValue.toLocaleString() : '-'}
+                        </div>
+                        <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
+                            {pValue !== undefined && pValue !== null ? `${Number(pValue).toFixed(1)}%` : '-'}
+                        </div>
+                    </React.Fragment>
+                )}
             </td>
         );
     };

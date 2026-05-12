@@ -1054,57 +1054,36 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
-    const handleRowAdd = async (insertAfterIdx) => {
-        const pageId = sessionStorage.getItem('pageId');
-        const user = auth?.user?.userId;
-        const insertAfterId = insertAfterIdx !== undefined && insertAfterIdx !== null ? stubs[insertAfterIdx].recoded_var_id : null;
+    const handleRowAdd = (insertAfterIdx) => {
+        const draftId = `__draft_custom_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
 
-        try {
-            loadingSpinner.show();
-            const res = await createStub.mutateAsync({
-                pageid: pageId,
-                user: user,
-                insert_after_id: insertAfterId,
-                label: "새 스터브"
-            });
-            const newStub = res?.resultjson?.stub_item || res?.data?.resultjson?.stub_item;
-            if (!newStub) throw new Error("No stub item returned");
+        const newRow = {
+            _row_id: `row_${Date.now()}_${Math.random()}`,
+            source_var_id: null,
+            recoded_var_id: draftId,
+            var_label: '새 스터브',
+            var_type: 'custom',
+            _is_custom: true,
+            condition: '',
+            x_info: banners.length > 0 ? banners[0].id : '',
+            stat_summary: '',
+            scale_preset_name: '',
+            rank_preset_name: '',
+            group_preset_name: '',
+            info: [],
+            banner: banners.length > 0 ? [banners[0].id] : []
+        };
 
-            const newRow = {
-                ...newStub,
-                _row_id: `row_${Date.now()}_${Math.random()}`,
-                source_var_id: newStub.source_var_id ?? null,
-                recoded_var_id: newStub.recoded_var_id,
-                var_label: newStub.label || '',
-                var_type: newStub.type || 'unknown',
-                condition: newStub.filter_expression || '',
-                x_info: (() => {
-                    let b = Array.isArray(newStub.banner) ? newStub.banner[0] : (newStub.banner || newStub.x_info || '');
-                    if (!b && banners.length > 0) return banners[0].id;
-                    return b;
-                })(),
-                stat_summary: newStub.stat_preset_id || '',
-                scale_preset_name: newStub.scale_preset_id || '',
-                rank_preset_name: newStub.rank_preset_id || '',
-                group_preset_name: newStub.group_preset_id || '',
-            };
-
-            setStubs(prev => {
-                const next = [...prev];
-                if (insertAfterIdx !== undefined && insertAfterIdx !== null) {
-                    next.splice(insertAfterIdx + 1, 0, newRow);
-                } else {
-                    next.push(newRow);
-                }
-                return next;
-            });
-            if (onUnsavedChange) onUnsavedChange(true);
-        } catch (err) {
-            console.error(err);
-            modal.showAlert('오류', '새 스터브 생성에 실패했습니다.');
-        } finally {
-            loadingSpinner.hide();
-        }
+        setStubs(prev => {
+            const next = [...prev];
+            if (insertAfterIdx !== undefined && insertAfterIdx !== null) {
+                next.splice(insertAfterIdx + 1, 0, newRow);
+            } else {
+                next.push(newRow);
+            }
+            return next;
+        });
+        if (onUnsavedChange) onUnsavedChange(true);
     };
 
     const handleRowCopy = (idx) => {
@@ -1243,7 +1222,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                 type: stub.var_type || 'single',
                 stub_kind: effSourceId ? 'source_based' : 'custom',
                 variable_role: 'stub',
-                managed_by: 'dp_request',
+                managed_by: 'recoded_editor',
                 metadata_status: 'explicit',
                 scale_preset_id: stub.scale_preset_name || null,
                 rank_preset_id: stub.rank_preset_name || null,
@@ -1270,7 +1249,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
                         info: [{ ...opt, row_role: 'option', id: undefined }],
                         variable_role: 'stub',
                         stub_kind: effSourceId ? 'source_based' : 'custom',
-                        managed_by: 'dp_request',
+                        managed_by: 'recoded_editor',
                         metadata_status: 'explicit'
                     };
                 });
@@ -1327,6 +1306,34 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange }, ref) => {
             const result = await saveRecodedOverview.mutateAsync(requestData);
             if (result?.success === "777") {
                 if (onUnsavedChange) onUnsavedChange(false);
+                
+                // 가이드라인 13번: 임시 스터브 ID 교체
+                const payload = result?.resultjson || result?.data?.resultjson || {};
+                if (payload.created_custom_stubs && Array.isArray(payload.created_custom_stubs)) {
+                    const idMap = {};
+                    payload.created_custom_stubs.forEach(mapping => {
+                        if (mapping.client_id && mapping.recoded_var_id) {
+                            idMap[mapping.client_id] = mapping.recoded_var_id;
+                        }
+                    });
+                    
+                    setStubs(prevStubs => prevStubs.map(stub => {
+                        if (idMap[stub.recoded_var_id]) {
+                            return {
+                                ...stub,
+                                _row_id: idMap[stub.recoded_var_id],
+                                recoded_var_id: idMap[stub.recoded_var_id],
+                                _is_custom: false
+                            };
+                        }
+                        return stub;
+                    }));
+
+                    if (selectedStubForModal && idMap[selectedStubForModal]) {
+                        setSelectedStubForModal(idMap[selectedStubForModal]);
+                    }
+                }
+                
                 await fetchOverview(); // 저장 후 목록 최신화
                 isSuccess = true;
             } else {

@@ -50,17 +50,17 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
     const rawColumns = resultData.columns || [];
     const rows = resultData.rows || [];
 
-    const columns = React.useMemo(() => {
-        if (!hideZeroBaseColumns) return rawColumns;
-        return rawColumns.filter(col => {
-            const total = col.column_total ?? col.total ?? 0;
-            return total > 0;
-        });
-    }, [rawColumns, hideZeroBaseColumns]);
+    const columns = rawColumns;
 
     const effectivePolicy = {
         n_digits: decimalN === '' ? 0 : decimalN,
-        percent_digits: decimalPct === '' ? 1 : decimalPct
+        percent_digits: decimalPct === '' ? 1 : decimalPct,
+        mean_digits: uiSettings?.mean_digits ?? 1,
+        std_digits: uiSettings?.std_digits ?? 1,
+        median_digits: uiSettings?.median_digits ?? 1,
+        min_digits: uiSettings?.min_digits ?? 1,
+        max_digits: uiSettings?.max_digits ?? 1,
+        var_digits: uiSettings?.var_digits ?? 1,
     };
 
     const showLabel3Header = columns.some(c => String(c.label3 ?? "").trim());
@@ -265,6 +265,19 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
 
                                     const isBaseCell = cell.is_base || isBaseRow || String(cell.cell_type ?? "").toLowerCase() === "base";
 
+                                    let formattedSingleVal = singleVal;
+                                    if (singleVal !== null && typeof singleVal !== 'object') {
+                                        const statType = String(row.stat_type || row.type || "").toLowerCase();
+                                        const role = String(row.row_role || "").toLowerCase();
+                                        if (role === 'stat' || ['mean', 'std', 'median', 'min', 'max', 'var'].includes(statType)) {
+                                            const digitsKey = `${statType}_digits`;
+                                            const digits = effectivePolicy[digitsKey] ?? 1;
+                                            formattedSingleVal = Number(singleVal).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+                                        } else {
+                                            formattedSingleVal = String(singleVal);
+                                        }
+                                    }
+
                                     return (
                                         <td key={col.key} style={{
                                             borderTop: topBorderAttr,
@@ -288,7 +301,11 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                                 }}>{formatPercentValue(valP, effectivePolicy)}%</div>
                                             )}
                                             {singleVal !== null && typeof singleVal !== 'object' && (
-                                                <div style={{ fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{String(singleVal)}</div>
+                                                <div style={{ fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>
+                                                    {row.prefix || infoItem.prefix || ''}
+                                                    {formattedSingleVal}
+                                                    {row.postfix || infoItem.postfix || ''}
+                                                </div>
                                             )}
                                             {singleVal === null && valN === null && valP === null && <span style={{ color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</span>}
                                         </td>
@@ -923,7 +940,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewCsv } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -1267,17 +1284,39 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             setComputedFilterOptions(filterOpts);
 
             // 2. 전체표 목록 (Overview) 가져오기
-            const overviewRes = await getOverview.mutateAsync({
+            const reqData = {
                 pageid: pageId,
                 user: user,
                 banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
-                banner: selectedXInfo === '__none__' ? [] : [selectedXInfo],
+                hide_zero_base_columns: hideZeroBaseColumns,
                 start: (targetPage - 1) * PAGE_SIZE,
                 limit: PAGE_SIZE,
-                search: bannerSearch, // API 검색 연동
+                search: bannerSearch,
                 filter_expression: currentFilterExp,
-                use_recoded: true
-            });
+                use_recoded: true,
+                display_policy: {
+                    show_n: showN,
+                    show_percent: showPct,
+                    hide_zero_base_columns: hideZeroBaseColumns,
+                    hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
+                    hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
+                    n_digits: Number(decimalN === '' ? 0 : decimalN),
+                    percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
+                    mean_digits: uiSettings?.mean_digits ?? 1,
+                    std_digits: uiSettings?.std_digits ?? 1,
+                    median_digits: uiSettings?.median_digits ?? 1,
+                    min_digits: uiSettings?.min_digits ?? 1,
+                    max_digits: uiSettings?.max_digits ?? 1,
+                    var_digits: uiSettings?.var_digits ?? 1,
+                    zero_display: uiSettings?.zero_display || "0",
+                    empty_display: uiSettings?.empty_display || "blank"
+                }
+            };
+            if (selectedXInfo !== '__none__') {
+                reqData.banner = [selectedXInfo];
+            }
+            
+            const overviewRes = await getOverview.mutateAsync(reqData);
 
             // 응답 포맷 대응 (resultjson 래핑 여부)
             const payload = overviewRes?.resultjson || overviewRes || {};
@@ -1728,16 +1767,33 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     pageid: pageId,
                                     user: user,
                                     use_recoded: true,
-                                    banner_mode: "stub",
+                                    banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
+                                    hide_zero_base_columns: hideZeroBaseColumns,
                                     start: 0,
                                     limit: 0,
                                     search: bannerSearch,
                                     filter_expression: filterExpression,
                                     display_policy: {
+                                        show_n: showN,
+                                        show_percent: showPct,
+                                        hide_zero_base_columns: hideZeroBaseColumns,
+                                        hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
+                                        hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                                         n_digits: Number(decimalN === '' ? 0 : decimalN),
-                                        percent_digits: Number(decimalPct === '' ? 1 : decimalPct)
+                                        percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
+                                        mean_digits: uiSettings?.mean_digits ?? 1,
+                                        std_digits: uiSettings?.std_digits ?? 1,
+                                        median_digits: uiSettings?.median_digits ?? 1,
+                                        min_digits: uiSettings?.min_digits ?? 1,
+                                        max_digits: uiSettings?.max_digits ?? 1,
+                                        var_digits: uiSettings?.var_digits ?? 1,
+                                        zero_display: uiSettings?.zero_display || "0",
+                                        empty_display: uiSettings?.empty_display || "blank"
                                     }
                                 };
+                                if (selectedXInfo !== '__none__') {
+                                    requestData.banner = [selectedXInfo];
+                                }
 
                                 const result = await exportOverviewHtml.mutateAsync(requestData);
                                 const payload = result?.resultjson || result || {};
@@ -1779,6 +1835,78 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         }}
                     >
                         <Copy size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} /> HTML 복사
+                    </button>
+                    <button
+                        className="dp-btn"
+                        onClick={async () => {
+                            const pageId = sessionStorage.getItem('pageId');
+                            const user = auth?.user?.userId;
+                            if (!pageId || !user) return;
+
+                            try {
+                                loadingSpinner.show();
+                                const requestData = {
+                                    pageid: pageId,
+                                    user: user,
+                                    use_recoded: true,
+                                    banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
+                                    hide_zero_base_columns: hideZeroBaseColumns,
+                                    start: 0,
+                                    limit: 0,
+                                    search: bannerSearch,
+                                    filter_expression: filterExpression,
+                                    display_policy: {
+                                        show_n: showN,
+                                        show_percent: showPct,
+                                        hide_zero_base_columns: hideZeroBaseColumns,
+                                        hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
+                                        hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
+                                        n_digits: Number(decimalN === '' ? 0 : decimalN),
+                                        percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
+                                        mean_digits: uiSettings?.mean_digits ?? 1,
+                                        std_digits: uiSettings?.std_digits ?? 1,
+                                        median_digits: uiSettings?.median_digits ?? 1,
+                                        min_digits: uiSettings?.min_digits ?? 1,
+                                        max_digits: uiSettings?.max_digits ?? 1,
+                                        var_digits: uiSettings?.var_digits ?? 1,
+                                        zero_display: uiSettings?.zero_display || "0",
+                                        empty_display: uiSettings?.empty_display || "blank"
+                                    }
+                                };
+                                if (selectedXInfo !== '__none__') {
+                                    requestData.banner = [selectedXInfo];
+                                }
+
+                                const result = await exportOverviewCsv.mutateAsync(requestData);
+                                const payload = result?.resultjson || result || {};
+
+                                if (result?.success === "777" && payload.csv) {
+                                    const blob = new Blob(["\uFEFF" + payload.csv], { type: 'text/csv;charset=utf-8;' });
+                                    const url = URL.createObjectURL(blob);
+                                    const link = document.createElement('a');
+                                    link.href = url;
+                                    link.setAttribute('download', `cross_analysis_${pageId}.csv`);
+                                    document.body.appendChild(link);
+                                    link.click();
+                                    document.body.removeChild(link);
+                                    URL.revokeObjectURL(url);
+                                } else {
+                                    modal.showAlert('오류', 'CSV 데이터 생성에 실패했습니다.');
+                                }
+                            } catch (error) {
+                                console.error('CSV Export Error:', error);
+                                modal.showAlert('오류', 'CSV 다운로드 중 문제가 발생했습니다.');
+                            } finally {
+                                loadingSpinner.hide();
+                            }
+                        }}
+                        style={{
+                            color: '#16a34a', border: '1px solid #16a34a', background: '#ffffff',
+                            height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginLeft: '8px'
+                        }}
+                    >
+                        <Download size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} /> CSV 다운로드
                     </button>
                 </div>
             </DataHeader>
