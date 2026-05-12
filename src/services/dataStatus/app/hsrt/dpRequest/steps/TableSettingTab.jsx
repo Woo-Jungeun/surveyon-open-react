@@ -445,12 +445,34 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 </div>
                                                 <LineStylePicker 
                                                     value={settings.render[g.style] || 'solid'} 
-                                                    onChange={(val) => handleChange(`render.${g.style}`, val)} 
+                                                    onChange={(val) => {
+                                                        handleChange(`render.${g.style}`, val);
+                                                        if (val === 'double') {
+                                                            const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
+                                                            if (!curWidth || curWidth < 3) {
+                                                                handleChange(`render.${g.width}`, '3px');
+                                                            }
+                                                        }
+                                                    }}
                                                     color={settings.render[g.color] || '#000000'} 
                                                     direction={i >= 2 ? 'up' : 'down'}
                                                 />
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <input type="number" min="0" max="10" value={(settings.render[g.width] || '').replace('px', '')} placeholder="1" onChange={(e) => handleChange(`render.${g.width}`, e.target.value ? `${e.target.value}px` : '')} style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께(숫자)" />
+                                                    <input
+                                                        type="number"
+                                                        min={settings.render[g.style] === 'double' ? 3 : 0}
+                                                        max="10"
+                                                        value={(settings.render[g.width] || '').replace('px', '')}
+                                                        placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
+                                                        onChange={(e) => {
+                                                            const isDouble = settings.render[g.style] === 'double';
+                                                            let val = e.target.value ? Number(e.target.value) : '';
+                                                            if (isDouble && val !== '' && val < 3) val = 3;
+                                                            handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
+                                                        }}
+                                                        style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                        title="두께(숫자)"
+                                                    />
                                                     <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
                                                 </div>
                                             </div>
@@ -476,12 +498,34 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 </div>
                                                 <LineStylePicker 
                                                     value={settings.render[g.style] || 'solid'} 
-                                                    onChange={(val) => handleChange(`render.${g.style}`, val)} 
+                                                    onChange={(val) => {
+                                                        handleChange(`render.${g.style}`, val);
+                                                        if (val === 'double') {
+                                                            const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
+                                                            if (!curWidth || curWidth < 3) {
+                                                                handleChange(`render.${g.width}`, '3px');
+                                                            }
+                                                        }
+                                                    }}
                                                     color={settings.render[g.color] || '#000000'} 
                                                     direction={i >= 2 ? 'up' : 'down'}
                                                 />
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <input type="number" min="0" max="10" value={(settings.render[g.width] || '').replace('px', '')} placeholder="1" onChange={(e) => handleChange(`render.${g.width}`, e.target.value ? `${e.target.value}px` : '')} style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} title="두께(숫자)" />
+                                                    <input
+                                                        type="number"
+                                                        min={settings.render[g.style] === 'double' ? 3 : 0}
+                                                        max="10"
+                                                        value={(settings.render[g.width] || '').replace('px', '')}
+                                                        placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
+                                                        onChange={(e) => {
+                                                            const isDouble = settings.render[g.style] === 'double';
+                                                            let val = e.target.value ? Number(e.target.value) : '';
+                                                            if (isDouble && val !== '' && val < 3) val = 3;
+                                                            handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
+                                                        }}
+                                                        style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                        title="두께(숫자)"
+                                                    />
                                                     <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
                                                 </div>
                                             </div>
