@@ -686,6 +686,156 @@ const openTemplateGuide = () => {
                 </tbody>
             </table>
         </div>
+
+        <!-- 형식 상세 안내 추가 -->
+        <div class="header" style="margin-top: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+            <h1>형식 상세 정보</h1>
+        </div>
+        <div class="content">
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; font-size: 13px; text-align: left;">
+                <thead>
+                    <tr style="background: #f1f5f9; border-bottom: 1px solid #e2e8f0;">
+                        <th style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #475569;">구분</th>
+                        <th style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #475569;">항목</th>
+                        <th style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #475569;">설명</th>
+                        <th style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #475569;">활용 지침</th>
+                        <th style="padding: 8px 12px; font-weight: 600; color: #475569;">조건/예시</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td rowspan="2" style="padding: 8px 12px; border-right: 1px solid #e2e8f0; vertical-align: top; color: #475569;">표시 row</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">base</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">계산 기준 표본 수</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">가능하면 항상 첫 row. 해석 시 기준 모수</td>
+                        <td style="padding: 8px 12px; font-family: monospace;">SQ1 is not null</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">option</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">응답 보기/구간/Top/Mid/Bot/rank 결과 row</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">single, multi, scale 보기, rank 등 모두 option</td>
+                        <td style="padding: 8px 12px; font-family: monospace;">단일: Q1 == 1<br />복수·multi·rank: Q1 in [1], AQ5[1:2] in [1]</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td rowspan="2" style="padding: 8px 12px; border-right: 1px solid #e2e8f0; vertical-align: top; color: #475569;">동적 표시 row</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">open(숫자)</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">숫자형 open 문항의 실제 값을 펼치는 row</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">교차분석 시 distinct 숫자값을 동적으로 표시</td>
+                        <td style="padding: 8px 12px;">조건 또는 대상변수: SQ2</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">open(문자)</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">문자형 open 문항의 실제 값을 펼치는 row</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">응답 문자열을 distinct 값으로 표시. 정렬/제한 필요</td>
+                        <td style="padding: 8px 12px;">조건 또는 대상변수: BRAND_NAME</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td rowspan="10" style="padding: 8px 12px; border-right: 1px solid #e2e8f0; vertical-align: top; color: #475569;">통계 row</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">mean</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">평균</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">scale/open(숫자)에서 기본 통계로 사용</td>
+                        <td style="padding: 8px 12px;">대상변수는 보통 원본 변수 ID</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">mean (100)</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">평균 100</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;"></td>
+                        <td style="padding: 8px 12px;"></td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">std</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">표준편차</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">평균 아래 보조 통계로 사용</td>
+                        <td style="padding: 8px 12px;">대상변수: SQ2</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">median</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">중앙값</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">평균이 왜곡될 수 있는 분포에서 보조 지표</td>
+                        <td style="padding: 8px 12px;">대상변수: SQ2</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">mode</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">최빈값</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">가장 많이 선택/응답된 값 확인</td>
+                        <td style="padding: 8px 12px;">대상변수: SQ2</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">min</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">최소값</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">응답 범위 하한 확인</td>
+                        <td style="padding: 8px 12px;">대상변수: SQ2</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">max</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">최대값</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">응답 범위 상한 확인</td>
+                        <td style="padding: 8px 12px;">대상변수: SQ2</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">var</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">분산</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">특수 검증/분석용. 일반 화면에서는 필요할 때만 노출</td>
+                        <td style="padding: 8px 12px;">variance는 저장 시 var로 정규화</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">sum</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">합계</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">점수 총합/누적값 계산 시 사용</td>
+                        <td style="padding: 8px 12px;">대상변수: SQ2</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0; font-weight: 600; color: #2563eb;">rse</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">상대표준오차</td>
+                        <td style="padding: 8px 12px; border-right: 1px solid #e2e8f0;">신뢰성 검토용. 표본이 작은 경우 참고</td>
+                        <td style="padding: 8px 12px;">대상변수: SQ2</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 조건 작성 가이드 추가 -->
+        <div class="header" style="margin-top: 24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+            <h1>스터브 조건 도움말</h1>
+        </div>
+        <div class="content">
+            <div style="font-size: 14px; color: #475569; display: flex; flex-direction: column; gap: 20px;">
+                <div style="line-height: 1.6;">
+                    스터브는 분석표의 행으로 사용할 재분류 조건입니다.<br />
+                    각 행의 조건식에 해당하는 응답자만 해당 스터브 항목에 집계됩니다.
+                </div>
+
+                <div>
+                    <div style="font-size: 14px; font-weight: 700; color: #3B82F6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span style="width: 4px; height: 14px; background: #3B82F6; border-radius: 2px; display: inline-block;"></span>
+                        작성 예시
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px; background: #F8FAFC; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0; font-family: monospace; font-size: 13px; color: #334155; font-weight: 500;">
+                        <div><span style="color: #64748b;">동등 대조: </span>SQ1 == 1</div>
+                        <div><span style="color: #64748b;">IN 연산: </span>SQ1 in [1, 2, 3]</div>
+                        <div><span style="color: #64748b;">NOT IN 연산: </span>SQ1 not in [8, 9]</div>
+                        <div><span style="color: #64748b;">NULL 확인: </span>SQ1 is not null</div>
+                        <div><span style="color: #64748b;">비교 대조: </span>AGE &gt;= 20 and AGE &lt; 30</div>
+                        <div><span style="color: #64748b;">다중 조건: </span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
+                        <div><span style="color: #64748b;">순위 조건: </span>Q1[1:2] in [코드]</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="font-size: 14px; font-weight: 700; color: #EF4444; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                        <span style="width: 4px; height: 14px; background: #EF4444; border-radius: 2px; display: inline-block;"></span>
+                        주의
+                    </div>
+                    <ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: #334155; font-size: 13px; line-height: 1.6;">
+                        <li>조건식이 비어 있으면 해당 행은 집계 조건으로 사용할 수 없습니다.</li>
+                        <li>같은 응답자가 여러 조건에 걸리면 여러 행에 <b>중복 포함</b>될 수 있습니다.</li>
+                        <li>필터 조건과 스터브 조건은 별개입니다.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
