@@ -210,33 +210,33 @@ const TypeHeaderCell = (props) => {
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>base</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>계산 기준 표본 수</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>가능하면 항상 첫 row. 해석 시 기준 모수</td>
-                                    <td style={{ padding: '1px 3px' }}><code>SQ1 is not null</code></td>
+                                    <td style={{ padding: '1px 3px' }}>SQ1 is not null</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>option</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 보기/구간/Top/Mid/Bot/rank 결과 row</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>single, multi, scale 보기, rank 등 모두 option</td>
-                                    <td style={{ padding: '1px 3px' }}>단일: Q1==1 / 복수: Q1 in [1]</td>
+                                    <td style={{ padding: '1px 3px' }}>단일: Q1 == 1<br />복수·multi·rank: Q1 in [1], AQ5[1:2] in [1]</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td rowSpan="2" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>동적 표시 row</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>open(숫자)</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>숫자형 open 문항의 실제 값을 펼치는 row</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>교차분석 시 distinct 숫자값을 동적으로 표시</td>
-                                    <td style={{ padding: '1px 3px' }}>logic / target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>조건 또는 대상변수: SQ2</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>open(문자)</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>문자형 open 문항의 실제 값을 펼치는 row</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 문자열을 distinct 값으로 표시. 정렬/제한 필요</td>
-                                    <td style={{ padding: '1px 3px' }}>logic / target_var: BRAND</td>
+                                    <td style={{ padding: '1px 3px' }}>조건 또는 대상변수: BRAND_NAME</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td rowSpan="10" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>통계 row</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>mean</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>scale/open(숫자)에서 기본 통계로 사용</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var는 보통 원본 변수 ID</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수는 보통 원본 변수 ID</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>mean (100)</td>
@@ -248,31 +248,31 @@ const TypeHeaderCell = (props) => {
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>std</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>표준편차</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균 아래 보조 통계로 사용</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>median</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>중앙값</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균이 왜곡될 수 있는 분포에서 보조 지표</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>mode</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최빈값</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>가장 많이 선택/응답된 값 확인</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>min</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최소값</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 범위 하한 확인</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>max</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최대값</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 범위 상한 확인</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>var</td>
@@ -284,13 +284,13 @@ const TypeHeaderCell = (props) => {
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>sum</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>합계</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>점수 총합/누적값 계산 시 사용</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
                                 </tr>
                                 <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>rse</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>상대표준오차</td>
                                     <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>신뢰성 검토용. 표본이 작은 경우 참고</td>
-                                    <td style={{ padding: '1px 3px' }}>target_var: SQ2</td>
+                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
                                 </tr>
                             </tbody>
                         </table>
