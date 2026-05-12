@@ -1569,9 +1569,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             </div>
 
             {/* 상세설정 팝업 렌더링 */}
-            <DpRequestStubSettingModal
-                show={!!selectedStubForModal}
-                onClose={() => setSelectedStubForModal(null)}
+            {!!selectedStubForModal && (
+                <DpRequestStubSettingModal
+                    show={true}
+                    onClose={() => setSelectedStubForModal(null)}
                 rowData={selectedStubForModal}
                 variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
                 onApply={(rules) => {
@@ -1611,6 +1612,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     if (onUnsavedChange) onUnsavedChange(true);
                 }}
             />
+            )}
         </div>
     );
 });

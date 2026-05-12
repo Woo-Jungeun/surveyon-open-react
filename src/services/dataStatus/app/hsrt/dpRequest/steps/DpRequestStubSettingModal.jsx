@@ -249,44 +249,43 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     const modal = useContext(modalContext);
     const { saveRecodedSet } = DpRequestPageApi();
 
-    const [categories, setCategories] = useState([]);
+    const getInitialCategories = (rData) => {
+        if (!rData || !rData.info || rData.info.length === 0) return [];
+        const isFormatted = rData.info.some(opt => opt.type !== undefined || opt.logic !== undefined || opt.condition !== undefined);
+        if (isFormatted) {
+            return rData.info.map(opt => ({
+                ...opt,
+                id: opt.id || getUniqueId(),
+                logic: opt.logic !== undefined ? opt.logic : opt.condition,
+                value: opt.value !== undefined ? opt.value : opt.val,
+                target_var: opt.target_var !== undefined ? opt.target_var : opt.targetVar,
+            }));
+        } else {
+            return rData.info.map((opt, i) => {
+                const val = opt.val !== undefined ? opt.val : (opt.value !== undefined ? opt.value : (opt.row_id !== undefined ? opt.row_id : i + 1));
+                return {
+                    ...opt,
+                    id: getUniqueId(),
+                    label: opt.label ? (String(opt.label).startsWith('_') ? opt.label : `_${opt.label}`) : `_${val}`,
+                    type: 'single',
+                    logic: `${rData.recoded_var_id || rData.source_var_id} in [${val}]`,
+                    target_var: '',
+                    value: val
+                };
+            });
+        }
+    };
+
+    const [categories, setCategories] = useState(() => getInitialCategories(rowData));
     const [isDetailSetting, setIsDetailSetting] = useState(false);
 
     useEffect(() => {
         if (show) {
             setIsDetailSetting(false);
         }
+        // 컴포넌트가 언마운트되지 않고 props만 바뀔 경우를 대비한 동기화
         if (show && rowData) {
-            if (rowData.info && rowData.info.length > 0) {
-                const isFormatted = rowData.info.some(opt => opt.type !== undefined || opt.logic !== undefined || opt.condition !== undefined);
-
-                if (isFormatted) {
-                    const standardizedInfo = rowData.info.map(opt => ({
-                        ...opt,
-                        id: opt.id || getUniqueId(),
-                        logic: opt.logic !== undefined ? opt.logic : opt.condition,
-                        value: opt.value !== undefined ? opt.value : opt.val,
-                        target_var: opt.target_var !== undefined ? opt.target_var : opt.targetVar,
-                    }));
-                    setCategories(standardizedInfo);
-                } else {
-                    const apiRows = rowData.info.map((opt, i) => {
-                        const val = opt.val !== undefined ? opt.val : (opt.value !== undefined ? opt.value : (opt.row_id !== undefined ? opt.row_id : i + 1));
-                        return {
-                            ...opt,
-                            id: getUniqueId(),
-                            label: opt.label ? (String(opt.label).startsWith('_') ? opt.label : `_${opt.label}`) : `_${val}`,
-                            type: 'single',
-                            logic: `${rowData.recoded_var_id || rowData.source_var_id} in [${val}]`,
-                            target_var: '',
-                            value: val
-                        };
-                    });
-                    setCategories(apiRows);
-                }
-            } else {
-                setCategories([]);
-            }
+            setCategories(getInitialCategories(rowData));
         }
     }, [show, rowData]);
 
