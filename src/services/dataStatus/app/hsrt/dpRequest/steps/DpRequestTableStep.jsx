@@ -87,12 +87,13 @@ const ConditionHeaderCell = (props) => {
                                 작성 예시
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#F8FAFC', padding: '10px', borderRadius: '6px', border: '1px solid #E2E8F0', fontFamily: 'monospace', fontSize: '12px', color: '#334155', fontWeight: 500 }}>
-                                <div>SQ1 == 1</div>
-                                <div>SQ1 in [1, 2, 3]</div>
-                                <div>SQ1 not in [8, 9]</div>
-                                <div>SQ1 is not null</div>
-                                <div>AGE &gt;= 20 and AGE &lt; 30</div>
-                                <div>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
+                                <div><span style={{ color: '#64748b' }}>동등 대조: </span>SQ1 == 1</div>
+                                <div><span style={{ color: '#64748b' }}>IN 연산: </span>SQ1 in [1, 2, 3]</div>
+                                <div><span style={{ color: '#64748b' }}>NOT IN 연산: </span>SQ1 not in [8, 9]</div>
+                                <div><span style={{ color: '#64748b' }}>NULL 확인: </span>SQ1 is not null</div>
+                                <div><span style={{ color: '#64748b' }}>비교 대조: </span>AGE &gt;= 20 and AGE &lt; 30</div>
+                                <div><span style={{ color: '#64748b' }}>다중 조건: </span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
+                                <div><span style={{ color: '#64748b' }}>순위 조건: </span>Q1[1:2] in [코드]</div>
                             </div>
                         </div>
 

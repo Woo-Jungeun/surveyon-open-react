@@ -118,29 +118,59 @@ const ConditionHeaderCell = (props) => {
                 style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
             >
                 <div style={{
-                    padding: '12px 16px',
+                    padding: '16px 20px',
                     background: '#ffffff',
                     width: 'max-content',
-                    minWidth: '160px',
+                    minWidth: '220px',
                     lineHeight: '1.6',
                     color: '#334155',
-                    textAlign: 'left' // 헤더 중앙정렬 영향을 받지 않도록 분리
+                    textAlign: 'left',
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05)'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
                         <div style={{
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            background: '#e2e8f0', color: '#64748b',
+                            width: '20px', height: '20px', borderRadius: '50%',
+                            background: '#EFF6FF', color: '#3B82F6', border: '1px solid #BFDBFE',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', fontWeight: 'bold'
+                            fontSize: '12px', fontWeight: 'bold'
                         }}>i</div>
-                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
+                        <span style={{ color: '#1E293B', fontWeight: '700', fontSize: '14px' }}>스터브 조건 도움말</span>
                     </div>
-                    <div style={{ fontSize: '13px', letterSpacing: '-0.3px', marginLeft: '4px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        <div><span style={{ fontWeight: 600 }}>• 동등 대조:</span> <span>GENDER == 1, REGION == 'A'</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
-                        <div><span style={{ fontWeight: 600 }}>• 순위 조건:</span> <span>Q1[1:2] in [코드] </span></div>
+
+                    <div style={{ fontSize: '13px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        <div style={{ lineHeight: '1.5' }}>
+                            스터브는 분석표의 행으로 사용할 재분류 조건입니다.<br />
+                            각 행의 조건식에 해당하는 응답자만 해당 스터브 항목에 집계됩니다.
+                        </div>
+
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#3B82F6', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '4px', height: '12px', background: '#3B82F6', borderRadius: '2px', display: 'inline-block' }}></span>
+                                작성 예시
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#F8FAFC', padding: '10px', borderRadius: '6px', border: '1px solid #E2E8F0', fontFamily: 'monospace', fontSize: '12px', color: '#334155', fontWeight: 500 }}>
+                                <div><span style={{ color: '#64748b' }}>동등 대조: </span>SQ1 == 1</div>
+                                <div><span style={{ color: '#64748b' }}>IN 연산: </span>SQ1 in [1, 2, 3]</div>
+                                <div><span style={{ color: '#64748b' }}>NOT IN 연산: </span>SQ1 not in [8, 9]</div>
+                                <div><span style={{ color: '#64748b' }}>NULL 확인: </span>SQ1 is not null</div>
+                                <div><span style={{ color: '#64748b' }}>비교 대조: </span>AGE &gt;= 20 and AGE &lt; 30</div>
+                                <div><span style={{ color: '#64748b' }}>다중 조건: </span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
+                                <div><span style={{ color: '#64748b' }}>순위 조건: </span>Q1[1:2] in [코드]</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#EF4444', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ width: '4px', height: '12px', background: '#EF4444', borderRadius: '2px', display: 'inline-block' }}></span>
+                                주의
+                            </div>
+                            <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px', color: '#334155', fontSize: '12px', lineHeight: '1.5' }}>
+                                <li>조건식이 비어 있으면 해당 행은 집계 조건으로 사용할 수 없습니다.</li>
+                                <li>같은 응답자가 여러 조건에 걸리면 여러 행에 <b>중복 포함</b>될 수 있습니다.</li>
+                                <li>필터 조건과 스터브 조건은 별개입니다.</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </Popup>
