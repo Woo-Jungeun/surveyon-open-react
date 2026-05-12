@@ -133,6 +133,7 @@ const ConditionHeaderCell = (props) => {
                         <div><span style={{ fontWeight: 600 }}>• 비교 대조:</span> <span>AGE &gt;= 20, AGE &lt; 30</span></div>
                         <div><span style={{ fontWeight: 600 }}>• IN 연산:</span> <span>AGE_GROUP in [2, 3, 4]</span></div>
                         <div><span style={{ fontWeight: 600 }}>• 다중 조건:</span> <span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
+                        <div><span style={{ fontWeight: 600 }}>• 순위 조건:</span> <span>Q1[1:2] in [코드] </span></div>
                     </div>
                 </div>
             </Popup>
