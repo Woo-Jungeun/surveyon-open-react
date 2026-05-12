@@ -173,7 +173,7 @@ const DpRequestPage = () => {
                         const isCompleted = stepInfo?.completed;
                         const count = stepInfo?.count || 0;
                         const isActive = idx === currentStep;
-                        
+
                         // 요약표 비활성화 조건: 스터브(recoded) 단계가 완료되지 않은 경우
                         const isDisabled = step.key === 'summary' && contextData?.steps?.recoded?.completed !== true;
 
@@ -247,7 +247,7 @@ const DpRequestPage = () => {
                                     height: '36px'
                                 }}
                                 onClick={() => {
-                                    modal.showConfirm('초기화', '설정을 초기화하시겠습니까?', {
+                                    modal.showConfirm('세팅 초기화', '설정을 초기화하시겠습니까?\n현재 스터브 및 요약표 설정이 모두 삭제되고 원본 변수 기준으로\n새로 생성됩니다.', {
                                         btns: [
                                             { title: '취소', click: () => { } },
                                             {
@@ -262,7 +262,7 @@ const DpRequestPage = () => {
                                 }}
                             >
                                 <RotateCcw size={14} />
-                                <span>초기화</span>
+                                <span>세팅 초기화</span>
                             </button>
                         </>
                     )}
@@ -272,7 +272,7 @@ const DpRequestPage = () => {
                             const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : currentStep === 2 ? step3Ref : currentStep === 3 ? step4Ref : currentStep === 4 ? step5Ref : null;
                             if (currentRef?.current?.save) {
                                 const res = await currentRef.current.save();
-                                
+
                                 if (res !== false) {
                                     // 저장 성공 시 컨텍스트 데이터 최신화 (완료 상태 및 카운트 갱신)
                                     await fetchContext();

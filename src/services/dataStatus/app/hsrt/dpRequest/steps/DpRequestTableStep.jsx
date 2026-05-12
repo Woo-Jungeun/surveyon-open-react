@@ -723,20 +723,19 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 const requestData = {
                     pageid: pageId,
                     user: user,
-                    reset_to_default: true,
                     dp_request_recoded_items: [],
                     summary_folders: [],
-                    order_ids: [],
                     delete_ids: [],
-                    variables: {},
                     auto_recode: true,
-                    auto_generate_summary: false
+                    auto_generate_summary: false,
+                    reset_to_default: true
                 };
                 const result = await saveRecodedOverview.mutateAsync(requestData);
                 if (result?.success === "777") {
-                    modal.showAlert('알림', '스터브 초기화가 완료되었습니다.');
+                    modal.showAlert('알림', '세팅 초기화가 완료되었습니다.');
                     if (onUnsavedChange) onUnsavedChange(false);
                     await fetchOverview();
+                    if (typeof onRefresh === 'function') onRefresh();
                 } else {
                     modal.showAlert('오류', '초기화 작업에 실패했습니다.');
                 }
