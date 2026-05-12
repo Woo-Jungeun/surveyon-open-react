@@ -1456,40 +1456,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             onAdd={handleRowAdd}
                             onCopy={handleRowCopy}
                         >
-                            {/* 재적용 버튼 컬럼 - source_based + 설정 적용된 행만 활성화 */}
-                            <Column width="45px" headerClassName="k-text-center"
-                                headerCell={() => (
-                                    <div style={{ textAlign: 'center', lineHeight: '1.2', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                                        설정<br />재적용
-                                    </div>
-                                )}
-                                cell={(p) => {
-                                    const canReapply = canReapplyPreset(p.dataItem);
-                                    return (
-                                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 2px' }}>
-                                            <button
-                                                type="button"
-                                                title={canReapply && '설정 재적용'}
-                                                disabled={!canReapply}
-                                                onClick={async (e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    await handleReapplyPreset(p.dataItem);
-                                                }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    width: '100%', height: '22px', padding: 0,
-                                                    border: 'none', background: 'transparent',
-                                                    cursor: canReapply ? 'pointer' : 'default',
-                                                    opacity: canReapply ? 1 : 0.25,
-                                                }}
-                                            >
-                                                <RotateCcw size={14} color={canReapply ? '#10b981' : '#94a3b8'} strokeWidth={3} />
-                                            </button>
-                                        </td>
-                                    );
-                                }}
-                            />
+
                             <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
                                 cell={(p) => <TextEditCell dataItem={p.dataItem} field="recoded_var_id" onUpdate={handleCellUpdate} placeholder="" />}
                             />
@@ -1530,6 +1497,40 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             />
                             <Column field="x_info" title="배너" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
+                            />
+                            {/* 재적용 버튼 컬럼 - source_based + 설정 적용된 행만 활성화 */}
+                            <Column width="45px" headerClassName="k-text-center"
+                                headerCell={() => (
+                                    <div style={{ textAlign: 'center', lineHeight: '1.2', fontSize: '12px', whiteSpace: 'nowrap' }}>
+                                        설정<br />재적용
+                                    </div>
+                                )}
+                                cell={(p) => {
+                                    const canReapply = canReapplyPreset(p.dataItem);
+                                    return (
+                                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 2px' }}>
+                                            <button
+                                                type="button"
+                                                title={canReapply && '설정 재적용'}
+                                                disabled={!canReapply}
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    await handleReapplyPreset(p.dataItem);
+                                                }}
+                                                style={{
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    width: '100%', height: '22px', padding: 0,
+                                                    border: 'none', background: 'transparent',
+                                                    cursor: canReapply ? 'pointer' : 'default',
+                                                    opacity: canReapply ? 1 : 0.25,
+                                                }}
+                                            >
+                                                <RotateCcw size={14} color={canReapply ? '#10b981' : '#94a3b8'} strokeWidth={3} />
+                                            </button>
+                                        </td>
+                                    );
+                                }}
                             />
                             <Column field="group_preset_name" title="그룹" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
