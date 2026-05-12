@@ -202,7 +202,7 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/pages/set", "API_BASE_URL_DATASTATUS")
     );
 
-    /** DP 의뢰서 - 프리셋 재적용 (source_based 부모 스터브만 가능) */
+    /** DP 의뢰서 - 설정 재적용 (source_based 부모 스터브만 가능) */
     const reapplyPreset = useMutation(
         async (data) => await api.post(data, "/dp-request/recoded/overview/reapply-preset", "API_BASE_URL_DATASTATUS"),
         {
