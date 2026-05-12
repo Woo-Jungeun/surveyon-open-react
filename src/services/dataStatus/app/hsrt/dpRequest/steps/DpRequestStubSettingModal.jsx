@@ -243,6 +243,273 @@ const ColorEditCell = React.memo(({ p, onUpdate }) => {
     );
 });
 
+const openTemplateGuide = () => {
+    const newWin = window.open('', '_blank', 'width=1100,height=850,scrollbars=yes,resizable=yes,top=100,left=100');
+    if (!newWin) return;
+    
+    newWin.document.write(`
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>유형별 추천 탬플릿</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', sans-serif;
+            background-color: #f8fafc;
+            color: #334155;
+            margin: 0;
+            padding: 12px;
+            line-height: 1.35;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            padding: 10px 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header svg {
+            width: 20px;
+            height: 20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .content {
+            padding: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        th, td {
+            padding: 6px 10px;
+            text-align: left;
+            vertical-align: top;
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            font-size: 12px;
+        }
+        th:last-child, td:last-child { border-right: none; }
+        tbody tr:last-child td { border-bottom: none; }
+        th {
+            background: #f1f5f9;
+            font-weight: 700;
+            color: #475569;
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        tbody tr:hover { background-color: #f8fafc; }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .badge-single { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+        .badge-scale { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+        .badge-multi { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .badge-rank { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+        .badge-open { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+        
+        .type-desc { font-weight: 700; color: #0f172a; font-size: 13px; }
+        ul { margin: 0; padding-left: 16px; }
+        li { margin-bottom: 2px; color: #475569; }
+        li:last-child { margin-bottom: 0; }
+        .warning-box {
+            background: #fef2f2;
+            border-left: 3px solid #ef4444;
+            padding: 6px 10px;
+            border-radius: 0 4px 4px 0;
+            margin-top: 4px;
+            font-size: 11.5px;
+            color: #991b1b;
+            line-height: 1.3;
+        }
+        .warning-box.yellow { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
+        .warning-box strong { display: block; margin-bottom: 2px; font-size: 12px; }
+        .rec-item { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 3px; }
+        .rec-item:last-child { margin-bottom: 0; }
+        .rec-item-num {
+            background: #e2e8f0; color: #475569; font-size: 10px; font-weight: 800;
+            min-width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+            border-radius: 3px; margin-top: 0px;
+        }
+        .rec-item-text { color: #1e293b; font-weight: 500; }
+        .rec-item-sub { color: #64748b; font-size: 11px; margin-top: 0px; }
+        code { background: #f1f5f9; padding: 1px 4px; border-radius: 3px; font-family: monospace; font-size: 11px; color: #0f172a; font-weight: 600; border: 1px solid #e2e8f0; }
+        .stat-item { position: relative; padding-left: 10px; margin-bottom: 3px; color: #475569; font-size: 12px; }
+        .stat-item:last-child { margin-bottom: 0; }
+        .stat-item::before { content: ''; position: absolute; left: 0; top: 6px; width: 3px; height: 3px; border-radius: 50%; background: #cbd5e1; }
+        .stat-item.highlight { color: #0f172a; font-weight: 600; }
+        .stat-item.highlight::before { background: #3b82f6; }
+        .muted { color: #94a3b8; font-style: italic; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg>
+            <h1>유형별 추천 탬플릿</h1>
+        </div>
+        <div class="content">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">유형</th>
+                        <th style="width: 16%;">의미</th>
+                        <th style="width: 24%;">사용 대상</th>
+                        <th style="width: 26%;">추천 row 구성</th>
+                        <th style="width: 24%;">통계 row 권장</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="badge badge-single">single</span></td>
+                        <td class="type-desc">명목형 단일</td>
+                        <td>
+                            <ul>
+                                <li>성별, 지역, 직업</li>
+                                <li>인지 여부</li>
+                                <li>구매 여부</li>
+                            </ul>
+                        </td>
+                        <td>
+                            <div class="rec-item"><div class="rec-item-num">1</div><div class="rec-item-text">Base</div></div>
+                            <div class="rec-item"><div class="rec-item-num">2</div><div class="rec-item-text">보기 전체</div></div>
+                            <div class="rec-item"><div class="rec-item-num">3</div><div><div class="rec-item-text">기타 / 모름 / 무응답</div><div class="rec-item-sub">※ 필요 시 하단 배치</div></div></div>
+                        </td>
+                        <td class="muted">사용하지 않음</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-scale">scale</span></td>
+                        <td class="type-desc">만족도/선호도<br/>5점 척도</td>
+                        <td></td>
+                        <td>
+                            <div class="rec-item"><div class="rec-item-num">1</div><div class="rec-item-text">Base</div></div>
+                            <div class="rec-item"><div class="rec-item-num">2</div><div class="rec-item-text">5점 보기 전체</div></div>
+                            <div class="rec-item"><div class="rec-item-num">3</div><div class="rec-item-text">Top2</div></div>
+                            <div class="rec-item"><div class="rec-item-num">4</div><div class="rec-item-text">Mid</div></div>
+                            <div class="rec-item"><div class="rec-item-num">5</div><div class="rec-item-text">Bot2</div></div>
+                            <div class="rec-item"><div class="rec-item-num">6</div><div class="rec-item-text">평균</div></div>
+                            <div class="rec-item"><div class="rec-item-num">7</div><div class="rec-item-text">표준편차</div></div>
+                        </td>
+                        <td>
+                            <div class="stat-item highlight">mean 권장</div>
+                            <div class="stat-item">std 선택</div>
+                            <div class="stat-item">median은 필요 시 선택</div>
+                            <div class="warning-box">
+                                MIN / MAX / var는 일반 보고서에서는 비권장합니다.
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-scale">scale</span></td>
+                        <td class="type-desc">만족도/선호도<br/>7점/10점 척도</td>
+                        <td>
+                            <div class="warning-box yellow" style="margin-top:0;">
+                                <strong style="color: #92400e;">💡 구성 팁</strong>
+                                보기 전체를 모두 노출하면 표가 너무 길어질 수 있습니다.<br/><br/>
+                                보고서 목적이라면 <b>Top / Mid / Bot + 평균</b> 중심 구성이 훨씬 읽기 쉽습니다.
+                            </div>
+                        </td>
+                        <td>
+                            <div class="rec-item"><div class="rec-item-num">1</div><div class="rec-item-text">Base</div></div>
+                            <div class="rec-item"><div class="rec-item-num">2</div><div class="rec-item-text">보기 전체 또는 요약 중심</div></div>
+                            <div class="rec-item"><div class="rec-item-num">3</div><div class="rec-item-text">Top3</div></div>
+                            <div class="rec-item"><div class="rec-item-num">4</div><div class="rec-item-text">Mid</div></div>
+                            <div class="rec-item"><div class="rec-item-num">5</div><div class="rec-item-text">Bot3</div></div>
+                            <div class="rec-item"><div class="rec-item-num">6</div><div class="rec-item-text">평균</div></div>
+                            <div class="rec-item"><div class="rec-item-num">7</div><div class="rec-item-text">표준편차</div></div>
+                        </td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-multi">multi</span></td>
+                        <td class="type-desc">복수 응답</td>
+                        <td>
+                            <div class="warning-box yellow" style="margin-top:0;">
+                                <strong style="color: #92400e;">⚠️ 주의</strong>
+                                합계가 100%를 초과할 가능성이 있으므로, 표 제목이나 주석에 명확히 표기해야 합니다.
+                            </div>
+                        </td>
+                        <td>
+                            <div class="rec-item"><div class="rec-item-num">1</div><div class="rec-item-text">Base</div></div>
+                            <div class="rec-item"><div class="rec-item-num">2</div><div class="rec-item-text">보기별 선택률</div></div>
+                            <div class="rec-item"><div class="rec-item-num">3</div><div class="rec-item-text">기타</div></div>
+                            <div class="rec-item"><div class="rec-item-num">4</div><div class="rec-item-text">선택 없음</div></div>
+                        </td>
+                        <td class="muted">사용하지 않음</td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-rank">rank</span></td>
+                        <td class="type-desc">순위</td>
+                        <td>
+                            <ul>
+                                <li>순위 누적 기준별로 스터브를 분리합니다.</li>
+                                <li style="margin-top: 6px;">자동 생성 변수명은 <code>문항_stub_(1)</code>, <code>문항_stub_(1+2)</code>처럼 일관되게 둡니다.</li>
+                            </ul>
+                        </td>
+                        <td>
+                            <div class="rec-item"><div class="rec-item-num">1</div><div class="rec-item-text">Base</div></div>
+                            <div class="rec-item"><div class="rec-item-num">2</div><div class="rec-item-text">1순위 기준 보기 row</div></div>
+                            <div class="rec-item"><div class="rec-item-num">3</div><div class="rec-item-text">1+2순위 기준 보기 row</div></div>
+                            <div class="rec-item"><div class="rec-item-num">4</div><div class="rec-item-text">1+2+3순위 기준 보기 row</div></div>
+                        </td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><span class="badge badge-open">open(숫자)</span></td>
+                        <td class="type-desc">숫자 개방형</td>
+                        <td></td>
+                        <td>
+                            <div class="rec-item"><div class="rec-item-num">1</div><div class="rec-item-text">Base</div></div>
+                            <div class="rec-item"><div class="rec-item-num">2</div><div class="rec-item-text">평균</div></div>
+                            <div class="rec-item"><div class="rec-item-num">3</div><div class="rec-item-text">중앙값</div></div>
+                            <div class="rec-item"><div class="rec-item-num">4</div><div class="rec-item-text">표준편차</div></div>
+                            <div class="rec-item"><div class="rec-item-num">5</div><div class="rec-item-text">최솟값</div></div>
+                            <div class="rec-item"><div class="rec-item-num">6</div><div class="rec-item-text">최댓값</div></div>
+                        </td>
+                        <td>
+                            <div class="stat-item highlight">mean 권장</div>
+                            <div class="stat-item highlight">median 권장</div>
+                            <div class="stat-item highlight">std 권장</div>
+                            <div class="stat-item highlight">min / max 검수용 권장</div>
+                            <div class="stat-item">var는 선택</div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+    `);
+    newWin.document.close();
+};
+
 const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onApply }) => {
     const auth = useSelector(state => state.auth);
     const loadingSpinner = useContext(loadingSpinnerContext);
@@ -317,11 +584,18 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
 
                 {/* 헤더 영역 */}
                 <div className="filter-popup-header-cbp">
-                    <div className="header-title-cbp" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '12px' }}>
+                    <div className="header-title-cbp" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
                         <h3 style={{ margin: 0 }}>표 상세설정</h3>
-                        {/* <p style={{ margin: 0, fontWeight: 'bold', color: '#1d4ed8', fontSize: '14px' }}>
-                            [선택된 라벨] {rowData?.var_label || rowData?.recoded_var_id || '없음'}
-                        </p> */}
+                        <div 
+                            title="유형별 추천 탬플릿"
+                            onClick={openTemplateGuide}
+                            style={{ 
+                                cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: '24px', height: '24px', borderRadius: '50%', background: '#eff6ff', border: '1px solid #bfdbfe'
+                            }}
+                        >
+                            <Info size={14} color="#3b82f6" />
+                        </div>
                     </div>
                     <div className="header-actions-cbp">
                         <button onClick={onClose} className="close-btn-cbp"><X size={20} /></button>
