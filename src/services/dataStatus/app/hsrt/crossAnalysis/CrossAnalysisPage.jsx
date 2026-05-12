@@ -1403,10 +1403,13 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         return () => window.removeEventListener("pageSelected", handlePageUpdate);
     }, [currentPage, filterExpression]);
 
+    const isInitialPageRender = useRef(true);
     useEffect(() => {
-        if (currentPage !== 1) {
-            fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
+        if (isInitialPageRender.current) {
+            isInitialPageRender.current = false;
+            return;
         }
+        fetchCrossAnalysisData('normal', null, currentPage, filterExpression);
     }, [currentPage]);
 
     useEffect(() => {
