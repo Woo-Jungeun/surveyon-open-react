@@ -16,7 +16,14 @@ function getUniqueId() {
     return `combo-item-${nextId++}`;
 }
 
-const STUB_TYPE_OPTIONS = ["base", "scale", "option", "mean", "std", "median", "mode", "min", "max", "var", "sum", "variance", "rse", "rank"];
+const STUB_TYPE_OPTIONS = ["base", "scale", "option", "open(숫자)", "open(문자)", "rank", "mean", "std", "median", "mode", "min", "max", "var", "sum", "rse"];
+
+// single, multi 등 내부 타입을 표시용 타입으로 변환
+const normalizeDisplayType = (type) => {
+    if (!type) return 'base';
+    if (type === 'single' || type === 'multi') return 'option';
+    return type;
+};
 
 const LineStylePicker = ({ value, onChange, color }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -385,7 +392,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                                 className="k-dropdown-solid dp-mini-dropdown"
                                                 popupSettings={{ className: "dp-mini-dropdown-popup" }}
                                                 data={STUB_TYPE_OPTIONS}
-                                                value={p.dataItem.type || 'base'}
+                                                value={normalizeDisplayType(p.dataItem.type)}
                                                 onChange={(e) => handleCategoryCellUpdate(p.dataIndex, 'type', e.value)}
                                                 style={{ width: '100%', height: '28px', fontSize: '13px', background: '#fff' }}
                                             />
@@ -393,7 +400,13 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     )}
                                 />
                                 <Column field="logic" title="조건" width="250px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="logic" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
-                                <Column field="target_var" title="대상 변수" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
+                                <Column field="target_var" title="대상 변수" width="150px" cell={(p) => {
+                                    const STAT_TYPES_FOR_TARGET = ['mean', 'std', 'median', 'mode', 'min', 'max', 'var'];
+                                    if (!STAT_TYPES_FOR_TARGET.includes(p.dataItem.type)) {
+                                        return <td style={{ padding: '1px 4px', verticalAlign: 'middle', backgroundColor: '#eaedf1', color: '#94a3b8', textAlign: 'center', userSelect: 'none' }}>-</td>;
+                                    }
+                                    return <TextEditCell dataItem={p.dataItem} field="target_var" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />;
+                                }} />
                                 <Column field="value" title="값" width="100px" headerClassName="k-text-center" className="k-text-center" cell={(p) => <TextEditCell dataItem={p.dataItem} field="value" align="center" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
 
                                 {isDetailSetting && <Column field="prefix" title="앞문자" width="120px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="prefix" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
