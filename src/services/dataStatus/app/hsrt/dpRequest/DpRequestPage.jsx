@@ -212,6 +212,7 @@ const DpRequestPage = () => {
                 <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
                     {currentStep === 2 && (
                         <>
+                            {/* 
                             <button
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '6px',
@@ -237,6 +238,7 @@ const DpRequestPage = () => {
                                 <RotateCcw size={14} />
                                 <span>기본 재적용</span>
                             </button>
+                            */}
                             <button
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '6px',

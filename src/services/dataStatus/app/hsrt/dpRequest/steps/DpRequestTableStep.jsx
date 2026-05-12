@@ -747,6 +747,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 loadingSpinner.hide();
             }
         },
+        /*
         reapplyDefault: async () => {
             const targetIds = stubs.filter(s => {
                 const isSummary = s.var_type === 'summary';
@@ -764,6 +765,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
             await handleSave(targetIds);
         }
+        */
     }));
 
     const fetchOverview = useCallback(async () => {
