@@ -1122,20 +1122,29 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         const varId = stubItem.recoded_var_id;
         if (!varId) return;
 
-        try {
-            const res = await reapplyPreset.mutateAsync({ pageid: pageId, user, recoded_var_ids: [varId] });
-            if (res?.success === '777' || res?.success === 777) {
-                modal.showAlert('완료', `[${varId}] 프리셋이 재적용되었습니다.`);
-                // 성공 후 그리드 데이터 재조회 및 상단 컨텍스트 갱신
-                await fetchOverview();
-                if (typeof onRefresh === 'function') onRefresh();
-            } else {
-                modal.showAlert('오류', res?.message || '프리셋 재적용에 실패했습니다.');
-            }
-        } catch (err) {
-            console.error('reapplyPreset error', err);
-            modal.showAlert('오류', err?.message || '프리셋 재적용 중 오류가 발생했습니다.');
-        }
+        modal.showConfirm('알림', `[${varId}] 프리셋을 재적용하시겠습니까?\n해당 스터브의 수동 수정값이 현재 프리셋 기준으로 덮어씌워집니다.`, {
+            btns: [
+                { title: '취소', click: () => { } },
+                {
+                    title: '재적용', click: async () => {
+                        try {
+                            const res = await reapplyPreset.mutateAsync({ pageid: pageId, user, recoded_var_ids: [varId] });
+                            if (res?.success === '777' || res?.success === 777) {
+                                modal.showAlert('완료', `[${varId}] 프리셋이 재적용되었습니다.`);
+                                // 성공 후 그리드 데이터 재조회 및 상단 컨텍스트 갱신
+                                await fetchOverview();
+                                if (typeof onRefresh === 'function') onRefresh();
+                            } else {
+                                modal.showAlert('오류', res?.message || '프리셋 재적용에 실패했습니다.');
+                            }
+                        } catch (err) {
+                            console.error('reapplyPreset error', err);
+                            modal.showAlert('오류', err?.message || '프리셋 재적용 중 오류가 발생했습니다.');
+                        }
+                    }
+                }
+            ]
+        });
     };
 
     const handleSave = async (forceReapplyIds = []) => {
