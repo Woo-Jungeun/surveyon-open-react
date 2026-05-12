@@ -455,8 +455,7 @@ const canUseRankPreset = (type) => {
 
 const canUseStatPreset = (type) => {
     const t = String(type || '').toLowerCase();
-    if (t === 'summary' || t === 'custom') return false;
-    return t === 'scale' || t === 'open(숫자)' || t === 'double' || t === 'open-num' || t === 'dummy';
+    return t === 'open(숫자)' || t === 'double' || t === 'open-num';
 };
 
 const canUseGroupPreset = (type) => {
