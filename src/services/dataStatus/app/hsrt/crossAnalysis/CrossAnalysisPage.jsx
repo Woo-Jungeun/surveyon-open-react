@@ -221,13 +221,13 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
 
                         const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base";
                         const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? "").toLowerCase().includes(role));
-                        
+
                         const defaultRowBg = (rowIndex % 2 === 1 ? (uiSettings?.theme_bg_alt || uiSettings?.theme_stripe || '#fafafa') : (uiSettings?.theme_bg || '#fff'));
                         const rowBg = customColor || defaultRowBg;
                         const stubBg = customColor || uiSettings?.theme_stub_header_bg || '#D9E1F2';
 
                         const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : (prevHasCustomLine ? 'none' : gridBorder));
-                        
+
                         let bottomBorderAttr = undefined;
                         if (customLine && customLine !== 'none') {
                             const lineStyle = customLine === 'thick' ? 'solid' : customLine;
@@ -600,7 +600,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             const lbl = String(col.label || col.name || '').trim();
             const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
             if (lbl === '전체' || lbl.toLowerCase() === 'base') return false;
-            
+
             if (groupName && availableChartGroups.includes(groupName)) {
                 if (!selectedChartGroups.includes(groupName)) return false;
             }
@@ -612,13 +612,13 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             const validParts = labelParts
                 .map(p => String(p || '').trim())
                 .filter(p => p !== '');
-            
+
             // Reverse the array so the specific item (e.g., '남성') is on top, 
             // and the group (e.g., '성별') is on the bottom, then join with newline.
             const fullLabel = validParts.reverse().join('\n');
 
             const flatCol = { label: fullLabel, name: fullLabel };
-            
+
             rows.forEach((row, rIdx) => {
                 const role = String(row.row_role || '').toLowerCase();
                 const rLbl = String(row.label || row.name || '').trim();
@@ -627,7 +627,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                 const fieldKey = `r${rIdx}`;
                 const originalColKey = col.key || `c${columns.indexOf(col)}`;
                 const cellBox = row.cells?.[originalColKey] || {};
-                
+
                 flatCol[`${fieldKey}_n`] = cellBox.count !== undefined ? cellBox.count : (cellBox.n || 0);
                 flatCol[`${fieldKey}_pct`] = cellBox.percent !== undefined ? cellBox.percent : (cellBox.pct || 0);
             });
@@ -785,7 +785,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
                                     {availableChartGroups.length > 0 && (
                                         <div style={{ position: 'relative' }} ref={filterMenuRef}>
-                                            <button 
+                                            <button
                                                 onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                                                 style={{
                                                     display: 'flex', alignItems: 'center', gap: '6px',
@@ -818,7 +818,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                     )}
                                                 </div>
                                             </button>
-                                            
+
                                             {isFilterMenuOpen && (
                                                 <div style={{
                                                     position: 'absolute', top: '100%', right: 0, marginTop: '4px',
@@ -829,15 +829,15 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                 }}>
                                                     <div style={{ padding: '4px 8px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>X축 그룹 보기</span>
-                                                        <button 
-                                                            onClick={() => setSelectedChartGroups(availableChartGroups)} 
+                                                        <button
+                                                            onClick={() => setSelectedChartGroups(availableChartGroups)}
                                                             style={{ fontSize: '12px', color: '#64748b', background: '#f1f5f9', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
                                                         >
                                                             초기화
                                                         </button>
                                                     </div>
                                                     <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                                        <div 
+                                                        <div
                                                             onClick={() => {
                                                                 if (selectedChartGroups.length === availableChartGroups.length) {
                                                                     setSelectedChartGroups([]);
@@ -847,11 +847,11 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                             }}
                                                             style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0f172a', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}
                                                         >
-                                                            <div style={{ 
+                                                            <div style={{
                                                                 width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`, 
-                                                                borderRadius: '3px', 
-                                                                background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff' 
+                                                                border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`,
+                                                                borderRadius: '3px',
+                                                                background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff'
                                                             }}>
                                                                 {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
                                                             </div>
@@ -860,20 +860,20 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                         {availableChartGroups.map(group => {
                                                             const isChecked = selectedChartGroups.includes(group);
                                                             return (
-                                                                <div 
-                                                                    key={group} 
+                                                                <div
+                                                                    key={group}
                                                                     onClick={() => {
-                                                                        setSelectedChartGroups(prev => 
+                                                                        setSelectedChartGroups(prev =>
                                                                             prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]
                                                                         );
                                                                     }}
                                                                     style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', color: '#334155', borderRadius: '4px', background: isChecked ? '#f8fafc' : 'transparent', ':hover': { background: '#f8fafc' } }}
                                                                 >
-                                                                    <div style={{ 
+                                                                    <div style={{
                                                                         width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                        border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`, 
-                                                                        borderRadius: '3px', 
-                                                                        background: isChecked ? '#2563eb' : '#fff' 
+                                                                        border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`,
+                                                                        borderRadius: '3px',
+                                                                        background: isChecked ? '#2563eb' : '#fff'
                                                                     }}>
                                                                         {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
                                                                     </div>
@@ -1314,7 +1314,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             if (selectedXInfo !== '__none__') {
                 reqData.banner = [selectedXInfo];
             }
-            
+
             const overviewRes = await getOverview.mutateAsync(reqData);
 
             // 응답 포맷 대응 (resultjson 래핑 여부)
@@ -1890,11 +1890,11 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     document.body.removeChild(link);
                                     URL.revokeObjectURL(url);
                                 } else {
-                                    modal.showAlert('오류', 'CSV 데이터 생성에 실패했습니다.');
+                                    modal.showAlert('오류', '엑셀 데이터 생성에 실패했습니다.');
                                 }
                             } catch (error) {
                                 console.error('CSV Export Error:', error);
-                                modal.showAlert('오류', 'CSV 다운로드 중 문제가 발생했습니다.');
+                                modal.showAlert('오류', '엑셀 다운로드 중 문제가 발생했습니다.');
                             } finally {
                                 loadingSpinner.hide();
                             }
@@ -1905,7 +1905,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginLeft: '8px'
                         }}
                     >
-                        <Download size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} /> CSV 다운로드
+                        <Download size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} /> 엑셀 다운로드
                     </button>
                 </div>
             </DataHeader>

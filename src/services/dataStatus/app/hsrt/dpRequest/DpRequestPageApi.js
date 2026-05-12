@@ -192,7 +192,7 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/datasets/overview/html-export", "API_BASE_URL_DATASTATUS")
     );
 
-    /** 교차분석 - CSV 다운로드 (export) */
+    /** 교차분석 - 엑셀 다운로드 (export) */
     const exportOverviewCsv = useMutation(
         async (data) => await api.post(data, "/datasets/overview/csv-export", "API_BASE_URL_DATASTATUS")
     );
