@@ -152,7 +152,6 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
             `}</style>
             <table className="dp-html-table" style={{
                 width: 'max-content',
-                minWidth: '100%',
                 borderCollapse: 'separate',
                 borderSpacing: 0,
                 margin: 0,
@@ -164,7 +163,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 <colgroup>
                     <col style={{ width: '150px' }} />
                     {columns.map((col, i) => (
-                        <col key={col.key || i} style={{ width: col.width || '100px' }} />
+                        <col key={col.key || i} style={{ width: col.width || '80px' }} />
                     ))}
                 </colgroup>
                 <thead style={{
