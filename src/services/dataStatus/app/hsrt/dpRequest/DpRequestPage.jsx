@@ -269,17 +269,11 @@ const DpRequestPage = () => {
                         onClick={async () => {
                             const currentRef = currentStep === 0 ? step1Ref : currentStep === 1 ? step2Ref : currentStep === 2 ? step3Ref : currentStep === 3 ? step4Ref : currentStep === 4 ? step5Ref : null;
                             if (currentRef?.current?.save) {
-                                const isSummaryClosed = contextData?.steps?.recoded?.completed !== true;
                                 const res = await currentRef.current.save();
                                 
                                 if (res !== false) {
                                     // 저장 성공 시 컨텍스트 데이터 최신화 (완료 상태 및 카운트 갱신)
                                     await fetchContext();
-                                    
-                                    // 요약표 단계가 닫혀있었는데 스터브(currentStep === 2) 저장이 성공했다면 요약표 단계로 자동 이동
-                                    if (currentStep === 2 && isSummaryClosed) {
-                                        handleStepChange(3);
-                                    }
                                 }
                             }
                         }}
