@@ -13,6 +13,7 @@ import { modalContext } from "@/components/common/Modal.jsx";
 import useUpdateHistory from '@/hooks/useUpdateHistory';
 import DataHeader from "@/services/dataStatus/components/DataHeader";
 import { DropDownList } from '@progress/kendo-react-dropdowns';
+import Toast from '@/components/common/Toast';
 
 // --- 상수 ---
 const CROSS_FILTER_ALL_ID = "__all__";
@@ -939,12 +940,17 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewXlsx } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewXlsx, createSnapshot } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
     // --- 히스토리 관리 (Undo/Redo) ---
     const history = useUpdateHistory('dp-banner');
+
+    const [toast, setToast] = useState({ show: false, message: '' });
+    const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
+    const [snapshotLabel, setSnapshotLabel] = useState('');
+    const [snapshotMemo, setSnapshotMemo] = useState('');
     const isHistoryAction = useRef(false);
     const isSidebarClickScrolling = useRef(false);
 
@@ -1753,7 +1759,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         </div>
                     </div>
 
-                    <button
+                    {/* <button
                         className="dp-btn"
                         onClick={async () => {
                             const pageId = sessionStorage.getItem('pageId');
@@ -1834,7 +1840,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         }}
                     >
                         <Copy size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} /> HTML 복사
-                    </button>
+                    </button> */}
                     <button
                         className="dp-btn"
                         onClick={async () => {
@@ -1913,6 +1919,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     >
                         <Download size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} /> 엑셀 다운로드
                     </button>
+                    {/* <button
+                        className="dp-btn"
+                        onClick={() => {
+                            setSnapshotLabel('교차분석 전체 저장본');
+                            setSnapshotMemo('');
+                            setIsSnapshotModalOpen(true);
+                        }}
+                        style={{
+                            color: '#3b5bdb', border: '1px solid #3b5bdb', background: '#ffffff',
+                            height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginLeft: '8px'
+                        }}
+                    >
+                        <Cloud size={16} strokeWidth={2.5} style={{ marginRight: '6px' }} /> 현재 결과 저장
+                    </button> */}
                 </div>
             </DataHeader>
             <div className="dp-request-container" style={{ flex: 1, minHeight: 0, padding: '16px', gap: '12px' }} onClick={() => updateBannerInfo(banners.find(b => b.id === selectedBanner)?.info.map(it => ({ ...it, inEdit: false })) || [])}>
@@ -2144,6 +2165,134 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </div>
                 </div>
             </Popup>
+
+            {/* 현재 결과 저장 모달 */}
+            {isSnapshotModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#fff', borderRadius: '8px', padding: '24px', width: '400px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+                        <h3 style={{ margin: '0 0 16px 0', fontSize: '16px', fontWeight: 700, color: '#0f172a' }}>현재 결과 저장</h3>
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: '#475569' }}>저장본 이름</label>
+                            <input
+                                type="text"
+                                value={snapshotLabel}
+                                onChange={e => setSnapshotLabel(e.target.value)}
+                                placeholder="저장본 이름을 입력하세요"
+                                style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px' }}
+                            />
+                        </div>
+                        <div style={{ marginBottom: '24px' }}>
+                            <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600, color: '#475569' }}>메모</label>
+                            <textarea
+                                value={snapshotMemo}
+                                onChange={e => setSnapshotMemo(e.target.value)}
+                                placeholder="메모를 입력하세요 (선택)"
+                                style={{ width: '100%', padding: '8px 12px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px', height: '80px', resize: 'none' }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                            <button
+                                onClick={() => setIsSnapshotModalOpen(false)}
+                                style={{ padding: '8px 16px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    if (!snapshotLabel.trim()) {
+                                        modal.showAlert('알림', '저장본 이름을 입력해주세요.');
+                                        return;
+                                    }
+                                    
+                                    const pageId = sessionStorage.getItem('pageId');
+                                    const user = auth?.user?.userId;
+                                    if (!pageId || !user) return;
+
+                                    try {
+                                        loadingSpinner.show();
+                                        const requestData = {
+                                            pageid: pageId,
+                                            user: user,
+                                            use_recoded: true,
+                                            banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
+                                            hide_zero_base_columns: hideZeroBaseColumns,
+                                            start: 0,
+                                            limit: 0,
+                                            search: bannerSearch,
+                                            filter_expression: filterExpression,
+                                            display_policy: {
+                                                show_n: showN,
+                                                show_percent: showPct,
+                                                hide_zero_base_columns: hideZeroBaseColumns,
+                                                hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
+                                                hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
+                                                n_digits: Number(decimalN === '' ? 0 : decimalN),
+                                                percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
+                                                mean_digits: uiSettings?.mean_digits ?? 1,
+                                                std_digits: uiSettings?.std_digits ?? 1,
+                                                median_digits: uiSettings?.median_digits ?? 1,
+                                                min_digits: uiSettings?.min_digits ?? 1,
+                                                max_digits: uiSettings?.max_digits ?? 1,
+                                                var_digits: uiSettings?.var_digits ?? 1,
+                                                zero_display: uiSettings?.zero_display || "0",
+                                                empty_display: uiSettings?.empty_display || "blank"
+                                            },
+                                            label: snapshotLabel,
+                                            memo: snapshotMemo,
+                                            reuse_existing: true
+                                        };
+
+                                        if (selectedXInfo !== '__none__') {
+                                            requestData.banner = [selectedXInfo];
+                                        }
+
+                                        const result = await createSnapshot.mutateAsync(requestData);
+                                        
+                                        if (result?.success === "777") {
+                                            setIsSnapshotModalOpen(false);
+                                            setToast({ 
+                                                show: true, 
+                                                message: (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <span>{result.resultjson?.reused ? '기존 저장본을 재사용합니다.' : '보관함에 저장되었습니다.'}</span>
+                                                        <button 
+                                                            onClick={() => {
+                                                                const url = new URL(window.location);
+                                                                url.searchParams.set('tab', 'TableSnapshotTab');
+                                                                window.location.href = url.toString();
+                                                            }}
+                                                            style={{ padding: '4px 8px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '11px', fontWeight: 600 }}
+                                                        >
+                                                            보관함에서 보기
+                                                        </button>
+                                                    </div>
+                                                ) 
+                                            });
+                                        } else {
+                                            modal.showAlert('오류', '저장에 실패했습니다.');
+                                        }
+                                    } catch (error) {
+                                        console.error('Snapshot Create Error:', error);
+                                        modal.showAlert('오류', '저장 중 문제가 발생했습니다.');
+                                    } finally {
+                                        loadingSpinner.hide();
+                                    }
+                                }}
+                                style={{ padding: '8px 16px', background: '#3b5bdb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
+                            >
+                                저장
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <Toast
+                show={toast.show}
+                message={toast.message}
+                onClose={() => setToast({ ...toast, show: false })}
+                duration={4000}
+            />
         </>
     );
 });

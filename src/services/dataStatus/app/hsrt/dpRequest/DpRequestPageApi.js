@@ -197,6 +197,11 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/datasets/overview/xlsx-export", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 교차분석 - 현재 결과 저장 (Snapshot) */
+    const createSnapshot = useMutation(
+        async (data) => await api.post(data, "/datasets/overview/snapshots/create", "API_BASE_URL_DATASTATUS")
+    );
+
     /** 교차분석 - 표시 옵션 저장 */
     const savePageSettings = useMutation(
         async (data) => await api.post(data, "/pages/set", "API_BASE_URL_DATASTATUS")
@@ -239,6 +244,7 @@ export function DpRequestPageApi() {
         getOverview,
         exportOverviewHtml,
         exportOverviewXlsx,
+        createSnapshot,
         savePageSettings,
         reapplyPreset
     };
