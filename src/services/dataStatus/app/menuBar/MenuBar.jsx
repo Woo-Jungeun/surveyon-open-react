@@ -57,6 +57,7 @@ const MENU_ITEMS = [
     label: "집계 현황",
     items: [
       { label: "교차분석", path: "/data_status/hsrt/cross_analysis", icon: Table },
+      { label: "추가분석", path: "/data_status/analysis/additional", icon: BarChart3 },
     ]
   }
 ];

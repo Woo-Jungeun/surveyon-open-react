@@ -144,16 +144,7 @@ const AdditionalAnalysisPage = () => {
     // Variables for Drag & Drop
     const [variables, setVariables] = useState([]);
 
-    const [_rowVarsState, _setRowVarsState] = useState([]);
-    
-    // 강제로 세로축(rowVars)을 answerStateCode 의 '완료'로 고정
-    const rowVars = useMemo(() => {
-        const targetAsc = variables.find(v => v.id === 'answerStateCode' || v.name === 'answerStateCode');
-        if (targetAsc) return [targetAsc];
-        return [{ id: 'answerStateCode', name: 'answerStateCode', label: 'answerStateCode', type: 'single', info: [{ value: '1', label: '완료' }] }];
-    }, [variables]);
-    
-    const setRowVars = () => {}; // 상태 변경 무력화 (드래그/제거 불가)
+    const [rowVars, setRowVars] = useState([]);
     const [colVars, setColVars] = useState([]); // Array of arrays: [[v1, v2], [v3]]
     const [selectedVarIds, setSelectedVarIds] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
@@ -317,14 +308,6 @@ const AdditionalAnalysisPage = () => {
 
                 loadedVariables = Array.from(variablesMap.values());
 
-                // answerStateCode의 info를 '완료'만 남기도록 강제 고정
-                const targetAns = loadedVariables.find(v => v.id === 'answerStateCode' || v.name === 'answerStateCode');
-                if (targetAns && Array.isArray(targetAns.info)) {
-                    const completeLabel = targetAns.info.find(i => String(i.label).includes('완료') || String(i.value).includes('완료'));
-                    if (completeLabel) {
-                        targetAns.info = [completeLabel];
-                    }
-                }
 
                 setVariables(loadedVariables);
             } catch (error) {
@@ -362,6 +345,7 @@ const AdditionalAnalysisPage = () => {
                         const firstTable = mappedTables[0];
                         setSelectedTableId(firstTable.id);
                         setTableName(firstTable.id || "");
+                        setIsConfigOpen(false);
 
                         // Set configuration using loaded variables
                         const newRowVars = (firstTable.row || []).map(id => {
@@ -1385,9 +1369,10 @@ const AdditionalAnalysisPage = () => {
                     const newColumnsList = newData.columns || [];
                     setResultDataList(processResults(newData));
 
-                    // Success - Close config (disabled)
-                    // setIsConfigOpen(false);
-                    modal.showAlert("알림", "저장 및 실행이 완료되었습니다.");
+                    // Success - Close config when alert is confirmed
+                    modal.showAlert("알림", "저장 및 실행이 완료되었습니다.", null, () => {
+                        setIsConfigOpen(false);
+                    });
 
                 } else {
                     modal.showAlert('알림', '저장은 되었으나 분석에 실패했습니다.');
@@ -1672,7 +1657,7 @@ const AdditionalAnalysisPage = () => {
                                     flex: isConfigOpen ? 1.5 : 'none',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    minHeight: isConfigOpen ? '500px' : 'auto',
+                                    minHeight: isConfigOpen ? '750px' : 'auto',
                                     transition: 'all 0.3s ease'
                                 }}>
                                     <div className="config-header" style={{ padding: '20px 24px', transition: 'all 0.2s' }}>
@@ -1686,7 +1671,7 @@ const AdditionalAnalysisPage = () => {
                                                     onChange={(e) => setTableName(e.target.value)}
                                                     placeholder="배너 명을 입력하세요"
                                                 />
-                                                <div
+                                                {/* <div
                                                     title={mainBannerId === selectedTableId ? "주배너 해제" : "이 배너를 주배너로 지정합니다"}
                                                     onClick={() => setMainBannerId(mainBannerId === selectedTableId ? null : selectedTableId)}
                                                     style={{
@@ -1705,15 +1690,17 @@ const AdditionalAnalysisPage = () => {
                                                             transform: mainBannerId === selectedTableId ? 'scale(1.05)' : 'scale(1)'
                                                         }}
                                                     />
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
 
                                         {/* Table Mode Switch */}
                                         <div className="action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <button className="btn-run" onClick={handleSaveAndRun}>
-                                                <Play size={16} fill="white" /> 저장 후 실행
-                                            </button>
+                                            {isConfigOpen && (
+                                                <button className="btn-run" onClick={handleSaveAndRun}>
+                                                    <Play size={16} fill="white" /> 저장 후 실행
+                                                </button>
+                                            )}
                                             <button
                                                 className={`wide-view-toggle-btn ${isConfigOpen ? 'active' : ''}`}
                                                 onClick={() => setIsConfigOpen(!isConfigOpen)}
@@ -1859,6 +1846,13 @@ const AdditionalAnalysisPage = () => {
                                                     >
                                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                             <span className="drop-zone-label" style={{ marginBottom: 0 }}>세로축 (행)</span>
+                                                            <button
+                                                                onClick={() => setRowVars([])}
+                                                                className="axis-clear-btn"
+                                                                title="전체 삭제"
+                                                            >
+                                                                <X size={12} />
+                                                            </button>
                                                         </div>
                                                         <div className="drop-zone-area vertical">
                                                             {rowVars.length === 0 ? (
@@ -1868,9 +1862,14 @@ const AdditionalAnalysisPage = () => {
                                                                     <div
                                                                         key={`${v.id}-${itemIndex}`}
                                                                         className="dropped-tag row-tag"
-                                                                        style={{ cursor: 'default' }}
+                                                                        draggable
+                                                                        onDragStart={(e) => handleDragStart(e, { type: 'ROW_ITEM', itemIndex, item: v })}
+                                                                        onDragOver={handleDragOver}
+                                                                        onDrop={(e) => handleDrop(e, 'row_item', null, itemIndex)}
                                                                     >
-                                                                        <span className="tag-text">{v.id} (완료)</span>
+                                                                        <span className="item-drag-handle"><GripHorizontal size={13} strokeWidth={2.5} /></span>
+                                                                        <span className="tag-text">{v.id}</span>
+                                                                        <X size={14} className="remove" onClick={(e) => { e.stopPropagation(); removeVar(v.id, 'row'); }} />
                                                                     </div>
                                                                 ))
                                                             )}
@@ -1916,7 +1915,7 @@ const AdditionalAnalysisPage = () => {
                                                                                             colSpan={previewData.maxRowLevels + previewData.totalDataCols}
                                                                                             className="preview-td preview-separator-row"
                                                                                         >
-                                                                                            <span className="preview-separator-label">── 표 분리 ──</span>
+                                                                                            <span className="preview-separator-label">[ 표 분리 ]</span>
                                                                                         </td>
                                                                                     </tr>
                                                                                 )}

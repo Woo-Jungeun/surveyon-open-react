@@ -1933,19 +1933,19 @@
 
 /* 표분리 구분선 */
 .preview-separator-row {
-    background: #f0f4ff !important;
-    border-top: 2px dashed #93c5fd !important;
-    border-bottom: 2px dashed #93c5fd !important;
+    background: #f8fafc !important;
+    border-top: 1px solid #cbd5e1 !important;
+    border-bottom: 1px solid #cbd5e1 !important;
     text-align: center;
-    padding: 3px 0 !important;
-    height: 20px !important;
+    padding: 6px 0 !important;
+    height: 28px !important;
 }
 
 .preview-separator-label {
-    font-size: 10px;
-    color: #6b96d6;
-    font-weight: 600;
-    letter-spacing: 0.08em;
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 500;
+    letter-spacing: 0.05em;
 }
 
 /* 표분리 모드 그룹 헤더 강조 */
