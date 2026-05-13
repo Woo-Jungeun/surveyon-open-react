@@ -733,10 +733,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 };
                 const result = await saveRecodedOverview.mutateAsync(requestData);
                 if (result?.success === "777") {
-                    modal.showAlert('알림', '세팅 초기화가 완료되었습니다.');
                     if (onUnsavedChange) onUnsavedChange(false);
                     await fetchOverview();
                     if (typeof onRefresh === 'function') onRefresh();
+                    modal.showAlert('알림', '세팅 초기화가 완료되었습니다.');
                 } else {
                     modal.showAlert('오류', '초기화 작업에 실패했습니다.');
                 }
@@ -1131,10 +1131,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         try {
                             const res = await reapplyPreset.mutateAsync({ pageid: pageId, user, recoded_var_ids: [varId] });
                             if (res?.success === '777' || res?.success === 777) {
-                                modal.showAlert('완료', `[${varId}] 설정이 재적용되었습니다.`);
                                 // 성공 후 그리드 데이터 재조회 및 상단 컨텍스트 갱신
                                 await fetchOverview();
                                 if (typeof onRefresh === 'function') onRefresh();
+                                modal.showAlert('완료', `[${varId}] 설정이 재적용되었습니다.`);
                             } else {
                                 modal.showAlert('오류', res?.message || '설정 재적용에 실패했습니다.');
                             }
