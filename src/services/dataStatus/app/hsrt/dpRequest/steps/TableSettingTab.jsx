@@ -203,7 +203,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             <div>{col.label}</div>
-                                            <div style={{ color: settings.render.theme_text_muted || '#CBD5E1', fontSize: '0.85em', marginTop: '2px', fontWeight: 400 }}>{col.subLabel}</div>
+                                            {/* <div style={{ color: settings.render.theme_text_muted || '#CBD5E1', fontSize: '0.85em', marginTop: '2px', fontWeight: 400 }}>{col.subLabel}</div> */}
                                         </th>
                                     ))}
                                 </tr>
