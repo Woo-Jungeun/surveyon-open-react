@@ -115,16 +115,16 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             setBanners(prev => {
                 const b = prev.find(x => x.id === selectedBannerRef.current);
                 if (!b) return prev;
-                const isSame = b.label === currentLabel && 
-                               (b.type || 'single') === currentXInfo && 
-                               b.info === currentInfoRef.current &&
-                               (b.tempId || b.id) === currentId;
+                const isSame = b.label === currentLabel &&
+                    (b.type || 'single') === currentXInfo &&
+                    b.info === currentInfoRef.current &&
+                    (b.tempId || b.id) === currentId;
                 if (isSame) return prev;
-                
-                return prev.map(x => 
-                    x.id === selectedBannerRef.current 
-                    ? { ...x, label: currentLabel, type: currentXInfo, tempId: currentId, info: currentInfoRef.current, isDirty: true } 
-                    : x
+
+                return prev.map(x =>
+                    x.id === selectedBannerRef.current
+                        ? { ...x, label: currentLabel, type: currentXInfo, tempId: currentId, info: currentInfoRef.current, isDirty: true }
+                        : x
                 );
             });
             if (onUnsavedChange) onUnsavedChange(true);
@@ -153,7 +153,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         }
         modal.showConfirm('알림', <span style={{ wordBreak: 'break-all' }}>문항({bannerId})을 삭제하시겠습니까?</span>, {
             btns: [
-                { title: "취소", click: () => {} },
+                { title: "취소", click: () => { } },
                 {
                     title: "삭제",
                     click: async () => {
@@ -231,6 +231,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             ...item,
                             label2: item.value ?? item.label2 ?? '',
                             label: item.label || '',
+                            logic: item.logic || '',
                             inEdit: false
                         })) : []
                     }));
@@ -346,11 +347,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 type: mappedType,
                 info: validRules.map((r, idx) => {
                     const parsedVal = parseFloat(r.label2);
-                    return {
+                    const itemData = {
                         index: idx + 1,
                         value: isNaN(parsedVal) ? String(r.label2 ?? '') : parsedVal,
                         label: String(r.label || '')
                     };
+                    if (r.logic) itemData.logic = String(r.logic);
+                    return itemData;
                 })
             }
         };
@@ -483,10 +486,11 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 reorderable addable showNo deletable editField="inEdit"
                                 onDataChange={updateBannerInfo}
                                 onRowClick={handleRowClick}
-                                newRowTemplate={{ label2: '', label: '' }}
+                                newRowTemplate={{ label2: '', label: '', logic: '' }}
                             >
                                 <Column field="label2" title="할당될 값" width="120px" cell={NumericEditCell} />
-                                <Column field="label" title="보기 라벨" width="500px" />
+                                <Column field="label" title="보기 라벨" width="300px" />
+                                <Column field="logic" title="조건" />
                             </KendoGridV2>
                         </div>
                     </div>
@@ -498,9 +502,9 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                 onClose={() => setIsCartesianModalOpen(false)}
                 variables={baseVariables}
                 onApply={(rules) => {
-                    const mappedRules = rules.map(rule => ({ label2: rule.label2, label: rule.label, inEdit: false }));
+                    const mappedRules = rules.map(rule => ({ label2: rule.label2, label: rule.label, logic: rule.logic, inEdit: false }));
                     setCurrentInfo(prev => {
-                        const newInfo = (prev.length === 1 && !prev[0].label2 && !prev[0].label)
+                        const newInfo = (prev.length === 1 && !prev[0].label2 && !prev[0].label && !prev[0].logic)
                             ? mappedRules : [...prev, ...mappedRules];
                         currentInfoRef.current = newInfo;
                         return newInfo;
