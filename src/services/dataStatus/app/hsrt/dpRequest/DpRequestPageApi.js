@@ -193,8 +193,8 @@ export function DpRequestPageApi() {
     );
 
     /** 교차분석 - 엑셀 다운로드 (export) */
-    const exportOverviewCsv = useMutation(
-        async (data) => await api.post(data, "/datasets/overview/csv-export", "API_BASE_URL_DATASTATUS")
+    const exportOverviewXlsx = useMutation(
+        async (data) => await api.post(data, "/datasets/overview/xlsx-export", "API_BASE_URL_DATASTATUS")
     );
 
     /** 교차분석 - 표시 옵션 저장 */
@@ -238,7 +238,7 @@ export function DpRequestPageApi() {
         getOverviewContext,
         getOverview,
         exportOverviewHtml,
-        exportOverviewCsv,
+        exportOverviewXlsx,
         savePageSettings,
         reapplyPreset
     };

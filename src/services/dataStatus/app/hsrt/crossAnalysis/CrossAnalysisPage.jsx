@@ -939,7 +939,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewCsv } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewXlsx } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -1876,15 +1876,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     requestData.banner = [selectedXInfo];
                                 }
 
-                                const result = await exportOverviewCsv.mutateAsync(requestData);
+                                const result = await exportOverviewXlsx.mutateAsync(requestData);
                                 const payload = result?.resultjson || result || {};
 
-                                if (result?.success === "777" && payload.csv) {
-                                    const blob = new Blob(["\uFEFF" + payload.csv], { type: 'text/csv;charset=utf-8;' });
+                                if (result?.success === "777" && payload.content_base64) {
+                                    const binaryString = window.atob(payload.content_base64);
+                                    const len = binaryString.length;
+                                    const bytes = new Uint8Array(len);
+                                    for (let i = 0; i < len; i++) {
+                                        bytes[i] = binaryString.charCodeAt(i);
+                                    }
+                                    const blob = new Blob([bytes], { type: payload.content_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
                                     const url = URL.createObjectURL(blob);
                                     const link = document.createElement('a');
                                     link.href = url;
-                                    link.setAttribute('download', `cross_analysis_${pageId}.csv`);
+                                    link.setAttribute('download', payload.filename || `cross_analysis_${pageId}.xlsx`);
                                     document.body.appendChild(link);
                                     link.click();
                                     document.body.removeChild(link);
