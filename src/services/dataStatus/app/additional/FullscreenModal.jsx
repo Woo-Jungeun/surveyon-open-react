@@ -475,7 +475,7 @@ const FullscreenModal = ({
                                         })()}
                                         {!hasVarLabel && !hasColLabel3 && !hasColLabel2 && resultData.columns.map((col, idx) => (
                                             <th key={idx} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20 }}>
-                                                {col.label || col}
+                                                {col?.label ?? col}
                                             </th>
                                         ))}
                                     </tr>
@@ -547,7 +547,7 @@ const FullscreenModal = ({
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
                                                 <th key={idx} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel3 && hasColLabel2) ? '75px' : ((hasVarLabel && hasColLabel3) || (hasVarLabel && hasColLabel2) || (hasColLabel3 && hasColLabel2)) ? '50px' : (hasVarLabel || hasColLabel3 || hasColLabel2) ? '25px' : '0', height: '30px', zIndex: 20, borderRight: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1' }}>
-                                                    {col.label || col}
+                                                    {col?.label ?? col}
                                                 </th>
                                             ))}
                                         </tr>
@@ -684,7 +684,7 @@ const FullscreenModal = ({
                                         })()}
                                         {!hasVarLabel && !hasColLabel3 && !hasColLabel2 && resultData.columns.map((col, idx) => (
                                             <th key={`fs-stat-col-${idx}`} className="fullscreen-table-header" style={{ width: '180px', minWidth: '180px', top: 0, zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
-                                                <div>{col.label || col}</div>
+                                                <div>{col?.label ?? col}</div>
                                                 <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
                                                     N={resultData.stats.n?.[idx] || 0}
                                                 </div>
@@ -758,7 +758,7 @@ const FullscreenModal = ({
                                         <tr>
                                             {resultData.columns.map((col, idx) => (
                                                 <th key={`fs-stat-label-${idx}`} className="fullscreen-table-header" style={{ top: (hasVarLabel && hasColLabel3 && hasColLabel2) ? '75px' : ((hasVarLabel && hasColLabel3) || (hasVarLabel && hasColLabel2) || (hasColLabel3 && hasColLabel2)) ? '50px' : (hasVarLabel || hasColLabel3 || hasColLabel2) ? '25px' : '0', height: '50px', zIndex: 20, verticalAlign: 'middle', textAlign: 'center' }}>
-                                                    <div style={{ wordBreak: 'break-all' }}>{col.label || col}</div>
+                                                    <div style={{ wordBreak: 'break-all' }}>{col?.label ?? col}</div>
                                                     <div className="fullscreen-stats-n" style={{ fontSize: '10px', opacity: 0.8, marginTop: '2px' }}>
                                                         N={resultData.stats.n?.[idx] || 0}
                                                     </div>

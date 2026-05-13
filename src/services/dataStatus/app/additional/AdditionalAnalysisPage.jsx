@@ -510,8 +510,8 @@ const AdditionalAnalysisPage = () => {
                                         table: {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
-                                            x_info: xInfo,
-                                            y_info: yInfo
+                                            banner: xInfo,
+                                            stub: yInfo
                                         }
                                     };
 
@@ -852,8 +852,8 @@ const AdditionalAnalysisPage = () => {
                         runPayload.table = {
                             id: item.id,
                             name: item.name || "Untitled Table",
-                            x_info: xInfo,
-                            y_info: yInfo
+                            banner: xInfo,
+                            stub: yInfo
                         };
 
                         const evalResult = await evaluateTable.mutateAsync(runPayload);
@@ -1373,8 +1373,8 @@ const AdditionalAnalysisPage = () => {
                 runPayload.table = {
                     id: selectedTableId || 'T1',
                     name: baseTableName,
-                    x_info: xInfo,
-                    y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : []
+                    banner: xInfo,
+                    stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : []
                 };
 
                 const evalResult = await evaluateTable.mutateAsync(runPayload);
@@ -1507,15 +1507,15 @@ const AdditionalAnalysisPage = () => {
             payload.tables = rowVars.map((v, idx) => ({
                 id: `${selectedTableId || 'T1'}_${idx + 1}`,
                 name: `${baseTableName} - ${v.label || v.name || v.id}`,
-                x_info: xInfo,
-                y_info: [v.id || v.name]
+                banner: xInfo,
+                stub: [v.id || v.name]
             }));
         } else {
             payload.table = {
                 id: selectedTableId || 'T1',
                 name: baseTableName,
-                x_info: xInfo,
-                y_info: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join(' + ')] : []
+                banner: xInfo,
+                stub: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join(' + ')] : []
             };
         }
 
@@ -1668,19 +1668,15 @@ const AdditionalAnalysisPage = () => {
                             <>
                                 {/* Config Section */}
                                 <div className="config-section" style={{
-                                    height: '100%',
-                                    flex: 1,
+                                    height: isConfigOpen ? '100%' : 'auto',
+                                    flex: isConfigOpen ? 1.5 : 'none',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    minHeight: '400px',
+                                    minHeight: isConfigOpen ? '500px' : 'auto',
                                     transition: 'all 0.3s ease'
                                 }}>
                                     <div className="config-header" style={{ padding: '20px 24px', transition: 'all 0.2s' }}>
                                         <div className="config-header__left-group">
-                                            <div style={{ display: 'none' }}>
-                                                {/* 토글 기능 제거 및 열림 고정 */}
-                                            </div>
-
                                             <div className="config-header__title-group" style={{ display: 'flex', alignItems: 'center' }}>
                                                 <span className="config-header__title-label">배너 명</span>
                                                 <input
@@ -1714,31 +1710,19 @@ const AdditionalAnalysisPage = () => {
                                         </div>
 
                                         {/* Table Mode Switch */}
-                                        {isConfigOpen && (
-                                            <>
-                                                {/* Table Mode Switch */}
-                                                {/* <div className="table-mode-switch">
-                                                    <button
-                                                        className={`mode-option-btn ${tableMode === 'separated' ? 'active' : ''}`}
-                                                        onClick={() => setTableMode('separated')}
-                                                    >
-                                                        표 분리
-                                                    </button>
-                                                 <button
-                                                className={`mode-option-btn ${tableMode === 'merged' ? 'active' : ''}`}
-                                                onClick={() => setTableMode('merged')}
-                                            >
-                                                표 병합
+                                        <div className="action-buttons" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <button className="btn-run" onClick={handleSaveAndRun}>
+                                                <Play size={16} fill="white" /> 저장 후 실행
                                             </button>
-                                                </div> */}
-
-                                                <div className="action-buttons">
-                                                    <button className="btn-run" onClick={handleSaveAndRun}>
-                                                        <Play size={16} fill="white" /> 저장 후 실행
-                                                    </button>
-                                                </div>
-                                            </>
-                                        )}
+                                            <button
+                                                className={`wide-view-toggle-btn ${isConfigOpen ? 'active' : ''}`}
+                                                onClick={() => setIsConfigOpen(!isConfigOpen)}
+                                                title={isConfigOpen ? "설정 닫기" : "설정 열기"}
+                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', padding: 0, border: '1px solid #e2e8f0', borderRadius: '4px', background: 'white', color: '#64748b', cursor: 'pointer' }}
+                                            >
+                                                {isConfigOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {isConfigOpen && (
@@ -1997,8 +1981,7 @@ const AdditionalAnalysisPage = () => {
                                     )}
                                 </div>
 
-                                {/* Result Section (Scroll Area) - 요청에 의해 숨김 처리 */}
-                                {false && (
+                                {/* Result Section (Scroll Area) */}
                                 <div className="results-scroll-container" style={{ display: resultDataList.length === 0 ? 'none' : 'flex' }}>
                                     {resultDataList.map((resultData, dataIndex) => (
                                         <ResultSectionBlock
@@ -2029,7 +2012,6 @@ const AdditionalAnalysisPage = () => {
                                         />
                                     ))}
                                 </div>
-                                )}
                             </>
                         )}
                     </div>

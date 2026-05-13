@@ -279,7 +279,7 @@ export const ResultSectionBlock = ({
                 const headerRows = [];
                 if (hasColLabel3) headerRows.push([(hasRowLabel2 ? '대분류' : ''), '문항', ...dataItem.columns.map(c => c.label3 || '')].filter(Boolean).join('\t'));
                 if (hasColLabel2) headerRows.push([(hasRowLabel2 ? '' : ''), '', ...dataItem.columns.map(c => c.label2 || '')].filter(Boolean).join('\t'));
-                headerRows.push([(hasRowLabel2 ? '' : ''), '', ...dataItem.columns.map(c => c.label || c)].filter(Boolean).join('\t'));
+                headerRows.push([(hasRowLabel2 ? '' : ''), '', ...dataItem.columns.map(c => c?.label ?? c)].filter(Boolean).join('\t'));
 
                 const rows = dataItem.rows.map(row =>
                     [(hasRowLabel2 ? (row.label2 || row.var_label || '') : ''), row.label, ...row.values.map(v => {
@@ -291,7 +291,7 @@ export const ResultSectionBlock = ({
 
                 clipboardText = `${headerRows.join('\n')}\n${rows}`;
             } else {
-                const headers = ['문항', ...dataItem.columns.map(c => c.label || c)].join('\t');
+                const headers = ['문항', ...dataItem.columns.map(c => c?.label ?? c)].join('\t');
                 const rows = dataItem.rows.map(row =>
                     [row.label, ...row.values.map(v => {
                         if (displayMode === 'value') return v.count;
@@ -316,7 +316,7 @@ export const ResultSectionBlock = ({
                 const headerRows = [];
                 if (hasColLabel3) headerRows.push(['통계분류', '통계항목', ...dataItem.columns.map(c => c.label3 || '')].join('\t'));
                 if (hasColLabel2) headerRows.push(['', '', ...dataItem.columns.map(c => c.label2 || '')].join('\t'));
-                headerRows.push(['', '', ...dataItem.columns.map(c => c.label || c)].join('\t'));
+                headerRows.push(['', '', ...dataItem.columns.map(c => c?.label ?? c)].join('\t'));
 
                 const rows = statsOptions.filter(opt => opt.checked).map(stat => {
                     const statKey = stat.id.toLowerCase();
@@ -325,7 +325,7 @@ export const ResultSectionBlock = ({
                 }).join('\n');
                 clipboardText = `${headerRows.join('\n')}\n${rows}`;
             } else {
-                const headers = ['통계', ...dataItem.columns.map(c => c.label || c)].join('\t');
+                const headers = ['통계', ...dataItem.columns.map(c => c?.label ?? c)].join('\t');
                 const rows = statsOptions.filter(opt => opt.checked).map(stat => {
                     const statKey = stat.id.toLowerCase();
                     const statValues = dataItem.stats[statKey] || [];
@@ -819,7 +819,7 @@ export const ResultSectionBlock = ({
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
                                                                     <th key={i} style={{ minWidth: '80px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: '600' }}>
-                                                                        {col.label || col}
+                                                                        {col?.label ?? col}
                                                                     </th>
                                                                 ))}
                                                             </tr>
@@ -1055,7 +1055,7 @@ export const ResultSectionBlock = ({
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
                                                                     <th key={i} style={{ minWidth: '80px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: '600' }}>
-                                                                        {col.label || col}
+                                                                        {col?.label ?? col}
                                                                     </th>
                                                                 ))}
                                                             </tr>
