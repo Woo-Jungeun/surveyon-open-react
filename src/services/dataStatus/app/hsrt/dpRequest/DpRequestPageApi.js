@@ -36,6 +36,15 @@ export function DpRequestPageApi() {
         }
     );
 
+    /** 계산 문항 재계산 */
+    const recomputeComputedVariables = useMutation(
+        async (data) => await api.post(data, "/variables/computed/recompute", "API_BASE_URL_DATASTATUS"),
+        {
+            onMutate: () => { loadingSpinner.show(); },
+            onSettled: () => { loadingSpinner.hide(); }
+        }
+    );
+
     /** 변수 삭제 */
     const deleteBaseVariable = useMutation(
         async (data) => await api.post(data, "/variables/base/delete", "API_BASE_URL_DATASTATUS"),
@@ -222,6 +231,7 @@ export function DpRequestPageApi() {
         getNextBaseVariableId,
         getComputedVariableList,
         saveBaseVariableMerge,
+        recomputeComputedVariables,
         deleteBaseVariable,
         getTableRenderContext,
         getTableDetail,

@@ -36,7 +36,7 @@ const NumericEditCell = (props) => {
 
 const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBaseVariableList, getNextBaseVariableId, saveBaseVariableMerge, deleteBaseVariable } = DpRequestPageApi();
+    const { getBaseVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const history = useUpdateHistory('dp-banner');
@@ -362,6 +362,9 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             loadingSpinner.show();
             const result = await saveBaseVariableMerge.mutateAsync({ pageid: pageId, user, variables: payloadVariables });
             if (result?.success === '777') {
+                // 재계산 API 호출
+                await recomputeComputedVariables.mutateAsync({ pageid: pageId, user });
+                
                 modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
                 await fetchVariablesData('select', nextId);
