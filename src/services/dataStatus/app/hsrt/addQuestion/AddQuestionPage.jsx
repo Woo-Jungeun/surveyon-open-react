@@ -474,9 +474,9 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     <input
                                         type="text"
                                         value={currentId}
-                                        onChange={(e) => setCurrentId(e.target.value)}
+                                        readOnly
                                         className="dp-input"
-                                        style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #e2e8f0', borderRadius: '6px' }}
+                                        style={{ flex: 1, minWidth: 0, height: '32px', padding: '0 12px', border: '1px solid #e2e8f0', borderRadius: '6px', background: '#f8fafc', color: '#64748b', cursor: 'not-allowed' }}
                                     />
                                 </div>
                                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
