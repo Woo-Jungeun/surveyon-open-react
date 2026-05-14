@@ -666,20 +666,20 @@ export const ResultSectionBlock = ({
                       color: ${uiSettings.theme_text || '#0f172a'} !important;
                   }
                   .table-wrapper .cross-table th {
-                        border-right: ${gridBorder} !important;
                         border-bottom: ${headerBorder} !important;
-                    }
-                    .table-wrapper .cross-table th.sticky-col {
-                        border-right: ${stubBorder} !important;
+                        border-right: none !important;
                     }
                     .table-wrapper .cross-table td {
-                        border-right: ${gridBorder} !important;
-                        border-bottom: ${gridBorder} !important;
+                        border-right: none !important;
+                        border-bottom: none !important;
+                    }
+                    .table-wrapper .cross-table th.sticky-col,
+                    .table-wrapper .cross-table td.sticky-col {
+                        border-right: ${stubBorder} !important;
                     }
                     .table-wrapper .cross-table td.sticky-col {
                         background-color: ${uiSettings?.theme_stub_header_bg || '#D9E1F2'} !important;
                         color: ${uiSettings?.theme_stub_header_fg || '#000'} !important;
-                        border-right: ${stubBorder} !important;
                     }
                 `}</style>
                                             <table className="cross-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
@@ -718,8 +718,7 @@ export const ResultSectionBlock = ({
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 padding: '4px 12px',
-                                                                                
-                                                                                borderRight: i < headerGroups.row1.length - 1 ? '1px solid #dbeafe' : 'none',
+                                                                                borderLeft: i > 0 ? gridBorder : 'none',
                                                                                 whiteSpace: 'normal',
                                                                                 wordBreak: 'break-all',
                                                                                 verticalAlign: 'middle'
@@ -759,7 +758,7 @@ export const ResultSectionBlock = ({
                                                                         if (isSpanned) return null;
 
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -797,7 +796,7 @@ export const ResultSectionBlock = ({
                                                                         if (coveredByRow1 || coveredByRow3) return null;
 
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -829,7 +828,7 @@ export const ResultSectionBlock = ({
                                                                     </th>
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600' }}>
+                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                         {col?.label ?? col}
                                                                     </th>
                                                                 ))}
@@ -857,6 +856,10 @@ export const ResultSectionBlock = ({
                                                         const formatN = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rN, maximumFractionDigits: rN });
                                                         const formatP = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rP, maximumFractionDigits: rP });
 
+                                                        const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base" || String(row.label ?? "").toLowerCase() === "base" || row.is_base;
+                                                        const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? row.stat_type ?? "").toLowerCase().includes(role));
+                                                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
+
                                                         return (
                                                         <tr key={i}>
                                                             {hasRowLabel2 && (
@@ -870,7 +873,7 @@ export const ResultSectionBlock = ({
                                                                         fontSize: '11px',
                                                                         fontWeight: '700',
                                                                         textAlign: 'center',
-                                                                        
+                                                                        borderTop: topBorderAttr,
                                                                         whiteSpace: 'normal',
                                                                         wordBreak: 'break-all'
                                                                     }}
@@ -879,12 +882,12 @@ export const ResultSectionBlock = ({
                                                                     {row.label2 || row.var_label}
                                                                 </td>
                                                             )}
-                                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px', color: labelColor }}>{row.label}</td>
+                                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px', color: labelColor, borderTop: topBorderAttr }}>{row.label}</td>
                                                             {row.values.map((v, j) => (
                                                                 <td
                                                                     key={j}
                                                                     className={`${v.sig_vs_total === 'up' ? 'sig-highlight-up' : v.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
-                                                                    style={{ textAlign: 'right', position: 'relative' }}
+                                                                    style={{ textAlign: 'right', position: 'relative', borderLeft: j > 0 ? gridBorder : 'none', borderTop: topBorderAttr }}
                                                                 >
                                                                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%', color: labelColor }}>
                                                                         {isHideAll ? null : isSingleVal ? (
