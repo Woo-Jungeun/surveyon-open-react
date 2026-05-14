@@ -11,6 +11,7 @@ import SideBar from '../../components/SideBar';
 import CreateTablePopup from './CreateTablePopup';
 import './AdditionalAnalysisPage.css';
 import { AdditionalAnalysisPageApi } from './AdditionalAnalysisPageApi';
+import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
 import { RecodingPageApi } from '../recoding/RecodingPageApi';
 import { modalContext } from "@/components/common/Modal.jsx";
 import FullscreenModal from './FullscreenModal';
@@ -43,7 +44,14 @@ const parseTableData = (newData) => {
             };
         });
         const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-        return { label: r.label, values: processedValues, total: total, label2: r.label2 || '', var_label: r.var_label || r.variable_label || '' };
+        return { 
+            ...r,
+            label: r.label, 
+            values: processedValues, 
+            total: total, 
+            label2: r.label2 || '', 
+            var_label: r.var_label || r.variable_label || '' 
+        };
     });
 
     const statsMap = newData.stats || {};
@@ -105,8 +113,9 @@ const processResults = (evalResultData) => {
 const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
+    const { getTableRenderContext } = DpRequestPageApi();
     const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, evaluateTables } = AdditionalAnalysisPageApi();
-    const { getRecodedList } = RecodingPageApi();
+    const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);
     const alertTimerRef = useRef(null);
@@ -145,10 +154,41 @@ const AdditionalAnalysisPage = () => {
     const [variables, setVariables] = useState([]);
 
     const [rowVars, setRowVars] = useState([]);
-    const [colVars, setColVars] = useState([]); // Array of arrays: [[v1, v2], [v3]]
+    const [colVars, setColVars] = useState([]);
+    const [variableOverrides, setVariableOverrides] = useState({}); // Array of arrays: [[v1, v2], [v3]]
     const [selectedVarIds, setSelectedVarIds] = useState([]);
     const [draggedItem, setDraggedItem] = useState(null);
     const draggedItemRef = useRef(null); // stale closure 방지용 동기 ref
+    const originalConfigsRef = useRef(new Map());
+    const isConfigLoadingRef = useRef(false);
+    const loadedTableIdRef = useRef(null);
+
+    useEffect(() => {
+        if (!selectedTableId) return;
+
+        const currentConfigString = JSON.stringify({
+            tableName,
+            rowVars: rowVars.map(v => v.id || v.name),
+            colVars: colVars.map(g => g.map(v => v.id || v.name)),
+            filterExpression,
+            selectedWeight,
+            tableMode
+        });
+
+        if (isConfigLoadingRef.current) {
+            loadedTableIdRef.current = selectedTableId;
+            originalConfigsRef.current.set(selectedTableId, currentConfigString);
+            setTables(prev => prev.map(t => t.id === selectedTableId ? { ...t, isDirty: false } : t));
+            isConfigLoadingRef.current = false;
+        } else if (loadedTableIdRef.current === selectedTableId) {
+            const orig = originalConfigsRef.current.get(selectedTableId);
+            if (orig && orig !== currentConfigString) {
+                setTables(prev => prev.map(t => t.id === selectedTableId && !t.isDirty ? { ...t, isDirty: true } : t));
+            } else if (orig && orig === currentConfigString) {
+                setTables(prev => prev.map(t => t.id === selectedTableId && t.isDirty ? { ...t, isDirty: false } : t));
+            }
+        }
+    }, [tableName, rowVars, colVars, filterExpression, selectedWeight, tableMode, selectedTableId]);
 
     // Filter weight variables from API response
     const weightVariableOptions = useMemo(() => {
@@ -165,6 +205,8 @@ const AdditionalAnalysisPage = () => {
     const { pageList: getPageList, getOriginalVariables } = VariablePageApi();
     const [isPageListOpen, setIsPageListOpen] = useState(false);
     const [pageListData, setPageListData] = useState([]);
+    const [displayPolicy, setDisplayPolicy] = useState(null);
+    const [renderSettings, setRenderSettings] = useState(null);
 
     const handleOpenPageList = async () => {
         const userId = auth?.user?.userId;
@@ -216,6 +258,7 @@ const AdditionalAnalysisPage = () => {
                 setResultDataList([]);
                 setRowVars([]);
                 setColVars([]);
+                setVariableOverrides({});
 
                 if (alertTimerRef.current) clearTimeout(alertTimerRef.current);
                 alertTimerRef.current = setTimeout(() => {
@@ -231,6 +274,15 @@ const AdditionalAnalysisPage = () => {
             loadingSpinner.show();
 
             let loadedVariables = [];
+
+            // Fetch Render Context
+            try {
+                const renderCtx = await getTableRenderContext.mutateAsync({ pageid: currentPid, user: auth.user.userId });
+                if (renderCtx?.success === "777" && renderCtx.resultjson) {
+                    setDisplayPolicy(renderCtx.resultjson.display_policy);
+                    setRenderSettings(renderCtx.resultjson.render_settings);
+                }
+            } catch (e) { console.error("Render context error", e); }
 
             // Fetch Variables (Original Variables)
             try {
@@ -272,7 +324,7 @@ const AdditionalAnalysisPage = () => {
                 }
 
                 // Fetch Recoded Variables (including Banner)
-                const recodedResult = await getRecodedList.mutateAsync({
+                const recodedResult = await getRecodedVariables.mutateAsync({
                     user: auth.user.userId,
                     pageid: currentPid
                 });
@@ -378,8 +430,8 @@ const AdditionalAnalysisPage = () => {
                                 // Apply config from API result
                                 if (tData.config) {
                                     // x_info -> 가로축 (Cols)
-                                    if (tData.config.x_info) {
-                                        const xIds = tData.config.x_info;
+                                    if (tData.config.banner) {
+                                        const xIds = tData.config.banner;
                                         let mappedCols = [];
                                         if (xIds.length === 1 && typeof xIds[0] === 'string' && (xIds[0].includes('*') || xIds[0].includes('+'))) {
                                             const groups = xIds[0].split('+');
@@ -400,8 +452,8 @@ const AdditionalAnalysisPage = () => {
                                         setColVars(mappedCols.filter(g => g.length > 0));
                                     }
                                     // y_info -> 세로축 (Rows)
-                                    if (tData.config.y_info) {
-                                        const yIds = tData.config.y_info;
+                                    if (tData.config.stub) {
+                                        const yIds = tData.config.stub;
                                         let mappedRows = [];
                                         if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
                                             mappedRows = yIds[0].split(/[+*]/).filter(id => id.trim()).map(id => {
@@ -437,12 +489,13 @@ const AdditionalAnalysisPage = () => {
                                 }
 
                                 setResultDataList(processResults(tData));
+                                isConfigLoadingRef.current = true;
 
                                 // Auto-run analysis for the first table
                                 try {
                                     const config = tData.config || {};
-                                    const xInfo = config.x_info || [];
-                                    const yInfo = config.y_info || [];
+                                    const xInfo = config.banner || [];
+                                    const yInfo = config.stub || [];
                                     const weightCol = config.weight_col || "";
                                     const filterExpr = config.filter_expression || "";
 
@@ -495,6 +548,7 @@ const AdditionalAnalysisPage = () => {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
                                             banner: xInfo,
+                                            variable_overrides: variableOverrides,
                                             stub: yInfo
                                         }
                                     };
@@ -712,12 +766,13 @@ const AdditionalAnalysisPage = () => {
 
                 if (result?.success === "777" && result.resultjson) {
                     const data = result.resultjson;
+                    isConfigLoadingRef.current = true;
 
                     // Apply config from API result
                     if (data.config) {
                         // x_info -> 가로축 (Cols)
-                        if (data.config.x_info) {
-                            const xIds = data.config.x_info;
+                        if (data.config.banner) {
+                            const xIds = data.config.banner;
                             let mappedCols = [];
                             if (xIds.length === 1 && typeof xIds[0] === 'string' && (xIds[0].includes('*') || xIds[0].includes('+'))) {
                                 const groups = xIds[0].split('+');
@@ -738,8 +793,8 @@ const AdditionalAnalysisPage = () => {
                             setColVars(mappedCols.filter(g => g.length > 0));
                         }
                         // y_info -> 세로축 (Rows)
-                        if (data.config.y_info) {
-                            const yIds = data.config.y_info;
+                        if (data.config.stub) {
+                            const yIds = data.config.stub;
                             let mappedRows = [];
                             if (yIds.length === 1 && typeof yIds[0] === 'string' && (yIds[0].includes('*') || yIds[0].includes('+'))) {
                                 mappedRows = yIds[0].split(/[+*]/).filter(id => id.trim()).map(id => {
@@ -779,8 +834,9 @@ const AdditionalAnalysisPage = () => {
 
                     try {
                         const config = data.config || {};
-                        const xInfo = config.x_info || [];
-                        const yInfo = config.y_info || [];
+                        if (config.variable_overrides) setVariableOverrides(config.variable_overrides);
+                        const xInfo = config.banner || [];
+                        const yInfo = config.stub || [];
                         const weightCol = config.weight_col || "";
                         const filterExpr = config.filter_expression || "";
                         const xIds = xInfo;
@@ -855,11 +911,31 @@ const AdditionalAnalysisPage = () => {
                 }
             } catch (error) {
                 console.error("Error fetching table data:", error);
-                setToast({ show: true, message: "배너 데이터 조회 실패" });
+                setToast({ show: true, message: "테이블 데이터 조회 실패" });
             } finally {
                 loadingSpinner.hide();
             }
         }
+    };
+
+    const handleAddNewTable = () => {
+        let maxNewIndex = 0;
+        let hasBase = false;
+        tables.forEach(t => {
+            if (t.name === '새 테이블') hasBase = true;
+            const match = t.name.match(/^새 테아블 (\d+)$/);
+            if (match) {
+                const idx = parseInt(match[1], 10);
+                if (idx > maxNewIndex) maxNewIndex = idx;
+            }
+        });
+
+        let newName = '새 테이블';
+        if (hasBase) {
+            newName = `새 테이블 ${maxNewIndex > 0 ? maxNewIndex + 1 : 1}`;
+        }
+
+        handleCreateTable(newName);
     };
 
     const handleCreateTable = (name) => {
@@ -887,6 +963,7 @@ const AdditionalAnalysisPage = () => {
         setFilterExpression('');
         setSelectedWeight("없음");
         setIsConfigOpen(true);
+        isConfigLoadingRef.current = true;
 
         // 다음 렌더 후 사이드바 목록을 맨 아래로 스크롤
         setTimeout(() => {
@@ -995,7 +1072,7 @@ const AdditionalAnalysisPage = () => {
                 });
                 setRowVars(newRowVars);
                 if (skipped) {
-                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)');
+                    modal.showAlert('알림', `최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)`);
                 }
             } else if (targetType === 'col' || targetType === 'new_col_group' || targetType === 'col_item') {
                 const newColVars = [...colVars];
@@ -1010,7 +1087,7 @@ const AdditionalAnalysisPage = () => {
                 });
                 setColVars(newColVars);
                 if (skipped) {
-                    modal.showAlert('알림', '최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)');
+                    modal.showAlert('알림', `최대 10개까지만 추가할 수 있습니다.\n(초과된 문항은 제외되었습니다)`);
                 }
             }
             setSelectedVarIds([]);
@@ -1187,16 +1264,17 @@ const AdditionalAnalysisPage = () => {
 
             const payload = {
                 user: auth.user.userId,
-                tableid: selectedTableId,
+                table_id: selectedTableId,
                 pageid: currentPageId,
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
-                    y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
+                    banner: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
+                    stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join('+')]) : [],
                     filter_expression: filterExpression,
                     filter_info: filterInfo,
                     weight_col: selectedWeight === "없음" ? "" : selectedWeight,
-                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
+                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
+                    variable_overrides: variableOverrides
                 }
             };
 
@@ -1209,6 +1287,7 @@ const AdditionalAnalysisPage = () => {
                 setTables(tables.map(t =>
                     t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false } : t
                 ));
+                isConfigLoadingRef.current = true;
 
                 // Refresh data after save
                 try {
@@ -1258,16 +1337,17 @@ const AdditionalAnalysisPage = () => {
 
             const savePayload = {
                 user: auth.user.userId,
-                tableid: selectedTableId,
+                table_id: selectedTableId,
                 pageid: currentPageId,
                 name: tableName || "Untitled Table",
                 config: {
-                    x_info: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
-                    y_info: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : [],
+                    banner: colVars.filter(g => g.length > 0).length > 0 ? [colVars.filter(g => g.length > 0).map(group => group.map(v => v.id || v.name).join('*')).join('+')] : [],
+                    stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join('+')]) : [],
                     filter_expression: filterExpression,
                     filter_info: filterInfo,
-                    weight_col: weightId,
-                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined'
+                    weight_col: selectedWeight === "없음" ? "" : selectedWeight,
+                    row_eval_mode: tableMode === 'separated' ? 'split' : 'combined',
+                    variable_overrides: variableOverrides
                 }
             };
 
@@ -1280,6 +1360,7 @@ const AdditionalAnalysisPage = () => {
                 setTables(tables.map(t =>
                     t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false } : t
                 ));
+                isConfigLoadingRef.current = true;
 
                 // Run Analysis
                 const variablesMap = {};
@@ -1358,7 +1439,7 @@ const AdditionalAnalysisPage = () => {
                     id: selectedTableId || 'T1',
                     name: baseTableName,
                     banner: xInfo,
-                    stub: rowVars.length > 0 ? (tableMode === 'separated' ? rowVars.map(v => v.id || v.name) : [rowVars.map(v => v.id || v.name).join(' + ')]) : []
+                    stub: rowVars.map(v => v.id || v.name)
                 };
 
                 const evalResult = await evaluateTable.mutateAsync(runPayload);
@@ -1500,15 +1581,13 @@ const AdditionalAnalysisPage = () => {
                 id: selectedTableId || 'T1',
                 name: baseTableName,
                 banner: xInfo,
-                stub: rowVars.length > 0 ? [rowVars.map(v => v.id || v.name).join(' + ')] : []
+                stub: rowVars.map(v => v.id || v.name)
             };
         }
 
         try {
             loadingSpinner.show();
-            const result = tableMode === 'separated'
-                ? await evaluateTables.mutateAsync(payload)
-                : await evaluateTable.mutateAsync(payload);
+            const result = await evaluateTable.mutateAsync(payload);
 
             if (result?.success === "777" && result.resultjson) {
                 setResultDataList(processResults(result.resultjson));
@@ -1532,7 +1611,7 @@ const AdditionalAnalysisPage = () => {
             return;
         }
 
-        modal.showConfirm('알림', '해당 배너를 삭제하시겠습니까?', {
+        modal.showConfirm('알림', '해당 테이블을 삭제하시겠습니까?', {
             btns: [
                 { title: '취소' },
                 {
@@ -1557,7 +1636,7 @@ const AdditionalAnalysisPage = () => {
                                     setTableName('');
                                 }
 
-                                modal.showAlert('성공', '배너가 삭제되었습니다.');
+                                modal.showAlert('성공', '테이블이 삭제되었습니다.');
                             } else {
                                 modal.showAlert('실패', '삭제 실패');
                             }
@@ -1574,7 +1653,7 @@ const AdditionalAnalysisPage = () => {
     return (
         <div className="cross-tab-page" data-theme="data-dashboard">
             <DataHeader
-                title="배너설정"
+                title="추가분석"
             >
 
                 {/* 고급 필터 버튼 - AdditionalAnalysisFilterPopup 오픈 */}
@@ -1587,31 +1666,6 @@ const AdditionalAnalysisPage = () => {
                         고급 필터{filterExpression ? ' ✓' : ''}
                     </button>
                 </div>
-
-                <button
-                    onClick={() => setIsModalOpen(true)}
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        height: '32px',
-                        padding: '0 12px',
-                        border: '1px solid #3b82f6',
-                        borderRadius: '6px',
-                        background: '#3b82f6',
-                        color: '#ffffff',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        outline: 'none',
-                        marginTop: '5px',
-                        marginLeft: '8px'
-                    }}
-                >
-                    <Plus size={16} />
-                    추가
-                </button>
             </DataHeader>
 
             <Toast
@@ -1624,7 +1678,15 @@ const AdditionalAnalysisPage = () => {
                 <div className="cross-tab-layout">
                     {/* Sidebar */}
                     <SideBar
-                        title="배너 목록"
+                        title="테이블 목록"
+                        headerAction={
+                            <button
+                                onClick={handleAddNewTable}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', height: '24px', padding: '0 8px', borderRadius: '4px', border: '1px solid #2563eb', color: '#2563eb', background: '#eff6ff', fontSize: '12px', fontWeight: 600, cursor: 'pointer' }}
+                            >
+                                <Plus size={12} /> 추가
+                            </button>
+                        }
                         items={filteredTables.map(t => ({
                             ...t,
                             name: t.id === mainBannerId ? (
@@ -1639,7 +1701,7 @@ const AdditionalAnalysisPage = () => {
                         onSearch={setTableSearchTerm}
                         onDelete={handleDeleteTable}
                         displayField="name"
-                        searchPlaceholder="배너를 검색하세요."
+                        searchPlaceholder="테이블을 검색하세요."
                         listRef={tableListRef}
                     />
 
@@ -1663,13 +1725,13 @@ const AdditionalAnalysisPage = () => {
                                     <div className="config-header" style={{ padding: '20px 24px', transition: 'all 0.2s' }}>
                                         <div className="config-header__left-group">
                                             <div className="config-header__title-group" style={{ display: 'flex', alignItems: 'center' }}>
-                                                <span className="config-header__title-label">배너 명</span>
+                                                <span className="config-header__title-label">테이블 명</span>
                                                 <input
                                                     type="text"
                                                     className="config-title-input"
                                                     value={tableName}
                                                     onChange={(e) => setTableName(e.target.value)}
-                                                    placeholder="배너 명을 입력하세요"
+                                                    placeholder="테이블 명을 입력하세요"
                                                 />
                                                 {/* <div
                                                     title={mainBannerId === selectedTableId ? "주배너 해제" : "이 배너를 주배너로 지정합니다"}
@@ -1986,6 +2048,8 @@ const AdditionalAnalysisPage = () => {
                                         <ResultSectionBlock
                                             key={`${resultData.table_id || 'T1'}_${dataIndex}`}
                                             resultData={resultData}
+                                            displayPolicy={displayPolicy}
+                                            renderSettings={renderSettings}
                                             dataIndex={dataIndex}
                                             isConfigOpen={isConfigOpen}
                                             setIsConfigOpen={setIsConfigOpen}
@@ -2034,11 +2098,7 @@ const AdditionalAnalysisPage = () => {
                 tableName={fullscreenModal.tableName}
             />
 
-            <CreateTablePopup
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onCreate={handleCreateTable}
-            />
+            {/* Removed CreateTablePopup */}
 
             <PageListPopup
                 isOpen={isPageListOpen}

@@ -60,8 +60,23 @@ const computeLocalVars = (dataItem, chartMode) => {
     };
 };
 
+
+const formatCountValue = (val, policy) => {
+    if (val === null || val === undefined || val === '') return '-';
+    const digits = policy?.n_digits ?? 0;
+    return Number(val).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+};
+
+const formatPercentValue = (val, policy) => {
+    if (val === null || val === undefined || val === '') return '-';
+    const digits = policy?.percent_digits ?? 1;
+    return Number(val).toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits });
+};
+
 export const ResultSectionBlock = ({
     resultData,
+    displayPolicy,
+    renderSettings,
     dataIndex,
     isConfigOpen,
     setIsConfigOpen,
@@ -93,6 +108,20 @@ export const ResultSectionBlock = ({
         computeLocalVars(resultData, activeChartMode),
         [resultData, activeChartMode]
     );
+
+    
+    const uiSettings = renderSettings || {};
+    const effectivePolicy = displayPolicy || {};
+    
+    const headerBorder = `${uiSettings?.theme_header_divider_width || '1px'} ${uiSettings?.theme_header_divider_style || 'solid'} ${uiSettings?.theme_header_divider_color || '#cbd5e1'}`;
+    const stubBorder = `${uiSettings?.theme_stub_divider_width || '1px'} ${uiSettings?.theme_stub_divider_style || 'solid'} ${uiSettings?.theme_stub_divider_color || '#cbd5e1'}`;
+    const gridBorder = `${uiSettings?.theme_grid_width || '1px'} ${uiSettings?.theme_grid_style || 'solid'} ${uiSettings?.theme_grid_color || '#e2e8f0'}`;
+    const sectionBorder = `${uiSettings?.theme_section_separator_width || '2px'} ${uiSettings?.theme_section_separator_style || 'dashed'} ${uiSettings?.theme_section_separator_color || '#000'}`;
+
+    const topOuter = `${uiSettings?.theme_table_outer_top_width || '0px'} ${uiSettings?.theme_table_outer_top_style || 'none'} ${uiSettings?.theme_table_outer_top_color || 'transparent'}`;
+    const bottomOuter = `${uiSettings?.theme_table_outer_bottom_width || '0px'} ${uiSettings?.theme_table_outer_bottom_style || 'none'} ${uiSettings?.theme_table_outer_bottom_color || 'transparent'}`;
+    const leftOuter = `${uiSettings?.theme_table_outer_left_width || '0px'} ${uiSettings?.theme_table_outer_left_style || 'none'} ${uiSettings?.theme_table_outer_left_color || 'transparent'}`;
+    const rightOuter = `${uiSettings?.theme_table_outer_right_width || '0px'} ${uiSettings?.theme_table_outer_right_style || 'none'} ${uiSettings?.theme_table_outer_right_color || 'transparent'}`;
 
     const chartContainerRef = useRef(null);
     const displayMenuRef = useRef(null);
@@ -506,15 +535,49 @@ export const ResultSectionBlock = ({
                 }}
                 style={{ cursor: (isConfigOpen || tableMode !== 'merged') ? 'pointer' : 'default' }}
             >
-                <div className="result-tabs">
+                <div className="result-tabs" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div className="result-tab">
                         결과 {resultData.y_info && <span className="y-info-label" title={resultData.y_info}>{resultData.y_info}</span>}
                     </div>
                     {!isConfigOpen && (tableMode === 'merged' || isExpanded) && (
-                        <button onClick={(e) => { e.stopPropagation(); setIsStatsOptionsOpen(!isStatsOptionsOpen); }} className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}>
-                            <Settings size={14} />
-                            <span>옵션 설정</span>
-                        </button>
+                        <>
+                            <button onClick={(e) => { e.stopPropagation(); setIsStatsOptionsOpen(!isStatsOptionsOpen); }} className={`stats-toggle-btn ${isStatsOptionsOpen ? 'active' : ''}`}>
+                                <Settings size={14} />
+                                <span>옵션 설정</span>
+                            </button>
+                            {isStatsOptionsOpen && (
+                                <div className="inline-options-container" onClick={(e) => e.stopPropagation()} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: '#f8fafc', padding: '4px 12px', borderRadius: '6px',  }}>
+                                    <div className="stats-controls__section" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
+                                        <span className="stats-controls__section-label" style={{ marginBottom: 0, fontSize: '12px', color: '#64748b', fontWeight: '500' }}>배치 옵션</span>
+                                        <div className="sortable-list" style={{ flexWrap: 'nowrap', gap: '4px' }}>
+                                            {layoutOptions.map((item, index) => {
+                                                if (item.id === 'stats') return null; // [USER-REQUEST] 통계 임시 주석
+                                                return (
+                                                    <div key={item.id} className={`sortable-item ${item.checked ? 'checked' : ''} ${item.id === 'ai' ? 'disabled' : ''}`}
+                                                        style={{ padding: '2px 8px', fontSize: '12px', gap: '4px', minWidth: 'auto', marginBottom: 0 }}
+                                                        draggable={item.id !== 'ai'}
+                                                        onDragStart={(e) => item.id !== 'ai' && handleSortDragStart(e, index, 'layout')}
+                                                        onDragOver={(e) => { if (item.id !== 'ai') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
+                                                        onDrop={(e) => item.id !== 'ai' && handleSortDrop(e, index, 'layout')}
+                                                        onClick={(e) => { e.stopPropagation(); item.id !== 'ai' && toggleLayoutOption(item.id); }}>
+                                                        <GripVertical size={12} className="drag-handle" style={item.id === 'ai' ? { display: 'none' } : {}} />
+                                                        <span>{item.label}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <div className="stats-controls__divider" style={{ width: '1px', height: '16px', margin: 0, background: '#e2e8f0' }}></div>
+                                    <div className="stats-controls__section" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 0 }}>
+                                        <span className="stats-controls__section-label" style={{ marginBottom: 0, fontSize: '12px', color: '#64748b', fontWeight: '500' }}>단 설정</span>
+                                        <div className="toggle-group" style={{ height: '24px' }}>
+                                            <button className={`toggle-chip ${columnLayout === 'single' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '0 8px', height: '24px' }} onClick={(e) => { e.stopPropagation(); setColumnLayout('single'); }}>1단</button>
+                                            <button className={`toggle-chip ${columnLayout === 'double' ? 'active' : ''}`} style={{ fontSize: '12px', padding: '0 8px', height: '24px' }} onClick={(e) => { e.stopPropagation(); setColumnLayout('double'); }}>2단</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
                 <div className="result-actions">
@@ -530,85 +593,6 @@ export const ResultSectionBlock = ({
                 </div>
             </div>
 
-            {isStatsOptionsOpen && (
-                <div className="stats-controls">
-                    <div className="stats-controls__title-group">
-                        <span className="stats-controls__title">옵션 설정</span>
-                        <span className="stats-controls__subtitle">드래그 순서 변경 및 표출 선택</span>
-                    </div>
-                    <div className="stats-controls__section">
-                        <span className="stats-controls__section-label">배치 옵션</span>
-                        <div className="sortable-list">
-                            {layoutOptions.map((item, index) => (
-                                <div key={item.id} className={`sortable-item ${item.checked ? 'checked' : ''} ${item.id === 'ai' ? 'disabled' : ''}`}
-                                    draggable={item.id !== 'ai'}
-                                    onDragStart={(e) => item.id !== 'ai' && handleSortDragStart(e, index, 'layout')}
-                                    onDragOver={(e) => { if (item.id !== 'ai') { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } }}
-                                    onDrop={(e) => item.id !== 'ai' && handleSortDrop(e, index, 'layout')}
-                                    onClick={() => item.id !== 'ai' && toggleLayoutOption(item.id)}>
-                                    <GripVertical size={14} className="drag-handle" style={item.id === 'ai' ? { display: 'none' } : {}} />
-                                    <span>{item.label}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                    {layoutOptions.find(opt => opt.id === 'stats')?.checked && (
-                        <>
-                            <div className="stats-controls__divider"></div>
-                            <div className="stats-controls__section">
-                                <span className="stats-controls__section-label">통계 옵션</span>
-                                <div className="sortable-list">
-                                    {statsOptions.map((item, index) => {
-                                        if (!['mean', 'median', 'mode'].includes(item.id) && !item.checked) return null;
-                                        return (
-                                            <div key={item.id} className={`sortable-item ${item.checked ? 'checked' : ''}`}
-                                                draggable onDragStart={(e) => handleSortDragStart(e, index, 'stats')}
-                                                onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                                                onDrop={(e) => handleSortDrop(e, index, 'stats')}
-                                                onClick={() => toggleStatOption(item.id)}>
-                                                <GripVertical size={14} className="drag-handle" />
-                                                <span>{item.label}</span>
-                                            </div>
-                                        );
-                                    })}
-                                    {statsOptions.some(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked) && (
-                                        <div style={{ position: 'relative' }} ref={moreStatsRef}>
-                                            <div className="more-btn-chip" onClick={() => setIsMoreStatsOpen(!isMoreStatsOpen)}>
-                                                <MoreHorizontal size={14} />
-                                            </div>
-                                            {isMoreStatsOpen && (
-                                                <div className="more-stats-dropdown">
-                                                    {statsOptions.filter(item => !['mean', 'median', 'mode'].includes(item.id) && !item.checked).map(item => (
-                                                        <div
-                                                            key={item.id}
-                                                            className="more-stats-item"
-                                                            onClick={(e) => {
-                                                                e.stopPropagation();
-                                                                toggleStatOption(item.id);
-                                                                setIsMoreStatsOpen(false);
-                                                            }}
-                                                        >
-                                                            {item.label}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </>
-                    )}
-                    <div className="stats-controls__divider"></div>
-                    <div className="stats-controls__section">
-                        <span className="stats-controls__section-label">단 설정</span>
-                        <div className="toggle-group">
-                            <button className={`toggle-chip ${columnLayout === 'single' ? 'active' : ''}`} onClick={() => setColumnLayout('single')}>1단</button>
-                            <button className={`toggle-chip ${columnLayout === 'double' ? 'active' : ''}`} onClick={() => setColumnLayout('double')}>2단</button>
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {!isConfigOpen && (
                 <div className="result-content">
@@ -671,7 +655,34 @@ export const ResultSectionBlock = ({
                                             </div>
                                         </div>
                                         <div className="table-wrapper">
-                                            <table className="cross-table">
+                                            
+              <style>{`
+                  .table-wrapper .cross-table {
+                      font-size: ${uiSettings.font_size ? uiSettings.font_size + 'px' : '12px'} !important;
+                      border-top: ${topOuter} !important;
+                      border-bottom: ${bottomOuter} !important;
+                      border-left: ${leftOuter} !important;
+                      border-right: ${rightOuter} !important;
+                      color: ${uiSettings.theme_text || '#0f172a'} !important;
+                  }
+                  .table-wrapper .cross-table th {
+                        border-right: ${gridBorder} !important;
+                        border-bottom: ${headerBorder} !important;
+                    }
+                    .table-wrapper .cross-table th.sticky-col {
+                        border-right: ${stubBorder} !important;
+                    }
+                    .table-wrapper .cross-table td {
+                        border-right: ${gridBorder} !important;
+                        border-bottom: ${gridBorder} !important;
+                    }
+                    .table-wrapper .cross-table td.sticky-col {
+                        background-color: ${uiSettings?.theme_stub_header_bg || '#D9E1F2'} !important;
+                        color: ${uiSettings?.theme_stub_header_fg || '#000'} !important;
+                        border-right: ${stubBorder} !important;
+                    }
+                `}</style>
+                                            <table className="cross-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
                                                 <thead>
                                                     {(() => {
                                                         const headerRows = [];
@@ -685,11 +696,11 @@ export const ResultSectionBlock = ({
                                                                         colSpan={hasRowLabel2 ? 2 : 1}
                                                                         className="sticky-col sticky-l0"
                                                                         style={{
-                                                                            background: '#f8fafc',
-                                                                            borderRight: '1px solid #e2e8f0',
-                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            background: uiSettings?.theme_primary || '#f8fafc',
+                                                                            
+                                                                            
                                                                             fontWeight: '700',
-                                                                            color: '#1e3a8a',
+                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                             fontSize: '11px',
                                                                             textAlign: 'center',
                                                                             verticalAlign: 'middle'
@@ -702,12 +713,12 @@ export const ResultSectionBlock = ({
                                                                             colSpan={group.count}
                                                                             rowSpan={group.rowSpan}
                                                                             style={{
-                                                                                background: '#eff6ff',
-                                                                                color: '#1e3a8a',
+                                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 padding: '4px 12px',
-                                                                                borderBottom: '1px solid #dbeafe',
+                                                                                
                                                                                 borderRight: i < headerGroups.row1.length - 1 ? '1px solid #dbeafe' : 'none',
                                                                                 whiteSpace: 'normal',
                                                                                 wordBreak: 'break-all',
@@ -730,11 +741,11 @@ export const ResultSectionBlock = ({
                                                                             colSpan={hasRowLabel2 ? 2 : 1}
                                                                             className="sticky-col sticky-l0"
                                                                             style={{
-                                                                                background: '#f8fafc',
-                                                                                borderRight: '1px solid #e2e8f0',
-                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                                
+                                                                                
                                                                                 fontWeight: '700',
-                                                                                color: '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -748,7 +759,7 @@ export const ResultSectionBlock = ({
                                                                         if (isSpanned) return null;
 
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: '#f0f9ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -766,11 +777,11 @@ export const ResultSectionBlock = ({
                                                                             colSpan={hasRowLabel2 ? 2 : 1}
                                                                             className="sticky-col sticky-l0"
                                                                             style={{
-                                                                                background: '#f8fafc',
-                                                                                borderRight: '1px solid #e2e8f0',
-                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                                
+                                                                                
                                                                                 fontWeight: '700',
-                                                                                color: '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -786,7 +797,7 @@ export const ResultSectionBlock = ({
                                                                         if (coveredByRow1 || coveredByRow3) return null;
 
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -804,11 +815,11 @@ export const ResultSectionBlock = ({
                                                                         colSpan={hasRowLabel2 ? 2 : 1}
                                                                         className="sticky-col sticky-l0"
                                                                         style={{
-                                                                            background: '#f8fafc',
-                                                                            borderRight: '1px solid #e2e8f0',
-                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            background: uiSettings?.theme_primary || '#f8fafc',
+                                                                            
+                                                                            
                                                                             fontWeight: '700',
-                                                                            color: '#1e3a8a',
+                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                             fontSize: '11px',
                                                                             textAlign: 'center',
                                                                             verticalAlign: 'middle'
@@ -818,7 +829,7 @@ export const ResultSectionBlock = ({
                                                                     </th>
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ minWidth: '80px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: '600' }}>
+                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600' }}>
                                                                         {col?.label ?? col}
                                                                     </th>
                                                                 ))}
@@ -829,7 +840,24 @@ export const ResultSectionBlock = ({
                                                     })()}
                                                 </thead>
                                                 <tbody>
-                                                    {resultData.rows.map((row, i) => (
+                                                    {resultData.rows.map((row, i) => {
+                                                        const isSingleVal = row.type === 'stat' || row.stat_type;
+                                                        const isHideAll = row.hide === 'all' || row.hide === 'all ';
+                                                        const isHideN = row.hide === 'n' || isHideAll || effectivePolicy?.show_n === false;
+                                                        const isHideP = row.hide === 'p' || isHideAll || effectivePolicy?.show_percent === false;
+                                                        const labelColor = row.color || 'inherit';
+
+                                                        let rN = effectivePolicy?.n_digits ?? 0;
+                                                        let rP = effectivePolicy?.percent_digits ?? 1;
+                                                        if (row.round !== undefined && row.round !== null && row.round !== '') {
+                                                            rN = Number(row.round);
+                                                            rP = Number(row.round);
+                                                        }
+
+                                                        const formatN = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rN, maximumFractionDigits: rN });
+                                                        const formatP = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rP, maximumFractionDigits: rP });
+
+                                                        return (
                                                         <tr key={i}>
                                                             {hasRowLabel2 && (
                                                                 <td
@@ -837,12 +865,12 @@ export const ResultSectionBlock = ({
                                                                     style={{
                                                                         display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
                                                                         verticalAlign: 'middle',
-                                                                        background: '#eff6ff',
-                                                                        color: '#1e3a8a',
+                                                                        background: uiSettings?.theme_primary || '#f8fafc',
+                                                                        color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                         fontSize: '11px',
                                                                         fontWeight: '700',
                                                                         textAlign: 'center',
-                                                                        borderRight: '1px solid #dbeafe',
+                                                                        
                                                                         whiteSpace: 'normal',
                                                                         wordBreak: 'break-all'
                                                                     }}
@@ -851,29 +879,35 @@ export const ResultSectionBlock = ({
                                                                     {row.label2 || row.var_label}
                                                                 </td>
                                                             )}
-                                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px' }}>{row.label}</td>
+                                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px', color: labelColor }}>{row.label}</td>
                                                             {row.values.map((v, j) => (
                                                                 <td
                                                                     key={j}
                                                                     className={`${v.sig_vs_total === 'up' ? 'sig-highlight-up' : v.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
                                                                     style={{ textAlign: 'right', position: 'relative' }}
                                                                 >
-                                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%' }}>
-                                                                        {displayMode === 'all' ? (
+                                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%', color: labelColor }}>
+                                                                        {isHideAll ? null : isSingleVal ? (
+                                                                            <span className="cell-value-single" style={{ fontWeight: '600' }}>
+                                                                                {row.prefix || ''}{formatN(v.count)}{row.postfix || ''}
+                                                                            </span>
+                                                                        ) : displayMode === 'all' ? (
                                                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                                                                <span className="cell-value">{v.count}</span>
-                                                                                <span className="cell-pct">{v.percent}%</span>
+                                                                                {!isHideN && <span className="cell-value">{formatN(v.count)}</span>}
+                                                                                {!isHideP && <span className="cell-pct">{row.prefix || ''}{formatP(v.percent)}%{row.postfix || ''}</span>}
                                                                             </div>
                                                                         ) : (
                                                                             <span className="cell-value-single">
-                                                                                {displayMode === 'value' ? v.count : `${v.percent}%`}
+                                                                                {displayMode === 'value' && !isHideN ? formatN(v.count) : null}
+                                                                                {displayMode === 'percent' && !isHideP ? `${row.prefix || ''}${formatP(v.percent)}%${row.postfix || ''}` : null}
                                                                             </span>
                                                                         )}
                                                                     </div>
                                                                 </td>
                                                             ))}
                                                         </tr>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -881,6 +915,7 @@ export const ResultSectionBlock = ({
                                 );
                             }
                             if (option.id === 'stats') {
+                                return null; /* [USER-REQUEST] 통계 임시 주석
                                 return (
                                     <div key="stats" className="result-block">
                                         <div className="section-header">
@@ -915,7 +950,7 @@ export const ResultSectionBlock = ({
                                             </div>
                                         </div>
                                         <div className="stats-table-container">
-                                            <table className="stats-table">
+                                            <table className="stats-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
                                                 <thead>
                                                     {(() => {
                                                         const statsTotalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + (headerGroups.showRow3 ? 1 : 0) + 1;
@@ -928,11 +963,11 @@ export const ResultSectionBlock = ({
                                                                         rowSpan={statsTotalRows}
                                                                         className="stats-th-label"
                                                                         style={{
-                                                                            background: '#f8fafc',
-                                                                            borderRight: '1px solid #e2e8f0',
-                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            background: uiSettings?.theme_primary || '#f8fafc',
+                                                                            
+                                                                            
                                                                             fontWeight: '700',
-                                                                            color: '#1e3a8a',
+                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                             fontSize: '11px',
                                                                             textAlign: 'center',
                                                                             verticalAlign: 'middle'
@@ -945,12 +980,12 @@ export const ResultSectionBlock = ({
                                                                             colSpan={group.count}
                                                                             rowSpan={group.rowSpan}
                                                                             style={{
-                                                                                background: '#eff6ff',
-                                                                                color: '#1e3a8a',
+                                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 padding: '4px 12px',
-                                                                                borderBottom: '1px solid #dbeafe',
+                                                                                
                                                                                 borderRight: i < headerGroups.row1.length - 1 ? '1px solid #dbeafe' : 'none',
                                                                                 whiteSpace: 'normal',
                                                                                 wordBreak: 'break-all',
@@ -972,11 +1007,11 @@ export const ResultSectionBlock = ({
                                                                             rowSpan={statsTotalRows}
                                                                             className="stats-th-label"
                                                                             style={{
-                                                                                background: '#f8fafc',
-                                                                                borderRight: '1px solid #e2e8f0',
-                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                                
+                                                                                
                                                                                 fontWeight: '700',
-                                                                                color: '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -989,7 +1024,7 @@ export const ResultSectionBlock = ({
                                                                         const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
                                                                         if (isSpanned) return null;
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: '#f0f9ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -1006,11 +1041,11 @@ export const ResultSectionBlock = ({
                                                                             rowSpan={statsTotalRows}
                                                                             className="stats-th-label"
                                                                             style={{
-                                                                                background: '#f8fafc',
-                                                                                borderRight: '1px solid #e2e8f0',
-                                                                                borderBottom: '1px solid #e2e8f0',
+                                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                                
+                                                                                
                                                                                 fontWeight: '700',
-                                                                                color: '#1e3a8a',
+                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                                 fontSize: '11px',
                                                                                 textAlign: 'center',
                                                                                 verticalAlign: 'middle'
@@ -1024,7 +1059,7 @@ export const ResultSectionBlock = ({
                                                                         const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
                                                                         if (coveredByRow1 || coveredByRow3) return null;
                                                                         return (
-                                                                            <th key={i} colSpan={group.count} style={{ background: '#eff6ff', border: '1px solid #dbeafe', color: '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
+                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px' }}>
                                                                                 {group.label}
                                                                             </th>
                                                                         );
@@ -1040,11 +1075,11 @@ export const ResultSectionBlock = ({
                                                                         rowSpan={statsTotalRows}
                                                                         className="stats-th-label"
                                                                         style={{
-                                                                            background: '#f8fafc',
-                                                                            borderRight: '1px solid #e2e8f0',
-                                                                            borderBottom: '1px solid #e2e8f0',
+                                                                            background: uiSettings?.theme_primary || '#f8fafc',
+                                                                            
+                                                                            
                                                                             fontWeight: '700',
-                                                                            color: '#1e3a8a',
+                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
                                                                             fontSize: '11px',
                                                                             textAlign: 'center',
                                                                             verticalAlign: 'middle'
@@ -1054,7 +1089,7 @@ export const ResultSectionBlock = ({
                                                                     </th>
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ minWidth: '80px', background: '#f8fafc', border: '1px solid #e2e8f0', color: '#64748b', fontSize: '11px', fontWeight: '600' }}>
+                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600' }}>
                                                                         {col?.label ?? col}
                                                                     </th>
                                                                 ))}
@@ -1067,7 +1102,7 @@ export const ResultSectionBlock = ({
                                                 <tbody>
                                                     {statsOptions.filter(opt => opt.checked).map(stat => (
                                                         <tr key={stat.id}>
-                                                            <td className="stats-td-label" style={{ color: '#1e3a8a', fontWeight: '700', textAlign: 'center' }}>{stat.label}</td>
+                                                            <td className="stats-td-label" style={{ color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', textAlign: 'center' }}>{stat.label}</td>
                                                             {(resultData.stats[stat.id] || []).map((v, i) => (
                                                                 <td key={i} className="stats-td-data">{v}</td>
                                                             ))}
@@ -1078,6 +1113,7 @@ export const ResultSectionBlock = ({
                                         </div>
                                     </div>
                                 );
+                                */
                             }
                             if (option.id === 'chart') {
                                 return (
@@ -1104,7 +1140,7 @@ export const ResultSectionBlock = ({
                                                                         height: '16px',
                                                                         borderRadius: '50%',
                                                                         background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`,
-                                                                        border: '1px solid #e2e8f0'
+                                                                        
                                                                     }}></div>
                                                                 );
                                                             })()}

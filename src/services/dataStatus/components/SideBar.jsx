@@ -2,16 +2,41 @@ import { useState } from 'react';
 import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './SideBar.css';
 
-const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef, className = '' }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, headerAction, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef, className = '' }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
         <div className={`sidebar-container ${className}`} style={{ width: isOpen ? '280px' : '48px' }}>
-            <div className="sidebar-header">
-                <div className="sidebar-title-row" style={{ justifyContent: isOpen ? 'space-between' : 'center', gap: '8px' }}>
-                    {isOpen && (
-                        <div className="sidebar-search" style={{ flex: 1 }}>
-                            <Search size={14} className="sidebar-search-icon" />
+            <div className="sidebar-header" style={{ padding: 0, gap: 0, borderBottom: 'none', background: '#ffffff' }}>
+                <div className="sidebar-title-row" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '48px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: isOpen ? 'space-between' : 'center' }}>
+                    {isOpen && title ? (
+                        <>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>{title} ({items.length})</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                {headerAction}
+                                <button
+                                    onClick={() => setIsOpen(!isOpen)}
+                                    className="dp-sidebar-toggle-btn-compact"
+                                    style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center' }}
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <button
+                            onClick={() => setIsOpen(!isOpen)}
+                            className="dp-sidebar-toggle-btn-compact"
+                            style={{ flexShrink: 0, margin: '0 auto', background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center' }}
+                        >
+                            <ChevronRight size={16} />
+                        </button>
+                    )}
+                </div>
+                {isOpen && (
+                    <div className="sidebar-search" style={{ padding: '8px 12px', borderBottom: '1px solid #e2e8f0', flexShrink: 0 }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            <Search size={14} className="sidebar-search-icon" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                             <input
                                 type="text"
                                 placeholder={searchPlaceholder}
@@ -19,15 +44,8 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                                 className="sidebar-search-input"
                             />
                         </div>
-                    )}
-                    <button
-                        onClick={() => setIsOpen(!isOpen)}
-                        className="sidebar-toggle-btn"
-                        style={{ flexShrink: 0 }}
-                    >
-                        {isOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
-                    </button>
-                </div>
+                    </div>
+                )}
             </div>
             {isOpen && (
                 <div
@@ -53,35 +71,39 @@ const SideBar = ({ items, selectedId, onItemClick, title, onSearch, onDelete, di
                                 className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
                             >
                                 <div className="sidebar-item-content">
-                                    <div className="sidebar-item-header" style={{ marginBottom: '4px' }}>
+                                    <div className="sidebar-item-header" style={{ marginBottom: '0' }}>
                                         <div className="sidebar-item-name" style={{ wordBreak: 'break-all', lineHeight: 1.3, marginBottom: 0 }}>
                                             {item.label || item[displayField]}
+                                            {!item.label && item.isDirty && <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '6px', fontWeight: 'normal' }}>(수정됨)</span>}
                                         </div>
                                     </div>
-                                    <div className="sidebar-item-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                        <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all' }}>
-                                            {item.label ? item[displayField] : ''}
-                                        </span>
-                                        {item.type && (() => {
-                                            const t = String(item.type).toLowerCase();
-                                            let badgeClass = item.color || 'gray';
-                                            if (t === 'single') badgeClass = 'single';
-                                            else if (t === 'multi') badgeClass = 'multi';
-                                            else if (t === 'rank') badgeClass = 'rank';
-                                            else if (t === 'minrank') badgeClass = 'minrank';
-                                            else if (t === 'maxrank') badgeClass = 'maxrank';
-                                            else if (t === 'scale') badgeClass = 'scale';
-                                            else if (t === 'open(문자)') badgeClass = 'open-text';
-                                            else if (t === 'open(숫자)') badgeClass = 'open-num';
-                                            else if (t === 'dummy') badgeClass = 'dummy';
-                                            else if (t === 'custom') badgeClass = 'custom';
-                                            return (
-                                                <span className={`question-type-badge ${badgeClass}`} style={{ flexShrink: 0 }}>
-                                                    {String(item.type).toLowerCase()}
-                                                </span>
-                                            );
-                                        })()}
-                                    </div>
+                                    {item.label && (
+                                        <div className="sidebar-item-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                            <span style={{ flex: 1, minWidth: 0, wordBreak: 'break-all' }}>
+                                                {item[displayField]}
+                                                {item.isDirty && <span style={{ color: '#DC2626', fontSize: '11px', marginLeft: '4px' }}>(수정됨)</span>}
+                                            </span>
+                                            {item.type && (() => {
+                                                const t = String(item.type).toLowerCase();
+                                                let badgeClass = item.color || 'gray';
+                                                if (t === 'single') badgeClass = 'single';
+                                                else if (t === 'multi') badgeClass = 'multi';
+                                                else if (t === 'rank') badgeClass = 'rank';
+                                                else if (t === 'minrank') badgeClass = 'minrank';
+                                                else if (t === 'maxrank') badgeClass = 'maxrank';
+                                                else if (t === 'scale') badgeClass = 'scale';
+                                                else if (t === 'open(문자)') badgeClass = 'open-text';
+                                                else if (t === 'open(숫자)') badgeClass = 'open-num';
+                                                else if (t === 'dummy') badgeClass = 'dummy';
+                                                else if (t === 'custom') badgeClass = 'custom';
+                                                return (
+                                                    <span className={`question-type-badge ${badgeClass}`} style={{ flexShrink: 0 }}>
+                                                        {String(item.type).toLowerCase()}
+                                                    </span>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
                                 </div>
                                 {onDelete && (
                                     <button

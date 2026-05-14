@@ -890,7 +890,7 @@
 }
 
 .cross-table {
-    min-width: 100%;
+    /* min-width: 100%; removed */
     width: max-content;
     border-collapse: separate;
     /* Changed to separate for sticky borders */
@@ -954,17 +954,11 @@
     z-index: 30;
 }
 
-.cross-table td.sticky-l0 {
-    background: #eff6ff !important;
-}
+/* .cross-table td.sticky-l0 background removed */
 
-.cross-table td.sticky-l1 {
-    background: #f8fafc !important;
-}
+/* .cross-table td.sticky-l1 background removed */
 
-.cross-table th.sticky-col {
-    background: #f8fafc !important;
-}
+/* .cross-table th.sticky-col background removed */
 
 .cell-value {
     font-weight: 700;
@@ -1782,7 +1776,7 @@
 
 .preview-table {
     display: table !important;
-    min-width: 100%;
+    /* min-width: 100%; removed */
     width: max-content;
     border-collapse: separate;
     border-spacing: 0;
@@ -1970,7 +1964,7 @@
 }
 
 .chart-scroll-wrapper {
-    min-width: 100%;
+    /* min-width: 100%; removed */
     height: 100%;
 }
 
@@ -1986,7 +1980,7 @@
 
 .stats-table {
     width: max-content;
-    min-width: 100%;
+    /* min-width: 100%; removed */
     border-collapse: separate;
     border-spacing: 0;
 }
