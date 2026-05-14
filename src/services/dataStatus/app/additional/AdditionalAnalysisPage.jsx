@@ -44,13 +44,13 @@ const parseTableData = (newData) => {
             };
         });
         const total = processedValues.reduce((a, b) => a + Number(b.count), 0);
-        return { 
+        return {
             ...r,
-            label: r.label, 
-            values: processedValues, 
-            total: total, 
-            label2: r.label2 || '', 
-            var_label: r.var_label || r.variable_label || '' 
+            label: r.label,
+            values: processedValues,
+            total: total,
+            label2: r.label2 || '',
+            var_label: r.var_label || r.variable_label || ''
         };
     });
 
@@ -2096,6 +2096,8 @@ const AdditionalAnalysisPage = () => {
                 paletteId={globalPaletteId}
                 setPaletteId={setGlobalPaletteId}
                 tableName={fullscreenModal.tableName}
+                displayPolicy={displayPolicy}
+                renderSettings={renderSettings}
             />
 
             {/* Removed CreateTablePopup */}
