@@ -36,7 +36,7 @@ const NumericEditCell = (props) => {
 
 const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBaseVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable } = DpRequestPageApi();
+    const { getBaseVariableList, getComputedVariableList, getNextBaseVariableId, saveBaseVariableMerge, recomputeComputedVariables, deleteBaseVariable } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const history = useUpdateHistory('dp-banner');
@@ -184,7 +184,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             const res = await getNextBaseVariableId.mutateAsync({ pageid: pageId, user });
             if (res?.success === '777' && res.resultjson?.next_id) {
                 const tempId = res.resultjson.next_id;
-                const newBanner = { id: tempId, label: '', type: 'single', info: [{ label2: '', label: '', inEdit: true }] };
+                const newBanner = { id: tempId, label: '', type: 'single', recoded_type: 'computed', info: [{ label2: '', label: '', inEdit: true }] };
                 // 현재 info 저장 후 신규 추가
                 const prevId = selectedBannerRef.current;
                 setBanners(prev => {
@@ -212,20 +212,18 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         if (!pageId || pageId === "null" || pageId === "undefined" || !user) return;
         try {
             loadingSpinner.show();
+            
+            // 1. Fetch base variables for candidates (Cartesian modal, duplicate check)
             const baseRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user });
+            let baseVars = [];
             if (baseRes?.success === '777' && baseRes.resultjson) {
                 const dataObj = baseRes.resultjson;
-                const baseVars = Object.entries(dataObj)
+                baseVars = Object.entries(dataObj)
                     .filter(([key]) => key !== 'count' && key !== 'first')
                     .map(([key, v]) => ({
                         id: v.id || key,
                         label: v.label || v.name || key,
-                        type: v.type === 'single' ? 'single' :
-                            (v.type === 'multi' || v.type === 'double') ? 'multi' :
-                                v.type === 'scale' ? 'scale' :
-                                    v.type === 'rank' ? 'rank' :
-                                        v.type === 'numeric' ? 'open(숫자)' :
-                                            (v.type === 'string' || v.type === 'open') ? 'open(문자)' : (v.type || 'single'),
+                        type: v.type,
                         subId: v.id || key,
                         info: Array.isArray(v.info) ? v.info.map(item => ({
                             ...item,
@@ -235,15 +233,37 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             inEdit: false
                         })) : []
                     }));
-
                 setBaseVariables(baseVars);
-                setBanners(baseVars);
-                history.reset(baseVars);
+            }
 
-                if (baseVars.length > 0) {
-                    let target = mode === 'fresh' ? baseVars[baseVars.length - 1] : baseVars[0];
+            // 2. Fetch computed variables for the left sidebar list
+            const compRes = await getComputedVariableList.mutateAsync({ pageid: pageId, user });
+            if (compRes?.success === '777' && compRes.resultjson) {
+                const compDataObj = compRes.resultjson;
+                const compVars = Object.entries(compDataObj)
+                    .filter(([key]) => key !== 'count' && key !== 'first')
+                    .map(([key, v]) => ({
+                        id: v.id || key,
+                        label: v.label || v.name || key,
+                        type: v.type,
+                        subId: v.id || key,
+                        recoded_type: v.recoded_type || 'computed',
+                        info: Array.isArray(v.info) ? v.info.map(item => ({
+                            ...item,
+                            label2: item.value ?? item.label2 ?? '',
+                            label: item.label || '',
+                            logic: item.logic || '',
+                            inEdit: false
+                        })) : []
+                    }));
+
+                setBanners(compVars);
+                history.reset(compVars);
+
+                if (compVars.length > 0) {
+                    let target = mode === 'fresh' ? compVars[compVars.length - 1] : compVars[0];
                     if (targetIdToSelect) {
-                        const found = baseVars.find(f => f.id === targetIdToSelect);
+                        const found = compVars.find(f => f.id === targetIdToSelect);
                         if (found) target = found;
                     }
                     if (mode === 'fresh' || mode === 'delete' || targetIdToSelect || !selectedBannerRef.current) {
@@ -258,13 +278,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                     if (mode === 'delete') scrollToTop();
                 } else {
                     setSelectedBanner(''); selectedBannerRef.current = '';
-                    setCurrentLabel(''); setCurrentId(''); setCurrentXInfo('');
+                    setCurrentLabel(''); setCurrentId(''); setCurrentXInfo('single');
                     setCurrentInfo([]); currentInfoRef.current = [];
                 }
             } else {
                 setBanners([]); history.reset([]);
                 setSelectedBanner(''); selectedBannerRef.current = '';
-                setCurrentLabel(''); setCurrentId(''); setCurrentXInfo('');
+                setCurrentLabel(''); setCurrentId(''); setCurrentXInfo('single');
                 setCurrentInfo([]); currentInfoRef.current = [];
             }
         } catch (error) { console.error(error); }
@@ -337,14 +357,12 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         if (hasNonNumericLabel2) return modal.showAlert('알림', '"할당될 값"은 숫자만 입력 가능합니다.');
 
         const nextId = currentId.trim().toUpperCase();
-        const typeMap = { single: 'single', scale: 'scale', multi: 'multi', rank: 'rank', 'open(문자)': 'string', 'open(숫자)': 'numeric' };
-        const mappedType = typeMap[currentXInfo] || currentXInfo || 'single';
-
         const payloadVariables = {
             [nextId]: {
                 id: nextId,
                 label: currentLabel.trim(),
-                type: mappedType,
+                type: currentXInfo,
+                recoded_type: 'computed',
                 info: validRules.map((r, idx) => {
                     const parsedVal = parseFloat(r.label2);
                     const itemData = {
