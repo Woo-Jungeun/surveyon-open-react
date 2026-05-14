@@ -303,64 +303,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         }
     };
 
-    // 지도 모드일 때는 ChoroplethMap 렌더링
-    if (isMap) {
-        return <ChoroplethMap data={data} />;
-    }
 
-    // 워드 클라우드 렌더링
-    if (isWordCloud) {
-        // Transform data for WordCloud: { text: string, value: number }
-        let wordData = [];
-
-        // case A: seriesNames가 있는 경우 (추가분석 - 각 열의 데이터를 항목별로 합산하거나 특정 열 기준)
-        if (seriesNames && seriesNames.length > 0) {
-            // 모든 항목(rows)에 대해 각 시리즈(columns)의 값을 합산하여 중요도 판단
-            wordData = filteredData.map(item => {
-                let totalVal = 0;
-                seriesNames.forEach(s => {
-                    const field = typeof s === 'string' ? s : s.field;
-                    totalVal += Number(item[field] || 0);
-                });
-                return {
-                    text: item.name,
-                    value: totalVal
-                };
-            });
-        } else {
-            // case B: 일반적인 name/total 구조
-            wordData = filteredData.map(item => ({
-                text: item.name,
-                value: Number(item.total || 0)
-            }));
-        }
-
-        // 값이 0인 데이터 제외 및 상위 N개 제한 (너무 많으면 렌더링 지저분함)
-        wordData = wordData.filter(d => d.value > 0).sort((a, b) => b.value - a.value).slice(0, 50);
-
-        if (wordData.length === 0) {
-            return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>표시할 데이터가 없습니다.</div>
-        }
-
-        const minVal = Math.min(...wordData.map(d => d.value));
-        const maxVal = Math.max(...wordData.map(d => d.value));
-
-        return (
-            <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', position: 'relative' }}>
-                <div ref={containerRef} style={{ flex: 1, width: '100%', height: '100%', overflow: 'hidden' }}>
-                    {dimensions.width > 0 && dimensions.height > 0 && wordData.length > 0 && (
-                        <WordCloudFixer
-                            wordData={wordData}
-                            dimensions={dimensions}
-                            activePalette={activePalette}
-                            minVal={minVal}
-                            maxVal={maxVal}
-                        />
-                    )}
-                </div>
-            </div>
-        );
-    }
 
     const activeSeriesCount = Object.keys(visibleSeries).length > 0 ? Object.values(visibleSeries).filter(Boolean).length : (seriesNames?.length || 1);
 
@@ -460,6 +403,65 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             return defaultVisual;
         }
     }, []);
+
+    // 지도 모드일 때는 ChoroplethMap 렌더링
+    if (isMap) {
+        return <ChoroplethMap data={data} />;
+    }
+
+    // 워드 클라우드 렌더링
+    if (isWordCloud) {
+        // Transform data for WordCloud: { text: string, value: number }
+        let wordData = [];
+
+        // case A: seriesNames가 있는 경우 (추가분석 - 각 열의 데이터를 항목별로 합산하거나 특정 열 기준)
+        if (seriesNames && seriesNames.length > 0) {
+            // 모든 항목(rows)에 대해 각 시리즈(columns)의 값을 합산하여 중요도 판단
+            wordData = filteredData.map(item => {
+                let totalVal = 0;
+                seriesNames.forEach(s => {
+                    const field = typeof s === 'string' ? s : s.field;
+                    totalVal += Number(item[field] || 0);
+                });
+                return {
+                    text: item.name,
+                    value: totalVal
+                };
+            });
+        } else {
+            // case B: 일반적인 name/total 구조
+            wordData = filteredData.map(item => ({
+                text: item.name,
+                value: Number(item.total || 0)
+            }));
+        }
+
+        // 값이 0인 데이터 제외 및 상위 N개 제한 (너무 많으면 렌더링 지저분함)
+        wordData = wordData.filter(d => d.value > 0).sort((a, b) => b.value - a.value).slice(0, 50);
+
+        if (wordData.length === 0) {
+            return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#888' }}>표시할 데이터가 없습니다.</div>
+        }
+
+        const minVal = Math.min(...wordData.map(d => d.value));
+        const maxVal = Math.max(...wordData.map(d => d.value));
+
+        return (
+            <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', position: 'relative' }}>
+                <div ref={containerRef} style={{ flex: 1, width: '100%', height: '100%', overflow: 'hidden' }}>
+                    {dimensions.width > 0 && dimensions.height > 0 && wordData.length > 0 && (
+                        <WordCloudFixer
+                            wordData={wordData}
+                            dimensions={dimensions}
+                            activePalette={activePalette}
+                            minVal={minVal}
+                            maxVal={maxVal}
+                        />
+                    )}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="agg-chart-wrapper" style={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', width: '100%' }}>

@@ -78,13 +78,16 @@ const FullscreenModal = ({
         };
     }, [resultData, localChartMode]);
 
-    useEffect(() => {
+    const [prevProps, setPrevProps] = useState({ isOpen, chartMode, displayMode, paletteId });
+
+    if (isOpen !== prevProps.isOpen || chartMode !== prevProps.chartMode || displayMode !== prevProps.displayMode || paletteId !== prevProps.paletteId) {
+        setPrevProps({ isOpen, chartMode, displayMode, paletteId });
         if (isOpen) {
             setLocalChartMode(chartMode);
             setLocalDisplayMode(displayMode);
             setLocalPaletteId(paletteId || 'default');
         }
-    }, [isOpen, chartMode, displayMode, paletteId]);
+    }
 
     // Close dropdown when clicking outside
     useEffect(() => {
