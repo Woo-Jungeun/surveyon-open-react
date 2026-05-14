@@ -45,6 +45,23 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                     });
                 }
             }
+        },
+        getScrollPosition: () => {
+            if (gridRef.current) {
+                const scrollElement = gridRef.current.querySelector(".k-grid-content");
+                if (scrollElement) {
+                    return { top: scrollElement.scrollTop, left: scrollElement.scrollLeft };
+                }
+            }
+            return null;
+        },
+        setScrollPosition: (pos) => {
+            if (gridRef.current && pos) {
+                const scrollElement = gridRef.current.querySelector(".k-grid-content");
+                if (scrollElement) {
+                    scrollElement.scrollTo({ top: pos.top, left: pos.left, behavior: 'instant' });
+                }
+            }
         }
     }));
 

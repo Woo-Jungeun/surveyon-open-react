@@ -1038,6 +1038,15 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         return stubs.filter(s => s.recoded_var_id?.toLowerCase().includes(q) || s.var_label?.toLowerCase().includes(q));
     }, [stubs, searchTerm]);
 
+    const scrollPosToRestore = useRef(null);
+
+    React.useLayoutEffect(() => {
+        if (scrollPosToRestore.current && gridRef.current?.setScrollPosition) {
+            gridRef.current.setScrollPosition(scrollPosToRestore.current);
+            scrollPosToRestore.current = null;
+        }
+    }, [stubs]);
+
     // onDataChange는 행추가/삭제 시에만 호출됨 (텍스트 편집은 TextEditCell의 onBlur에서 처리)
     const handleDataChange = useCallback((newData) => {
         setStubs(newData);
@@ -1080,22 +1089,42 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             banner: banners.length > 0 ? [banners[0].id] : []
         };
 
+        const scrollPos = gridRef.current?.getScrollPosition?.();
+        if (scrollPos) scrollPosToRestore.current = scrollPos;
+
         setStubs(prev => {
             const next = [...prev];
             if (insertAfterIdx !== undefined && insertAfterIdx !== null) {
-                next.splice(insertAfterIdx + 1, 0, newRow);
+                const targetItem = filteredStubs[insertAfterIdx];
+                const realIdx = targetItem ? next.findIndex(item => item._row_id === targetItem._row_id) : -1;
+                if (realIdx !== -1) {
+                    next.splice(realIdx + 1, 0, newRow);
+                } else {
+                    next.push(newRow);
+                }
             } else {
                 next.push(newRow);
             }
             return next;
         });
+
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
     const handleRowCopy = (idx) => {
         if (idx === undefined || idx === null) return;
+        
+        const scrollPos = gridRef.current?.getScrollPosition?.();
+        if (scrollPos) scrollPosToRestore.current = scrollPos;
+        
         setStubs(prev => {
-            const target = prev[idx];
+            const targetItem = filteredStubs[idx];
+            if (!targetItem) return prev;
+            
+            const realIdx = prev.findIndex(item => item._row_id === targetItem._row_id);
+            if (realIdx === -1) return prev;
+            
+            const target = prev[realIdx];
             const next = [...prev];
             const newRow = {
                 ...target,
@@ -1103,9 +1132,25 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 recoded_var_id: `${target.recoded_var_id}_copy_${Math.floor(Math.random() * 1000)}`,
                 var_label: `${target.var_label}_copy`,
             };
-            next.splice(idx + 1, 0, newRow);
+            next.splice(realIdx + 1, 0, newRow);
             return next;
         });
+
+        if (onUnsavedChange) onUnsavedChange(true);
+    };
+
+    const handleRowDelete = (idx) => {
+        if (idx === undefined || idx === null) return;
+        
+        const scrollPos = gridRef.current?.getScrollPosition?.();
+        if (scrollPos) scrollPosToRestore.current = scrollPos;
+        
+        setStubs(prev => {
+            const targetItem = filteredStubs[idx];
+            if (!targetItem) return prev;
+            return prev.filter(item => item._row_id !== targetItem._row_id);
+        });
+
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
@@ -1408,6 +1453,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             onDataChange={handleDataChange}
                             style={{ height: '100%', width: '100%' }}
                             scrollable="virtual"
+                            dataItemKey="_row_id"
                             addable={true}
                             copyable={true}
                             deletable={true}
@@ -1415,6 +1461,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             deletePos="start"
                             onAdd={handleRowAdd}
                             onCopy={handleRowCopy}
+                            onDelete={handleRowDelete}
                         >
 
                             <Column field="recoded_var_id" title="변수" width="115px" headerClassName="k-text-center"
