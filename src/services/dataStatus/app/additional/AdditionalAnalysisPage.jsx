@@ -923,7 +923,7 @@ const AdditionalAnalysisPage = () => {
         let hasBase = false;
         tables.forEach(t => {
             if (t.name === '새 테이블') hasBase = true;
-            const match = t.name.match(/^새 테아블 (\d+)$/);
+            const match = t.name.match(/^새 테이블 (\d+)$/);
             if (match) {
                 const idx = parseInt(match[1], 10);
                 if (idx > maxNewIndex) maxNewIndex = idx;
@@ -1285,7 +1285,7 @@ const AdditionalAnalysisPage = () => {
 
                 // Update table list with new name and isNew status
                 setTables(tables.map(t =>
-                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false } : t
+                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false, isDirty: false } : t
                 ));
                 isConfigLoadingRef.current = true;
 
@@ -1358,7 +1358,7 @@ const AdditionalAnalysisPage = () => {
             if (saveResult?.success === "777") {
                 // Update table list with new name and isNew status
                 setTables(tables.map(t =>
-                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false } : t
+                    t.id === selectedTableId ? { ...t, name: tableName || "Untitled Table", isNew: false, isDirty: false } : t
                 ));
                 isConfigLoadingRef.current = true;
 
@@ -1618,6 +1618,22 @@ const AdditionalAnalysisPage = () => {
                     title: '삭제',
                     click: async () => {
                         try {
+                            const tableToDelete = tables.find(t => t.id === tableId);
+                            if (tableToDelete?.isNew) {
+                                // Remove from local state only for new, unsaved tables
+                                setTables(prev => prev.filter(t => t.id !== tableId));
+
+                                // Clear selection if deleted table was selected
+                                if (selectedTableId === tableId) {
+                                    setSelectedTableId(null);
+                                    setRowVars([]);
+                                    setColVars([]);
+                                    setTableName('');
+                                }
+                                modal.showAlert('성공', '테이블이 삭제되었습니다.');
+                                return;
+                            }
+
                             const payload = {
                                 user: auth.user.userId,
                                 tableid: tableId
@@ -1626,7 +1642,7 @@ const AdditionalAnalysisPage = () => {
                             const result = await deleteCrossTable.mutateAsync(payload);
                             if (result?.success === "777") {
                                 // Remove from local state
-                                setTables(tables.filter(t => t.id !== tableId));
+                                setTables(prev => prev.filter(t => t.id !== tableId));
 
                                 // Clear selection if deleted table was selected
                                 if (selectedTableId === tableId) {
