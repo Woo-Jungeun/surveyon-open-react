@@ -877,6 +877,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     };
 
     const [categories, setCategories] = useState(() => getInitialCategories(rowData));
+    const [rankOutputs, setRankOutputs] = useState(() => rowData?.rank_outputs ? [...rowData.rank_outputs] : []);
     const [isDetailSetting, setIsDetailSetting] = useState(false);
 
     useEffect(() => {
@@ -886,6 +887,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
         // 컴포넌트가 언마운트되지 않고 props만 바뀔 경우를 대비한 동기화
         if (show && rowData) {
             setCategories(getInitialCategories(rowData));
+            setRankOutputs(rowData.rank_outputs ? [...rowData.rank_outputs] : []);
         }
     }, [show, rowData]);
 
@@ -904,7 +906,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     // 적용 이벤트
     const handleGenerate = () => {
         if (onApply) {
-            onApply(categories);
+            onApply(categories, rankOutputs);
         }
         onClose(); // 처리 후 모달 닫기
     };
@@ -953,6 +955,78 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                             <input type="text" value={Array.isArray(rowData?.x_info) ? rowData.x_info.join(', ') : (rowData?.x_info || '')} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
                     </div>
+
+                    {rowData?.var_type === 'rank' && (
+                        <div style={{ flex: 'none', border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: '180px' }}>
+                            <div style={{ padding: '10px 16px', borderBottom: '1px solid #e2e8f0', background: '#fafafa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>출력 스터브 (Rank Outputs) 설정</span>
+                                <button
+                                    onClick={() => {
+                                        setRankOutputs(prev => [
+                                            ...prev,
+                                            {
+                                                start_rank: 1,
+                                                end_rank: 1,
+                                                rank_output: '1'
+                                            }
+                                        ]);
+                                    }}
+                                    style={{
+                                        padding: '4px 10px', fontSize: '12px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 600
+                                    }}
+                                >
+                                    + 출력 추가
+                                </button>
+                            </div>
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+                                {rankOutputs.length === 0 ? (
+                                    <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '20px' }}>설정된 출력 스터브가 없습니다.</div>
+                                ) : (
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                        <thead>
+                                            <tr style={{ background: '#f1f5f9' }}>
+                                                <th style={{ padding: '8px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>시작 순위 (Start)</th>
+                                                <th style={{ padding: '8px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>종료 순위 (End)</th>
+                                                <th style={{ padding: '8px', borderBottom: '1px solid #e2e8f0', textAlign: 'center' }}>출력명 (Output)</th>
+                                                <th style={{ padding: '8px', borderBottom: '1px solid #e2e8f0', textAlign: 'center', width: '60px' }}>삭제</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {rankOutputs.map((out, idx) => (
+                                                <tr key={idx}>
+                                                    <td style={{ padding: '6px', textAlign: 'center' }}>
+                                                        <input type="number" min="1" value={out.start_rank || ''} onChange={e => {
+                                                            const val = e.target.value ? Number(e.target.value) : '';
+                                                            setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, start_rank: val } : item));
+                                                        }} style={{ width: '60px', padding: '4px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                                    </td>
+                                                    <td style={{ padding: '6px', textAlign: 'center' }}>
+                                                        <input type="number" min="1" value={out.end_rank || ''} onChange={e => {
+                                                            const val = e.target.value ? Number(e.target.value) : '';
+                                                            setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, end_rank: val } : item));
+                                                        }} style={{ width: '60px', padding: '4px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                                    </td>
+                                                    <td style={{ padding: '6px', textAlign: 'center' }}>
+                                                        <input type="text" value={out.rank_output || ''} onChange={e => {
+                                                            const val = e.target.value;
+                                                            setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, rank_output: val } : item));
+                                                        }} style={{ width: '100px', padding: '4px', textAlign: 'center', border: '1px solid #cbd5e1', borderRadius: '4px' }} />
+                                                    </td>
+                                                    <td style={{ padding: '6px', textAlign: 'center' }}>
+                                                        <button onClick={() => {
+                                                            setRankOutputs(prev => prev.filter((_, i) => i !== idx));
+                                                        }} style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer' }}>
+                                                            <X size={14} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* 하단 그리드 영역 */}
                     <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

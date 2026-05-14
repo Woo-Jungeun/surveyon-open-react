@@ -637,13 +637,23 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
     }
 
     const { color, displayType } = getQuestionTypeInfo(val);
+
+    let outputText = '';
+    let tooltipTitle = '';
+    if (val === 'rank' && Array.isArray(dataItem.rank_outputs) && dataItem.rank_outputs.length > 0) {
+        outputText = ` | 출력 ${dataItem.rank_outputs.length}개`;
+        const presetName = dataItem.rank_preset_name || '순위 지정';
+        const outputStrs = dataItem.rank_outputs.map(o => o.rank_output || 'null').join(' / ');
+        tooltipTitle = `${presetName} (${outputStrs})`;
+    }
+
     return (
         <td
             data-field="var_type"
             data-row-id={dataItem.source_var_id}
             style={{ textAlign: 'center', verticalAlign: 'middle', userSelect: 'none' }}
         >
-            <span className={`question-type-badge ${color}`}>{displayType}</span>
+            <span className={`question-type-badge ${color}`} title={tooltipTitle}>{displayType}{outputText}</span>
         </td>
     );
 });
@@ -953,7 +963,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     scale_preset_name: item.scale_preset_id === 'default_double' ? '' : (item.scale_preset_id || ''),
                     rank_preset_name: item.rank_preset_id || '',
                     group_preset_name: item.group_preset_id || '',
-                    info: infoArray
+                    info: infoArray,
+                    rank_outputs: v.rank_outputs || item.rank_outputs || []
                 };
             });
 
@@ -1274,30 +1285,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 stat_preset_id: stub.stat_summary || null,
                 condition: filterExp || null,
                 banner: bannerArr,
-                info: infoArray ? infoArray.filter(opt => !isRankParent || opt.type !== 'rank') : undefined
+                info: infoArray ? infoArray.filter(opt => !isRankParent || opt.type !== 'rank') : undefined,
+                ...(isRankParent && stub.rank_outputs ? { rank_outputs: stub.rank_outputs } : {})
             };
-
-            // Rank 자식 별도 저장
-            if (isRankParent && infoArray) {
-                const rankOpts = infoArray.filter(opt => opt.type === 'rank');
-                rankOpts.forEach(opt => {
-                    variablesMap[opt.id] = {
-                        id: opt.id,
-                        source_var_id: effSourceId || null, // 부모의 source_var_id
-                        label: opt.label || '',
-                        type: stub.var_type,
-                        banner: bannerArr,
-                        generated_kind: 'rank_child',
-                        parent_stub_id: effRecodedId,
-                        rank_output: String(opt.value),
-                        info: [{ ...opt, row_role: 'option', id: undefined }],
-                        variable_role: 'stub',
-                        stub_kind: effSourceId ? 'source_based' : 'custom',
-                        managed_by: 'recoded_editor',
-                        metadata_status: 'explicit'
-                    };
-                });
-            }
         }
 
         // 3. 삭제될 ID 추출 (원본에 있었지만 현재는 없는 recoded_var_id)
@@ -1310,23 +1300,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         const orderIds = [];
         for (const s of stubs) {
             if (s.recoded_var_id) {
-                const isRankParent = s.var_type === 'rank' || s.var_type === 'multi' || s.var_type === 'minrank' || s.var_type === 'maxrank';
-                if (isRankParent && s.info) {
-                    const rankOpts = s.info.filter(opt => opt.type === 'rank');
-                    if (rankOpts.length > 0) {
-                        let rankChildCount = 0;
-                        rankOpts.forEach(opt => {
-                            const rankVal = opt.value !== undefined && opt.value !== null && opt.value !== '' ? opt.value : (rankChildCount + 1);
-                            const childId = `${s.recoded_var_id}_(${rankVal})`;
-                            orderIds.push(childId);
-                            rankChildCount++;
-                        });
-                    } else {
-                        orderIds.push(s.recoded_var_id.trim());
-                    }
-                } else {
-                    orderIds.push(s.recoded_var_id.trim());
-                }
+                orderIds.push(s.recoded_var_id.trim());
             }
         }
 
@@ -1512,7 +1486,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 2px' }}>
                                             <button
                                                 type="button"
-                                                title={canReapply && '설정 재적용'}
+                                                title={canReapply ? '설정 재적용' : undefined}
                                                 disabled={!canReapply}
                                                 onClick={async (e) => {
                                                     e.preventDefault();
@@ -1577,7 +1551,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     onClose={() => setSelectedStubForModal(null)}
                 rowData={selectedStubForModal}
                 variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
-                onApply={(rules) => {
+                onApply={(rules, rankOutputs) => {
                     // 그리드 내부 필드 정리 + 필수 필드 정규화
                     const STAT_TYPES = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"];
                     const normalizedRules = rules.map((opt, i) => {
@@ -1605,12 +1579,17 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             color: opt.color || null,
                         };
                     });
-                    // 해당 stub의 info 업데이트
-                    setStubs(prev => prev.map(s =>
-                        s.recoded_var_id === selectedStubForModal?.recoded_var_id
-                            ? { ...s, info: normalizedRules }
-                            : s
-                    ));
+                    // 해당 stub의 info 및 rank_outputs 업데이트
+                    setStubs(prev => prev.map(s => {
+                        if (s.recoded_var_id === selectedStubForModal?.recoded_var_id) {
+                            return {
+                                ...s,
+                                info: normalizedRules,
+                                ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
+                            };
+                        }
+                        return s;
+                    }));
                     if (onUnsavedChange) onUnsavedChange(true);
                 }}
             />
