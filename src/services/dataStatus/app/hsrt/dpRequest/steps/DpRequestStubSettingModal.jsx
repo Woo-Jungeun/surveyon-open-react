@@ -980,10 +980,13 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             setIsRankOutputsOpen(true);
-                                            setRankOutputs(prev => [
-                                                ...prev,
-                                                { start_rank: 1, end_rank: 1, rank_output: '1' }
-                                            ]);
+                                            setRankOutputs(prev => {
+                                                const maxRank = prev.reduce((max, out) => Math.max(max, out.end_rank || 1), 0);
+                                                return [
+                                                    ...prev,
+                                                    { start_rank: maxRank + 1, end_rank: maxRank + 1, rank_output: String(maxRank + 1) }
+                                                ];
+                                            });
                                         }}
                                         style={{ background: '#fff', border: '1px solid #cbd5e1', padding: '4px 10px', borderRadius: '4px', fontSize: '12px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer', color: '#334155' }}
                                     >
@@ -1013,7 +1016,12 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                             const sRank = out.start_rank || 1;
                                             const eRank = out.end_rank || 1;
                                             const rankTitleStr = sRank === eRank ? `${sRank}순위` : `${sRank}~${eRank}순위`;
-                                            const rankIdStr = sRank === eRank ? `${sRank}` : `${sRank}+${eRank}`;
+                                            let rankIdStr = `${sRank}`;
+                                            if (sRank !== eRank) {
+                                                const start = Math.min(sRank, eRank);
+                                                const end = Math.max(sRank, eRank);
+                                                rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                                            }
                                             
                                             return (
                                                 <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '6px 16px', borderBottom: idx === rankOutputs.length - 1 ? 'none' : '1px solid #e2e8f0' }}>

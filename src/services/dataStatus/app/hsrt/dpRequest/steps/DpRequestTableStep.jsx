@@ -1056,9 +1056,37 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const handleCellUpdate = useCallback((item, field, value) => {
         const targetId = item._row_id;
         if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(String(item.source_var_id))) {
-            setStubs(prev => prev.map(s => stubDragSelectedIds.has(String(s.source_var_id)) ? { ...s, [field]: value } : s));
+            setStubs(prev => prev.map(s => {
+                if (stubDragSelectedIds.has(String(s.source_var_id))) {
+                    let updated = { ...s };
+                    if (field !== 'recoded_var_id') {
+                        updated[field] = value;
+                    }
+                    return updated;
+                }
+                return s;
+            }));
         } else {
-            setStubs(prev => prev.map(s => s._row_id === targetId ? { ...s, [field]: value } : s));
+            setStubs(prev => prev.map(s => {
+                if (s._row_id === targetId) {
+                    let updated = { ...s, [field]: value };
+                    if (field === 'recoded_var_id' && updated.rank_outputs && Array.isArray(updated.rank_outputs)) {
+                        updated.rank_outputs = updated.rank_outputs.map(out => {
+                            const sRank = out.start_rank || 1;
+                            const eRank = out.end_rank || 1;
+                            let rankIdStr = `${sRank}`;
+                            if (sRank !== eRank) {
+                                const start = Math.min(sRank, eRank);
+                                const end = Math.max(sRank, eRank);
+                                rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                            }
+                            return { ...out, recoded_var_id: `${value}_(${rankIdStr})` };
+                        });
+                    }
+                    return updated;
+                }
+                return s;
+            }));
         }
 
         // 작업 후 선택 초기화
@@ -1126,12 +1154,35 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             
             const target = prev[realIdx];
             const next = [...prev];
+            const newRecodedId = `${target.recoded_var_id}_copy_${Math.floor(Math.random() * 1000)}`;
             const newRow = {
                 ...target,
                 _row_id: `row_${Date.now()}_${Math.random()}`,
-                recoded_var_id: `${target.recoded_var_id}_copy_${Math.floor(Math.random() * 1000)}`,
+                recoded_var_id: newRecodedId,
                 var_label: `${target.var_label}_copy`,
+                _origin: 'copied'
             };
+
+            // rank_outputs가 있다면 복사본에 맞게 recoded_var_id 변경
+            if (newRow.rank_outputs && Array.isArray(newRow.rank_outputs)) {
+                newRow.rank_outputs = newRow.rank_outputs.map(out => {
+                    const sRank = out.start_rank || 1;
+                    const eRank = out.end_rank || 1;
+                    let rankIdStr = `${sRank}`;
+                    if (sRank !== eRank) {
+                        const start = Math.min(sRank, eRank);
+                        const end = Math.max(sRank, eRank);
+                        rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                    }
+                    return {
+                        ...out,
+                        recoded_var_id: `${newRecodedId}_(${rankIdStr})`,
+                        parent_stub_id: newRecodedId,
+                        source_var_id: target.source_var_id
+                    };
+                });
+            }
+
             next.splice(realIdx + 1, 0, newRow);
             return next;
         });
@@ -1225,12 +1276,13 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             effRecodedId = stub.recoded_var_id.trim();
             effSourceId = stub.source_var_id ?? null;
 
-            // 커스텀 스터브는 원본 변수가 없어야 함 (에러 방지)
-            if (stub.var_type === 'custom' || effRecodedId.startsWith('custom_stub_') || stub._is_custom) {
+            const isRankParent = stub.var_type === 'rank' || stub.var_type === 'multi' || stub.var_type === 'minrank' || stub.var_type === 'maxrank';
+
+            // 커스텀 스터브 및 복제된 스터브는 원본 변수가 없어야 함 (에러 방지). 단, rank 계열은 제외 (백엔드 필수 검증)
+            const isCustomLike = !isRankParent && (stub.var_type === 'custom' || effRecodedId.startsWith('custom_stub_') || stub._is_custom || stub._origin === 'copied');
+            if (isCustomLike) {
                 effSourceId = null;
             }
-
-            const isRankParent = stub.var_type === 'rank' || stub.var_type === 'multi' || stub.var_type === 'minrank' || stub.var_type === 'maxrank';
 
             let filterExp = stub.condition || null;
             let infoArray = undefined;
@@ -1286,7 +1338,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 : [];
 
             // 1) dp_request_recoded_items: 원본 base variable 기반인 경우만
-            if (effSourceId && effSourceId !== effRecodedId) {
+            // 주의: rank child는 dp_request_recoded_items에 들어가면 안 됩니다 (백엔드 에러 원인).
+            // 안전장치로 _(숫자) 패턴인 경우 제외.
+            const isRankChildFormat = /_\([0-9+]+\)$/.test(effRecodedId);
+            if (effSourceId && effSourceId !== effRecodedId && !isRankChildFormat) {
                 stubItems.push({
                     source_var_id: effSourceId,
                     recoded_var_id: effRecodedId,
@@ -1299,13 +1354,39 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 });
             }
 
+            let finalRankOutputs = undefined;
+            if (isRankParent && stub.rank_outputs && Array.isArray(stub.rank_outputs)) {
+                const outputById = new Map();
+                stub.rank_outputs.forEach(out => {
+                    const sRank = out.start_rank || 1;
+                    const eRank = out.end_rank || 1;
+                    let rankIdStr = `${sRank}`;
+                    if (sRank !== eRank) {
+                        const start = Math.min(sRank, eRank);
+                        const end = Math.max(sRank, eRank);
+                        rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                    }
+                    const childId = `${effRecodedId}_(${rankIdStr})`;
+                    if (!outputById.has(childId)) {
+                        outputById.set(childId, {
+                            ...out,
+                            rank_output: rankIdStr,
+                            recoded_var_id: childId,
+                            parent_stub_id: effRecodedId,
+                            source_var_id: effSourceId
+                        });
+                    }
+                });
+                finalRankOutputs = Array.from(outputById.values());
+            }
+
             // 2) variables: 상세 속성 전체 (info는 base 포함 전체)
             variablesMap[effRecodedId] = {
                 id: effRecodedId,
-                source_var_id: effSourceId || null,
+                source_var_id: effSourceId,
                 label: stub.var_label || '',
                 type: stub.var_type || 'single',
-                stub_kind: effSourceId ? 'source_based' : 'custom',
+                stub_kind: isCustomLike ? 'custom' : 'source_based',
                 variable_role: 'stub',
                 managed_by: 'recoded_editor',
                 metadata_status: 'explicit',
@@ -1316,7 +1397,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 condition: filterExp || null,
                 banner: bannerArr,
                 info: infoArray ? infoArray.filter(opt => !isRankParent || opt.type !== 'rank') : undefined,
-                ...(isRankParent && stub.rank_outputs ? { rank_outputs: stub.rank_outputs } : {})
+                ...(finalRankOutputs ? { rank_outputs: finalRankOutputs } : {})
             };
         }
 
@@ -1327,10 +1408,28 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         const deletedIds = originalRecodedIds.filter(id => !currentRecodedIds.includes(id));
 
         // 4. 현재 순서 배열 (order_ids)
+        // 자식 rank item도 순서에 명시적으로 추가해야 합니다.
         const orderIds = [];
         for (const s of stubs) {
             if (s.recoded_var_id) {
-                orderIds.push(s.recoded_var_id.trim());
+                const effRecodedId = s.recoded_var_id.trim();
+                orderIds.push(effRecodedId);
+
+                const isRankParent = s.var_type === 'rank' || s.var_type === 'multi' || s.var_type === 'minrank' || s.var_type === 'maxrank';
+                if (isRankParent && s.rank_outputs && Array.isArray(s.rank_outputs)) {
+                    s.rank_outputs.forEach(out => {
+                        const sRank = out.start_rank || 1;
+                        const eRank = out.end_rank || 1;
+                        let rankIdStr = `${sRank}`;
+                        if (sRank !== eRank) {
+                            const start = Math.min(sRank, eRank);
+                            const end = Math.max(sRank, eRank);
+                            rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                        }
+                        const childId = `${effRecodedId}_(${rankIdStr})`;
+                        orderIds.push(childId);
+                    });
+                }
             }
         }
 
