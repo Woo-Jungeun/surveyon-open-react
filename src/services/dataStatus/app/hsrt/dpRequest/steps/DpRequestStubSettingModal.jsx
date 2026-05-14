@@ -2,7 +2,7 @@ import React, { useCallback, useState, useContext, useEffect, useRef } from 'rea
 import { useSelector } from 'react-redux';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
 import { ColorPicker } from '@progress/kendo-react-inputs';
-import { X, GripVertical, Plus, Trash2, Save, Copy, Check, Info, ChevronDown } from 'lucide-react';
+import { X, GripVertical, Plus, Trash2, Save, Copy, Check, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import '@/components/common/popup/ConditionBuilderPopup.css';
 import KendoGridV2 from '@/components/kendo/KendoGridV2';
@@ -848,6 +848,8 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const { saveRecodedSet } = DpRequestPageApi();
+    const [isRankOutputsOpen, setIsRankOutputsOpen] = useState(true);
+
 
     const getInitialCategories = (rData) => {
         if (!rData || !rData.info || rData.info.length === 0) return [];
@@ -958,17 +960,26 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
 
                     {rowData?.var_type === 'rank' && (
                         <div style={{ flex: 'none', background: '#f4f6f8', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                <div>
-                                    <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#1e293b' }}>출력 스터브</div>
-                                    <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>원본 스터브 설정은 공유하고 순위 범위만 다르게 저장합니다. 추가된 출력 스터브는 데이터 분석 시 자동으로 개별 생성됩니다.</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isRankOutputsOpen ? '16px' : '0' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }} onClick={() => setIsRankOutputsOpen(!isRankOutputsOpen)}>
+                                    <div style={{ marginTop: '2px', color: '#64748b' }}>
+                                        {isRankOutputsOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#1e293b' }}>출력 스터브</div>
+                                        {isRankOutputsOpen && (
+                                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>원본 스터브 설정은 공유하고 순위 범위만 다르게 저장합니다. 추가된 출력 스터브는 데이터 분석 시 자동으로 개별 생성됩니다.</div>
+                                        )}
+                                    </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                     <div style={{ border: '1px solid #bae6fd', background: '#e0f2fe', color: '#0369a1', padding: '4px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>
                                         출력 {rankOutputs.length}개
                                     </div>
                                     <button
-                                        onClick={() => {
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setIsRankOutputsOpen(true);
                                             setRankOutputs(prev => [
                                                 ...prev,
                                                 { start_rank: 1, end_rank: 1, rank_output: '1' }
@@ -981,7 +992,8 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 </div>
                             </div>
                             
-                            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
+                            {isRankOutputsOpen && (
+                                <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
                                 {/* Table Header */}
                                 <div style={{ display: 'flex', fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '6px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0' }}>
                                     <div style={{ flex: '0 0 220px', paddingRight: '16px' }}>순위 범위</div>
@@ -1088,6 +1100,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     )}
                                 </div>
                             </div>
+                            )}
                         </div>
                     )}
 

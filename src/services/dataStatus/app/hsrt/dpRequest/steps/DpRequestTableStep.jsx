@@ -901,8 +901,16 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
             // 1. 모든 원본 식별자 수집 (추후 삭제 감지용)
             const allOriginalIds = new Set();
-            stubItems.forEach(s => s.recoded_var_id && allOriginalIds.add(s.recoded_var_id));
-            Object.keys(variablesMap).forEach(k => allOriginalIds.add(k));
+            stubItems.forEach(s => {
+                if (s.recoded_var_id && variablesMap[s.recoded_var_id]?.generated_kind !== 'rank_child') {
+                    allOriginalIds.add(s.recoded_var_id);
+                }
+            });
+            Object.keys(variablesMap).forEach(k => {
+                if (variablesMap[k]?.generated_kind !== 'rank_child') {
+                    allOriginalIds.add(k);
+                }
+            });
             summaryFolders.forEach(s => s.stub_id && allOriginalIds.add(s.stub_id));
             setOriginalRecodedIds(Array.from(allOriginalIds));
 
@@ -910,31 +918,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 const v = variablesMap[item.recoded_var_id] || {};
                 const parentType = item.type || v.type || 'custom';
                 const isRankParent = parentType === 'rank' || parentType === 'multi' || parentType === 'minrank' || parentType === 'maxrank';
-                let infoArray = v.info || item.info || [];
+                let infoArray = (item.info && item.info.length > 0) ? item.info : (v.info && v.info.length > 0 ? v.info : []);
 
-                if (isRankParent) {
-                    const children = Object.values(variablesMap)
-                        .filter(child => child.parent_stub_id === item.recoded_var_id && child.generated_kind === 'rank_child')
-                        .sort((a, b) => {
-                            const valA = Number(a.rank_output || (a.info && a.info[0] ? a.info[0].value : 0));
-                            const valB = Number(b.rank_output || (b.info && b.info[0] ? b.info[0].value : 0));
-                            return valA - valB;
-                        });
-                    const childrenInfo = children.map(child => {
-                        const childOpt = child.info && child.info[0] ? child.info[0] : {};
-                        return {
-                            ...childOpt,
-                            id: child.id,
-                            label: childOpt.label || child.label,
-                            type: 'rank',
-                            logic: childOpt.logic !== undefined ? childOpt.logic : (child.condition || ''),
-                            value: childOpt.value !== undefined ? childOpt.value : (child.rank_output || '')
-                        };
-                    });
-                    if (childrenInfo.length > 0) {
-                        infoArray = [...infoArray.filter(i => i.type !== 'rank'), ...childrenInfo];
-                    }
-                }
 
                 return {
                     ...item,
