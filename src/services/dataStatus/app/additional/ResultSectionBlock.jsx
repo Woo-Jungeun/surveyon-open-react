@@ -857,8 +857,14 @@ export const ResultSectionBlock = ({
                                                         const formatP = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rP, maximumFractionDigits: rP });
 
                                                         const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base" || String(row.label ?? "").toLowerCase() === "base" || row.is_base;
-                                                        const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? row.stat_type ?? "").toLowerCase().includes(role));
-                                                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
+                                                        const isSectionAgg = ['top', 'bottom', 'bot', 'mean', 'std'].some(role => String(row.row_role ?? row.stat_type ?? "").toLowerCase().includes(role));
+                                                        let customTopBorderAttr = undefined;
+                                                        if (row.line && row.line !== 'none') {
+                                                            const lineStyle = row.line === 'thick' ? 'solid' : row.line;
+                                                            const lineWidth = row.line === 'double' ? '3px' : '2px';
+                                                            customTopBorderAttr = `${lineWidth} ${lineStyle} #475569`;
+                                                        }
+                                                        const topBorderAttr = customTopBorderAttr || (isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder));
 
                                                         return (
                                                         <tr key={i}>

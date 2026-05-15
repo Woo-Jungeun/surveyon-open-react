@@ -227,14 +227,14 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         const rowBg = customColor || defaultRowBg;
                         const stubBg = customColor || uiSettings?.theme_stub_header_bg || '#D9E1F2';
 
-                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : (prevHasCustomLine ? 'none' : gridBorder));
-
-                        let bottomBorderAttr = undefined;
+                        let customTopBorderAttr = undefined;
                         if (customLine && customLine !== 'none') {
                             const lineStyle = customLine === 'thick' ? 'solid' : customLine;
                             const lineWidth = customLine === 'double' ? '3px' : '2px';
-                            bottomBorderAttr = `${lineWidth} ${lineStyle} #475569`; // 프리뷰와 동일한 진한 색상 사용
+                            customTopBorderAttr = `${lineWidth} ${lineStyle} #475569`; // 프리뷰와 동일한 진한 색상 사용
                         }
+
+                        const topBorderAttr = customTopBorderAttr || (isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : (prevHasCustomLine ? 'none' : gridBorder)));
 
                         return (
                             <tr key={row.key || rowIndex} style={{
@@ -243,7 +243,6 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                             }}>
                                 <td className="stub-cell" style={{
                                     borderTop: topBorderAttr,
-                                    borderBottom: bottomBorderAttr,
                                     background: stubBg,
                                     color: uiSettings?.theme_stub_header_fg || '#000',
                                     padding: 0
@@ -257,7 +256,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                 </td>
                                 {columns.map((col, i) => {
                                     const cell = row.cells?.[col.key] || resultData.data?.[row.key]?.[col.key];
-                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ borderTop: topBorderAttr, borderBottom: bottomBorderAttr, borderLeft: i > 0 ? gridBorder : 'none', padding: '2px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
+                                    if (!cell || (typeof cell !== 'object' && cell === '')) return <td key={col.key} style={{ borderTop: topBorderAttr, borderLeft: i > 0 ? gridBorder : 'none', padding: '2px 8px', textAlign: 'right', color: uiSettings?.theme_text_muted || '#cbd5e1' }}>-</td>;
 
                                     let valN = cell.count ?? cell.n ?? null;
                                     let valP = cell.percent ?? cell.pct ?? null;
@@ -281,7 +280,6 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                     return (
                                         <td key={col.key} style={{
                                             borderTop: topBorderAttr,
-                                            borderBottom: bottomBorderAttr,
                                             borderLeft: i > 0 ? gridBorder : 'none',
                                             padding: '2px 8px',
                                             textAlign: 'right'
@@ -2008,6 +2006,23 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 {banner.id.startsWith('NEW_') ? '저장 대기' : banner.id}
                                             </span>
                                         </div>
+                                        {banner.raw?.type && (
+                                            <div style={{
+                                                fontSize: '11px',
+                                                padding: '2px 6px',
+                                                borderRadius: '4px',
+                                                whiteSpace: 'nowrap',
+                                                fontWeight: '800',
+                                                textTransform: 'lowercase',
+                                                ...(banner.raw.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
+                                                    (banner.raw.type === 'double' || banner.raw.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                    banner.raw.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
+                                                    banner.raw.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
+                                                    { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' })
+                                            }}>
+                                                {banner.raw.type === 'double' ? 'multi' : banner.raw.type}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
