@@ -387,7 +387,7 @@ const ProList = () => {
                 return;
             }
 
-            saveBlobWithName(blob, "raw_data.xlsx");
+            saveBlobWithName(blob, `${projectnum}.xlsx`);
 
         } catch (err) {
             console.error(err);
