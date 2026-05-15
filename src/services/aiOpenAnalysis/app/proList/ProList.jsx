@@ -311,9 +311,8 @@ const ProList = () => {
                         {
                             title: "확인",
                             click: () => {
-                                // 데이터 재조회
-                                // handleSearch 함수가 props로 없으므로, ProList에서 query client invalidate 등을 하거나 직접 grid data reload 처리
-                                window.location.reload();
+                                setGridDataKey(prev => prev + 1);
+                                setTimeStamp(Date.now());
                             }
                         }
                     ]
