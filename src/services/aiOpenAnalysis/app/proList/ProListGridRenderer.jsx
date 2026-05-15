@@ -12,6 +12,88 @@ import { PERM, hasPerm, addSortProxies, GROUP_MIN_PERM, FIELD_MIN_PERM } from ".
 import GridDataCount from "@/components/common/grid/GridDataCount";
 import "./ProList.css";
 import { process } from "@progress/kendo-data-query";
+import { ChevronDown } from 'lucide-react';
+
+const DropdownMenu = ({ label, items, isPrimary }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+    useEffect(() => {
+        const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
+    return (
+        <div ref={ref} style={{ position: 'relative' }}>
+            <button 
+                onClick={() => setOpen(!open)} 
+                className={`ai-data-header-btn ${isPrimary ? 'ai-data-header-btn-primary' : 'ai-data-header-btn-secondary'}`}
+                style={isPrimary ? {
+                    backgroundColor: '#FFB74D',
+                    borderColor: '#FFB74D',
+                    color: '#fff',
+                    height: '32px',
+                    fontSize: '13px',
+                    padding: '0 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                } : {
+                    height: '32px',
+                    fontSize: '13px',
+                    padding: '0 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                }}
+            >
+                {label} <ChevronDown size={14} style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+            </button>
+            {open && (
+                <div style={{ 
+                    position: 'absolute', 
+                    top: 'calc(100% + 4px)', 
+                    right: 0, 
+                    background: '#fff', 
+                    border: '1px solid #f1f5f9', 
+                    borderRadius: '8px', 
+                    boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)', 
+                    minWidth: '160px', 
+                    zIndex: 100, 
+                    padding: '6px' 
+                }}>
+                    {items.map((it, i) => it.divider ? (
+                        <div key={i} style={{ height: '1px', background: '#f1f5f9', margin: '4px 0' }} />
+                    ) : (
+                        <div 
+                            key={i} 
+                            onClick={() => { setOpen(false); it.onClick(); }} 
+                            style={{ 
+                                padding: '8px 12px', 
+                                fontSize: '13px', 
+                                cursor: 'pointer', 
+                                color: '#475569', 
+                                transition: 'all 0.2s ease', 
+                                textAlign: 'left', 
+                                fontWeight: '400',
+                                borderRadius: '4px'
+                            }} 
+                            onMouseOver={e => {
+                                e.currentTarget.style.background = '#fff7ed'; // 아주 연한 주황색
+                                e.currentTarget.style.color = '#ea580c';      // 텍스트는 조금 더 진한 주황색
+                            }} 
+                            onMouseOut={e => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.color = '#475569';
+                            }}
+                        >
+                            {it.text}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
 
 const ProListGridRenderer = (props) => {
     const [showRegisterPopup, setShowRegisterPopup] = useState(false);
@@ -892,59 +974,32 @@ const ProListGridRenderer = (props) => {
                 tooltip={`문항 목록|조사(Qmaster): 등록 시 오픈응답문항 중 텍스트로 입력된 데이터 자동 등록\n신규(수동): "문항등록"을 통해 엑셀로 문항을 선택하여 등록`}
             >
                 {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                    <button
-                        className="ai-data-header-btn ai-data-header-btn-secondary"
-                        onClick={handleExportExcelDev}
-                    >
-                        보기 추출 (개발자용)
-                    </button>
+                    <DropdownMenu 
+                        label="데이터추출" 
+                        isPrimary={false} 
+                        items={[
+                            { text: '보기추출(개발자용)', onClick: handleExportExcelDev },
+                            { text: '보기추출(DP용)', onClick: handleExportExcelDP },
+                            { divider: true },
+                            { text: '응답추출(전체문항)', onClick: handleExportRaw }
+                        ]} 
+                    />
                 )}
-                {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                    <>
-                        <button
-                            className="ai-data-header-btn ai-data-header-btn-secondary"
-                            onClick={handleExportExcelDP}
-                        >
-                            보기 추출 (DP용)
-                        </button>
-                        <button
-                            className="ai-data-header-btn ai-data-header-btn-secondary"
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            보기등록(ALL)
-                        </button>
-                        <button
-                            className="ai-data-header-btn ai-data-header-btn-secondary"
-                            onClick={handleExportRaw}
-                        >
-                            응답추출(ALL)
-                        </button>
-                    </>
-                )}
-                {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
-                    <GridHeaderBtnPrimary
-                        onClick={() => setShowRegisterPopup(true)}
-                        style={{
-                            height: '32px',
-                            fontSize: '13px',
-                            padding: '0 12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            backgroundColor: '#FFB74D', // 더 부드러운 주황색 (Material Orange 300)
-                            borderColor: '#FFB74D',
-                            color: '#fff'
-                        }}
-                    >
-                        문항 등록
-                        <span
-                            className="info-icon"
-                            data-tooltip={`문항 등록|엑셀로 새로운 문항 추가`}
-                            onClick={(e) => e.stopPropagation()}
-                            style={{ filter: 'opacity(0.6)' }}
-                        ></span>
-                    </GridHeaderBtnPrimary>
-                )}
+                {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (() => {
+                    const registerItems = [
+                        { text: '문항등록', onClick: () => setShowRegisterPopup(true) }
+                    ];
+                    if (!userAuth.includes("연구원")) {
+                        registerItems.push({ text: '보기등록(전체문항)', onClick: () => fileInputRef.current?.click() });
+                    }
+                    return (
+                        <DropdownMenu 
+                            label="데이터등록" 
+                            isPrimary={true} 
+                            items={registerItems} 
+                        />
+                    );
+                })()}
             </AiDataHeader>
 
             <div className="pro-list-content">
