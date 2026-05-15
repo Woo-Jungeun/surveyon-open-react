@@ -84,12 +84,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
     };
 
     const previewCols = [
-        { label: '남성 X 20~29세', subLabel: 'banner_02', base: 100, v1: 58, p1: 58.0, v2: 42, p2: 42.0, tV: 44, tP: 44.0, mean: 3.42 },
-        { label: '남성 X 30~39세', subLabel: 'banner_02', base: 680, v1: 356, p1: 52.4, v2: 324, p2: 47.6, tV: 301, tP: 44.3, mean: 3.37 },
-        { label: '여성 X 20~29세', subLabel: 'banner_02', base: 36, v1: 0, p1: 0.0, v2: 36, p2: 100.0, tV: 14, tP: 38.9, mean: 3.11 },
-        { label: '서울', subLabel: 'banner_02', base: 977, v1: 503, p1: 51.5, v2: 474, p2: 48.5, tV: 460, tP: 47.1, mean: 3.44 },
-        { label: '부산', subLabel: 'banner_02', base: 181, v1: 94, p1: 51.9, v2: 87, p2: 48.1, tV: 87, tP: 48.1, mean: 3.39 },
-        { label: '빈 열 예시', subLabel: '숨김 대상', base: 0, v1: 0, p1: 0.0, v2: 0, p2: 0.0, tV: 0, tP: 0.0, mean: '-' }
+        { label: '남성 X 20~29세', subLabel: 'banner_02', base: 100, v1: 58, p1: 58.0, v2: 42, p2: 42.0, v3: 0, p3: 0.0, tV: 44, tP: 44.0, mean: 3.42 },
+        { label: '남성 X 30~39세', subLabel: 'banner_02', base: 680, v1: 356, p1: 52.4, v2: 324, p2: 47.6, v3: 0, p3: 0.0, tV: 301, tP: 44.3, mean: 3.37 },
+        { label: '여성 X 20~29세', subLabel: 'banner_02', base: 36, v1: 0, p1: 0.0, v2: 36, p2: 100.0, v3: 0, p3: 0.0, tV: 14, tP: 38.9, mean: 3.11 },
+        { label: '서울', subLabel: 'banner_02', base: 977, v1: 503, p1: 51.5, v2: 474, p2: 48.5, v3: 0, p3: 0.0, tV: 460, tP: 47.1, mean: 3.44 },
+        { label: '부산', subLabel: 'banner_02', base: 181, v1: 94, p1: 51.9, v2: 87, p2: 48.1, v3: 0, p3: 0.0, tV: 87, tP: 48.1, mean: 3.39 },
+        { label: '빈 열 예시', subLabel: '숨김 대상', base: 0, v1: 0, p1: 0.0, v2: 0, p2: 0.0, v3: 0, p3: 0.0, tV: 0, tP: 0.0, mean: '-' }
     ].filter(col => !settings.display?.hide_zero_base_columns || col.base > 0);
 
     const showN = settings.display?.show_n ?? true;
@@ -232,8 +232,11 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 </tr>
                                 {[
                                     { label: '남성', vKey: 'v1', pKey: 'p1' },
-                                    { label: '여성', vKey: 'v2', pKey: 'p2' }
-                                ].map((row, idx) => (
+                                    { label: '여성', vKey: 'v2', pKey: 'p2' },
+                                    { label: '빈 행 예시', vKey: 'v3', pKey: 'p3', isEmptyRow: true }
+                                ]
+                                .filter(row => !settings.display?.hide_zero_stubs || !row.isEmptyRow)
+                                .map((row, idx) => (
                                     <tr key={row.label} style={{ background: idx % 2 === 1 ? (settings.render.theme_stripe || '#F1F5F9') : (settings.render.theme_bg || '#FFFFFF') }}>
                                         <td style={{
                                             padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000',
