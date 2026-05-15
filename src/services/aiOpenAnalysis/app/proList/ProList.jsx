@@ -6,8 +6,10 @@ import GridData from "@/components/common/grid/GridData.jsx";
 import { ProListApi } from "@/services/aiOpenAnalysis/app/proList/ProListApi.js";
 import "@/services/aiOpenAnalysis/app/AiCommonLayout.css";
 import { modalContext } from "@/components/common/Modal.jsx";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import ProListGridRenderer from "./ProListGridRenderer";
 import { PERM, roleToPerm, hasPerm, GROUP_MIN_PERM, FIELD_MIN_PERM, natKey, NAT_FIELDS, addSortProxies } from "./ProListUtils";
+import * as XLSX from "xlsx";
 
 /**
  * 문항 목록
@@ -21,7 +23,9 @@ const ProList = () => {
     const userAuth = auth?.user?.userAuth || "";
     const dispatch = useDispatch();
     const modal = useContext(modalContext);
+    const loadingSpinner = useContext(loadingSpinnerContext);
     const navigate = useNavigate();
+    const fileInputRef = useRef(null);
     const DATA_ITEM_KEY = "no";
     const SELECTED_FIELD = "selected";
     const { state } = useLocation();
@@ -246,6 +250,122 @@ const ProList = () => {
         }
     }, [auth?.user?.userId, projectnum, excelDownloadMutation, modal, saveBlobWithName]);
 
+    // 보기등록(ALL) 엑셀 업로드 이벤트
+    const handleImportExcel = useCallback(async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            loadingSpinner.show();
+            const data = await file.arrayBuffer();
+            const workbook = XLSX.read(data);
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+            // 3번째 행(인덱스 2)이 노란색 헤더이므로, 데이터는 인덱스 3부터 시작
+            let startIdx = 3;
+            const dataLbObj = {};
+
+            for (let i = startIdx; i < rows.length; i++) {
+                const row = rows[i];
+                if (!row || !row[0]) continue; // 변수명이 없으면 skip
+
+                const varName = row[0]; // A (변수명)
+                const lv123code = row[3] ?? ""; // D
+                const lv3 = row[4] ?? ""; // E
+                const lv2code = row[5] ?? ""; // F
+                const lv2 = row[6] ?? ""; // G
+                const lv1code = row[7] ?? ""; // H
+                const lv1 = row[8] ?? ""; // I
+
+                if (!dataLbObj[varName]) {
+                    dataLbObj[varName] = [];
+                }
+
+                dataLbObj[varName].push({
+                    lv3: String(lv3),
+                    lv123code: String(lv123code),
+                    lv2code: String(lv2code),
+                    lv2: String(lv2),
+                    lv1code: String(lv1code),
+                    lv1: String(lv1)
+                });
+            }
+
+            const data_lb = Object.keys(dataLbObj).map(key => ({
+                [key]: dataLbObj[key]
+            }));
+
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: "import_lb_all",
+                data_lb
+            };
+
+            const res = await editMutation.mutateAsync(payload);
+            if (res?.success === "200") {
+                modal.showConfirm("알림", "보기 등록이 완료되었습니다.", {
+                    btns: [
+                        {
+                            title: "확인",
+                            click: () => {
+                                // 데이터 재조회
+                                // handleSearch 함수가 props로 없으므로, ProList에서 query client invalidate 등을 하거나 직접 grid data reload 처리
+                                window.location.reload(); 
+                            }
+                        }
+                    ]
+                });
+            } else {
+                modal.showErrorAlert("에러", res?.message || "보기 등록 중 오류가 발생했습니다.");
+            }
+
+        } catch (err) {
+            console.error(err);
+            modal.showErrorAlert("오류", "보기 등록 파일 처리 중 오류가 발생했습니다.");
+        } finally {
+            loadingSpinner.hide();
+            e.target.value = null; // 초기화
+        }
+    }, [auth?.user?.userId, projectnum, editMutation, modal, loadingSpinner]);
+
+    // 응답추출(ALL) 엑셀 다운로드 이벤트
+    const handleExportRaw = useCallback(async () => {
+        try {
+            const payload = {
+                user: auth?.user?.userId || "",
+                projectnum,
+                gb: "export_data_all"
+            };
+            const res = await excelDownloadMutation.mutateAsync(payload);
+
+            if (res?.success === "720") {
+                modal.showErrorAlert("알림", "추출할 응답 데이터가 없습니다.");
+                return;
+            }
+
+            const blob = res?.data instanceof Blob ? res.data : (res instanceof Blob ? res : null);
+
+            if (!blob) {
+                modal.showErrorAlert("에러", "응답추출 파일을 받지 못했습니다.");
+                return;
+            }
+
+            if (blob.type?.includes("application/json")) {
+                modal.showErrorAlert("에러", "응답 추출 요청이 거부되었습니다.");
+                return;
+            }
+
+            saveBlobWithName(blob, "raw_data.xlsx");
+
+        } catch (err) {
+            console.error(err);
+            modal.showErrorAlert("오류", "응답 추출 중 오류가 발생했습니다.");
+        }
+    }, [auth?.user?.userId, projectnum, excelDownloadMutation, modal, saveBlobWithName]);
+
     return (
         <GridData
             key={gridDataKey}
@@ -261,40 +381,55 @@ const ProList = () => {
                 _ts: timeStamp, // 캐시 버스터
             }}
             renderItem={(props) =>
-                <ProListGridRenderer {...props}
-                    scrollTopRef={scrollTopRef}
-                    mergeEditsById={mergeEditsById}
-                    setMergeEditsById={setMergeEditsById}
-                    mergeSavedBaseline={mergeSavedBaseline}
-                    setMergeSavedBaseline={setMergeSavedBaseline}
-                    locksById={locksById}
-                    setLocksById={setLocksById}
-                    excludedById={excludedById}
-                    setExcludedById={setExcludedById}
-                    auth={auth}
-                    projectnum={projectnum}
-                    userPerm={userPerm}
-                    modal={modal}
-                    navigate={navigate}
-                    editMutation={editMutation}
-                    columns={columns}
-                    setColumns={setColumns}
-                    columnsForPerm={columnsForPerm}
-                    filter={filter}
-                    setFilter={setFilter}
-                    sort={sort}
-                    setSort={setSort}
-                    popupShow={popupShow}
-                    setPopupShow={setPopupShow}
-                    popupMode={popupMode}
-                    setPopupMode={setPopupMode}
-                    popupRow={popupRow}
-                    setPopupRow={setPopupRow}
-                    goOpenSetting={goOpenSetting}
-                    handleExportExcelDev={handleExportExcelDev}
-                    handleExportExcelDP={handleExportExcelDP}
-                    userAuth={userAuth}
-                />}
+
+                <>
+                    <ProListGridRenderer {...props}
+                        scrollTopRef={scrollTopRef}
+                        mergeEditsById={mergeEditsById}
+                        setMergeEditsById={setMergeEditsById}
+                        mergeSavedBaseline={mergeSavedBaseline}
+                        setMergeSavedBaseline={setMergeSavedBaseline}
+                        locksById={locksById}
+                        setLocksById={setLocksById}
+                        excludedById={excludedById}
+                        setExcludedById={setExcludedById}
+                        auth={auth}
+                        projectnum={projectnum}
+                        userPerm={userPerm}
+                        modal={modal}
+                        navigate={navigate}
+                        editMutation={editMutation}
+                        columns={columns}
+                        setColumns={setColumns}
+                        columnsForPerm={columnsForPerm}
+                        filter={filter}
+                        setFilter={setFilter}
+                        sort={sort}
+                        setSort={setSort}
+                        popupShow={popupShow}
+                        setPopupShow={setPopupShow}
+                        popupMode={popupMode}
+                        setPopupMode={setPopupMode}
+                        popupRow={popupRow}
+                        setPopupRow={setPopupRow}
+                        goOpenSetting={goOpenSetting}
+                        handleExportExcelDev={handleExportExcelDev}
+                        handleExportExcelDP={handleExportExcelDP}
+                        handleImportExcel={handleImportExcel}
+                        handleExportRaw={handleExportRaw}
+                        fileInputRef={fileInputRef}
+                        userAuth={userAuth}
+                    />
+                    {/* 화면 밖 파일 입력기 */}
+                    <input
+                        type="file"
+                        accept=".xlsx, .xls"
+                        style={{ display: "none" }}
+                        ref={fileInputRef}
+                        onChange={handleImportExcel}
+                    />
+                </>
+            }
         />
     );
 };

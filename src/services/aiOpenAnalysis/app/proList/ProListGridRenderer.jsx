@@ -39,6 +39,8 @@ const ProListGridRenderer = (props) => {
         goOpenSetting,
         handleExportExcelDev,
         handleExportExcelDP,
+        handleExportRaw,
+        fileInputRef,
         userAuth
     } = props;
 
@@ -898,12 +900,26 @@ const ProListGridRenderer = (props) => {
                     </button>
                 )}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반") && !userAuth.includes("연구원")) && (
-                    <button
-                        className="ai-data-header-btn ai-data-header-btn-secondary"
-                        onClick={handleExportExcelDP}
-                    >
-                        보기 추출 (DP용)
-                    </button>
+                    <>
+                        <button
+                            className="ai-data-header-btn ai-data-header-btn-secondary"
+                            onClick={handleExportExcelDP}
+                        >
+                            보기 추출 (DP용)
+                        </button>
+                        <button
+                            className="ai-data-header-btn ai-data-header-btn-secondary"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            보기등록(ALL)
+                        </button>
+                        <button
+                            className="ai-data-header-btn ai-data-header-btn-secondary"
+                            onClick={handleExportRaw}
+                        >
+                            응답추출(ALL)
+                        </button>
+                    </>
                 )}
                 {(!userAuth.includes("고객") && !userAuth.includes("일반")) && (
                     <GridHeaderBtnPrimary
