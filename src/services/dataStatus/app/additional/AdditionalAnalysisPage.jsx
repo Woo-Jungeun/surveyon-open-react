@@ -275,10 +275,12 @@ const AdditionalAnalysisPage = () => {
 
             let loadedVariables = [];
 
+            let localDisplayPolicy = null;
             // Fetch Render Context
             try {
                 const renderCtx = await getTableRenderContext.mutateAsync({ pageid: currentPid, user: auth.user.userId });
                 if (renderCtx?.success === "777" && renderCtx.resultjson) {
+                    localDisplayPolicy = renderCtx.resultjson.display_policy;
                     setDisplayPolicy(renderCtx.resultjson.display_policy);
                     setRenderSettings(renderCtx.resultjson.render_settings);
                 }
@@ -544,6 +546,10 @@ const AdditionalAnalysisPage = () => {
                                         filter_expression: filterExpr,
                                         include_stats: ALL_STATS,
                                         row_eval_mode: 'split', // tData.config?.row_eval_mode ? tData.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined'),
+                                        display_policy: localDisplayPolicy || {},
+                                        zero_base_columns: localDisplayPolicy?.hide_zero_base_columns ?? false,
+                                        zero_banners: localDisplayPolicy?.hide_zero_base_columns ?? false,
+                                        zero_stubs: localDisplayPolicy?.hide_zero_stubs ?? false,
                                         table: {
                                             id: firstTable.id,
                                             name: firstTable.name || tData.name || "Untitled Table",
@@ -886,6 +892,10 @@ const AdditionalAnalysisPage = () => {
                             filter_expression: filterExpr,
                             include_stats: ALL_STATS,
                             row_eval_mode: 'split', // data.config?.row_eval_mode ? data.config.row_eval_mode : (tableMode === 'separated' ? 'split' : 'combined')
+                            display_policy: displayPolicy || {},
+                            zero_base_columns: displayPolicy?.hide_zero_base_columns ?? false,
+                            zero_banners: displayPolicy?.hide_zero_base_columns ?? false,
+                            zero_stubs: displayPolicy?.hide_zero_stubs ?? false,
                             // sort: { group_by: "label2_label3" }
                         };
 
@@ -1432,6 +1442,10 @@ const AdditionalAnalysisPage = () => {
                     filter_expression: filterExpression,
                     include_stats: ALL_STATS,
                     row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
+                    display_policy: displayPolicy || {},
+                    zero_base_columns: displayPolicy?.hide_zero_base_columns ?? false,
+                    zero_banners: displayPolicy?.hide_zero_base_columns ?? false,
+                    zero_stubs: displayPolicy?.hide_zero_stubs ?? false,
                     // sort: { group_by: "label2_label3" }
                 };
 
@@ -1566,6 +1580,10 @@ const AdditionalAnalysisPage = () => {
             filter_expression: currentFilter,
             include_stats: ALL_STATS,
             row_eval_mode: 'split', // tableMode === 'separated' ? 'split' : 'combined'
+            display_policy: displayPolicy || {},
+            zero_base_columns: displayPolicy?.hide_zero_base_columns ?? false,
+            zero_banners: displayPolicy?.hide_zero_base_columns ?? false,
+            zero_stubs: displayPolicy?.hide_zero_stubs ?? false,
             // sort: { group_by: "label2_label3" }
         };
 

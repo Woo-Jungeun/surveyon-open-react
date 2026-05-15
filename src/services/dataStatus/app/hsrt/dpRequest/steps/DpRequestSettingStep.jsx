@@ -136,6 +136,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.format_min_round !== undefined && ui.format_min_round !== null) initDisplay.min_digits = ui.format_min_round;
                 if (ui.format_max_round !== undefined && ui.format_max_round !== null) initDisplay.max_digits = ui.format_max_round;
                 if (ui.hide_zero_base_columns !== undefined && ui.hide_zero_base_columns !== null) initDisplay.hide_zero_base_columns = ui.hide_zero_base_columns;
+                if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
 
                 let mergedRender = { 
                     ...settings.render, 
@@ -508,6 +509,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     format_min_round: settings.display.min_digits !== "" && settings.display.min_digits !== null ? Number(settings.display.min_digits) : undefined,
                     format_max_round: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
+                    hide_zero_stubs: settings.display.hide_zero_stubs,
                 },
                 display_policy: {
                     show_n: settings.display.show_n,
@@ -521,6 +523,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     max_digits: settings.display.max_digits !== "" && settings.display.max_digits !== null ? Number(settings.display.max_digits) : undefined,
                     var_digits: settings.display.var_digits !== "" && settings.display.var_digits !== null ? Number(settings.display.var_digits) : undefined,
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
+                    hide_zero_stubs: settings.display.hide_zero_stubs,
                 },
                 scale_presets: scaleDataPayload,
                 rank_presets: rankDataPayload,

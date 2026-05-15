@@ -315,10 +315,11 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         {/* 기본 표시 여부 */}
                         <div>
                             <div style={{ fontWeight: 600, fontSize: '12px', color: '#64748B', marginBottom: '8px' }}>기본 표시 여부</div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                 {[
                                     { label: '빈도 기본 표시', field: 'show_n' },
                                     { label: '비율 기본 표시', field: 'show_percent' },
+                                    { label: '빈 행 숨기기', field: 'hide_zero_stubs' },
                                     { label: '빈 열 숨기기', field: 'hide_zero_base_columns' }
                                 ].map(item => (
                                     <div
