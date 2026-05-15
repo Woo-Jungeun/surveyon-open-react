@@ -226,6 +226,24 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                             <span style={{ fontSize: '11px', color: isSelected ? '#60a5fa' : '#94a3b8', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0, lineHeight: 1.2, paddingBottom: '2px' }}>
                                                 ({v.id})
                                             </span>
+                                            {v.type && (
+                                                <div style={{
+                                                    fontSize: '10px',
+                                                    padding: '2px 5px',
+                                                    borderRadius: '4px',
+                                                    whiteSpace: 'nowrap',
+                                                    fontWeight: '800',
+                                                    textTransform: 'lowercase',
+                                                    flexShrink: 0,
+                                                    ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
+                                                        (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                        v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
+                                                        v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
+                                                        { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
+                                                }}>
+                                                    {v.type === 'double' ? 'multi' : v.type}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -298,6 +316,24 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', minWidth: 0, overflow: 'hidden', gap: '6px' }}>
                                                     <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#1e293b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden', lineHeight: 1.2, paddingBottom: '2px', paddingRight: '4px' }}>{v.label || item.varId}</span>
                                                     <span style={{ fontSize: '11px', color: '#64748b', whiteSpace: 'nowrap', textOverflow: 'ellipsis', flexShrink: 0, lineHeight: 1.2, paddingBottom: '2px' }}>({item.varId})</span>
+                                                    {v.type && (
+                                                        <div style={{
+                                                            fontSize: '10px',
+                                                            padding: '2px 5px',
+                                                            borderRadius: '4px',
+                                                            whiteSpace: 'nowrap',
+                                                            fontWeight: '800',
+                                                            textTransform: 'lowercase',
+                                                            flexShrink: 0,
+                                                            ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
+                                                                (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
+                                                                v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
+                                                                v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
+                                                                { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
+                                                        }}>
+                                                            {v.type === 'double' ? 'multi' : v.type}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <button
                                                     type="button"
