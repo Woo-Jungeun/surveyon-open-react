@@ -917,7 +917,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
 
     return (
         <div className="advanced-filter-overlay-cbp theme-blue">
-            <div className="advanced-filter-content-cbp" onClick={(e) => e.stopPropagation()} style={{ width: '1100px', height: '700px' }}>
+            <div className="advanced-filter-content-cbp" onClick={(e) => e.stopPropagation()} style={{ width: '1100px', height: '820px', maxHeight: '90vh' }}>
 
                 {/* 헤더 영역 */}
                 <div className="filter-popup-header-cbp">
@@ -961,9 +961,24 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                     {rowData?.var_type === 'rank' && (
                         <div style={{ flex: 'none', background: '#f4f6f8', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isRankOutputsOpen ? '16px' : '0' }}>
-                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }} onClick={() => setIsRankOutputsOpen(!isRankOutputsOpen)}>
-                                    <div style={{ marginTop: '2px', color: '#64748b' }}>
-                                        {isRankOutputsOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }} onClick={() => setIsRankOutputsOpen(!isRankOutputsOpen)} title={isRankOutputsOpen ? "토글 닫기" : "토글 열기"}>
+                                    <div 
+                                        style={{ 
+                                            marginTop: '2px',
+                                            width: '24px', 
+                                            height: '24px', 
+                                            borderRadius: '50%', 
+                                            background: isRankOutputsOpen ? '#e0f2fe' : '#e2e8f0', 
+                                            color: isRankOutputsOpen ? '#0284c7' : '#64748b', 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center',
+                                            transition: 'all 0.2s',
+                                            flexShrink: 0,
+                                            boxShadow: isRankOutputsOpen ? '0 0 0 2px #bae6fd' : 'none'
+                                        }}
+                                    >
+                                        {isRankOutputsOpen ? <ChevronUp size={16} strokeWidth={3} /> : <ChevronDown size={16} strokeWidth={3} />}
                                     </div>
                                     <div>
                                         <div style={{ fontWeight: 'bold', fontSize: '15px', color: '#1e293b' }}>출력 스터브</div>
@@ -1007,7 +1022,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 </div>
 
                                 {/* Table Body */}
-                                <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                                     {rankOutputs.length === 0 ? (
                                         <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '30px' }}>설정된 출력 스터브가 없습니다.</div>
                                     ) : (
@@ -1116,9 +1131,26 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                     <div style={{ flex: 1, border: '1px solid #cbd5e1', borderRadius: '6px', background: '#fff', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
                         {/* 그리드 옵션 헤더 */}
-                        <div style={{ padding: '10px 16px', borderBottom: '1px solid #e2e8f0', background: '#fafafa', display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setIsDetailSetting(!isDetailSetting)}>
-                                <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>상세 설정</span>
+                        <div style={{ padding: '8px 16px', borderBottom: '1px solid #e2e8f0', background: isDetailSetting ? '#eff6ff' : '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'background 0.3s' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ width: '3px', height: '14px', background: isDetailSetting ? '#3b82f6' : '#94a3b8', borderRadius: '2px' }}></div>
+                                <span style={{ fontSize: '13px', fontWeight: 700, color: isDetailSetting ? '#1e3a8a' : '#475569' }}>
+                                    그리드 편집
+                                </span>
+                            </div>
+                            <div 
+                                style={{ 
+                                    display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', 
+                                    padding: '4px 12px', background: isDetailSetting ? '#dbeafe' : '#fff', 
+                                    border: `1px solid ${isDetailSetting ? '#bfdbfe' : '#cbd5e1'}`, 
+                                    borderRadius: '20px', transition: 'all 0.2s',
+                                    boxShadow: isDetailSetting ? '0 1px 2px rgba(59,130,246,0.1)' : 'none'
+                                }} 
+                                onClick={() => setIsDetailSetting(!isDetailSetting)}
+                                onMouseOver={e => { if(!isDetailSetting) e.currentTarget.style.background = '#f8fafc'; }}
+                                onMouseOut={e => { if(!isDetailSetting) e.currentTarget.style.background = '#fff'; }}
+                            >
+                                <span style={{ fontSize: '12px', fontWeight: 700, color: isDetailSetting ? '#1d4ed8' : '#64748b' }}>상세 컬럼 표시</span>
                                 <div style={{ width: '32px', height: '18px', borderRadius: '10px', background: isDetailSetting ? '#3b82f6' : '#cbd5e1', position: 'relative', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: '2px' }}>
                                     <div style={{ width: '14px', height: '14px', borderRadius: '50%', background: '#fff', position: 'absolute', left: isDetailSetting ? 'calc(100% - 16px)' : '2px', transition: 'left 0.2s' }} />
                                 </div>
