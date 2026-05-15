@@ -225,7 +225,7 @@ const Sidebar = ({
                                 if (projectInfo.onSettingsClick) projectInfo.onSettingsClick();
                             }}
                         >
-                            <div className="project-title">{projectInfo.title}</div>
+                            <div className="project-title" title={projectInfo.title}>{projectInfo.title}</div>
                             {projectInfo.subTitle && (
                                 <span className="project-id-badge">{projectInfo.subTitle}</span>
                             )}
@@ -247,7 +247,7 @@ const Sidebar = ({
                                 if (pageInfo.onSettingsClick) pageInfo.onSettingsClick();
                             }}
                         >
-                            <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }}>{pageInfo.title}</div>
+                            <div className="project-title" style={{ fontSize: "13px", fontWeight: 500 }} title={pageInfo.title}>{pageInfo.title}</div>
                             {!isHsrtCustomer && (
                                 <button className="project-settings-btn">
                                     <Settings size={16} />
