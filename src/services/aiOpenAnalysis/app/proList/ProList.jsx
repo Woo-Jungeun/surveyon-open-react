@@ -305,7 +305,7 @@ const ProList = () => {
             };
 
             const res = await editMutation.mutateAsync(payload);
-            if (res?.success === "200") {
+            if (res?.success === "777") {
                 modal.showConfirm("알림", "보기 등록이 완료되었습니다.", {
                     btns: [
                         {
@@ -313,7 +313,7 @@ const ProList = () => {
                             click: () => {
                                 // 데이터 재조회
                                 // handleSearch 함수가 props로 없으므로, ProList에서 query client invalidate 등을 하거나 직접 grid data reload 처리
-                                window.location.reload(); 
+                                window.location.reload();
                             }
                         }
                     ]
