@@ -37,7 +37,11 @@ const ProListPopup = (parentProps) => {
     }
   }, [popupShow]);
 
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
+
   const fetchData = async () => {
+    loadingSpinner.show();
+    setIsDataLoaded(false);
     try {
       const qnumVal = popupMode === "single"
         ? (popupRow?.merge_qnum || "")
@@ -66,8 +70,25 @@ const ProListPopup = (parentProps) => {
       console.error(e);
       setGridData([]);
       setSelectedState({});
+    } finally {
+      setIsDataLoaded(true);
     }
   };
+
+  useEffect(() => {
+    if (isDataLoaded) {
+      // 1. requestAnimationFrame: React state update commit 완료 후
+      // 2. 두 번째 requestAnimationFrame: 브라우저 Paint 완료 후
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            loadingSpinner.hide();
+            setIsDataLoaded(false);
+          }, 500); // 넉넉히 대기하여 그리드가 렌더링 된 후 로딩바 닫힘
+        });
+      });
+    }
+  }, [isDataLoaded, gridData]);
 
   const filteredGridData = React.useMemo(() => {
     if (!searchTerm.trim()) return gridData;

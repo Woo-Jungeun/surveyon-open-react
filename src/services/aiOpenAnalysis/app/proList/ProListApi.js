@@ -18,10 +18,16 @@ export function ProListApi() {
         async (data) => await api.post(data.params, "/pro_list_api.aspx", "EX_API_BASE_URL"),
         {
             onMutate: (vars) => {
-                loadingSpinner.show();
+                if (vars?.params?.gb === "select") {
+                    loadingSpinner.show();
+                }
             },
-            onSettled: () => {
-                loadingSpinner.hide();
+            onSettled: (data, error, vars) => {
+                if (vars?.params?.gb === "select") {
+                    setTimeout(() => {
+                        loadingSpinner.hide();
+                    }, 600); // KendoGrid 렌더링 대기 시간
+                }
             }
         }
     );
