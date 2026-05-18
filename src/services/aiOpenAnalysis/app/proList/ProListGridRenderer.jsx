@@ -95,8 +95,252 @@ const DropdownMenu = ({ label, items, isPrimary }) => {
     );
 };
 
+// 헤더 버튼(2개)
+const HeaderBtnGroup = ({ buttons, disabled }) => (
+    <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+        {buttons.map((b, i) => (
+            <Button
+                key={i}
+                className={b.className ?? 'btnS'}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!disabled && b.onClick) b.onClick(e);
+                }}
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{
+                    opacity: disabled ? 0.5 : 1,
+                    cursor: disabled ? 'not-allowed' : 'pointer',
+                    pointerEvents: disabled ? 'none' : 'auto'
+                }}
+            >
+                {b.text}
+            </Button>
+        ))}
+    </div>
+);
+
+const HeaderLabeledBtnGroup = ({ label, buttons, disabled }) => (
+    <div
+        onClick={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: '5px' }}
+    >
+        <span style={{ fontWeight: 500, fontSize: '12px' }}>{label}</span>
+        <HeaderBtnGroup buttons={buttons} disabled={disabled} />
+    </div>
+);
+
+// 컬럼에서 wrap이면 멀티라인 셀 사용 => 문항 최종 
+const WrapCellComponent = (cellProps) => {
+    const isQuestionFin = cellProps.field === 'question_fin';
+    const style = isQuestionFin ? { padding: '0 10px' } : undefined;
+    return <td className="cell-wrap" style={style}>{cellProps.dataItem?.[cellProps.field]}</td>;
+};
+
+const BlankWhenMergeCell = (cellProps) => {
+    const ctx = React.useContext(ProListGridContext);
+    const row = cellProps.dataItem;
+    return <td>{ctx.isMergeRow(row) ? '' : row?.[cellProps.field]}</td>;
+};
+
+const DefaultTextCell = (cellProps) => {
+    return <td title={cellProps.dataItem?.[cellProps.field]}>{cellProps.dataItem?.[cellProps.field]}</td>;
+};
+
+const WrapCellBreakAllComponent = (cellProps) => {
+    return <td className="cell-wrap" style={{ wordBreak: 'break-all' }}>{cellProps.dataItem?.[cellProps.field]}</td>;
+};
+
+const norm = (s) => String(s ?? "").trim();
+
+export const ProListGridContext = React.createContext(null);
+
+const UseYnCell = (cellProps) => {
+    const ctx = React.useContext(ProListGridContext);
+    const row = cellProps.dataItem;
+    const excluded = ctx.isExcluded(row);
+    const locked = ctx.isLocked(row);
+    const includeLabel = ctx.isMergeRow(row) ? '머지' : '분석';
+    const state = excluded ? 'exclude' : (includeLabel === '머지' ? 'merge' : 'analysis');
+    const label = excluded ? '제외' : includeLabel;
+    const cls = `chip chip--${state} ${locked ? 'chip--disabled' : ''}`;
+
+    return (
+        <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+            <Button className={cls} disabled={locked} onClick={() => { if (!locked) ctx.toggleExcluded(row); }}>
+                <span className="chip-check" aria-hidden>✓</span>
+                <span className="chip-label">{label}</span>
+            </Button>
+        </td>
+    );
+};
+
+const UseYnHeaderCell = () => {
+    const ctx = React.useContext(ProListGridContext);
+    return (
+        <HeaderLabeledBtnGroup
+            buttons={[
+                { text: '분석', className: 'btnS', onClick: ctx.actions.onHeaderUseYN },
+                { text: '제외', className: 'btnS btnTxt type01', onClick: ctx.actions.onHeaderExclude },
+            ]}
+            disabled={ctx.dataWithProxiesLength === 0}
+        />
+    );
+};
+
+const ExcludeCell = (cellProps) => {
+    const ctx = React.useContext(ProListGridContext);
+    const row = cellProps.dataItem;
+    const { merge_qnum } = row;
+    const excluded = ctx.isExcluded(row);
+    return (
+        <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+            {!excluded && !ctx.isMergeRow(row) && (
+                <Button className="btnM" themeColor="primary" onClick={() => { if (!ctx.blockWhenDirty()) ctx.goOpenSetting(merge_qnum, row.project_lock); }}>
+                    분석보기
+                </Button>
+            )}
+        </td>
+    );
+};
+
+const EmptyHeaderCell = () => <></>;
+
+const LockCell = (cellProps) => {
+    const ctx = React.useContext(ProListGridContext);
+    const { dataItem } = cellProps;
+    const locked = ctx.isLocked(dataItem);
+    const excluded = ctx.isExcluded(dataItem);
+    if (excluded) return <td style={{ textAlign: 'center' }}></td>;
+    return (
+        <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
+            <div className={`lock-icon-btn ${locked ? 'locked' : ''}`} onClick={() => ctx.toggleRowLock(dataItem)} title={locked ? '잠금 해제' : '잠금'}>
+                <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden="true">
+                    {locked ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                        </svg>
+                    )}
+                </span>
+            </div>
+        </td>
+    );
+};
+
+const LockHeaderCell = () => {
+    const ctx = React.useContext(ProListGridContext);
+    return (
+        <HeaderLabeledBtnGroup
+            label="수정"
+            buttons={[
+                { text: 'X', className: 'btnS btnTxt type02', onClick: () => ctx.bulkSetLock(true) },
+                { text: 'O', className: 'btnS btnType02', onClick: () => ctx.bulkSetLock(false) },
+            ]}
+            disabled={ctx.dataWithProxiesLength === 0}
+        />
+    );
+};
+
+const FilterSettingCell = (cellProps) => {
+    const ctx = React.useContext(ProListGridContext);
+    const row = cellProps.dataItem;
+    const excluded = ctx.isExcluded(row);
+    if (excluded) return <td style={{ textAlign: 'center' }}></td>;
+    return (
+        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
+            {!ctx.isMergeRow(row) && (
+                <Button className="btnM btn-setting-outline" themeColor="primary"
+                    onClick={(e) => { e.stopPropagation(); ctx.setPopupMode("single"); ctx.setPopupRow(row); ctx.setPopupShow(true); }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    style={{ padding: '0 8px', height: '26px', minWidth: '54px' }} >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                        <span>설정</span>
+                        {row.qnum_join_cnt > 0 && (
+                            <b style={{
+                                background: '#f97316', color: '#fff', fontSize: '9px', fontWeight: '600',
+                                height: '14px', minWidth: '14px', padding: '1px 4px 2px 2px', borderRadius: '7px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: '1px',
+                                lineHeight: 1, letterSpacing: '-0.5px', boxSizing: 'border-box'
+                            }}>
+                                {row.qnum_join_cnt || 0}
+                            </b>
+                        )}
+                    </div>
+                </Button>
+            )}
+        </td>
+    );
+};
+
+const FilterSettingHeaderCell = () => {
+    const ctx = React.useContext(ProListGridContext);
+    return (
+        <HeaderLabeledBtnGroup
+            label={<React.Fragment>필터문항<br />설정</React.Fragment>}
+            buttons={[{ text: '전체설정', className: 'btnS', onClick: () => { ctx.setPopupMode("all"); ctx.setPopupRow(null); ctx.setPopupShow(true); } }]}
+            disabled={ctx.dataWithProxiesLength === 0}
+        />
+    );
+};
+
+const MergeInputCell = (cellProps) => {
+    const ctx = React.useContext(ProListGridContext);
+    const row = cellProps.dataItem;
+    const original = ctx.norm(row?.merge_qnum ?? "");
+    const cur = ctx.getMergeVal(row);
+    const tdRef = React.useRef(null);
+    const locked = ctx.isLocked(row);
+    const excluded = ctx.isExcluded(row);
+    const editable = ctx.hasManagePerm;
+    const disabled = locked || excluded || !editable;
+    const baseline = ctx.mergeSavedBaseline.get(row.id) ?? original;
+
+    return (
+        <td
+            ref={tdRef}
+            className={!disabled && ctx.norm(cur) !== baseline ? 'cell-merge-diff' : ''}
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+        >
+            <textarea
+                ref={(el) => { if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; } }}
+                className="merge-input"
+                key={`${row.id}:${cur}`}
+                defaultValue={cur}
+                disabled={disabled}
+                placeholder="입력"
+                rows={1}
+                style={{
+                    resize: 'none', minHeight: '30px', height: 'auto', width: 'calc(100% - 20px)', margin: '0 auto',
+                    display: 'block', overflow: 'hidden', whiteSpace: 'pre-wrap', lineHeight: '1.5',
+                    fontSize: '12px', textAlign: 'center', boxSizing: 'border-box'
+                }}
+                onInput={(e) => {
+                    const now = ctx.norm(e.currentTarget.value);
+                    if (!tdRef.current) return;
+                    e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
+                    if (disabled) return;
+                    if (now !== baseline) tdRef.current.classList.add('cell-merge-diff');
+                    else tdRef.current.classList.remove('cell-merge-diff');
+                }}
+                onBlur={(e) => ctx.setMergeVal(row, e.currentTarget.value)}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); }
+                }}
+            />
+        </td>
+    );
+};
+
 const ProListGridRenderer = (props) => {
     const [showRegisterPopup, setShowRegisterPopup] = useState(false);
+    const [gridSkip, setGridSkip] = useState(0);
     const renderCount = useRef(0);
     renderCount.current += 1;
 
@@ -162,24 +406,23 @@ const ProListGridRenderer = (props) => {
     }, [dataState?.data, mergeEditsById, modal]);
 
     // ---------------- merge helpers ----------------
-    const norm = (s) => String(s ?? "").trim();
-    const getMergeVal = (row) =>
-        mergeEditsById.has(row?.id) ? mergeEditsById.get(row?.id) : (row?.merge_qnum ?? "");
-    const setMergeVal = (row, v) =>
-        setMergeEditsById(m => { const n = new Map(m); n.set(row?.id, v); return n; });
+    const getMergeVal = useCallback((row) =>
+        mergeEditsById.has(row?.id) ? mergeEditsById.get(row?.id) : (row?.merge_qnum ?? ""), [mergeEditsById]);
+    const setMergeVal = useCallback((row, v) =>
+        setMergeEditsById(m => { const n = new Map(m); n.set(row?.id, v); return n; }), []);
 
     // 변경 검출 기준 = 서버값 merge_qnum
-    const getMergeChanges = () => {
+    const getMergeChanges = useCallback(() => {
         const rows = dataState?.data ?? [];
         const changed = {};
         rows.forEach(r => {
-            if (isLocked(r)) return;
+            if (!!locksById.get(r.id)) return;
             const base = norm(mergeSavedBaseline.get(r.id) ?? "");
             const cur = norm(getMergeVal(r));
             if (cur !== base) changed[r.id] = cur;
         });
         return changed;
-    };
+    }, [dataState?.data, locksById, mergeSavedBaseline, getMergeVal]);
     // 현재 입력 기준 그룹 계산(화면 순서 유지)
     const dupGroups = useMemo(() => {
         const rows = dataState?.data ?? [];
@@ -202,7 +445,7 @@ const ProListGridRenderer = (props) => {
     }, [dataState?.data, mergeEditsById]);
 
     // 표출 머지 여부는 "현재 입력" 기준으로 계산
-    const isMergeRow = (row) => dupGroups.restOfGroup.has(row?.id);
+    const isMergeRow = useCallback((row) => dupGroups.restOfGroup.has(row?.id), [dupGroups.restOfGroup]);
     // 문항통합저장: "수정한 행" ∪ "그로 인해 실제 상태가 바뀐 행"만 호출
     const sendMergeAll = async () => {
         const beforeEdits = new Map(mergeEditsById);
@@ -327,7 +570,7 @@ const ProListGridRenderer = (props) => {
         }
     };
 
-    const isExcluded = (row) => !!excludedById.get(row?.id);
+    const isExcluded = useCallback((row) => !!excludedById.get(row?.id), [excludedById]);
     const setExcluded = (row, excluded) =>
         setExcludedById(m => { const n = new Map(m); n.set(row.id, excluded); return n; });
 
@@ -486,13 +729,16 @@ const ProListGridRenderer = (props) => {
 
     // ---------------- header/action helpers ----------------
     // 개별 컬럼 렌더 공통 함수
-    const actions = {
-        onHeaderUseYN: guard(PERM.WRITE, () => { if (!blockWhenDirty()) bulkSetExcluded(false); }),
-        onHeaderExclude: guard(PERM.WRITE, () => { if (!blockWhenDirty()) bulkSetExcluded(true); }),
-        onHeaderMergeSave: guard(PERM.MANAGE, () => sendMergeAll()),
-        onHeaderEditLockAll: guard(PERM.MANAGE, () => { if (!blockWhenDirty()) bulkSetLock(true); }),
-        onHeaderEditUnlockAll: guard(PERM.MANAGE, () => { if (!blockWhenDirty()) bulkSetLock(false); }),
-    };
+    const latestActionsRef = useRef({ sendMergeAll, bulkSetExcluded, bulkSetLock, blockWhenDirty, userPerm });
+    latestActionsRef.current = { sendMergeAll, bulkSetExcluded, bulkSetLock, blockWhenDirty, userPerm };
+
+    const actions = useMemo(() => ({
+        onHeaderUseYN: () => { if (hasPerm(latestActionsRef.current.userPerm, PERM.WRITE) && !latestActionsRef.current.blockWhenDirty()) latestActionsRef.current.bulkSetExcluded(false); },
+        onHeaderExclude: () => { if (hasPerm(latestActionsRef.current.userPerm, PERM.WRITE) && !latestActionsRef.current.blockWhenDirty()) latestActionsRef.current.bulkSetExcluded(true); },
+        onHeaderMergeSave: () => { if (hasPerm(latestActionsRef.current.userPerm, PERM.MANAGE)) latestActionsRef.current.sendMergeAll(); },
+        onHeaderEditLockAll: () => { if (hasPerm(latestActionsRef.current.userPerm, PERM.MANAGE) && !latestActionsRef.current.blockWhenDirty()) latestActionsRef.current.bulkSetLock(true); },
+        onHeaderEditUnlockAll: () => { if (hasPerm(latestActionsRef.current.userPerm, PERM.MANAGE) && !latestActionsRef.current.blockWhenDirty()) latestActionsRef.current.bulkSetLock(false); },
+    }), []);
 
     // 헤더 버튼(단일)
     const HeaderBtn = ({ className = 'btnS', children, onClick }) => (
@@ -503,47 +749,6 @@ const ProListGridRenderer = (props) => {
             }}>{children}</Button>
         </div>
     );
-
-    // 헤더 버튼(2개)
-    const HeaderBtnGroup = ({ buttons, disabled }) => (
-        <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-            {buttons.map((b, i) => (
-                <Button
-                    key={i}
-                    className={b.className ?? 'btnS'}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        if (!disabled && b.onClick) b.onClick(e);
-                    }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    style={{
-                        opacity: disabled ? 0.5 : 1,
-                        cursor: disabled ? 'not-allowed' : 'pointer',
-                        pointerEvents: disabled ? 'none' : 'auto'
-                    }}
-                >
-                    {b.text}
-                </Button>
-            ))}
-        </div>
-    );
-
-    const HeaderLabeledBtnGroup = ({ label, buttons, disabled }) => (
-        <div
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-            style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, marginBottom: '5px' }}
-        >
-            <span style={{ fontWeight: 500, fontSize: '12px' }}>{label}</span>
-            <HeaderBtnGroup buttons={buttons} disabled={disabled} />
-        </div>
-    );
-
-    // 컬럼에서 wrap이면 멀티라인 셀 사용 => 문항 최종 
-    const WrapCell = (field, style) => (cellProps) => (
-        <td className="cell-wrap" style={style}>{cellProps.dataItem?.[field]}</td>
-    );
-
     // 공통 메뉴 팩토리: 컬럼 메뉴에 columns & setColumns 전달
     const columnMenu = useMemo(() => {
         const handleColumnsChange = (updated) => {
@@ -562,12 +767,7 @@ const ProListGridRenderer = (props) => {
         );
     }, [columnsForPerm, filter, setColumns, setFilter, setSort]);
 
-    const renderLeafColumn = (c) => {
-        // 분석 상태가 머지일 경우 숨길 컬럼 
-        const BlankWhenMergeCell = (field) => (cellProps) => {
-            const row = cellProps.dataItem;
-            return <td>{isMergeRow(row) ? '' : row?.[field]}</td>;
-        };
+    const renderLeafColumn = useCallback((c) => {
 
         // ADMIN: 분석 (헤더에 버튼 2개 몰아넣기)
         if (c.field === 'useYN') {
@@ -580,35 +780,8 @@ const ProListGridRenderer = (props) => {
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
-                    headerCell={() => (
-                        <HeaderLabeledBtnGroup
-                            // label="관리"
-                            buttons={[
-                                { text: '분석', className: 'btnS', onClick: actions.onHeaderUseYN },
-                                { text: '제외', className: 'btnS btnTxt type01', onClick: actions.onHeaderExclude },
-                            ]}
-                            disabled={dataWithProxies.length === 0}
-                        />
-                    )}
-                    cell={(cellProps) => {
-                        const row = cellProps.dataItem;
-                        const excluded = isExcluded(row);
-                        const locked = isLocked(row);
-
-                        const includeLabel = isMergeRow(row) ? '머지' : '분석'; // 입력 기준 표출
-                        const state = excluded ? 'exclude' : (includeLabel === '머지' ? 'merge' : 'analysis');
-                        const label = excluded ? '제외' : includeLabel;
-                        const cls = `chip chip--${state} ${locked ? 'chip--disabled' : ''}`;
-
-                        return (
-                            <td style={{ textAlign: 'center' }} onMouseDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
-                                <Button className={cls} disabled={locked} onClick={() => { if (!locked) toggleExcluded(row); }}>
-                                    <span className="chip-check" aria-hidden>✓</span>
-                                    <span className="chip-label">{label}</span>
-                                </Button>
-                            </td>
-                        );
-                    }}
+                    headerCell={UseYnHeaderCell}
+                    cell={UseYnCell}
                 />
             );
         }
@@ -623,30 +796,8 @@ const ProListGridRenderer = (props) => {
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
-                    headerCell={() => <></>}
-                    cell={(cellProps) => {
-                        const row = cellProps.dataItem;
-                        const { merge_qnum } = row;
-                        const excluded = isExcluded(row);
-                        const locked = isLocked(row);
-                        return (
-                            <td style={{ textAlign: 'center' }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                onClick={(e) => e.stopPropagation()}>
-                                {!excluded && !isMergeRow(row) && ( // 머지 행이면 숨김
-                                    <Button
-                                        className="btnM"
-                                        themeColor="primary"
-                                        onClick={() => {
-                                            if (!blockWhenDirty()) goOpenSetting(merge_qnum, row.project_lock);
-                                        }}
-                                    >
-                                        분석보기
-                                    </Button>
-                                )}
-                            </td>
-                        );
-                    }}
+                    headerCell={EmptyHeaderCell}
+                    cell={ExcludeCell}
                 />
             );
         }
@@ -661,51 +812,8 @@ const ProListGridRenderer = (props) => {
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
-                    headerCell={() => (
-                        <HeaderLabeledBtnGroup
-                            label="수정"
-                            buttons={[
-                                { text: 'X', className: 'btnS btnTxt type02', onClick: () => bulkSetLock(true) },
-                                { text: 'O', className: 'btnS btnType02', onClick: () => bulkSetLock(false) },
-                            ]}
-                            disabled={dataWithProxies.length === 0}
-                        />
-                    )}
-                    cell={(cellProps) => {
-                        const { dataItem } = cellProps;
-                        const locked = isLocked(dataItem);
-                        const excluded = isExcluded(dataItem);
-                        // 제외 상태면 버튼 자체를 안보이게
-                        if (excluded) {
-                            return <td style={{ textAlign: 'center' }}></td>;
-                        }
-                        return (
-                            <td style={{ textAlign: 'center' }}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <div
-                                    className={`lock-icon-btn ${locked ? 'locked' : ''}`}
-                                    onClick={() => toggleRowLock(dataItem)}
-                                    title={locked ? '잠금 해제' : '잠금'}
-                                >
-                                    <span style={{ fontSize: 16, lineHeight: 1 }} aria-hidden="true">
-                                        {locked ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
-                                            </svg>
-                                        )}
-                                    </span>
-                                </div>
-                            </td>
-                        );
-                    }}
+                    headerCell={LockHeaderCell}
+                    cell={LockCell}
                 />
             );
         }
@@ -719,60 +827,8 @@ const ProListGridRenderer = (props) => {
                     width={c.width}
                     sortable={false}
                     columnMenu={undefined}
-                    headerCell={() => (
-                        <HeaderLabeledBtnGroup
-                            label={
-                                <React.Fragment>
-                                    필터문항<br />설정
-                                </React.Fragment>
-                            }
-                            buttons={[
-                                { text: '전체설정', className: 'btnS', onClick: () => { setPopupMode("all"); setPopupRow(null); setPopupShow(true); } }
-                            ]}
-                            disabled={dataWithProxies.length === 0}
-                        />
-                    )}
-                    cell={(cellProps) => {
-                        const row = cellProps.dataItem;
-                        const excluded = isExcluded(row);
-                        // 제외 상태면 버튼 숨김
-                        if (excluded) {
-                            return <td style={{ textAlign: 'center' }}></td>;
-                        }
-                        return (
-                            <td style={{ textAlign: "center", verticalAlign: "middle" }}>
-                                {!isMergeRow(row) && (
-                                    <Button className="btnM btn-setting-outline" themeColor="primary"
-                                        onClick={(e) => { e.stopPropagation(); setPopupMode("single"); setPopupRow(row); setPopupShow(true); }}
-                                        onMouseDown={(e) => e.stopPropagation()}
-                                        style={{ padding: '0 8px', height: '26px', minWidth: '54px' }} >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                                            <span>설정</span>
-                                            {row.qnum_join_cnt > 0 && (
-                                                <b style={{
-                                                    background: '#f97316',
-                                                    color: '#fff',
-                                                    fontSize: '9px',
-                                                    fontWeight: '600',
-                                                    height: '14px',
-                                                    minWidth: '14px',
-                                                    padding: '1px 4px 2px 2px',
-                                                    borderRadius: '7px',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    paddingTop: '1px',
-                                                    lineHeight: 1,
-                                                    letterSpacing: '-0.5px',
-                                                    boxSizing: 'border-box'
-                                                }}>
-                                                    {row.qnum_join_cnt || 0}
-                                                </b>
-                                            )}
-                                        </div>
-                                    </Button>
-                                )}
-                            </td>
-                        );
-                    }}
+                    headerCell={FilterSettingHeaderCell}
+                    cell={FilterSettingCell}
                 />
             );
         }
@@ -788,9 +844,9 @@ const ProListGridRenderer = (props) => {
                     sortable={false}               // 정렬 끔
                     filterable={false}             // 필터 끔
                     columnMenu={undefined}         // 컬럼 메뉴 끔
-                    headerCell={() => <></>}       // 헤더 콘텐츠 자체 미렌더
+                    headerCell={EmptyHeaderCell}       // 헤더 콘텐츠 자체 미렌더
                     headerClassName="no-leaf-header"
-                    cell={c.wrap ? WrapCell(c.field, c.field === 'question_fin' ? { padding: '0 10px' } : undefined) : undefined}   // wrap이면 멀티라인 셀 사용
+                    cell={c.wrap ? WrapCellComponent : undefined}   // wrap이면 멀티라인 셀 사용
                 />
             );
         }
@@ -802,7 +858,7 @@ const ProListGridRenderer = (props) => {
                     title={c.title}
                     width={c.width}
                     columnMenu={columnMenu}
-                    cell={BlankWhenMergeCell('status_text')}
+                    cell={BlankWhenMergeCell}
                 />
             );
         }
@@ -819,7 +875,7 @@ const ProListGridRenderer = (props) => {
                     // 메뉴/필터는 원본 필드 기준으로 동작하도록 교정
                     columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
                     // 셀 표시는 기존처럼: 머지 행이면 빈칸
-                    cell={BlankWhenMergeCell(c.field)}
+                    cell={BlankWhenMergeCell}
                 />
             );
         }
@@ -835,7 +891,7 @@ const ProListGridRenderer = (props) => {
                     // 메뉴/필터는 원본 필드 기준으로 동작하게 교정
                     columnMenu={(menuProps) => columnMenu({ ...menuProps, field: c.field })}
                     // 셀은 원본 값 그대로 표시
-                    cell={(p) => <td title={p.dataItem?.[c.field]}>{p.dataItem?.[c.field]}</td>}
+                    cell={DefaultTextCell}
                 />
             );
         }
@@ -850,8 +906,8 @@ const ProListGridRenderer = (props) => {
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
-                    headerCell={() => <></>}
-                    cell={c.wrap ? WrapCell(c.field, c.field === 'question_fin' ? { padding: '0 10px' } : undefined) : undefined}
+                    headerCell={EmptyHeaderCell}
+                    cell={c.wrap ? WrapCellComponent : undefined}
                 />
             );
         }
@@ -866,76 +922,8 @@ const ProListGridRenderer = (props) => {
                     sortable={false}
                     filterable={false}
                     columnMenu={undefined}
-                    headerCell={() => <></>}
-                    cell={(cellProps) => {
-                        const row = cellProps.dataItem;
-                        const original = norm(row?.merge_qnum ?? "");
-                        const cur = getMergeVal(row);     // controlled value          
-                        const tdRef = useRef(null);
-                        const locked = isLocked(row); // "수정불가"면 true
-                        const excluded = isExcluded(row);
-                        // editable prop이 false면(관리자가 아니면) disabled 처리
-                        const disabled = locked || excluded || (c.editable === false);
-                        const baseline = mergeSavedBaseline.get(row.id) ?? original;
-
-                        return (
-                            <td
-                                ref={tdRef}
-                                className={!disabled && norm(cur) !== baseline ? 'cell-merge-diff' : ''}
-                                onMouseDown={(e) => e.stopPropagation()}
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <textarea
-                                    ref={(el) => {
-                                        if (el) {
-                                            // Mount 시 높이 자동 조절
-                                            el.style.height = 'auto';
-                                            el.style.height = el.scrollHeight + 'px';
-                                        }
-                                    }}
-                                    className="merge-input"
-                                    key={`${row.id}:${cur}`}     // 재조회로 값이 바뀌면 인풋을 리마운트
-                                    defaultValue={cur}           // 타이핑 중에는 리렌더 안 일어남(포커스 유지)
-                                    disabled={disabled}
-                                    placeholder="입력"
-                                    rows={1}
-                                    style={{
-                                        resize: 'none',
-                                        minHeight: '30px',
-                                        height: 'auto',
-                                        width: 'calc(100% - 20px)',
-                                        margin: '0 auto',
-                                        display: 'block',
-                                        overflow: 'hidden',
-                                        whiteSpace: 'pre-wrap', // 줄바꿈 허용
-                                        lineHeight: '1.5',
-                                        fontSize: '12px',
-                                        textAlign: 'center',
-                                        boxSizing: 'border-box'
-                                    }}
-                                    onInput={(e) => {
-                                        const now = norm(e.currentTarget.value);
-                                        if (!tdRef.current) return;
-
-                                        // Auto-resize
-                                        e.currentTarget.style.height = 'auto';
-                                        e.currentTarget.style.height = e.currentTarget.scrollHeight + 'px';
-
-                                        if (disabled) return;
-                                        if (now !== baseline) tdRef.current.classList.add('cell-merge-diff');
-                                        else tdRef.current.classList.remove('cell-merge-diff');
-                                    }}
-                                    onBlur={(e) => setMergeVal(row, e.currentTarget.value)} // 포커스 빠질 때만 저장
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            e.preventDefault(); // 줄바꿈 방지 (엔터로 저장/블러)
-                                            e.currentTarget.blur();
-                                        }
-                                    }}
-                                />
-                            </td>
-                        );
-                    }}
+                    headerCell={EmptyHeaderCell}
+                    cell={MergeInputCell}
                 />
             );
         }
@@ -948,24 +936,130 @@ const ProListGridRenderer = (props) => {
                 width={c.width}
                 editable={c.editable}
                 columnMenu={columnMenu}
-                cell={c.wrap ? WrapCell(c.field, { wordBreak: 'break-all' }) : undefined}
+                cell={c.wrap ? WrapCellBreakAllComponent : undefined}
             />
         );
-    };
+    }, [columnMenu, proxyField]);
 
-    const visible = columnsForPerm.filter(c => c.show !== false);
+    const { visible, roots, groups } = useMemo(() => {
+        const vis = columnsForPerm.filter(c => c.show !== false);
+        const rts = vis.filter(c => !c.group);
+        const grps = ["VIEW", "ADMIN", "EDIT"]
+            .map(name => {
+                const inGroup = vis.filter(c => c.group === name);
+                const subgroups = [...new Set(inGroup.map(c => c.subgroup).filter(Boolean))];
+                return { name, inGroup, subgroups };
+            })
+            .filter(g => g.inGroup.length > 0);
+        return { visible: vis, roots: rts, groups: grps };
+    }, [columnsForPerm]);
 
-    // 상위로 묶지 않는 단일 컬럼
-    const roots = visible.filter(c => !c.group);
+    const ctxValue = useMemo(() => ({
+        isExcluded, isLocked, isMergeRow, toggleExcluded, bulkSetExcluded,
+        goOpenSetting, blockWhenDirty, bulkSetLock, toggleRowLock,
+        dataWithProxiesLength: dataWithProxies.length,
+        actions, getMergeVal, setMergeVal, mergeSavedBaseline, norm,
+        hasManagePerm: hasPerm(userPerm, PERM.MANAGE),
+        popupMode, setPopupMode, popupRow, setPopupRow, popupShow, setPopupShow
+    }), [isExcluded, isLocked, isMergeRow, toggleExcluded, bulkSetExcluded, goOpenSetting, blockWhenDirty, bulkSetLock, toggleRowLock, dataWithProxies.length, actions, getMergeVal, setMergeVal, mergeSavedBaseline, norm, userPerm, popupMode, popupShow, popupRow]);
 
-    // 1단 그룹 → 2단 subgroup → leaf
-    const groups = groupOrder
-        .map(name => {
-            const inGroup = visible.filter(c => c.group === name);
-            const subgroups = [...new Set(inGroup.map(c => c.subgroup).filter(Boolean))];
-            return { name, inGroup, subgroups };
-        })
-        .filter(g => g.inGroup.length > 0);
+    const gridColumns = useMemo(() => {
+        return [
+            ...roots.map(renderLeafColumn),
+            ...groups.map(g => {
+                const inGroup = visible.filter(c => c.group === g.name);
+                const bySub = new Map();
+
+                inGroup.forEach((c, idx) => {
+                    const key = c.subgroup || "__root__";
+                    const entry = bySub.get(key) || { cols: [], order: Number.POSITIVE_INFINITY, _idx: idx };
+                    entry.cols.push(c);
+                    const ord = Number.isFinite(c.order) ? c.order : 1e6;
+                    entry.order = Math.min(entry.order, ord);
+                    bySub.set(key, entry);
+                });
+
+                const items = [];
+
+                const root = bySub.get("__root__");
+                if (root) {
+                    root.cols.forEach((c, i) => {
+                        items.push({ type: "col", order: Number.isFinite(c.order) ? c.order : 1e6, _idx: i, col: c });
+                    });
+                    bySub.delete("__root__");
+                }
+
+                for (const [sub, entry] of bySub.entries()) {
+                    const colsSorted = entry.cols.slice().sort((a, b) =>
+                        (a.leafOrder ?? 0) - (b.leafOrder ?? 0)
+                    );
+                    items.push({ type: "sub", order: entry.order, _idx: entry._idx, sub, cols: colsSorted });
+                }
+
+                items.sort((a, b) => (a.order - b.order) || (a._idx - b._idx));
+                return (
+                    <Column
+                        key={`grp:${g.name}`}
+                        title={g.name}
+                        headerCell={() => (
+                            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
+                                {g.name}
+                                {g.name === "ADMIN" && (
+                                    <span
+                                        className="info-icon"
+                                        data-tooltip={`ADMIN|• ✓분석: 분석 할 문항만 체크\n• ✓제외: 분석 안 할 문항 체크\n• 분석보기 버튼: 각 문항별 카테고리 자동분류 페이지로 이동`}
+                                    ></span>
+                                )}
+                                {g.name === "EDIT" && (
+                                    <span
+                                        className="info-icon"
+                                        data-tooltip={`EDIT|• 문항통합저장 버튼: 여러 문항을 하나로 통합해 분석\n• 🔓 수정 가능: 분석 전 수정 가능\n• 🔒 수정 불가: 분석 완료 후 수정 불가`}
+                                    ></span>
+                                )}
+                            </div>
+                        )}
+                    >
+                        {items.map(it =>
+                            it.type === "col"
+                                ? renderLeafColumn(it.col)
+                                : (
+                                    <Column
+                                        key={`sub:${g.name}:${it.sub}`}
+                                        title={it.sub === "문항최종" ? "문항최종" : ""}
+                                        headerClassName={[
+                                            (it.sub === "문항최종" || it.sub === "문항통합저장")
+                                                ? "sub-no-bottom-border"
+                                                : "",
+                                        ].filter(Boolean).join(" ")}
+                                        headerCell={
+                                            it.sub === "문항통합저장"
+                                                ? () => (
+                                                    <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", justifyContent: "center" }}>
+                                                        <Button
+                                                            className="btnS btnType04"
+                                                            onClick={dataWithProxies.length === 0 ? undefined : actions.onHeaderMergeSave}
+                                                            style={{
+                                                                opacity: dataWithProxies.length === 0 ? 0.5 : 1,
+                                                                cursor: dataWithProxies.length === 0 ? 'not-allowed' : 'pointer',
+                                                                pointerEvents: dataWithProxies.length === 0 ? 'none' : 'auto'
+                                                            }}
+                                                        >
+                                                            문항통합저장
+                                                        </Button>
+                                                    </div>
+                                                )
+                                                : undefined
+                                        }
+                                    >
+                                        {it.cols.map(renderLeafColumn)}
+                                    </Column>
+                                )
+                        )}
+                    </Column>
+                );
+            })
+        ];
+    }, [roots, groups, visible, dataWithProxies.length, actions.onHeaderMergeSave, renderLeafColumn]);
 
     return (
         <div className="pro-list-page">
@@ -1008,6 +1102,7 @@ const ProListGridRenderer = (props) => {
                 <div className="pro-list-card">
                     <div className="cmn_gird_wrap">
                         <div id="grid_01" className="cmn_grid multihead">
+                            <ProListGridContext.Provider value={ctxValue}>
                             <KendoGrid
                                 parentProps={{
                                     height: "100%",
@@ -1025,109 +1120,25 @@ const ProListGridRenderer = (props) => {
                                             return { ...d, field: orig || d.field };
                                         });
                                         setSort(nextRaw ?? []);
+                                        setGridSkip(0);
                                     },
-                                    filterChange: ({ filter }) => { setFilter(filter ?? null); },
+                                    filterChange: ({ filter }) => { 
+                                        setFilter(filter ?? null); 
+                                        setGridSkip(0);
+                                    },
                                     sort: mappedSort,
                                     filter: filter,
                                     columnVirtualization: false,
+                                    scrollable: "virtual",
+                                    rowHeight: 45,
+                                    pageSize: 50,
+                                    skip: gridSkip,
+                                    onPageChange: (e) => setGridSkip(e.page.skip),
                                 }}
                             >
-                                {roots.map(renderLeafColumn)}
-
-                                {groups.map(g => {
-                                    const inGroup = visible.filter(c => c.group === g.name);
-                                    const bySub = new Map();
-
-                                    inGroup.forEach((c, idx) => {
-                                        const key = c.subgroup || "__root__";
-                                        const entry = bySub.get(key) || { cols: [], order: Number.POSITIVE_INFINITY, _idx: idx };
-                                        entry.cols.push(c);
-                                        const ord = Number.isFinite(c.order) ? c.order : 1e6;
-                                        entry.order = Math.min(entry.order, ord);
-                                        bySub.set(key, entry);
-                                    });
-
-                                    const items = [];
-
-                                    const root = bySub.get("__root__");
-                                    if (root) {
-                                        root.cols.forEach((c, i) => {
-                                            items.push({ type: "col", order: Number.isFinite(c.order) ? c.order : 1e6, _idx: i, col: c });
-                                        });
-                                        bySub.delete("__root__");
-                                    }
-
-                                    for (const [sub, entry] of bySub.entries()) {
-                                        const colsSorted = entry.cols.slice().sort((a, b) =>
-                                            (a.leafOrder ?? 0) - (b.leafOrder ?? 0)
-                                        );
-                                        items.push({ type: "sub", order: entry.order, _idx: entry._idx, sub, cols: colsSorted });
-                                    }
-
-                                    items.sort((a, b) => (a.order - b.order) || (a._idx - b._idx));
-                                    return (
-                                        <Column
-                                            key={`grp:${g.name}`}
-                                            title={g.name}
-                                            headerCell={() => (
-                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "4px" }}>
-                                                    {g.name}
-                                                    {g.name === "ADMIN" && (
-                                                        <span
-                                                            className="info-icon"
-                                                            data-tooltip={`ADMIN|• ✓분석: 분석 할 문항만 체크\n• ✓제외: 분석 안 할 문항 체크\n• 분석보기 버튼: 각 문항별 카테고리 자동분류 페이지로 이동`}
-                                                        ></span>
-                                                    )}
-                                                    {g.name === "EDIT" && (
-                                                        <span
-                                                            className="info-icon"
-                                                            data-tooltip={`EDIT|• 문항통합저장 버튼: 여러 문항을 하나로 통합해 분석\n• 🔓 수정 가능: 분석 전 수정 가능\n• 🔒 수정 불가: 분석 완료 후 수정 불가`}
-                                                        ></span>
-                                                    )}
-                                                </div>
-                                            )}
-                                        >
-                                            {items.map(it =>
-                                                it.type === "col"
-                                                    ? renderLeafColumn(it.col)
-                                                    : (
-                                                        <Column
-                                                            key={`sub:${g.name}:${it.sub}`}
-                                                            title={it.sub === "문항최종" ? "문항최종" : ""}
-                                                            headerClassName={[
-                                                                (it.sub === "문항최종" || it.sub === "문항통합저장")
-                                                                    ? "sub-no-bottom-border"
-                                                                    : "",
-                                                            ].filter(Boolean).join(" ")}
-                                                            headerCell={
-                                                                it.sub === "문항통합저장"
-                                                                    ? () => (
-                                                                        <div onClick={(e) => e.stopPropagation()} style={{ display: "flex", justifyContent: "center" }}>
-                                                                            <Button
-                                                                                className="btnS btnType04"
-                                                                                onClick={dataWithProxies.length === 0 ? undefined : actions.onHeaderMergeSave}
-                                                                                style={{
-                                                                                    opacity: dataWithProxies.length === 0 ? 0.5 : 1,
-                                                                                    cursor: dataWithProxies.length === 0 ? 'not-allowed' : 'pointer',
-                                                                                    pointerEvents: dataWithProxies.length === 0 ? 'none' : 'auto'
-                                                                                }}
-                                                                            >
-                                                                                문항통합저장
-                                                                            </Button>
-                                                                        </div>
-                                                                    )
-                                                                    : undefined
-                                                            }
-                                                        >
-                                                            {it.cols.map(renderLeafColumn)}
-                                                        </Column>
-                                                    )
-                                            )}
-                                        </Column>
-                                    );
-                                })}
-
+                                {gridColumns}
                             </KendoGrid>
+                            </ProListGridContext.Provider>
                         </div>
                     </div>
                 </div>
