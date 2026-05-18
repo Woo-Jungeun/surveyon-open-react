@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, BarChartHorizontal, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Check, LayoutList } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, BarChartHorizontal, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Check, LayoutList, Loader2 } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
@@ -373,13 +373,17 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
-const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings }) => {
+const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewTables, userId }) => {
     const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(false);
     const [isGridOpen, setIsGridOpen] = useState(true);
     const [isChartOpen, setIsChartOpen] = useState(false);
     const [chartMode, setChartMode] = useState('column');
     const [paletteId, setPaletteId] = useState('default');
     const [selectedChartGroups, setSelectedChartGroups] = useState([]);
+
+    const [aiSummaryData, setAiSummaryData] = useState("");
+    const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
+    const { getAiSummary } = DpRequestPageApi();
 
     const [showDownloadMenu, setShowDownloadMenu] = useState(false);
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
@@ -406,6 +410,55 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const aiSummaryFetchingRef = useRef(false);
+
+    useEffect(() => {
+        if (!isAiSummaryOpen || !projectNum || !banner?.id || overviewTables.length === 0) return;
+        if (aiSummaryData || aiSummaryFetchingRef.current) return; // 이미 데이터가 있거나 로딩중이면 중지 (무한루프 방지)
+
+        const fetchAiSummaryData = async () => {
+            const pageId = sessionStorage.getItem('pageId');
+            if (!pageId || !userId) return;
+
+            try {
+                aiSummaryFetchingRef.current = true;
+                setIsAiSummaryLoading(true);
+                const reqData = {
+                    project_num: projectNum,
+                    user: userId,
+                    page_id: pageId,
+                    table_id: banner.id,
+                    model: "llm-gpt-oss-120b",
+                    temperature: 0.2,
+                    result_json: {
+                        success: "777",
+                        message: "OK",
+                        resultjson: {
+                            tables: overviewTables
+                        }
+                    }
+                };
+
+                const res = await getAiSummary.mutateAsync(reqData);
+
+                if (res && res.resultjson && res.resultjson[banner.id] && res.resultjson[banner.id].length > 0) {
+                    setAiSummaryData(res.resultjson[banner.id][0].result_data);
+                } else {
+                    setAiSummaryData("요약 데이터를 불러오지 못했습니다.");
+                }
+            } catch (error) {
+                console.error("AI Summary Error:", error);
+                setAiSummaryData("요약 데이터를 불러오는 중 오류가 발생했습니다.");
+            } finally {
+                setIsAiSummaryLoading(false);
+                aiSummaryFetchingRef.current = false;
+            }
+        };
+
+        fetchAiSummaryData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isAiSummaryOpen, banner?.id, projectNum, overviewTables, userId]);
 
     const getChartTypeName = (mode) => {
         const typeMap = {
@@ -701,15 +754,28 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     )}
                 </div>
 
-                {/* 2. AI Summary (Moved down) */}
+                {/* 2. AI Summary */}
                 <div style={{ background: '#fff', borderRadius: '10px', border: '1px solid #e2e8f0', padding: isAiSummaryOpen ? '12px' : '8px 12px', boxShadow: '0 1px 2px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
                     <div onClick={() => setIsAiSummaryOpen(!isAiSummaryOpen)} style={{ cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: '#1e3a8a', marginBottom: isAiSummaryOpen ? '8px' : 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Sparkles size={16} /> AI 데이터 요약</div>
                         {isAiSummaryOpen ? <ChevronUp size={16} color="#64748b" /> : <ChevronDown size={16} color="#64748b" />}
                     </div>
                     {isAiSummaryOpen && (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b' }}>
-                            <span style={{ fontSize: '13px' }}>AI 분석 요약 결과 표출 영역</span>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', minHeight: '60px', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#334155', padding: '16px' }}>
+                            {isAiSummaryLoading ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', width: '100%', justifyContent: 'center' }}>
+                                    <Loader2 className="animate-spin" size={16} />
+                                    AI 분석 결과를 가져오는 중입니다...
+                                </div>
+                            ) : aiSummaryData ? (
+                                <div style={{ fontSize: '13px', lineHeight: '1.6', whiteSpace: 'pre-wrap', wordBreak: 'keep-all' }}>
+                                    {aiSummaryData}
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', color: '#64748b' }}>
+                                    <span style={{ fontSize: '13px' }}>AI 분석 요약 결과를 가져올 수 없습니다.</span>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -938,7 +1004,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
 const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewXlsx, createSnapshot } = DpRequestPageApi();
+    const { getOverviewContext, getOverview, savePageSettings, exportOverviewHtml, exportOverviewXlsx, createSnapshot, getAiSummary } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -960,6 +1026,12 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [hideZeroBaseColumns, setHideZeroBaseColumns] = useState(false);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
     const [uiSettings, setUiSettings] = useState({});
+
+    // AI 데이터 요약 상태
+    const [projectNum, setProjectNum] = useState("");
+    const [overviewTables, setOverviewTables] = useState([]);
+    const [aiSummaryData, setAiSummaryData] = useState("");
+    const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
     const [localDecimalN, setLocalDecimalN] = useState(0);
     const [localDecimalPct, setLocalDecimalPct] = useState(1);
@@ -1228,6 +1300,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             let fetchedUi = uiSettings;
 
             if (ctxPayload) {
+                setProjectNum(ctxPayload.pn || "");
                 fetchedUi = ctxPayload.ui_settings || {};
                 setUiSettings(fetchedUi);
                 setShowN(fetchedUi.format_show_n ?? true);
@@ -1326,6 +1399,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             const payload = overviewRes?.resultjson || overviewRes || {};
             const tablesList = payload.tables || [];
             const resultsList = payload.results || [];
+            
+            setOverviewTables(tablesList);
 
             if (tablesList.length > 0 || (overviewRes?.success === '777')) {
                 const formatted = tablesList.map((t, i) => {
@@ -2105,6 +2180,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 decimalN={decimalN}
                                 decimalPct={decimalPct}
                                 uiSettings={uiSettings}
+                                projectNum={projectNum}
+                                overviewTables={overviewTables}
+                                userId={auth?.user?.userId}
                             />
                         ))}
                     </div>
