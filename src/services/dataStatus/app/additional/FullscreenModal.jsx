@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { saveAs } from '@progress/kendo-file-saver';
-import { X, BarChart2, BarChartHorizontal, Layers, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud, ChevronDown, ChevronUp } from 'lucide-react';
+import { X, BarChart2, BarChartHorizontal, Layers, Percent, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud, ChevronDown, ChevronUp, LayoutList, Check } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
@@ -24,6 +24,9 @@ const FullscreenModal = ({
     displayPolicy
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
+    const [showLegend, setShowLegend] = useState(false);
+    const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+    const [selectedChartGroups, setSelectedChartGroups] = useState([]);
     const [localDisplayMode, setLocalDisplayMode] = useState(displayMode);
     const [localPaletteId, setLocalPaletteId] = useState(paletteId || 'default');
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
@@ -33,6 +36,7 @@ const FullscreenModal = ({
     const downloadMenuRef = useRef(null);
     const paletteMenuRef = useRef(null);
     const displayMenuRef = useRef(null);
+    const filterMenuRef = useRef(null);
 
     // [Standard Logic] Recompute chart variables based on resultData and localChartMode
     const { localComputedChartData, localComputedSeriesNames, localComputedSuffix } = useMemo(() => {
@@ -65,7 +69,7 @@ const FullscreenModal = ({
                 }
             });
             return dataPoint;
-        });
+        }).filter(d => !['전체', '합계', 'total', 'Total'].includes(d.name));
 
         const computedSeriesNames = resultData.rows
             .filter(row => !(row.label && ['합계', '전체', 'total', 'Total'].includes(row.label)))
@@ -78,10 +82,42 @@ const FullscreenModal = ({
         };
     }, [resultData, localChartMode]);
 
-    const [prevProps, setPrevProps] = useState({ isOpen, chartMode, displayMode, paletteId });
+    const availableChartGroups = useMemo(() => {
+        if (!localComputedChartData) return [];
+        const groups = new Set();
+        localComputedChartData.forEach(d => {
+            const parts = d.name.split('\n');
+            // FullscreenModal currently constructs parts as label3, label2, label. So group is parts[0] or parts[parts.length - 1] depending on logic.
+            // Let's use the first part as it matches the label3 if it exists.
+            const groupName = parts[0];
+            groups.add(groupName);
+        });
+        return Array.from(groups);
+    }, [localComputedChartData]);
 
-    if (isOpen !== prevProps.isOpen || chartMode !== prevProps.chartMode || displayMode !== prevProps.displayMode || paletteId !== prevProps.paletteId) {
-        setPrevProps({ isOpen, chartMode, displayMode, paletteId });
+    const prevAvailableGroupsStr = useRef("");
+
+    useEffect(() => {
+        const currentGroupsStr = availableChartGroups.join(",");
+        if (availableChartGroups.length > 0 && prevAvailableGroupsStr.current !== currentGroupsStr) {
+            setSelectedChartGroups(availableChartGroups);
+            prevAvailableGroupsStr.current = currentGroupsStr;
+        }
+    }, [availableChartGroups]);
+
+    const finalChartData = useMemo(() => {
+        if (!localComputedChartData) return [];
+        return localComputedChartData.filter(d => {
+            const parts = d.name.split('\n');
+            const groupName = parts[0];
+            return selectedChartGroups.includes(groupName);
+        });
+    }, [localComputedChartData, selectedChartGroups]);
+
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
+
+    if (isOpen !== prevIsOpen) {
+        setPrevIsOpen(isOpen);
         if (isOpen) {
             setLocalChartMode(chartMode);
             setLocalDisplayMode(displayMode);
@@ -100,6 +136,9 @@ const FullscreenModal = ({
             }
             if (displayMenuRef.current && !displayMenuRef.current.contains(event.target)) {
                 setIsDisplayMenuOpen(false);
+            }
+            if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
+                setIsFilterMenuOpen(false);
             }
         };
 
@@ -465,8 +504,133 @@ const FullscreenModal = ({
                                     )}
                                 </div>
                                 <div className="toolbar-divider"></div>
-                                <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="막대형"><BarChart2 size={18} /></button>
-                                <button className={`view-option-btn ${localChartMode === 'stackedColumn' || localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적 막대형"><Layers size={18} /></button>
+                                
+                                <button
+                                    onClick={() => setShowLegend(!showLegend)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '6px',
+                                        padding: '4px 8px', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                        background: showLegend ? '#eff6ff' : '#fff',
+                                        color: showLegend ? '#2563eb' : '#64748b',
+                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%'
+                                    }}
+                                    title="범례 보기/숨기기"
+                                >
+                                    <LayoutList size={14} style={{ flexShrink: 0 }} />
+                                    <span style={{ whiteSpace: 'nowrap' }}>범례</span>
+                                </button>
+
+                                <div className="toolbar-divider"></div>
+                                
+                                {availableChartGroups.length > 0 && (
+                                    <div style={{ position: 'relative' }} ref={filterMenuRef}>
+                                        <button
+                                            onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '6px',
+                                                padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                                background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
+                                                color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
+                                                fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '100%',
+                                                maxWidth: '180px'
+                                            }}
+                                        >
+                                            <Filter size={14} style={{ flexShrink: 0 }} />
+                                            <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
+                                                {selectedChartGroups.length === availableChartGroups.length ? (
+                                                    <span style={{ whiteSpace: 'nowrap' }}>그룹 필터 (전체)</span>
+                                                ) : selectedChartGroups.length === 0 ? (
+                                                    <span style={{ whiteSpace: 'nowrap' }}>선택 없음</span>
+                                                ) : selectedChartGroups.length === 1 ? (
+                                                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {selectedChartGroups[0]}
+                                                    </span>
+                                                ) : (
+                                                    <>
+                                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1 }}>
+                                                            {selectedChartGroups[0]}
+                                                        </span>
+                                                        <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                                            &nbsp;외 {selectedChartGroups.length - 1}개
+                                                        </span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </button>
+
+                                        {isFilterMenuOpen && (
+                                            <div style={{
+                                                position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                                                background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', zIndex: 1000,
+                                                minWidth: '200px', padding: '8px',
+                                                display: 'flex', flexDirection: 'column', gap: '4px'
+                                            }}>
+                                                <div style={{ padding: '4px 8px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>그룹 필터</span>
+                                                    <button
+                                                        onClick={() => setSelectedChartGroups(availableChartGroups)}
+                                                        style={{ fontSize: '12px', color: '#64748b', background: '#f1f5f9', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                                    >
+                                                        초기화
+                                                    </button>
+                                                </div>
+                                                <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                    <div
+                                                        onClick={() => {
+                                                            if (selectedChartGroups.length === availableChartGroups.length) {
+                                                                setSelectedChartGroups([]);
+                                                            } else {
+                                                                setSelectedChartGroups(availableChartGroups);
+                                                            }
+                                                        }}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0f172a', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}
+                                                    >
+                                                        <div style={{
+                                                            width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`,
+                                                            borderRadius: '3px',
+                                                            background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff'
+                                                        }}>
+                                                            {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
+                                                        </div>
+                                                        <span>전체 선택</span>
+                                                    </div>
+                                                    {availableChartGroups.map(group => {
+                                                        const isChecked = selectedChartGroups.includes(group);
+                                                        return (
+                                                            <div
+                                                                key={group}
+                                                                onClick={() => {
+                                                                    setSelectedChartGroups(prev =>
+                                                                        prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]
+                                                                    );
+                                                                }}
+                                                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', color: '#334155', borderRadius: '4px', background: isChecked ? '#f8fafc' : 'transparent', ':hover': { background: '#f8fafc' } }}
+                                                            >
+                                                                <div style={{
+                                                                    width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                    border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`,
+                                                                    borderRadius: '3px',
+                                                                    background: isChecked ? '#2563eb' : '#fff'
+                                                                }}>
+                                                                    {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
+                                                                </div>
+                                                                <span style={{ wordBreak: 'keep-all', lineHeight: 1.2 }}>{group}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="toolbar-divider"></div>
+                                <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'bar' ? 'active' : ''}`} onClick={() => setLocalChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적 막대형"><Layers size={18} /></button>
+                                <button className={`view-option-btn ${localChartMode === 'stacked100Column' ? 'active' : ''}`} onClick={() => setLocalChartMode('stacked100Column')} title="100% 누적 막대형"><Percent size={18} /></button>
                                 <button className={`view-option-btn ${localChartMode === 'line' ? 'active' : ''}`} onClick={() => setLocalChartMode('line')} title="선형"><LineChart size={18} /></button>
                                 <button className={`view-option-btn ${localChartMode === 'pie' ? 'active' : ''}`} onClick={() => setLocalChartMode('pie')} title="원형"><PieChart size={18} /></button>
                                 <button className={`view-option-btn ${localChartMode === 'donut' ? 'active' : ''}`} onClick={() => setLocalChartMode('donut')} title="도넛형"><Donut size={18} /></button>
@@ -548,237 +712,228 @@ const FullscreenModal = ({
               `}</style>
 
                             <table className="cross-table fullscreen-table" style={{ width: "max-content", tableLayout: "fixed", margin: 0 }}>
-                                                <thead>
-                                                    {(() => {
-                                                        const headerRows = [];
-                                                        const totalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + (headerGroups.showRow3 ? 1 : 0) + 1;
+                                <thead>
+                                    {(() => {
+                                        const headerRows = [];
+                                        const totalRows = (hasVarLabel ? 1 : 0) + (headerGroups.showRow2 ? 1 : 0) + (headerGroups.showRow3 ? 1 : 0) + 1;
 
-                                                        if (hasVarLabel) {
-                                                            headerRows.push(
-                                                                <tr key="var-label-row">
-                                                                    <th
-                                                                        rowSpan={totalRows}
-                                                                        colSpan={hasRowLabel2 ? 2 : 1}
-                                                                        className="sticky-col sticky-l0"
-                                                                        style={{
-                                                                            background: uiSettings?.theme_primary || '#f8fafc',
-                                                                            
-                                                                            
-                                                                            fontWeight: '700',
-                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                            fontSize: '11px',
-                                                                            textAlign: 'center',
-                                                                            verticalAlign: 'middle'
-                                                                        }}
-                                                                    >
-                                                                        문항
-                                                                    </th>
-                                                                    {headerGroups.row1.map((group, i) => (
-                                                                        <th key={i}
-                                                                            colSpan={group.count}
-                                                                            rowSpan={group.rowSpan}
-                                                                            style={{
-                                                                                background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                                fontSize: '11px',
-                                                                                textAlign: 'center',
-                                                                                padding: '4px 12px',
-                                                                                
-                                                                                borderLeft: i > 0 ? gridBorder : 'none',
-                                                                                whiteSpace: 'normal',
-                                                                                wordBreak: 'break-all',
-                                                                                verticalAlign: 'middle'
-                                                                            }}
-                                                                        >
-                                                                            {group.label}
-                                                                        </th>
-                                                                    ))}
-                                                                </tr>
-                                                            );
-                                                        }
+                                        if (hasVarLabel) {
+                                            headerRows.push(
+                                                <tr key="var-label-row">
+                                                    <th
+                                                        rowSpan={totalRows}
+                                                        colSpan={hasRowLabel2 ? 2 : 1}
+                                                        className="sticky-col sticky-l0"
+                                                        style={{
+                                                            background: uiSettings?.theme_primary || '#f8fafc',
+                                                            fontWeight: '700',
+                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                            fontSize: '11px',
+                                                            textAlign: 'center',
+                                                            verticalAlign: 'middle'
+                                                        }}
+                                                    >
+                                                        문항
+                                                    </th>
+                                                    {headerGroups.row1.map((group, i) => (
+                                                        <th key={i}
+                                                            colSpan={group.count}
+                                                            rowSpan={group.rowSpan}
+                                                            style={{
+                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                fontSize: '11px',
+                                                                textAlign: 'center',
+                                                                padding: '4px 12px',
+                                                                borderLeft: i > 0 ? gridBorder : 'none',
+                                                                whiteSpace: 'normal',
+                                                                wordBreak: 'break-all',
+                                                                verticalAlign: 'middle'
+                                                            }}
+                                                        >
+                                                            {group.label}
+                                                        </th>
+                                                    ))}
+                                                </tr>
+                                            );
+                                        }
 
-                                                        if (headerGroups.showRow3) {
-                                                            headerRows.push(
-                                                                <tr key="col-label3-row">
-                                                                    {!hasVarLabel && (
-                                                                        <th
-                                                                            rowSpan={totalRows}
-                                                                            colSpan={hasRowLabel2 ? 2 : 1}
-                                                                            className="sticky-col sticky-l0"
-                                                                            style={{
-                                                                                background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                
-                                                                                
-                                                                                fontWeight: '700',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                                fontSize: '11px',
-                                                                                textAlign: 'center',
-                                                                                verticalAlign: 'middle'
-                                                                            }}
-                                                                        >
-                                                                            문항
-                                                                        </th>
-                                                                    )}
-                                                                    {headerGroups.row3.map((group, i) => {
-                                                                        const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
-                                                                        if (isSpanned) return null;
-
-                                                                        return (
-                                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
-                                                                                {group.label}
-                                                                            </th>
-                                                                        );
-                                                                    })}
-                                                                </tr>
-                                                            );
-                                                        }
-
-                                                        if (headerGroups.showRow2) {
-                                                            headerRows.push(
-                                                                <tr key="col-label2-row">
-                                                                    {(!hasVarLabel && !headerGroups.showRow3) && (
-                                                                        <th
-                                                                            rowSpan={totalRows}
-                                                                            colSpan={hasRowLabel2 ? 2 : 1}
-                                                                            className="sticky-col sticky-l0"
-                                                                            style={{
-                                                                                background: uiSettings?.theme_primary || '#f8fafc',
-                                                                                
-                                                                                
-                                                                                fontWeight: '700',
-                                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                                fontSize: '11px',
-                                                                                textAlign: 'center',
-                                                                                verticalAlign: 'middle'
-                                                                            }}
-                                                                        >
-                                                                            문항
-                                                                        </th>
-                                                                    )}
-                                                                    {headerGroups.row2.map((group, i) => {
-                                                                        // Check if spanning from row1 (rowSpan >= 3) OR row3 (rowSpan >= 2)
-                                                                        const coveredByRow1 = headerGroups.row1.some(g1 => g1.rowSpan >= 3 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
-                                                                        const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
-                                                                        if (coveredByRow1 || coveredByRow3) return null;
-
-                                                                        return (
-                                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
-                                                                                {group.label}
-                                                                            </th>
-                                                                        );
-                                                                    })}
-                                                                </tr>
-                                                            );
-                                                        }
-
-                                                        // 마지막 라벨 행
-                                                        headerRows.push(
-                                                            <tr key="label-row">
-                                                                {(!hasVarLabel && !headerGroups.showRow2 && !headerGroups.showRow3) && (
-                                                                    <th
-                                                                        rowSpan={totalRows}
-                                                                        colSpan={hasRowLabel2 ? 2 : 1}
-                                                                        className="sticky-col sticky-l0"
-                                                                        style={{
-                                                                            background: uiSettings?.theme_primary || '#f8fafc',
-                                                                            
-                                                                            
-                                                                            fontWeight: '700',
-                                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                            fontSize: '11px',
-                                                                            textAlign: 'center',
-                                                                            verticalAlign: 'middle'
-                                                                        }}
-                                                                    >
-                                                                        문항
-                                                                    </th>
-                                                                )}
-                                                                {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600', borderLeft: i > 0 ? gridBorder : 'none' }}>
-                                                                        {col?.label ?? col}
-                                                                    </th>
-                                                                ))}
-                                                            </tr>
-                                                        );
-
-                                                        return headerRows;
-                                                    })()}
-                                                </thead>
-                                                <tbody>
-                                                    {resultData.rows.map((row, i) => {
-                                                        const isSingleVal = row.type === 'stat' || row.stat_type;
-                                                        const isHideAll = row.hide === 'all' || row.hide === 'all ';
-                                                        const isHideN = row.hide === 'n' || isHideAll || effectivePolicy?.show_n === false;
-                                                        const isHideP = row.hide === 'p' || isHideAll || effectivePolicy?.show_percent === false;
-                                                        const labelColor = row.color || 'inherit';
-
-                                                        let rN = effectivePolicy?.n_digits ?? 0;
-                                                        let rP = effectivePolicy?.percent_digits ?? 1;
-                                                        if (row.round !== undefined && row.round !== null && row.round !== '') {
-                                                            rN = Number(row.round);
-                                                            rP = Number(row.round);
-                                                        }
-
-                                                        const formatN = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rN, maximumFractionDigits: rN });
-                                                        const formatP = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rP, maximumFractionDigits: rP });
-
-                                                        const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base" || String(row.label ?? "").toLowerCase() === "base" || row.is_base;
-                                                        const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? row.stat_type ?? "").toLowerCase().includes(role));
-                                                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
+                                        if (headerGroups.showRow3) {
+                                            headerRows.push(
+                                                <tr key="col-label3-row">
+                                                    {!hasVarLabel && (
+                                                        <th
+                                                            rowSpan={totalRows}
+                                                            colSpan={hasRowLabel2 ? 2 : 1}
+                                                            className="sticky-col sticky-l0"
+                                                            style={{
+                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                fontWeight: '700',
+                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                fontSize: '11px',
+                                                                textAlign: 'center',
+                                                                verticalAlign: 'middle'
+                                                            }}
+                                                        >
+                                                            문항
+                                                        </th>
+                                                    )}
+                                                    {headerGroups.row3.map((group, i) => {
+                                                        const isSpanned = headerGroups.row1.some(g1 => g1.rowSpan >= 2 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                        if (isSpanned) return null;
 
                                                         return (
-                                                        <tr key={i}>
-                                                            {hasRowLabel2 && (
-                                                                <td
-                                                                    className="label-cell row-group-label sticky-col sticky-l0"
-                                                                    style={{
-                                                                        display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
-                                                                        verticalAlign: 'middle',
-                                                                        background: uiSettings?.theme_primary || '#f8fafc',
-                                                                        color: uiSettings?.theme_primary_fg || '#1e3a8a',
-                                                                        fontSize: '11px',
-                                                                        fontWeight: '700',
-                                                                        textAlign: 'center',
-                                                                        borderTop: topBorderAttr,
-                                                                        whiteSpace: 'normal',
-                                                                        wordBreak: 'break-all'
-                                                                    }}
-                                                                    rowSpan={resultData.rows.filter(r => (r.label2 || r.var_label) === (row.label2 || row.var_label)).length}
-                                                                >
-                                                                    {row.label2 || row.var_label}
-                                                                </td>
-                                                            )}
-                                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px', color: labelColor, borderTop: topBorderAttr }}>{row.label}</td>
-                                                            {row.values.map((v, j) => (
-                                                                <td
-                                                                    key={j}
-                                                                    className={`${v.sig_vs_total === 'up' ? 'sig-highlight-up' : v.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
-                                                                    style={{ textAlign: 'right', position: 'relative', borderLeft: j > 0 ? gridBorder : 'none', borderTop: topBorderAttr }}
-                                                                >
-                                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%', color: labelColor }}>
-                                                                        {isHideAll ? null : isSingleVal ? (
-                                                                            <span className="cell-value-single" style={{ fontWeight: '600' }}>
-                                                                                {row.prefix || ''}{formatN(v.count)}{row.postfix || ''}
-                                                                            </span>
-                                                                        ) : displayMode === 'all' ? (
-                                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                                                                                {!isHideN && <span className="cell-value">{formatN(v.count)}</span>}
-                                                                                {!isHideP && <span className="cell-pct">{row.prefix || ''}{formatP(v.percent)}%{row.postfix || ''}</span>}
-                                                                            </div>
-                                                                        ) : (
-                                                                            <span className="cell-value-single">
-                                                                                {displayMode === 'value' && !isHideN ? formatN(v.count) : null}
-                                                                                {displayMode === 'percent' && !isHideP ? `${row.prefix || ''}${formatP(v.percent)}%${row.postfix || ''}` : null}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                            ))}
-                                                        </tr>
+                                                            <th key={i} colSpan={group.count} rowSpan={group.rowSpan} style={{ background: uiSettings?.theme_primary || '#f0f9ff',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                {group.label}
+                                                            </th>
                                                         );
                                                     })}
-                                                </tbody>
-                                            </table>
+                                                </tr>
+                                            );
+                                        }
+
+                                        if (headerGroups.showRow2) {
+                                            headerRows.push(
+                                                <tr key="col-label2-row">
+                                                    {(!hasVarLabel && !headerGroups.showRow3) && (
+                                                        <th
+                                                            rowSpan={totalRows}
+                                                            colSpan={hasRowLabel2 ? 2 : 1}
+                                                            className="sticky-col sticky-l0"
+                                                            style={{
+                                                                background: uiSettings?.theme_primary || '#f8fafc',
+                                                                fontWeight: '700',
+                                                                color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                                fontSize: '11px',
+                                                                textAlign: 'center',
+                                                                verticalAlign: 'middle'
+                                                            }}
+                                                        >
+                                                            문항
+                                                        </th>
+                                                    )}
+                                                    {headerGroups.row2.map((group, i) => {
+                                                        // Check if spanning from row1 (rowSpan >= 3) OR row3 (rowSpan >= 2)
+                                                        const coveredByRow1 = headerGroups.row1.some(g1 => g1.rowSpan >= 3 && g1.startIndex <= group.startIndex && (g1.startIndex + g1.count) >= (group.startIndex + group.count));
+                                                        const coveredByRow3 = headerGroups.row3.some(g3 => g3.rowSpan >= 2 && g3.startIndex <= group.startIndex && (g3.startIndex + g3.count) >= (group.startIndex + group.count));
+                                                        if (coveredByRow1 || coveredByRow3) return null;
+
+                                                        return (
+                                                            <th key={i} colSpan={group.count} style={{ background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#1e3a8a', fontWeight: '700', fontSize: '11px', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                {group.label}
+                                                            </th>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            );
+                                        }
+
+                                        // 마지막 라벨 행
+                                        headerRows.push(
+                                            <tr key="label-row">
+                                                {(!hasVarLabel && !headerGroups.showRow2 && !headerGroups.showRow3) && (
+                                                    <th
+                                                        rowSpan={totalRows}
+                                                        colSpan={hasRowLabel2 ? 2 : 1}
+                                                        className="sticky-col sticky-l0"
+                                                        style={{
+                                                            background: uiSettings?.theme_primary || '#f8fafc',
+                                                            fontWeight: '700',
+                                                            color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                            fontSize: '11px',
+                                                            textAlign: 'center',
+                                                            verticalAlign: 'middle'
+                                                        }}
+                                                    >
+                                                        문항
+                                                    </th>
+                                                )}
+                                                {resultData.columns.map((col, i) => (
+                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                        {col?.label ?? col}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        );
+
+                                        return headerRows;
+                                    })()}
+                                </thead>
+                                <tbody>
+                                    {resultData.rows.map((row, i) => {
+                                        const isSingleVal = row.type === 'stat' || row.stat_type;
+                                        const isHideAll = row.hide === 'all' || row.hide === 'all ';
+                                        const isHideN = row.hide === 'n' || isHideAll || effectivePolicy?.show_n === false;
+                                        const isHideP = row.hide === 'p' || isHideAll || effectivePolicy?.show_percent === false;
+                                        const labelColor = row.color || 'inherit';
+
+                                        let rN = effectivePolicy?.n_digits ?? 0;
+                                        let rP = effectivePolicy?.percent_digits ?? 1;
+                                        if (row.round !== undefined && row.round !== null && row.round !== '') {
+                                            rN = Number(row.round);
+                                            rP = Number(row.round);
+                                        }
+
+                                        const formatN = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rN, maximumFractionDigits: rN });
+                                        const formatP = (val) => val === null || val === undefined || val === '' ? '-' : Number(val).toLocaleString(undefined, { minimumFractionDigits: rP, maximumFractionDigits: rP });
+
+                                        const isBaseRow = String(row.row_role ?? "").toLowerCase() === "base" || String(row.label ?? "").toLowerCase() === "base" || row.is_base;
+                                        const isSectionAgg = ['top', 'bottom', 'mean', 'std'].some(role => String(row.row_role ?? row.stat_type ?? "").toLowerCase().includes(role));
+                                        const topBorderAttr = isBaseRow ? 'none' : (isSectionAgg ? sectionBorder : gridBorder);
+
+                                        return (
+                                        <tr key={i}>
+                                            {hasRowLabel2 && (
+                                                <td
+                                                    className="label-cell row-group-label sticky-col sticky-l0"
+                                                    style={{
+                                                        display: (i === 0 || (resultData.rows[i - 1].label2 || resultData.rows[i - 1].var_label) !== (row.label2 || row.var_label)) ? 'table-cell' : 'none',
+                                                        verticalAlign: 'middle',
+                                                        background: uiSettings?.theme_primary || '#f8fafc',
+                                                        color: uiSettings?.theme_primary_fg || '#1e3a8a',
+                                                        fontSize: '11px',
+                                                        fontWeight: '700',
+                                                        textAlign: 'center',
+                                                        borderTop: topBorderAttr,
+                                                        whiteSpace: 'normal',
+                                                        wordBreak: 'break-all'
+                                                    }}
+                                                    rowSpan={resultData.rows.filter(r => (r.label2 || r.var_label) === (row.label2 || row.var_label)).length}
+                                                >
+                                                    {row.label2 || row.var_label}
+                                                </td>
+                                            )}
+                                            <td className={`label-cell sticky-col ${hasRowLabel2 ? 'sticky-l1' : 'sticky-l0'}`} style={{ textAlign: 'left', fontSize: '11px', color: labelColor, borderTop: topBorderAttr }}>{row.label}</td>
+                                            {row.values.map((v, j) => (
+                                                <td
+                                                    key={j}
+                                                    className={`${v.sig_vs_total === 'up' ? 'sig-highlight-up' : v.sig_vs_total === 'down' ? 'sig-highlight-down' : ''}`}
+                                                    style={{ textAlign: 'right', position: 'relative', borderLeft: j > 0 ? gridBorder : 'none', borderTop: topBorderAttr }}
+                                                >
+                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end', width: '100%', color: labelColor }}>
+                                                        {isHideAll ? null : isSingleVal ? (
+                                                            <span className="cell-value-single" style={{ fontWeight: '600' }}>
+                                                                {row.prefix || ''}{formatN(v.count)}{row.postfix || ''}
+                                                            </span>
+                                                        ) : displayMode === 'all' ? (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                                                                {!isHideN && <span className="cell-value">{formatN(v.count)}</span>}
+                                                                {!isHideP && <span className="cell-pct">{row.prefix || ''}{formatP(v.percent)}%{row.postfix || ''}</span>}
+                                                            </div>
+                                                        ) : (
+                                                            <span className="cell-value-single">
+                                                                {displayMode === 'value' && !isHideN ? formatN(v.count) : null}
+                                                                {displayMode === 'percent' && !isHideP ? `${row.prefix || ''}${formatP(v.percent)}%${row.postfix || ''}` : null}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                            ))}
+                                        </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
                         </div>
                     )}
 
@@ -968,12 +1123,14 @@ const FullscreenModal = ({
                         <div className="fullscreen-chart-wrapper" ref={chartContainerRef} style={{ overflow: 'hidden', height: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <div style={{ flex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <KendoChart
-                                    data={localComputedChartData}
+                                    data={finalChartData}
                                     seriesNames={localComputedSeriesNames}
                                     allowedTypes={getChartAllowedTypes()}
                                     initialType={getChartInitialType()}
                                     suffix={localComputedSuffix}
                                     paletteId={localPaletteId}
+                                    hideHeader={true}
+                                    externalShowLegend={showLegend}
                                 />
                             </div>
                         </div>
