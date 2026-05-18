@@ -1225,14 +1225,16 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             // X 정보 (기준변수) 리스트 세팅 및 데이터 필터 (파생문항) 세팅
             const ctxPayload = contextRes?.resultjson || contextRes || {};
 
+            let fetchedUi = uiSettings;
+
             if (ctxPayload) {
-                const ui = ctxPayload.ui_settings || {};
-                setUiSettings(ui);
-                setShowN(ui.format_show_n ?? true);
-                setDecimalN(ui.format_n_round ?? ctxPayload.n_digits ?? 0);
-                setShowPct(ui.format_show_percent ?? true);
-                setDecimalPct(ui.format_percent_round ?? ctxPayload.percent_digits ?? 1);
-                setHideZeroBaseColumns(ui.hide_zero_base_columns ?? false);
+                fetchedUi = ctxPayload.ui_settings || {};
+                setUiSettings(fetchedUi);
+                setShowN(fetchedUi.format_show_n ?? true);
+                setDecimalN(fetchedUi.format_n_round ?? ctxPayload.n_digits ?? 0);
+                setShowPct(fetchedUi.format_show_percent ?? true);
+                setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
+                setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
             }
 
             // 데이터 세팅 후 초기화 플래그 해제 (setTimeout을 통해 setState 이후 반영 보장)
@@ -1297,21 +1299,21 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 filter_expression: currentFilterExp,
                 use_recoded: true,
                 display_policy: {
-                    show_n: showN,
-                    show_percent: showPct,
-                    hide_zero_base_columns: hideZeroBaseColumns,
-                    hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
-                    hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
-                    n_digits: Number(decimalN === '' ? 0 : decimalN),
-                    percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
-                    mean_digits: uiSettings?.mean_digits ?? 1,
-                    std_digits: uiSettings?.std_digits ?? 1,
-                    median_digits: uiSettings?.median_digits ?? 1,
-                    min_digits: uiSettings?.min_digits ?? 1,
-                    max_digits: uiSettings?.max_digits ?? 1,
-                    var_digits: uiSettings?.var_digits ?? 1,
-                    zero_display: uiSettings?.zero_display || "0",
-                    empty_display: uiSettings?.empty_display || "blank"
+                    show_n: fetchedUi?.format_show_n ?? showN,
+                    show_percent: fetchedUi?.format_show_percent ?? showPct,
+                    hide_zero_base_columns: fetchedUi?.hide_zero_base_columns ?? hideZeroBaseColumns,
+                    hide_zero_stubs: fetchedUi?.hide_zero_stubs ?? false,
+                    hide_zero_banners: fetchedUi?.hide_zero_banners ?? false,
+                    n_digits: Number(fetchedUi?.format_n_round ?? decimalN === '' ? 0 : decimalN),
+                    percent_digits: Number(fetchedUi?.format_percent_round ?? decimalPct === '' ? 1 : decimalPct),
+                    mean_digits: fetchedUi?.mean_digits ?? uiSettings?.mean_digits ?? 1,
+                    std_digits: fetchedUi?.std_digits ?? uiSettings?.std_digits ?? 1,
+                    median_digits: fetchedUi?.median_digits ?? uiSettings?.median_digits ?? 1,
+                    min_digits: fetchedUi?.min_digits ?? uiSettings?.min_digits ?? 1,
+                    max_digits: fetchedUi?.max_digits ?? uiSettings?.max_digits ?? 1,
+                    var_digits: fetchedUi?.var_digits ?? uiSettings?.var_digits ?? 1,
+                    zero_display: fetchedUi?.zero_display || uiSettings?.zero_display || "0",
+                    empty_display: fetchedUi?.empty_display || uiSettings?.empty_display || "blank"
                 }
             };
             if (selectedXInfo !== '__none__') {
