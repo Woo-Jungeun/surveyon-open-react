@@ -373,7 +373,7 @@ const ConditionHeaderCell = (props) => {
     );
 };
 
-const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewTables, userId }) => {
+const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimalN, decimalPct, uiSettings, projectNum, overviewPayload, userId }) => {
     const [isAiSummaryOpen, setIsAiSummaryOpen] = useState(false);
     const [isGridOpen, setIsGridOpen] = useState(true);
     const [isChartOpen, setIsChartOpen] = useState(false);
@@ -414,7 +414,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const aiSummaryFetchingRef = useRef(false);
 
     useEffect(() => {
-        if (!isAiSummaryOpen || !projectNum || !banner?.id || overviewTables.length === 0) return;
+        if (!isAiSummaryOpen || !projectNum || !banner?.id || !overviewPayload) return;
         if (aiSummaryData || aiSummaryFetchingRef.current) return; // 이미 데이터가 있거나 로딩중이면 중지 (무한루프 방지)
 
         const fetchAiSummaryData = async () => {
@@ -434,9 +434,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     result_json: {
                         success: "777",
                         message: "OK",
-                        resultjson: {
-                            tables: overviewTables
-                        }
+                        resultjson: overviewPayload
                     }
                 };
 
@@ -458,7 +456,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
         fetchAiSummaryData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isAiSummaryOpen, banner?.id, projectNum, overviewTables, userId]);
+    }, [isAiSummaryOpen, banner?.id, projectNum, overviewPayload, userId]);
 
     const getChartTypeName = (mode) => {
         const typeMap = {
@@ -1029,7 +1027,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     // AI 데이터 요약 상태
     const [projectNum, setProjectNum] = useState("");
-    const [overviewTables, setOverviewTables] = useState([]);
+    const [overviewPayload, setOverviewPayload] = useState(null);
     const [aiSummaryData, setAiSummaryData] = useState("");
     const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
 
@@ -1400,7 +1398,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             const tablesList = payload.tables || [];
             const resultsList = payload.results || [];
             
-            setOverviewTables(tablesList);
+            setOverviewPayload(payload);
 
             if (tablesList.length > 0 || (overviewRes?.success === '777')) {
                 const formatted = tablesList.map((t, i) => {
@@ -2181,7 +2179,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 decimalPct={decimalPct}
                                 uiSettings={uiSettings}
                                 projectNum={projectNum}
-                                overviewTables={overviewTables}
+                                overviewPayload={overviewPayload}
                                 userId={auth?.user?.userId}
                             />
                         ))}
