@@ -442,7 +442,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
 
                 const res = await getAiSummary.mutateAsync(reqData);
 
-                if (res && res.resultjson && res.resultjson[banner.id] && res.resultjson[banner.id].length > 0) {
+                if (String(res?.success) === "777" && res?.resultjson?.[banner.id]?.[0]?.result_data) {
                     setAiSummaryData(res.resultjson[banner.id][0].result_data);
                 } else {
                     setAiSummaryData("요약 데이터를 불러오지 못했습니다.");
