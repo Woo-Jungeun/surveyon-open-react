@@ -1,5 +1,7 @@
 import axios from "axios";
 import { persistor } from "@/common/redux/store/StorePersist.jsx";
+import store from "@/common/redux/store/Store";
+import { AES256 } from "@/common/utils/AES256";
 
 /** 모드별 baseURL 계산 (dev: 프록시 타도록 "/o", prod: 절대 URL) */
 function joinURL(base, path) {
@@ -33,6 +35,13 @@ apiAxios.interceptors.request.use(
         const xAuthToken = getCookie("X-Auth-Token");
         if (xAuthToken) {
             config.headers["X-Auth-Token"] = xAuthToken;
+        }
+
+        // hrc 헤더 추가 (userId 암호화)
+        const state = store.getState();
+        const userId = state?.auth?.user?.userId;
+        if (userId) {
+            config.headers["hrc"] = AES256.Crypto.encryptAES256(String(userId));
         }
         // FormData면 JSON 헤더 제거 → 브라우저가 boundary 포함해서 자동 세팅
         if (config.data instanceof FormData) {
