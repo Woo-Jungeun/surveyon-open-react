@@ -109,7 +109,15 @@ function showUpdateToast() {
 
 // 사용자가 화면의 아무 곳이나 클릭할 때도 1분(60초)에 한 번씩만 버전을 몰래 확인합니다.
 if (typeof window !== "undefined") {
-    window.addEventListener('click', checkFrontendVersion);
+    // 캡처링 단계(true)에서 이벤트를 가로채서, 그리드(Grid) 내부 클릭 등 stopPropagation()이 걸린 이벤트도 무조건 감지합니다.
+    window.addEventListener('click', () => checkFrontendVersion(), true);
+    
+    // 브라우저 탭을 이동했다가 다시 이 화면으로 돌아왔을 때(포커스 온)도 확인합니다.
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            checkFrontendVersion();
+        }
+    });
 }
 // ---------------------------
 
