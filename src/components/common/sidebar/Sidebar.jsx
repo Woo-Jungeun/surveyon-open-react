@@ -70,6 +70,35 @@ const Sidebar = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    // 메뉴(라우터) 이동 시 즉각적인 버전 확인 및 강제 새로고침
+    useEffect(() => {
+        const checkVersionAndReload = async () => {
+            // 이미 토스트가 떠 있는 상태에서 메뉴를 이동했다면 묻지도 따지지도 않고 새로고침
+            if (document.getElementById('version-update-toast')) {
+                window.location.reload();
+                return;
+            }
+            try {
+                let currentScriptUrl = null;
+                document.querySelectorAll('script').forEach(s => {
+                    if (s.src && s.src.includes('/assets/index-')) currentScriptUrl = s.src;
+                });
+                if (!currentScriptUrl) return;
+                
+                const res = await fetch('/index.html?_t=' + Date.now(), { headers: { 'Cache-Control': 'no-cache' } });
+                const text = await res.text();
+                const match = text.match(/<script[^>]+src="([^"]+index-[^"]+\.js)"/);
+                if (match) {
+                    const newScriptUrl = match[1];
+                    if (currentScriptUrl.split('/').pop() !== newScriptUrl.split('/').pop()) {
+                        window.location.reload(); // 메뉴 이동 시에는 토스트 띄우지 않고 바로 새로고침
+                    }
+                }
+            } catch (e) {}
+        };
+        checkVersionAndReload();
+    }, [location.pathname]);
+
     // 섹션 토글
     const toggleSection = (label) => {
         if (isCollapsed) return;

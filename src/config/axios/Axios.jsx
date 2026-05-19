@@ -58,8 +58,8 @@ async function checkFrontendVersion() {
             const newFilename = newScriptUrl.split('/').pop();
             
             if (currentFilename !== newFilename) {
-                console.log('New version detected! Reloading...', currentFilename, '->', newFilename);
-                window.location.reload();
+                console.log('New version detected! Showing toast...', currentFilename, '->', newFilename);
+                showUpdateToast();
             }
         }
     } catch (e) {
@@ -67,7 +67,47 @@ async function checkFrontendVersion() {
     }
 }
 
-// 사용자가 화면의 아무 곳이나 클릭할 때도 10초에 한 번씩만 버전을 몰래 확인합니다.
+function showUpdateToast() {
+    if (document.getElementById('version-update-toast')) return;
+    
+    const toast = document.createElement('div');
+    toast.id = 'version-update-toast';
+    
+    const sidebarFooter = document.querySelector('.sidebar-footer');
+    
+    // 고급스러운 보라색 그라데이션 및 부드러운 그림자 효과
+    const commonStyle = "background: linear-gradient(135deg, #6c5ef7 0%, #5A4BFF 100%); color: white; padding: 16px; border-radius: 14px; box-shadow: 0 10px 25px rgba(90, 75, 255, 0.3), 0 4px 10px rgba(0,0,0,0.1); z-index: 999999; display: flex; flex-direction: column; gap: 14px; font-family: 'Spoqa Han Sans Neo', sans-serif; border: 1px solid rgba(255,255,255,0.1);";
+
+    if (sidebarFooter) {
+        toast.style.cssText = `position: absolute; bottom: calc(100% + 12px); left: 16px; right: 16px; ${commonStyle}`;
+        sidebarFooter.appendChild(toast);
+    } else {
+        toast.style.cssText = `position: fixed; bottom: 30px; left: 30px; ${commonStyle}`;
+        document.body.appendChild(toast);
+    }
+    
+    toast.innerHTML = `
+        <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <div style="background: rgba(255,255,255,0.2); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </div>
+            <div style="padding-top: 1px;">
+                <div style="font-weight: 700; margin-bottom: 4px; font-size: 13.5px; letter-spacing: -0.5px; white-space: nowrap;">새로운 업데이트 안내!</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,0.9); line-height: 1.4; letter-spacing: -0.3px;">원활한 사용을 위해 화면을<br/>새로고침해 주세요.</div>
+            </div>
+        </div>
+        <button 
+            onclick="window.location.reload()" 
+            onmouseover="this.style.background='#ffffff'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';" 
+            onmouseout="this.style.background='rgba(255,255,255,0.95)'; this.style.transform='none'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.1)';" 
+            style="background: rgba(255,255,255,0.95); color: #5A4BFF; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 13px; transition: all 0.2s ease; width: 100%; box-shadow: 0 2px 6px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; gap: 6px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            지금 새로고침
+        </button>
+    `;
+}
+
+// 사용자가 화면의 아무 곳이나 클릭할 때도 1분(60초)에 한 번씩만 버전을 몰래 확인합니다.
 if (typeof window !== "undefined") {
     window.addEventListener('click', checkFrontendVersion);
 }
