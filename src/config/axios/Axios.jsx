@@ -22,9 +22,63 @@ export const apiAxios = axios.create({
     headers: { "Content-Type": "application/json;charset=utf-8" },
 });
 
+// --- Version Check Logic ---
+let currentScriptUrl = null;
+let lastVersionCheck = 0;
+
+if (typeof window !== "undefined") {
+    // 초기 로딩 시 현재 실행 중인 index-XXXX.js 스크립트 경로 저장
+    document.querySelectorAll('script').forEach(s => {
+        if (s.src && s.src.includes('/assets/index-')) {
+            currentScriptUrl = s.src;
+        }
+    });
+}
+
+async function checkFrontendVersion() {
+    if (!currentScriptUrl || typeof window === "undefined") return;
+    
+    const now = Date.now();
+    // 10초에 한 번씩만 서버에 확인 (과부하 방지)
+    if (now - lastVersionCheck < 10000) return;
+    lastVersionCheck = now;
+
+    try {
+        const res = await fetch('/index.html?_t=' + now, { 
+            method: 'GET', 
+            headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' } 
+        });
+        if (!res.ok) return;
+        const text = await res.text();
+        const match = text.match(/<script[^>]+src="([^"]+index-[^"]+\.js)"/);
+        
+        if (match) {
+            const newScriptUrl = match[1];
+            const currentFilename = currentScriptUrl.split('/').pop();
+            const newFilename = newScriptUrl.split('/').pop();
+            
+            if (currentFilename !== newFilename) {
+                console.log('New version detected! Reloading...', currentFilename, '->', newFilename);
+                window.location.reload();
+            }
+        }
+    } catch (e) {
+        // 네트워크 에러 등 무시
+    }
+}
+
+// 사용자가 화면의 아무 곳이나 클릭할 때도 10초에 한 번씩만 버전을 몰래 확인합니다.
+if (typeof window !== "undefined") {
+    window.addEventListener('click', checkFrontendVersion);
+}
+// ---------------------------
+
 /** 요청 인터셉터 (쿠키의 TOKEN → Authorization 헤더) */
 apiAxios.interceptors.request.use(
     (config) => {
+        // API 요청 시마다 백그라운드에서 버전 확인 (새 버전이면 새로고침됨)
+        checkFrontendVersion();
+
         const token = getCookie("TOKEN"); // 아래에 이미 정의된 getCookie 사용
         if (token) {
             config.headers = config.headers || {};
