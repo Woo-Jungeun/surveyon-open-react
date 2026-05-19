@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, memo, useMemo, useContext } from 'react';
-import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy, ChevronDown, Check } from 'lucide-react';
+import { Cloud, BarChart2, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Copy, ChevronDown, Check, BarChartHorizontal, LayoutList } from 'lucide-react';
 import { exportImage, exportSVG } from '@progress/kendo-drawing';
 import { saveAs } from '@progress/kendo-file-saver';
 import { DropDownList } from '@progress/kendo-react-dropdowns';
@@ -30,10 +30,17 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
     // const [paletteId, setPaletteId] = useState('default'); // Moved to parent
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
+    const [isChartTypeMenuOpen, setIsChartTypeMenuOpen] = useState(false);
+    const [showLegend, setShowLegend] = useState(false);
+    const [selectedChartGroups, setSelectedChartGroups] = useState([]);
+    const [isGroupFilterMenuOpen, setIsGroupFilterMenuOpen] = useState(false);
+
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const displayMenuRef = useRef(null);
     const paletteMenuRef = useRef(null);
+    const chartTypeMenuRef = useRef(null);
+    const groupFilterMenuRef = useRef(null);
 
     // 외부 영역 클릭 시 드롭다운 닫기
     useEffect(() => {
@@ -46,6 +53,12 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
             }
             if (paletteMenuRef.current && !paletteMenuRef.current.contains(event.target)) {
                 setIsPaletteMenuOpen(false);
+            }
+            if (chartTypeMenuRef.current && !chartTypeMenuRef.current.contains(event.target)) {
+                setIsChartTypeMenuOpen(false);
+            }
+            if (groupFilterMenuRef.current && !groupFilterMenuRef.current.contains(event.target)) {
+                setIsGroupFilterMenuOpen(false);
             }
         };
 
@@ -331,6 +344,63 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
         return { hasLabel2: true, headerGroups: groups };
     }, [q.columns]);
 
+    const availableChartGroups = useMemo(() => {
+        if (!q.data) return [];
+        const groups = new Set();
+        
+        if (q.columns && q.columns.length > 0) {
+            q.columns.forEach(col => {
+                const groupName = col.label2 || col.label;
+                groups.add(groupName);
+            });
+        } else {
+            q.data.forEach(d => {
+                const parts = String(d.name).split('\n');
+                const groupName = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+                groups.add(groupName);
+            });
+        }
+        return Array.from(groups);
+    }, [q.data, q.columns]);
+
+    const prevAvailableGroupsStr = useRef("");
+    useEffect(() => {
+        const currentGroupsStr = availableChartGroups.join(",");
+        if (availableChartGroups.length > 0 && prevAvailableGroupsStr.current !== currentGroupsStr) {
+            setSelectedChartGroups(availableChartGroups);
+            prevAvailableGroupsStr.current = currentGroupsStr;
+        }
+    }, [availableChartGroups]);
+
+    const chartData = useMemo(() => {
+        if (!q.data) return [];
+        
+        if (q.columns && q.columns.length > 0) {
+            return q.columns.filter(col => {
+                const groupName = col.label2 || col.label;
+                return selectedChartGroups.includes(groupName);
+            }).map(col => {
+                const parts = [];
+                if (col.label) parts.push(col.label);
+                if (col.label2) parts.push(col.label2);
+                
+                const dataPoint = { name: parts.join('\n') };
+                
+                q.data.forEach((row, index) => {
+                    dataPoint[`series_${index}`] = row[col.key];
+                    dataPoint[`series_${index}_pct`] = row[`${col.key}_pct`];
+                });
+                return dataPoint;
+            });
+        }
+
+        return q.data.filter(d => {
+            const parts = String(d.name).split('\n');
+            const groupName = parts.length > 1 ? parts[parts.length - 1] : parts[0];
+            return selectedChartGroups.includes(groupName);
+        });
+    }, [q.data, q.columns, selectedChartGroups]);
+
     return (
         <div id={q.id} className="agg-card">
             <Toast
@@ -433,45 +503,44 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                 <div style={{ width: showChart ? 'calc(50% - 16px)' : 'auto', display: 'flex', justifyContent: 'flex-end', flexShrink: 0 }}>
                     <div className="view-options">
                         {/* 다운로드 버튼 */}
+                        {/* 1. 다운로드 버튼 */}
                         {showChart && (
-                            <div className="download-menu-container" ref={downloadMenuRef}>
+                            <div className="download-menu-container" ref={downloadMenuRef} style={{ marginRight: '2px' }}>
                                 <button
                                     className={`view-option-btn download-btn ${showDownloadMenu ? 'active' : ''}`}
-                                    onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+                                    onClick={(e) => { e.stopPropagation(); setShowDownloadMenu(!showDownloadMenu); }}
                                     title="차트 다운로드"
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
                                 >
-                                    <Download size={18} />
+                                    <Download size={15} />
                                 </button>
                                 {showDownloadMenu && (
-                                    <div className="download-dropdown">
-                                        <button onClick={() => handleDownload('png')}>
-                                            PNG (이미지)
-                                        </button>
-                                        <button onClick={() => handleDownload('svg')}>
-                                            SVG (PPT용)
-                                        </button>
+                                    <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto' }}>
+                                        <button onClick={() => handleDownload('png')}>PNG (이미지)</button>
+                                        <button onClick={() => handleDownload('svg')}>SVG (PPT용)</button>
                                     </div>
                                 )}
                             </div>
                         )}
 
+                        {/* 2. 팔레트 메뉴 */}
                         {showChart && (
-                            <div className="download-menu-container" ref={paletteMenuRef} style={{ marginRight: '0' }}>
+                            <div className="download-menu-container" ref={paletteMenuRef} style={{ marginRight: '2px' }}>
                                 <button
                                     className={`view-option-btn ${isPaletteMenuOpen ? 'active' : ''}`}
                                     onClick={(e) => { e.stopPropagation(); setIsPaletteMenuOpen(!isPaletteMenuOpen); }}
                                     title="색상 테마 설정"
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', background: 'transparent', border: 'none', cursor: 'pointer' }}
                                 >
                                     {(() => {
                                         const theme = CHART_THEME_OPTIONS.find(opt => opt.id === paletteId) || CHART_THEME_OPTIONS[0];
                                         const colors = theme.preview;
                                         return (
                                             <div style={{
-                                                width: '18px',
-                                                height: '18px',
+                                                width: '16px',
+                                                height: '16px',
                                                 borderRadius: '50%',
-                                                background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`,
-                                                border: '1px solid #e2e8f0'
+                                                background: `conic-gradient(${colors[0]}, ${colors[1]}, ${colors[2]}, ${colors[0]})`
                                             }}></div>
                                         );
                                     })()}
@@ -498,24 +567,210 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                             </div>
                         )}
 
-                        <button
-                            className={`view-option-btn close-chart-btn ${!showChart ? 'active' : ''}`}
-                            onClick={() => setShowChart(false)}
-                            title="차트 숨기기"
-                        >
-                            <X size={18} />
-                        </button>
-                        <button className={`view-option-btn ${showChart && (chartMode === 'column' || chartMode === 'bar') ? 'active' : ''}`} onClick={() => { setChartMode('column'); setShowChart(true); }} title="막대형"><BarChart2 size={18} /></button>
-                        <button className={`view-option-btn ${showChart && (chartMode === 'stackedColumn' || chartMode === 'stacked100Column') ? 'active' : ''}`} onClick={() => { setChartMode('stackedColumn'); setShowChart(true); }} title="누적 막대형"><Layers size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'line' ? 'active' : ''}`} onClick={() => { setChartMode('line'); setShowChart(true); }} title="선형"><LineChart size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'pie' ? 'active' : ''}`} onClick={() => { setChartMode('pie'); setShowChart(true); }} title="원형"><PieChart size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'donut' ? 'active' : ''}`} onClick={() => { setChartMode('donut'); setShowChart(true); }} title="도넛형"><Donut size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'radarArea' ? 'active' : ''}`} onClick={() => { setChartMode('radarArea'); setShowChart(true); }} title="방사형"><Aperture size={18} /></button>
-                        {/* <button className={`view-option-btn ${showChart && chartMode === 'funnel' ? 'active' : ''}`} onClick={() => { setChartMode('funnel'); setShowChart(true); }} title="깔때기 차트"><Filter size={18} /></button> */}
-                        <button className={`view-option-btn ${showChart && chartMode === 'scatterPoint' ? 'active' : ''}`} onClick={() => { setChartMode('scatterPoint'); setShowChart(true); }} title="점도표"><MoreHorizontal size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'area' ? 'active' : ''}`} onClick={() => { setChartMode('area'); setShowChart(true); }} title="영역형"><AreaChart size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'heatmap' ? 'active' : ''}`} onClick={() => { setChartMode('heatmap'); setShowChart(true); }} title="히트맵"><LayoutGrid size={18} /></button>
-                        <button className={`view-option-btn ${showChart && chartMode === 'wordCloud' ? 'active' : ''}`} onClick={() => { setChartMode('wordCloud'); setShowChart(true); }} title="워드클라우드"><Cloud size={18} /></button>
+                        {/* 3. 차트 닫기 버튼 (색상 바로 오른쪽) */}
+                        {showChart && (
+                            <button
+                                className={`view-option-btn close-chart-btn`}
+                                onClick={() => setShowChart(false)}
+                                title="차트 숨기기"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                            >
+                                <X size={18} />
+                            </button>
+                        )}
+
+                        {/* 구분선 */}
+                        {showChart && (chartMode !== 'heatmap' || availableChartGroups.length > 0) && (
+                            <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
+                        )}
+
+                        {/* 4. 범례 보기 */}
+                        {showChart && chartMode !== 'heatmap' && (
+                            <button
+                                onClick={() => setShowLegend(!showLegend)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '6px',
+                                    padding: '4px 8px', border: `1px solid ${showLegend ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                    background: showLegend ? '#eff6ff' : '#fff',
+                                    color: showLegend ? '#2563eb' : '#64748b',
+                                    fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px'
+                                }}
+                                title="범례 보기/숨기기"
+                            >
+                                <LayoutList size={14} style={{ flexShrink: 0 }} />
+                                <span style={{ whiteSpace: 'nowrap' }}>범례</span>
+                            </button>
+                        )}
+
+                        {/* 구분선 */}
+                        {showChart && chartMode !== 'heatmap' && availableChartGroups.length > 0 && (
+                            <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
+                        )}
+
+                        {/* 5. 그룹 필터 */}
+                        {showChart && availableChartGroups.length > 0 && (
+                            <div className="download-menu-container" ref={groupFilterMenuRef}>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setIsGroupFilterMenuOpen(!isGroupFilterMenuOpen); }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '6px',
+                                        padding: '4px 8px', border: `1px solid ${(selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                        background: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#eff6ff' : '#fff',
+                                        color: (selectedChartGroups.length > 0 && selectedChartGroups.length < availableChartGroups.length) ? '#2563eb' : '#64748b',
+                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px', maxWidth: '220px'
+                                    }}
+                                    title="그룹 필터"
+                                >
+                                    <Filter size={14} style={{ flexShrink: 0 }} />
+                                    <div style={{ display: 'flex', alignItems: 'center', overflow: 'hidden', width: '100%' }}>
+                                        {selectedChartGroups.length === availableChartGroups.length ? (
+                                            <span style={{ whiteSpace: 'nowrap' }}>그룹 필터 (전체)</span>
+                                        ) : selectedChartGroups.length === 0 ? (
+                                            <span style={{ whiteSpace: 'nowrap' }}>선택 없음</span>
+                                        ) : selectedChartGroups.length === 1 ? (
+                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {selectedChartGroups[0]}
+                                            </span>
+                                        ) : (
+                                            <>
+                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 1 }}>
+                                                    {selectedChartGroups[0]}
+                                                </span>
+                                                <span style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                                    &nbsp;외 {selectedChartGroups.length - 1}개
+                                                </span>
+                                            </>
+                                        )}
+                                    </div>
+                                </button>
+                                {isGroupFilterMenuOpen && (
+                                    <div style={{
+                                        position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+                                        background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)', zIndex: 1100,
+                                        minWidth: '200px', padding: '8px',
+                                        display: 'flex', flexDirection: 'column', gap: '4px'
+                                    }}>
+                                        <div style={{ padding: '4px 8px', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px', marginBottom: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#334155' }}>X축 그룹 보기</span>
+                                            <button
+                                                onClick={() => setSelectedChartGroups(availableChartGroups)}
+                                                style={{ fontSize: '12px', color: '#64748b', background: '#f1f5f9', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px' }}
+                                            >
+                                                초기화
+                                            </button>
+                                        </div>
+                                        <div style={{ maxHeight: '250px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                            <div
+                                                onClick={() => {
+                                                    if (selectedChartGroups.length === availableChartGroups.length) {
+                                                        setSelectedChartGroups([]);
+                                                    } else {
+                                                        setSelectedChartGroups(availableChartGroups);
+                                                    }
+                                                }}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', fontWeight: 600, color: '#0f172a', borderBottom: '1px solid #f1f5f9', marginBottom: '4px' }}
+                                            >
+                                                <div style={{
+                                                    width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    border: `1px solid ${selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#cbd5e1'}`,
+                                                    borderRadius: '3px',
+                                                    background: selectedChartGroups.length === availableChartGroups.length ? '#2563eb' : '#fff'
+                                                }}>
+                                                    {selectedChartGroups.length === availableChartGroups.length && <Check size={10} color="#fff" strokeWidth={3} />}
+                                                </div>
+                                                <span>전체 선택</span>
+                                            </div>
+                                            {availableChartGroups.map(group => {
+                                                const isChecked = selectedChartGroups.includes(group);
+                                                return (
+                                                    <div
+                                                        key={group}
+                                                        onClick={() => {
+                                                            setSelectedChartGroups(prev =>
+                                                                prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group]
+                                                            );
+                                                        }}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', cursor: 'pointer', fontSize: '13px', color: '#334155', borderRadius: '4px', background: isChecked ? '#f8fafc' : 'transparent', ':hover': { background: '#f8fafc' } }}
+                                                    >
+                                                        <div style={{
+                                                            width: '14px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            border: `1px solid ${isChecked ? '#2563eb' : '#cbd5e1'}`,
+                                                            borderRadius: '3px',
+                                                            background: isChecked ? '#2563eb' : '#fff'
+                                                        }}>
+                                                            {isChecked && <Check size={10} color="#fff" strokeWidth={3} />}
+                                                        </div>
+                                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{group}</span>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 구분선 */}
+                        {showChart && <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />}
+
+                        {/* 6. 차트 타입 메뉴 (항상 표시 - 닫힌 차트를 열기 위함) */}
+                        <div className="download-menu-container" ref={chartTypeMenuRef}>
+                            <button
+                                className={`view-option-btn ${!showChart || isChartTypeMenuOpen ? 'active' : ''}`}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!showChart) {
+                                        setShowChart(true);
+                                    } else {
+                                        setIsChartTypeMenuOpen(!isChartTypeMenuOpen);
+                                    }
+                                }}
+                                title={!showChart ? "차트 보기" : "차트 타입 변경"}
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', borderRadius: '6px', background: (!showChart || isChartTypeMenuOpen) ? '#eff6ff' : 'transparent', border: (!showChart || isChartTypeMenuOpen) ? '1px solid #bfdbfe' : 'none', cursor: 'pointer', color: (!showChart || isChartTypeMenuOpen) ? '#2563eb' : '#64748b' }}
+                            >
+                                {(() => {
+                                    const CHART_TYPE_OPTIONS = [
+                                        { id: 'column', icon: <BarChart2 size={15} /> },
+                                        { id: 'bar', icon: <BarChartHorizontal size={15} /> },
+                                        { id: 'stackedColumn', icon: <Layers size={15} /> },
+                                        { id: 'stacked100Column', icon: <Percent size={15} /> },
+                                        { id: 'line', icon: <LineChart size={15} /> },
+                                        { id: 'pie', icon: <PieChart size={15} /> },
+                                        { id: 'donut', icon: <Donut size={15} /> },
+                                        { id: 'radarArea', icon: <Aperture size={15} /> },
+                                        { id: 'scatterPoint', icon: <MoreHorizontal size={15} /> },
+                                        { id: 'area', icon: <AreaChart size={15} /> },
+                                        { id: 'heatmap', icon: <LayoutGrid size={15} /> },
+                                        { id: 'wordCloud', icon: <Cloud size={15} /> }
+                                    ];
+                                    return CHART_TYPE_OPTIONS.find(opt => opt.id === chartMode)?.icon || <BarChart2 size={15} />;
+                                })()}
+                            </button>
+                            {isChartTypeMenuOpen && (
+                                <div className="download-dropdown" style={{ top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '160px', zIndex: 1100, position: 'absolute', background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)', maxHeight: '250px', overflowY: 'auto' }}>
+                                    {[
+                                        { id: 'column', label: '세로 막대형', icon: <BarChart2 size={16} /> },
+                                        { id: 'bar', label: '가로 막대형', icon: <BarChartHorizontal size={16} /> },
+                                        { id: 'stackedColumn', label: '누적 막대형', icon: <Layers size={16} /> },
+                                        { id: 'stacked100Column', label: '100% 누적 막대형', icon: <Percent size={16} /> },
+                                        { id: 'line', label: '선형', icon: <LineChart size={16} /> },
+                                        { id: 'pie', label: '원형', icon: <PieChart size={16} /> },
+                                        { id: 'donut', label: '도넛형', icon: <Donut size={16} /> },
+                                        { id: 'radarArea', label: '방사형', icon: <Aperture size={16} /> },
+                                        { id: 'scatterPoint', label: '점도표', icon: <MoreHorizontal size={16} /> },
+                                        { id: 'area', label: '영역형', icon: <AreaChart size={16} /> },
+                                        { id: 'heatmap', label: '히트맵', icon: <LayoutGrid size={16} /> },
+                                        { id: 'wordCloud', label: '워드클라우드', icon: <Cloud size={16} /> }
+                                    ].map((option) => (
+                                        <button key={option.id} onClick={(e) => { e.stopPropagation(); setChartMode(option.id); setShowChart(true); setIsChartTypeMenuOpen(false); }} className={chartMode === option.id ? 'active' : ''} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            {option.icon}
+                                            {option.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -624,11 +879,13 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                             // ────────────────────────────────────────────────────────────────
                             const usePercentFields = ['donut', 'funnel'].includes(chartMode);
 
-                            const chartSeries = q.columns
-                                ? q.columns.map(col => ({
-                                    field: usePercentFields ? `${col.key}_pct` : col.key,
-                                    name: col.label2 ? `${col.label2} - ${col.label}` : col.label
-                                }))
+                            const chartSeries = q.columns && q.columns.length > 0
+                                ? q.data.map((row, index) => {
+                                    return {
+                                        field: usePercentFields ? `series_${index}_pct` : `series_${index}`,
+                                        name: row.name
+                                    };
+                                })
                                 : [{ field: usePercentFields ? 'total_pct' : 'total', name: '전체' }];
 
                             // 차트별 허용 타입 (토글 제한)
@@ -641,14 +898,16 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
 
                             return (
                                 <KendoChart
-                                    key={`${q.id}-${chartMode}-${paletteId}`}
-                                    data={q.data}
+                                    key={`${q.id}-${chartMode}-${paletteId}-${selectedChartGroups.join(',')}`}
+                                    data={chartData}
                                     seriesNames={chartSeries}
                                     initialType={chartMode}
                                     labelLimit={10}
                                     suffix={usePercentFields ? "%" : ""}
                                     paletteId={paletteId}
                                     allowedTypes={allowedTypes}
+                                    hideHeader={true}
+                                    externalShowLegend={showLegend}
                                 />
                             );
                         })()}
@@ -1081,11 +1340,11 @@ const FrequencyAnalysisPage = () => {
                             displayIds.push('answerStateCode');
                         }
                         return displayIds;
-                    })(), // 고급 필터 또는 배너 필터 적용
+                    })(), // 배너 문항 적용
                     start: (sidebarPage - 1) * SIDEBAR_PAGE_SIZE + index,  // 전체 순번에 해당하는 인덱스
                     limit: limit, // 가져올 갯수
                     weight_col: "",
-                    filter_expression: filterLogic, // 고급 필터 적용
+                    filter_expression: filterLogic, // 배너 설정 조건식 적용
                     include_stats: [],
                     search: searchTerm // 검색어 추가
                 };
@@ -1243,11 +1502,11 @@ const FrequencyAnalysisPage = () => {
     return (
         <div className="aggregation-page" data-theme="data-dashboard">
             <DataHeader title="진행현황표">
-                {/* 필터 영역 그룹 */}
+                {/* 배너 영역 그룹 */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    {/* 필터 문항 선택 드롭다운 */}
+                    {/* 배너 문항 선택 드롭다운 */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>필터</span>
+                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#444', whiteSpace: 'nowrap' }}>배너</span>
                         <div className="custom-filter-wrapper" ref={variableDropdownRef}>
                             <div
                                 className={`custom-filter-trigger ${isVariableDropdownOpen ? 'open' : ''}`}
@@ -1257,7 +1516,7 @@ const FrequencyAnalysisPage = () => {
                                 <span className="trigger-text">
                                     {(() => {
                                         if (overviewVariables.length === 0 && selectedVariableIds.length === 1 && selectedVariableIds[0] === 'answerStateCode') return '응답현황';
-                                        if (overviewVariables.length === 0 && selectedVariableIds.length === 0) return '필터 문항 선택';
+                                        if (overviewVariables.length === 0 && selectedVariableIds.length === 0) return '배너 문항 선택';
                                         if (selectedVariableIds.length === 0) return '선택 안함';
                                         if (selectedVariableIds.length === overviewVariables.length + 1) return '전체';
                                         const displayNames = [];
@@ -1356,15 +1615,15 @@ const FrequencyAnalysisPage = () => {
                         </div>
                     </div>
 
-                    {/* 고급 필터 버튼 - 로직 편집 팝업 열기 */}
+                    {/* 배너 설정 버튼 - 로직 편집 팝업 열기 */}
                     <button
                         onClick={() => setIsFilterPopupOpen(true)}
                         className={`advanced-filter-btn`}
                     >
                         <Filter size={15} />
-                        필터 문항 설정
+                        배너 설정
                     </button>
-                </div> {/* 필터 영역 그룹 끝 */}
+                </div> {/* 배너 영역 그룹 끝 */}
 
                 {/* 배너 영역 임시 숨김 처리 */}
                 {false && (
@@ -1501,12 +1760,13 @@ const FrequencyAnalysisPage = () => {
                 <div className="aggregation-layout">
                     <SideBar
                         className="compact-sidebar"
-                        // title="문항 목록"
+                        title="테이블 목록"
+                        totalCount={totalQuestions}
                         items={sidebarItems}
                         selectedId={activeId}
                         onItemClick={(item) => scrollToId(item.id)}
                         onSearch={setSearchTerm}
-                        searchPlaceholder="문항을 검색하세요."
+                        searchPlaceholder="변수명 또는 라벨 검색"
                         onScrollEnd={handleSidebarScrollEnd}
                         currentPage={sidebarPage}
                         totalPages={totalSidebarPages}

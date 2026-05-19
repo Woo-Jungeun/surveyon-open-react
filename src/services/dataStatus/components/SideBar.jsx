@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import './SideBar.css';
 
-const SideBar = ({ items, selectedId, onItemClick, title, headerAction, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef, className = '' }) => {
+const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerAction, onSearch, onDelete, displayField = 'name', searchPlaceholder = '검색어를 입력하세요.', onScrollEnd, currentPage, totalPages, onPageChange, listRef, className = '' }) => {
     const [isOpen, setIsOpen] = useState(true);
 
     return (
@@ -11,7 +11,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, headerAction, onSearch
                 <div className="sidebar-title-row" style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0', height: '48px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: isOpen ? 'space-between' : 'center' }}>
                     {isOpen && title ? (
                         <>
-                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>{title} ({items.length})</span>
+                            <span style={{ fontSize: '13px', fontWeight: 700, color: '#475569' }}>{title} ({totalCount !== undefined ? totalCount : items.length})</span>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 {headerAction}
                                 <button

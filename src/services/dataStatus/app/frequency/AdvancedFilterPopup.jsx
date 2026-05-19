@@ -376,7 +376,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
     const handleDeleteVariable = (varId, filterLabel) => {
         const displayName = filterLabel || varId;
-        modal.showConfirm("삭제", `'${displayName}' 필터를 삭제하시겠습니까?`, {
+        modal.showConfirm("삭제", `'${displayName}' 배너를 삭제하시겠습니까?`, {
             btns: [
                 { title: "취소", click: () => { } },
                 {
@@ -517,13 +517,13 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
 
     const handleSave = async () => {
         if (!varLabel.trim()) {
-            modal.showAlert("알림", "필터명을 입력해 주세요.");
+            modal.showAlert("알림", "배너명을 입력해 주세요.");
             return;
         }
 
         const missingCatLabel = categories.some(cat => !cat.label.trim());
         if (missingCatLabel) {
-            modal.showAlert("알림", "모든 그룹명을 입력해 주세요.");
+            modal.showAlert("알림", "모든 라벨명을 입력해 주세요.");
             return;
         }
 
@@ -843,8 +843,8 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
             <div className="advanced-filter-content-v5" onClick={(e) => e.stopPropagation()}>
                 <div className="filter-popup-header-v5">
                     <div className="header-title-v5">
-                        <h3>필터 문항 설정</h3>
-                        <p>이곳에서 만드는 변수 ID는 항상 overview_* 형태로 저장됩니다. 저장 후 필터 문항 선택에서 바로 선택할 수 있습니다.</p>
+                        <h3>배너 설정</h3>
+                        {/* <p>이곳에서 만드는 변수 ID는 항상 overview_* 형태로 저장됩니다. 저장 후 배너 선택에서 바로 선택할 수 있습니다.</p> */}
                     </div>
                     <div className="header-actions-v5">
                         {/* <button className={`guide-btn-v5 ${showGuide ? 'active' : ''}`} onClick={handleToggleGuide}>
@@ -883,7 +883,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     {/* Column 1: 필터문항목록 (Variables) */}
                     <div className="col-v5 col-vars">
                         <div className="col-header-v5">
-                            <span>필터 문항 목록</span>
+                            <span>배너 목록</span>
                             <button className="add-btn-v5" onClick={handleAddNew}><Plus size={16} /></button>
                         </div>
                         <div className="col-list-v5">
@@ -910,7 +910,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                                         value={varLabel}
                                                         onChange={e => setVarLabel(e.target.value)}
                                                         onClick={e => e.stopPropagation()}
-                                                        placeholder="필터명 입력"
+                                                        placeholder="배너명 입력"
                                                     />
                                                 </>
                                             ) : (
@@ -921,7 +921,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                                     <div className="item-title-v5">{v.label}</div>
                                                 </>
                                             )}
-                                            <div className="item-info-v5">{displayGroupsCount}개 그룹</div>
+                                            <div className="item-info-v5">{displayGroupsCount}개 라벨</div>
                                         </div>
                                         <button className="del-btn-v5" onClick={(e) => { e.stopPropagation(); handleDeleteVariable(v.id, v.label); }}><X size={14} color="#94a3b8" /></button>
                                     </div>
@@ -935,9 +935,9 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                             className="inline-input-v5"
                                             value={varLabel}
                                             onChange={e => setVarLabel(e.target.value)}
-                                            placeholder="필터명 입력"
+                                            placeholder="배너명 입력"
                                         />
-                                        <div className="item-info-v5">{categories.length}개 그룹</div>
+                                        <div className="item-info-v5">{categories.length}개 라벨</div>
                                     </div>
                                     <button className="del-btn-v5" onClick={(e) => {
                                         e.stopPropagation();
@@ -960,7 +960,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                     {/* Column 2: 필터 그룹 (Categories) */}
                     <div className="col-v5 col-cats">
                         <div className="col-header-v5 cats-header-v5">
-                            <span>필터 그룹</span>
+                            <span>배너 라벨</span>
                             <div className="cats-header-actions-v5">
                                 {/* <div className="cond-logic-toggle-v5 mini">
                                     <button
@@ -991,10 +991,10 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                                     className="inline-input-v5"
                                                     value={cat.label}
                                                     onChange={e => handleUpdateCategoryLabel(idx, e.target.value)}
-                                                    placeholder="그룹명 입력"
+                                                    placeholder="라벨명 입력"
                                                 />
                                             ) : (
-                                                <div className="item-title-v5">{cat.label || `새 그룹 ${idx + 1}`}</div>
+                                                <div className="item-title-v5">{cat.label || `새 라벨 ${idx + 1}`}</div>
                                             )}
                                             <div className="item-info-v5" style={{ color: selectedCatIndex === idx ? '#3b82f6' : '#64748b' }}>{cat.conditionSets.reduce((acc, set) => acc + set.conditions.length, 0)}개</div>
                                         </div>
@@ -1015,7 +1015,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                             <>
                                 <div className="cond-header-v5">
                                     <div className="cond-title-v5">
-                                        <h3>{categories[selectedCatIndex].label || `새 그룹 ${selectedCatIndex + 1}`}</h3>
+                                        <h3>{categories[selectedCatIndex].label || `새 라벨 ${selectedCatIndex + 1}`}</h3>
                                         <p>조건을 입력하여 데이터를 필터링합니다.</p>
                                     </div>
                                     <div className="cond-logic-toggle-v5">
@@ -1176,7 +1176,7 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
                                 </div>
                             </>
                         ) : (
-                            <div className="empty-cond-v5">필터 그룹을 선택해주세요.</div>
+                            <div className="empty-cond-v5">배너 라벨을 선택해주세요.</div>
                         )}
                     </div>
                 </div>
