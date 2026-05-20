@@ -32,6 +32,33 @@ const KendoGridV3 = (props) => {
     } = props;
 
     const [draggedItemIndex, setDraggedItemIndex] = useState(null);
+    const [colWidths, setColWidths] = useState({});
+
+    const handleColumnResize = (event) => {
+        const resizedCol = event.column;
+        const key = resizedCol.field || resizedCol.title;
+        if (key) {
+            setColWidths(prev => ({
+                ...prev,
+                [key]: resizedCol.width
+            }));
+        }
+    };
+
+    const processedChildren = React.Children.map(children, (child, idx) => {
+        if (!React.isValidElement(child)) return child;
+        
+        const field = child.props.field;
+        const title = child.props.title;
+        const key = field || title || `col-index-${idx}`;
+        
+        if (colWidths[key] !== undefined) {
+            return React.cloneElement(child, {
+                width: colWidths[key]
+            });
+        }
+        return child;
+    });
 
     // --- 가상 스크롤 (Virtual Scrolling) 자체 지원 ---
     const isVirtual = rest.scrollable === 'virtual';
@@ -194,6 +221,8 @@ const KendoGridV3 = (props) => {
                 editField={editField}
                 onRowClick={onRowClick}
                 rowRender={internalRowRender}
+                resizable={true}
+                onColumnResize={handleColumnResize}
                 {...gridProps}
             >
                 <GridNoRecords>
@@ -227,6 +256,7 @@ const KendoGridV3 = (props) => {
                 {reorderable && (
                     <Column
                         width="45px"
+                        resizable={false}
                         headerCell={() => (
                             <div style={{ textAlign: 'center', lineHeight: '1.2', fontSize: '13px' }}>
                                 순서<br />변경
@@ -247,6 +277,7 @@ const KendoGridV3 = (props) => {
                     <Column
                         title={addable && copyable ? "추가/복사" : "추가"}
                         width={addable && copyable ? "75px" : "45px"}
+                        resizable={false}
                         headerClassName="k-text-center"
                         cell={(cellProps) => (
                             <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
@@ -275,6 +306,7 @@ const KendoGridV3 = (props) => {
                     <Column
                         title="삭제"
                         width="50px"
+                        resizable={false}
                         cell={(cellProps) => (
                             <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
                                 <button
@@ -303,6 +335,7 @@ const KendoGridV3 = (props) => {
                     <Column
                         title="No"
                         width="45px"
+                        resizable={false}
                         cell={(cellProps) => (
                             <td style={{ textAlign: 'center', color: '#64748b', fontWeight: 600, padding: '0 4px', verticalAlign: 'middle' }}>
                                 {cellProps.dataIndex + 1}
@@ -311,16 +344,15 @@ const KendoGridV3 = (props) => {
                     />
                 )}
 
-
-
                 {/* 사용자 정의 컬럼들 */}
-                {children}
+                {processedChildren}
 
                 {/* 삭제 버튼 컬럼 (뒤쪽 배치 - 기본값) */}
                 {deletable && deletePos === 'end' && (
                     <Column
                         title="삭제"
                         width="50px"
+                        resizable={false}
                         cell={(cellProps) => (
                             <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
                                 <button
