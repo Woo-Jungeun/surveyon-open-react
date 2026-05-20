@@ -1006,7 +1006,15 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         setSelectedCells(prev => {
             const isSelected = prev.some(cell => cell.r === rowIndex && cell.c === field);
             if (!isSelected) {
-                return [{ r: rowIndex, c: field }];
+                const currentBanner = banners.find(b => b.id === selectedBanner);
+                const data = currentBanner?.info || [];
+                const range = getCellRowSpanRange(data, rowIndex, field);
+                
+                const newSelection = [];
+                for (let i = range.min; i <= range.max; i++) {
+                    newSelection.push({ r: i, c: field });
+                }
+                return newSelection;
             }
             return prev;
         });
@@ -1017,7 +1025,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             r: rowIndex,
             c: field
         });
-    }, []);
+    }, [banners, selectedBanner, getCellRowSpanRange]);
 
     const handleMergeCells = useCallback(() => {
         if (selectedCells.length < 2) return;
@@ -1076,6 +1084,20 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         
         if (changed) updateBannerInfo(newData);
         setContextMenu(null);
+    }, [selectedCells, banners, selectedBanner, updateBannerInfo]);
+
+    const handleDeleteSelectedRows = useCallback(() => {
+        if (selectedCells.length === 0) return;
+        
+        const currentBanner = banners.find(b => b.id === selectedBanner);
+        if (!currentBanner || !currentBanner.info) return;
+
+        const rowsToDelete = [...new Set(selectedCells.map(c => c.r))];
+        const newData = currentBanner.info.filter((_, index) => !rowsToDelete.includes(index));
+        
+        updateBannerInfo(newData);
+        setContextMenu(null);
+        setSelectedCells([]);
     }, [selectedCells, banners, selectedBanner, updateBannerInfo]);
 
     const handleRowClick = useCallback((e) => {
@@ -1592,6 +1614,10 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                             <div style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px' }} onClick={handleUnmergeCells} onMouseEnter={e => e.target.style.background = '#f1f5f9'} onMouseLeave={e => e.target.style.background = 'transparent'}>
                                 셀 분할
+                            </div>
+                            <div style={{ borderTop: '1px solid #e2e8f0', margin: '4px 0' }} />
+                            <div style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px', color: '#ef4444' }} onClick={handleDeleteSelectedRows} onMouseEnter={e => e.target.style.background = '#fee2e2'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                                선택 행 일괄 삭제
                             </div>
                         </div>
                     )}
