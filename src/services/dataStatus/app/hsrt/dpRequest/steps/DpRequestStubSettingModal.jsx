@@ -962,16 +962,16 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                         <div style={{ flex: 'none', background: '#f4f6f8', border: '1px solid #cbd5e1', borderRadius: '6px', padding: '16px', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: isRankOutputsOpen ? '16px' : '0' }}>
                                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer' }} onClick={() => setIsRankOutputsOpen(!isRankOutputsOpen)} title={isRankOutputsOpen ? "토글 닫기" : "토글 열기"}>
-                                    <div 
-                                        style={{ 
+                                    <div
+                                        style={{
                                             marginTop: '2px',
-                                            width: '24px', 
-                                            height: '24px', 
-                                            borderRadius: '50%', 
-                                            background: isRankOutputsOpen ? '#e0f2fe' : '#e2e8f0', 
-                                            color: isRankOutputsOpen ? '#0284c7' : '#64748b', 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
+                                            width: '24px',
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            background: isRankOutputsOpen ? '#e0f2fe' : '#e2e8f0',
+                                            color: isRankOutputsOpen ? '#0284c7' : '#64748b',
+                                            display: 'flex',
+                                            alignItems: 'center',
                                             justifyContent: 'center',
                                             transition: 'all 0.2s',
                                             flexShrink: 0,
@@ -1009,120 +1009,120 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     </button>
                                 </div>
                             </div>
-                            
+
                             {isRankOutputsOpen && (
                                 <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '6px', overflow: 'hidden' }}>
-                                {/* Table Header */}
-                                <div style={{ display: 'flex', fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '6px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0' }}>
-                                    <div style={{ flex: '0 0 220px', paddingRight: '16px' }}>순위 범위</div>
-                                    <div style={{ flex: 1, paddingRight: '16px' }}>자동 생성 제목</div>
-                                    <div style={{ flex: '0 0 200px', paddingRight: '16px' }}>배너</div>
-                                    <div style={{ flex: '0 0 90px' }}>표시 여부</div>
-                                    <div style={{ flex: '0 0 30px' }}></div>
-                                </div>
+                                    {/* Table Header */}
+                                    <div style={{ display: 'flex', fontSize: '12px', color: '#64748b', background: '#f8fafc', padding: '6px 16px', fontWeight: '600', borderBottom: '1px solid #e2e8f0' }}>
+                                        <div style={{ flex: '0 0 220px', paddingRight: '16px' }}>순위 범위</div>
+                                        <div style={{ flex: 1, paddingRight: '16px' }}>자동 생성 제목</div>
+                                        <div style={{ flex: '0 0 200px', paddingRight: '16px' }}>배너</div>
+                                        <div style={{ flex: '0 0 90px' }}>표시 여부</div>
+                                        <div style={{ flex: '0 0 30px' }}></div>
+                                    </div>
 
-                                {/* Table Body */}
-                                <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                                    {rankOutputs.length === 0 ? (
-                                        <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '30px' }}>설정된 출력 스터브가 없습니다.</div>
-                                    ) : (
-                                        rankOutputs.map((out, idx) => {
-                                            const rankOptions = Array.from({length: 4}, (_, i) => i + 1);
-                                            const sRank = out.start_rank || 1;
-                                            const eRank = out.end_rank || 1;
-                                            const rankTitleStr = sRank === eRank ? `${sRank}순위` : `${sRank}~${eRank}순위`;
-                                            let rankIdStr = `${sRank}`;
-                                            if (sRank !== eRank) {
-                                                const start = Math.min(sRank, eRank);
-                                                const end = Math.max(sRank, eRank);
-                                                rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
-                                            }
-                                            
-                                            return (
-                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '6px 16px', borderBottom: idx === rankOutputs.length - 1 ? 'none' : '1px solid #e2e8f0' }}>
-                                                    
-                                                    {/* Column 1: 순위 범위 */}
-                                                    <div style={{ flex: '0 0 220px', paddingRight: '16px' }}>
-                                                        <div style={{ height: '26px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                                                            <DropDownList 
-                                                                data={rankOptions.map(r => ({ text: `${r}순위`, value: r }))}
+                                    {/* Table Body */}
+                                    <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
+                                        {rankOutputs.length === 0 ? (
+                                            <div style={{ textAlign: 'center', color: '#94a3b8', fontSize: '13px', padding: '30px' }}>설정된 출력 스터브가 없습니다.</div>
+                                        ) : (
+                                            rankOutputs.map((out, idx) => {
+                                                const rankOptions = Array.from({ length: 4 }, (_, i) => i + 1);
+                                                const sRank = out.start_rank || 1;
+                                                const eRank = out.end_rank || 1;
+                                                const rankTitleStr = sRank === eRank ? `${sRank}순위` : `${sRank}~${eRank}순위`;
+                                                let rankIdStr = `${sRank}`;
+                                                if (sRank !== eRank) {
+                                                    const start = Math.min(sRank, eRank);
+                                                    const end = Math.max(sRank, eRank);
+                                                    rankIdStr = Array.from({ length: end - start + 1 }, (_, i) => start + i).join('+');
+                                                }
+
+                                                return (
+                                                    <div key={idx} style={{ display: 'flex', alignItems: 'center', padding: '6px 16px', borderBottom: idx === rankOutputs.length - 1 ? 'none' : '1px solid #e2e8f0' }}>
+
+                                                        {/* Column 1: 순위 범위 */}
+                                                        <div style={{ flex: '0 0 220px', paddingRight: '16px' }}>
+                                                            <div style={{ height: '26px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                                                                <DropDownList
+                                                                    data={rankOptions.map(r => ({ text: `${r}순위`, value: r }))}
+                                                                    textField="text"
+                                                                    dataItemKey="value"
+                                                                    value={{ text: `${sRank}순위`, value: sRank }}
+                                                                    onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, start_rank: e.value.value } : item))}
+                                                                    className="dp-mini-dropdown k-dropdown-solid"
+                                                                    style={{ width: '85px', fontSize: '13px', fontWeight: '600' }}
+                                                                />
+                                                                <span style={{ color: '#94a3b8', fontSize: '12px' }}>~</span>
+                                                                <DropDownList
+                                                                    data={rankOptions.map(r => ({ text: `${r}순위`, value: r }))}
+                                                                    textField="text"
+                                                                    dataItemKey="value"
+                                                                    value={{ text: `${eRank}순위`, value: eRank }}
+                                                                    onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, end_rank: e.value.value } : item))}
+                                                                    className="dp-mini-dropdown k-dropdown-solid"
+                                                                    style={{ width: '85px', fontSize: '13px', fontWeight: '600' }}
+                                                                />
+                                                            </div>
+                                                            <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.4' }}>
+                                                                {rankIdStr}순위 · 조건식은 백엔드가 자동 생성합니다.
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Column 2: 자동 생성 제목 */}
+                                                        <div style={{ flex: 1, paddingRight: '16px' }}>
+                                                            <div style={{ height: '26px', display: 'flex', alignItems: 'center', fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '2px' }}>
+                                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                    {rowData?.var_label || ''} ({rankTitleStr})
+                                                                </span>
+                                                            </div>
+                                                            <div style={{ fontSize: '12px', color: '#94a3b8' }}>
+                                                                {rowData?.recoded_var_id}_({rankIdStr})
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Column 3: 배너 */}
+                                                        <div style={{ flex: '0 0 200px', paddingRight: '16px', height: '26px', display: 'flex', alignItems: 'center' }}>
+                                                            <input
+                                                                type="text"
+                                                                value={out.banner || ''}
+                                                                placeholder={Array.isArray(rowData?.x_info) ? rowData.x_info.join(', ') : (rowData?.x_info || '배너 입력')}
+                                                                onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, banner: e.target.value } : item))}
+                                                                style={{ width: '100%', height: '26px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px', color: '#475569', boxSizing: 'border-box', outline: 'none' }}
+                                                            />
+                                                        </div>
+
+                                                        {/* Column 4: 표시 여부 */}
+                                                        <div style={{ flex: '0 0 90px', display: 'flex', alignItems: 'center', height: '26px' }}>
+                                                            <DropDownList
+                                                                data={[{ text: '표시', value: false }, { text: '숨김', value: true }]}
                                                                 textField="text"
                                                                 dataItemKey="value"
-                                                                value={{ text: `${sRank}순위`, value: sRank }}
-                                                                onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, start_rank: e.value.value } : item))}
+                                                                value={{ text: out.hide ? '숨김' : '표시', value: !!out.hide }}
+                                                                onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, hide: e.value.value } : item))}
                                                                 className="dp-mini-dropdown k-dropdown-solid"
-                                                                style={{ width: '85px', fontSize: '13px', fontWeight: '600' }}
-                                                            />
-                                                            <span style={{ color: '#94a3b8', fontSize: '12px' }}>~</span>
-                                                            <DropDownList 
-                                                                data={rankOptions.map(r => ({ text: `${r}순위`, value: r }))}
-                                                                textField="text"
-                                                                dataItemKey="value"
-                                                                value={{ text: `${eRank}순위`, value: eRank }}
-                                                                onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, end_rank: e.value.value } : item))}
-                                                                className="dp-mini-dropdown k-dropdown-solid"
-                                                                style={{ width: '85px', fontSize: '13px', fontWeight: '600' }}
+                                                                style={{ width: '80px', fontSize: '13px', fontWeight: '600' }}
                                                             />
                                                         </div>
-                                                        <div style={{ fontSize: '11px', color: '#94a3b8', lineHeight: '1.4' }}>
-                                                            {rankIdStr}순위 · 조건식은 백엔드가 자동 생성합니다.
+
+                                                        {/* Column 5: 삭제 버튼 */}
+                                                        <div style={{ flex: '0 0 30px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: '26px' }}>
+                                                            <button
+                                                                onClick={() => setRankOutputs(prev => prev.filter((_, i) => i !== idx))}
+                                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px', borderRadius: '4px', transition: 'all 0.2s' }}
+                                                                onMouseOver={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = '#fee2e2'; }}
+                                                                onMouseOut={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'transparent'; }}
+                                                            >
+                                                                <Trash2 size={16} strokeWidth={2.0} />
+                                                            </button>
                                                         </div>
-                                                    </div>
 
-                                                    {/* Column 2: 자동 생성 제목 */}
-                                                    <div style={{ flex: 1, paddingRight: '16px' }}>
-                                                        <div style={{ height: '26px', display: 'flex', alignItems: 'center', fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '2px' }}>
-                                                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                {rowData?.var_label || ''} ({rankTitleStr})
-                                                            </span>
-                                                        </div>
-                                                        <div style={{ fontSize: '12px', color: '#94a3b8' }}>
-                                                            {rowData?.recoded_var_id}_({rankIdStr})
-                                                        </div>
                                                     </div>
-
-                                                    {/* Column 3: 배너 */}
-                                                    <div style={{ flex: '0 0 200px', paddingRight: '16px', height: '26px', display: 'flex', alignItems: 'center' }}>
-                                                        <input 
-                                                            type="text" 
-                                                            value={out.banner || ''} 
-                                                            placeholder={Array.isArray(rowData?.x_info) ? rowData.x_info.join(', ') : (rowData?.x_info || '배너 입력')}
-                                                            onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, banner: e.target.value } : item))}
-                                                            style={{ width: '100%', height: '26px', padding: '0 10px', border: '1px solid #cbd5e1', borderRadius: '4px', fontSize: '13px', color: '#475569', boxSizing: 'border-box', outline: 'none' }}
-                                                        />
-                                                    </div>
-
-                                                    {/* Column 4: 표시 여부 */}
-                                                    <div style={{ flex: '0 0 90px', display: 'flex', alignItems: 'center', height: '26px' }}>
-                                                        <DropDownList 
-                                                            data={[{ text: '표시', value: false }, { text: '숨김', value: true }]}
-                                                            textField="text"
-                                                            dataItemKey="value"
-                                                            value={{ text: out.hide ? '숨김' : '표시', value: !!out.hide }}
-                                                            onChange={e => setRankOutputs(prev => prev.map((item, i) => i === idx ? { ...item, hide: e.value.value } : item))}
-                                                            className="dp-mini-dropdown k-dropdown-solid"
-                                                            style={{ width: '80px', fontSize: '13px', fontWeight: '600' }}
-                                                        />
-                                                    </div>
-
-                                                    {/* Column 5: 삭제 버튼 */}
-                                                    <div style={{ flex: '0 0 30px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: '26px' }}>
-                                                        <button
-                                                            onClick={() => setRankOutputs(prev => prev.filter((_, i) => i !== idx))}
-                                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '4px', borderRadius: '4px', transition: 'all 0.2s' }}
-                                                            onMouseOver={e => { e.currentTarget.style.color = '#ef4444'; e.currentTarget.style.background = '#fee2e2'; }}
-                                                            onMouseOut={e => { e.currentTarget.style.color = '#94a3b8'; e.currentTarget.style.background = 'transparent'; }}
-                                                        >
-                                                            <Trash2 size={16} strokeWidth={2.0} />
-                                                        </button>
-                                                    </div>
-
-                                                </div>
-                                            );
-                                        })
-                                    )}
+                                                );
+                                            })
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
                             )}
                         </div>
                     )}
@@ -1138,17 +1138,17 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     그리드 편집
                                 </span>
                             </div>
-                            <div 
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', 
-                                    padding: '4px 12px', background: isDetailSetting ? '#dbeafe' : '#fff', 
-                                    border: `1px solid ${isDetailSetting ? '#bfdbfe' : '#cbd5e1'}`, 
+                            <div
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                    padding: '4px 12px', background: isDetailSetting ? '#dbeafe' : '#fff',
+                                    border: `1px solid ${isDetailSetting ? '#bfdbfe' : '#cbd5e1'}`,
                                     borderRadius: '20px', transition: 'all 0.2s',
                                     boxShadow: isDetailSetting ? '0 1px 2px rgba(59,130,246,0.1)' : 'none'
-                                }} 
+                                }}
                                 onClick={() => setIsDetailSetting(!isDetailSetting)}
-                                onMouseOver={e => { if(!isDetailSetting) e.currentTarget.style.background = '#f8fafc'; }}
-                                onMouseOut={e => { if(!isDetailSetting) e.currentTarget.style.background = '#fff'; }}
+                                onMouseOver={e => { if (!isDetailSetting) e.currentTarget.style.background = '#f8fafc'; }}
+                                onMouseOut={e => { if (!isDetailSetting) e.currentTarget.style.background = '#fff'; }}
                             >
                                 <span style={{ fontSize: '12px', fontWeight: 700, color: isDetailSetting ? '#1d4ed8' : '#64748b' }}>상세 컬럼 표시</span>
                                 <div style={{ width: '32px', height: '18px', borderRadius: '10px', background: isDetailSetting ? '#3b82f6' : '#cbd5e1', position: 'relative', transition: 'background 0.2s', display: 'flex', alignItems: 'center', padding: '2px' }}>
@@ -1175,8 +1175,8 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                 style={{ flex: 1, height: '100%', width: '100%' }}
                                 scrollable="scrollable"
                             >
-                                {isDetailSetting && <Column field="label2" title="대분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
-                                {isDetailSetting && <Column field="label3" title="중분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="label3" title="대분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label3" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
+                                {isDetailSetting && <Column field="label2" title="중분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label2" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />}
                                 <Column field="label" title="소분류" width="150px" cell={(p) => <TextEditCell dataItem={p.dataItem} field="label" onUpdate={(item, f, v) => handleCategoryCellUpdate(p.dataIndex, f, v)} />} />
                                 <Column
                                     field="type"
