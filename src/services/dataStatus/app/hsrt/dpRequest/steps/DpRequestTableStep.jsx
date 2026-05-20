@@ -663,7 +663,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
     const auth = useSelector((store) => store.auth);
-    const { getRecodedOverview, saveRecodedOverview, getTableDetail, getBannerDetail, createStub, reapplyPreset } = DpRequestPageApi();
+    const { getRecodedOverview, saveRecodedOverview, getTableDetail, getBannerDetail, reapplyPreset } = DpRequestPageApi();
 
     const [searchTerm, setSearchTerm] = useState('');
     const [stubs, setStubs] = useState([]);
@@ -1078,7 +1078,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             if (sRank !== eRank) {
                                 const start = Math.min(sRank, eRank);
                                 const end = Math.max(sRank, eRank);
-                                rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                                rankIdStr = Array.from({ length: end - start + 1 }, (_, i) => start + i).join('+');
                             }
                             return { ...out, recoded_var_id: `${value}_(${rankIdStr})` };
                         });
@@ -1141,17 +1141,17 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
     const handleRowCopy = (idx) => {
         if (idx === undefined || idx === null) return;
-        
+
         const scrollPos = gridRef.current?.getScrollPosition?.();
         if (scrollPos) scrollPosToRestore.current = scrollPos;
-        
+
         setStubs(prev => {
             const targetItem = filteredStubs[idx];
             if (!targetItem) return prev;
-            
+
             const realIdx = prev.findIndex(item => item._row_id === targetItem._row_id);
             if (realIdx === -1) return prev;
-            
+
             const target = prev[realIdx];
             const next = [...prev];
             const newRecodedId = `${target.recoded_var_id}_copy_${Math.floor(Math.random() * 1000)}`;
@@ -1172,7 +1172,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     if (sRank !== eRank) {
                         const start = Math.min(sRank, eRank);
                         const end = Math.max(sRank, eRank);
-                        rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                        rankIdStr = Array.from({ length: end - start + 1 }, (_, i) => start + i).join('+');
                     }
                     return {
                         ...out,
@@ -1192,10 +1192,10 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
 
     const handleRowDelete = (idx) => {
         if (idx === undefined || idx === null) return;
-        
+
         const scrollPos = gridRef.current?.getScrollPosition?.();
         if (scrollPos) scrollPosToRestore.current = scrollPos;
-        
+
         setStubs(prev => {
             const targetItem = filteredStubs[idx];
             if (!targetItem) return prev;
@@ -1364,7 +1364,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     if (sRank !== eRank) {
                         const start = Math.min(sRank, eRank);
                         const end = Math.max(sRank, eRank);
-                        rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                        rankIdStr = Array.from({ length: end - start + 1 }, (_, i) => start + i).join('+');
                     }
                     const childId = `${effRecodedId}_(${rankIdStr})`;
                     if (!outputById.has(childId)) {
@@ -1424,7 +1424,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                         if (sRank !== eRank) {
                             const start = Math.min(sRank, eRank);
                             const end = Math.max(sRank, eRank);
-                            rankIdStr = Array.from({length: end - start + 1}, (_, i) => start + i).join('+');
+                            rankIdStr = Array.from({ length: end - start + 1 }, (_, i) => start + i).join('+');
                         }
                         const childId = `${effRecodedId}_(${rankIdStr})`;
                         orderIds.push(childId);
@@ -1680,50 +1680,50 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                 <DpRequestStubSettingModal
                     show={true}
                     onClose={() => setSelectedStubForModal(null)}
-                rowData={selectedStubForModal}
-                variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
-                onApply={(rules, rankOutputs) => {
-                    // 그리드 내부 필드 정리 + 필수 필드 정규화
-                    const STAT_TYPES = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"];
-                    const normalizedRules = rules.map((opt, i) => {
-                        const isBase = opt.type === 'base';
-                        const isStat = STAT_TYPES.includes(opt.type);
-                        const rowRole = isBase ? 'base' : (isStat ? 'stat' : (opt.row_role || 'option'));
-                        // 그리드 내부 필드(inEdit 등) 제거, 필수 필드 보충
-                        return {
-                            index: i + 1,
-                            label: opt.label || '',
-                            label2: opt.label2 || '',
-                            label3: opt.label3 || '',
-                            logic: opt.logic || '',
-                            type: opt.type || 'option',
-                            row_role: rowRole,
-                            is_internal: opt.is_internal ?? null,
-                            prefix: opt.prefix || null,
-                            postfix: opt.postfix || null,
-                            hide: opt.hide || null,
-                            round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isBase ? 0 : (isStat ? 2 : null)),
-                            value: opt.value !== '' && opt.value !== undefined && opt.value !== null ? opt.value : null,
-                            stat_type: opt.stat_type || null,
-                            target_var: opt.target_var || null,
-                            line: opt.line || null,
-                            color: opt.color || null,
-                        };
-                    });
-                    // 해당 stub의 info 및 rank_outputs 업데이트
-                    setStubs(prev => prev.map(s => {
-                        if (s.recoded_var_id === selectedStubForModal?.recoded_var_id) {
+                    rowData={selectedStubForModal}
+                    variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
+                    onApply={(rules, rankOutputs) => {
+                        // 그리드 내부 필드 정리 + 필수 필드 정규화
+                        const STAT_TYPES = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"];
+                        const normalizedRules = rules.map((opt, i) => {
+                            const isBase = opt.type === 'base';
+                            const isStat = STAT_TYPES.includes(opt.type);
+                            const rowRole = isBase ? 'base' : (isStat ? 'stat' : (opt.row_role || 'option'));
+                            // 그리드 내부 필드(inEdit 등) 제거, 필수 필드 보충
                             return {
-                                ...s,
-                                info: normalizedRules,
-                                ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
+                                index: i + 1,
+                                label: opt.label || '',
+                                label2: opt.label2 || '',
+                                label3: opt.label3 || '',
+                                logic: opt.logic || '',
+                                type: opt.type || 'option',
+                                row_role: rowRole,
+                                is_internal: opt.is_internal ?? null,
+                                prefix: opt.prefix || null,
+                                postfix: opt.postfix || null,
+                                hide: opt.hide || null,
+                                round: opt.round !== undefined && opt.round !== '' ? Number(opt.round) : (isBase ? 0 : (isStat ? 2 : null)),
+                                value: opt.value !== '' && opt.value !== undefined && opt.value !== null ? opt.value : null,
+                                stat_type: opt.stat_type || null,
+                                target_var: opt.target_var || null,
+                                line: opt.line || null,
+                                color: opt.color || null,
                             };
-                        }
-                        return s;
-                    }));
-                    if (onUnsavedChange) onUnsavedChange(true);
-                }}
-            />
+                        });
+                        // 해당 stub의 info 및 rank_outputs 업데이트
+                        setStubs(prev => prev.map(s => {
+                            if (s.recoded_var_id === selectedStubForModal?.recoded_var_id) {
+                                return {
+                                    ...s,
+                                    info: normalizedRules,
+                                    ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
+                                };
+                            }
+                            return s;
+                        }));
+                        if (onUnsavedChange) onUnsavedChange(true);
+                    }}
+                />
             )}
         </div>
     );

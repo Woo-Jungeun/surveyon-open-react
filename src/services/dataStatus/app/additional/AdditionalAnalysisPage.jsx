@@ -114,7 +114,7 @@ const AdditionalAnalysisPage = () => {
     // Auth & API
     const auth = useSelector((store) => store.auth);
     const { getTableRenderContext } = DpRequestPageApi();
-    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable, evaluateTables } = AdditionalAnalysisPageApi();
+    const { getCrossTabList, getCrossTabData, saveCrossTable, deleteCrossTable, evaluateTable } = AdditionalAnalysisPageApi();
     const { getRecodedVariables } = RecodingPageApi();
     const modal = React.useContext(modalContext);
     const loadingSpinner = React.useContext(loadingSpinnerContext);

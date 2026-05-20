@@ -110,11 +110,9 @@ const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placehol
 
 const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive, hideSidebar = false, hideGroupSidebar = false, theme = 'default', title, initialLogic, saveMode = 'api', initialInfo }) => {
     const modal = React.useContext(modalContext);
-    const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
-    const { getOriginalVariables } = VariablePageApi();
+    const { getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
 
     const [variables, setVariables] = useState(initialVariables);
-    const [originalVars, setOriginalVars] = useState(variablesList);
     const [selectedVarId, setSelectedVarId] = useState(null);
     const [varName, setVarName] = useState('');
     const [varLabel, setVarLabel] = useState('');
@@ -282,22 +280,6 @@ const ConditionBuilderPopup = ({ variablesList = [], initialVariables = [], onCl
         }
 
         return mergedSets.length > 0 ? mergedSets : defaultState;
-    };
-
-    // Fetch variables list for sidebar
-    const fetchList = async () => {
-        if (!auth?.user?.userId || !pageId) return;
-        try {
-            const result = await getRecodedList.mutateAsync({ user: auth.user.userId, pageid: pageId });
-            if (result?.success === "777" && result.resultjson) {
-                const overviewVars = Object.values(result.resultjson)
-                    .filter(v => v.id.startsWith('overview_'))
-                    .map(v => ({ ...v, label: v.label || v.id }));
-                setVariables(overviewVars);
-            }
-        } catch (error) {
-            console.error("Failed to fetch recoded list:", error);
-        }
     };
 
     useEffect(() => {

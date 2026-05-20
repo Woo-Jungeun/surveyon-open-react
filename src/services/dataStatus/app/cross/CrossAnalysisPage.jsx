@@ -741,7 +741,7 @@ const CrossAnalysisPage = () => {
     const [overviewVariables, setOverviewVariables] = useState([]);
     const [bannerVariables, setBannerVariables] = useState([]);
     const [originalVariables, setOriginalVariables] = useState([]);
-    const { getRecodedList, getRecodedVariables } = RecodingPageApi();
+    const { getRecodedList } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
 
     const fetchOverviewVars = async () => {
@@ -1337,8 +1337,8 @@ const CrossAnalysisPage = () => {
 
             {/* Settings Modal */}
             {optionModalOpen && (
-                <CrossOptionModal 
-                    onClose={() => setOptionModalOpen(false)} 
+                <CrossOptionModal
+                    onClose={() => setOptionModalOpen(false)}
                     onApply={(opts) => {
                         console.log('Applied Options:', opts);
                         // Save options

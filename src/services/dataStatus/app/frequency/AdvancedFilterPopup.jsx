@@ -111,7 +111,7 @@ const MultiCheckboxDropdown = ({ options = [], valueStr = '', onChange, placehol
 
 const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClose, onSave, auth, pageId, onSaved, activeVariableId, onDeleteActive }) => {
     const modal = React.useContext(modalContext);
-    const { getRecodedList, getRecodedVariables, setRecodedVariable, deleteRecodedVariable } = RecodingPageApi();
+    const { getRecodedVariables } = RecodingPageApi();
     const { getOriginalVariables } = VariablePageApi();
     const { saveRecodedSet, deleteRecodedSet } = DpRequestPageApi();
 
@@ -284,22 +284,6 @@ const AdvancedFilterPopup = ({ variablesList = [], initialVariables = [], onClos
         }
 
         return mergedSets.length > 0 ? mergedSets : defaultState;
-    };
-
-    // Fetch variables list for sidebar
-    const fetchList = async () => {
-        if (!auth?.user?.userId || !pageId) return;
-        try {
-            const result = await getRecodedList.mutateAsync({ user: auth.user.userId, pageid: pageId });
-            if (result?.success === "777" && result.resultjson) {
-                const overviewVars = Object.values(result.resultjson)
-                    .filter(v => v.id.startsWith('overview_'))
-                    .map(v => ({ ...v, label: v.label || v.id }));
-                setVariables(overviewVars);
-            }
-        } catch (error) {
-            console.error("Failed to fetch recoded list:", error);
-        }
     };
 
     useEffect(() => {
