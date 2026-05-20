@@ -421,6 +421,60 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [deletedBannerIds, setDeletedBannerIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
     const [originalBannerIds, setOriginalBannerIds] = useState([]); // 초기 로딩된 배너 ID 목록 (신규 구분용)
 
+    // --- Add Variable Popup States ---
+    const [isAddVarPopupOpen, setIsAddVarPopupOpen] = useState(false);
+    const addVarButtonRef = useRef(null);
+    const [addVarSearch, setAddVarSearch] = useState('');
+
+    const addVarFilteredVariables = useMemo(() => {
+        const search = addVarSearch.toLowerCase();
+        const allowedTypes = ['single', 'multi', 'scale', 'rank'];
+        return (Array.isArray(baseVariables) ? baseVariables : []).filter(v => {
+            const matchesSearch = (v.label || '').toLowerCase().includes(search) || (v.id || '').toLowerCase().includes(search);
+            const isAllowedType = allowedTypes.includes((v.type || '').toLowerCase());
+            return matchesSearch && isAllowedType;
+        });
+    }, [baseVariables, addVarSearch]);
+
+    const handleAddVariableToGrid = useCallback((vId) => {
+        const v = baseVariables.find(item => item.id === vId);
+        if (!v) return;
+
+        if (!selectedBanner) {
+            modal.showAlert('알림', '선택된 배너가 없습니다.');
+            return;
+        }
+
+        const cats = v.categories || v.info || [];
+        if (cats.length === 0) {
+            modal.showAlert('알림', '해당 문항에 보기 정보가 없습니다.');
+            return;
+        }
+
+        const newItems = cats.map(cat => ({
+            label3: '',
+            label2: v.label || v.name || '',
+            label: cat.label || cat.name || '',
+            logic: `${v.id} == ${cat.value !== undefined ? cat.value : ''}`,
+            inEdit: false
+        }));
+
+        setBanners(prev => prev.map(b => {
+            if (b.id === selectedBanner) {
+                return {
+                    ...b,
+                    info: [...(b.info || []), ...newItems],
+                    isDirty: true
+                };
+            }
+            return b;
+        }));
+
+        if (onUnsavedChange) onUnsavedChange(true);
+        setIsAddVarPopupOpen(false);
+        setAddVarSearch('');
+    }, [baseVariables, selectedBanner, onUnsavedChange, modal]);
+
     // 키보드 이벤트 (Undo/Redo)
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -1429,8 +1483,90 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     >
                                         미리보기 계산
                                     </button>
+                                    <button
+                                        ref={addVarButtonRef}
+                                        onClick={() => setIsAddVarPopupOpen(!isAddVarPopupOpen)}
+                                        style={{
+                                            background: isAddVarPopupOpen ? '#eff6ff' : '#fff',
+                                            border: '1px solid #3b82f6',
+                                            color: '#3b82f6',
+                                            height: '32px',
+                                            padding: '0 16px',
+                                            borderRadius: '4px',
+                                            fontSize: '13px',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.1s',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '4px',
+                                            boxShadow: isAddVarPopupOpen ? 'inset 0 2px 4px rgba(0,0,0,0.05)' : 'none'
+                                        }}
+                                        onMouseOver={(e) => {
+                                            if (!isAddVarPopupOpen) e.currentTarget.style.background = '#eff6ff';
+                                        }}
+                                        onMouseOut={(e) => {
+                                            e.currentTarget.style.background = isAddVarPopupOpen ? '#eff6ff' : '#fff';
+                                            e.currentTarget.style.transform = 'scale(1)';
+                                        }}
+                                        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.96)'}
+                                        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                                    >
+                                        <span style={{ fontSize: '15px', fontWeight: 500, marginTop: '-2px' }}>+</span> 문항추가
+                                    </button>
                                 </div>
                             </div>
+
+                            <Popup
+                                anchor={addVarButtonRef.current}
+                                show={isAddVarPopupOpen}
+                                popupClass="add-var-popup"
+                                anchorAlign={{ horizontal: 'right', vertical: 'bottom' }}
+                                popupAlign={{ horizontal: 'right', vertical: 'top' }}
+                                margin={{ horizontal: 0, vertical: 4 }}
+                            >
+                                <div style={{ 
+                                    width: '280px', 
+                                    height: '400px', 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    background: '#fff', 
+                                    border: '1px solid #e2e8f0', 
+                                    borderRadius: '6px', 
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', 
+                                    padding: '8px' 
+                                }}>
+                                    <div className="dp-search-input-wrapper" style={{ marginBottom: '8px' }}>
+                                        <Search size={14} className="dp-search-input-icon" />
+                                        <input
+                                            type="text"
+                                            placeholder="변수명 검색"
+                                            value={addVarSearch}
+                                            onChange={(e) => setAddVarSearch(e.target.value)}
+                                            className="dp-search-input"
+                                            autoFocus
+                                        />
+                                    </div>
+                                    <div className="variable-list custom-scrollbar" style={{ flex: 1, overflowY: 'auto', paddingRight: '4px' }}>
+                                        {addVarFilteredVariables.map(v => (
+                                            <VariableItem
+                                                key={v.id}
+                                                v={v}
+                                                isSelected={false}
+                                                onDragStart={() => {}}
+                                                onClick={handleAddVariableToGrid}
+                                            />
+                                        ))}
+                                        {addVarFilteredVariables.length === 0 && (
+                                            <div style={{ textAlign: 'center', color: '#94a3b8', padding: '20px 0', fontSize: '13px' }}>
+                                                검색 결과가 없습니다.
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </Popup>
+
                             <div className="dp-table-container" style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
                                 <KendoGridV3
                                     data={banners.find(b => b.id === selectedBanner)?.info || []}
