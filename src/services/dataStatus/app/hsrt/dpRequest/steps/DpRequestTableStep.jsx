@@ -660,6 +660,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const [stubs, setStubs] = useState([]);
     const [banners, setBanners] = useState([]);
     const [originalRecodedIds, setOriginalRecodedIds] = useState([]);
+    const [modifiedPresetIds, setModifiedPresetIds] = useState(new Set());
     const gridRef = useRef(null);
     const [scalePresets, setScalePresets] = useState([]);
     const [rankPresets, setRankPresets] = useState([]);
@@ -1044,14 +1045,23 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     }, [onUnsavedChange]);
 
+    const PRESET_FIELDS = ['group_preset_name', 'stat_summary', 'scale_preset_name', 'rank_preset_name'];
+
     const handleCellUpdate = useCallback((item, field, value) => {
         const targetId = item._row_id;
+        const isPresetModified = PRESET_FIELDS.includes(field);
+
         if (stubDragSelectedIds.size > 1 && stubDragSelectedIds.has(String(item.source_var_id))) {
             setStubs(prev => prev.map(s => {
                 if (stubDragSelectedIds.has(String(s.source_var_id))) {
                     let updated = { ...s };
                     if (field !== 'recoded_var_id') {
-                        updated[field] = value;
+                        if (updated[field] !== value) {
+                            updated[field] = value;
+                            if (isPresetModified) {
+                                setModifiedPresetIds(old => new Set(old).add(updated.recoded_var_id));
+                            }
+                        }
                     }
                     return updated;
                 }
@@ -1060,6 +1070,9 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         } else {
             setStubs(prev => prev.map(s => {
                 if (s._row_id === targetId) {
+                    if (s[field] !== value && isPresetModified) {
+                        setModifiedPresetIds(old => new Set(old).add(s.recoded_var_id));
+                    }
                     let updated = { ...s, [field]: value };
                     if (field === 'recoded_var_id' && updated.rank_outputs && Array.isArray(updated.rank_outputs)) {
                         updated.rank_outputs = updated.rank_outputs.map(out => {
@@ -1472,6 +1485,30 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     }
                 }
 
+                let idsToReapply = Array.from(modifiedPresetIds);
+                if (payload.created_custom_stubs && Array.isArray(payload.created_custom_stubs)) {
+                    const idMap = {};
+                    payload.created_custom_stubs.forEach(mapping => {
+                        if (mapping.client_id && mapping.recoded_var_id) {
+                            idMap[mapping.client_id] = mapping.recoded_var_id;
+                        }
+                    });
+                    idsToReapply = idsToReapply.map(id => idMap[id] || id);
+                }
+
+                if (idsToReapply.length > 0) {
+                    const reapplyResult = await reapplyPreset.mutateAsync({
+                        pageid: pageId,
+                        user: user,
+                        recoded_var_ids: idsToReapply
+                    });
+                    if (reapplyResult?.success === "777") {
+                        setModifiedPresetIds(new Set());
+                    } else {
+                        console.error('Failed to reapply presets:', reapplyResult);
+                    }
+                }
+
                 await fetchOverview(); // 저장 후 목록 최신화
                 isSuccess = true;
             } else {
@@ -1595,40 +1632,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                             <Column field="x_info" title="배너" width="150px" headerClassName="k-text-center"
                                 cell={(p) => <PresetDropdownCell field="x_info" dataItem={p.dataItem} presets={banners} onChange={handleCellUpdate} />}
                             />
-                            {/* 재적용 버튼 컬럼 - source_based + 설정 적용된 행만 활성화 */}
-                            <Column width="45px" headerClassName="k-text-center"
-                                headerCell={() => (
-                                    <div style={{ textAlign: 'center', lineHeight: '1.2', fontSize: '12px', whiteSpace: 'nowrap' }}>
-                                        설정<br />재적용
-                                    </div>
-                                )}
-                                cell={(p) => {
-                                    const canReapply = canReapplyPreset(p.dataItem);
-                                    return (
-                                        <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: '0 2px' }}>
-                                            <button
-                                                type="button"
-                                                title={canReapply ? '설정 재적용' : undefined}
-                                                disabled={!canReapply}
-                                                onClick={async (e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    await handleReapplyPreset(p.dataItem);
-                                                }}
-                                                style={{
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    width: '100%', height: '22px', padding: 0,
-                                                    border: 'none', background: 'transparent',
-                                                    cursor: canReapply ? 'pointer' : 'default',
-                                                    opacity: canReapply ? 1 : 0.25,
-                                                }}
-                                            >
-                                                <RotateCcw size={14} color={canReapply ? '#10b981' : '#94a3b8'} strokeWidth={3} />
-                                            </button>
-                                        </td>
-                                    );
-                                }}
-                            />
+
                             <Column field="group_preset_name" title="그룹" width="150px" headerClassName="k-text-center"
                                 cell={(p) => {
                                     if (!canUseGroupPreset(p.dataItem.var_type)) {
