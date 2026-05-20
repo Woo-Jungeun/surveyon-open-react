@@ -50,10 +50,10 @@ const DpRequestPage = () => {
 
     // 명세서 기반 5단계 워크플로우 정의
     const steps = [
-        { key: 'table', label: '설정', desc: '[표 설정] 가중치 변수, 숫자 표시 정책, 테마 색상과 프리셋을 구성하고 저장합니다.' },
-        { key: 'banner', label: '배너', desc: '[배너 설정] 분석 테이블 상단에 기준이 되는 배너를 설정합니다.' },
-        { key: 'recoded', label: '스터브', desc: '[스터브 설정] DP 표 생성을 위한 recoded 메타데이터 설정. 이 화면에서 설정한 내용이 저장 시 실제 recoded 변수 및 필터로 생성됩니다.' },
-        { key: 'summary', label: '요약표', desc: '[요약표 관리] 같은 척도끼리 묶어서 빈도/통계 요약표를 구성하고, 저장 시 summary stub으로 반영합니다.' },
+        { key: 'table', label: '표 설정', desc: '[표 설정] 가중치 변수, 숫자 표시 정책, 테마 색상과 프리셋을 구성하고 저장합니다.' },
+        { key: 'banner', label: '배너', desc: '[배너] 분석 테이블 상단에 기준이 되는 배너를 설정합니다.' },
+        { key: 'recoded', label: '스터브', desc: '[스터브] DP 표 생성을 위한 recoded 메타데이터 설정. 이 화면에서 설정한 내용이 저장 시 실제 recoded 변수 및 필터로 생성됩니다.' },
+        { key: 'summary', label: '요약표', desc: '[요약표] 같은 척도끼리 묶어서 빈도/통계 요약표를 구성하고, 저장 시 summary stub으로 반영합니다.' },
         // { key: 'order', label: '표 순서', desc: '[표 순서] DP 결과 테이블에 표출될 스터브와 요약표의 순서를 조정하고, 필요한 항목은 마지막 단계에서 상세 편집합니다.' },
     ];
 
@@ -160,7 +160,7 @@ const DpRequestPage = () => {
     };
 
     // 단계에 따라 컨텐츠 영역 padding 결정
-    // Step 0 (설정) 은 자체 padding을 포함하므로 별도 패딩 불필요
+    // Step 0 (표 설정) 은 자체 padding을 포함하므로 별도 패딩 불필요
     const contentPadding = currentStep === 0 ? '0' : '12px 16px 16px 16px';
 
     return (

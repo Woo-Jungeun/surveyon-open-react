@@ -119,12 +119,12 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (actualTableDetail?.id || renderContext?.id) {
                 const ui = actualTableDetail?.ui_settings || {};
 
-                const initDisplay = { 
-                    ...settings.display, 
+                const initDisplay = {
+                    ...settings.display,
                     ...renderContext?.effective_display_policy,
                     ...actualTableDetail?.display_policy
                 };
-                
+
                 if (ui.format_show_n !== undefined && ui.format_show_n !== null) initDisplay.show_n = ui.format_show_n;
                 if (ui.format_show_percent !== undefined && ui.format_show_percent !== null) initDisplay.show_percent = ui.format_show_percent;
                 if (ui.format_n_round !== undefined && ui.format_n_round !== null) initDisplay.n_digits = ui.format_n_round;
@@ -139,9 +139,9 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.hide_zero_banners !== undefined && ui.hide_zero_banners !== null) initDisplay.hide_zero_banners = ui.hide_zero_banners;
                 if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
 
-                let mergedRender = { 
-                    ...settings.render, 
-                    ...renderContext?.effective_render_settings, 
+                let mergedRender = {
+                    ...settings.render,
+                    ...renderContext?.effective_render_settings,
                     ...ui,
                     font_family: ui.font_family || ui.font_family_base || settings.render.font_family,
                     font_size: ui.font_size || ui.font_size_base || settings.render.font_size,
@@ -388,7 +388,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                             formatValid = false;
                             break;
                         }
-                        
+
                         const numVal = parseInt(strVal, 10);
                         if (numVal < 1) {
                             modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}'에 1 이상의 정수만 허용됩니다.`);
@@ -402,7 +402,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }
                         numSet.add(strVal);
                     }
-                    
+
                     if (!formatValid) {
                         modal.showAlert("알림", `[다중형 순위 설정] '${item.name}'의 '${rawPart.trim()}' 형식이 올바르지 않습니다. 숫자와 '+' 조합만 허용됩니다.`);
                         loadingSpinner.hide();
@@ -553,7 +553,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const tabs = [
         { label: '분석 설정', icon: <Settings size={18} /> },
-        { label: '표 설정', icon: <Layout size={18} /> },
+        { label: '표 디자인 설정', icon: <Layout size={18} /> },
     ];
 
     const renderTabContent = () => {
@@ -580,7 +580,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
         />
     );
 
-    // 2. 표 설정 탭
+    // 2. 표 디자인 설정 탭
     const renderTableSettingsTab = () => (
         <TableSettingTab
             settings={settings}

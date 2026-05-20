@@ -62,7 +62,7 @@ const AnalysisSettingTab = ({
 
             <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <div className="dp-setting-card-header" style={{ padding: '12px 20px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                    <Layers size={16} /> 고급 분석 설정 (응답 묶기 및 재정의)
+                    <Layers size={16} /> 표 추가 설정 (일괄 척도, 순위 등)
                 </div>
                 <div className="dp-setting-card-body" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
@@ -163,7 +163,7 @@ const AnalysisSettingTab = ({
 
                     {/* 그룹화 */}
                     <div>
-                        <div style={{ fontWeight: 600, fontSize: '14px', color: '#1E293B', marginBottom: '8px' }}>그룹(값 묶기) 설정</div>
+                        <div style={{ fontWeight: 600, fontSize: '14px', color: '#1E293B', marginBottom: '8px' }}>보기 STT 설정</div>
                         <div style={{ height: '200px', border: '1px solid #E2E8F0', borderRadius: '6px', overflow: 'hidden', background: '#FFFFFF' }}>
                             <KendoGridV2
                                 data={groupData}
