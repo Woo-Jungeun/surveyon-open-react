@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { saveAs } from '@progress/kendo-file-saver';
-import { X, BarChart2, BarChartHorizontal, Layers, Percent, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud, ChevronDown, ChevronUp, LayoutList, Check } from 'lucide-react';
+import { X, BarChart2, BarChartHorizontal, Layers, Percent, LineChart, PieChart, Donut, Aperture, Filter, MoreHorizontal, AreaChart, Map as MapIcon, LayoutGrid, Download, Cloud, ChevronDown, ChevronUp, LayoutList, Check, Settings } from 'lucide-react';
 import KendoChart from '../../components/KendoChart';
 import './FullscreenModal.css';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
@@ -21,7 +21,9 @@ const FullscreenModal = ({
     setPaletteId,
     tableName,
     renderSettings,
-    displayPolicy
+    displayPolicy,
+    chartDataType,
+    showChartValues
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
     const [showLegend, setShowLegend] = useState(false);
@@ -38,12 +40,19 @@ const FullscreenModal = ({
     const displayMenuRef = useRef(null);
     const filterMenuRef = useRef(null);
 
+    const [localChartDataType, setLocalChartDataType] = useState(chartDataType || 'percentage');
+    const [localShowChartValues, setLocalShowChartValues] = useState(showChartValues ?? true);
+    const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
+    const chartOptionsMenuRef = useRef(null);
+
     // [Standard Logic] Recompute chart variables based on resultData and localChartMode
     const { localComputedChartData, localComputedSeriesNames, localComputedSuffix } = useMemo(() => {
         if (!resultData) return {};
 
-        // Donut and Funnel use Percentages, others use Counts
-        const usePercent = localChartMode === 'donut' || localChartMode === 'funnel';
+        // Use localChartDataType if provided, otherwise default to legacy behavior
+        const usePercent = localChartDataType 
+            ? localChartDataType === 'percentage'
+            : (localChartMode === 'donut' || localChartMode === 'funnel');
 
         const computedChartData = resultData.columns.map((colObj, colIndex) => {
             let colName = colObj.label || colObj;
@@ -80,7 +89,7 @@ const FullscreenModal = ({
             localComputedSeriesNames: computedSeriesNames,
             localComputedSuffix: usePercent ? "%" : ""
         };
-    }, [resultData, localChartMode]);
+    }, [resultData, localChartMode, localChartDataType]);
 
     const availableChartGroups = useMemo(() => {
         if (!localComputedChartData) return [];
@@ -122,10 +131,11 @@ const FullscreenModal = ({
             setLocalChartMode(chartMode);
             setLocalDisplayMode(displayMode);
             setLocalPaletteId(paletteId || 'default');
+            setLocalChartDataType(chartDataType || 'percentage');
+            setLocalShowChartValues(showChartValues ?? true);
         }
     }
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (downloadMenuRef.current && !downloadMenuRef.current.contains(event.target)) {
@@ -139,6 +149,9 @@ const FullscreenModal = ({
             }
             if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
                 setIsFilterMenuOpen(false);
+            }
+            if (chartOptionsMenuRef.current && !chartOptionsMenuRef.current.contains(event.target)) {
+                setIsChartOptionsOpen(false);
             }
         };
 
@@ -627,6 +640,93 @@ const FullscreenModal = ({
                                 )}
 
                                 <div className="toolbar-divider"></div>
+                                {/* Chart Options Button */}
+                                <div style={{ position: 'relative' }} ref={chartOptionsMenuRef}>
+                                    <button
+                                        onClick={() => setIsChartOptionsOpen(!isChartOptionsOpen)}
+                                        className={`view-option-btn ${isChartOptionsOpen ? 'active' : ''}`}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: '4px',
+                                            fontSize: '12px', fontWeight: 600, border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                            background: isChartOptionsOpen ? '#eff6ff' : '#fff',
+                                            color: isChartOptionsOpen ? '#2563eb' : '#64748b',
+                                            cursor: 'pointer', transition: 'all 0.2s',
+                                            width: 'auto',
+                                            height: '100%',
+                                            padding: '4px 8px'
+                                        }}
+                                        title="차트 옵션"
+                                    >
+                                        <Settings size={14} style={{ flexShrink: 0 }} />
+                                        <span style={{ whiteSpace: 'nowrap' }}>옵션</span>
+                                    </button>
+
+                                    {isChartOptionsOpen && (
+                                        <div className="download-dropdown" style={{
+                                            top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '220px', zIndex: 1100, position: 'absolute',
+                                            background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                                            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)', padding: '16px',
+                                            display: 'flex', flexDirection: 'column', gap: '16px'
+                                        }}>
+                                            <div>
+                                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 표출 데이터</span>
+                                                <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '4px' }}>
+                                                    <div
+                                                        onClick={() => setLocalChartDataType('frequency')}
+                                                        style={{
+                                                            flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
+                                                            fontWeight: localChartDataType === 'frequency' ? 700 : 500,
+                                                            color: localChartDataType === 'frequency' ? '#2563eb' : '#64748b',
+                                                            background: localChartDataType === 'frequency' ? '#fff' : 'transparent',
+                                                            borderRadius: '4px', cursor: 'pointer',
+                                                            boxShadow: localChartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        빈도
+                                                    </div>
+                                                    <div
+                                                        onClick={() => setLocalChartDataType('percentage')}
+                                                        style={{
+                                                            flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
+                                                            fontWeight: localChartDataType === 'percentage' ? 700 : 500,
+                                                            color: localChartDataType === 'percentage' ? '#2563eb' : '#64748b',
+                                                            background: localChartDataType === 'percentage' ? '#fff' : 'transparent',
+                                                            borderRadius: '4px', cursor: 'pointer',
+                                                            boxShadow: localChartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        비율
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div style={{ height: '1px', background: '#e2e8f0' }} />
+                                            <div>
+                                                <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 값 표기</span>
+                                                <div
+                                                    onClick={() => setLocalShowChartValues(!localShowChartValues)}
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0' }}
+                                                >
+                                                    <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
+                                                    <div style={{
+                                                        width: '36px', height: '20px', background: localShowChartValues ? '#3b82f6' : '#e2e8f0',
+                                                        borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
+                                                    }}>
+                                                        <div style={{
+                                                            position: 'absolute', top: '2px', left: localShowChartValues ? '18px' : '2px',
+                                                            width: '16px', height: '16px', background: '#fff', borderRadius: '50%',
+                                                            transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                                        }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="toolbar-divider"></div>
+
                                 <button className={`view-option-btn ${!localChartMode || localChartMode === 'column' ? 'active' : ''}`} onClick={() => setLocalChartMode('column')} title="세로 막대형"><BarChart2 size={18} /></button>
                                 <button className={`view-option-btn ${localChartMode === 'bar' ? 'active' : ''}`} onClick={() => setLocalChartMode('bar')} title="가로 막대형"><BarChartHorizontal size={18} /></button>
                                 <button className={`view-option-btn ${localChartMode === 'stackedColumn' ? 'active' : ''}`} onClick={() => setLocalChartMode('stackedColumn')} title="누적 막대형"><Layers size={18} /></button>
@@ -1123,6 +1223,7 @@ const FullscreenModal = ({
                         <div className="fullscreen-chart-wrapper" ref={chartContainerRef} style={{ overflow: 'hidden', height: '100%', flex: 1, display: 'flex', flexDirection: 'column' }}>
                             <div style={{ flex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
                                 <KendoChart
+                                    key={`${localChartMode}-${localPaletteId}-${localChartDataType}`}
                                     data={finalChartData}
                                     seriesNames={localComputedSeriesNames}
                                     allowedTypes={getChartAllowedTypes()}
@@ -1131,6 +1232,8 @@ const FullscreenModal = ({
                                     paletteId={localPaletteId}
                                     hideHeader={true}
                                     externalShowLegend={showLegend}
+                                    showLabels={localShowChartValues}
+                                    decimals={localChartDataType === 'percentage' ? (displayPolicy?.percent_digits ?? 1) : (displayPolicy?.n_digits ?? 0)}
                                 />
                             </div>
                         </div>

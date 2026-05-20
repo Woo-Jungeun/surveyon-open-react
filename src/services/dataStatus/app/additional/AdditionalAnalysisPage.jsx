@@ -2132,6 +2132,8 @@ const AdditionalAnalysisPage = () => {
                 tableName={fullscreenModal.tableName}
                 displayPolicy={displayPolicy}
                 renderSettings={renderSettings}
+                chartDataType={fullscreenModal.chartDataType}
+                showChartValues={fullscreenModal.showChartValues}
             />
 
             {/* Removed CreateTablePopup */}

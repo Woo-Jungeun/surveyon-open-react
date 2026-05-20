@@ -8,12 +8,11 @@ import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
 import { useSelector } from 'react-redux';
 import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
 
-const computeLocalVars = (dataItem, chartMode) => {
+const computeLocalVars = (dataItem, chartMode, chartDataType) => {
     if (!dataItem) return {};
 
-    // 최종 기준: 도넛형(Donut)만 퍼센트(_pct) 사용
-    // 그 외 원형(Pie) 포함 모든 차트는 사례수(count) 사용
-    const usePercent = chartMode === 'donut' || chartMode === 'funnel';
+    // 최종 기준: 차트 표출 데이터 옵션에 따라 퍼센트(_percent) 혹은 사례수(count) 사용
+    const usePercent = chartDataType === 'percentage';
 
     const chartData = dataItem.columns.map((colObj, colIndex) => {
         let colName = colObj.label || colObj;
@@ -109,10 +108,14 @@ export const ResultSectionBlock = ({
     const paletteMenuRef = useRef(null);
     const [isChartTypeMenuOpen, setIsChartTypeMenuOpen] = useState(false);
     const chartTypeMenuRef = useRef(null);
+    const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
+    const chartOptionsMenuRef = useRef(null);
+    const [chartDataType, setChartDataType] = useState('percentage');
+    const [showChartValues, setShowChartValues] = useState(true);
 
     const { chartData: fullChartData, seriesNames, hasColLabel2, hasColLabel3, hasVarLabel, hasRowLabel2, suffix } = useMemo(() =>
-        computeLocalVars(resultData, activeChartMode),
-        [resultData, activeChartMode]
+        computeLocalVars(resultData, activeChartMode, chartDataType),
+        [resultData, activeChartMode, chartDataType]
     );
 
     const availableChartGroups = useMemo(() => {
@@ -175,6 +178,9 @@ export const ResultSectionBlock = ({
             }
             if (chartTypeMenuRef.current && !chartTypeMenuRef.current.contains(e.target)) {
                 setIsChartTypeMenuOpen(false);
+            }
+            if (chartOptionsMenuRef.current && !chartOptionsMenuRef.current.contains(e.target)) {
+                setIsChartOptionsOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
@@ -1352,6 +1358,93 @@ export const ResultSectionBlock = ({
                                                     )}
 
                                                     <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
+
+                                                    {/* Chart Options Button */}
+                                                    <div style={{ position: 'relative' }} ref={chartOptionsMenuRef}>
+                                                        <button
+                                                            onClick={() => setIsChartOptionsOpen(!isChartOptionsOpen)}
+                                                            className={`view-option-btn ${isChartOptionsOpen ? 'active' : ''}`}
+                                                            style={{
+                                                                display: 'flex', alignItems: 'center', gap: '4px',
+                                                                fontSize: '12px', fontWeight: 600, border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                                                background: isChartOptionsOpen ? '#eff6ff' : '#fff',
+                                                                color: isChartOptionsOpen ? '#2563eb' : '#64748b',
+                                                                cursor: 'pointer', transition: 'all 0.2s',
+                                                                width: 'auto',
+                                                                height: '100%',
+                                                                padding: '4px 8px'
+                                                            }}
+                                                            title="차트 옵션"
+                                                        >
+                                                            <Settings size={14} style={{ flexShrink: 0 }} />
+                                                            <span style={{ whiteSpace: 'nowrap' }}>옵션</span>
+                                                        </button>
+
+                                                        {isChartOptionsOpen && (
+                                                            <div className="download-dropdown" style={{
+                                                                top: 'calc(100% + 4px)', right: 0, left: 'auto', minWidth: '220px', zIndex: 1100, position: 'absolute',
+                                                                background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                                                                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)', padding: '16px',
+                                                                display: 'flex', flexDirection: 'column', gap: '16px'
+                                                            }}>
+                                                                <div>
+                                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 표출 데이터</span>
+                                                                    <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '4px' }}>
+                                                                        <div
+                                                                            onClick={() => setChartDataType('frequency')}
+                                                                            style={{
+                                                                                flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
+                                                                                fontWeight: chartDataType === 'frequency' ? 700 : 500,
+                                                                                color: chartDataType === 'frequency' ? '#2563eb' : '#64748b',
+                                                                                background: chartDataType === 'frequency' ? '#fff' : 'transparent',
+                                                                                borderRadius: '4px', cursor: 'pointer',
+                                                                                boxShadow: chartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                                                transition: 'all 0.2s'
+                                                                            }}
+                                                                        >
+                                                                            빈도
+                                                                        </div>
+                                                                        <div
+                                                                            onClick={() => setChartDataType('percentage')}
+                                                                            style={{
+                                                                                flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
+                                                                                fontWeight: chartDataType === 'percentage' ? 700 : 500,
+                                                                                color: chartDataType === 'percentage' ? '#2563eb' : '#64748b',
+                                                                                background: chartDataType === 'percentage' ? '#fff' : 'transparent',
+                                                                                borderRadius: '4px', cursor: 'pointer',
+                                                                                boxShadow: chartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                                                transition: 'all 0.2s'
+                                                                            }}
+                                                                        >
+                                                                            비율
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ height: '1px', background: '#e2e8f0' }} />
+                                                                <div>
+                                                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 값 표기</span>
+                                                                    <div
+                                                                        onClick={() => setShowChartValues(!showChartValues)}
+                                                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0' }}
+                                                                    >
+                                                                        <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
+                                                                        <div style={{
+                                                                            width: '36px', height: '20px', background: showChartValues ? '#3b82f6' : '#e2e8f0',
+                                                                            borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
+                                                                        }}>
+                                                                            <div style={{
+                                                                                position: 'absolute', top: '2px', left: showChartValues ? '18px' : '2px',
+                                                                                width: '16px', height: '16px', background: '#fff', borderRadius: '50%',
+                                                                                transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                                                            }} />
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
                                                     
                                                     {columnLayout === 'double' ? (
                                                         <div className="download-menu-container" ref={chartTypeMenuRef}>
@@ -1419,6 +1512,9 @@ export const ResultSectionBlock = ({
                                                         </>
                                                     )}
                                                 </div>
+
+
+
                                                 <button
                                                     onClick={() => setFullscreenModal({
                                                         open: true,
@@ -1431,7 +1527,9 @@ export const ResultSectionBlock = ({
                                                         suffix,
                                                         displayMode,
                                                         paletteId,
-                                                        tableName
+                                                        tableName,
+                                                        chartDataType,
+                                                        showChartValues
                                                     })}
                                                     className="action-btn"
                                                 >
@@ -1442,7 +1540,7 @@ export const ResultSectionBlock = ({
                                         </div>
                                         <div ref={chartContainerRef} className="cross-tab-chart-container">
                                             <KendoChart
-                                                key={`${activeChartMode}-${paletteId}`}
+                                                key={`${activeChartMode}-${paletteId}-${chartDataType}`}
                                                 data={chartData}
                                                 seriesNames={seriesNames}
                                                 initialType={activeChartMode}
@@ -1455,6 +1553,8 @@ export const ResultSectionBlock = ({
                                                 })()}
                                                 externalShowLegend={showLegend}
                                                 hideHeader={true}
+                                                showLabels={showChartValues}
+                                                decimals={chartDataType === 'percentage' ? (displayPolicy?.percent_digits ?? 1) : (displayPolicy?.n_digits ?? 0)}
                                             />
                                         </div>
                                     </div>
