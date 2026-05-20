@@ -85,7 +85,7 @@ const WordCloudFixer = ({ wordData, dimensions, activePalette, minVal, maxVal })
     return MemoizedWordCloud;
 };
 
-const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default', hideHeader = false, externalShowLegend = undefined }) => {
+const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default', hideHeader = false, externalShowLegend = undefined, showLabels = false, decimals = undefined }) => {
     const activePalette = CHART_PALETTES[paletteId] || CHART_PALETTES.default;
     const [chartType, setChartType] = useState(initialType || 'column');
     const [internalShowLegend, setInternalShowLegend] = useState(false);
@@ -183,6 +183,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             const pieData = filteredData
                 .map((row, index) => ({
                     name: String(row.name).replace(/\n/g, ' '),
+                    rawName: row.name,
                     pieValue: Number(row[targetField] || 0),
                     color: activePalette[index % activePalette.length]
                 }));
@@ -225,7 +226,11 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     yAxis="yAxis"
                     labels={{
                         visible: true,
-                        content: (e) => `${e.value}${suffix}`,
+                        content: (e) => {
+                            if (!e.value || Number(e.value) === 0) return "";
+                            const valStr = decimals !== undefined ? Number(e.value).toFixed(decimals) : e.value;
+                            return `${valStr}${suffix}`;
+                        },
                         color: '#fff'
                     }}
                     color={activePalette[0]}
@@ -237,6 +242,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
             // 퍼널: 각 행(row)를 단계로, total count를 값으로 사용 (파이/도넛과 동일)
             const funnelData = filteredData.map((item, index) => ({
                 name: String(item.name).replace(/\n/g, ' '),
+                rawName: item.name,
                 funnelValue: Number(item['total'] || 0),
                 color: activePalette[index % activePalette.length]
             }));
@@ -278,16 +284,17 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                     opacity={chartType === 'radarArea' ? 0.3 : undefined}
                     width={isScatterPoint ? 0 : undefined}
                     markers={isScatterPoint ? { visible: true, size: 10, type: "circle" } : undefined}
-                    labels={isStacked ? {
-                        visible: true,
+                    labels={{
+                        visible: showLabels,
                         content: (e) => {
                             if (!e.value || Number(e.value) === 0) return "";
-                            return chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : `${e.value}${suffix}`;
+                            const valStr = decimals !== undefined ? Number(e.value).toFixed(decimals) : e.value;
+                            return chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : `${valStr}${suffix}`;
                         },
-                        position: "center",
+                        position: isStacked ? "center" : "outsideEnd",
                         background: "none",
-                        color: "#fff"
-                    } : undefined}
+                        color: isStacked ? "#fff" : undefined
+                    }}
                 />
             );
         });
@@ -306,6 +313,12 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
 
 
     const activeSeriesCount = Object.keys(visibleSeries).length > 0 ? Object.values(visibleSeries).filter(Boolean).length : (seriesNames?.length || 1);
+
+    // 최대 분류 줄 수 계산
+    const maxLines = useMemo(() => {
+        if (!Array.isArray(filteredData) || filteredData.length === 0) return 1;
+        return Math.max(...filteredData.map(d => String(d.name || '').split('\n').length));
+    }, [filteredData]);
 
     // 가로 스크롤이 필요한 차트 타입인지 확인
     const isHorizontalScrollType = ['column', 'stackedColumn', 'stacked100Column', 'line', 'area', 'scatterPoint', 'heatmap'].includes(chartType);
@@ -326,7 +339,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     }
 
     if (isVerticalScrollType) {
-        const groupHeight = Math.max(45, activeSeriesCount * 8); // 라벨 3줄 표시를 위한 최소 높이 45px 확보, 막대당 8px
+        const baseHeight = 30 + maxLines * 18; 
+        const groupHeight = Math.max(baseHeight, activeSeriesCount * 12 + 10);
         calculatedHeight = Math.max(200, data.length * groupHeight + 50);
     }
 
@@ -614,7 +628,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                         transitions={false}
                     >
                         {/* 차트 상단 여백을 0으로 설정하여 plotBand(구분선)가 600 라인에서 정확히 멈추도록 함 */}
-                        <ChartArea background="none" margin={{ top: 0, bottom: 20, left: 10, right: 10 }} />
+                        <ChartArea background="none" margin={{ top: 0, bottom: Math.max(20, maxLines * 16 + 5), left: 10, right: 10 }} />
                         <ChartLegend visible={false} />
 
                         {/* Axes for Standard Charts */}
@@ -679,20 +693,24 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                     return chunks;
                                                 };
 
-                                                const hasGroup = originalLines.length > 1;
-
-                                                // 소분류는 최대 2줄 허용
-                                                const subLabelLines = originalLines[0] ? chunkStr(originalLines[0], 2) : [];
-
-                                                // 전체 3줄에 맞추기 위해, 대분류가 허용받는 최대 줄 수 계산
-                                                let maxGroupLines = 3 - subLabelLines.length;
-                                                if (maxGroupLines < 1) maxGroupLines = 1; // 최소 1줄 보장
-
-                                                const groupLabelLines = hasGroup ? chunkStr(originalLines[originalLines.length - 1], maxGroupLines) : [];
-
                                                 const group = new drawing.Group();
                                                 const centerX = e.rect.center().x;
-                                                let currentY = e.rect.origin.y; // 기본 위치
+                                                
+                                                // 1. 소분류 (bold)
+                                                const subLabelLines = originalLines[0] ? chunkStr(originalLines[0], 2) : [];
+                                                
+                                                // 2. 나머지 대/중분류 등 (regular, grey)
+                                                const remainingLinesList = [];
+                                                for (let i = 1; i < originalLines.length; i++) {
+                                                    remainingLinesList.push(...chunkStr(originalLines[i], 1));
+                                                }
+
+                                                // 텍스트 전체 높이 계산 (소분류 각 줄당 16px, 대/중분류 각 줄당 15px)
+                                                const totalTextHeight = (subLabelLines.length * 16) + (remainingLinesList.length * 15);
+                                                const rectHeight = e.rect.size?.height || e.rect.height?.() || 45;
+                                                
+                                                // 수직 중앙 정렬을 위한 Y 오프셋 계산
+                                                let currentY = e.rect.origin.y + Math.max(0, (rectHeight - totalTextHeight) / 2);
 
                                                 subLabelLines.forEach(lineStr => {
                                                     const fontStr = "bold 12px Pretendard, sans-serif";
@@ -707,7 +725,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                     currentY += 16; // 줄간격
                                                 });
 
-                                                groupLabelLines.forEach(lineStr => {
+                                                remainingLinesList.forEach(lineStr => {
                                                     const fontStr = "12px Pretendard, sans-serif";
                                                     measureCtx.font = fontStr;
                                                     const textWidth = measureCtx.measureText(lineStr).width;
@@ -717,7 +735,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                                         fill: { color: "#64748b" }
                                                     });
                                                     group.append(groupObj);
-                                                    currentY += 15;
+                                                    currentY += 15; // 줄간격
                                                 });
 
                                                 return group;
@@ -823,27 +841,81 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             animation={false}
                             render={(e) => {
                                 const category = e.point ? e.point.category : e.category;
-                                const value = e.point ? e.point.value : e.value;
+                                const rawValue = e.point ? e.point.value : e.value;
+                                const value = decimals !== undefined && rawValue !== undefined && rawValue !== null 
+                                    ? Number(rawValue).toFixed(decimals) 
+                                    : rawValue;
 
                                 const seriesName = e.series?.name || e.point?.series?.name || e.series?.field || "";
                                 const seriesColor = e.point?.dataItem?.color || e.point?.options?.color || e.point?.color || e.series?.color || (e.point?.series?.color) || '#334155';
 
                                 // 히트맵용 심플 스타일
                                 if (isHeatmap) {
+                                    const hmValue = e.point?.dataItem?.value;
+                                    const hmFormattedValue = decimals !== undefined && hmValue !== undefined && hmValue !== null 
+                                        ? Number(hmValue).toFixed(decimals) 
+                                        : hmValue;
+                                    
+                                    const xName = e.point?.dataItem?.x || "";
+                                    const parts = String(xName).split('\n');
+                                    const reversedParts = [...parts].reverse();
+
                                     return (
-                                        <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500', maxWidth: '300px', whiteSpace: 'pre-wrap', wordBreak: 'keep-all', textAlign: 'left', lineHeight: '1.4' }}>
-                                            <div style={{ opacity: 0.9, fontSize: '11px', marginBottom: '2px' }}>{String(e.point?.dataItem?.y).replace(/\n/g, ' ')}\n{e.point?.dataItem?.x}</div>
-                                            <strong>{e.point?.dataItem?.value}{suffix}</strong>
+                                        <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500', maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'keep-all', textAlign: 'left', lineHeight: '1.4' }}>
+                                            <div style={{ fontSize: '12px', fontWeight: 'bold', borderBottom: '1px solid rgba(255,255,255,0.2)', paddingBottom: '4px', marginBottom: '6px' }}>
+                                                {String(e.point?.dataItem?.y).replace(/\n/g, ' ')}
+                                            </div>
+                                            <div style={{ marginBottom: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                {reversedParts.map((part, idx) => {
+                                                    const isLast = idx === reversedParts.length - 1;
+                                                    return (
+                                                        <div 
+                                                            key={idx} 
+                                                            style={{ 
+                                                                opacity: isLast ? 1 : 0.8, 
+                                                                fontSize: isLast ? '13px' : '11px',
+                                                                fontWeight: isLast ? 'bold' : 'normal'
+                                                            }}
+                                                        >
+                                                            {part}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <strong>{hmFormattedValue}{suffix}</strong>
                                         </div>
                                     );
                                 }
 
                                 // 파이/도넛/퍼널용 심플 스타일
                                 if (isPieOrDonut || chartType === 'funnel') {
-                                    const pctValue = e.point?.percentage ? (e.point.percentage * 100).toFixed(1) : value;
+                                    const pctValue = e.point?.percentage 
+                                        ? (decimals !== undefined ? (e.point.percentage * 100).toFixed(decimals) : (e.point.percentage * 100).toFixed(1)) 
+                                        : value;
+
+                                    const rawName = e.point?.dataItem?.rawName || category || "";
+                                    const parts = String(rawName).split('\n');
+                                    const reversedParts = [...parts].reverse();
+
                                     return (
                                         <div style={{ padding: '8px 12px', backgroundColor: seriesColor || '#334155', color: '#fff', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.2)', fontSize: '13px', fontWeight: '500', maxWidth: '300px', whiteSpace: 'normal', wordBreak: 'keep-all', textAlign: 'left', lineHeight: '1.4' }}>
-                                            <div style={{ opacity: 0.9, fontSize: '11px', marginBottom: '4px' }}>{category}</div>
+                                            <div style={{ marginBottom: '6px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                {reversedParts.map((part, idx) => {
+                                                    const isLast = idx === reversedParts.length - 1;
+                                                    return (
+                                                        <div 
+                                                            key={idx} 
+                                                            style={{ 
+                                                                opacity: isLast ? 1 : 0.8, 
+                                                                fontSize: isLast ? '13px' : '11px',
+                                                                fontWeight: isLast ? 'bold' : 'normal'
+                                                            }}
+                                                        >
+                                                            {part}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
                                             <div>
                                                 <strong>{value}{suffix}</strong>
                                                 {chartType === 'pie' && suffix !== '%' && <span style={{ opacity: 0.9, fontSize: '11px', marginLeft: '4px' }}>({pctValue}%)</span>}
@@ -867,9 +939,6 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                         textAlign: 'left',
                                         lineHeight: '1.4'
                                     }}>
-                                        <div style={{ opacity: 0.9, fontSize: '11px', marginBottom: '2px' }}>
-                                            {category}
-                                        </div>
                                         <div>
                                             {seriesName && `${seriesName}: `}<strong>{value}{suffix}</strong>
                                         </div>

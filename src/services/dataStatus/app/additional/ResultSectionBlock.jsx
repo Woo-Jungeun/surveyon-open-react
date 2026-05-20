@@ -5,6 +5,8 @@ import KendoChart from '../../components/KendoChart';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { saveAs } from '@progress/kendo-file-saver';
 import { CHART_THEME_OPTIONS } from '../../constants/chartThemes';
+import { useSelector } from 'react-redux';
+import { DpRequestPageApi } from '../hsrt/dpRequest/DpRequestPageApi';
 
 const computeLocalVars = (dataItem, chartMode) => {
     if (!dataItem) return {};
