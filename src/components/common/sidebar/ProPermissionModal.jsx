@@ -246,6 +246,7 @@ const ProPermissionModal = ({ open, onClose }) => {
 
     const numberedData = useMemo(() => gridData.map((item, idx) => ({ ...item, no: idx + 1 })), [gridData]);
     const processedData = useMemo(() => process(numberedData, { sort, filter }), [numberedData, sort, filter]);
+    const hasHsrtCustomer = useMemo(() => gridData.some(item => item.permission_gubun === "H-SRT고객"), [gridData]);
 
     if (!open) return null;
 
@@ -391,9 +392,10 @@ const ProPermissionModal = ({ open, onClose }) => {
                                 }}
                             >
                                 <Column field="no" title="No" width="60px" filterable={false} />
-                                <Column field="worker_name" title="이름" />
-                                <Column field="permission_gubun" title="권한" width="180px" />
+                                <Column field="worker_name" title="이름" width="100px" />
+                                <Column field="permission_gubun" title="권한" width="160px" />
                                 <Column field="worker_id" title="ID" />
+                                {hasHsrtCustomer && <Column field="page_title" title="페이지명" width="200px" />}
                                 <Column
                                     field="register_date"
                                     title="등록일"

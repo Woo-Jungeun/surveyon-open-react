@@ -99,7 +99,7 @@ body:has(.pp-modal-overlay) #nprogress .spinner-icon {
 
 .pp-modal-container {
     width: 90%;
-    max-width: 1100px;
+    max-width: 1300px;
     height: 80vh;
     background: #fff;
     border-radius: 12px;
@@ -624,4 +624,10 @@ body:has(.pp-modal-overlay) #nprogress .spinner-icon {
 .pp-grid-wrap .k-grid td {
     white-space: normal !important;
     word-break: break-word !important;
+}
+
+/* data-dashboard 테마의 k-grid-header 파란 테두리 제거 */
+body:has(.pp-modal-overlay) .k-grid-header,
+.pp-modal-container .k-grid-header {
+    border-bottom: 1px solid #e5e7eb !important;
 }
