@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
+﻿import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { Trash2, Search, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Info, Wand2, Plus, Copy, ChevronDown, ChevronUp, Sparkles, Table2, BarChart3, Cloud, BarChart2, BarChartHorizontal, LineChart, PieChart, Donut, AreaChart, LayoutGrid, Radar, Layers, Percent, Filter, Aperture, MoveVertical, MoreHorizontal, Waves, GitCommitVertical, Target, X, Download, Check, LayoutList, Loader2 } from 'lucide-react';
 import { Popup } from '@progress/kendo-react-popup';
@@ -66,6 +66,31 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
 
     const showLabel3Header = columns.some(c => String(c.label3 ?? "").trim());
     const showLabel2Header = columns.some(c => String(c.label2 ?? "").trim());
+    
+    const showRowLabel3 = rows.some(r => String(r.label3 ?? "").trim());
+    const showRowLabel2 = rows.some(r => String(r.label2 ?? "").trim());
+    
+    const rowSpansL3 = {};
+    const rowSpansL2 = {};
+    
+    if (showRowLabel3 || showRowLabel2) {
+        let i = 0;
+        while (i < rows.length) {
+            let j = i + 1;
+            while (j < rows.length && rows[j].label3 === rows[i].label3) j++;
+            rowSpansL3[i] = j - i;
+            i = j;
+        }
+
+        i = 0;
+        while (i < rows.length) {
+            let j = i + 1;
+            while (j < rows.length && rows[j].label3 === rows[i].label3 && rows[j].label2 === rows[i].label2) j++;
+            rowSpansL2[i] = j - i;
+            i = j;
+        }
+    }
+
     const label3Groups = showLabel3Header ? buildColumnHeaderGroups(columns, "label3") : [];
     const label2Groups = showLabel2Header ? buildColumnHeaderGroups(columns, "label2") : [];
     const hasGroupedHeaders = showLabel3Header || showLabel2Header;
@@ -103,14 +128,20 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 .dp-table-container {
                     padding: 0 !important;
                 }
+                .dp-html-table th {
+                    border-right: ${gridBorder};
+                    padding: 2px 4px !important;
+                }
+                .dp-html-table td {
+                    border-right: ${gridBorder};
+                    border-bottom: ${gridBorder};
+                    padding: 2px 4px !important;
+                }
                 .dp-html-table .stub-header,
                 .dp-html-table .stub-cell {
                     position: sticky !important;
-                    left: 0 !important;
+                    
                     z-index: 100 !important;
-                    min-width: 150px !important;
-                    width: 150px !important;
-                    max-width: 150px !important;
                     background-color: ${uiSettings?.theme_stub_header_bg || '#D9E1F2'} !important;
                     border-right: ${stubBorder} !important;
                     margin: 0 !important;
@@ -120,7 +151,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 .dp-html-table .stub-cell > div {
                     display: block !important;
                     width: 100% !important;
-                    padding: 4px 8px !important;
+                    padding: 2px 4px !important;
                     box-sizing: border-box !important;
                     white-space: nowrap !important;
                     overflow: hidden !important;
@@ -162,7 +193,9 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 color: uiSettings?.theme_text || '#0f172a'
             }}>
                 <colgroup>
-                    <col style={{ width: '150px' }} />
+                    {showRowLabel3 && <col style={{ width: '110px' }} />}
+                    {showRowLabel2 && <col style={{ width: '110px' }} />}
+                    <col style={{ width: '110px' }} />
                     {columns.map((col, i) => (
                         <col key={col.key || i} style={{ width: col.width || '80px' }} />
                     ))}
@@ -176,7 +209,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                 }}>
                     {showLabel3Header && (
                         <tr>
-                            <th rowSpan={headerRowCount} className="stub-header" style={{ padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>
+                            <th colSpan={(showRowLabel3 ? 1 : 0) + (showRowLabel2 ? 1 : 0) + 1} rowSpan={headerRowCount} className="stub-header" style={{ left: 0, padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>
                             {label3Groups.map((g, i) => (
                                 <th key={`l3-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
@@ -184,14 +217,14 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                     )}
                     {showLabel2Header && (
                         <tr>
-                            {!showLabel3Header && <th rowSpan={headerRowCount} className="stub-header" style={{ padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
+                            {!showLabel3Header && <th colSpan={(showRowLabel3 ? 1 : 0) + (showRowLabel2 ? 1 : 0) + 1} rowSpan={headerRowCount} className="stub-header" style={{ left: 0, padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                             {label2Groups.map((g, i) => (
                                 <th key={`l2-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
                     <tr>
-                        {(!showLabel2Header && !showLabel3Header) && <th className="stub-header" style={{ padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
+                        {(!showLabel2Header && !showLabel3Header) && <th colSpan={(showRowLabel3 ? 1 : 0) + (showRowLabel2 ? 1 : 0) + 1} className="stub-header" style={{ left: 0, padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                         {columns.map((col, i) => {
                             const columnTotal = col.column_total ?? col.total ?? null;
                             return (
@@ -241,17 +274,49 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                 background: rowBg,
                                 color: uiSettings?.theme_text || 'inherit'
                             }}>
+                                {showRowLabel3 && rowSpansL3[rowIndex] !== undefined && (
+                                    <td className="stub-cell" rowSpan={rowSpansL3[rowIndex]} style={{
+                                        borderTop: topBorderAttr,
+                                        borderRight: gridBorder,
+                                        background: stubBg,
+                                        color: uiSettings?.theme_stub_header_fg || '#000',
+                                        padding: 0,
+                                        left: 0,
+                                        minWidth: '110px', width: '110px', maxWidth: '110px'
+                                    }}>
+                                        <div title={row.label3} style={{ textAlign: 'center',  }}>
+                                            {row.label3}
+                                        </div>
+                                    </td>
+                                )}
+                                {showRowLabel2 && rowSpansL2[rowIndex] !== undefined && (
+                                    <td className="stub-cell" rowSpan={rowSpansL2[rowIndex]} style={{
+                                        borderTop: topBorderAttr,
+                                        borderRight: gridBorder,
+                                        background: stubBg,
+                                        color: uiSettings?.theme_stub_header_fg || '#000',
+                                        padding: 0,
+                                        left: showRowLabel3 ? '110px' : 0,
+                                        minWidth: '110px', width: '110px', maxWidth: '110px'
+                                    }}>
+                                        <div title={row.label2} style={{ textAlign: 'center',  }}>
+                                            {row.label2}
+                                        </div>
+                                    </td>
+                                )}
                                 <td className="stub-cell" style={{
                                     borderTop: topBorderAttr,
                                     background: stubBg,
                                     color: uiSettings?.theme_stub_header_fg || '#000',
-                                    padding: 0
+                                    padding: 0,
+                                    left: (showRowLabel3 ? 110 : 0) + (showRowLabel2 ? 110 : 0) + 'px'
                                 }}>
                                     <div title={row.label} style={{
                                         lineHeight: 1.2,
                                         padding: '2px 8px',
                                         paddingLeft: row.indent ? '24px' : '8px',
-                                        fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px'
+                                        fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px',
+                                        textAlign: 'center'
                                     }}>{row.label}</div>
                                 </td>
                                 {columns.map((col, i) => {
@@ -357,7 +422,7 @@ const ConditionHeaderCell = (props) => {
                             width: '18px', height: '18px', borderRadius: '50%',
                             background: '#e2e8f0', color: '#64748b',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', fontWeight: 'bold'
+                            fontSize: '11px', 
                         }}>i</div>
                         <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
                     </div>
