@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     return {
         // Vite
         base: "/",
+        assetsInclude: ["**/*.PNG"],
         plugins: [react()],
         resolve: {
             alias: {

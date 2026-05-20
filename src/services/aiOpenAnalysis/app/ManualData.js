@@ -27,6 +27,21 @@ import manual_img_25 from '@/assets/images/manual/4/7_1.png';
 import manual_img_26 from '@/assets/images/manual/4/8.png';
 import manual_img_27 from '@/assets/images/manual/4/7_2.png';
 
+import srt_img_01 from '@/assets/images/manual/srt_01.PNG';
+import srt_img_02 from '@/assets/images/manual/srt_02.PNG';
+import srt_img_03 from '@/assets/images/manual/srt_03.PNG';
+import srt_img_04 from '@/assets/images/manual/srt_04.PNG';
+import srt_img_05 from '@/assets/images/manual/srt_05.PNG';
+import srt_img_06 from '@/assets/images/manual/srt_06.PNG';
+import srt_img_07 from '@/assets/images/manual/srt_07.PNG';
+import srt_img_08 from '@/assets/images/manual/srt_08.PNG';
+import srt_img_09 from '@/assets/images/manual/srt_09.PNG';
+import srt_img_10 from '@/assets/images/manual/srt_10.PNG';
+import srt_img_11 from '@/assets/images/manual/srt_11.PNG';
+import srt_img_12 from '@/assets/images/manual/srt_12.PNG';
+import srt_img_13 from '@/assets/images/manual/srt_13.PNG';
+import fieldwork_img_01 from '@/assets/images/manual/실사관리_1.PNG';
+
 /**
  * 통합 웹 매뉴얼 데이터
  * 
@@ -245,22 +260,25 @@ export const manualData = [
     },
     {
         id: "dataadmin",
-        title: "3. H-SRT (데이터 현황)",
+        title: "3. H-SRT",
         icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>`,
         content: `
-            <h2>3. H-SRT 데이터 현황(Statistical Reporting Tool)</h2>
-            <p>문항별 결과 AI분석 보고 가능 표, 시각화, 요약</p>
-            <p>기대효과 : 한눈에 분석되는 결과와 시각화 도출로 보고서 활용 시 유용한 자료로 제공<br>고객 제공용 (로그인, 기간설정 등의 권한)</p>
-            <li>[ 데이터설정 ]
-            <br>설문문항 & 가공문항 관리 (문항,보기레이블 수정, 가중치 설정, 문항 가공(리코딩) 설정)
-            <br>DP의뢰서 설정 : DP테이블로 생성되어야 하는 조건을 정의하면 자동테이블 생성
-            </li>
-            <li>[ 집계현황 ]
-            <br>문항 집계 현황 : 설문문항 &가공문항별 단일표 or 다중배너표 (전체문항) 현황 및 AI분석 가능
-            <br>교차테이블 : 교차표현황과 통계현황을 계산하여 표,시각화,AI분석 가능,(전체필터현황)
-            <br>DP테이블 : DP의뢰서의 정의된 규칙으로 자동생성 및 추출 가능
-            <br>쿼터현황/관리 : 진행사이트 및 쿼터핸들링
-            </li>
+            <h2>3. H-SRT</h2>
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <img src="${srt_img_01}" class="guide-image" alt="srt_01" width="100%" />
+                <img src="${srt_img_02}" class="guide-image" alt="srt_02" width="100%" />
+                <img src="${srt_img_03}" class="guide-image" alt="srt_03" width="100%" />
+                <img src="${srt_img_04}" class="guide-image" alt="srt_04" width="100%" />
+                <img src="${srt_img_05}" class="guide-image" alt="srt_05" width="100%" />
+                <img src="${srt_img_06}" class="guide-image" alt="srt_06" width="100%" />
+                <img src="${srt_img_07}" class="guide-image" alt="srt_07" width="100%" />
+                <img src="${srt_img_08}" class="guide-image" alt="srt_08" width="100%" />
+                <img src="${srt_img_09}" class="guide-image" alt="srt_09" width="100%" />
+                <img src="${srt_img_10}" class="guide-image" alt="srt_10" width="100%" />
+                <img src="${srt_img_11}" class="guide-image" alt="srt_11" width="100%" />
+                <img src="${srt_img_12}" class="guide-image" alt="srt_12" width="100%" />
+                <img src="${srt_img_13}" class="guide-image" alt="srt_13" width="100%" />
+            </div>
         `
     },
     {
@@ -659,10 +677,21 @@ export const manualData = [
     {
         id: "usageadmin",
         title: "5. 응답자 관리",
-        icon: `<svg xmlns=\"http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>`,
         content: `
             <h2>5. 응답자 관리</h2>
             <p>상태 관리 및 AI 성실도 분류 및 관리</p>
+        `
+    },
+    {
+        id: "fieldwork",
+        title: "6. 실사 관리",
+        icon: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="13" x2="15" y2="13"></line><line x1="9" y1="17" x2="15" y2="17"></line></svg>`,
+        content: `
+            <h2>6. 실사 관리</h2>
+            <div style="display: flex; flex-direction: column; gap: 16px; width: 100%;">
+                <img src="${fieldwork_img_01}" class="guide-image" alt="실사관리_1" width="100%" />
+            </div>
         `
     }
 
