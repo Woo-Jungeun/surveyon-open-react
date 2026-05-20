@@ -34,6 +34,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const [showLegend, setShowLegend] = useState(false);
     const [selectedChartGroups, setSelectedChartGroups] = useState([]);
     const [isGroupFilterMenuOpen, setIsGroupFilterMenuOpen] = useState(false);
+    const [chartDataType, setChartDataType] = useState('frequency'); // 'frequency' or 'percentage'
+    const [showChartValues, setShowChartValues] = useState(true);
+    const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
 
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
@@ -41,6 +44,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const paletteMenuRef = useRef(null);
     const chartTypeMenuRef = useRef(null);
     const groupFilterMenuRef = useRef(null);
+    const chartOptionsMenuRef = useRef(null);
 
     // 외부 영역 클릭 시 드롭다운 닫기
     useEffect(() => {
@@ -59,6 +63,9 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
             }
             if (groupFilterMenuRef.current && !groupFilterMenuRef.current.contains(event.target)) {
                 setIsGroupFilterMenuOpen(false);
+            }
+            if (chartOptionsMenuRef.current && !chartOptionsMenuRef.current.contains(event.target)) {
+                setIsChartOptionsOpen(false);
             }
         };
 
@@ -379,12 +386,14 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
             return q.columns.filter(col => {
                 const groupName = col.label2 || col.label;
                 return selectedChartGroups.includes(groupName);
-            }).map(col => {
-                const parts = [];
-                if (col.label) parts.push(col.label);
-                if (col.label2) parts.push(col.label2);
+            }).map((col, cIdx) => {
+                const labelParts = [col.label3, col.label2, col.label || col.name || `c${cIdx}`];
+                const validParts = labelParts
+                    .map(p => String(p || '').trim())
+                    .filter(p => p !== '');
+                const fullLabel = validParts.reverse().join('\n');
                 
-                const dataPoint = { name: parts.join('\n') };
+                const dataPoint = { name: fullLabel };
                 
                 q.data.forEach((row, index) => {
                     dataPoint[`series_${index}`] = row[col.key];
@@ -603,7 +612,96 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                         )}
 
                         {/* 구분선 */}
-                        {showChart && chartMode !== 'heatmap' && availableChartGroups.length > 0 && (
+                        {showChart && chartMode !== 'heatmap' && (
+                            <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
+                        )}
+
+                        {/* 차트 옵션 */}
+                        {showChart && (
+                            <div style={{ position: 'relative' }} ref={chartOptionsMenuRef}>
+                                <button
+                                    onClick={() => setIsChartOptionsOpen(!isChartOptionsOpen)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '6px',
+                                        padding: '4px 8px', border: `1px solid ${isChartOptionsOpen ? '#3b82f6' : '#e2e8f0'}`, borderRadius: '6px',
+                                        background: isChartOptionsOpen ? '#eff6ff' : '#fff',
+                                        color: isChartOptionsOpen ? '#2563eb' : '#64748b',
+                                        fontSize: '12px', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s', height: '28px'
+                                    }}
+                                    title="차트 옵션"
+                                >
+                                    <Settings size={14} style={{ flexShrink: 0 }} />
+                                    <span style={{ whiteSpace: 'nowrap' }}>옵션</span>
+                                </button>
+
+                                {isChartOptionsOpen && (
+                                    <div style={{
+                                        position: 'absolute', top: '100%', right: 0, marginTop: '4px',
+                                        background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px',
+                                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)', zIndex: 1000,
+                                        minWidth: '220px', padding: '16px',
+                                        display: 'flex', flexDirection: 'column', gap: '16px'
+                                    }}>
+                                        <div>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 표출 데이터</span>
+                                            <div style={{ display: 'flex', background: '#f1f5f9', borderRadius: '6px', padding: '4px' }}>
+                                                <div
+                                                    onClick={() => setChartDataType('frequency')}
+                                                    style={{
+                                                        flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
+                                                        fontWeight: chartDataType === 'frequency' ? 700 : 500,
+                                                        color: chartDataType === 'frequency' ? '#2563eb' : '#64748b',
+                                                        background: chartDataType === 'frequency' ? '#fff' : 'transparent',
+                                                        borderRadius: '4px', cursor: 'pointer',
+                                                        boxShadow: chartDataType === 'frequency' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    빈도
+                                                </div>
+                                                <div
+                                                    onClick={() => setChartDataType('percentage')}
+                                                    style={{
+                                                        flex: 1, textAlign: 'center', padding: '6px 0', fontSize: '12px',
+                                                        fontWeight: chartDataType === 'percentage' ? 700 : 500,
+                                                        color: chartDataType === 'percentage' ? '#2563eb' : '#64748b',
+                                                        background: chartDataType === 'percentage' ? '#fff' : 'transparent',
+                                                        borderRadius: '4px', cursor: 'pointer',
+                                                        boxShadow: chartDataType === 'percentage' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                >
+                                                    비율
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{ height: '1px', background: '#e2e8f0' }} />
+                                        <div>
+                                            <span style={{ fontSize: '12px', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '8px', textAlign: 'left' }}>차트 값 표기</span>
+                                            <div
+                                                onClick={() => setShowChartValues(!showChartValues)}
+                                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0' }}
+                                            >
+                                                <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>값 표출하기</span>
+                                                <div style={{
+                                                    width: '36px', height: '20px', background: showChartValues ? '#3b82f6' : '#e2e8f0',
+                                                    borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
+                                                }}>
+                                                    <div style={{
+                                                        position: 'absolute', top: '2px', left: showChartValues ? '18px' : '2px',
+                                                        width: '16px', height: '16px', background: '#fff', borderRadius: '50%',
+                                                        transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                                    }} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* 구분선 */}
+                        {showChart && availableChartGroups.length > 0 && (
                             <div style={{ width: '1px', height: '16px', background: '#cbd5e1', margin: '0 4px', alignSelf: 'center' }} />
                         )}
 
@@ -877,7 +975,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                             // 도넛(Donut) / 깔때기(Funnel) → 퍼센트(_pct)
                             // 그 외 모든 차트 (원형 포함)  → 사례수(count)
                             // ────────────────────────────────────────────────────────────────
-                            const usePercentFields = ['donut', 'funnel'].includes(chartMode);
+                            const usePercentFields = chartDataType === 'percentage';
 
                             const chartSeries = q.columns && q.columns.length > 0
                                 ? q.data.map((row, index) => {
@@ -898,7 +996,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
 
                             return (
                                 <KendoChart
-                                    key={`${q.id}-${chartMode}-${paletteId}-${selectedChartGroups.join(',')}`}
+                                    key={`${q.id}-${chartMode}-${paletteId}-${selectedChartGroups.join(',')}-${chartDataType}`}
                                     data={chartData}
                                     seriesNames={chartSeries}
                                     initialType={chartMode}
@@ -908,6 +1006,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                                     allowedTypes={allowedTypes}
                                     hideHeader={true}
                                     externalShowLegend={showLegend}
+                                    showLabels={showChartValues}
+                                    decimals={usePercentFields ? 1 : 0}
                                 />
                             );
                         })()}
@@ -1363,7 +1463,9 @@ const FrequencyAnalysisPage = () => {
                         const tableColumns = aggInfoCols.map(c => ({
                             key: c.key,
                             label: c.label || c.var_label || c.name || c.key,
-                            label2: c.label2
+                            label2: c.label2,
+                            label3: c.label3,
+                            parent_label: c.parent_label
                         }));
 
                         let optionRows = aggInfoRows;
