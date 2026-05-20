@@ -638,22 +638,13 @@ const TypeEditCell = React.memo(({ dataItem, onUpdate }) => {
 
     const { color, displayType } = getQuestionTypeInfo(val);
 
-    let outputText = '';
-    let tooltipTitle = '';
-    if (val === 'rank' && Array.isArray(dataItem.rank_outputs) && dataItem.rank_outputs.length > 0) {
-        outputText = ` | 출력 ${dataItem.rank_outputs.length}개`;
-        const presetName = dataItem.rank_preset_name || '순위 지정';
-        const outputStrs = dataItem.rank_outputs.map(o => o.rank_output || 'null').join(' / ');
-        tooltipTitle = `${presetName} (${outputStrs})`;
-    }
-
     return (
         <td
             data-field="var_type"
             data-row-id={dataItem.source_var_id}
             style={{ textAlign: 'center', verticalAlign: 'middle', userSelect: 'none' }}
         >
-            <span className={`question-type-badge ${color}`} title={tooltipTitle}>{displayType}{outputText}</span>
+            <span className={`question-type-badge ${color}`}>{displayType}</span>
         </td>
     );
 });
