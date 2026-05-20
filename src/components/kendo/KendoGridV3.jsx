@@ -35,29 +35,40 @@ const KendoGridV3 = (props) => {
     const [colWidths, setColWidths] = useState({});
 
     const handleColumnResize = (event) => {
-        const resizedCol = event.column;
-        const key = resizedCol.field || resizedCol.title;
-        if (key) {
+        if (event.columns) {
+            const newWidths = {};
+            event.columns.forEach(col => {
+                const key = col.field || col.title;
+                if (key && col.width !== undefined) {
+                    newWidths[key] = col.width;
+                }
+            });
             setColWidths(prev => ({
                 ...prev,
-                [key]: resizedCol.width
+                ...newWidths
             }));
+        } else if (event.column) {
+            const key = event.column.field || event.column.title;
+            if (key && event.column.width !== undefined) {
+                setColWidths(prev => ({
+                    ...prev,
+                    [key]: event.column.width
+                }));
+            }
         }
     };
 
     const processedChildren = React.Children.map(children, (child, idx) => {
         if (!React.isValidElement(child)) return child;
         
-        const field = child.props.field;
-        const title = child.props.title;
-        const key = field || title || `col-index-${idx}`;
+        const field = child.props.field || child.props.title || `custom-col-${idx}`;
+        const key = field;
         
+        const additionalProps = { field };
         if (colWidths[key] !== undefined) {
-            return React.cloneElement(child, {
-                width: colWidths[key]
-            });
+            additionalProps.width = colWidths[key];
         }
-        return child;
+        return React.cloneElement(child, additionalProps);
     });
 
     // --- 가상 스크롤 (Virtual Scrolling) 자체 지원 ---
@@ -255,6 +266,7 @@ const KendoGridV3 = (props) => {
                 {/* 순서 변경 컬럼 */}
                 {reorderable && (
                     <Column
+                        field="_reorder"
                         width="45px"
                         resizable={false}
                         headerCell={() => (
@@ -275,6 +287,7 @@ const KendoGridV3 = (props) => {
                 {/* 행 추가/복사 컬럼 */}
                 {(addable || copyable) && (
                     <Column
+                        field="_add_copy"
                         title={addable && copyable ? "추가/복사" : "추가"}
                         width={addable && copyable ? "75px" : "45px"}
                         resizable={false}
@@ -304,6 +317,7 @@ const KendoGridV3 = (props) => {
                 {/* 삭제 버튼 컬럼 (앞쪽 배치) */}
                 {deletable && deletePos === 'start' && (
                     <Column
+                        field="_delete_start"
                         title="삭제"
                         width="50px"
                         resizable={false}
@@ -333,6 +347,7 @@ const KendoGridV3 = (props) => {
                 {/* 순번 컬럼 */}
                 {showNo && (
                     <Column
+                        field="_no"
                         title="No"
                         width="45px"
                         resizable={false}
@@ -350,6 +365,7 @@ const KendoGridV3 = (props) => {
                 {/* 삭제 버튼 컬럼 (뒤쪽 배치 - 기본값) */}
                 {deletable && deletePos === 'end' && (
                     <Column
+                        field="_delete_end"
                         title="삭제"
                         width="50px"
                         resizable={false}
