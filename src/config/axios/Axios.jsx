@@ -76,10 +76,11 @@ function showUpdateToast() {
     const sidebarFooter = document.querySelector('.sidebar-footer');
     
     // 고급스러운 보라색 그라데이션 및 부드러운 그림자 효과
-    const commonStyle = "background: linear-gradient(135deg, #6c5ef7 0%, #5A4BFF 100%); color: white; padding: 16px; border-radius: 14px; box-shadow: 0 10px 25px rgba(90, 75, 255, 0.3), 0 4px 10px rgba(0,0,0,0.1); z-index: 999999; display: flex; flex-direction: column; gap: 14px; font-family: 'Spoqa Han Sans Neo', sans-serif; border: 1px solid rgba(255,255,255,0.1);";
+    const commonStyle = "background: linear-gradient(135deg, #6c5ef7 0%, #5A4BFF 100%); color: white; padding: 16px; border-radius: 14px; box-shadow: 0 10px 25px rgba(90, 75, 255, 0.3), 0 4px 10px rgba(0,0,0,0.1); z-index: 999999; display: flex; flex-direction: column; gap: 14px; font-family: 'Spoqa Han Sans Neo', sans-serif; border: 1px solid rgba(255,255,255,0.1); width: 230px;";
 
     if (sidebarFooter) {
-        toast.style.cssText = `position: absolute; bottom: calc(100% + 12px); left: 16px; right: 16px; ${commonStyle}`;
+        // 메뉴바가 닫혀도 찌그러지지 않도록 right: 16px 대신 고정 너비를 주고 left를 잡습니다.
+        toast.style.cssText = `position: absolute; bottom: calc(100% + 12px); left: 16px; ${commonStyle}`;
         sidebarFooter.appendChild(toast);
     } else {
         toast.style.cssText = `position: fixed; bottom: 30px; left: 30px; ${commonStyle}`;
