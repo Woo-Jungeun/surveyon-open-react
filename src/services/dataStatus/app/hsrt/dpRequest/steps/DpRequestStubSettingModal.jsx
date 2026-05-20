@@ -16,7 +16,7 @@ function getUniqueId() {
     return `combo-item-${nextId++}`;
 }
 
-const STUB_TYPE_OPTIONS = ["base", "scale", "option", "open(숫자)", "open(문자)", "rank", "mean", "std", "median", "mode", "min", "max", "var", "sum", "rse"];
+const STUB_TYPE_OPTIONS = ["base", "scale", "option", "open(숫자)", "open(문자)", "rank", "mean", "std", "median", "mode", "min", "max", "var", "sum", "rse", "factor"];
 
 // single, multi 등 내부 타입을 표시용 타입으로 변환
 const normalizeDisplayType = (type) => {
