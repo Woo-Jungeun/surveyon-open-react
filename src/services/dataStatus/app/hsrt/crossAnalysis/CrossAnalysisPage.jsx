@@ -1532,6 +1532,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 display_policy: {
                     show_n: fetchedUi?.format_show_n ?? showN,
                     show_percent: fetchedUi?.format_show_percent ?? showPct,
+                    percent_symbol: fetchedUi?.format_show_percent ?? showPct,
                     hide_zero_base_columns: fetchedUi?.hide_zero_base_columns ?? hideZeroBaseColumns,
                     hide_zero_stubs: fetchedUi?.hide_zero_stubs ?? false,
                     hide_zero_banners: fetchedUi?.hide_zero_banners ?? false,
@@ -1761,7 +1762,8 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 display_policy: {
                     show_n: showN,
                     show_percent: showPct,
-                    excel_show_percent: excelShowPct, // display_policy 내에도 추가
+                    excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
+                    percent_symbol: excelShowPct,
                     hide_zero_base_columns: hideZeroBaseColumns,
                     hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
                     hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
@@ -2488,6 +2490,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             display_policy: {
                                                 show_n: showN,
                                                 show_percent: showPct,
+                                                percent_symbol: showPct,
                                                 hide_zero_base_columns: hideZeroBaseColumns,
                                                 hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
                                                 hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
