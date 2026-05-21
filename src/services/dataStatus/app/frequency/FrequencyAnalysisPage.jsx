@@ -34,7 +34,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const [showLegend, setShowLegend] = useState(false);
     const [selectedChartGroups, setSelectedChartGroups] = useState([]);
     const [isGroupFilterMenuOpen, setIsGroupFilterMenuOpen] = useState(false);
-    const [chartDataType, setChartDataType] = useState('frequency'); // 'frequency' or 'percentage'
+    const [chartDataType, setChartDataType] = useState('percentage'); // 'frequency' or 'percentage'
     const [showChartValues, setShowChartValues] = useState(true);
     const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
 
