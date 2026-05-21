@@ -653,7 +653,10 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                         onDrop={onDrop}
                         onClick={handleFileSelectClick}
                     >
-                        <div className="upload-drag-icon">
+                        <div className="upload-drag-icon" style={{
+                            backgroundColor: activeTab === 'replace' ? '#fef3c7' : '#f0faf5',
+                            color: activeTab === 'replace' ? '#d97706' : '#16a34a'
+                        }}>
                             <UploadCloud size={24} />
                         </div>
                         <p className="upload-drag-text">
