@@ -877,7 +877,7 @@ export const ResultSectionBlock = ({
                                                                     </th>
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600', borderLeft: i > 0 ? gridBorder : 'none' }}>
+                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '500', borderLeft: i > 0 ? gridBorder : 'none' }}>
                                                                         {col?.label ?? col}
                                                                     </th>
                                                                 ))}
@@ -1147,7 +1147,7 @@ export const ResultSectionBlock = ({
                                                                     </th>
                                                                 )}
                                                                 {resultData.columns.map((col, i) => (
-                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '600' }}>
+                                                                    <th key={i} style={{ minWidth: '80px', background: uiSettings?.theme_primary || '#f8fafc',  color: uiSettings?.theme_primary_fg || '#64748b', fontSize: '11px', fontWeight: '500' }}>
                                                                         {col?.label ?? col}
                                                                     </th>
                                                                 ))}

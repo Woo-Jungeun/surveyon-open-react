@@ -328,7 +328,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
                                         textAlign: 'left',
-                                        fontWeight: 600,
+                                        fontWeight: 500,
                                         fontFamily: settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>
@@ -341,7 +341,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     {previewCols.map((col, i) => (
                                         <th key={col.label} style={{
                                             position: 'relative',
-                                            padding: '4px 8px', textAlign: 'right', fontWeight: 600,
+                                            padding: '4px 8px', textAlign: 'right', fontWeight: 500,
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                             borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',

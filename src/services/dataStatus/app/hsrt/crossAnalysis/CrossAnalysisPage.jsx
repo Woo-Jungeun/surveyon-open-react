@@ -211,7 +211,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         <tr>
                             <th colSpan={(showRowLabel3 ? 1 : 0) + (showRowLabel2 ? 1 : 0) + 1} rowSpan={headerRowCount} className="stub-header" style={{ left: 0, padding: '3px 8px', fontWeight: 700, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>
                             {label3Groups.map((g, i) => (
-                                <th key={`l3-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
+                                <th key={`l3-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
@@ -219,7 +219,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         <tr>
                             {!showLabel3Header && <th colSpan={(showRowLabel3 ? 1 : 0) + (showRowLabel2 ? 1 : 0) + 1} rowSpan={headerRowCount} className="stub-header" style={{ left: 0, padding: '8px', fontWeight: 700, textAlign: 'center', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>구분</th>}
                             {label2Groups.map((g, i) => (
-                                <th key={`l2-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 600, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
+                                <th key={`l2-${i}`} colSpan={g.span} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 6px', fontWeight: 500, textAlign: 'center', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{g.label || '\u00A0'}</th>
                             ))}
                         </tr>
                     )}
@@ -228,7 +228,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                         {columns.map((col, i) => {
                             const columnTotal = col.column_total ?? col.total ?? null;
                             return (
-                                <th key={col.key || i} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 600, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>
+                                <th key={col.key || i} style={{ borderLeft: i > 0 ? gridBorder : 'none', borderBottom: headerBorder, background: uiSettings?.theme_primary || '#f8fafc', color: uiSettings?.theme_primary_fg || 'inherit', padding: '3px 8px', fontWeight: 500, textAlign: 'center', verticalAlign: 'middle', fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>
                                     <div style={{ lineHeight: 1.1, fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px' }}>{col.label}</div>
                                     {/* {columnTotal !== null && <div style={{ fontSize: uiSettings?.font_size ? `${Math.max(8, uiSettings.font_size - 2)}px` : '10px', color: uiSettings?.theme_primary_fg ? 'rgba(255,255,255,0.7)' : '#64748b', fontWeight: 400, lineHeight: 1, marginTop: '1px' }}>total {formatCountValue(columnTotal, effectivePolicy)}</div>} */}
                                 </th>
