@@ -1169,6 +1169,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
 
     const [toast, setToast] = useState({ show: false, message: '' });
     const [isSnapshotModalOpen, setIsSnapshotModalOpen] = useState(false);
+    const [isExcelModalOpen, setIsExcelModalOpen] = useState(false); // 엑셀 다운로드 확인 모달 열림 여부
     const [snapshotLabel, setSnapshotLabel] = useState('');
     const [snapshotMemo, setSnapshotMemo] = useState('');
     const isHistoryAction = useRef(false);
@@ -1178,6 +1179,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [showN, setShowN] = useState(false);
     const [decimalN, setDecimalN] = useState(0);
     const [showPct, setShowPct] = useState(true);
+    const [excelShowPct, setExcelShowPct] = useState(true); // 엑셀 다운로드 시 % 표출 여부
     const [decimalPct, setDecimalPct] = useState(1);
     const [hideZeroBaseColumns, setHideZeroBaseColumns] = useState(false);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
@@ -1735,6 +1737,80 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
         };
     }, [filteredBanners, banners]);
 
+    const handleExcelExport = async () => {
+        const pageId = sessionStorage.getItem('pageId');
+        const user = auth?.user?.userId;
+        if (!pageId || !user) return;
+
+        try {
+            loadingSpinner.show();
+            const requestData = {
+                pageid: pageId,
+                user: user,
+                use_recoded: true,
+                banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
+                hide_zero_base_columns: hideZeroBaseColumns,
+                zero_base_columns: hideZeroBaseColumns,
+                zero_banners: hideZeroBaseColumns,
+                zero_stubs: uiSettings?.hide_zero_stubs ?? false,
+                start: 0,
+                limit: 0,
+                search: bannerSearch,
+                filter_expression: filterExpression,
+                excel_show_percent: excelShowPct, // 엑셀 % 표출 여부 추가
+                display_policy: {
+                    show_n: showN,
+                    show_percent: showPct,
+                    excel_show_percent: excelShowPct, // display_policy 내에도 추가
+                    hide_zero_base_columns: hideZeroBaseColumns,
+                    hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
+                    hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
+                    n_digits: Number(decimalN === '' ? 0 : decimalN),
+                    percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
+                    mean_digits: uiSettings?.mean_digits ?? 1,
+                    std_digits: uiSettings?.std_digits ?? 1,
+                    median_digits: uiSettings?.median_digits ?? 1,
+                    min_digits: uiSettings?.min_digits ?? 1,
+                    max_digits: uiSettings?.max_digits ?? 1,
+                    var_digits: uiSettings?.var_digits ?? 1,
+                    zero_display: uiSettings?.zero_display || "0",
+                    empty_display: uiSettings?.empty_display || "blank"
+                }
+            };
+            if (selectedXInfo !== '__none__') {
+                requestData.banner = [selectedXInfo];
+            }
+
+            const result = await exportOverviewXlsx.mutateAsync(requestData);
+            const payload = result?.resultjson || result || {};
+
+            if (result?.success === "777" && payload.content_base64) {
+                const binaryString = window.atob(payload.content_base64);
+                const len = binaryString.length;
+                const bytes = new Uint8Array(len);
+                for (let i = 0; i < len; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: payload.content_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', payload.filename || `cross_analysis_${pageId}.xlsx`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            } else {
+                modal.showAlert('오류', '엑셀 데이터 생성에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('CSV Export Error:', error);
+            modal.showAlert('오류', '엑셀 다운로드 중 문제가 발생했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
+    };
+
     return (
         <>
             <style>
@@ -2076,79 +2152,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </button> */}
                     <button
                         className="dp-btn"
-                        onClick={async () => {
-                            const pageId = sessionStorage.getItem('pageId');
-                            const user = auth?.user?.userId;
-                            if (!pageId || !user) return;
-
-                            try {
-                                loadingSpinner.show();
-                                const requestData = {
-                                    pageid: pageId,
-                                    user: user,
-                                    use_recoded: true,
-                                    banner_mode: selectedXInfo === '__none__' ? 'stub' : 'override',
-                                    hide_zero_base_columns: hideZeroBaseColumns,
-                                    zero_base_columns: hideZeroBaseColumns,
-                                    zero_banners: hideZeroBaseColumns,
-                                    zero_stubs: uiSettings?.hide_zero_stubs ?? false,
-                                    start: 0,
-                                    limit: 0,
-                                    search: bannerSearch,
-                                    filter_expression: filterExpression,
-                                    display_policy: {
-                                        show_n: showN,
-                                        show_percent: showPct,
-                                        hide_zero_base_columns: hideZeroBaseColumns,
-                                        hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
-                                        hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
-                                        n_digits: Number(decimalN === '' ? 0 : decimalN),
-                                        percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
-                                        mean_digits: uiSettings?.mean_digits ?? 1,
-                                        std_digits: uiSettings?.std_digits ?? 1,
-                                        median_digits: uiSettings?.median_digits ?? 1,
-                                        min_digits: uiSettings?.min_digits ?? 1,
-                                        max_digits: uiSettings?.max_digits ?? 1,
-                                        var_digits: uiSettings?.var_digits ?? 1,
-                                        zero_display: uiSettings?.zero_display || "0",
-                                        empty_display: uiSettings?.empty_display || "blank"
-                                    }
-                                };
-                                if (selectedXInfo !== '__none__') {
-                                    requestData.banner = [selectedXInfo];
-                                }
-
-                                const result = await exportOverviewXlsx.mutateAsync(requestData);
-                                const payload = result?.resultjson || result || {};
-
-                                if (result?.success === "777" && payload.content_base64) {
-                                    const binaryString = window.atob(payload.content_base64);
-                                    const len = binaryString.length;
-                                    const bytes = new Uint8Array(len);
-                                    for (let i = 0; i < len; i++) {
-                                        bytes[i] = binaryString.charCodeAt(i);
-                                    }
-                                    const blob = new Blob([bytes], { type: payload.content_type || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-                                    const url = URL.createObjectURL(blob);
-                                    const link = document.createElement('a');
-                                    link.href = url;
-                                    link.setAttribute('download', payload.filename || `cross_analysis_${pageId}.xlsx`);
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    URL.revokeObjectURL(url);
-                                } else {
-                                    modal.showAlert('오류', '엑셀 데이터 생성에 실패했습니다.');
-                                }
-                            } catch (error) {
-                                console.error('CSV Export Error:', error);
-                                modal.showAlert('오류', '엑셀 다운로드 중 문제가 발생했습니다.');
-                            } finally {
-                                loadingSpinner.hide();
-                            }
-                        }}
+                        onClick={() => setIsExcelModalOpen(true)}
                         style={{
-                            color: '#16a34a', border: '1px solid #16a34a', background: '#ffffff',
+                            color: '#2563eb', border: '1px solid #2563eb', background: '#ffffff',
                             height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                             borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', marginLeft: '8px'
                         }}
@@ -2540,6 +2546,65 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                 style={{ padding: '8px 16px', background: '#3b5bdb', color: '#fff', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: 600 }}
                             >
                                 저장
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {isExcelModalOpen && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0, 0, 0, 0.4)', zIndex: 100000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ background: '#fff', borderRadius: '16px', padding: '32px', width: '450px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)', border: '1px solid #f1f5f9' }}>
+                        <h3 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <Download size={22} color="#2563eb" strokeWidth={2.5} />
+                            엑셀 다운로드
+                        </h3>
+                        <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: '#475569', fontWeight: 500, lineHeight: '1.5' }}>
+                            교차분석표를 엑셀 파일로 다운로드 하시겠습니까?
+                        </p>
+                        <div style={{ marginBottom: '28px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                            <div
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
+                                }}
+                                onClick={() => setExcelShowPct(!excelShowPct)}
+                            >
+                                <div style={{
+                                    width: '20px', height: '20px', borderRadius: '5px',
+                                    background: excelShowPct ? '#2563eb' : '#fff',
+                                    border: `1.5px solid ${excelShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                    transition: 'all 0.15s'
+                                }}>
+                                    {excelShowPct && (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    )}
+                                </div>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 표출 여부</span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button
+                                onClick={() => setIsExcelModalOpen(false)}
+                                onMouseOver={(e) => e.target.style.background = '#e2e8f0'}
+                                onMouseOut={(e) => e.target.style.background = '#f1f5f9'}
+                                style={{ padding: '10px 20px', background: '#f1f5f9', color: '#475569', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    setIsExcelModalOpen(false);
+                                    await handleExcelExport();
+                                }}
+                                onMouseOver={(e) => e.target.style.background = '#1d4ed8'}
+                                onMouseOut={(e) => e.target.style.background = '#2563eb'}
+                                style={{ padding: '10px 24px', background: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '14px', fontWeight: 600, transition: 'background 0.2s' }}
+                            >
+                                다운로드
                             </button>
                         </div>
                     </div>
