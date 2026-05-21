@@ -1,5 +1,5 @@
 import React, { useRef, useState, useContext } from 'react';
-import { UploadCloud, X, Info } from 'lucide-react';
+import { UploadCloud, X, Info, RefreshCw, Check, AlertTriangle } from 'lucide-react';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { useSelector } from 'react-redux';
 import { MapManagementPageApi } from './MapManagementPageApi';
@@ -8,11 +8,12 @@ import './MapManagementPage.css';
 const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
     const fileInputRef = useRef(null);
     const modal = useContext(modalContext);
-    const { updateDataFromSav } = MapManagementPageApi();
+    const { updateDataFromSav, uploadSpss } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
 
     const [selectedFile, setSelectedFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [activeTab, setActiveTab] = useState('update'); // 'update' | 'replace'
 
     if (!isOpen) return null;
 
@@ -48,7 +49,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
         }
     };
 
-    const handleUploadSubmit = async () => {
+    const handleUploadSubmitOriginal = async () => {
         if (!selectedFile) {
             modal.showErrorAlert("알림", "업데이트할 파일을 선택해주세요.");
             return;
@@ -129,6 +130,73 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
         });
     };
 
+    const handleReplaceSubmit = async () => {
+        const pn = sessionStorage.getItem('merge_pn') || sessionStorage.getItem('projectnum');
+        const projectName = sessionStorage.getItem('projectname');
+        const userId = auth?.user?.userId || '';
+
+        if (!pn) {
+            modal.showErrorAlert("알림", "프로젝트 정보를 찾을 수 없습니다.");
+            return;
+        }
+
+        modal.showConfirm("알림", "교체(업로드) 완료 시 기존 내용으로의 복구가 절대 불가능하며,\n기존의 모든 맵 구성과 데이터가 삭제되고 덮어씌워집니다.\n계속 진행하시겠습니까?", {
+            btns: [
+                { title: "취소", click: () => { } },
+                {
+                    title: "시작",
+                    click: async () => {
+                        const formData = new FormData();
+                        formData.append("pn", pn);
+                        formData.append("file", selectedFile);
+                        formData.append("gb", "spss");
+                        if (projectName) {
+                            formData.append("projectName", projectName);
+                        }
+                        if (userId) {
+                            formData.append("user", userId);
+                        }
+
+                        try {
+                            const res = await uploadSpss.mutateAsync(formData);
+
+                            if (res?.success === "777") {
+                                handleModalClose();
+                                await modal.showAlert("알림", "파일 교체(업로드)가 완료되었습니다.", { zIndex: 99999 });
+                                if (refreshData) refreshData();
+                            } else {
+                                const errorMsg = res?.errortext || res?.message || "파일 교체 중 오류가 발생했습니다.";
+                                modal.showErrorAlert("에러", errorMsg, { zIndex: 99999 });
+                            }
+                        } catch (error) {
+                            console.error("Replace error:", error);
+                            modal.showErrorAlert("에러", "파일 교체 요청 중 오류가 발생했습니다.", { zIndex: 99999 });
+                        }
+                    }
+                }
+            ]
+        });
+    };
+
+    const handleUploadSubmit = async () => {
+        if (!selectedFile) {
+            modal.showErrorAlert("알림", activeTab === 'update' ? "업데이트할 파일을 선택해주세요." : "교체할 파일을 선택해주세요.");
+            return;
+        }
+
+        const fileName = selectedFile.name.toLowerCase();
+        if (!fileName.endsWith('.sav')) {
+            modal.showErrorAlert("알림", ".sav 형식의 파일만 업로드할 수 있습니다.");
+            return;
+        }
+
+        if (activeTab === 'update') {
+            await handleUploadSubmitOriginal();
+        } else {
+            await handleReplaceSubmit();
+        }
+    };
+
     const handleFileSelectClick = (e) => {
         if (e) e.stopPropagation();
         if (fileInputRef.current) {
@@ -164,34 +232,418 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                             borderRadius: '4px',
                             marginRight: '8px'
                         }}></div>
-                        <h3 className="variable-modal-title">데이터 불러오기</h3>
+                        <h3 className="variable-modal-title">데이터 등록</h3>
                     </div>
                     <button onClick={handleModalClose} className="variable-modal-close"><X size={20} /></button>
                 </div>
 
                 <div className="variable-modal-body" style={{ padding: '24px' }}>
 
-                    {/* 경고 문구 추가 (타이틀 바로 아래) */}
-                    <div className="upload-modal-warning">
-                        <span className="upload-icon-warning">⚠️</span>
-                        <span>파일을 업로드할 경우, 기존 맵 구성 데이터가 모두 덮어씌워집니다.</span>
+                    {/* 탭 헤더 */}
+                    <div style={{
+                        display: 'flex',
+                        background: '#f8fafc',
+                        padding: '6px',
+                        borderRadius: '8px',
+                        marginBottom: '20px',
+                        gap: '8px',
+                        border: '1px solid #e2e8f0',
+                    }}>
+                        <button
+                            onClick={() => {
+                                setActiveTab('update');
+                                setSelectedFile(null);
+                                if (fileInputRef.current) fileInputRef.current.value = "";
+                            }}
+                            style={{
+                                flex: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                border: activeTab === 'update' ? '1px solid #16a34a' : '1px solid transparent',
+                                background: activeTab === 'update' ? '#ffffff' : 'transparent',
+                                color: activeTab === 'update' ? '#16a34a' : '#64748b',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s',
+                                boxShadow: activeTab === 'update' ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
+                            }}
+                        >
+                            <RefreshCw size={13} style={{ color: activeTab === 'update' ? '#16a34a' : '#64748b' }} />
+                            <span>SAV 최초등록 / 업데이트</span>
+                            <span style={{
+                                background: activeTab === 'update' ? '#dcfce7' : '#f1f5f9',
+                                color: activeTab === 'update' ? '#15803d' : '#64748b',
+                                padding: '2px 6px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '500',
+                            }}>
+                                PID 기준
+                            </span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                setActiveTab('replace');
+                                setSelectedFile(null);
+                                if (fileInputRef.current) fileInputRef.current.value = "";
+                            }}
+                            style={{
+                                flex: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '6px',
+                                padding: '10px 12px',
+                                borderRadius: '6px',
+                                border: activeTab === 'replace' ? '1px solid #d97706' : '1px solid transparent',
+                                background: activeTab === 'replace' ? '#ffffff' : 'transparent',
+                                color: activeTab === 'replace' ? '#d97706' : '#64748b',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s',
+                                boxShadow: activeTab === 'replace' ? '0 1px 3px rgba(0,0,0,0.05)' : 'none',
+                            }}
+                        >
+                            <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '13px', lineHeight: 1 }}>⇅</span>
+                            <span>SAV 교체</span>
+                            <span style={{
+                                background: activeTab === 'replace' ? '#fef3c7' : '#f1f5f9',
+                                color: activeTab === 'replace' ? '#d97706' : '#64748b',
+                                padding: '2px 6px',
+                                borderRadius: '12px',
+                                fontSize: '10px',
+                                fontWeight: '500',
+                            }}>
+                                전체 덮어씀
+                            </span>
+                        </button>
                     </div>
 
-                    {/* 데이터 불러오기 주의사항 (상단) */}
-                    <div className="update-info-box">
-                        <div className="update-info-title">
-                            <Info size={16} />
-                            <span>파일 업로드 주의사항</span>
+                    {/* 데이터 불러오기 주의사항 (상단) - 테이블 형식 */}
+                    {activeTab === 'update' ? (
+                        <div style={{
+                            width: '100%',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '12px',
+                            overflow: 'hidden',
+                            marginBottom: '20px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                        }}>
+                            <table style={{
+                                width: '100%',
+                                borderCollapse: 'collapse',
+                                fontFamily: 'inherit',
+                                fontSize: '13px',
+                            }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                        <th style={{
+                                            width: '100px',
+                                            background: '#f4fbf7',
+                                            color: '#344054',
+                                            fontWeight: '600',
+                                            padding: '10px 16px',
+                                            textAlign: 'left',
+                                            borderRight: '1px solid #e2e8f0',
+                                            fontSize: '12px',
+                                            borderTop: '3px solid #16a34a',
+                                        }}>
+                                            항목
+                                        </th>
+                                        <th style={{
+                                            background: '#f4fbf7',
+                                            color: '#344054',
+                                            fontWeight: '600',
+                                            padding: '10px 16px',
+                                            textAlign: 'left',
+                                            fontSize: '12px',
+                                            borderTop: '3px solid #16a34a',
+                                        }}>
+                                            SAV 최초등록 / 업데이트
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                        <td style={{
+                                            background: '#f4fbf7',
+                                            color: '#344054',
+                                            fontWeight: '600',
+                                            padding: '14px 16px',
+                                            borderRight: '1px solid #e2e8f0',
+                                            verticalAlign: 'middle',
+                                        }}>
+                                            PID
+                                        </td>
+                                        <td style={{
+                                            padding: '14px 16px',
+                                            background: '#fff',
+                                            color: '#344054',
+                                            verticalAlign: 'middle',
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                <span>기존 PID 기준으로 행 매칭</span>
+                                                <div style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    background: '#f0fdf4',
+                                                    border: '1px solid #bbf7d0',
+                                                    color: '#16a34a',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '500',
+                                                }}>
+                                                    유지+추가
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                        <td style={{
+                                            background: '#f4fbf7',
+                                            color: '#344054',
+                                            fontWeight: '600',
+                                            padding: '14px 16px',
+                                            borderRight: '1px solid #e2e8f0',
+                                            verticalAlign: 'middle',
+                                        }}>
+                                            맵(MAP)
+                                        </td>
+                                        <td style={{
+                                            padding: '14px 16px',
+                                            background: '#fff',
+                                            color: '#b45309',
+                                            verticalAlign: 'middle',
+                                        }}>
+                                            <span>기존 맵 유지 · 새파일맵 ≠ 기존맵 ⇒ 업데이트 불가</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{
+                                            background: '#f4fbf7',
+                                            color: '#344054',
+                                            fontWeight: '600',
+                                            padding: '14px 16px',
+                                            borderRight: '1px solid #e2e8f0',
+                                            verticalAlign: 'middle',
+                                        }}>
+                                            기존 데이터
+                                        </td>
+                                        <td style={{
+                                            padding: '14px 16px',
+                                            background: '#fff',
+                                            color: '#344054',
+                                            verticalAlign: 'middle',
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                <span>PID 없는 행 원본 유지</span>
+                                                <div style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '4px',
+                                                    background: '#eff6ff',
+                                                    border: '1px solid #bfdbfe',
+                                                    color: '#2563eb',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '500',
+                                                }}>
+                                                    데이터 업데이트
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <ul className="update-info-list" style={{ listStyle: 'none', paddingLeft: 0, marginTop: '4px', wordBreak: 'keep-all' }}>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> spss 파일(sav) 형식만 지원합니다.</li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 신규 등록되어 MAP 변수가 PID 하나인 프로젝트의 경우 최초 1회에 한하여 SAV 파일 양식에 맞춰 MAP 세팅이 진행됩니다.</li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 첫 번째 데이터는 반드시 <strong style={{ color: '#16a34a' }}>PID</strong>여야 합니다. (최초 등록일 경우 PID가 없을 경우에 한해서만 PID를 자동 생성합니다.)</li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 신규 등록 이후엔 데이터를 내려받으신 후 PID가 부여된 파일로 데이터 업데이트를 진행해 주시기 바랍니다.</li>
-                            <li style={{ marginBottom: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> 만약 pid에 문제가 있을 경우(중복, 특수문자 등) 업로드는 진행되지 않습니다.</li>
-                            <li style={{ marginTop: '6px' }}><span style={{ color: '#16a34a', marginRight: '6px' }}>✔</span> MAP 세팅과 SAV 파일의 필드명이 매칭되지 않을 시 업데이트가 진행되지 않습니다.</li>
-                        </ul>
-                    </div>
+                    ) : (
+                        <div>
+                            {/* 기존 데이터와 맵이 모두 삭제됩니다 경고 */}
+                            <div style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                background: '#fef2f2',
+                                border: '1px solid #fecaca',
+                                borderRadius: '8px',
+                                padding: '12px 16px',
+                                marginBottom: '16px',
+                                fontSize: '13px',
+                                color: '#991b1b',
+                            }}>
+                                <AlertTriangle size={15} style={{ color: '#ef4444', flexShrink: 0 }} />
+                                <span>
+                                    기존 데이터와 맵이 <strong style={{ fontWeight: '700', color: '#dc2626' }}>모두 삭제</strong>됩니다. 업로드 즉시 <strong style={{ fontWeight: '700', color: '#dc2626' }}>복구가 불가능</strong>합니다.
+                                </span>
+                            </div>
+
+                            {/* 테이블 형식 */}
+                            <div style={{
+                                width: '100%',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                marginBottom: '20px',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.02)'
+                            }}>
+                                <table style={{
+                                    width: '100%',
+                                    borderCollapse: 'collapse',
+                                    fontFamily: 'inherit',
+                                    fontSize: '13px',
+                                }}>
+                                    <thead>
+                                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                            <th style={{
+                                                width: '100px',
+                                                background: '#fffbeb',
+                                                color: '#344054',
+                                                fontWeight: '600',
+                                                padding: '10px 16px',
+                                                textAlign: 'left',
+                                                borderRight: '1px solid #e2e8f0',
+                                                fontSize: '12px',
+                                                borderTop: '3px solid #f59e0b',
+                                            }}>
+                                                항목
+                                            </th>
+                                            <th style={{
+                                                background: '#fffbeb',
+                                                color: '#344054',
+                                                fontWeight: '600',
+                                                padding: '10px 16px',
+                                                textAlign: 'left',
+                                                fontSize: '12px',
+                                                borderTop: '3px solid #f59e0b',
+                                            }}>
+                                                SAV 교체
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                            <td style={{
+                                                background: '#fffbeb',
+                                                color: '#344054',
+                                                fontWeight: '600',
+                                                padding: '14px 16px',
+                                                borderRight: '1px solid #e2e8f0',
+                                                verticalAlign: 'middle',
+                                            }}>
+                                                PID
+                                            </td>
+                                            <td style={{
+                                                padding: '14px 16px',
+                                                background: '#fff',
+                                                color: '#344054',
+                                                verticalAlign: 'middle',
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                    <span>새 파일 PID로 전면 교체</span>
+                                                    <div style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        background: '#fee2e2',
+                                                        border: '1px solid #fecaca',
+                                                        color: '#ef4444',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '20px',
+                                                        fontSize: '11px',
+                                                        fontWeight: '500',
+                                                    }}>
+                                                        복구 불가
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                            <td style={{
+                                                background: '#fffbeb',
+                                                color: '#344054',
+                                                fontWeight: '600',
+                                                padding: '14px 16px',
+                                                borderRight: '1px solid #e2e8f0',
+                                                verticalAlign: 'middle',
+                                            }}>
+                                                맵(MAP)
+                                            </td>
+                                            <td style={{
+                                                padding: '14px 16px',
+                                                background: '#fff',
+                                                color: '#344054',
+                                                verticalAlign: 'middle',
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                    <span>새 파일 기준 맵 전체 교체</span>
+                                                    <div style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        background: '#fee2e2',
+                                                        border: '1px solid #fecaca',
+                                                        color: '#ef4444',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '20px',
+                                                        fontSize: '11px',
+                                                        fontWeight: '500',
+                                                    }}>
+                                                        복구 불가
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style={{
+                                                background: '#fffbeb',
+                                                color: '#344054',
+                                                fontWeight: '600',
+                                                padding: '14px 16px',
+                                                borderRight: '1px solid #e2e8f0',
+                                                verticalAlign: 'middle',
+                                            }}>
+                                                기존 데이터
+                                            </td>
+                                            <td style={{
+                                                padding: '14px 16px',
+                                                background: '#fff',
+                                                color: '#ef4444',
+                                                verticalAlign: 'middle',
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                                                    <span>전체 삭제됨</span>
+                                                    <div style={{
+                                                        display: 'inline-flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        background: '#fee2e2',
+                                                        border: '1px solid #fecaca',
+                                                        color: '#ef4444',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '20px',
+                                                        fontSize: '11px',
+                                                        fontWeight: '500',
+                                                    }}>
+                                                        복구 불가
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
 
                     {/* 드래그 앤 드롭 영역 */}
                     <div
@@ -206,6 +658,9 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                         </div>
                         <p className="upload-drag-text">
                             여기에 파일을 끌어다 놓거나 클릭하여 선택하세요
+                        </p>
+                        <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', fontWeight: 'normal', margin: '6px 0 0 0' }}>
+                            ※ SPSS 파일(.sav) 형식만 지원합니다.
                         </p>
                     </div>
 
@@ -251,8 +706,19 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                     <button className="upload-cancel-btn" onClick={handleModalClose}>
                         취소
                     </button>
-                    <button className="upload-submit-btn" onClick={handleUploadSubmit}>
-                        업데이트 시작
+                    <button
+                        className="upload-submit-btn"
+                        onClick={handleUploadSubmit}
+                        disabled={!selectedFile}
+                        style={{
+                            backgroundColor: !selectedFile
+                                ? '#cbd5e1'
+                                : (activeTab === 'update' ? '#16a34a' : '#f59e0b'),
+                            cursor: !selectedFile ? 'not-allowed' : 'pointer',
+                            opacity: !selectedFile ? 0.6 : 1,
+                        }}
+                    >
+                        {activeTab === 'update' ? '업데이트 시작' : '⇅ 교체 시작'}
                     </button>
                 </div>
             </div>
