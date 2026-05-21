@@ -406,7 +406,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           title: "",
           logoText: "H-SRT",
           logoClass: "menu-bar-logo",
-          onClick: () => navigate("/data_status/hsrt/add_question")
+          onClick: () => navigate(isHsrtCustomer ? "/data_status/hsrt/cross_analysis" : "/data_status/hsrt/add_question")
         }}
         menuGroups={computedMenuGroups}
         projectInfo={projectInfoData}
