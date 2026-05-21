@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus } from 'lucide-react';
+import { Trash2, Search, ChevronLeft, ChevronRight, Wand2, Plus, Info } from 'lucide-react';
 import { DpRequestPageApi } from '../dpRequest/DpRequestPageApi';
 import KendoGridV2, { GridColumn as Column } from "@/components/kendo/KendoGridV2";
 import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
@@ -31,6 +31,56 @@ const NumericEditCell = (props) => {
                 style={{ width: '100%', height: '100%', border: 'none', outline: 'none' }}
             />
         </td>
+    );
+};
+
+// --- 커스텀 헤더 셀 (조건 도움말) ---
+const ConditionHeaderCell = (props) => {
+    const handleOpenHelp = (e) => {
+        e.stopPropagation();
+        const helpWin = window.open('', '_blank', 'width=580,height=350,scrollbars=yes,resizable=yes');
+        if (helpWin) {
+            helpWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>조건 도움말</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 24px; color: #334155; line-height: 1.6; background-color: #f8fafc; }
+                        .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+                        h1 { font-size: 20px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+                        .badge { width: 24px; height: 24px; border-radius: 50%; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-right: 8px; }
+                        .list-item { margin-bottom: 12px; font-size: 14px; }
+                        .item-title { font-weight: 700; color: #2563eb; display: inline-block; width: 90px; }
+                        .item-example { font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: #0f172a; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1><span class="badge">i</span>조건 도움말</h1>
+                        <div class="list-item"><span class="item-title">• 동등 대조:</span> <span class="item-example">GENDER == 1, REGION == 'A'</span></div>
+                        <div class="list-item"><span class="item-title">• 비교 대조:</span> <span class="item-example">AGE >= 20, AGE < 30</span></div>
+                        <div class="list-item"><span class="item-title">• IN 연산:</span> <span class="item-example">AGE_GROUP in [2, 3, 4]</span></div>
+                        <div class="list-item"><span class="item-title">• 다중 조건:</span> <span class="item-example">(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</span></div>
+                    </div>
+                </body>
+                </html>
+            `);
+            helpWin.document.close();
+        }
+    };
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+            <span>{props.title}</span>
+            <div
+                onClick={handleOpenHelp}
+                style={{ cursor: 'pointer', display: 'flex' }}
+                title="도움말 새창으로 열기"
+            >
+                <Info size={14} color="#94a3b8" />
+            </div>
+        </div>
     );
 };
 
@@ -212,7 +262,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
         if (!pageId || pageId === "null" || pageId === "undefined" || !user) return;
         try {
             loadingSpinner.show();
-            
+
             // 1. Fetch base variables for candidates (Cartesian modal, duplicate check)
             const baseRes = await getBaseVariableList.mutateAsync({ pageid: pageId, user });
             let baseVars = [];
@@ -382,7 +432,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
             if (result?.success === '777') {
                 // 재계산 API 호출
                 await recomputeComputedVariables.mutateAsync({ pageid: pageId, user });
-                
+
                 modal.showAlert('알림', '문항이 저장되었습니다.');
                 if (onUnsavedChange) onUnsavedChange(false);
                 await fetchVariablesData('select', nextId);
@@ -511,7 +561,7 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                             >
                                 <Column field="label2" title="할당될 값" width="120px" cell={NumericEditCell} />
                                 <Column field="label" title="보기 라벨" width="300px" />
-                                <Column field="logic" title="조건" />
+                                <Column field="logic" title="조건" headerCell={ConditionHeaderCell} />
                             </KendoGridV2>
                         </div>
                     </div>

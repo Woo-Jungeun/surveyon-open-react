@@ -10,87 +10,69 @@ import useUpdateHistory from '@/hooks/useUpdateHistory';
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
-    const anchorRef = useRef(null);
-    const [show, setShow] = useState(false);
+    const handleOpenHelp = (e) => {
+        e.stopPropagation();
+        const helpWin = window.open('', '_blank', 'width=580,height=600,scrollbars=yes,resizable=yes');
+        if (helpWin) {
+            helpWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>배너 조건 도움말</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 24px; color: #334155; line-height: 1.6; background-color: #f8fafc; }
+                        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+                        h1 { font-size: 20px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+                        .badge { width: 24px; height: 24px; border-radius: 50%; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-right: 8px; }
+                        h2 { font-size: 14px; font-weight: 700; color: #3b82f6; margin-top: 20px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+                        h2.warning { color: #ef4444; }
+                        h2::before { content: ''; width: 4px; height: 12px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+                        h2.info-title::before { background: #3b82f6; }
+                        h2.warning::before { background: #ef4444; }
+                        .example-box { background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 13px; color: #334155; margin-bottom: 16px; line-height: 1.8; }
+                        ul { margin: 0; padding-left: 20px; }
+                        li { margin-bottom: 8px; font-size: 13px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1><span class="badge">i</span>배너 조건 도움말</h1>
+                        <div style="font-size: 14px; margin-bottom: 20px;">
+                            배너는 분석표의 상단 기준축으로 사용할 분류 조건입니다.<br />
+                            각 행의 조건식에 해당하는 응답자만 해당 배너 항목에 포함됩니다.
+                        </div>
+                        <h2 class="info-title">작성 예시</h2>
+                        <div class="example-box">
+                            <div>GENDER == 1</div>
+                            <div>AGE >= 20</div>
+                            <div>REGION in [1, 2, 3]</div>
+                            <div>(GENDER == 1 or GENDER == 2) and AGE >= 20</div>
+                        </div>
+                        <h2 class="warning">주의사항</h2>
+                        <ul>
+                            <li>변수명은 실제 <b>데이터 컬럼 ID</b>와 동일해야 합니다.</li>
+                            <li>문자값은 따옴표(<code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px;">' '</code>)로 감싸야 합니다.</li>
+                            <li>여러 조건은 <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px; font-weight: 600;">and</code> / <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px; font-weight: 600;">or</code>로 연결합니다.</li>
+                            <li>배너 ID는 <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px;">banner</code> 또는 <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px;">banner_</code>로 시작해야 합니다.</li>
+                        </ul>
+                    </div>
+                </body>
+                </html>
+            `);
+            helpWin.document.close();
+        }
+    };
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
             <span>{props.title}</span>
             <div
-                ref={anchorRef}
-                onMouseEnter={() => setShow(true)}
-                onMouseLeave={() => setShow(false)}
+                onClick={handleOpenHelp}
                 style={{ cursor: 'pointer', display: 'flex' }}
-                onClick={(e) => e.stopPropagation()}
+                title="도움말 새창으로 열기"
             >
                 <Info size={14} color="#94a3b8" />
             </div>
-
-            <Popup
-                anchor={anchorRef.current}
-                show={show}
-                animate={false}
-                popupClass="condition-tooltip-popup"
-                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
-                anchorAlign={{ horizontal: 'right', vertical: 'bottom' }}
-                popupAlign={{ horizontal: 'right', vertical: 'top' }}
-                margin={{ horizontal: 10, vertical: 4 }}
-            >
-                <div style={{
-                    padding: '16px 20px',
-                    background: '#ffffff',
-                    width: 'max-content',
-                    minWidth: '220px',
-                    lineHeight: '1.6',
-                    color: '#334155',
-                    textAlign: 'left', // 헤더 중앙정렬 영향을 받지 않도록 분리
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05)'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
-                        <div style={{
-                            width: '20px', height: '20px', borderRadius: '50%',
-                            background: '#EFF6FF', color: '#3B82F6', border: '1px solid #BFDBFE',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '12px', fontWeight: 'bold'
-                        }}>i</div>
-                        <span style={{ color: '#1E293B', fontWeight: '700', fontSize: '14px' }}>배너 조건 도움말</span>
-                    </div>
-
-                    <div style={{ fontSize: '13px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ lineHeight: '1.5' }}>
-                            배너는 분석표의 상단 기준축으로 사용할 분류 조건입니다.<br />
-                            각 행의 조건식에 해당하는 응답자만 해당 배너 항목에 포함됩니다.
-                        </div>
-
-                        <div>
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#3B82F6', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '4px', height: '12px', background: '#3B82F6', borderRadius: '2px', display: 'inline-block' }}></span>
-                                작성 예시
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#F8FAFC', padding: '10px', borderRadius: '6px', border: '1px solid #E2E8F0', fontFamily: 'monospace', fontSize: '12px', color: '#334155', fontWeight: 500 }}>
-                                <div>GENDER == 1</div>
-                                <div>AGE &gt;= 20</div>
-                                <div>REGION in [1, 2, 3]</div>
-                                <div>(GENDER == 1 or GENDER == 2) and AGE &gt;= 20</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#EF4444', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '4px', height: '12px', background: '#EF4444', borderRadius: '2px', display: 'inline-block' }}></span>
-                                주의사항
-                            </div>
-                            <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px', color: '#334155', fontSize: '12px', lineHeight: '1.5' }}>
-                                <li>변수명은 실제 <b>데이터 컬럼 ID</b>와 동일해야 합니다.</li>
-                                <li>문자값은 따옴표(<code style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '1px 4px', borderRadius: '4px', color: '#1E293B' }}>' '</code>)로 감싸야 합니다.</li>
-                                <li>여러 조건은 <code style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '1px 4px', borderRadius: '4px', color: '#1E293B', fontWeight: 600 }}>and</code> / <code style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '1px 4px', borderRadius: '4px', color: '#1E293B', fontWeight: 600 }}>or</code>로 연결합니다.</li>
-                                <li>배너 ID는 <code style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '1px 4px', borderRadius: '4px', color: '#1E293B' }}>banner</code> 또는 <code style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '1px 4px', borderRadius: '4px', color: '#1E293B' }}>banner_</code>로 시작해야 합니다.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </Popup>
         </div>
     );
 };

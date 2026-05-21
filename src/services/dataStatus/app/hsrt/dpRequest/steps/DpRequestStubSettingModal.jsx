@@ -94,239 +94,219 @@ const LineStylePicker = ({ value, onChange, color }) => {
 
 // --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
-    const anchorRef = useRef(null);
-    const [show, setShow] = useState(false);
+    const handleOpenHelp = (e) => {
+        e.stopPropagation();
+        const helpWin = window.open('', '_blank', 'width=580,height=600,scrollbars=yes,resizable=yes');
+        if (helpWin) {
+            helpWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>스터브 조건 도움말</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 24px; color: #334155; line-height: 1.6; background-color: #f8fafc; }
+                        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+                        h1 { font-size: 20px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+                        .badge { width: 24px; height: 24px; border-radius: 50%; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-right: 8px; }
+                        h2 { font-size: 14px; font-weight: 700; color: #3b82f6; margin-top: 20px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+                        h2.warning { color: #ef4444; }
+                        h2::before { content: ''; width: 4px; height: 12px; border-radius: 2px; display: inline-block; margin-right: 6px; }
+                        h2.info-title::before { background: #3b82f6; }
+                        h2.warning::before { background: #ef4444; }
+                        .example-box { background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 13px; color: #334155; margin-bottom: 16px; line-height: 1.8; }
+                        ul { margin: 0; padding-left: 20px; }
+                        li { margin-bottom: 8px; font-size: 13px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1><span class="badge">i</span>스터브 조건 도움말</h1>
+                        <div style="font-size: 14px; margin-bottom: 20px;">
+                            스터브는 분석표의 행으로 사용할 재분류 조건입니다.<br />
+                            각 행의 조건식에 해당하는 응답자만 해당 스터브 항목에 집계됩니다.
+                        </div>
+                        <h2 class="info-title">작성 예시</h2>
+                        <div class="example-box">
+                            <div><span style="color: #64748b">동등 대조: </span>SQ1 == 1</div>
+                            <div><span style="color: #64748b">IN 연산: </span>SQ1 in [1, 2, 3]</div>
+                            <div><span style="color: #64748b">NOT IN 연산: </span>SQ1 not in [8, 9]</div>
+                            <div><span style="color: #64748b">NULL 확인: </span>SQ1 is not null</div>
+                            <div><span style="color: #64748b">비교 대조: </span>AGE >= 20 and AGE < 30</div>
+                            <div><span style="color: #64748b">다중 조건: </span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
+                            <div><span style="color: #64748b">순위 조건: </span>Q1[1:2] in [코드]</div>
+                        </div>
+                        <h2 class="warning">주의</h2>
+                        <ul>
+                            <li>조건식이 비어 있으면 해당 행은 집계 조건으로 사용할 수 없습니다.</li>
+                            <li>같은 응답자가 여러 조건에 걸리면 여러 행에 <b>중복 포함</b>될 수 있습니다.</li>
+                            <li>필터 조건과 스터브 조건은 별개입니다.</li>
+                        </ul>
+                    </div>
+                </body>
+                </html>
+            `);
+            helpWin.document.close();
+        }
+    };
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
             <span>{props.title}</span>
             <div
-                ref={anchorRef}
-                onMouseEnter={() => setShow(true)}
-                onMouseLeave={() => setShow(false)}
+                onClick={handleOpenHelp}
                 style={{ cursor: 'pointer', display: 'flex' }}
-                onClick={(e) => e.stopPropagation()}
+                title="도움말 새창으로 열기"
             >
                 <Info size={14} color="#94a3b8" />
             </div>
-
-            <Popup
-                anchor={anchorRef.current}
-                show={show}
-                animate={false}
-                popupClass="condition-tooltip-popup"
-                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
-            >
-                <div style={{
-                    padding: '16px 20px',
-                    background: '#ffffff',
-                    width: 'max-content',
-                    minWidth: '220px',
-                    lineHeight: '1.6',
-                    color: '#334155',
-                    textAlign: 'left',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.05)'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '8px' }}>
-                        <div style={{
-                            width: '20px', height: '20px', borderRadius: '50%',
-                            background: '#EFF6FF', color: '#3B82F6', border: '1px solid #BFDBFE',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '12px', fontWeight: 'bold'
-                        }}>i</div>
-                        <span style={{ color: '#1E293B', fontWeight: '700', fontSize: '14px' }}>스터브 조건 도움말</span>
-                    </div>
-
-                    <div style={{ fontSize: '13px', color: '#475569', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        <div style={{ lineHeight: '1.5' }}>
-                            스터브는 분석표의 행으로 사용할 재분류 조건입니다.<br />
-                            각 행의 조건식에 해당하는 응답자만 해당 스터브 항목에 집계됩니다.
-                        </div>
-
-                        <div>
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#3B82F6', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '4px', height: '12px', background: '#3B82F6', borderRadius: '2px', display: 'inline-block' }}></span>
-                                작성 예시
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: '#F8FAFC', padding: '10px', borderRadius: '6px', border: '1px solid #E2E8F0', fontFamily: 'monospace', fontSize: '12px', color: '#334155', fontWeight: 500 }}>
-                                <div><span style={{ color: '#64748b' }}>동등 대조: </span>SQ1 == 1</div>
-                                <div><span style={{ color: '#64748b' }}>IN 연산: </span>SQ1 in [1, 2, 3]</div>
-                                <div><span style={{ color: '#64748b' }}>NOT IN 연산: </span>SQ1 not in [8, 9]</div>
-                                <div><span style={{ color: '#64748b' }}>NULL 확인: </span>SQ1 is not null</div>
-                                <div><span style={{ color: '#64748b' }}>비교 대조: </span>AGE &gt;= 20 and AGE &lt; 30</div>
-                                <div><span style={{ color: '#64748b' }}>다중 조건: </span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
-                                <div><span style={{ color: '#64748b' }}>순위 조건: </span>Q1[1:2] in [코드]</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ fontSize: '12px', fontWeight: '700', color: '#EF4444', marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{ width: '4px', height: '12px', background: '#EF4444', borderRadius: '2px', display: 'inline-block' }}></span>
-                                주의
-                            </div>
-                            <ul style={{ margin: 0, paddingLeft: '16px', display: 'flex', flexDirection: 'column', gap: '4px', color: '#334155', fontSize: '12px', lineHeight: '1.5' }}>
-                                <li>조건식이 비어 있으면 해당 행은 집계 조건으로 사용할 수 없습니다.</li>
-                                <li>같은 응답자가 여러 조건에 걸리면 여러 행에 <b>중복 포함</b>될 수 있습니다.</li>
-                                <li>필터 조건과 스터브 조건은 별개입니다.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </Popup>
         </div>
     );
 };
 
 // --- 커스텀 헤더 셀 (형식 아이콘 및 표 가이드) ---
 const TypeHeaderCell = (props) => {
-    const anchorRef = useRef(null);
-    const [show, setShow] = useState(false);
+    const handleOpenHelp = (e) => {
+        e.stopPropagation();
+        const helpWin = window.open('', '_blank', 'width=1150,height=950,scrollbars=yes,resizable=yes');
+        if (helpWin) {
+            helpWin.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>형식 설명 도움말</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 24px; color: #334155; line-height: 1.6; background-color: #f8fafc; }
+                        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+                        h1 { font-size: 20px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+                        .badge { width: 24px; height: 24px; border-radius: 50%; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-right: 8px; }
+                        table { width: 100%; border-collapse: collapse; border: 1px solid #e2e8f0; margin-top: 12px; font-size: 13px; }
+                        th, td { padding: 10px 12px; border: 1px solid #e2e8f0; text-align: left; }
+                        th { background: #f1f5f9; font-weight: 600; color: #475569; }
+                        tr:nth-child(even) { background-color: #f8fafc; }
+                        .type-name { font-weight: 600; color: #2563eb; }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <h1><span class="badge">i</span>형식 도움말 및 가이드</h1>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>구분</th>
+                                    <th>항목</th>
+                                    <th>설명</th>
+                                    <th>활용 지침</th>
+                                    <th>조건/예시</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td rowspan="2" style="color: #475569; font-weight: 500;">표시 row</td>
+                                    <td class="type-name">base</td>
+                                    <td>계산 기준 표본 수</td>
+                                    <td>가능하면 항상 첫 row. 해석 시 기준 모수</td>
+                                    <td>SQ1 is not null</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">option</td>
+                                    <td>응답 보기/구간/Top/Mid/Bot/rank 결과 row</td>
+                                    <td>single, multi, scale 보기, rank 등 모두 option</td>
+                                    <td>단일: Q1 == 1<br>복수·multi·rank: Q1 in [1], AQ5[1:2] in [1]</td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="2" style="color: #475569; font-weight: 500;">동적 표시 row</td>
+                                    <td class="type-name">open(숫자)</td>
+                                    <td>숫자형 open 문항의 실제 값을 펼치는 row</td>
+                                    <td>교차분석 시 distinct 숫자값을 동적으로 표시</td>
+                                    <td>조건 또는 대상변수: SQ2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">open(문자)</td>
+                                    <td>문자형 open 문항의 실제 값을 펼치는 row</td>
+                                    <td>응답 문자열을 distinct 값으로 표시. 정렬/제한 필요</td>
+                                    <td>조건 또는 대상변수: BRAND_NAME</td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="10" style="color: #475569; font-weight: 500;">통계 row</td>
+                                    <td class="type-name">mean</td>
+                                    <td>평균</td>
+                                    <td>scale/open(숫자)에서 기본 통계로 사용</td>
+                                    <td>대상변수는 보통 원본 변수 ID</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">mean (100)</td>
+                                    <td>평균 100</td>
+                                    <td>100점 만점 환산 평균 (설문 응답값을 100점 만점으로 스케일링하여 평균 계산)</td>
+                                    <td>대상변수: Q2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">std</td>
+                                    <td>표준편차</td>
+                                    <td>평균 아래 보조 통계로 사용</td>
+                                    <td>대상변수: SQ2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">median</td>
+                                    <td>중앙값</td>
+                                    <td>평균이 왜곡될 수 있는 분포에서 보조 지표</td>
+                                    <td>대상변수: SQ2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">mode</td>
+                                    <td>최빈값</td>
+                                    <td>가장 많이 선택/응답된 값 확인</td>
+                                    <td>대상변수: SQ2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">min</td>
+                                    <td>최소값</td>
+                                    <td>응답 범위 하한 확인</td>
+                                    <td>대상변수: SQ2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">max</td>
+                                    <td>최대값</td>
+                                    <td>응답 범위 상한 확인</td>
+                                    <td>대상변수: SQ2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">var</td>
+                                    <td>분산</td>
+                                    <td>특수 검증/분석용. 일반 화면에서는 필요할 때만 노출</td>
+                                    <td>variance는 저장 시 var로 정규화</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">sum</td>
+                                    <td>합계</td>
+                                    <td>점수 총합/누적값 계산 시 사용</td>
+                                    <td>대상변수: SQ2</td>
+                                </tr>
+                                <tr>
+                                    <td class="type-name">rse</td>
+                                    <td>상대표준오차</td>
+                                    <td>신뢰성 검토용. 표본이 작은 경우 참고</td>
+                                    <td>대상변수: SQ2</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </body>
+                </html>
+            `);
+            helpWin.document.close();
+        }
+    };
 
     return (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
             <span>{props.title}</span>
             <div
-                ref={anchorRef}
-                onMouseEnter={() => setShow(true)}
-                onMouseLeave={() => setShow(false)}
+                onClick={handleOpenHelp}
                 style={{ cursor: 'pointer', display: 'flex' }}
-                onClick={(e) => e.stopPropagation()}
+                title="도움말 새창으로 열기"
             >
                 <Info size={14} color="#94a3b8" />
             </div>
-
-            <Popup
-                anchor={anchorRef.current}
-                show={show}
-                animate={false}
-                popupClass="type-tooltip-popup"
-                style={{ zIndex: 100000 }} // Grid header 위에 잘 보이도록 z-index 높임
-            >
-                <div style={{
-                    padding: '6px 10px',
-                    background: '#ffffff',
-                    width: '940px',
-                    lineHeight: '1.25',
-                    color: '#334155',
-                    textAlign: 'left',
-                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '6px'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '6px' }}>
-                        <div style={{
-                            width: '18px', height: '18px', borderRadius: '50%',
-                            background: '#e2e8f0', color: '#64748b',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', fontWeight: 'bold'
-                        }}>i</div>
-                        <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>형식</span>
-                    </div>
-                    <div style={{ fontSize: '8.5px', letterSpacing: '-0.4px', marginLeft: '2px', fontWeight: 400 }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #e2e8f0' }}>
-                            <thead>
-                                <tr style={{ background: '#f1f5f9', borderBottom: '1px solid #e2e8f0' }}>
-                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>구분</th>
-                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>항목</th>
-                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>설명</th>
-                                    <th style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', textAlign: 'left', fontWeight: 400, color: '#475569' }}>활용 지침</th>
-                                    <th style={{ padding: '1px 3px', textAlign: 'left', fontWeight: 400, color: '#475569' }}>조건/예시</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td rowSpan="2" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>표시 row</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>base</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>계산 기준 표본 수</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>가능하면 항상 첫 row. 해석 시 기준 모수</td>
-                                    <td style={{ padding: '1px 3px' }}>SQ1 is not null</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>option</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 보기/구간/Top/Mid/Bot/rank 결과 row</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>single, multi, scale 보기, rank 등 모두 option</td>
-                                    <td style={{ padding: '1px 3px' }}>단일: Q1 == 1<br />복수·multi·rank: Q1 in [1], AQ5[1:2] in [1]</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td rowSpan="2" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>동적 표시 row</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>open(숫자)</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>숫자형 open 문항의 실제 값을 펼치는 row</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>교차분석 시 distinct 숫자값을 동적으로 표시</td>
-                                    <td style={{ padding: '1px 3px' }}>조건 또는 대상변수: SQ2</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>open(문자)</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>문자형 open 문항의 실제 값을 펼치는 row</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 문자열을 distinct 값으로 표시. 정렬/제한 필요</td>
-                                    <td style={{ padding: '1px 3px' }}>조건 또는 대상변수: BRAND_NAME</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td rowSpan="10" style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', verticalAlign: 'top', color: '#475569' }}>통계 row</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>mean</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>scale/open(숫자)에서 기본 통계로 사용</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수는 보통 원본 변수 ID</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>mean (100)</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균 100</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}></td>
-                                    <td style={{ padding: '1px 3px' }}></td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>std</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>표준편차</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균 아래 보조 통계로 사용</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>median</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>중앙값</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>평균이 왜곡될 수 있는 분포에서 보조 지표</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>mode</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최빈값</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>가장 많이 선택/응답된 값 확인</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>min</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최소값</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 범위 하한 확인</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>max</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>최대값</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>응답 범위 상한 확인</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>var</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>분산</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>특수 검증/분석용. 일반 화면에서는 필요할 때만 노출</td>
-                                    <td style={{ padding: '1px 3px' }}>variance는 저장 시 var로 정규화</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>sum</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>합계</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>점수 총합/누적값 계산 시 사용</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
-                                </tr>
-                                <tr style={{ borderBottom: '1px solid #e2e8f0' }}>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0', fontWeight: 500, color: '#2563eb' }}>rse</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>상대표준오차</td>
-                                    <td style={{ padding: '1px 3px', borderRight: '1px solid #e2e8f0' }}>신뢰성 검토용. 표본이 작은 경우 참고</td>
-                                    <td style={{ padding: '1px 3px' }}>대상변수: SQ2</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </Popup>
         </div>
     );
 };
