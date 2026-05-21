@@ -76,9 +76,11 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             backgroundColor: isSelected 
                 ? 'rgba(245, 158, 11, 0.35)' 
                 : 'transparent',
-            border: isSelected 
-                ? '1px solid #F59E0B' 
-                : 'none',
+            border: '1px solid transparent',
+            borderColor: isSelected 
+                ? '#F59E0B' 
+                : 'transparent',
+            outline: 'none',
             ...(isHorizontal ? {
                 left: 0,
                 right: 0,
