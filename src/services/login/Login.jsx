@@ -32,21 +32,21 @@ const Login = () => {
             const isCustomer = sessionStorage.getItem("groupcode") === "999999991";
             let targetPath = "/";
             if (isCustomer) {
-                targetPath = "/data_status";
+                targetPath = "/data_status/hsrt/cross_analysis";
                 const showmenu = sessionStorage.getItem("showmenu");
                 if (showmenu) {
                     const firstMenuLabel = showmenu.split(",")[0].replace(/\s+/g, "");
                     const menuPathMap = {
-                        "빈도분석": "/data_status/hsrt/add_question",
-                        "배너설정": "/data_status/hsrt/add_question",
-                        "교차분석": "/data_status/analysis/cross",
-                        "추가분석": "/data_status/hsrt/add_question",
-                        "쿼터현황/관리": "/data_status/analysis/quota",
-                        "AI분석": "/data_status/ai/analysis",
-                        "AI리포트": "/data_status/ai/report",
-                        "변수생성": "/data_status/setting/recoding",
-                        "DP의뢰서정의": "/data_status/setting/dp_definition",
-                        "가중치생성": "/data_status/setting/weight",
+                        // "빈도분석": "/data_status/hsrt/cross_analysis",
+                        // "배너설정": "/data_status/hsrt/cross_analysis",
+                        "교차분석": "/data_status/hsrt/cross_analysis",
+                        "추가분석": "/data_status/analysis/additional",
+                        // "쿼터현황/관리": "/data_status/analysis/quota",
+                        // "AI분석": "/data_status/ai/analysis",
+                        // "AI리포트": "/data_status/ai/report",
+                        // "변수생성": "/data_status/setting/recoding",
+                        // "DP의뢰서정의": "/data_status/setting/dp_definition",
+                        // "가중치생성": "/data_status/setting/weight",
                     };
                     if (menuPathMap[firstMenuLabel]) {
                         targetPath = menuPathMap[firstMenuLabel];
