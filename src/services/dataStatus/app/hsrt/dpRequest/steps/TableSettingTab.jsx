@@ -47,7 +47,65 @@ const LineStylePicker = ({ value, onChange, color, direction = 'down' }) => {
     );
 };
 
+const borderNames = {
+    theme_table_outer_top: '표 상단 외곽선',
+    theme_table_outer_bottom: '표 하단 외곽선',
+    theme_table_outer_left: '표 좌측 외곽선',
+    theme_table_outer_right: '표 우측 외곽선',
+    theme_header_divider: '헤더 하단선',
+    theme_stub_divider: '스터브 구분선',
+    theme_section_separator: '섹션 구분선',
+    theme_grid: '데이터 기본선'
+};
+
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
+    const [selectedBorder, setSelectedBorder] = useState('theme_table_outer_top');
+    const [hoveredBorder, setHoveredBorder] = useState(null);
+
+    const renderBorderHandle = (borderType, position) => {
+        const isSelected = selectedBorder === borderType;
+        const isHighlighted = hoveredBorder === borderType;
+        const isHorizontal = position === 'top' || position === 'bottom';
+        
+        const style = {
+            position: 'absolute',
+            zIndex: 20,
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            boxSizing: 'border-box',
+            backgroundColor: isSelected 
+                ? 'rgba(245, 158, 11, 0.35)' 
+                : 'transparent',
+            border: isSelected 
+                ? '1px solid #F59E0B' 
+                : 'none',
+            ...(isHorizontal ? {
+                left: 0,
+                right: 0,
+                height: '10px',
+                [position]: '-5px',
+            } : {
+                top: 0,
+                bottom: 0,
+                width: '10px',
+                [position]: '-5px',
+            })
+        };
+
+        return (
+            <div 
+                style={style}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBorder(borderType);
+                }}
+                onMouseEnter={() => setHoveredBorder(borderType)}
+                onMouseLeave={() => setHoveredBorder(null)}
+                title={`${borderNames[borderType] || ''} 클릭하여 편집`}
+            />
+        );
+    };
+
     const handleChange = (path, value) => {
         const keys = path.split('.');
         const newSettings = { ...settings };
@@ -108,6 +166,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             maxWidth: '100%',
             overflowX: 'hidden'
         }}>
+            <style>{`
+                @keyframes borderSelectedPulse {
+                    0% { opacity: 0.6; }
+                    50% { opacity: 1; }
+                    100% { opacity: 0.6; }
+                }
+            `}</style>
 
             {/* 1.5 빠른 프리셋 */}
             <div style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #E2E8F0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', padding: '16px' }}>
@@ -165,7 +230,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
             </div>
 
             {/* 1. 상단: 실시간 미리보기 (고정) */}
-            <div style={{ position: 'sticky', top: '-20px', zIndex: 10, background: '#F1F5F9', margin: '-20px -24px -20px -24px', padding: '20px 24px' }}>
+            <div style={{ position: 'sticky', top: 0, zIndex: 10, background: '#F1F5F9', margin: '-20px -24px 0 -24px', padding: '20px 24px 10px 24px' }}>
                 <div className="dp-setting-card" style={{ background: '#FFFFFF', borderRadius: '8px', border: '1px solid #CBD5E1', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
                     <div className="dp-setting-card-header" style={{ padding: '10px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', fontSize: '13px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -173,6 +238,78 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         </div>
                     </div>
                     <div className="dp-setting-card-body" style={{ padding: '16px', overflowX: 'auto', background: settings.render.theme_bg || '#FFFFFF', borderRadius: '0 0 8px 8px' }}>
+                        {selectedBorder && (
+                            <div 
+                                onMouseEnter={() => setHoveredBorder(selectedBorder)}
+                                onMouseLeave={() => setHoveredBorder(null)}
+                                style={{ 
+                                    background: '#EFF6FF', 
+                                    border: '1px solid #3B82F6', 
+                                    borderRadius: '6px', 
+                                    padding: '10px 16px', 
+                                    marginBottom: '16px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: '16px',
+                                    flexWrap: 'wrap'
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#1D4ED8', whiteSpace: 'nowrap' }}>
+                                        선택된 선: {borderNames[selectedBorder]}
+                                    </span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
+                                            <input 
+                                                type="color" 
+                                                value={(settings.render[`${selectedBorder}_color`] || '#000000').slice(0, 7)} 
+                                                onChange={(e) => handleChange(`render.${selectedBorder}_color`, e.target.value.toUpperCase())} 
+                                                style={{ width: '20px', height: '20px', padding: 0, border: 'none', cursor: 'pointer' }} 
+                                            />
+                                        </div>
+                                        <LineStylePicker 
+                                            value={settings.render[`${selectedBorder}_style`] || 'solid'} 
+                                            onChange={(val) => {
+                                                handleChange(`render.${selectedBorder}_style`, val);
+                                                if (val === 'double') {
+                                                    const curWidth = parseInt((settings.render[`${selectedBorder}_width`] || '0').replace('px', ''), 10);
+                                                    if (!curWidth || curWidth < 3) {
+                                                        handleChange(`render.${selectedBorder}_width`, '3px');
+                                                    }
+                                                }
+                                            }}
+                                            color={settings.render[`${selectedBorder}_color`] || '#000000'} 
+                                            direction="down"
+                                        />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            <input
+                                                type="number"
+                                                min={settings.render[`${selectedBorder}_style`] === 'double' ? 3 : 0}
+                                                max="10"
+                                                value={(settings.render[`${selectedBorder}_width`] || '').replace('px', '')}
+                                                placeholder={settings.render[`${selectedBorder}_style`] === 'double' ? '3' : '1'}
+                                                onChange={(e) => {
+                                                    const isDouble = settings.render[`${selectedBorder}_style`] === 'double';
+                                                    let val = e.target.value ? Number(e.target.value) : '';
+                                                    if (isDouble && val !== '' && val < 3) val = 3;
+                                                    handleChange(`render.${selectedBorder}_width`, val !== '' ? `${val}px` : '');
+                                                }}
+                                                style={{ width: '50px', padding: '4px 6px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                title="두께(숫자)"
+                                            />
+                                            <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => setSelectedBorder(null)}
+                                    style={{ border: 'none', background: 'transparent', color: '#1D4ED8', fontSize: '11px', cursor: 'pointer', fontWeight: 600 }}
+                                >
+                                    선택 해제
+                                </button>
+                            </div>
+                        )}
                         <table style={{
                             width: '100%', borderCollapse: 'separate', borderSpacing: 0, margin: '0 0 8px 0',
                             fontFamily: settings.render.font_family || 'Arial',
@@ -186,6 +323,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             <thead>
                                 <tr style={{ background: settings.render.theme_primary || '#2F5597', color: settings.render.theme_primary_fg || '#FFFFFF' }}>
                                     <th style={{
+                                        position: 'relative',
                                         padding: '4px 8px',
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
@@ -193,9 +331,16 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         fontWeight: 600,
                                         fontFamily: settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>구분</th>
+                                    }}>
+                                        구분
+                                        {renderBorderHandle('theme_table_outer_top', 'top')}
+                                        {renderBorderHandle('theme_table_outer_left', 'left')}
+                                        {renderBorderHandle('theme_header_divider', 'bottom')}
+                                        {renderBorderHandle('theme_stub_divider', 'right')}
+                                    </th>
                                     {previewCols.map((col, i) => (
                                         <th key={col.label} style={{
+                                            position: 'relative',
                                             padding: '4px 8px', textAlign: 'right', fontWeight: 600,
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                             borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
@@ -203,14 +348,19 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             <div>{col.label}</div>
-                                            {/* <div style={{ color: settings.render.theme_text_muted || '#CBD5E1', fontSize: '0.85em', marginTop: '2px', fontWeight: 400 }}>{col.subLabel}</div> */}
+                                            {renderBorderHandle('theme_table_outer_top', 'top')}
+                                            {renderBorderHandle('theme_header_divider', 'bottom')}
+                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
+                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
                                         </th>
                                     ))}
                                 </tr>
+                                
                             </thead>
                             <tbody>
                                 <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
+                                        position: 'relative',
                                         padding: '3px 8px',
                                         background: settings.render.theme_stub_header_bg || '#D9E1F2',
                                         color: settings.render.theme_stub_header_fg || '#000',
@@ -218,15 +368,22 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         fontFamily: settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>Base</td>
+                                    }}>
+                                        Base
+                                        {renderBorderHandle('theme_table_outer_left', 'left')}
+                                        {renderBorderHandle('theme_stub_divider', 'right')}
+                                    </td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
+                                            position: 'relative',
                                             padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                             fontFamily: settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {formatN(col.base)}
+                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
+                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
                                         </td>
                                     ))}
                                 </tr>
@@ -239,14 +396,21 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 .map((row, idx) => (
                                     <tr key={row.label} style={{ background: idx % 2 === 1 ? (settings.render.theme_stripe || '#F1F5F9') : (settings.render.theme_bg || '#FFFFFF') }}>
                                         <td style={{
+                                            position: 'relative',
                                             padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000',
                                             borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                             borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
                                             fontFamily: settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                        }}>{row.label}</td>
+                                        }}>
+                                            {row.label}
+                                            {renderBorderHandle('theme_table_outer_left', 'left')}
+                                            {renderBorderHandle('theme_stub_divider', 'right')}
+                                            {renderBorderHandle('theme_grid', 'top', idx !== 0)}
+                                        </td>
                                         {previewCols.map((col, i) => (
                                             <td key={i} style={{
+                                                position: 'relative',
                                                 padding: '3px 8px', textAlign: 'right',
                                                 borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                                 borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
@@ -255,20 +419,30 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             }}>
                                                 {showN && <div>{formatN(col[row.vKey])}</div>}
                                                 {showPct && <div style={{ color: settings.render.theme_text_muted || '#64748B', fontSize: '0.9em', marginTop: '2px' }}>{formatPct(col[row.pKey])}</div>}
+                                                {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
+                                                {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
+                                                {renderBorderHandle('theme_grid', 'top', idx !== 0)}
                                             </td>
                                         ))}
                                     </tr>
                                 ))}
                                 <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
+                                        position: 'relative',
                                         padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                         fontFamily: settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>top2</td>
+                                    }}>
+                                        top2
+                                        {renderBorderHandle('theme_table_outer_left', 'left')}
+                                        {renderBorderHandle('theme_stub_divider', 'right')}
+                                        {renderBorderHandle('theme_section_separator', 'top')}
+                                    </td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
+                                            position: 'relative',
                                             padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                             borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
@@ -277,19 +451,30 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         }}>
                                             {showN && <div>{formatN(col.tV)}</div>}
                                             {showPct && <div style={{ color: settings.render.theme_text_muted || '#64748B', fontSize: '0.9em', marginTop: '2px' }}>{formatPct(col.tP)}</div>}
+                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
+                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
+                                            {renderBorderHandle('theme_section_separator', 'top')}
                                         </td>
                                     ))}
                                 </tr>
                                 <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
+                                        position: 'relative',
                                         padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
                                         fontFamily: settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
-                                    }}>평균</td>
+                                    }}>
+                                        평균
+                                        {renderBorderHandle('theme_table_outer_left', 'left')}
+                                        {renderBorderHandle('theme_table_outer_bottom', 'bottom')}
+                                        {renderBorderHandle('theme_stub_divider', 'right')}
+                                        {renderBorderHandle('theme_section_separator', 'top')}
+                                    </td>
                                     {previewCols.map((col, i) => (
                                         <td key={i} style={{
+                                            position: 'relative',
                                             padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                             borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
@@ -297,6 +482,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {formatMean(col.mean)}
+                                            {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
+                                            {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
+                                            {renderBorderHandle('theme_section_separator', 'top')}
+                                            {renderBorderHandle('theme_table_outer_bottom', 'bottom')}
                                         </td>
                                     ))}
                                 </tr>
@@ -431,57 +620,78 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                         <Type size={16} color="#475569" /> 선 스타일 설정
                     </div>
                     <div className="dp-setting-card-body" style={{ padding: '16px', flex: 1 }}>
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div style={{ marginBottom: '16px' }}>
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '12px' }}>표 외곽선 설정</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', alignContent: 'start' }}>
                                     {[
-                                        { group: '표 상단', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
-                                        { group: '표 하단', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
-                                        { group: '표 좌측', color: 'theme_table_outer_left_color', style: 'theme_table_outer_left_style', width: 'theme_table_outer_left_width' },
-                                        { group: '표 우측', color: 'theme_table_outer_right_color', style: 'theme_table_outer_right_style', width: 'theme_table_outer_right_width' },
-                                    ].map((g, i) => (
-                                        <div key={g.group} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #F8FAFC' }}>
-                                            <div style={{ fontSize: '11px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
-                                                    <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
-                                                </div>
-                                                <LineStylePicker 
-                                                    value={settings.render[g.style] || 'solid'} 
-                                                    onChange={(val) => {
-                                                        handleChange(`render.${g.style}`, val);
-                                                        if (val === 'double') {
-                                                            const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
-                                                            if (!curWidth || curWidth < 3) {
-                                                                handleChange(`render.${g.width}`, '3px');
+                                        { group: '표 상단', prefix: 'theme_table_outer_top', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
+                                        { group: '표 하단', prefix: 'theme_table_outer_bottom', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
+                                        { group: '표 좌측', prefix: 'theme_table_outer_left', color: 'theme_table_outer_left_color', style: 'theme_table_outer_left_style', width: 'theme_table_outer_left_width' },
+                                        { group: '표 우측', prefix: 'theme_table_outer_right', color: 'theme_table_outer_right_color', style: 'theme_table_outer_right_style', width: 'theme_table_outer_right_width' },
+                                    ].map((g, i) => {
+                                        const isSelected = selectedBorder === g.prefix;
+                                        return (
+                                            <div 
+                                                key={g.group} 
+                                                onClick={() => setSelectedBorder(g.prefix)}
+                                                onMouseEnter={() => setHoveredBorder(g.prefix)}
+                                                onMouseLeave={() => setHoveredBorder(null)}
+                                                style={{ 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'space-between', 
+                                                    padding: '6px 8px', 
+                                                    border: isSelected ? '1px solid #BFDBFE' : '1px solid transparent', 
+                                                    borderRadius: '6px',
+                                                    background: isSelected ? '#EFF6FF' : 'transparent',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    marginBottom: '2px'
+                                                }}
+                                            >
+                                                <div style={{ fontSize: '11px', fontWeight: 600, color: isSelected ? '#1D4ED8' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
+                                                        <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
+                                                    </div>
+                                                    <LineStylePicker 
+                                                        value={settings.render[g.style] || 'solid'} 
+                                                        onChange={(val) => {
+                                                            handleChange(`render.${g.style}`, val);
+                                                            if (val === 'double') {
+                                                                const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
+                                                                if (!curWidth || curWidth < 3) {
+                                                                    handleChange(`render.${g.width}`, '3px');
+                                                                }
                                                             }
-                                                        }
-                                                    }}
-                                                    color={settings.render[g.color] || '#000000'} 
-                                                    direction={i >= 2 ? 'up' : 'down'}
-                                                />
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <input
-                                                        type="number"
-                                                        min={settings.render[g.style] === 'double' ? 3 : 0}
-                                                        max="10"
-                                                        value={(settings.render[g.width] || '').replace('px', '')}
-                                                        placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
-                                                        onChange={(e) => {
-                                                            const isDouble = settings.render[g.style] === 'double';
-                                                            let val = e.target.value ? Number(e.target.value) : '';
-                                                            if (isDouble && val !== '' && val < 3) val = 3;
-                                                            handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
                                                         }}
-                                                        style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                                        title="두께(숫자)"
+                                                        color={settings.render[g.color] || '#000000'} 
+                                                        direction={i >= 2 ? 'up' : 'down'}
                                                     />
-                                                    <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <input
+                                                            type="number"
+                                                            min={settings.render[g.style] === 'double' ? 3 : 0}
+                                                            max="10"
+                                                            value={(settings.render[g.width] || '').replace('px', '')}
+                                                            placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
+                                                            onChange={(e) => {
+                                                                const isDouble = settings.render[g.style] === 'double';
+                                                                let val = e.target.value ? Number(e.target.value) : '';
+                                                                if (isDouble && val !== '' && val < 3) val = 3;
+                                                                handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
+                                                            }}
+                                                            style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                            title="두께(숫자)"
+                                                        />
+                                                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -489,52 +699,72 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '12px' }}>표 내부 구분선 설정</div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', alignContent: 'start' }}>
                                     {[
-                                        { group: '헤더 하단선', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
-                                        { group: '스터브 구분선', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
-                                        { group: '섹션 구분선', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
-                                        { group: '데이터 기본선', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
-                                    ].map((g, i) => (
-                                        <div key={g.group} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid #F8FAFC' }}>
-                                            <div style={{ fontSize: '11px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
-                                                    <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
-                                                </div>
-                                                <LineStylePicker 
-                                                    value={settings.render[g.style] || 'solid'} 
-                                                    onChange={(val) => {
-                                                        handleChange(`render.${g.style}`, val);
-                                                        if (val === 'double') {
-                                                            const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
-                                                            if (!curWidth || curWidth < 3) {
-                                                                handleChange(`render.${g.width}`, '3px');
+                                        { group: '헤더 하단선', prefix: 'theme_header_divider', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
+                                        { group: '스터브 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
+                                        { group: '섹션 구분선', prefix: 'theme_section_separator', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
+                                        { group: '데이터 기본선', prefix: 'theme_grid', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
+                                    ].map((g, i) => {
+                                        const isSelected = selectedBorder === g.prefix;
+                                        return (
+                                            <div 
+                                                key={g.group} 
+                                                onClick={() => setSelectedBorder(g.prefix)}
+                                                onMouseEnter={() => setHoveredBorder(g.prefix)}
+                                                onMouseLeave={() => setHoveredBorder(null)}
+                                                style={{ 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'space-between', 
+                                                    padding: '6px 8px', 
+                                                    border: isSelected ? '1px solid #BFDBFE' : '1px solid transparent', 
+                                                    borderRadius: '6px',
+                                                    background: isSelected ? '#EFF6FF' : 'transparent',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s',
+                                                    marginBottom: '2px'
+                                                }}
+                                            >
+                                                <div style={{ fontSize: '11px', fontWeight: 600, color: isSelected ? '#1D4ED8' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
+                                                        <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
+                                                    </div>
+                                                    <LineStylePicker 
+                                                        value={settings.render[g.style] || 'solid'} 
+                                                        onChange={(val) => {
+                                                            handleChange(`render.${g.style}`, val);
+                                                            if (val === 'double') {
+                                                                const curWidth = parseInt((settings.render[g.width] || '0').replace('px', ''), 10);
+                                                                if (!curWidth || curWidth < 3) {
+                                                                    handleChange(`render.${g.width}`, '3px');
+                                                                }
                                                             }
-                                                        }
-                                                    }}
-                                                    color={settings.render[g.color] || '#000000'} 
-                                                    direction={i >= 2 ? 'up' : 'down'}
-                                                />
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <input
-                                                        type="number"
-                                                        min={settings.render[g.style] === 'double' ? 3 : 0}
-                                                        max="10"
-                                                        value={(settings.render[g.width] || '').replace('px', '')}
-                                                        placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
-                                                        onChange={(e) => {
-                                                            const isDouble = settings.render[g.style] === 'double';
-                                                            let val = e.target.value ? Number(e.target.value) : '';
-                                                            if (isDouble && val !== '' && val < 3) val = 3;
-                                                            handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
                                                         }}
-                                                        style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
-                                                        title="두께(숫자)"
+                                                        color={settings.render[g.color] || '#000000'} 
+                                                        direction={i >= 2 ? 'up' : 'down'}
                                                     />
-                                                    <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <input
+                                                            type="number"
+                                                            min={settings.render[g.style] === 'double' ? 3 : 0}
+                                                            max="10"
+                                                            value={(settings.render[g.width] || '').replace('px', '')}
+                                                            placeholder={settings.render[g.style] === 'double' ? '3' : '1'}
+                                                            onChange={(e) => {
+                                                                const isDouble = settings.render[g.style] === 'double';
+                                                                let val = e.target.value ? Number(e.target.value) : '';
+                                                                if (isDouble && val !== '' && val < 3) val = 3;
+                                                                handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
+                                                            }}
+                                                            style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                            title="두께(숫자)"
+                                                        />
+                                                        <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
