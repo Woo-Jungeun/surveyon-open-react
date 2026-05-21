@@ -215,6 +215,22 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                 });
             });
 
+            const maxVal = Math.max(...heatmapData.map(d => Number(d.value || 0))) || 1;
+
+            const darkColorsByPalette = {
+                default: '#1e3a8a',
+                professional: '#312e81',
+                tableau: '#1f2937',
+                pastel: '#0f172a',
+                ocean: '#1e3a8a',
+                forest: '#064e3b',
+                sunset: '#7c2d12',
+                slate: '#0f172a',
+                premium: '#4c1d95',
+                vivid: '#0f172a'
+            };
+            const themeDarkColor = darkColorsByPalette[paletteId] || '#1e3a8a';
+
             return (
                 <ChartSeriesItem
                     type="heatmap"
@@ -231,7 +247,33 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                             const valStr = decimals !== undefined ? Number(e.value).toFixed(decimals) : e.value;
                             return `${valStr}${suffix}`;
                         },
-                        color: '#fff'
+                        visual: (e) => {
+                            const val = Number(e.value || 0);
+                            const limit = suffix === '%' ? 50 : (maxVal * 0.5);
+                            const textColor = val <= limit ? themeDarkColor : '#ffffff';
+
+                            const defaultVisual = e.createVisual();
+                            if (defaultVisual) {
+                                if (defaultVisual.nodeType === "Text" || defaultVisual instanceof drawing.Text) {
+                                    defaultVisual.options.fill = { color: textColor };
+                                }
+                                if (defaultVisual.children) {
+                                    defaultVisual.children.forEach(child => {
+                                        if (child.nodeType === "Text" || child instanceof drawing.Text) {
+                                            child.options.fill = { color: textColor };
+                                        }
+                                        if (child.children) {
+                                            child.children.forEach(gc => {
+                                                if (gc.nodeType === "Text" || gc instanceof drawing.Text) {
+                                                    gc.options.fill = { color: textColor };
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            }
+                            return defaultVisual;
+                        }
                     }}
                     color={activePalette[0]}
                 />
