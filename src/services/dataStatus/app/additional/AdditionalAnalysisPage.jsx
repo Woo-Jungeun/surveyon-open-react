@@ -1848,6 +1848,7 @@ const AdditionalAnalysisPage = () => {
                                                                 draggable
                                                                 onDragStart={(e) => handleDragStart(e, v)}
                                                                 onClick={(e) => handleVariableClick(e, v.id)}
+                                                                title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
                                                             >
                                                                 <div className="variable-item-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
                                                                     <div className="variable-item__name">{v.id}</div>

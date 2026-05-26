@@ -69,6 +69,7 @@ const SideBar = ({ items, selectedId, onItemClick, title, totalCount, headerActi
                                 id={`sidebar-item-${item.id}`}
                                 onClick={() => onItemClick(item)}
                                 className={`sidebar-item ${selectedId === item.id ? 'selected' : ''}`}
+                                title={`${item.label || item[displayField] || ''}${item.label && item[displayField] ? ` (${item[displayField]})` : ''}`}
                             >
                                 <div className="sidebar-item-content">
                                     <div className="sidebar-item-header" style={{ marginBottom: '0' }}>

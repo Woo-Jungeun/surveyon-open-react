@@ -620,6 +620,7 @@ const VariableItem = memo(({ v, isSelected, onDragStart, onClick }) => (
         onDragStart={(e) => onDragStart(e, v)}
         onClick={(e) => { e.stopPropagation(); onClick(v.id); }}
         style={{ borderRadius: '6px' }}
+        title={`${v.label || ''}${v.id ? ` (${v.id})` : ''}`}
     >
         <div className="variable-item-header">
             <div className="variable-item__name">{v.label}</div>
@@ -1542,6 +1543,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
                                     onClick={() => { setSelectedBanner(banner.id); setCurrentLabel(banner.label); }}
                                     style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
+                                    title={`${banner.label || ''}${banner.id && !banner.isNew ? ` (${banner.id})` : ''}`}
                                 >
                                     <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
                                         <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', wordBreak: 'break-all', fontWeight: banner.isNew ? 700 : 'normal' }}>

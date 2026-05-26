@@ -2234,6 +2234,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                             }, 50);
                                         }}
                                         style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
+                                        title={`${banner.label || ''}${banner.id && !banner.id.startsWith('NEW_') ? ` (${banner.id})` : ''}`}
                                     >
                                         <div className="dp-banner-item-info" style={{ flex: 1, paddingRight: '8px' }}>
                                             <span className="dp-banner-label" style={{ display: 'block', marginBottom: '1px', lineHeight: 1.3, fontSize: '12px', wordBreak: 'break-all' }}>
