@@ -85,7 +85,7 @@ const WordCloudFixer = ({ wordData, dimensions, activePalette, minVal, maxVal })
     return MemoizedWordCloud;
 };
 
-const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default', hideHeader = false, externalShowLegend = undefined, showLabels = false, decimals = undefined }) => {
+const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default', hideHeader = false, externalShowLegend = undefined, showLabels = false, decimals = undefined, isPercent = false }) => {
     const activePalette = CHART_PALETTES[paletteId] || CHART_PALETTES.default;
     const [chartType, setChartType] = useState(initialType || 'column');
     const [internalShowLegend, setInternalShowLegend] = useState(false);
@@ -169,7 +169,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     const renderSeries = () => {
         if (isPieOrDonut) {
             // 기준 필드 찾기: 파이/도넛은 보통 단일 차원이므로 가급적 합계(total) 기준 적용을 우선
-            const defaultField = suffix === '%' ? 'total_pct' : 'total';
+            const defaultField = (isPercent || suffix === '%') ? 'total_pct' : 'total';
             let targetField = defaultField;
 
             if (filteredData.length > 0 && typeof filteredData[0][defaultField] !== 'undefined') {
@@ -331,7 +331,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                         content: (e) => {
                             if (!e.value || Number(e.value) === 0) return "";
                             const valStr = decimals !== undefined ? Number(e.value).toFixed(decimals) : e.value;
-                            return chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}%` : `${valStr}${suffix}`;
+                            return chartType === 'stacked100Column' ? `${(e.percentage * 100).toFixed(0)}${suffix}` : `${valStr}${suffix}`;
                         },
                         position: isStacked ? "center" : "outsideEnd",
                         background: "none",
@@ -813,8 +813,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                             format: chartType === 'stacked100Column' ? '{0:P0}' : (suffix ? `{0}${suffix}` : '{0}')
                                         }}
                                         min={0}
-                                        max={chartType === 'stacked100Column' ? 1 : (suffix === '%' ? 110 : undefined)}
-                                        majorUnit={chartType === 'stacked100Column' ? 0.2 : (suffix === '%' ? 20 : undefined)}
+                                        max={chartType === 'stacked100Column' ? 1 : ((isPercent || suffix === '%') ? 110 : undefined)}
+                                        majorUnit={chartType === 'stacked100Column' ? 0.2 : ((isPercent || suffix === '%') ? 20 : undefined)}
                                         reverse={false}
                                     />
                                 </ChartValueAxis>
@@ -826,8 +826,8 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                     <ChartValueAxisItem
                                         labels={{ format: suffix ? `{0}${suffix}` : '{0}' }}
                                         min={0}
-                                        max={suffix === '%' ? 110 : undefined}
-                                        majorUnit={suffix === '%' ? 20 : undefined}
+                                        max={(isPercent || suffix === '%') ? 110 : undefined}
+                                        majorUnit={(isPercent || suffix === '%') ? 20 : undefined}
                                     />
                                 </ChartValueAxis>
                             )

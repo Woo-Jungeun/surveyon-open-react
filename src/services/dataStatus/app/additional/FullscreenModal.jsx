@@ -23,7 +23,9 @@ const FullscreenModal = ({
     renderSettings,
     displayPolicy,
     chartDataType,
-    showChartValues
+    showChartValues,
+    showPercentSymbol,
+    setShowPercentSymbol
 }) => {
     const [localChartMode, setLocalChartMode] = useState(chartMode);
     const [showLegend, setShowLegend] = useState(false);
@@ -42,6 +44,7 @@ const FullscreenModal = ({
 
     const [localChartDataType, setLocalChartDataType] = useState(chartDataType || 'percentage');
     const [localShowChartValues, setLocalShowChartValues] = useState(showChartValues ?? true);
+    const [localShowPercentSymbol, setLocalShowPercentSymbol] = useState(showPercentSymbol ?? false);
     const [isChartOptionsOpen, setIsChartOptionsOpen] = useState(false);
     const chartOptionsMenuRef = useRef(null);
 
@@ -133,6 +136,7 @@ const FullscreenModal = ({
             setLocalPaletteId(paletteId || 'default');
             setLocalChartDataType(chartDataType || 'percentage');
             setLocalShowChartValues(showChartValues ?? true);
+            setLocalShowPercentSymbol(showPercentSymbol ?? false);
         }
     }
 
@@ -720,6 +724,26 @@ const FullscreenModal = ({
                                                         }} />
                                                     </div>
                                                 </div>
+                                                <div
+                                                    onClick={() => {
+                                                        const nextVal = !localShowPercentSymbol;
+                                                        setLocalShowPercentSymbol(nextVal);
+                                                        if (setShowPercentSymbol) setShowPercentSymbol(nextVal);
+                                                    }}
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0', marginTop: '8px' }}
+                                                >
+                                                    <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
+                                                    <div style={{
+                                                        width: '36px', height: '20px', background: localShowPercentSymbol ? '#3b82f6' : '#e2e8f0',
+                                                        borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
+                                                    }}>
+                                                        <div style={{
+                                                            position: 'absolute', top: '2px', left: localShowPercentSymbol ? '18px' : '2px',
+                                                            width: '16px', height: '16px', background: '#fff', borderRadius: '50%',
+                                                            transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                                        }} />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     )}
@@ -1228,7 +1252,8 @@ const FullscreenModal = ({
                                     seriesNames={localComputedSeriesNames}
                                     allowedTypes={getChartAllowedTypes()}
                                     initialType={getChartInitialType()}
-                                    suffix={localComputedSuffix}
+                                    suffix={localChartDataType === 'percentage' && localShowPercentSymbol ? "%" : ""}
+                                    isPercent={localChartDataType === 'percentage'}
                                     paletteId={localPaletteId}
                                     hideHeader={true}
                                     externalShowLegend={showLegend}

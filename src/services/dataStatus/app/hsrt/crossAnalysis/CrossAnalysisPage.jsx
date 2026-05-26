@@ -445,6 +445,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
     const [chartMode, setChartMode] = useState('column');
     const [paletteId, setPaletteId] = useState('default');
     const [selectedChartGroups, setSelectedChartGroups] = useState([]);
+    const [showPercentSymbol, setShowPercentSymbol] = useState(false);
 
     const [aiSummaryData, setAiSummaryData] = useState("");
     const [isAiSummaryLoading, setIsAiSummaryLoading] = useState(false);
@@ -1101,6 +1102,22 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                                             }} />
                                                         </div>
                                                     </div>
+                                                    <div
+                                                        onClick={() => setShowPercentSymbol(!showPercentSymbol)}
+                                                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer', padding: '4px 0', marginTop: '8px' }}
+                                                    >
+                                                        <span style={{ fontSize: '13px', color: '#475569', fontWeight: 500 }}>% 표출</span>
+                                                        <div style={{
+                                                            width: '36px', height: '20px', background: showPercentSymbol ? '#3b82f6' : '#e2e8f0',
+                                                            borderRadius: '20px', position: 'relative', transition: 'background 0.2s', flexShrink: 0
+                                                        }}>
+                                                            <div style={{
+                                                                position: 'absolute', top: '2px', left: showPercentSymbol ? '18px' : '2px',
+                                                                width: '16px', height: '16px', background: '#fff', borderRadius: '50%',
+                                                                transition: 'left 0.2s', boxShadow: '0 1px 2px rgba(0,0,0,0.1)'
+                                                            }} />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         )}
@@ -1137,7 +1154,8 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     seriesNames={chartSeries}
                                     initialType={chartMode}
                                     labelLimit={12}
-                                    suffix={usePercentFields ? "%" : ""}
+                                    suffix={usePercentFields && showPercentSymbol ? "%" : ""}
+                                    isPercent={usePercentFields}
                                     paletteId={paletteId}
                                     allowedTypes={[chartMode]}
                                     hideHeader={true}

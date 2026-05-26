@@ -31,6 +31,7 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
     const [isDisplayMenuOpen, setIsDisplayMenuOpen] = useState(false);
     // const [paletteId, setPaletteId] = useState('default'); // Moved to parent
     const [isPaletteMenuOpen, setIsPaletteMenuOpen] = useState(false);
+    const [showPercentSymbol, setShowPercentSymbol] = useState(false);
     const chartContainerRef = useRef(null);
     const downloadMenuRef = useRef(null);
     const displayMenuRef = useRef(null);
@@ -499,6 +500,17 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                             </div>
                         )}
 
+                        {showChart && (
+                            <button
+                                className={`view-option-btn ${showPercentSymbol ? 'active' : ''}`}
+                                onClick={() => setShowPercentSymbol(!showPercentSymbol)}
+                                title="% 표출"
+                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 'bold' }}
+                            >
+                                %
+                            </button>
+                        )}
+
                         <button
                             className={`view-option-btn close-chart-btn ${!showChart ? 'active' : ''}`}
                             onClick={() => setShowChart(false)}
@@ -646,7 +658,8 @@ const AggregationCard = memo(({ q, paletteId, setPaletteId }) => {
                                     seriesNames={chartSeries}
                                     initialType={chartMode}
                                     labelLimit={10}
-                                    suffix={usePercentFields ? "%" : ""}
+                                    suffix={usePercentFields && showPercentSymbol ? "%" : ""}
+                                    isPercent={usePercentFields}
                                     paletteId={paletteId}
                                     allowedTypes={allowedTypes}
                                 />
