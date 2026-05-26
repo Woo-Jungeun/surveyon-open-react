@@ -725,7 +725,7 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                             opacity: !selectedFile ? 0.6 : 1,
                         }}
                     >
-                        {activeTab === 'update' ? '업데이트 시작' : '⇅ 교체 시작'}
+                        {activeTab === 'update' ? '업데이트 시작' : '교체 시작'}
                     </button>
                 </div>
             </div>
