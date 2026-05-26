@@ -704,7 +704,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         const groups = new Set();
         columns.forEach(col => {
             const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
-            if (groupName && groupName !== '전체' && groupName.toLowerCase() !== 'base') {
+            if (groupName && groupName !== '전체') {
                 groups.add(groupName);
             }
         });
@@ -721,7 +721,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         const targetColumns = columns.filter(col => {
             const lbl = String(col.label || col.name || '').trim();
             const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
-            if (lbl === '전체' || lbl.toLowerCase() === 'base') return false;
+            if (lbl === '전체') return false;
 
             if (groupName && availableChartGroups.includes(groupName)) {
                 if (!selectedChartGroups.includes(groupName)) return false;
@@ -744,7 +744,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             rows.forEach((row, rIdx) => {
                 const role = String(row.row_role || '').toLowerCase();
                 const rLbl = String(row.label || row.name || '').trim();
-                if (role === 'base' || rLbl === '전체' || rLbl.toLowerCase() === 'base') return;
+                if (rLbl === '전체') return;
 
                 const fieldKey = `r${rIdx}`;
                 const originalColKey = col.key || `c${columns.indexOf(col)}`;
@@ -772,7 +772,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     name: rLbl.replace(/\n/g, ' ')
                 };
             })
-            .filter(series => series.role !== 'base' && series.originalLabel !== '전체' && series.originalLabel.toLowerCase() !== 'base')
+            .filter(series => series.originalLabel !== '전체')
             .map(({ field, name }) => ({ field, name }));
     }, [rows, usePercentFields]);
 
