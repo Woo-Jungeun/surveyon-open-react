@@ -383,7 +383,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             fontFamily: settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
-                                            {formatN(col.base)}
+                                            {settings.display?.show_base_parenthesis
+                                                ? `(${formatN(col.base)})`
+                                                : formatN(col.base)
+                                            }
                                             {i === previewCols.length - 1 && renderBorderHandle('theme_table_outer_right', 'right')}
                                             {i > 0 && renderBorderHandle('theme_grid', 'left', i !== 1)}
                                         </td>
@@ -514,12 +517,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     { label: '빈도 기본 표시', field: 'show_n' },
                                     { label: '비율 기본 표시', field: 'show_percent' },
                                     { label: '빈 행 숨기기', field: 'hide_zero_stubs' },
-                                    { label: '빈 열 숨기기', field: 'hide_zero_base_columns' }
+                                    { label: '빈 열 숨기기', field: 'hide_zero_base_columns' },
+                                    { label: 'Base 기본 (괄호)', field: 'show_base_parenthesis', fullWidth: true }
                                 ].map(item => (
                                     <div
                                         key={item.field}
                                         onClick={() => toggleDisplay(item.field)}
-                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F1F5F9', padding: '8px 12px', borderRadius: '6px' }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: '#334155', cursor: 'pointer', userSelect: 'none', background: '#F1F5F9', padding: '8px 12px', borderRadius: '6px', ...(item.fullWidth ? { gridColumn: '1 / -1' } : {}) }}
                                     >
                                         <div style={{ width: '16px', height: '16px', flexShrink: 0, borderRadius: '3px', background: settings.display[item.field] ? '#3B82F6' : '#fff', border: settings.display[item.field] ? '1px solid #3B82F6' : '1px solid #cbd5e1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             {settings.display[item.field] && <svg width="10" height="8" viewBox="0 0 10 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}

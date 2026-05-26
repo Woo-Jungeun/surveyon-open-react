@@ -138,6 +138,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.hide_zero_base_columns !== undefined && ui.hide_zero_base_columns !== null) initDisplay.hide_zero_base_columns = ui.hide_zero_base_columns;
                 if (ui.hide_zero_banners !== undefined && ui.hide_zero_banners !== null) initDisplay.hide_zero_banners = ui.hide_zero_banners;
                 if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
+                if (ui.show_base_parenthesis !== undefined && ui.show_base_parenthesis !== null) initDisplay.show_base_parenthesis = ui.show_base_parenthesis;
 
                 let mergedRender = {
                     ...settings.render,
@@ -512,6 +513,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
                     hide_zero_banners: settings.display.hide_zero_base_columns,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
+                    show_base_parenthesis: settings.display.show_base_parenthesis,
                 },
                 display_policy: {
                     show_n: settings.display.show_n,
@@ -527,6 +529,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_base_columns: settings.display.hide_zero_base_columns,
                     hide_zero_banners: settings.display.hide_zero_base_columns,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
+                    show_base_parenthesis: settings.display.show_base_parenthesis,
                 },
                 scale_presets: scaleDataPayload,
                 rank_presets: rankDataPayload,
