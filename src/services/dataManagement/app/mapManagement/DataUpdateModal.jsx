@@ -8,7 +8,7 @@ import './MapManagementPage.css';
 const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
     const fileInputRef = useRef(null);
     const modal = useContext(modalContext);
-    const { updateDataFromSav, uploadSpss } = MapManagementPageApi();
+    const { updateDataFromSav, uploadSpss, syncMap } = MapManagementPageApi();
     const auth = useSelector((store) => store.auth);
 
     const [selectedFile, setSelectedFile] = useState(null);
@@ -92,6 +92,8 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                                 await modal.showAlert("알림", "데이터 불러오기 처리가 완료되었습니다.", { zIndex: 99999 });
                                 // 3. 맵 구성 조회 API 태우기 (재조회)
                                 if (refreshData) refreshData();
+                                // 4. 데이터 맵 새로고침
+                                await syncMap.mutateAsync({ user: userId, pn });
                             } else if (res?.success === "907") {
                                 let duplicatePids = [
                                     "중복PID값1",
@@ -164,6 +166,8 @@ const DataUpdateModal = ({ isOpen, onClose, refreshData }) => {
                                 handleModalClose();
                                 await modal.showAlert("알림", "파일 교체(업로드)가 완료되었습니다.", { zIndex: 99999 });
                                 if (refreshData) refreshData();
+                                // 데이터 맵 새로고침
+                                await syncMap.mutateAsync({ user: userId, pn });
                             } else {
                                 const errorMsg = res?.errortext || res?.message || "파일 교체 중 오류가 발생했습니다.";
                                 modal.showErrorAlert("에러", errorMsg, { zIndex: 99999 });
