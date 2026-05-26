@@ -2192,7 +2192,26 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     </button> */}
                     <button
                         className="dp-btn"
-                        onClick={() => setIsExcelModalOpen(true)}
+                        onClick={() => {
+                            // 현재 화면에 표시 중인 표(selectedBanner)의 Base 행에 괄호가 적용되어 있는지 확인
+                            const activeBanner = banners.find(b => b.id === selectedBanner) || banners[0];
+                            const baseRow = activeBanner?.info?.find(row => 
+                                String(row.row_role ?? "").toLowerCase() === 'base' || 
+                                String(row.type ?? "").toLowerCase() === 'base' || 
+                                String(row.key ?? "").toLowerCase() === 'base'
+                            ) || activeBanner?.dataResult?.rows?.find(row => 
+                                String(row.row_role ?? "").toLowerCase() === 'base' || 
+                                String(row.type ?? "").toLowerCase() === 'base' || 
+                                String(row.key ?? "").toLowerCase() === 'base'
+                            );
+
+                            const hasParenthesisOnScreen = baseRow 
+                                ? (baseRow.prefix === "(" && baseRow.postfix === ")") 
+                                : true; // 못 찾으면 기본값인 true로 설정
+
+                            setExcelShowBaseParenthesis(hasParenthesisOnScreen);
+                            setIsExcelModalOpen(true);
+                        }}
                         style={{
                             color: '#2563eb', border: '1px solid #2563eb', background: '#ffffff',
                             height: '32px', padding: '0 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
