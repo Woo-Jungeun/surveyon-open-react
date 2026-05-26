@@ -679,7 +679,7 @@ const BannerActionFooter = memo(({ onCreateBanner, name, onNameChange }) => {
 
 const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const auth = useSelector((store) => store.auth);
-    const { getBannerDetail, getBaseVariableList, generateBanner, saveBannerDetail, getTableDetail } = DpRequestPageApi();
+    const { getBannerDetail, getBaseVariableList, generateBanner, saveBannerDetail, getTableDetail, evaluateVariable } = DpRequestPageApi();
     const loadingSpinner = useContext(loadingSpinnerContext);
     const modal = useContext(modalContext);
 
@@ -711,6 +711,119 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [isSelecting, setIsSelecting] = useState(false);
     const selectionAnchorRef = useRef(null);
     const [contextMenu, setContextMenu] = useState(null); // {x, y, r, c}
+
+    // --- 빈도 실시간 계산 및 조회 ---
+    const [frequencies, setFrequencies] = useState({});
+    const [isCalculatingFreq, setIsCalculatingFreq] = useState(false);
+    const lastCalculatedRef = useRef('');
+
+    const calculateFrequencies = useCallback(async (bannerId, infoList, baseVarsOverride = null) => {
+        const pageId = sessionStorage.getItem('pageId');
+        if (!pageId || !bannerId || !infoList || infoList.length === 0) return;
+
+        const infoString = JSON.stringify(infoList);
+        if (lastCalculatedRef.current === `${bannerId}-${infoString}`) return;
+        lastCalculatedRef.current = `${bannerId}-${infoString}`;
+
+        // API payload 구조 매핑
+        const validInfo = infoList.map((it, idx) => ({
+            index: idx + 1,
+            value: it.value !== undefined ? it.value : (idx + 1),
+            label: it.label || '',
+            logic: it.logic || '',
+            stat_type: it.stat_type || null,
+            target_var: it.target_var || null,
+            type: it.type || "빈도",
+            prefix: it.prefix || "",
+            postfix: it.postfix || "",
+            hide: it.hide || "",
+            round: it.round || null,
+            line: it.line || "",
+            color: it.color || ""
+        }));
+
+        const variablesPayload = {};
+        const varsToUse = baseVarsOverride || baseVariables;
+        varsToUse.forEach(bv => {
+            variablesPayload[bv.id] = bv;
+        });
+
+        const activeBannerLabel = banners.find(b => b.id === bannerId)?.label || '';
+
+        variablesPayload[bannerId] = {
+            id: bannerId,
+            label: currentLabel || activeBannerLabel,
+            type: 'single',
+            info: validInfo
+        };
+
+        const payload = {
+            pageid: pageId,
+            user: auth?.user?.userId,
+            table: {
+                id: `__var__${bannerId}`,
+                name: currentLabel || activeBannerLabel,
+                banner: [],
+                stub: [bannerId]
+            },
+            variables: variablesPayload,
+            include_stats: ["mean", "std", "min", "max", "n"]
+        };
+
+        try {
+            setIsCalculatingFreq(true);
+            const res = await evaluateVariable.mutateAsync(payload);
+            if (res && res.success === '777' && res.resultjson) {
+                const apiColumns = res.resultjson.columns || [];
+                const apiRows = res.resultjson.rows || res.resultjson.data || [];
+
+                if (apiColumns.length > 0 && apiRows.length > 0) {
+                    const firstColKey = apiColumns[0].key;
+                    const newFreqs = {};
+
+                    apiRows.forEach((row, idx) => {
+                        const cellBox = row.cells ? row.cells[firstColKey] : row[firstColKey];
+                        if (cellBox !== undefined && cellBox !== null) {
+                            const isSingleVal = typeof cellBox !== 'object';
+                            const nVal = !isSingleVal
+                                ? (cellBox.count !== undefined ? cellBox.count : cellBox.n)
+                                : cellBox;
+                            const pVal = !isSingleVal
+                                ? (cellBox.percent !== undefined ? cellBox.percent : cellBox.p)
+                                : null;
+
+                            newFreqs[`${bannerId}-${idx}`] = {
+                                n: nVal !== undefined ? nVal : null,
+                                p: pVal !== undefined ? pVal : null
+                            };
+                        }
+                    });
+
+                    setFrequencies(prev => ({
+                        ...prev,
+                        ...newFreqs
+                    }));
+                }
+            }
+        } catch (err) {
+            console.error("Failed to calculate frequencies:", err);
+        } finally {
+            setIsCalculatingFreq(false);
+        }
+    }, [baseVariables, currentLabel, banners, auth?.user?.userId]);
+
+    useEffect(() => {
+        const currentBannerData = banners.find(b => b.id === selectedBanner);
+        if (!currentBannerData || !currentBannerData.info || currentBannerData.info.length === 0) {
+            return;
+        }
+
+        const timer = setTimeout(() => {
+            calculateFrequencies(selectedBanner, currentBannerData.info);
+        }, 800); // 800ms 디바운스
+
+        return () => clearTimeout(timer);
+    }, [selectedBanner, banners, calculateFrequencies]);
 
     // --- 삭제 관리용 스테이트 추가 ---
     const [deletedBannerIds, setDeletedBannerIds] = useState([]); // 서버에 실제 삭제 요청할 ID들
@@ -1033,10 +1146,12 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 activeBannerIds = bannerResult.resultjson.banner_ids || [];
             }
 
+            let loadedBaseVars = [];
             if (tableResult?.success === '777' && tableResult.resultjson) {
                 if (tableResult.resultjson.base_variables) {
                     const baseVars = tableResult.resultjson.base_variables;
-                    setBaseVariables(Array.isArray(baseVars) ? baseVars : Object.values(baseVars));
+                    loadedBaseVars = Array.isArray(baseVars) ? baseVars : Object.values(baseVars);
+                    setBaseVariables(loadedBaseVars);
                 }
                 if (tableResult.resultjson.recoded_variables) {
                     const raw = tableResult.resultjson.recoded_variables;
@@ -1091,6 +1206,13 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             setSelectedBanner(target.id);
                             setCurrentLabel(target.label);
                             if (forceSelectFirst) scrollToTop();
+                        }
+
+                        // 첫 진입 시 빈도 값을 로딩 바가 떠 있는 상태에서 동기적으로 호출하여 한 번에 로드
+                        const targetId = isFresh || !selectedBanner || forceSelectFirst ? target.id : selectedBanner;
+                        const targetBanner = formatted.find(b => b.id === targetId) || target;
+                        if (targetBanner && targetBanner.info && targetBanner.info.length > 0) {
+                            await calculateFrequencies(targetId, targetBanner.info, loadedBaseVars);
                         }
                     } else if (forceSelectFirst || !selectedBanner) {
                         setSelectedBanner(null);
@@ -1897,6 +2019,35 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     <Column field="label2" title="중분류" width="150px" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3']} onUpdate={handleMergedUpdate} level={2} handleDrop={handleReorderBlock} selectedCells={selectedCells} onCellMouseDown={handleCellMouseDown} onCellMouseEnter={handleCellMouseEnter} onContextMenu={handleContextMenu} />} />
                                     <Column field="label" title="소분류" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} dependencies={['label3', 'label2']} onUpdate={handleMergedUpdate} level={1} handleDrop={handleReorderBlock} selectedCells={selectedCells} onCellMouseDown={handleCellMouseDown} onCellMouseEnter={handleCellMouseEnter} onContextMenu={handleContextMenu} />} />
                                     <Column field="logic" title="조건" width="180px" headerCell={ConditionHeaderCell} headerClassName="k-text-center" cell={(p) => <MergedTextEditCell {...p} data={banners.find(b => b.id === selectedBanner)?.info || []} onUpdate={handleMergedUpdate} disableMerge={true} />} />
+                                    <Column
+                                        field="n"
+                                        title="빈도"
+                                        width="80px"
+                                        headerClassName="k-text-center"
+                                        cell={(p) => {
+                                            const freqObj = frequencies[`${selectedBanner}-${p.dataIndex}`];
+                                            const nVal = freqObj?.n;
+                                            const pVal = freqObj?.p;
+                                            return (
+                                                <td style={{ textAlign: 'right', padding: '4px 12px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
+                                                    {nVal !== null && nVal !== undefined ? (
+                                                        <React.Fragment>
+                                                            <div style={{ fontWeight: '600', color: '#1e293b', fontSize: '13px' }}>
+                                                                {nVal.toLocaleString()}
+                                                            </div>
+                                                            {pVal !== null && pVal !== undefined && (
+                                                                <div style={{ color: '#64748b', fontSize: '11px', marginTop: '2px' }}>
+                                                                    {Number(pVal).toFixed(1)}%
+                                                                </div>
+                                                            )}
+                                                        </React.Fragment>
+                                                    ) : (
+                                                        <span style={{ color: '#94a3b8', fontSize: '13px' }}>-</span>
+                                                    )}
+                                                </td>
+                                            );
+                                        }}
+                                    />
                                 </KendoGridV3>
                             </div>
                         </>
