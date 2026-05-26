@@ -92,56 +92,371 @@ const LineStylePicker = ({ value, onChange, color }) => {
     );
 };
 
-// --- 커스텀 헤더 셀 (조건 아이콘) ---
 const ConditionHeaderCell = (props) => {
     const handleOpenHelp = (e) => {
         e.stopPropagation();
-        const helpWin = window.open('', '_blank', 'width=580,height=600,scrollbars=yes,resizable=yes');
+        const helpWin = window.open('', '_blank', 'width=800,height=700,scrollbars=yes,resizable=yes');
         if (helpWin) {
             helpWin.document.write(`
                 <!DOCTYPE html>
-                <html>
+                <html lang="ko">
                 <head>
-                    <title>스터브 조건 도움말</title>
+                    <meta charset="UTF-8">
+                    <title>연산자 도움말</title>
                     <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 24px; color: #334155; line-height: 1.6; background-color: #f8fafc; }
-                        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-                        h1 { font-size: 20px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-                        .badge { width: 24px; height: 24px; border-radius: 50%; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-right: 8px; }
-                        h2 { font-size: 14px; font-weight: 700; color: #3b82f6; margin-top: 20px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-                        h2.warning { color: #ef4444; }
-                        h2::before { content: ''; width: 4px; height: 12px; border-radius: 2px; display: inline-block; margin-right: 6px; }
-                        h2.info-title::before { background: #3b82f6; }
-                        h2.warning::before { background: #ef4444; }
-                        .example-box { background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 13px; color: #334155; margin-bottom: 16px; line-height: 1.8; }
-                        ul { margin: 0; padding-left: 20px; }
-                        li { margin-bottom: 8px; font-size: 13px; }
+                        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+                        * { box-sizing: border-box; }
+                        body {
+                            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #ffffff;
+                            color: #1e293b;
+                        }
+                        .header {
+                            display: flex;
+                            align-items: center;
+                            padding: 10px 16px;
+                            border-bottom: 1px solid #e2e8f0;
+                            background-color: #ffffff;
+                            position: sticky;
+                            top: 0;
+                            z-index: 10;
+                        }
+                        .header-title-container {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        .header-icon {
+                            width: 20px;
+                            height: 20px;
+                            background-color: #0f172a;
+                            color: #ffffff;
+                            border-radius: 50%;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+                        .header-title {
+                            font-size: 15px;
+                            font-weight: 700;
+                            color: #0f172a;
+                        }
+
+                        .content {
+                            padding: 12px 16px;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                        }
+                        .section-container {
+                            border-radius: 6px;
+                            padding: 8px 12px;
+                            border: 1px solid #e2e8f0;
+                        }
+                        .section-compare {
+                            border-color: #dbeafe;
+                            background-color: #eff6ff;
+                        }
+                        .section-include {
+                            border-color: #f3e8ff;
+                            background-color: #faf5ff;
+                        }
+                        .section-logic {
+                            border-color: #dcfce7;
+                            background-color: #f0fdf4;
+                        }
+                        .section-range {
+                            border-color: #fef3c7;
+                            background-color: #fffbeb;
+                        }
+                        .section-group {
+                            border-color: #fee2e2;
+                            background-color: #fef2f2;
+                        }
+                        .section-rank {
+                            border-color: #e0f2fe;
+                            background-color: #f0f9ff;
+                        }
+
+                        .section-header {
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            margin-bottom: 6px;
+                        }
+                        .section-badge {
+                            display: inline-block;
+                            padding: 1px 6px;
+                            border-radius: 4px;
+                            font-size: 11px;
+                            font-weight: 700;
+                        }
+                        .badge-compare { background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+                        .badge-include { background-color: #f3e8ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+                        .badge-logic { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+                        .badge-range { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+                        .badge-group { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+                        .badge-rank { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+
+                        .section-desc {
+                            font-size: 11px;
+                            color: #64748b;
+                            font-weight: 500;
+                        }
+
+                        .grid-3 {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 8px;
+                        }
+                        .grid-2 {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 8px;
+                        }
+
+                        .box {
+                            background-color: #ffffff;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 6px;
+                            padding: 6px 10px;
+                            display: flex;
+                            align-items: center;
+                        }
+                        .section-compare .box { border-color: #bfdbfe; }
+                        .section-include .box { border-color: #e9d5ff; }
+                        .section-logic .box { border-color: #bbf7d0; }
+                        .section-range .box { border-color: #fde68a; }
+                        .section-group .box { border-color: #fca5a5; }
+                        .section-rank .box { border-color: #bae6fd; }
+
+                        .box-vertical {
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 3px;
+                        }
+
+                        .box-top-row {
+                            display: flex;
+                            align-items: center;
+                            width: 100%;
+                        }
+
+                        .operator {
+                            font-family: monospace;
+                            font-size: 13px;
+                            font-weight: 700;
+                            padding-right: 8px;
+                            margin-right: 8px;
+                            border-right: 1px solid #e2e8f0;
+                            min-width: 36px;
+                            text-align: center;
+                            display: inline-block;
+                        }
+                        .section-compare .operator { color: #2563eb; min-width: 26px; }
+                        .section-include .operator { color: #7c3aed; }
+                        .section-logic .operator { color: #16a34a; }
+                        .section-range .operator { color: #d97706; }
+                        .section-group .operator { color: #dc2626; min-width: 20px; }
+                        .section-rank .operator { color: #0284c7; min-width: auto; border-right: none; padding-right: 0; margin-right: 0; }
+
+                        .operator-desc {
+                            font-size: 12px;
+                            color: #334155;
+                            font-weight: 500;
+                        }
+
+                        .example {
+                            font-family: monospace;
+                            font-size: 11px;
+                            color: #64748b;
+                            width: 100%;
+                            border-top: 1px dashed #f1f5f9;
+                            padding-top: 2px;
+                            margin-top: 1px;
+                            word-break: break-all;
+                        }
+
+
                     </style>
                 </head>
                 <body>
-                    <div class="container">
-                        <h1><span class="badge">i</span>스터브 조건 도움말</h1>
-                        <div style="font-size: 14px; margin-bottom: 20px;">
-                            스터브는 분석표의 행으로 사용할 재분류 조건입니다.<br />
-                            각 행의 조건식에 해당하는 응답자만 해당 스터브 항목에 집계됩니다.
+                    <div class="header">
+                        <div class="header-title-container">
+                            <div class="header-icon">?</div>
+                            <div class="header-title">연산자 도움말</div>
                         </div>
-                        <h2 class="info-title">작성 예시</h2>
-                        <div class="example-box">
-                            <div><span style="color: #64748b">동등 대조: </span>SQ1 == 1</div>
-                            <div><span style="color: #64748b">IN 연산: </span>SQ1 in [1, 2, 3]</div>
-                            <div><span style="color: #64748b">NOT IN 연산: </span>SQ1 not in [8, 9]</div>
-                            <div><span style="color: #64748b">NULL 확인: </span>SQ1 is not null</div>
-                            <div><span style="color: #64748b">비교 대조: </span>AGE >= 20 and AGE < 30</div>
-                            <div><span style="color: #64748b">다중 조건: </span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
-                            <div><span style="color: #64748b">순위 조건: </span>Q1[1:2] in [코드]</div>
-                        </div>
-                        <h2 class="warning">주의</h2>
-                        <ul>
-                            <li>조건식이 비어 있으면 해당 행은 집계 조건으로 사용할 수 없습니다.</li>
-                            <li>같은 응답자가 여러 조건에 걸리면 여러 행에 <b>중복 포함</b>될 수 있습니다.</li>
-                            <li>필터 조건과 스터브 조건은 별개입니다.</li>
-                        </ul>
+
                     </div>
+
+                    <div class="content">
+                        <!-- 비교 -->
+                        <div class="section-container section-compare">
+                            <div class="section-header">
+                                <span class="section-badge badge-compare">비교</span>
+                                <span class="section-desc">값 크기·일치 비교</span>
+                            </div>
+                            <div class="grid-3">
+                                <div class="box">
+                                    <span class="operator">==</span>
+                                    <span class="operator-desc">같음</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">!=</span>
+                                    <span class="operator-desc">같지 않음</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&gt;</span>
+                                    <span class="operator-desc">초과</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&gt;=</span>
+                                    <span class="operator-desc">이상</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&lt;</span>
+                                    <span class="operator-desc">미만</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&lt;=</span>
+                                    <span class="operator-desc">이하</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 포함 -->
+                        <div class="section-container section-include">
+                            <div class="section-header">
+                                <span class="section-badge badge-include">포함</span>
+                                <span class="section-desc">리스트 안 값의 포함 여부</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">in</span>
+                                        <span class="operator-desc">포함</span>
+                                    </div>
+                                    <div class="example">region in [11,21,31]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">not in</span>
+                                        <span class="operator-desc">미포함</span>
+                                    </div>
+                                    <div class="example">sq3 not in [98,99]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 논리 -->
+                        <div class="section-container section-logic">
+                            <div class="section-header">
+                                <span class="section-badge badge-logic">논리</span>
+                                <span class="section-desc">여러 조건 연결</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">and</span>
+                                        <span class="operator-desc">그리고 (모두 만족)</span>
+                                    </div>
+                                    <div class="example">age &gt;= 20 and age &lt; 40</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">or</span>
+                                        <span class="operator-desc">또는 (하나 이상 만족)</span>
+                                    </div>
+                                    <div class="example">gender == 1 or gender == 2</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 범위 함수 -->
+                        <div class="section-container section-range">
+                            <div class="section-header">
+                                <span class="section-badge badge-range">범위 함수</span>
+                                <span class="section-desc">다중응답 범위에 사용</span>
+                            </div>
+                            <div class="grid-3">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">any</span>
+                                        <span class="operator-desc">하나라도 만족</span>
+                                    </div>
+                                    <div class="example">any(q10:q20) in [1]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">all</span>
+                                        <span class="operator-desc">전부 만족</span>
+                                    </div>
+                                    <div class="example">all(q10:q20) in [1]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">none</span>
+                                        <span class="operator-desc">모두 불만족</span>
+                                    </div>
+                                    <div class="example">none(q10:q20) in [1]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 그룹핑 -->
+                        <div class="section-container section-group">
+                            <div class="section-header">
+                                <span class="section-badge badge-group">그룹핑</span>
+                                <span class="section-desc">조건 우선순위 지정</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">(</span>
+                                        <span class="operator-desc">그룹 시작</span>
+                                    </div>
+                                    <div class="example">(a == 1 or b == 1) and c == 1</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">)</span>
+                                        <span class="operator-desc">그룹 종료</span>
+                                    </div>
+                                    <div class="example">(a == 1 or b == 1) and c == 1</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 순위 -->
+                        <div class="section-container section-rank">
+                            <div class="section-header">
+                                <span class="section-badge badge-rank">순위</span>
+                                <span class="section-desc">순위 문항의 특정 순위 코드 포함</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator" style="border-right: 1px solid #e2e8f0; padding-right: 12px; margin-right: 12px;">[순위지정] in [코드]</span>
+                                        <span class="operator-desc">지정 순위에 포함된 코드</span>
+                                    </div>
+                                    <div class="example">Q1 [1:2] in [코드]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator" style="border-right: 1px solid #e2e8f0; padding-right: 12px; margin-right: 12px;">형식 설명</span>
+                                        <span class="operator-desc">[순위지정] = 1:2 / [코드] = 응답 코드값</span>
+                                    </div>
+                                    <div class="example" style="border-top: none; padding-top: 0; margin-top: 0; color: transparent; user-select: none;">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
                 </body>
                 </html>
             `);
@@ -415,7 +730,7 @@ const openTemplateGuide = () => {
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>유형별 추천 탬플릿</title>
+    <title>표 상세설정 도움말</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         body {
@@ -781,39 +1096,169 @@ const openTemplateGuide = () => {
             <h1>스터브 조건 도움말</h1>
         </div>
         <div class="content">
-            <div style="font-size: 14px; color: #475569; display: flex; flex-direction: column; gap: 20px;">
-                <div style="line-height: 1.6;">
-                    스터브는 분석표의 행으로 사용할 재분류 조건입니다.<br />
-                    각 행의 조건식에 해당하는 응답자만 해당 스터브 항목에 집계됩니다.
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+
+                <!-- 비교 -->
+                <div style="border-radius: 6px; padding: 8px 12px; border: 1px solid #dbeafe; background-color: #eff6ff;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span style="display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe;">비교</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">값 크기·일치 비교</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        <div style="background-color: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center;">
+                            <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #2563eb; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 26px; text-align: center;">\u003d\u003d</span>
+                            <span style="font-size: 12px; color: #334155; font-weight: 500;">같음</span>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center;">
+                            <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #2563eb; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 26px; text-align: center;">!=</span>
+                            <span style="font-size: 12px; color: #334155; font-weight: 500;">같지 않음</span>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center;">
+                            <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #2563eb; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 26px; text-align: center;">&gt;</span>
+                            <span style="font-size: 12px; color: #334155; font-weight: 500;">초과</span>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center;">
+                            <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #2563eb; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 26px; text-align: center;">&gt;\u003d</span>
+                            <span style="font-size: 12px; color: #334155; font-weight: 500;">이상</span>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center;">
+                            <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #2563eb; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 26px; text-align: center;">&lt;</span>
+                            <span style="font-size: 12px; color: #334155; font-weight: 500;">미만</span>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 10px; display: flex; align-items: center;">
+                            <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #2563eb; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 26px; text-align: center;">&lt;\u003d</span>
+                            <span style="font-size: 12px; color: #334155; font-weight: 500;">이하</span>
+                        </div>
+                    </div>
                 </div>
 
-                <div>
-                    <div style="font-size: 14px; font-weight: 700; color: #3B82F6; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                        <span style="width: 4px; height: 14px; background: #3B82F6; border-radius: 2px; display: inline-block;"></span>
-                        작성 예시
+                <!-- 포함 -->
+                <div style="border-radius: 6px; padding: 8px 12px; border: 1px solid #f3e8ff; background-color: #faf5ff;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span style="display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background-color: #f3e8ff; color: #7c3aed; border: 1px solid #e9d5ff;">포함</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">리스트 안 값의 포함 여부</span>
                     </div>
-                    <div style="display: flex; flex-direction: column; gap: 6px; background: #F8FAFC; padding: 16px; border-radius: 8px; border: 1px solid #E2E8F0; font-family: monospace; font-size: 13px; color: #334155; font-weight: 500;">
-                        <div><span style="color: #64748b;">동등 대조: </span>SQ1 == 1</div>
-                        <div><span style="color: #64748b;">IN 연산: </span>SQ1 in [1, 2, 3]</div>
-                        <div><span style="color: #64748b;">NOT IN 연산: </span>SQ1 not in [8, 9]</div>
-                        <div><span style="color: #64748b;">NULL 확인: </span>SQ1 is not null</div>
-                        <div><span style="color: #64748b;">비교 대조: </span>AGE &gt;= 20 and AGE &lt; 30</div>
-                        <div><span style="color: #64748b;">다중 조건: </span>(SQ1 == 1 or SQ1 == 2) and SQ2 == 1</div>
-                        <div><span style="color: #64748b;">순위 조건: </span>Q1[1:2] in [코드]</div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <div style="background-color: #ffffff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #7c3aed; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 36px; text-align: center;">in</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">포함</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">region in [11,21,31]</div>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #e9d5ff; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #7c3aed; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 36px; text-align: center;">not in</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">미포함</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">sq3 not in [98,99]</div>
+                        </div>
                     </div>
                 </div>
 
-                <div>
-                    <div style="font-size: 14px; font-weight: 700; color: #EF4444; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
-                        <span style="width: 4px; height: 14px; background: #EF4444; border-radius: 2px; display: inline-block;"></span>
-                        주의
+                <!-- 논리 -->
+                <div style="border-radius: 6px; padding: 8px 12px; border: 1px solid #dcfce7; background-color: #f0fdf4;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span style="display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0;">논리</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">여러 조건 연결</span>
                     </div>
-                    <ul style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; color: #334155; font-size: 13px; line-height: 1.6;">
-                        <li>조건식이 비어 있으면 해당 행은 집계 조건으로 사용할 수 없습니다.</li>
-                        <li>같은 응답자가 여러 조건에 걸리면 여러 행에 <b>중복 포함</b>될 수 있습니다.</li>
-                        <li>필터 조건과 스터브 조건은 별개입니다.</li>
-                    </ul>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #16a34a; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 36px; text-align: center;">and</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">그리고 (모두 만족)</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">age &gt;= 20 and age &lt; 40</div>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #16a34a; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 36px; text-align: center;">or</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">또는 (하나 이상 만족)</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">gender == 1 or gender == 2</div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- 범위 함수 -->
+                <div style="border-radius: 6px; padding: 8px 12px; border: 1px solid #fef3c7; background-color: #fffbeb;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span style="display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a;">범위 함수</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">다중응답 범위에 사용</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                        <div style="background-color: #ffffff; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #d97706; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 36px; text-align: center;">any</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">하나라도 만족</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">any(q10:q20) in [1]</div>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #d97706; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 36px; text-align: center;">all</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">전부 만족</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">all(q10:q20) in [1]</div>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #fde68a; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #d97706; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 36px; text-align: center;">none</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">모두 불만족</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">none(q10:q20) in [1]</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 그룹핑 -->
+                <div style="border-radius: 6px; padding: 8px 12px; border: 1px solid #fee2e2; background-color: #fef2f2;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span style="display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;">그룹핑</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">조건 우선순위 지정</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <div style="background-color: #ffffff; border: 1px solid #fca5a5; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #dc2626; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 20px; text-align: center;">(</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">그룹 시작</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">(a == 1 or b == 1) and c == 1</div>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #fca5a5; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #dc2626; padding-right: 8px; margin-right: 8px; border-right: 1px solid #e2e8f0; min-width: 20px; text-align: center;">)</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">그룹 종료</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">(a == 1 or b == 1) and c == 1</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 순위 -->
+                <div style="border-radius: 6px; padding: 8px 12px; border: 1px solid #e0f2fe; background-color: #f0f9ff;">
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                        <span style="display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;">순위</span>
+                        <span style="font-size: 11px; color: #64748b; font-weight: 500;">순위 문항의 특정 순위 코드 포함</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                        <div style="background-color: #ffffff; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #0284c7; padding-right: 12px; margin-right: 12px; border-right: 1px solid #e2e8f0;">[순위지정] in [코드]</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">지정 순위에 포함된 코드</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: #64748b; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">Q1 [1:2] in [코드]</div>
+                        </div>
+                        <div style="background-color: #ffffff; border: 1px solid #bae6fd; border-radius: 6px; padding: 6px 10px; display: flex; flex-direction: column; align-items: flex-start; gap: 3px;">
+                            <div style="display: flex; align-items: center; width: 100%;">
+                                <span style="font-family: monospace; font-size: 13px; font-weight: 700; color: #0284c7; padding-right: 12px; margin-right: 12px; border-right: 1px solid #e2e8f0;">형식 설명</span>
+                                <span style="font-size: 12px; color: #334155; font-weight: 500;">[순위지정] = 1:2 / [코드] = 응답 코드값</span>
+                            </div>
+                            <div style="font-family: monospace; font-size: 11px; color: transparent; width: 100%; border-top: 1px dashed #f1f5f9; padding-top: 2px; margin-top: 1px;">-</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -904,7 +1349,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                     <div className="header-title-cbp" style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '8px' }}>
                         <h3 style={{ margin: 0 }}>표 상세설정</h3>
                         <div
-                            title="유형별 추천 탬플릿"
+                            title="표 상세설정 도움말"
                             onClick={openTemplateGuide}
                             style={{
                                 cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',

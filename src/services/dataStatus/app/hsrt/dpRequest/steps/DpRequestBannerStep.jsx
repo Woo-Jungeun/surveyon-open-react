@@ -12,49 +12,361 @@ import useUpdateHistory from '@/hooks/useUpdateHistory';
 const ConditionHeaderCell = (props) => {
     const handleOpenHelp = (e) => {
         e.stopPropagation();
-        const helpWin = window.open('', '_blank', 'width=580,height=600,scrollbars=yes,resizable=yes');
+        const helpWin = window.open('', '_blank', 'width=800,height=700,scrollbars=yes,resizable=yes');
         if (helpWin) {
             helpWin.document.write(`
                 <!DOCTYPE html>
-                <html>
+                <html lang="ko">
                 <head>
-                    <title>배너 조건 도움말</title>
+                    <meta charset="UTF-8">
+                    <title>연산자 도움말</title>
                     <style>
-                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding: 24px; color: #334155; line-height: 1.6; background-color: #f8fafc; }
-                        .container { max-width: 600px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-                        h1 { font-size: 20px; font-weight: 700; color: #1e293b; margin-top: 0; margin-bottom: 16px; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-                        .badge { width: 24px; height: 24px; border-radius: 50%; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; margin-right: 8px; }
-                        h2 { font-size: 14px; font-weight: 700; color: #3b82f6; margin-top: 20px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
-                        h2.warning { color: #ef4444; }
-                        h2::before { content: ''; width: 4px; height: 12px; border-radius: 2px; display: inline-block; margin-right: 6px; }
-                        h2.info-title::before { background: #3b82f6; }
-                        h2.warning::before { background: #ef4444; }
-                        .example-box { background: #f8fafc; padding: 12px 16px; border-radius: 6px; border: 1px solid #e2e8f0; font-family: monospace; font-size: 13px; color: #334155; margin-bottom: 16px; line-height: 1.8; }
-                        ul { margin: 0; padding-left: 20px; }
-                        li { margin-bottom: 8px; font-size: 13px; }
+                        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+                        * { box-sizing: border-box; }
+                        body {
+                            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+                            margin: 0;
+                            padding: 0;
+                            background-color: #ffffff;
+                            color: #1e293b;
+                        }
+                        .header {
+                            display: flex;
+                            align-items: center;
+                            padding: 10px 16px;
+                            border-bottom: 1px solid #e2e8f0;
+                            background-color: #ffffff;
+                            position: sticky;
+                            top: 0;
+                            z-index: 10;
+                        }
+                        .header-title-container {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        .header-icon {
+                            width: 20px;
+                            height: 20px;
+                            background-color: #0f172a;
+                            color: #ffffff;
+                            border-radius: 50%;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 12px;
+                            font-weight: 700;
+                        }
+                        .header-title {
+                            font-size: 15px;
+                            font-weight: 700;
+                            color: #0f172a;
+                        }
+                        .content {
+                            padding: 12px 16px;
+                            display: flex;
+                            flex-direction: column;
+                            gap: 10px;
+                        }
+                        .section-container {
+                            border-radius: 6px;
+                            padding: 8px 12px;
+                            border: 1px solid #e2e8f0;
+                        }
+                        .section-compare {
+                            border-color: #dbeafe;
+                            background-color: #eff6ff;
+                        }
+                        .section-include {
+                            border-color: #f3e8ff;
+                            background-color: #faf5ff;
+                        }
+                        .section-logic {
+                            border-color: #dcfce7;
+                            background-color: #f0fdf4;
+                        }
+                        .section-range {
+                            border-color: #fef3c7;
+                            background-color: #fffbeb;
+                        }
+                        .section-group {
+                            border-color: #fee2e2;
+                            background-color: #fef2f2;
+                        }
+                        .section-rank {
+                            border-color: #e0f2fe;
+                            background-color: #f0f9ff;
+                        }
+
+                        .section-header {
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            margin-bottom: 6px;
+                        }
+                        .section-badge {
+                            display: inline-block;
+                            padding: 1px 6px;
+                            border-radius: 4px;
+                            font-size: 11px;
+                            font-weight: 700;
+                        }
+                        .badge-compare { background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+                        .badge-include { background-color: #f3e8ff; color: #7c3aed; border: 1px solid #e9d5ff; }
+                        .badge-logic { background-color: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+                        .badge-range { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+                        .badge-group { background-color: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+                        .badge-rank { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+
+                        .section-desc {
+                            font-size: 11px;
+                            color: #64748b;
+                            font-weight: 500;
+                        }
+
+                        .grid-3 {
+                            display: grid;
+                            grid-template-columns: repeat(3, 1fr);
+                            gap: 8px;
+                        }
+                        .grid-2 {
+                            display: grid;
+                            grid-template-columns: repeat(2, 1fr);
+                            gap: 8px;
+                        }
+
+                        .box {
+                            background-color: #ffffff;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 6px;
+                            padding: 6px 10px;
+                            display: flex;
+                            align-items: center;
+                        }
+                        .section-compare .box { border-color: #bfdbfe; }
+                        .section-include .box { border-color: #e9d5ff; }
+                        .section-logic .box { border-color: #bbf7d0; }
+                        .section-range .box { border-color: #fde68a; }
+                        .section-group .box { border-color: #fca5a5; }
+                        .section-rank .box { border-color: #bae6fd; }
+
+                        .box-vertical {
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 3px;
+                        }
+
+                        .box-top-row {
+                            display: flex;
+                            align-items: center;
+                            width: 100%;
+                        }
+
+                        .operator {
+                            font-family: monospace;
+                            font-size: 13px;
+                            font-weight: 700;
+                            padding-right: 8px;
+                            margin-right: 8px;
+                            border-right: 1px solid #e2e8f0;
+                            min-width: 36px;
+                            text-align: center;
+                            display: inline-block;
+                        }
+                        .section-compare .operator { color: #2563eb; min-width: 26px; }
+                        .section-include .operator { color: #7c3aed; }
+                        .section-logic .operator { color: #16a34a; }
+                        .section-range .operator { color: #d97706; }
+                        .section-group .operator { color: #dc2626; min-width: 20px; }
+                        .section-rank .operator { color: #0284c7; min-width: auto; border-right: none; padding-right: 0; margin-right: 0; }
+
+                        .operator-desc {
+                            font-size: 12px;
+                            color: #334155;
+                            font-weight: 500;
+                        }
+
+                        .example {
+                            font-family: monospace;
+                            font-size: 11px;
+                            color: #64748b;
+                            width: 100%;
+                            border-top: 1px dashed #f1f5f9;
+                            padding-top: 2px;
+                            margin-top: 1px;
+                            word-break: break-all;
+                        }
                     </style>
                 </head>
                 <body>
-                    <div class="container">
-                        <h1><span class="badge">i</span>배너 조건 도움말</h1>
-                        <div style="font-size: 14px; margin-bottom: 20px;">
-                            배너는 분석표의 상단 기준축으로 사용할 분류 조건입니다.<br />
-                            각 행의 조건식에 해당하는 응답자만 해당 배너 항목에 포함됩니다.
+                    <div class="header">
+                        <div class="header-title-container">
+                            <div class="header-icon">?</div>
+                            <div class="header-title">연산자 도움말</div>
                         </div>
-                        <h2 class="info-title">작성 예시</h2>
-                        <div class="example-box">
-                            <div>GENDER == 1</div>
-                            <div>AGE >= 20</div>
-                            <div>REGION in [1, 2, 3]</div>
-                            <div>(GENDER == 1 or GENDER == 2) and AGE >= 20</div>
+                    </div>
+
+                    <div class="content">
+                        <!-- 비교 -->
+                        <div class="section-container section-compare">
+                            <div class="section-header">
+                                <span class="section-badge badge-compare">비교</span>
+                                <span class="section-desc">값 크기·일치 비교</span>
+                            </div>
+                            <div class="grid-3">
+                                <div class="box">
+                                    <span class="operator">==</span>
+                                    <span class="operator-desc">같음</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">!=</span>
+                                    <span class="operator-desc">같지 않음</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&gt;</span>
+                                    <span class="operator-desc">초과</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&gt;=</span>
+                                    <span class="operator-desc">이상</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&lt;</span>
+                                    <span class="operator-desc">미만</span>
+                                </div>
+                                <div class="box">
+                                    <span class="operator">&lt;=</span>
+                                    <span class="operator-desc">이하</span>
+                                </div>
+                            </div>
                         </div>
-                        <h2 class="warning">주의사항</h2>
-                        <ul>
-                            <li>변수명은 실제 <b>데이터 컬럼 ID</b>와 동일해야 합니다.</li>
-                            <li>문자값은 따옴표(<code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px;">' '</code>)로 감싸야 합니다.</li>
-                            <li>여러 조건은 <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px; font-weight: 600;">and</code> / <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px; font-weight: 600;">or</code>로 연결합니다.</li>
-                            <li>배너 ID는 <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px;">banner</code> 또는 <code style="background: #f1f5f9; border: 1px solid #e2e8f0; padding: 2px 4px; border-radius: 4px;">banner_</code>로 시작해야 합니다.</li>
-                        </ul>
+
+                        <!-- 포함 -->
+                        <div class="section-container section-include">
+                            <div class="section-header">
+                                <span class="section-badge badge-include">포함</span>
+                                <span class="section-desc">리스트 안 값의 포함 여부</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">in</span>
+                                        <span class="operator-desc">포함</span>
+                                    </div>
+                                    <div class="example">region in [11,21,31]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">not in</span>
+                                        <span class="operator-desc">미포함</span>
+                                    </div>
+                                    <div class="example">sq3 not in [98,99]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 논리 -->
+                        <div class="section-container section-logic">
+                            <div class="section-header">
+                                <span class="section-badge badge-logic">논리</span>
+                                <span class="section-desc">여러 조건 연결</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">and</span>
+                                        <span class="operator-desc">그리고 (모두 만족)</span>
+                                    </div>
+                                    <div class="example">age &gt;= 20 and age &lt; 40</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">or</span>
+                                        <span class="operator-desc">또는 (하나 이상 만족)</span>
+                                    </div>
+                                    <div class="example">gender == 1 or gender == 2</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 범위 함수 -->
+                        <div class="section-container section-range">
+                            <div class="section-header">
+                                <span class="section-badge badge-range">범위 함수</span>
+                                <span class="section-desc">다중응답 범위에 사용</span>
+                            </div>
+                            <div class="grid-3">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">any</span>
+                                        <span class="operator-desc">하나라도 만족</span>
+                                    </div>
+                                    <div class="example">any(q10:q20) in [1]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">all</span>
+                                        <span class="operator-desc">전부 만족</span>
+                                    </div>
+                                    <div class="example">all(q10:q20) in [1]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">none</span>
+                                        <span class="operator-desc">모두 불만족</span>
+                                    </div>
+                                    <div class="example">none(q10:q20) in [1]</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 그룹핑 -->
+                        <div class="section-container section-group">
+                            <div class="section-header">
+                                <span class="section-badge badge-group">그룹핑</span>
+                                <span class="section-desc">조건 우선순위 지정</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">(</span>
+                                        <span class="operator-desc">그룹 시작</span>
+                                    </div>
+                                    <div class="example">(a == 1 or b == 1) and c == 1</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator">)</span>
+                                        <span class="operator-desc">그룹 종료</span>
+                                    </div>
+                                    <div class="example">(a == 1 or b == 1) and c == 1</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 순위 -->
+                        <div class="section-container section-rank">
+                            <div class="section-header">
+                                <span class="section-badge badge-rank">순위</span>
+                                <span class="section-desc">순위 문항의 특정 순위 코드 포함</span>
+                            </div>
+                            <div class="grid-2">
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator" style="border-right: 1px solid #e2e8f0; padding-right: 12px; margin-right: 12px;">[순위지정] in [코드]</span>
+                                        <span class="operator-desc">지정 순위에 포함된 코드</span>
+                                    </div>
+                                    <div class="example">Q1 [1:2] in [코드]</div>
+                                </div>
+                                <div class="box box-vertical">
+                                    <div class="box-top-row">
+                                        <span class="operator" style="border-right: 1px solid #e2e8f0; padding-right: 12px; margin-right: 12px;">형식 설명</span>
+                                        <span class="operator-desc">[순위지정] = 1:2 / [코드] = 응답 코드값</span>
+                                    </div>
+                                    <div class="example" style="border-top: none; padding-top: 0; margin-top: 0; color: transparent; user-select: none;">-</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </body>
                 </html>
@@ -97,7 +409,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                 }
             }
         } // ADDED MISSING BRACE HERE
-        
+
         if (isSameAsPrev && data[dataIndex][`_unmerged_${field}`]) {
             isSameAsPrev = false;
         }
@@ -185,12 +497,12 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
     return (
         <td
             rowSpan={rowSpan}
-            style={{ 
-                padding: '1px 4px', 
-                verticalAlign: 'middle', 
+            style={{
+                padding: '1px 4px',
+                verticalAlign: 'middle',
                 background: isSelected ? '#e0f2fe' : '#fff', // Selected state background
-                textAlign: align, 
-                borderBottom: rowSpan > 1 ? '1px solid #e2e8f0' : undefined, 
+                textAlign: align,
+                borderBottom: rowSpan > 1 ? '1px solid #e2e8f0' : undefined,
                 position: 'relative',
                 userSelect: 'none' // 텍스트 드래그 선택 방지
             }}
@@ -202,7 +514,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                     const cellKey = `${dataIndex}-${field}`;
                     const now = Date.now();
                     const lastClick = lastClickTracker.get(cellKey) || 0;
-                    
+
                     if (now - lastClick < 500) { // 500ms로 시간 연장
                         // Double click detected manually!
                         setIsEditing(true);
@@ -224,7 +536,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
             onContextMenu={(e) => e.preventDefault()}
             onDragOver={(e) => {
                 if (!currentDragState || currentDragState.level !== level) return;
-                
+
                 // 제약조건 검사
                 if (level === 2 && dataItem.label3 !== currentDragState.parentLabel3) return;
                 if (level === 1 && (dataItem.label3 !== currentDragState.parentLabel3 || dataItem.label2 !== currentDragState.parentLabel2)) return;
@@ -234,7 +546,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
                 e.dataTransfer.dropEffect = "move";
                 const rect = e.currentTarget.getBoundingClientRect();
                 const y = e.clientY - rect.top;
-                
+
                 if (y < rect.height / 2) {
                     e.currentTarget.classList.add("dp-drop-top");
                     e.currentTarget.classList.remove("dp-drop-bottom");
@@ -260,7 +572,7 @@ const MergedTextEditCell = React.memo(({ dataItem, field, onUpdate, dataIndex, d
         >
             <div style={{ display: 'flex', alignItems: 'center', height: '100%', minHeight: '26px' }}>
                 {level > 0 && (
-                    <div 
+                    <div
                         draggable
                         onMouseDown={(e) => e.stopPropagation()}
                         onDragStart={(e) => {
@@ -762,7 +1074,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 info: (v.info || v.categories || []).map(item => ({ ...item, inEdit: false }))
                             }));
                     }
-                    
+
                     setBanners(formatted);
                     history.reset(formatted); // 초기 히스토리 기준점을 서버 데이터로 설정
                     setSelectedCells([]); // 데이터 재조회 시 셀 선택 초기화
@@ -853,7 +1165,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const handleReorderBlock = useCallback((level, targetIndex, position, targetRowSpan) => {
         if (!currentDragState) return;
         const { startIndex, rowSpan } = currentDragState;
-        
+
         let actualTargetIndex = targetIndex;
         if (position === 'bottom') {
             actualTargetIndex = targetIndex + targetRowSpan;
@@ -869,23 +1181,23 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
         const newData = [...currentBanner.info];
         const block = newData.splice(startIndex, rowSpan);
-        
+
         // 블록이 빠져나갔으므로 타겟 인덱스 조정 (아래쪽에서 위로 올릴 때)
         if (actualTargetIndex > startIndex) {
             actualTargetIndex -= rowSpan;
         }
-        
+
         newData.splice(actualTargetIndex, 0, ...block);
         updateBannerInfo(newData);
     }, [banners, selectedBanner, updateBannerInfo]);
 
     const getCellRowSpanRange = useCallback((data, dataIndex, field) => {
         if (!data || !data[dataIndex]) return { min: dataIndex, max: dataIndex };
-        
+
         let deps = [];
         if (field === 'label') deps = ['label3', 'label2'];
         else if (field === 'label2') deps = ['label3'];
-        
+
         let minR = dataIndex;
         // find upwards
         for (let i = dataIndex - 1; i >= 0; i--) {
@@ -901,7 +1213,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (isSame) minR = i;
             else break;
         }
-        
+
         let maxR = dataIndex;
         // find downwards
         for (let i = dataIndex + 1; i < data.length; i++) {
@@ -917,7 +1229,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             if (isSame) maxR = i;
             else break;
         }
-        
+
         return { min: minR, max: maxR };
     }, []);
 
@@ -927,7 +1239,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         const currentBanner = banners.find(b => b.id === selectedBanner);
         const data = currentBanner?.info || [];
         const range = getCellRowSpanRange(data, rowIndex, field);
-        
+
         const newSelection = [];
         for (let i = range.min; i <= range.max; i++) {
             newSelection.push({ r: i, c: field });
@@ -938,29 +1250,29 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleCellMouseEnter = useCallback((rowIndex, field) => {
         if (!isSelecting) return;
-        
+
         setSelectedCells(prev => {
             const start = selectionAnchorRef.current;
             if (!start) return prev;
-            
+
             const newSelection = [];
-            
+
             const colFields = ['label3', 'label2', 'label'];
             const startColIdx = colFields.indexOf(start.c);
             const currColIdx = colFields.indexOf(field);
-            
+
             if (startColIdx === -1 || currColIdx === -1) return prev;
 
             const minCol = Math.min(startColIdx, currColIdx);
             const maxCol = Math.max(startColIdx, currColIdx);
-            
+
             const currentBanner = banners.find(b => b.id === selectedBanner);
             const data = currentBanner?.info || [];
 
             let expandedMinR = Math.min(start.r, rowIndex);
             let expandedMaxR = Math.max(start.r, rowIndex);
             let changing = true;
-            
+
             // Expand vertically to cover the full rowSpan of any selected cells
             while (changing) {
                 changing = false;
@@ -984,14 +1296,14 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleContextMenu = useCallback((e, rowIndex, field) => {
         e.preventDefault();
-        
+
         setSelectedCells(prev => {
             const isSelected = prev.some(cell => cell.r === rowIndex && cell.c === field);
             if (!isSelected) {
                 const currentBanner = banners.find(b => b.id === selectedBanner);
                 const data = currentBanner?.info || [];
                 const range = getCellRowSpanRange(data, rowIndex, field);
-                
+
                 const newSelection = [];
                 for (let i = range.min; i <= range.max; i++) {
                     newSelection.push({ r: i, c: field });
@@ -1000,7 +1312,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
             }
             return prev;
         });
-        
+
         setContextMenu({
             x: e.clientX,
             y: e.clientY,
@@ -1011,49 +1323,49 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleMergeCells = useCallback(() => {
         if (selectedCells.length < 2) return;
-        
+
         const currentBanner = banners.find(b => b.id === selectedBanner);
         if (!currentBanner || !currentBanner.info) return;
 
         const newData = [...currentBanner.info];
         const colFields = ['label3', 'label2', 'label'];
-        
+
         let changed = false;
         colFields.forEach(field => {
             const cellsInCol = selectedCells.filter(c => c.c === field).map(c => c.r);
             if (cellsInCol.length < 2) return;
-            
+
             const minRow = Math.min(...cellsInCol);
             const maxRow = Math.max(...cellsInCol);
             const targetValue = newData[minRow][field];
-            
+
             for (let i = minRow; i <= maxRow; i++) {
                 newData[i] = { ...newData[i], [field]: targetValue };
                 delete newData[i][`_unmerged_${field}`];
                 changed = true;
             }
         });
-        
+
         if (changed) updateBannerInfo(newData);
         setContextMenu(null);
     }, [selectedCells, banners, selectedBanner, updateBannerInfo]);
 
     const handleUnmergeCells = useCallback(() => {
         if (selectedCells.length === 0) return;
-        
+
         const currentBanner = banners.find(b => b.id === selectedBanner);
         if (!currentBanner || !currentBanner.info) return;
 
         const newData = [...currentBanner.info];
         let changed = false;
-        
+
         selectedCells.forEach(cell => {
             const r = cell.r;
             const field = cell.c;
-            
+
             let val = newData[r][field];
             newData[r] = { ...newData[r] };
-            
+
             for (let i = r + 1; i < newData.length; i++) {
                 if (newData[i][field] === val) {
                     newData[i] = { ...newData[i], [`_unmerged_${field}`]: true };
@@ -1063,20 +1375,20 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             }
         });
-        
+
         if (changed) updateBannerInfo(newData);
         setContextMenu(null);
     }, [selectedCells, banners, selectedBanner, updateBannerInfo]);
 
     const handleDeleteSelectedRows = useCallback(() => {
         if (selectedCells.length === 0) return;
-        
+
         const currentBanner = banners.find(b => b.id === selectedBanner);
         if (!currentBanner || !currentBanner.info) return;
 
         const rowsToDelete = [...new Set(selectedCells.map(c => c.r))];
         const newData = currentBanner.info.filter((_, index) => !rowsToDelete.includes(index));
-        
+
         updateBannerInfo(newData);
         setContextMenu(null);
         setSelectedCells([]);
@@ -1224,7 +1536,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 />
                             </div>
                         </div>
-                            <div ref={listContainerRef} className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+                        <div ref={listContainerRef} className="dp-banner-list" style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                             {filteredBanners.map((banner, index) => (
                                 <div key={`${banner.id}-${index}`}
                                     className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
@@ -1530,16 +1842,16 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 popupAlign={{ horizontal: 'right', vertical: 'top' }}
                                 margin={{ horizontal: 0, vertical: 4 }}
                             >
-                                <div style={{ 
-                                    width: '280px', 
-                                    height: '400px', 
-                                    display: 'flex', 
-                                    flexDirection: 'column', 
-                                    background: '#fff', 
-                                    border: '1px solid #e2e8f0', 
-                                    borderRadius: '6px', 
-                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', 
-                                    padding: '8px' 
+                                <div style={{
+                                    width: '280px',
+                                    height: '400px',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    background: '#fff',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '6px',
+                                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                    padding: '8px'
                                 }}>
                                     <div className="dp-search-input-wrapper" style={{ marginBottom: '8px' }}>
                                         <Search size={14} className="dp-search-input-icon" />
@@ -1558,7 +1870,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 key={v.id}
                                                 v={v}
                                                 isSelected={false}
-                                                onDragStart={() => {}}
+                                                onDragStart={() => { }}
                                                 onClick={handleAddVariableToGrid}
                                             />
                                         ))}
@@ -1587,7 +1899,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             </div>
                         </>
                     )}
-                    
+
                     {/* Context Menu */}
                     {contextMenu && (
                         <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 100000, background: '#fff', border: '1px solid #ccc', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', padding: '4px 0', minWidth: '120px' }}>
