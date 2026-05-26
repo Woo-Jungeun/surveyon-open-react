@@ -1649,7 +1649,8 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     group_preset_id: stub.group_preset_name || null,
                     stat_preset_id: stub.stat_summary || null,
                     filter_expression: filterExp || null,
-                    banner: bannerArr
+                    banner: bannerArr,
+                    sort_mode: stub.sort_mode || 'none'
                 });
             }
 
@@ -1972,7 +1973,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                     onClose={() => setSelectedStubForModal(null)}
                     rowData={selectedStubForModal}
                     variables={stubs} // 임시로 전체 stubs를 넘겨줍니다. 나중에 필요에 따라 수정
-                    onApply={(rules, rankOutputs) => {
+                    onApply={(rules, rankOutputs, sortMode) => {
                         // 그리드 내부 필드 정리 + 필수 필드 정규화
                         const STAT_TYPES = ["mean", "median", "mode", "min", "max", "var", "std", "sum", "variance", "rse"];
                         const normalizedRules = rules.map((opt, i) => {
@@ -2006,6 +2007,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                 return {
                                     ...s,
                                     info: normalizedRules,
+                                    sort_mode: sortMode,
                                     ...(rankOutputs ? { rank_outputs: rankOutputs } : {})
                                 };
                             }

@@ -1892,3 +1892,50 @@
     box-shadow: none !important;
     outline: none !important;
 }
+
+/* ============================================================
+   정렬 설정 드롭다운 스타일 (선택된 값 & 리스트 13px)
+   ============================================================ */
+.dp-sort-dropdown .k-input-inner,
+.dp-sort-dropdown .k-input-value-text {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+}
+
+.dp-sort-dropdown-popup {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 4px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    padding: 2px 0 !important;
+}
+
+.dp-sort-dropdown-popup .k-list-item,
+.dp-sort-dropdown-popup .k-item {
+    padding: 6px 12px !important;
+    font-size: 13px !important;
+    color: #1e293b !important;
+    line-height: 1.4 !important;
+    min-height: 24px !important;
+}
+
+.dp-sort-dropdown-popup .k-list-item:hover,
+.dp-sort-dropdown-popup .k-item.k-state-hover,
+.dp-sort-dropdown-popup .k-list-item.k-hover {
+    background: #eff6ff !important;
+    color: #2563eb !important;
+}
+
+.dp-sort-dropdown-popup .k-list-item.k-selected,
+.dp-sort-dropdown-popup .k-item.k-state-selected,
+.dp-sort-dropdown-popup .k-list-item.k-state-selected {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+    font-weight: 600 !important;
+}
+
+.dp-sort-dropdown-popup .k-list-item.k-focus,
+.dp-sort-dropdown-popup .k-item.k-state-focused {
+    background: #eff6ff !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
