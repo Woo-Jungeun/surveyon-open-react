@@ -1489,7 +1489,18 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setShowPct(fetchedUi.format_show_percent ?? true);
                 setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
                 setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
-                setExcelShowBaseParenthesis(fetchedUi.show_base_parenthesis ?? true);
+                
+                let hasBaseParenthesis = true;
+                if (fetchedUi.base_prefix !== undefined && fetchedUi.base_prefix !== null) {
+                    hasBaseParenthesis = (fetchedUi.base_prefix === "(" && fetchedUi.base_postfix === ")");
+                } else if (ctxPayload.display_policy?.base_prefix !== undefined && ctxPayload.display_policy?.base_prefix !== null) {
+                    hasBaseParenthesis = (ctxPayload.display_policy.base_prefix === "(" && ctxPayload.display_policy.base_postfix === ")");
+                } else if (fetchedUi.show_base_parenthesis !== undefined && fetchedUi.show_base_parenthesis !== null) {
+                    hasBaseParenthesis = fetchedUi.show_base_parenthesis;
+                } else if (ctxPayload.display_policy?.show_base_parenthesis !== undefined && ctxPayload.display_policy?.show_base_parenthesis !== null) {
+                    hasBaseParenthesis = ctxPayload.display_policy.show_base_parenthesis;
+                }
+                setExcelShowBaseParenthesis(hasBaseParenthesis);
             }
 
             // 데이터 세팅 후 초기화 플래그 해제 (setTimeout을 통해 setState 이후 반영 보장)

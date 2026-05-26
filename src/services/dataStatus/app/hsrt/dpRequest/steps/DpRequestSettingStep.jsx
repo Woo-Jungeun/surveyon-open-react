@@ -77,7 +77,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             var_digits: 2,
             median_digits: 2,
             min_digits: 0,
-            max_digits: 0
+            max_digits: 0,
+            show_base_parenthesis: true
         }
     });
 
@@ -138,7 +139,18 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.hide_zero_base_columns !== undefined && ui.hide_zero_base_columns !== null) initDisplay.hide_zero_base_columns = ui.hide_zero_base_columns;
                 if (ui.hide_zero_banners !== undefined && ui.hide_zero_banners !== null) initDisplay.hide_zero_banners = ui.hide_zero_banners;
                 if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
-                if (ui.show_base_parenthesis !== undefined && ui.show_base_parenthesis !== null) initDisplay.show_base_parenthesis = ui.show_base_parenthesis;
+                
+                // base_prefix / base_postfix 값에 따라 show_base_parenthesis 값 판별
+                const policy = actualTableDetail?.display_policy || renderContext?.effective_display_policy;
+                if (policy && policy.base_prefix !== undefined && policy.base_prefix !== null) {
+                    initDisplay.show_base_parenthesis = (policy.base_prefix === "(" && policy.base_postfix === ")");
+                } else if (ui.base_prefix !== undefined && ui.base_prefix !== null) {
+                    initDisplay.show_base_parenthesis = (ui.base_prefix === "(" && ui.base_postfix === ")");
+                } else if (ui.show_base_parenthesis !== undefined && ui.show_base_parenthesis !== null) {
+                    initDisplay.show_base_parenthesis = ui.show_base_parenthesis;
+                } else if (policy && policy.show_base_parenthesis !== undefined && policy.show_base_parenthesis !== null) {
+                    initDisplay.show_base_parenthesis = policy.show_base_parenthesis;
+                }
 
                 let mergedRender = {
                     ...settings.render,
@@ -514,6 +526,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_banners: settings.display.hide_zero_base_columns,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
                     show_base_parenthesis: settings.display.show_base_parenthesis,
+                    base_prefix: settings.display.show_base_parenthesis ? "(" : "",
+                    base_postfix: settings.display.show_base_parenthesis ? ")" : "",
                 },
                 display_policy: {
                     show_n: settings.display.show_n,
