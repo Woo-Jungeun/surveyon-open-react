@@ -530,6 +530,8 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_banners: settings.display.hide_zero_base_columns,
                     hide_zero_stubs: settings.display.hide_zero_stubs,
                     show_base_parenthesis: settings.display.show_base_parenthesis,
+                    base_prefix: settings.display.show_base_parenthesis ? "(" : "",
+                    base_postfix: settings.display.show_base_parenthesis ? ")" : "",
                 },
                 scale_presets: scaleDataPayload,
                 rank_presets: rankDataPayload,

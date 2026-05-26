@@ -354,7 +354,11 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                                     fontSize: uiSettings?.font_size ? `${uiSettings.font_size}px` : '12px',
                                                     fontWeight: 500,
                                                     color: uiSettings?.theme_text || 'inherit'
-                                                }}>{formatCountValue(valN, effectivePolicy)}</div>
+                                                }}>
+                                                    {isBaseCell ? (row.prefix || infoItem.prefix || '') : ''}
+                                                    {formatCountValue(valN, effectivePolicy)}
+                                                    {isBaseCell ? (row.postfix || infoItem.postfix || '') : ''}
+                                                </div>
                                             )}
                                             {valP !== null && showPct && !isBaseCell && (
                                                 <div style={{
@@ -1198,6 +1202,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [decimalN, setDecimalN] = useState(0);
     const [showPct, setShowPct] = useState(true);
     const [excelShowPct, setExcelShowPct] = useState(true); // 엑셀 다운로드 시 % 표출 여부
+    const [excelShowBaseParenthesis, setExcelShowBaseParenthesis] = useState(true); // 엑셀 다운로드 시 Base 기본 괄호 여부
     const [decimalPct, setDecimalPct] = useState(1);
     const [hideZeroBaseColumns, setHideZeroBaseColumns] = useState(false);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
@@ -1484,6 +1489,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setShowPct(fetchedUi.format_show_percent ?? true);
                 setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
                 setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
+                setExcelShowBaseParenthesis(fetchedUi.show_base_parenthesis ?? true);
             }
 
             // 데이터 세팅 후 초기화 플래그 해제 (setTimeout을 통해 setState 이후 반영 보장)
@@ -1794,7 +1800,10 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     max_digits: uiSettings?.max_digits ?? 1,
                     var_digits: uiSettings?.var_digits ?? 1,
                     zero_display: uiSettings?.zero_display || "0",
-                    empty_display: uiSettings?.empty_display || "blank"
+                    empty_display: uiSettings?.empty_display || "blank",
+                    show_base_parenthesis: excelShowBaseParenthesis,
+                    base_prefix: excelShowBaseParenthesis ? "(" : "",
+                    base_postfix: excelShowBaseParenthesis ? ")" : ""
                 }
             };
             if (selectedXInfo !== '__none__') {
@@ -2584,7 +2593,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         <p style={{ margin: '0 0 24px 0', fontSize: '15px', color: '#475569', fontWeight: 500, lineHeight: '1.5' }}>
                             교차분석표를 엑셀 파일로 다운로드 하시겠습니까?
                         </p>
-                        <div style={{ marginBottom: '28px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ marginBottom: '28px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
                             <div
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
@@ -2606,6 +2615,29 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     )}
                                 </div>
                                 <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 표출 여부</span>
+                            </div>
+
+                            <div
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
+                                }}
+                                onClick={() => setExcelShowBaseParenthesis(!excelShowBaseParenthesis)}
+                            >
+                                <div style={{
+                                    width: '20px', height: '20px', borderRadius: '5px',
+                                    background: excelShowBaseParenthesis ? '#2563eb' : '#fff',
+                                    border: `1.5px solid ${excelShowBaseParenthesis ? '#2563eb' : '#cbd5e1'}`,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0,
+                                    transition: 'all 0.15s'
+                                }}>
+                                    {excelShowBaseParenthesis && (
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    )}
+                                </div>
+                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>Base 기본 (괄호)</span>
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
