@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { X, Search, GripVertical, Plus, Check } from 'lucide-react';
 import '@/components/common/popup/ConditionBuilderPopup.css';
 
@@ -40,13 +40,13 @@ function generateCartesianRules(selectedVarIds, variablesMap) {
         const logics = comboItems.map((item, idx) => {
             const varId = selectedVarIds[idx];
             let val = item.value;
-            
+
             // 숫자로만 이루어지지 않은 일반 문자열인 경우, 안전을 위해 홑따옴표 처리 ('Seoul', 'GroupA' 등)
             // (ANY 예약어나, 이미 숫자형인 경우 그대로 둠)
             if (val !== 'ANY' && isNaN(Number(val))) {
                 val = `'${val}'`;
             }
-            
+
             return `${varId} == ${val}`;
         });
 
@@ -63,6 +63,14 @@ function generateCartesianRules(selectedVarIds, variablesMap) {
 const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedItems, setSelectedItems] = useState([]);
+
+    // 모달이 닫히면 선택된 변수 리스트 및 검색어 초기화
+    useEffect(() => {
+        if (!show) {
+            setSelectedItems([]);
+            setSearchTerm('');
+        }
+    }, [show]);
 
     // Drag & Drop State (Right Canvas Reordering Only)
     const [draggedItemIdx, setDraggedItemIdx] = useState(null);
@@ -237,9 +245,9 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                     flexShrink: 0,
                                                     ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
                                                         (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
-                                                        v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
-                                                        v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
-                                                        { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
+                                                            v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
+                                                                v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
+                                                                    { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
                                                 }}>
                                                     {v.type === 'double' ? 'multi' : v.type}
                                                 </div>
@@ -327,9 +335,9 @@ const CartesianGeneratorModal = ({ show, onClose, variables = [], onApply }) => 
                                                             flexShrink: 0,
                                                             ...(v.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
                                                                 (v.type === 'double' || v.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
-                                                                v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
-                                                                v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
-                                                                { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
+                                                                    v.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
+                                                                        v.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
+                                                                            { background: '#f8fafc', color: '#475569', border: '1px solid #e2e8f0' })
                                                         }}>
                                                             {v.type === 'double' ? 'multi' : v.type}
                                                         </div>
