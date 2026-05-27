@@ -67,10 +67,30 @@
     border-radius: 3px 3px 0 0;
 }
 
-/* Header Centering & Multiline Support */
+/* Header Centering & Multiline Support (Compact Height & Padding Override) */
+.variable-page-card .cmn_grid.singlehead .k-grid-header th.k-header,
+.variable-page-card .cmn_grid.singlehead .k-grid-header th.k-table-th,
 .variable-column-header {
     height: 60px !important;
+    padding: 0 4px !important;
+    padding-block: 0px !important;
+    padding-inline: 4px !important;
     vertical-align: middle !important;
+}
+
+.variable-page-card .cmn_grid.singlehead .k-grid-header th .k-cell-inner,
+.variable-page-card .cmn_grid.singlehead .k-grid-header th .k-link,
+.variable-column-header .k-cell-inner,
+.variable-column-header .k-link {
+    height: 100% !important;
+    padding: 0 !important;
+    padding-block: 0px !important;
+    padding-inline: 0px !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .k-header-center {
@@ -86,7 +106,7 @@
 
 .k-header-center .k-column-title {
     white-space: pre-line !important;
-    line-height: 1.2;
+    line-height: 1.1 !important;
     font-size: 11px !important;
 }
 
@@ -1661,6 +1681,7 @@ input:checked+.slider:before {
     color: #16a34a;
     font-weight: 600;
 }
+
 /* 사용자 요청: 그리드 공간 확보를 위한 패딩 축소 및 헤더 글자 크기 지정 */
 .variable-page-card .k-grid td,
 .variable-page-card .k-grid th {
@@ -1707,8 +1728,10 @@ input:checked+.slider:before {
    ReLabelModal Dropdown Custom (SRT 연한 초록 테마)
 ======================================= */
 .relabel-dropdown {
-    border: 1px solid #d1d5db; /* 기본 테두리 약간 부드럽게 */
+    border: 1px solid #d1d5db;
+    /* 기본 테두리 약간 부드럽게 */
 }
+
 .relabel-dropdown:focus,
 .relabel-dropdown.k-focus,
 .relabel-dropdown.k-state-focused {
@@ -1719,12 +1742,15 @@ input:checked+.slider:before {
 /* 드롭다운 항목 배경색 및 글씨색상 (사진과 동일하게 연한 배경 + 어두운 글씨) */
 .relabel-dropdown-popup .k-list-item.k-selected,
 .relabel-dropdown-popup .k-list-item.k-state-selected {
-    background-color: #dcfce7 !important;  /* 연한 초록색 배경 */
-    color: #1e293b !important; /* 짙은 회색/검정 글씨 */
+    background-color: #dcfce7 !important;
+    /* 연한 초록색 배경 */
+    color: #1e293b !important;
+    /* 짙은 회색/검정 글씨 */
 }
 
 .relabel-dropdown-popup .k-list-item.k-hover,
 .relabel-dropdown-popup .k-list-item:hover {
-    background-color: #f0fdf4 !important; /* 더 연한 초록색 호버 */
+    background-color: #f0fdf4 !important;
+    /* 더 연한 초록색 호버 */
     color: #1e293b !important;
 }

@@ -1,6 +1,5 @@
 import React, { useContext, useRef, useEffect, useCallback, useMemo, memo, useState } from 'react';
-import KendoGrid from '../../../../components/kendo/KendoGrid';
-import { GridColumn as Column } from "@progress/kendo-react-grid";
+import KendoGridV2, { GridColumn as Column } from '../../../../components/kendo/KendoGridV2';
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
 import { Plus, Trash2, GripVertical, X } from 'lucide-react';
@@ -67,8 +66,8 @@ const CustomReLabelHeaderCell = (props) => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', paddingTop: '4px', paddingBottom: '4px' }}>
-            <span style={{ fontSize: '12px', lineHeight: '1' }}>표제목</span>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', paddingTop: '0px', paddingBottom: '0px' }}>
+            <span style={{ fontSize: '11px', lineHeight: '1' }}>표제목</span>
             <span
                 style={{
                     display: 'inline-flex',
@@ -76,10 +75,10 @@ const CustomReLabelHeaderCell = (props) => {
                     justifyContent: 'center',
                     border: '1px solid #059669',
                     borderRadius: '4px',
-                    padding: '2px 8px',
+                    padding: '1px 6px',
                     color: '#059669',
-                    fontSize: '11px',
-                    lineHeight: '1.1',
+                    fontSize: '10px',
+                    lineHeight: '1',
                     background: '#fff',
                     cursor: 'pointer',
                     letterSpacing: '-0.3px',
@@ -186,8 +185,32 @@ const InputCell = (props) => {
 
     if (!isEditing) {
         return (
-            <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
-                <div className="variable-text-readonly" style={{ background: 'transparent', border: 'none', pointerEvents: 'none' }}>
+            <td 
+                style={{ 
+                    ...style, 
+                    verticalAlign: 'middle',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: style?.width || '1px'
+                }} 
+                className={className}
+                title={dataItem[field] ? String(dataItem[field]) : ''}
+            >
+                <div style={{ 
+                    background: 'transparent', 
+                    border: 'none', 
+                    pointerEvents: 'none', 
+                    whiteSpace: 'nowrap', 
+                    overflow: 'hidden', 
+                    textOverflow: 'ellipsis',
+                    fontSize: '13px',
+                    color: '#475569',
+                    padding: '6px 4px',
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    textAlign: (field === 'memo') ? 'left' : 'center'
+                }}>
                     {dataItem[field]}
                 </div>
             </td>
@@ -722,14 +745,108 @@ const MapConfigTab = ({
 
     const isItemSelectable = useCallback((item) => item?.sysName !== 'pid' && String(item?.type || '').toLowerCase() !== 'custom', []);
 
-    const columnMenu = useCallback((props) => (
-        <ExcelColumnMenu
-            {...props}
-            filter={filter}
-            onFilterChange={setFilter}
-            onSortChange={setSort}
-        />
-    ), [filter, setFilter, setSort]);
+    const BakedSelectionCell = useCallback((props) => {
+        const { dataItem } = props;
+        if (!dataItem) return <td />;
+        
+        const isSelectable = isItemSelectable(dataItem);
+        const checked = !!bakedSelectedState[dataItem.id];
+
+        const handleChange = (e) => {
+            if (!isSelectable) return;
+            const next = { ...bakedSelectedState };
+            if (next[dataItem.id]) {
+                delete next[dataItem.id];
+            } else {
+                next[dataItem.id] = true;
+            }
+            handleBakedSelectedChange(next);
+        };
+
+        return (
+            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                <label className={`dm-checkbox-label ${isSelectable ? '' : 'dm-checkbox-disabled'}`}>
+                    <input
+                        type="checkbox"
+                        className="dm-checkbox-input"
+                        checked={checked}
+                        disabled={!isSelectable}
+                        onChange={handleChange}
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} />
+                </label>
+            </td>
+        );
+    }, [bakedSelectedState, handleBakedSelectedChange, isItemSelectable]);
+
+    const BakedSelectionHeaderCell = useCallback(() => {
+        const ref = useRef(null);
+        
+        const selectableItems = useMemo(
+            () => (ctxVars ?? []).filter((item) => isItemSelectable(item)),
+            [ctxVars]
+        );
+
+        const allChecked = selectableItems.length > 0 && selectableItems.every((item) => bakedSelectedState[item.id]);
+        const someChecked = selectableItems.some((item) => bakedSelectedState[item.id]) && !allChecked;
+
+        useEffect(() => {
+            if (ref.current) ref.current.indeterminate = someChecked;
+        }, [someChecked]);
+
+        const stop = (e) => e.stopPropagation();
+
+        const onHeaderChange = (e) => {
+            const checked = e.target.checked;
+            const next = {};
+            (ctxVars || []).forEach((item) => {
+                if (!isItemSelectable(item)) {
+                    next[item.id] = false;
+                } else {
+                    next[item.id] = checked;
+                }
+            });
+            handleBakedSelectedChange(next);
+        };
+
+        return (
+            <div
+                onClick={stop}
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '2px',
+                    width: '100%',
+                    cursor: 'pointer',
+                    paddingTop: '0px',
+                    paddingBottom: '0px'
+                }}
+            >
+                <span style={{ fontSize: '11px', lineHeight: '1.0' }}>SRT<br />이관</span>
+                <label className="dm-checkbox-label" style={{ marginTop: '2px' }}>
+                    <input
+                        ref={ref}
+                        type="checkbox"
+                        className="dm-checkbox-input"
+                        checked={allChecked}
+                        onChange={onHeaderChange}
+                    />
+                    <span className="dm-checkbox-box" />
+                </label>
+            </div>
+        );
+    }, [ctxVars, bakedSelectedState, handleBakedSelectedChange, isItemSelectable]);
+
+    const displayData = useMemo(() => {
+        const sliced = variables.slice(skip, skip + pageSize);
+        return sliced.map(item => ({
+            ...item,
+            isBaked: item.sysName === 'pid' ? true : !!bakedSelectedState[item.id]
+        }));
+    }, [variables, skip, pageSize, bakedSelectedState]);
 
     const rowRender = useCallback((trElement, props) => {
         const { dataItem } = props;
@@ -762,49 +879,16 @@ const MapConfigTab = ({
         }
     }, [pageChange]);
 
-    const gridProps = useMemo(() => ({
-        data: variables,
-        dataItemKey: "id",
-        sort,
-        filter,
-        sortChange: ({ sort }) => setSort(sort),
-        filterChange: ({ filter }) => setFilter(filter),
-        height: "100%",
-        rowRender,
-        pageable: true,
-        total: variables.length,
-        skip,
-        pageSize,
-        onPageChange: handlePageChange,
-        onRowClick: (e) => setEditingRowId(e.dataItem.id),
-        reorderable: true,
-        multiSelect: true,
-        selectedField: "isBaked",
-        selectedState: bakedSelectedState,
-        setSelectedState: handleBakedSelectedChange,
-        linkRowClickToSelection: false,
-        selectionHeaderTitle: "SRT\n이관",
-        selectionColumnAfterField: (isDetailed || isResearcher) ? "reLabel" : "label",
-        selectionColumnWidth: "60px",
-        selectionHeaderFlexDirection: "column",
-        isItemSelectable,
-        useCustomCheckbox: true
-    }), [
-        variables, sort, filter, setSort, setFilter, rowRender,
-        skip, pageSize, handlePageChange, setEditingRowId,
-        bakedSelectedState, handleBakedSelectedChange, isItemSelectable, isResearcher, isDetailed
-    ]);
-
     const mappingColumns = useMemo(() => {
         const commonPrefix = [
             { field: 'drag', title: '순서\n변경', width: '50px', cell: DragCell },
             { field: 'add', title: '추가', width: '50px' },
-            // { field: 'id', title: 'no', width: '50px' },
-            { field: 'sysName', title: '변수명', width: (isDetailed || isResearcher) ? '100px' : '100px' },
+            { field: 'sysName', title: '변수명', width: '100px' },
         ];
 
+        let cols = [];
         if (isResearcher) {
-            return [
+            cols = [
                 ...commonPrefix,
                 { field: 'logic', title: '로직체크', width: '180px' },
                 { field: 'label', title: '문항', minWidth: 250 },
@@ -814,10 +898,8 @@ const MapConfigTab = ({
                 { field: 'memo', title: '메모', minWidth: 120 },
                 { field: 'delete', title: '삭제', width: '50px' }
             ];
-        }
-
-        if (isDetailed) {
-            return [
+        } else if (isDetailed) {
+            cols = [
                 ...commonPrefix,
                 { field: 'logic', title: '로직체크', width: '110px' },
                 { field: 'label', title: '문항', width: '120px' },
@@ -835,24 +917,42 @@ const MapConfigTab = ({
                 { field: 'memo', title: '메모', minWidth: 120 },
                 { field: 'delete', title: '삭제', width: '50px' }
             ];
+        } else {
+            cols = [
+                ...commonPrefix,
+                { field: 'startPos', title: '시작\n자리수', width: '90px' },
+                { field: 'valLen', title: '보기\n자리수', width: '90px' },
+                { field: 'valCnt', title: '보기\n갯수', width: '85px' },
+                { field: 'totalLen', title: '총\n자리수', width: '90px' },
+                { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
+                { field: 'logic', title: '로직체크', width: '150px' },
+                { field: 'label', title: '문항', minWidth: 50 },
+                { field: 'decimal', title: '소수점\n자리수', width: '90px' },
+                { field: 'type', title: '변수\n유형', width: '140px' },
+                { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
+                { field: 'delete', title: '삭제', width: '50px' }
+            ];
         }
 
-        return [
-            ...commonPrefix,
-            { field: 'startPos', title: '시작\n자리수', width: '90px' },
-            { field: 'valLen', title: '보기\n자리수', width: '90px' },
-            { field: 'valCnt', title: '보기\n갯수', width: '85px' },
-            { field: 'totalLen', title: '총\n자리수', width: '90px' },
-            { field: 'etcOpen', title: '기타\n오픈정의', width: '100px' },
-            { field: 'logic', title: '로직체크', width: '150px' },
-            { field: 'label', title: '문항', minWidth: 50 },
-            { field: 'decimal', title: '소수점\n자리수', width: '90px' },
-            // { field: 'spssName', title: 'SPSS\n변수명', width: '100px' },
-            { field: 'type', title: '변수\n유형', width: '140px' },
-            { field: 'minQuestions', title: '문항\n최소갯수', width: '100px' },
-            { field: 'delete', title: '삭제', width: '50px' }
-        ];
-    }, [isDetailed, isResearcher]);
+        const insertAfterField = (isDetailed || isResearcher) ? "reLabel" : "label";
+        const insertIdx = cols.findIndex(c => c.field === insertAfterField);
+        
+        const selectionCol = {
+            field: 'isBaked',
+            title: 'SRT 이관',
+            width: '60px',
+            cell: BakedSelectionCell,
+            headerCell: BakedSelectionHeaderCell
+        };
+
+        if (insertIdx !== -1) {
+            cols.splice(insertIdx + 1, 0, selectionCol);
+        } else {
+            cols.push(selectionCol);
+        }
+        
+        return cols;
+    }, [isDetailed, isResearcher, BakedSelectionCell, BakedSelectionHeaderCell]);
 
     return (
         <>
@@ -914,9 +1014,27 @@ const MapConfigTab = ({
 
             <div className="variable-page-card">
                 <div className="cmn_grid singlehead">
-                    <KendoGrid parentProps={gridProps}>
+                    <KendoGridV2
+                        data={displayData}
+                        dataItemKey="id"
+                        sort={sort}
+                        filter={filter}
+                        sortChange={({ sort }) => setSort(sort)}
+                        filterChange={({ filter }) => setFilter(filter)}
+                        height="100%"
+                        rowRender={rowRender}
+                        pageable={true}
+                        total={variables.length}
+                        skip={skip}
+                        pageSize={pageSize}
+                        onPageChange={handlePageChange}
+                        onRowClick={(e) => setEditingRowId(e.dataItem.id)}
+                        reorderable={false}
+                        addable={false}
+                        deletable={false}
+                        copyable={false}
+                    >
                         {mappingColumns.map((c) => {
-                            const isUtilityColumn = ['drag', 'add', 'logic', 'delete'].includes(c.field); //columnMenu 전부 제거
                             return (
                                 <Column
                                     key={c.field}
@@ -924,17 +1042,14 @@ const MapConfigTab = ({
                                     title={c.title}
                                     width={c.width}
                                     minWidth={c.minWidth}
-                                    // columnMenu={isUtilityColumn ? undefined : columnMenu}
                                     columnMenu={undefined}
-                                    cell={getCell(c.field)}
+                                    cell={getCell(c.field) || c.cell}
                                     headerCell={c.headerCell}
                                     headerClassName="k-header-center variable-column-header"
-                                // sortable={!isUtilityColumn}
-                                // filterable={!isUtilityColumn}
                                 />
                             );
                         })}
-                    </KendoGrid>
+                    </KendoGridV2>
                 </div>
             </div>
         </>
