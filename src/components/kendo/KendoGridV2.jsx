@@ -324,25 +324,51 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
                         width={addable && copyable ? "75px" : "45px"}
                         resizable={false}
                         headerClassName="k-text-center"
-                        cell={(cellProps) => (
-                            <td style={{ textAlign: 'center', padding: '0 4px', verticalAlign: 'middle' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '24px', width: '100%' }}>
-                                    {addable && (
-                                        <button type="button" title="빈 행 추가" className="dp-grid-add-row-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleAdd(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
-                                            <Plus size={18} color="#3b82f6" strokeWidth={3} />
-                                        </button>
-                                    )}
-                                    {addable && copyable && (
-                                        <div style={{ width: '1px', height: '12px', background: '#cbd5e1' }} />
-                                    )}
-                                    {copyable && (
-                                        <button type="button" title="현재 행 복사" className="dp-grid-copy-row-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
-                                            <Copy size={15} color="#94a3b8" strokeWidth={2} />
-                                        </button>
-                                    )}
-                                </div>
-                            </td>
-                        )}
+                        cell={(cellProps) => {
+                            const isOnlyAdd = addable && !copyable;
+                            return (
+                                <td 
+                                    onClick={isOnlyAdd ? (e) => { e.preventDefault(); e.stopPropagation(); handleAdd(cellProps.dataIndex); } : undefined}
+                                    style={{ 
+                                        textAlign: 'center', 
+                                        padding: '0 4px', 
+                                        verticalAlign: 'middle',
+                                        cursor: isOnlyAdd ? 'pointer' : 'default'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', height: '24px', width: '100%' }}>
+                                        {addable && (
+                                            <button 
+                                                type="button" 
+                                                title="빈 행 추가" 
+                                                className="dp-grid-add-row-btn" 
+                                                onClick={!isOnlyAdd ? (e) => { e.preventDefault(); e.stopPropagation(); handleAdd(cellProps.dataIndex); } : undefined} 
+                                                style={{ 
+                                                    display: 'flex', 
+                                                    alignItems: 'center', 
+                                                    justifyContent: 'center', 
+                                                    width: '20px', 
+                                                    padding: 0, 
+                                                    border: 'none', 
+                                                    background: 'transparent',
+                                                    pointerEvents: isOnlyAdd ? 'none' : 'auto'
+                                                }}
+                                            >
+                                                <Plus size={18} color="#3b82f6" strokeWidth={3} />
+                                            </button>
+                                        )}
+                                        {addable && copyable && (
+                                            <div style={{ width: '1px', height: '12px', background: '#cbd5e1' }} />
+                                        )}
+                                        {copyable && (
+                                            <button type="button" title="현재 행 복사" className="dp-grid-copy-row-btn" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleCopy(cellProps.dataIndex); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '20px', padding: 0, border: 'none', background: 'transparent' }}>
+                                                <Copy size={15} color="#94a3b8" strokeWidth={2} />
+                                            </button>
+                                        )}
+                                    </div>
+                                </td>
+                            );
+                        }}
                     />
                 )}
 
