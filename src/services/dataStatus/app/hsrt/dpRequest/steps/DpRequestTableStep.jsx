@@ -955,6 +955,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
     const [stubs, setStubs] = useState([]);
     const [banners, setBanners] = useState([]);
     const [originalRecodedIds, setOriginalRecodedIds] = useState([]);
+    const [originalStubs, setOriginalStubs] = useState([]);
     const [modifiedPresetIds, setModifiedPresetIds] = useState(new Set());
     const gridRef = useRef(null);
     const [scalePresets, setScalePresets] = useState([]);
@@ -1302,6 +1303,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             itemMap.forEach(item => sorted.push(item));
 
             setStubs(sorted);
+            setOriginalStubs(sorted);
             history.reset(sorted);
             if (onUnsavedChange) onUnsavedChange(false);
         } catch (err) {
@@ -1707,6 +1709,15 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
         summaryFolders.forEach(s => currentRecodedIds.push(s.stub_id));
         const deletedIds = originalRecodedIds.filter(id => !currentRecodedIds.includes(id));
 
+        // 삭제된 스터브들의 source_var_id를 hidden_stub_base_var_ids로 수집
+        const hiddenStubBaseVarIds = [];
+        deletedIds.forEach(delId => {
+            const origItem = originalStubs.find(s => s.recoded_var_id === delId);
+            if (origItem && origItem.source_var_id) {
+                hiddenStubBaseVarIds.push(origItem.source_var_id);
+            }
+        });
+
         // 4. 현재 순서 배열 (order_ids)
         // 자식 rank item도 순서에 명시적으로 추가해야 합니다.
         const orderIds = [];
@@ -1740,6 +1751,7 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
             summary_folders: summaryFolders,
             order_ids: orderIds,
             delete_ids: deletedIds,
+            hidden_stub_base_var_ids: hiddenStubBaseVarIds,
             variables: variablesMap,
             force_reapply_preset_ids: forceReapplyIds,
             auto_recode: true,
