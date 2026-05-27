@@ -1188,7 +1188,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         const pageId = sessionStorage.getItem('pageId');
         if (!pageId || !auth?.user?.userId) return;
         try {
-            loadingSpinner.show();
             const [bannerResult, tableResult] = await Promise.all([
                 getBannerDetail.mutateAsync({ pageid: pageId, user: auth.user.userId }),
                 getTableDetail.mutateAsync({ pageid: pageId, user: auth.user.userId })
@@ -1274,7 +1273,6 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 }
             }
         } catch (error) { console.error(error); }
-        finally { loadingSpinner.hide(); }
     };
 
     const handleCreateBanner = async (name) => {

@@ -179,11 +179,7 @@ export function DpRequestPageApi() {
 
     /** 개별 변수(카테고리) 평가 수행 */
     const evaluateVariable = useMutation(
-        async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS"),
-        {
-            onMutate: () => { loadingSpinner.show(); },
-            onSettled: () => { loadingSpinner.hide(); }
-        }
+        async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS")
     );
 
     /** 교차분석 - 초기 문맥 조회 */
