@@ -85,7 +85,7 @@ const WordCloudFixer = ({ wordData, dimensions, activePalette, minVal, maxVal })
     return MemoizedWordCloud;
 };
 
-const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default', hideHeader = false, externalShowLegend = undefined, showLabels = false, decimals = undefined, isPercent = false }) => {
+const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%", labelLimit = 0, paletteId = 'default', hideHeader = false, externalShowLegend = undefined, showLabels = false, decimals = undefined, isPercent = false, allowAggregate = false }) => {
     const activePalette = CHART_PALETTES[paletteId] || CHART_PALETTES.default;
     const [chartType, setChartType] = useState(initialType || 'column');
     const [internalShowLegend, setInternalShowLegend] = useState(false);
@@ -163,7 +163,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
     // 전체/합계 집계 행은 모든 차트에서 제외 (차트 왜곡 방지)
     const AGGREGATE_LABELS = new Set(['전체', '합계', 'total', 'Total', '전체(명)']);
     const filteredData = Array.isArray(data)
-        ? data.filter(row => !AGGREGATE_LABELS.has(row.name))
+        ? data.filter(row => allowAggregate || !AGGREGATE_LABELS.has(row.name))
         : data;
 
     const renderSeries = () => {

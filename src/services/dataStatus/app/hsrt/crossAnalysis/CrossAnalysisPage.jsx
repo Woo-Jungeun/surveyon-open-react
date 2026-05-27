@@ -709,7 +709,10 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         const groups = new Set();
         columns.forEach(col => {
             const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
-            if (groupName && groupName !== '전체') {
+            const lbl = String(col.label || col.name || '').trim();
+            if (lbl === '전체' || groupName === '전체') {
+                groups.add('전체');
+            } else if (groupName && groupName.toLowerCase() !== 'base') {
                 groups.add(groupName);
             }
         });
@@ -726,9 +729,11 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
         const targetColumns = columns.filter(col => {
             const lbl = String(col.label || col.name || '').trim();
             const groupName = String(col.label3 || col.label2 || col.parent_label || '').trim();
-            if (lbl === '전체') return false;
+            if (lbl.toLowerCase() === 'base') return false;
 
-            if (groupName && availableChartGroups.includes(groupName)) {
+            if (lbl === '전체' || groupName === '전체') {
+                if (!selectedChartGroups.includes('전체')) return false;
+            } else if (groupName && availableChartGroups.includes(groupName)) {
                 if (!selectedChartGroups.includes(groupName)) return false;
             }
             return true;
@@ -749,7 +754,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
             rows.forEach((row, rIdx) => {
                 const role = String(row.row_role || '').toLowerCase();
                 const rLbl = String(row.label || row.name || '').trim();
-                if (rLbl === '전체') return;
+                if (role === 'base' || rLbl.toLowerCase() === 'base') return;
 
                 const fieldKey = `r${rIdx}`;
                 const originalColKey = col.key || `c${columns.indexOf(col)}`;
@@ -777,7 +782,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                     name: rLbl.replace(/\n/g, ' ')
                 };
             })
-            .filter(series => series.originalLabel !== '전체')
+            .filter(series => series.role !== 'base' && series.originalLabel.toLowerCase() !== 'base')
             .map(({ field, name }) => ({ field, name }));
     }, [rows, usePercentFields]);
 
@@ -1166,6 +1171,7 @@ const BannerBlock = React.memo(({ banner, index, isLast, showN, showPct, decimal
                                     externalShowLegend={showLegend}
                                     showLabels={showChartValues}
                                     decimals={usePercentFields ? decimalPct : decimalN}
+                                    allowAggregate={true}
                                 />
                             ) : (
                                 <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f8fafc', borderRadius: '6px', border: '1px dashed #cbd5e1', color: '#64748b', fontSize: '13px' }}>
