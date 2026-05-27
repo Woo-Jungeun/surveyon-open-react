@@ -173,17 +173,19 @@ const MapManagementPage = () => {
         };
     }, []);
 
+    // 탭 변경 시 검색어 및 선택 항목 초기화
     useEffect(() => {
-        if (activeTab === 'category') {
-            if (variables.length > 0 && !selectedVariableId) {
-                setSelectedVariableId(variables[0].id);
-            }
-        } else {
-            setSelectedVariableId(null);
-            setSidebarSearchQuery('');
-            setMappingSearchQuery('');
+        setSidebarSearchQuery('');
+        setMappingSearchQuery('');
+        setSelectedVariableId(null);
+    }, [activeTab]);
+
+    // 보기 레이블 탭 진입 시 첫 번째 항목 자동 선택
+    useEffect(() => {
+        if (activeTab === 'category' && variables.length > 0 && !selectedVariableId) {
+            setSelectedVariableId(variables[0].id);
         }
-    }, [activeTab, variables]);
+    }, [activeTab, variables, selectedVariableId]);
 
     const selectedVariable = variables.find(v => v.id === selectedVariableId) ?? null;
 
