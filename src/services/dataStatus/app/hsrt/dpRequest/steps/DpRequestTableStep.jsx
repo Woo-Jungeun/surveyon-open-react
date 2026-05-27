@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback, useMemo, forwardRef, useImperativeHandle, useRef } from 'react';
-import { ChevronDown, Check, Search, X, Info, RotateCcw } from 'lucide-react';
+import { ChevronDown, Check, Search, X, Info, RotateCcw, ArrowDown } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { Popup } from '@progress/kendo-react-popup';
 import { DropDownList, MultiSelect } from '@progress/kendo-react-dropdowns';
@@ -444,12 +444,33 @@ const handleGlobalPointerUpStub = (e) => {
     stubDragStartId = null;
     stubDragHasMoved = false;
 };
+const handleGlobalPointerDownStub = (e) => {
+    if (e.target) {
+        const isPopup = e.target.closest('.k-popup') || e.target.closest('.k-list-container') || e.target.closest('.k-animation-container') || e.target.closest('.dp-dropdown-popup') || e.target.closest('.dp-custom-popup');
+        if (isPopup) return;
+
+        const isDragCell = e.target.closest('td[data-field="x_info"]') || e.target.closest('td[data-field="sort_mode"]');
+
+        if (!isDragCell && !e.ctrlKey && !e.metaKey) {
+            stubDragSelectedIds.clear();
+            stubDragBaseSelectedIds.clear();
+            stubDragStartId = null;
+            document.querySelectorAll('.stub-cell-selected').forEach(el => el.classList.remove('stub-cell-selected'));
+        }
+    }
+};
+
 if (typeof window !== 'undefined') {
     // 중복 등록 방지를 위해 기존 것 제거
     window.removeEventListener('mouseup', handleGlobalPointerUpStub);
     window.removeEventListener('pointerup', handleGlobalPointerUpStub);
+    window.removeEventListener('mousedown', handleGlobalPointerDownStub);
+    window.removeEventListener('pointerdown', handleGlobalPointerDownStub);
+
     window.addEventListener('mouseup', handleGlobalPointerUpStub);
     window.addEventListener('pointerup', handleGlobalPointerUpStub);
+    window.addEventListener('mousedown', handleGlobalPointerDownStub);
+    window.addEventListener('pointerdown', handleGlobalPointerDownStub);
 }
 
 const STUB_INLINE_STYLE = `
@@ -1929,6 +1950,46 @@ const DpRequestTableStep = forwardRef(({ onUnsavedChange, onRefresh }, ref) => {
                                         </button>
                                     </td>
                                 )}
+                            />
+                            <Column field="sort_mode" title="정렬" width="40px" headerClassName="k-text-center"
+                                cell={(p) => {
+                                    const sortMode = p.dataItem.sort_mode || 'none';
+                                    const isDesc = sortMode === 'n_desc';
+
+                                    const handleToggleSort = (e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        const nextSort = isDesc ? 'none' : 'n_desc';
+                                        handleCellUpdate(p.dataItem, 'sort_mode', nextSort);
+                                    };
+
+                                    return (
+                                        <td
+                                            data-field="sort_mode"
+                                            data-row-id={p.dataItem.source_var_id}
+                                            onPointerDownCapture={e => handleStubPointerDownCapture(e, p.dataItem.source_var_id, 'sort_mode')}
+                                            onPointerEnter={e => handleStubPointerEnter(e, p.dataItem.source_var_id, 'sort_mode')}
+                                            onMouseDownCapture={preventCtrlEvent}
+                                            onClickCapture={preventCtrlEvent}
+                                            onMouseDown={e => e.stopPropagation()}
+                                            draggable={true}
+                                            onDragStart={e => { e.stopPropagation(); e.preventDefault(); }}
+                                            className={getStubDragClasses(p.dataItem.source_var_id)}
+                                            onClick={handleToggleSort}
+                                            style={{
+                                                textAlign: 'center',
+                                                verticalAlign: 'middle',
+                                                cursor: 'pointer',
+                                                userSelect: 'none',
+                                                padding: '1px 4px'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px' }}>
+                                                {isDesc ? <ArrowDown size={15} color="#2563eb" strokeWidth={3} /> : ''}
+                                            </div>
+                                        </td>
+                                    );
+                                }}
                             />
                             <Column field="var_type" title="유형" width="100px" headerClassName="k-text-center"
                                 cell={(p) => <TypeEditCell dataItem={p.dataItem} onUpdate={handleCellUpdate} />}

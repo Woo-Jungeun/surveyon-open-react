@@ -1311,7 +1311,6 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     const [categories, setCategories] = useState(() => getInitialCategories(rowData));
     const [rankOutputs, setRankOutputs] = useState(() => rowData?.rank_outputs ? [...rowData.rank_outputs] : []);
     const [isDetailSetting, setIsDetailSetting] = useState(false);
-    const [sortMode, setSortMode] = useState(() => rowData?.sort_mode || 'none');
 
     useEffect(() => {
         if (show) {
@@ -1321,7 +1320,6 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
         if (show && rowData) {
             setCategories(getInitialCategories(rowData));
             setRankOutputs(rowData.rank_outputs ? [...rowData.rank_outputs] : []);
-            setSortMode(rowData.sort_mode || 'none');
         }
     }, [show, rowData]);
 
@@ -1340,7 +1338,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     // 적용 이벤트
     const handleGenerate = () => {
         if (onApply) {
-            onApply(categories, rankOutputs, sortMode);
+            onApply(categories, rankOutputs, rowData?.sort_mode || 'none');
         }
         onClose(); // 처리 후 모달 닫기
     };
@@ -1376,30 +1374,17 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
 
                     {/* 상단 폼 영역 */}
                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ flex: 1.2, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px', flexShrink: 0 }}>변수</span>
                             <input type="text" value={rowData?.recoded_var_id || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
-                        <div style={{ flex: 2, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ flex: 2.2, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px', flexShrink: 0 }}>라벨</span>
                             <input type="text" value={rowData?.var_label || ''} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
                         </div>
-                        <div style={{ flex: 1.2, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ flex: 1.6, display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px', flexShrink: 0 }}>배너</span>
                             <input type="text" value={Array.isArray(rowData?.x_info) ? rowData.x_info.join(', ') : (rowData?.x_info || '')} disabled style={{ flex: 1, height: '32px', padding: '0 10px', border: '1px solid #e2e8f0', borderRadius: '4px', background: '#f8fafc', color: '#64748b', fontSize: '13px' }} />
-                        </div>
-                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#475569', minWidth: '30px', flexShrink: 0 }}>정렬</span>
-                            <DropDownList
-                                data={sortOptions}
-                                textField="text"
-                                dataItemKey="value"
-                                value={sortOptions.find(o => o.value === sortMode) || sortOptions[0]}
-                                onChange={(e) => setSortMode(e.value.value)}
-                                className="k-dropdown-solid dp-sort-dropdown"
-                                popupSettings={{ className: "dp-sort-dropdown-popup" }}
-                                style={{ flex: 1, width: '100%', fontSize: '13px', height: '32px' }}
-                            />
                         </div>
                     </div>
 
