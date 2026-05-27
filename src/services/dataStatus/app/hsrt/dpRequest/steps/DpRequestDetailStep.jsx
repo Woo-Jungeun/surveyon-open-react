@@ -225,7 +225,6 @@ const DpRequestDetailStep = forwardRef(({ onUnsavedChange }, ref) => {
                 ordered_ids: tableOrder.map(item => item.id),
                 delete_ids: [] // UI상에서 삭제된 항목이 있다면 이곳에 포함
             };
-            console.log("Final saving table order with payload:", payload);
 
             // saveOrderDetail API 연동 (DpRequestPageApi에서 가져옴)
             await saveOrderDetail.mutateAsync(payload);

@@ -22,19 +22,14 @@ const DpRequestPreviewPopup = () => {
                 const fetchData = async () => {
                     loadingSpinner.show();
                     try {
-                        console.log("=== API REQUEST PAYLOAD ===");
-                        console.log(JSON.stringify(payload, null, 2));
-                        
+
                         const res = await evaluateVariable.mutateAsync(payload);
-                        
-                        console.log("=== API RESPONSE ===");
-                        console.log(res);
 
                         if (res && res.success === '777' && res.resultjson) {
                             // API에서 내려주는 columns 배열 세팅 (예: [{ key: "total_auto", label: "?꿀겐", ... }])
                             const apiColumns = res.resultjson.columns || [];
                             setColumns(apiColumns);
-                            
+
                             // API에서 내려주는 rows 배열 세팅 (예: [{ key: "banner__1", label: "스포츠...", value: 1, total_auto: {n: 335, p: 9.4} }])
                             const apiRows = res.resultjson.rows || res.resultjson.data || [];
                             setData(apiRows);
@@ -60,7 +55,7 @@ const DpRequestPreviewPopup = () => {
         // 데이터가 cells 하위에 있거나 직접 필드명에 매핑되어 있을 수 있음
         const cellBox = props.dataItem.cells ? props.dataItem.cells[props.field] : props.dataItem[props.field];
         if (cellBox === undefined || cellBox === null) return <td style={{ textAlign: 'right', padding: '6px 16px', verticalAlign: 'middle', borderBottom: '1px solid #e2e8f0' }}>-</td>;
-        
+
         const isSingleVal = typeof cellBox !== 'object';
         const singleVal = isSingleVal ? cellBox : null;
         const nValue = !isSingleVal ? (cellBox.count !== undefined ? cellBox.count : cellBox.n) : null;
@@ -96,25 +91,25 @@ const DpRequestPreviewPopup = () => {
             </div>
             <div style={{ flex: 1, minHeight: 0, background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <KendoGridV2 data={data} style={{ height: '100%' }}>
-                    <Column 
-                        field="label" 
-                        title="구분" 
-                        headerClassName="k-text-center" 
+                    <Column
+                        field="label"
+                        title="구분"
+                        headerClassName="k-text-center"
                         width="250px"
                         cell={(p) => (
                             <td style={{ padding: '12px 16px', borderBottom: '1px solid #e2e8f0', color: '#334155', fontWeight: '600', fontSize: '13px' }}>
                                 {p.dataItem.label}
                             </td>
-                        )} 
+                        )}
                     />
                     {columns.map(col => (
-                        <Column 
-                            key={col.key} 
-                            field={col.key} 
-                            title={col.label} 
-                            headerClassName="k-text-center" 
+                        <Column
+                            key={col.key}
+                            field={col.key}
+                            title={col.label}
+                            headerClassName="k-text-center"
                             width="140px"
-                            cell={DataCellTemplate} 
+                            cell={DataCellTemplate}
                         />
                     ))}
                 </KendoGridV2>
