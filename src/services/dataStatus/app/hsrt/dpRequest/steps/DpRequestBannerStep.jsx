@@ -974,6 +974,59 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         if (onUnsavedChange) onUnsavedChange(true);
     };
 
+    const handleSidebarContextMenu = useCallback((e, bannerId, bannerLabel) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setContextMenu({
+            x: e.clientX,
+            y: e.clientY,
+            type: 'sidebar',
+            bannerId,
+            bannerLabel
+        });
+    }, []);
+
+    const handleDuplicateBanner = useCallback((bannerId) => {
+        const target = banners.find(b => b.id === bannerId);
+        if (!target) return;
+
+        let maxNum = 0;
+        banners.forEach(b => {
+            const match = b.id.match(/^banner_(\d+)$/);
+            if (match) {
+                const num = parseInt(match[1], 10);
+                if (num > maxNum) maxNum = num;
+            }
+        });
+        const newId = `banner_${String(maxNum + 1).padStart(2, '0')}`;
+
+        const baseLabel = target.label || '';
+        let copyNum = 1;
+        let newLabel = `${baseLabel}_copy${copyNum}`;
+        while (banners.some(b => b.label === newLabel)) {
+            copyNum += 1;
+            newLabel = `${baseLabel}_copy${copyNum}`;
+        }
+
+        const newBanner = {
+            ...target,
+            id: newId,
+            label: newLabel,
+            name: newLabel,
+            subId: newId,
+            info: JSON.parse(JSON.stringify(target.info || [])), // deep copy
+            categories: JSON.parse(JSON.stringify(target.categories || target.info || [])), // deep copy
+            isNew: true
+        };
+
+        setBanners(prev => [...prev, newBanner]);
+        setTimeout(scrollToBottom, 100);
+        setSelectedBanner(newId);
+        setCurrentLabel(newLabel);
+        if (onUnsavedChange) onUnsavedChange(true);
+        setContextMenu(null);
+    }, [banners, onUnsavedChange, scrollToBottom]);
+
     // --- Interaction Logic ---
     const toggleSelection = useCallback((id) => {
         setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -1569,30 +1622,37 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
 
     const handleSaveBanner = async () => {
         const pageId = sessionStorage.getItem('pageId');
-        if (!selectedBanner || !pageId) return;
+        if (!pageId) return;
 
-        const currentBannerData = banners.find(b => b.id === selectedBanner);
-        if (!currentBannerData) return;
+        // 1. 저장할 대상 배너(신규 또는 수정된 배너)들을 모두 찾는다.
+        const bannersToSave = banners.filter(b => b.isNew || b.isDirty);
+        if (bannersToSave.length === 0) {
+            if (onUnsavedChange) onUnsavedChange(false);
+            return true;
+        }
 
-        // API 명세서 형식에 맞게 데이터 가공
+        const variablesPayload = {};
+        bannersToSave.forEach(b => {
+            const finalLabel = b.id === selectedBanner ? currentLabel : b.label;
+            variablesPayload[b.id] = {
+                id: b.id,
+                label: finalLabel,
+                type: "banner",
+                info: (b.info || [])
+                    .filter(c => (c.label && c.label.toString().trim() !== "") || (c.logic && c.logic.toString().trim() !== ""))
+                    .map(it => ({
+                        label3: it.label3 || '',
+                        label2: it.label2 || '',
+                        label: it.label || '',
+                        logic: it.logic || ''
+                    }))
+            };
+        });
+
         const requestData = {
             pageid: pageId,
-            user: auth?.user?.userId, // 사용자ID 추가
-            variables: {
-                [currentBannerData.id]: {
-                    id: currentBannerData.id,
-                    label: currentLabel, // 수정된 라벨 사용
-                    type: "banner", // 명세에 따라 banner로 설정
-                    info: currentBannerData.info
-                        .filter(c => (c.label && c.label.toString().trim() !== "") || (c.logic && c.logic.toString().trim() !== ""))
-                        .map(it => ({
-                            label3: it.label3,
-                            label2: it.label2,
-                            label: it.label,
-                            logic: it.logic
-                        }))
-                }
-            },
+            user: auth?.user?.userId,
+            variables: variablesPayload,
             delete_ids: []
         };
 
@@ -1664,6 +1724,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                 <div key={`${banner.id}-${index}`}
                                     className={`dp-banner-item ${selectedBanner === banner.id ? 'active' : ''}`}
                                     onClick={() => { setSelectedBanner(banner.id); setCurrentLabel(banner.label); }}
+                                    onContextMenu={(e) => handleSidebarContextMenu(e, banner.id, banner.label)}
                                     style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', minHeight: '40px', borderRadius: '8px' }}
                                     title={`${banner.label || ''}${banner.id && !banner.isNew ? ` (${banner.id})` : ''}`}
                                 >
@@ -1691,7 +1752,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 </div>
 
                 <div className="dp-content" style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-                    {banners.find(b => b.id === selectedBanner)?.isNew ? (
+                    {(banners.find(b => b.id === selectedBanner)?.isNew && (!banners.find(b => b.id === selectedBanner)?.info || banners.find(b => b.id === selectedBanner)?.info.length === 0)) ? (
                         <>
                             <div className="dp-content-header" style={{ height: '48px', display: 'flex', alignItems: 'center', flexShrink: 0, padding: '0 16px', borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
                                 <div className="dp-content-label-edit" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2054,7 +2115,14 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     )}
 
                     {/* Context Menu */}
-                    {contextMenu && (
+                    {contextMenu && contextMenu.type === 'sidebar' && (
+                        <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 100000, background: '#fff', border: '1px solid #ccc', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', padding: '4px 0', minWidth: '120px' }}>
+                            <div style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px' }} onClick={() => handleDuplicateBanner(contextMenu.bannerId)} onMouseEnter={e => e.target.style.background = '#f1f5f9'} onMouseLeave={e => e.target.style.background = 'transparent'}>
+                                배너 복제
+                            </div>
+                        </div>
+                    )}
+                    {contextMenu && contextMenu.type !== 'sidebar' && (
                         <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 100000, background: '#fff', border: '1px solid #ccc', borderRadius: '4px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', padding: '4px 0', minWidth: '120px' }}>
                             <div style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '13px' }} onClick={handleMergeCells} onMouseEnter={e => e.target.style.background = '#f1f5f9'} onMouseLeave={e => e.target.style.background = 'transparent'}>
                                 셀 병합
