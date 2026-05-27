@@ -42,6 +42,7 @@ const MapManagementPage = () => {
     const [editingRowId, setEditingRowId] = useState(null);   // 현재 편집 중인 행 id
 
     const [sidebarSearchQuery, setSidebarSearchQuery] = useState(''); // 변수 목록 검색어
+    const [mappingSearchQuery, setMappingSearchQuery] = useState(''); // MAP 구성 탭 검색어
 
     const [editingCategoryPopupOpen, SetEditingCategoryPopupOpen] = useState(null); // 보기 변경 팝업
     const [editingLogicPopupOpen, setEditingLogicPopupOpen] = useState(null);       // 로직 변경 팝업
@@ -180,10 +181,27 @@ const MapManagementPage = () => {
         } else {
             setSelectedVariableId(null);
             setSidebarSearchQuery('');
+            setMappingSearchQuery('');
         }
     }, [activeTab, variables]);
 
     const selectedVariable = variables.find(v => v.id === selectedVariableId) ?? null;
+
+    const filteredMappingVariables = useMemo(() => {
+        if (!mappingSearchQuery.trim()) return variables;
+        const q = mappingSearchQuery.toLowerCase().trim();
+        return variables.filter(v => 
+            (v.sysName && String(v.sysName).toLowerCase().includes(q)) ||
+            (v.name && String(v.name).toLowerCase().includes(q)) ||
+            (v.label && String(v.label).toLowerCase().includes(q)) ||
+            (v.reLabel && String(v.reLabel).toLowerCase().includes(q))
+        );
+    }, [variables, mappingSearchQuery]);
+
+    const handleMappingSearchChange = (query) => {
+        setMappingSearchQuery(query);
+        setSkip(0);
+    };
 
     // ── 핸들러 ──
     const pageChange = (event) => {
@@ -677,7 +695,7 @@ const MapManagementPage = () => {
 
                     {activeTab === 'mapping' ? (
                         <MapConfigTab
-                            variables={variables}
+                            variables={filteredMappingVariables}
                             isDetailed={isDetailed}
                             setIsDetailed={setIsDetailed}
                             sort={sort}
@@ -688,6 +706,8 @@ const MapManagementPage = () => {
                             pageSize={pageSize}
                             pageChange={pageChange}
                             setEditingRowId={setEditingRowId}
+                            searchQuery={mappingSearchQuery}
+                            setSearchQuery={handleMappingSearchChange}
                         />
                     ) : (
                         <ViewLabelTab

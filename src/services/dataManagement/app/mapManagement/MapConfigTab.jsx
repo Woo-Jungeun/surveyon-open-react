@@ -3,7 +3,7 @@ import KendoGrid from '../../../../components/kendo/KendoGrid';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import ExcelColumnMenu from '../../../../components/common/grid/ExcelColumnMenu';
 import { DropDownList } from "@progress/kendo-react-dropdowns";
-import { Plus, Trash2, GripVertical } from 'lucide-react';
+import { Plus, Trash2, GripVertical, X } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { modalContext } from "@/components/common/Modal.jsx";
 import { MapManagementPageApi } from './MapManagementPageApi';
@@ -701,7 +701,9 @@ const MapConfigTab = ({
     skip,
     pageSize,
     pageChange,
-    setEditingRowId
+    setEditingRowId,
+    searchQuery,
+    setSearchQuery
 }) => {
     const { variables: ctxVars, setVariables, editingRowId } = useContext(MapManagementContext);
     const auth = useSelector((store) => store.auth);
@@ -860,6 +862,44 @@ const MapConfigTab = ({
                 </div>
                 <div className="map-controls">
                     {/* <span className="grid-guide"><span className="guide-icon">💡</span> 셀 클릭 편집 | '+': 행 추가 | 'Trash': 삭제 | 가로/세로 스크롤 시 고정</span> */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginRight: '16px', position: 'relative' }}>
+                        <input
+                            type="text"
+                            placeholder="변수명 또는 문항 검색"
+                            value={searchQuery || ''}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{
+                                height: '28px',
+                                padding: '0 12px 0 28px',
+                                fontSize: '13px',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '4px',
+                                width: '200px',
+                                outline: 'none',
+                                background: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748b\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Ccircle cx=\'11\' cy=\'11\' r=\'8\'%3E%3C/circle%3E%3Cline x1=\'21\' y1=\'21\' x2=\'16.65\' y2=\'16.65\'%3E%3C/line%3E%3C/svg%3E") no-repeat 8px center',
+                                backgroundColor: '#fff'
+                            }}
+                        />
+                        {searchQuery && (
+                            <button
+                                onClick={() => setSearchQuery('')}
+                                style={{
+                                    position: 'absolute',
+                                    right: '8px',
+                                    border: 'none',
+                                    background: 'transparent',
+                                    cursor: 'pointer',
+                                    color: '#94a3b8',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    padding: 0,
+                                    zIndex: 10
+                                }}
+                            >
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
                     {!isResearcher && (
                         <div className="toggle-wrapper">
                             <span className="toggle-label">상세 설정</span>
