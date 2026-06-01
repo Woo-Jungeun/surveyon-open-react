@@ -13,7 +13,7 @@
     flex: 1;
     min-height: 0;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     gap: 16px;
     padding: 16px;
     box-sizing: border-box;
@@ -696,3 +696,245 @@
     cursor: not-allowed;
     transform: none;
 }
+
+/* ─────────────────────────────────────────────────── */
+/* 좌측 컨트롤 패널 및 패널 공통                        */
+/* ─────────────────────────────────────────────────── */
+.st-panel {
+    background: #ffffff;
+    border: 1px solid var(--dm-border, #e2e8f0);
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.st-parser-left {
+    width: 250px;
+    flex-shrink: 0;
+    padding: 16px 12px;
+    gap: 16px;
+    overflow-y: auto;
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+}
+
+.st-parser-left.collapsed {
+    width: 44px;
+    padding: 16px 0;
+    overflow: hidden;
+    background: #f8fafc;
+}
+
+.st-collapsed-trigger-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    height: 100%;
+    cursor: pointer;
+    gap: 16px;
+    padding-top: 12px;
+    user-select: none;
+}
+
+.st-collapsed-trigger-bar:hover {
+    background: #e2e8f0;
+}
+
+.st-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.st-panel-toggle-btn {
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: #64748b;
+}
+
+.st-panel-toggle-btn:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+}
+
+/* 드롭 존 */
+.st-left-dropzone {
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 8px;
+    background: #f8fafc;
+    min-height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    padding: 8px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.st-left-dropzone:hover:not(.is-filled) {
+    border-color: var(--dm-primary, #16a34a);
+    background: #f0fdf4;
+}
+
+.st-left-dropzone.is-dragging {
+    border-color: var(--dm-primary, #16a34a);
+    background: #ecfdf5;
+}
+
+.st-left-dropzone.is-filled {
+    border-style: solid;
+    border-color: #d1fae5;
+    background: #f0fdf4;
+    cursor: default;
+}
+
+.st-dz-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.st-dz-icon {
+    color: #94a3b8;
+}
+
+.st-dz-text {
+    font-size: 11.5px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.st-dz-subtext {
+    font-size: 10px;
+    color: #94a3b8;
+    background: #f1f5f9;
+    padding: 1px 6px;
+    border-radius: 99px;
+}
+
+.st-dz-filled {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    background: #fff;
+    border: 1px solid #d1fae5;
+    border-radius: 6px;
+    padding: 6px 8px;
+    box-sizing: border-box;
+}
+
+.st-dz-filename {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
+.st-dz-remove {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    padding: 2px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.st-dz-remove:hover {
+    color: #ef4444;
+    background: #fee2e2;
+}
+
+/* 통계 요약 카드 */
+.st-stats-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.st-stats-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.st-stats-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.st-stats-value {
+    font-size: 12.5px;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+.st-stats-row:nth-child(2) .st-stats-value {
+    color: var(--dm-primary, #16a34a); /* Brand green for validation cost */
+}
+
+/* 실행 버튼 */
+.st-btn-action {
+    width: 100%;
+    height: 38px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.st-btn-action.btn-green {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.st-btn-action.btn-green:hover {
+    transform: translateY(-1.5px);
+    box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
+    background: linear-gradient(135deg, #34d399 0%, #059669 100%);
+}
+
+.st-btn-action.btn-green:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.st-btn-action:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
