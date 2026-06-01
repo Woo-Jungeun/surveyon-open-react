@@ -675,10 +675,22 @@ const HeaderCheckboxCell = ({ allIds, style, className }) => {
 /** 행 삭제 버튼 셀 */
 const DeleteCell = (props) => {
     const { onDelete } = useContext(MapManagementContext);
+
+    const handleRemove = (e) => {
+        const gridContent = document.querySelector('.variable-page-card .k-grid-content');
+        if (gridContent) {
+            window.mapScrollPosToRestore = {
+                top: gridContent.scrollTop,
+                left: gridContent.scrollLeft
+            };
+        }
+        onDelete(props.dataItem.id);
+    };
+
     return (
         <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle' }}>
             <button
-                onClick={() => onDelete(props.dataItem.id)}
+                onClick={handleRemove}
                 style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}
             >
                 <Trash2 size={16} />
@@ -735,6 +747,20 @@ const MapConfigTab = ({
     setSearchQuery
 }) => {
     const { variables: ctxVars, setVariables, editingRowId } = useContext(MapManagementContext);
+
+    React.useLayoutEffect(() => {
+        if (window.mapScrollPosToRestore) {
+            const gridContent = document.querySelector('.variable-page-card .k-grid-content');
+            if (gridContent) {
+                gridContent.scrollTo({
+                    top: window.mapScrollPosToRestore.top,
+                    left: window.mapScrollPosToRestore.left,
+                    behavior: 'instant'
+                });
+            }
+            window.mapScrollPosToRestore = null;
+        }
+    }, [variables]);
     const auth = useSelector((store) => store.auth);
     const projectUserGroup = sessionStorage.getItem("usergroup") || "";
     const isResearcher = (auth?.user?.userAuth || []).includes("연구원") || projectUserGroup.includes("연구원");
