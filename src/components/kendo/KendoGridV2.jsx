@@ -28,6 +28,7 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
         onRowClick,
         onAdd,
         onCopy,
+        onDelete,
         ...rest
     } = props;
 
@@ -158,6 +159,10 @@ const KendoGridV2 = React.forwardRef((props, ref) => {
     };
 
     const handleDelete = (idx) => {
+        if (onDelete) {
+            onDelete(idx);
+            return;
+        }
         if (!onDataChange) return;
         const newData = [...data];
         newData.splice(idx, 1);
@@ -468,7 +473,8 @@ KendoGridV2.propTypes = {
     newRowTemplate: PropTypes.object,
     duplicateRowTemplate: PropTypes.func,
     onDataChange: PropTypes.func,
-    onRowClick: PropTypes.func
+    onRowClick: PropTypes.func,
+    onDelete: PropTypes.func
 };
 
 export default KendoGridV2;
