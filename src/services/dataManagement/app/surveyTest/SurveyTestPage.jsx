@@ -254,7 +254,7 @@ const SurveyTestPage = () => {
                                 ) : (
                                     <div className="st-drop-empty horizontal">
                                         <FileText size={20} className="st-drop-icon" />
-                                        <span className="st-drop-hint">클릭하여 파일 찾기 또는 여기로 드래그</span>
+                                        <span className="st-drop-hint">클릭하여 파일 찾기</span>
                                         <span className="st-drop-ext">.hwp · .docx</span>
                                     </div>
                                 )}

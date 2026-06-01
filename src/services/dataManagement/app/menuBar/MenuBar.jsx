@@ -27,6 +27,7 @@ const getMenuItems = () => {
     items.push({
       label: "",
       items: [
+        { label: "QA", path: "/data_management/qa", icon: BrainCircuit },
         { label: "설문 테스트", path: "/data_management/survey_test", icon: ClipboardCheck }
       ]
     });
@@ -119,7 +120,7 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
 
     // Trigger event context change for MapManagementPage
     window.dispatchEvent(new Event("pageSelected"));
-    
+
     // 프로젝트가 변경되면 무조건 데이터관리 초기화면(맵 관리)으로 리다이렉트
     navigate("/data_management/setting/map");
   };
