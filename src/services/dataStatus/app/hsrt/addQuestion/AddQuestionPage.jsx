@@ -548,11 +548,13 @@ const AddQuestionPage = forwardRef(({ onUnsavedChange }, ref) => {
                         if (!pageId || !user) return;
                         try {
                             const result = await deleteBaseVariable.mutateAsync({ pageid: pageId, user, variables: [bannerId] });
-                            if (result?.success === '777') {
+                            if (result?.success === "777") {
                                 modal.showAlert('알림', '삭제되었습니다.');
                                 await fetchVariablesData(selectedBanner === bannerId ? 'delete' : 'normal');
+                            } else if (result?.message?.includes("사용 중이라 삭제할 수 없습니다")) {
+                                modal.showErrorAlert("에러", "문항이 다른 설정에서 사용 중이라 삭제할 수 없습니다.");
                             } else {
-                                modal.showAlert('오류', result?.Message || '삭제 중 문제가 발생했습니다.');
+                                modal.showAlert('오류', result?.Message || result?.message || '삭제 중 문제가 발생했습니다.');
                             }
                         } catch { modal.showAlert('오류', '삭제 요청에 실패했습니다.'); }
                     }
