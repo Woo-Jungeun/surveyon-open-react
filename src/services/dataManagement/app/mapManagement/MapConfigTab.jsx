@@ -204,9 +204,9 @@ const InputCell = (props) => {
                     whiteSpace: 'nowrap', 
                     overflow: 'hidden', 
                     textOverflow: 'ellipsis',
-                    fontSize: '13px',
+                    fontSize: '12px',
                     color: '#475569',
-                    padding: '6px 4px',
+                    padding: '2px 4px',
                     width: '100%',
                     boxSizing: 'border-box',
                     textAlign: (field === 'memo') ? 'left' : 'center'
@@ -270,8 +270,8 @@ const LogicCell = (props) => {
 
     return (
         <td style={{ ...style, verticalAlign: 'middle', padding: 0 }} className={className}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', height: '100%', padding: '8px 4px', boxSizing: 'border-box' }}>
-                <div style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#4b5563', fontSize: '12px', textAlign: 'left', lineHeight: '1.4' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', width: '100%', height: '100%', padding: '2px 4px', boxSizing: 'border-box' }}>
+                <div style={{ flex: 1, whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#4b5563', fontSize: '11px', textAlign: 'left', lineHeight: '1.4' }}>
                     {dataItem.logic}
                 </div>
                 <button
@@ -568,17 +568,19 @@ const CheckboxCell = memo((props) => {
     const isChecked = !!(dataItem[field]);
 
     return (
-        <td style={{ ...style, textAlign: 'center', verticalAlign: 'middle' }} className={className}>
-            <label className={`dm-checkbox-label ${isEditing ? '' : 'dm-checkbox-disabled'}`}>
-                <input
-                    type="checkbox"
-                    className="dm-checkbox-input"
-                    checked={isChecked}
-                    onChange={handleChange}
-                    disabled={!isEditing}
-                />
-                <span className="dm-checkbox-box" />
-            </label>
+        <td style={{ ...style, textAlign: 'center', verticalAlign: 'middle', padding: 0 }} className={className}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%' }}>
+                <label className={`dm-checkbox-label ${isEditing ? '' : 'dm-checkbox-disabled'}`}>
+                    <input
+                        type="checkbox"
+                        className="dm-checkbox-input"
+                        checked={isChecked}
+                        onChange={handleChange}
+                        disabled={!isEditing}
+                    />
+                    <span className="dm-checkbox-box" />
+                </label>
+            </div>
         </td>
     );
 });
@@ -623,15 +625,17 @@ const RowSelectCell = (props) => {
         <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', padding: 0 }}
             onClick={e => e.stopPropagation()}
         >
-            <label className="dm-checkbox-label">
-                <input
-                    type="checkbox"
-                    className="dm-checkbox-input"
-                    checked={checked}
-                    onChange={handleChange}
-                />
-                <span className="dm-checkbox-box" />
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%' }}>
+                <label className="dm-checkbox-label">
+                    <input
+                        type="checkbox"
+                        className="dm-checkbox-input"
+                        checked={checked}
+                        onChange={handleChange}
+                    />
+                    <span className="dm-checkbox-box" />
+                </label>
+            </div>
         </td>
     );
 };
@@ -652,16 +656,18 @@ const HeaderCheckboxCell = ({ allIds, style, className }) => {
 
     return (
         <th style={{ ...style, textAlign: 'center', verticalAlign: 'middle', padding: 0 }} className={className}>
-            <label className="dm-checkbox-label">
-                <input
-                    type="checkbox"
-                    className="dm-checkbox-input"
-                    checked={allChecked}
-                    ref={el => { if (el) el.indeterminate = someChecked && !allChecked; }}
-                    onChange={handleChange}
-                />
-                <span className="dm-checkbox-box" />
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', width: '100%' }}>
+                <label className="dm-checkbox-label">
+                    <input
+                        type="checkbox"
+                        className="dm-checkbox-input"
+                        checked={allChecked}
+                        ref={el => { if (el) el.indeterminate = someChecked && !allChecked; }}
+                        onChange={handleChange}
+                    />
+                    <span className="dm-checkbox-box" />
+                </label>
+            </div>
         </th>
     );
 };
@@ -764,18 +770,20 @@ const MapConfigTab = ({
         };
 
         return (
-            <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
-                <label className={`dm-checkbox-label ${isSelectable ? '' : 'dm-checkbox-disabled'}`}>
-                    <input
-                        type="checkbox"
-                        className="dm-checkbox-input"
-                        checked={checked}
-                        disabled={!isSelectable}
-                        onChange={handleChange}
-                        onClick={(e) => e.stopPropagation()}
-                    />
-                    <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} />
-                </label>
+            <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%' }}>
+                    <label className={`dm-checkbox-label ${isSelectable ? '' : 'dm-checkbox-disabled'}`}>
+                        <input
+                            type="checkbox"
+                            className="dm-checkbox-input"
+                            checked={checked}
+                            disabled={!isSelectable}
+                            onChange={handleChange}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} />
+                    </label>
+                </div>
             </td>
         );
     }, [bakedSelectedState, handleBakedSelectedChange, isItemSelectable]);
