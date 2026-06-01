@@ -362,6 +362,37 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
         return Math.max(...filteredData.map(d => String(d.name || '').split('\n').length));
     }, [filteredData]);
 
+    // 최대 값 계산 (y축 여유 공간 확보용)
+    const maxValue = useMemo(() => {
+        if (!Array.isArray(filteredData) || filteredData.length === 0) return 100;
+        const targetFields = seriesNames 
+            ? seriesNames.map(s => typeof s === 'string' ? s : s.field)
+            : ['total'];
+        
+        let maxVal = 0;
+        const isStackedType = chartType === 'stackedColumn';
+
+        filteredData.forEach(row => {
+            if (isStackedType) {
+                let rowSum = 0;
+                targetFields.forEach(field => {
+                    rowSum += Number(row[field] || 0);
+                });
+                if (rowSum > maxVal) {
+                    maxVal = rowSum;
+                }
+            } else {
+                targetFields.forEach(field => {
+                    const val = Number(row[field] || 0);
+                    if (val > maxVal) {
+                        maxVal = val;
+                    }
+                });
+            }
+        });
+        return maxVal;
+    }, [filteredData, seriesNames, chartType]);
+
     // 가로 스크롤이 필요한 차트 타입인지 확인
     const isHorizontalScrollType = ['column', 'stackedColumn', 'stacked100Column', 'line', 'area', 'scatterPoint', 'heatmap'].includes(chartType);
     // 세로 스크롤이 필요한 차트 타입인지 확인 (가로형 막대)
@@ -813,7 +844,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                             format: chartType === 'stacked100Column' ? '{0:P0}' : (suffix ? `{0}${suffix}` : '{0}')
                                         }}
                                         min={0}
-                                        max={chartType === 'stacked100Column' ? 1 : ((isPercent || suffix === '%') ? 110 : undefined)}
+                                        max={chartType === 'stacked100Column' ? 1 : ((isPercent || suffix === '%') ? 110 : (maxValue > 0 ? (maxValue < 5 ? maxValue + 1 : maxValue * 1.15) : undefined))}
                                         majorUnit={chartType === 'stacked100Column' ? 0.2 : ((isPercent || suffix === '%') ? 20 : undefined)}
                                         reverse={false}
                                     />
@@ -826,7 +857,7 @@ const KendoChart = ({ data, seriesNames, allowedTypes, initialType, suffix = "%"
                                     <ChartValueAxisItem
                                         labels={{ format: suffix ? `{0}${suffix}` : '{0}' }}
                                         min={0}
-                                        max={(isPercent || suffix === '%') ? 110 : undefined}
+                                        max={(isPercent || suffix === '%') ? 110 : (maxValue > 0 ? (maxValue < 5 ? maxValue + 1 : maxValue * 1.15) : undefined)}
                                         majorUnit={(isPercent || suffix === '%') ? 20 : undefined}
                                     />
                                 </ChartValueAxis>
