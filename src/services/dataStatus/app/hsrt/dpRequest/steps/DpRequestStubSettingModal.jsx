@@ -683,11 +683,25 @@ const ColorEditCell = React.memo(({ p, onUpdate }) => {
         setLocalColor(e.target.value.toUpperCase());
     };
 
+    // 텍스트 인풋 변경 처리
+    const handleTextChange = (e) => {
+        setLocalColor(e.target.value.toUpperCase());
+    };
+
     // 150ms 디바운스를 적용하여 그리드 전체 리렌더링 최소화
     useEffect(() => {
         const timer = setTimeout(() => {
             if (localColor !== (p.dataItem.color || '')) {
-                onUpdate(p.dataIndex, 'color', localColor);
+                let formattedColor = localColor.trim();
+                if (formattedColor && !formattedColor.startsWith('#')) {
+                    formattedColor = '#' + formattedColor;
+                }
+                const isValidHex = /^#([A-FA-f0-9]{3}){1,2}$/.test(formattedColor);
+                if (isValidHex) {
+                    onUpdate(p.dataIndex, 'color', formattedColor);
+                } else if (formattedColor === '') {
+                    onUpdate(p.dataIndex, 'color', '');
+                }
             }
         }, 150);
         return () => clearTimeout(timer);
@@ -696,21 +710,37 @@ const ColorEditCell = React.memo(({ p, onUpdate }) => {
     return (
         <td style={{ padding: '4px', textAlign: 'center', verticalAlign: 'middle' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', padding: '2px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', position: 'relative', overflow: 'hidden' }} title="색상">
+                <div style={{ display: 'flex', alignItems: 'center', padding: '2px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', position: 'relative', overflow: 'hidden', flexShrink: 0 }} title="색상 선택">
                     {!localColor && (
                         <div style={{ position: 'absolute', top: 2, left: 2, right: 2, bottom: 2, background: 'linear-gradient(to top right, transparent calc(50% - 1px), #ef4444 calc(50%), transparent calc(50% + 1px))', pointerEvents: 'none', borderRadius: '2px' }} />
                     )}
                     <input
                         type="color"
-                        value={(localColor || '#FFFFFF').slice(0, 7)}
+                        value={(/^#([A-FA-f0-9]{3}){1,2}$/.test(localColor) ? localColor : '#FFFFFF').slice(0, 7)}
                         onChange={handleChange}
-                        style={{ width: '20px', height: '20px', padding: 0, border: 'none', cursor: 'pointer', opacity: localColor ? 1 : 0 }}
+                        style={{ width: '20px', height: '20px', padding: 0, border: 'none', cursor: 'pointer', opacity: localColor ? 1 : 0.2 }}
                     />
                 </div>
+                <input
+                    type="text"
+                    value={localColor}
+                    onChange={handleTextChange}
+                    placeholder="#FFFFFF"
+                    style={{
+                        width: '65px',
+                        height: '24px',
+                        fontSize: '11px',
+                        padding: '0 4px',
+                        border: '1px solid #CBD5E1',
+                        borderRadius: '4px',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                    }}
+                />
                 {localColor && (
                     <div
                         onClick={() => { setLocalColor(''); onUpdate(p.dataIndex, 'color', ''); }}
-                        style={{ cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                         title="색상 초기화"
                     >
                         <X size={14} color="#ef4444" />
@@ -1311,10 +1341,12 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
     const [categories, setCategories] = useState(() => getInitialCategories(rowData));
     const [rankOutputs, setRankOutputs] = useState(() => rowData?.rank_outputs ? [...rowData.rank_outputs] : []);
     const [isDetailSetting, setIsDetailSetting] = useState(false);
+    const [baseGlobalColor, setBaseGlobalColor] = useState('');
 
     useEffect(() => {
         if (show) {
             setIsDetailSetting(false);
+            setBaseGlobalColor('');
         }
         // 컴포넌트가 언마운트되지 않고 props만 바뀔 경우를 대비한 동기화
         if (show && rowData) {
@@ -1322,6 +1354,28 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
             setRankOutputs(rowData.rank_outputs ? [...rowData.rank_outputs] : []);
         }
     }, [show, rowData]);
+
+    const applyBaseColorGlobally = () => {
+        let formattedColor = baseGlobalColor.trim();
+        if (formattedColor && !formattedColor.startsWith('#')) {
+            formattedColor = '#' + formattedColor;
+        }
+
+        if (formattedColor !== '') {
+            const isValidHex = /^#([A-FA-f0-9]{3}){1,2}$/.test(formattedColor);
+            if (!isValidHex) {
+                modal.showAlert('알림', '올바른 HEX 색상 코드(예: #333322)를 입력해 주세요.');
+                return;
+            }
+        }
+
+        setCategories(prev => prev.map(cat => {
+            if (cat.type === 'base') {
+                return { ...cat, color: formattedColor };
+            }
+            return cat;
+        }));
+    };
 
     const handleCategoryCellUpdate = useCallback((dataIndex, field, value) => {
         setCategories(prev => {
@@ -1568,6 +1622,47 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     그리드 편집
                                 </span>
                             </div>
+
+                            {isDetailSetting && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: 'auto', marginLeft: '24px' }}>
+                                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#475569' }}>BASE 배경색 일괄 적용:</span>
+                                    <input
+                                        type="text"
+                                        placeholder="#FFFFFF"
+                                        value={baseGlobalColor}
+                                        onChange={e => setBaseGlobalColor(e.target.value.toUpperCase())}
+                                        style={{
+                                            width: '80px',
+                                            height: '24px',
+                                            fontSize: '11px',
+                                            padding: '0 6px',
+                                            border: '1px solid #cbd5e1',
+                                            borderRadius: '4px',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                    <button
+                                        onClick={applyBaseColorGlobally}
+                                        style={{
+                                            height: '24px',
+                                            padding: '0 8px',
+                                            background: '#2563eb',
+                                            color: '#fff',
+                                            border: 'none',
+                                            borderRadius: '4px',
+                                            fontSize: '11px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            transition: 'background 0.2s'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
+                                        onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
+                                    >
+                                        적용
+                                    </button>
+                                </div>
+                            )}
+
                             <div
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
@@ -1662,7 +1757,7 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                         />
                                     </td>
                                 )} />}
-                                {isDetailSetting && <Column field="color" title="배경색" width="100px" cell={renderColorCell} />}
+                                {isDetailSetting && <Column field="color" title="배경색" width="140px" cell={renderColorCell} />}
                             </KendoGridV2>
                         </div>
                     </div>
