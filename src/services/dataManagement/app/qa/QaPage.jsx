@@ -19,12 +19,11 @@ const MOCK_QUESTIONS = [
     {
         id: 'A1_a',
         type: 'single',
-        text: '귀하의 성별은 어떻게 되십니까? (셔플 및 고정 테스트 가능)',
-        is_randomized: true,
+        text: '귀하의 성별은 어떻게 되십니까?',
         options: [
-            { code: '1', text: '남성', is_fixed: false },
-            { code: '2', text: '여성', is_fixed: false },
-            { code: '9', text: '기타/무응답 (이 항목은 고정됨)', is_fixed: true }
+            { code: '1', text: '남성' },
+            { code: '2', text: '여성' },
+            { code: '9', text: '기타/무응답' }
         ],
         logic: '흐름 스킵: [{"target":"A1_b","condition":"모든 응답 완료"}]'
     },
@@ -226,21 +225,7 @@ const MOCK_ERRORS = [
     }
 ];
 
-// ─── 셔플링 헬퍼 함수 (is_fixed: true 항목은 맨 아래 보존한 채 섞음) ───────
-const getShuffledOptions = (options, isShuffled) => {
-    if (!isShuffled) return options;
-    const fixedOptions = options.filter(o => o.is_fixed);
-    const nonFixedOptions = options.filter(o => !o.is_fixed);
 
-    // nonFixedOptions 무작위 셔플 (Fisher-Yates)
-    const shuffled = [...nonFixedOptions];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
-    return [...shuffled, ...fixedOptions];
-};
 
 // ─── 문항 유형 이름 단축화 헬퍼 함수 ────────────────────────────────
 const getShortTypeName = (type) => {
@@ -258,17 +243,18 @@ const QaPage = () => {
     const [isDragging, setIsDragging] = useState(false);
     const [isSaved, setIsSaved] = useState(false); // 저장 완료 토스트 알림 상태
     const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
-    const [isRightCollapsed, setIsRightCollapsed] = useState(false);
+    const [isRightCollapsed, setIsRightCollapsed] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
     // 분석 데이터 상태
     const [questions, setQuestions] = useState([]); // 문항 리스트
     const [errors, setErrors] = useState([]); // 검증 오류 리스트
     const [activeQuestionId, setActiveQuestionId] = useState(''); // 현재 선택된 문항 ID (스크롤 연계)
+    const [estimatedCost, setEstimatedCost] = useState('0.00'); // 예상 API 비용
+    const [elapsedTime, setElapsedTime] = useState('3.5'); // 소요 시간
 
     // ── UI/UX 사양 동적 시뮬레이션 상태 ──
     const [userAnswers, setUserAnswers] = useState({}); // 각 문항별 사용자의 모의 선택 응답 값
-    const [shuffleStates, setShuffleStates] = useState({}); // 각 문항별 셔플 토글 상태 { 문항ID: Boolean }
     const [openEndedTexts, setOpenEndedTexts] = useState({}); // 주관식 기타 입력 텍스트 { '문항ID_옵션코드': String }
     const openEndedInputRefs = useRef({}); // 기타 입력창 포커스용 ref
 
@@ -332,6 +318,8 @@ const QaPage = () => {
         if (MOCK_QUESTIONS.length > 0) {
             setActiveQuestionId(MOCK_QUESTIONS[0].id);
         }
+        setEstimatedCost('0.00');
+        setElapsedTime('3.5');
         modal.showAlert('알림', '명세서 사양 기준 구조화된 설문 데이터가 정상 로드되었습니다.');
     };
 
@@ -402,7 +390,9 @@ const QaPage = () => {
         }
 
         try {
-            await analyzeAll.mutateAsync(fd);
+            const res = await analyzeAll.mutateAsync(fd);
+            const cost = res?.estimatedApiCost !== undefined ? res.estimatedApiCost.toFixed(2) : (res?.resultjson?.estimatedApiCost !== undefined ? res.resultjson.estimatedApiCost.toFixed(2) : '0.00');
+            const time = res?.processingTimeSeconds !== undefined ? res.processingTimeSeconds.toString() : (res?.resultjson?.processingTimeSeconds !== undefined ? res.resultjson.processingTimeSeconds.toString() : '3.5');
 
             setProgressPercentage(100);
             setProgressMessage('설문지 JSON 구조화가 완료되었습니다!');
@@ -412,6 +402,8 @@ const QaPage = () => {
                 if (MOCK_QUESTIONS.length > 0) {
                     setActiveQuestionId(MOCK_QUESTIONS[0].id);
                 }
+                setEstimatedCost(cost);
+                setElapsedTime(time);
             }, 600);
 
         } catch (e) {
@@ -429,6 +421,8 @@ const QaPage = () => {
                         if (MOCK_QUESTIONS.length > 0) {
                             setActiveQuestionId(MOCK_QUESTIONS[0].id);
                         }
+                        setEstimatedCost('0.00');
+                        setElapsedTime('3.5');
                     }, 500);
                 } else {
                     setProgressPercentage(currentPercent);
@@ -455,6 +449,7 @@ const QaPage = () => {
             return;
         }
         setErrors(MOCK_ERRORS);
+        setIsRightCollapsed(false);
         modal.showAlert('알림', 'AI 로직 검증 결과 총 3건의 이슈가 감지되었습니다.');
     };
 
@@ -562,25 +557,16 @@ const QaPage = () => {
         }));
     };
 
-    // 4) 셔플 테스트 토글 핸들러
-    const handleShuffleToggle = (questionId) => {
-        setShuffleStates(prev => ({
-            ...prev,
-            [questionId]: !prev[questionId]
-        }));
-    };
+
 
     // ── qtype별 폼 요소 렌더링 함수 ──
     const renderFormContent = (q) => {
-        const isShuffled = !!shuffleStates[q.id];
-
         switch (q.type) {
             case 'single': {
-                const renderedOptions = getShuffledOptions(q.options, isShuffled);
                 const selectedVal = userAnswers[q.id] || '';
                 return (
                     <div className="qa-form-rendering-box">
-                        {renderedOptions.map(opt => (
+                        {q.options.map(opt => (
                             <label key={opt.code} className="qa-option-row">
                                 <input
                                     type="radio"
@@ -589,9 +575,6 @@ const QaPage = () => {
                                     onChange={() => handleSingleSelect(q.id, opt.code)}
                                 />
                                 <span style={{ marginLeft: '4px' }}>{opt.text}</span>
-                                {opt.is_fixed && (
-                                    <span className="qa-control-badge qa-badge-fixed-info" style={{ marginLeft: '6px' }}>📌 고정</span>
-                                )}
                             </label>
                         ))}
                     </div>
@@ -599,14 +582,13 @@ const QaPage = () => {
             }
 
             case 'multi': {
-                const renderedOptions = getShuffledOptions(q.options, isShuffled);
                 const selectedVals = userAnswers[q.id] || [];
                 // 배타 항목이 체크되어 있는지 판별
-                const hasExclusiveChecked = renderedOptions.some(opt => opt.is_exclusive && selectedVals.includes(opt.code));
+                const hasExclusiveChecked = q.options.some(opt => opt.is_exclusive && selectedVals.includes(opt.code));
 
                 return (
                     <div className="qa-form-rendering-box">
-                        {renderedOptions.map(opt => {
+                        {q.options.map(opt => {
                             const isChecked = selectedVals.includes(opt.code);
                             // 배타적 항목이 체크되어 있는 경우, 다른 일반 항목들은 조작 불가능하도록 disabled
                             const isDisabled = hasExclusiveChecked && !opt.is_exclusive;
@@ -623,9 +605,6 @@ const QaPage = () => {
 
                                     {opt.is_exclusive && (
                                         <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[배타]</span>
-                                    )}
-                                    {opt.is_fixed && (
-                                        <span className="qa-control-badge qa-badge-fixed-info" style={{ marginLeft: '6px' }}>📌 고정</span>
                                     )}
 
                                     {/* 주관식 기타 입력창 결합 */}
@@ -791,7 +770,11 @@ const QaPage = () => {
 
     return (
         <div className="qa-parser-page" data-theme="data-management">
-            <DataHeader title="QA" />
+            <DataHeader
+                title="QA"
+                onSave={handleSaveData}
+                saveButtonLabel="구조화 데이터 저장"
+            />
 
             <div className="qa-parser-body">
                 {/* ── 1. 좌측 컨트롤 패널 (250px 슬림) ───────────────────────── */}
@@ -853,11 +836,26 @@ const QaPage = () => {
                                     <BrainCircuit size={14} />
                                     AI 로직 오류 체크
                                 </button>
-                                <button className="qa-btn-action btn-purple" onClick={handleSaveData}>
-                                    <Database size={14} />
-                                    구조화 데이터 최종 저장
-                                </button>
+
                             </div>
+
+                            {/* 검증 요약 카드 - 결과 생성 시 노출 */}
+                            {questions.length > 0 && (
+                                <div className="qa-stats-card" style={{ animation: 'qaFadeIn 0.35s ease', marginBottom: '12px' }}>
+                                    <div className="qa-stats-row">
+                                        <span className="qa-stats-label">파싱 문항 수</span>
+                                        <span className="qa-stats-value">{questions.filter(q => q.type !== 'global_logic').length} 개</span>
+                                    </div>
+                                    <div className="qa-stats-row">
+                                        <span className="qa-stats-label">예상 API 비용</span>
+                                        <span className="qa-stats-value">${estimatedCost}</span>
+                                    </div>
+                                    <div className="qa-stats-row">
+                                        <span className="qa-stats-label">소요 시간</span>
+                                        <span className="qa-stats-value">{elapsedTime} 초</span>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* 저장 완료 피드백 토스트 */}
                             {isSaved && (
@@ -873,7 +871,6 @@ const QaPage = () => {
                 <div className="qa-parser-center qa-panel">
                     <div className="qa-center-header">
                         <h2>구조화 설문 결과 상세 뷰어</h2>
-                        <span className="qa-active-api-badge">Active Backend API</span>
                     </div>
 
                     <div className="qa-split-viewer">
@@ -979,19 +976,8 @@ const QaPage = () => {
                                                 <div className="qa-qc-title-area">
                                                     <span className="qa-qc-id">{q.id}</span>
                                                     <span className="qa-type-badge">{q.type}</span>
-                                                    {q.is_randomized && (
-                                                        <span className="qa-control-badge qa-badge-shuffle-info">🎲 보기 랜덤</span>
-                                                    )}
                                                 </div>
                                                 <div className="qa-qc-controls">
-                                                    {q.is_randomized && (
-                                                        <div
-                                                            className={`qa-shuffle-tester-box ${shuffleStates[q.id] ? 'active' : ''}`}
-                                                            onClick={() => handleShuffleToggle(q.id)}
-                                                        >
-                                                            <span>셔플 테스트</span>
-                                                        </div>
-                                                    )}
                                                     <button className="qa-mini-btn btn-insert" onClick={() => handleInsertQuestion(q.id)}>+ 삽입</button>
                                                     <button className="qa-mini-btn" onClick={() => handleModifyQuestion(q.id)}>수정</button>
                                                     <button className="qa-mini-btn btn-delete" onClick={() => handleDeleteQuestion(q.id)}>삭제</button>

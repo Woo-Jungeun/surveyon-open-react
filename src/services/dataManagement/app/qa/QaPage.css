@@ -550,49 +550,10 @@
     gap: 3px;
 }
 
-.qa-badge-shuffle-info {
-    color: #ea580c;
-    background: #fff7ed;
-    border: 1px solid #ffd8a8;
-}
-
 .qa-badge-exclusive {
     color: #dc2626;
     background: #fff5f5;
     border: 1px solid #fca5a5;
-}
-
-.qa-badge-fixed-info {
-    color: #475569;
-    background: #f1f5f9;
-    border: 1px solid #cbd5e1;
-}
-
-/* 셔플 테스트 토글 헤더 영역 */
-.qa-shuffle-tester-box {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #64748b;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    padding: 2px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    user-select: none;
-    transition: all 0.15s;
-}
-
-.qa-shuffle-tester-box:hover {
-    border-color: var(--dm-primary, #16a34a);
-    color: var(--dm-primary, #16a34a);
-}
-
-.qa-shuffle-tester-box.active {
-    background: var(--dm-primary, #16a34a);
-    border-color: var(--dm-primary, #16a34a);
-    color: #fff;
 }
 
 .qa-qc-controls {
@@ -1122,4 +1083,39 @@
     color: #94a3b8;
     text-align: center;
     padding: 20px 10px;
+}
+
+/* 통계 요약 카드 (Survey Test와 동일한 프리미엄 라이트 테마) */
+.qa-stats-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.qa-stats-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.qa-stats-label {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.qa-stats-value {
+    font-size: 12.5px;
+    color: #1e293b;
+    font-weight: 700;
+}
+
+/* 예상 API 비용 수치 색상을 브랜드 초록색으로 강조 */
+.qa-stats-row:nth-child(2) .qa-stats-value {
+    color: var(--dm-primary, #16a34a);
 }
