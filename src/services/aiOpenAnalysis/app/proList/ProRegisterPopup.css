@@ -407,3 +407,16 @@
     background-color: #FF6B00;
     border: none;
 }
+
+/* Kendo Dropdown Focus - Orange Theme */
+.excel-upload-container .k-dropdownlist.k-focus,
+.excel-upload-container .k-dropdownlist:focus-within,
+.excel-upload-container .k-picker.k-focus,
+.excel-upload-container .k-picker:focus-within,
+.excel-upload-container .k-dropdownlist:focus,
+.excel-upload-container .k-input-solid:focus,
+.excel-upload-container .k-input-solid:focus-within,
+.excel-upload-container .k-input-solid.k-focus {
+    border-color: #FF6B00 !important;
+    box-shadow: 0 0 0 2px rgba(255, 107, 0, 0.2) !important;
+}
