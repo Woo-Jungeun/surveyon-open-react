@@ -400,7 +400,7 @@ input:checked+.slider:before {
 .variable-page-card {
     background: transparent;
     border-radius: 0;
-    padding: 24px;
+    padding: 10px;
     box-shadow: none;
     height: 100%;
     display: flex;
@@ -1807,5 +1807,6 @@ input:checked+.slider:before {
 .variable-page-card .cmn_grid.singlehead .k-grid-header th.k-header,
 .variable-page-card .cmn_grid.singlehead .k-grid-header th.k-table-th,
 .variable-page-card .variable-column-header {
-    height: 32px !important; /* 헤더 높이 60px -> 32px로 대폭 축소 */
+    height: 32px !important;
+    /* 헤더 높이 60px -> 32px로 대폭 축소 */
 }
