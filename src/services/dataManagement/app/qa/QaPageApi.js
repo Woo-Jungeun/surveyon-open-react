@@ -6,9 +6,9 @@ import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 export function QaPageApi() {
     const loadingSpinner = useContext(loadingSpinnerContext);
 
-    /** 통합 QA 분석 - multipart/form-data (Pn, DocumentFile, User) */
+    /** 통합 QA 분석 - setup-from-document (pn, documentFile, user, modelType) */
     const analyzeAll = useMutation(
-        async (data) => await api.post(data, "/QA/analyze-all", "API_BASE_URL_DATAMANAGEMENT"),
+        async (data) => await api.post(data, "/qa/setup-from-document", "API_BASE_URL_DATAMANAGEMENT"),
     );
 
     return { analyzeAll };

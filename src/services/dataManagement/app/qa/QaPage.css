@@ -327,16 +327,16 @@
 }
 
 .qa-index-item:hover {
-    border-color: #94a3b8;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    background: #f8fafc;
+    border-color: var(--dm-primary, #16a34a);
+    box-shadow: 0 4px 6px -1px rgba(22, 163, 74, 0.08);
+    background: #f9fefb;
 }
 
 .qa-index-item.active {
-    background: #f0f7ff;
-    border-color: #2563eb;
+    background: #f0fdf4;
+    border-color: var(--dm-primary, #16a34a);
     border-width: 1.5px;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
 }
 
 .qa-index-item-info {
@@ -359,7 +359,7 @@
 }
 
 .qa-index-item.active .qa-index-label-title {
-    color: #1e3a8a;
+    color: #14532d;
     font-weight: 700;
 }
 
@@ -554,6 +554,12 @@
     color: #dc2626;
     background: #fff5f5;
     border: 1px solid #fca5a5;
+}
+
+.qa-badge-fixed {
+    color: #0284c7;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
 }
 
 .qa-qc-controls {
@@ -1119,3 +1125,124 @@
 .qa-stats-row:nth-child(2) .qa-stats-value {
     color: var(--dm-primary, #16a34a);
 }
+
+/* ─── 좌측 컨트롤 패널의 단계별 카드 레이아웃 ─── */
+.qa-analysis-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.qa-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 4px;
+}
+
+.qa-card-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #475569;
+    letter-spacing: -0.01em;
+}
+
+/* 비활성화 버튼 디자인 */
+.qa-btn-action.btn-disabled {
+    background: #f1f5f9 !important;
+    color: #94a3b8 !important;
+    border: 1px solid #cbd5e1 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+    opacity: 0.8;
+}
+
+/* 업로드 완료 시 green 실행 버튼에 가벼운 활성 애니메이션 부여 */
+@keyframes activePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+    }
+}
+
+.qa-btn-action.active-pulse {
+    animation: activePulse 2s infinite;
+    background: var(--dm-primary, #16a34a) !important;
+    color: #ffffff !important;
+    border-color: var(--dm-primary, #16a34a) !important;
+}
+
+.qa-btn-action.active-pulse:hover {
+    background: var(--dm-primary-hover, #15803d) !important;
+    border-color: var(--dm-primary-hover, #15803d) !important;
+    color: #ffffff !important;
+}
+
+/* ── 문항 상세 구조화 정보 정적 리스트 표출 스타일 ── */
+.qa-qc-section {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.qa-qc-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b; /* muted gray */
+    margin-bottom: 2px;
+}
+
+.qa-qc-section-content {
+    border-left: 2px solid var(--dm-primary, #16a34a); /* green vertical line */
+    padding-left: 12px;
+    margin-left: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.qa-qc-option-item {
+    font-size: 13px;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.4;
+}
+
+.qa-qc-option-code {
+    font-weight: 700;
+    color: var(--dm-primary-hover, #15803d); /* green code font matching theme */
+    font-family: 'Consolas', monospace;
+}
+
+.qa-qc-option-text {
+    color: #334155;
+}
+
+.qa-qc-logic-item {
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.45;
+    word-break: break-all;
+}
+
+.qa-badge-open {
+    color: #475569;
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+}
+
+
