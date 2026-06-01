@@ -1,7 +1,67 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Layout, Type, Palette, Eye } from 'lucide-react';
 
-const LineStylePicker = ({ value, onChange, color, direction = 'down' }) => {
+const ColorInput = React.memo(({ value, onChange, width = '105px', textWidth = '65px', padding = '3px 6px', gap = '6px' }) => {
+    const [localValue, setLocalValue] = useState(value || '');
+
+    useEffect(() => {
+        setLocalValue(value || '');
+    }, [value]);
+
+    const handleTextChange = (e) => {
+        setLocalValue(e.target.value.toUpperCase());
+    };
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (localValue !== value) {
+                let formatted = localValue.trim();
+                if (formatted && !formatted.startsWith('#')) {
+                    formatted = '#' + formatted;
+                }
+                const isValidHex = /^#([A-FA-f0-9]{3}){1,2}$/.test(formatted);
+                if (isValidHex) {
+                    onChange(formatted);
+                } else if (formatted === '') {
+                    onChange('');
+                }
+            }
+        }, 150);
+        return () => clearTimeout(timer);
+    }, [localValue, value, onChange]);
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: gap, padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', width: width, boxSizing: 'border-box', height: '28px', flexShrink: 0 }}>
+            <input 
+                type="color" 
+                value={(/^#([A-FA-f0-9]{3}){1,2}$/.test(localValue) ? localValue : '#FFFFFF').slice(0, 7)} 
+                onChange={(e) => {
+                    const val = e.target.value.toUpperCase();
+                    setLocalValue(val);
+                    onChange(val);
+                }} 
+                style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer', borderRadius: '4px', flexShrink: 0 }} 
+            />
+            <input
+                type="text"
+                value={localValue}
+                onChange={handleTextChange}
+                placeholder="#FFFFFF"
+                style={{
+                    width: textWidth,
+                    height: '20px',
+                    fontSize: '11px',
+                    border: 'none',
+                    outline: 'none',
+                    fontFamily: 'monospace',
+                    padding: 0
+                }}
+            />
+        </div>
+    );
+});
+
+const LineStylePicker = ({ value, onChange, color, direction = 'down', width = '60px', padding = '0 8px' }) => {
     const [isOpen, setIsOpen] = useState(false);
     const ref = useRef(null);
     useEffect(() => {
@@ -15,7 +75,7 @@ const LineStylePicker = ({ value, onChange, color, direction = 'down' }) => {
         <div ref={ref} style={{ position: 'relative' }}>
             <div 
                 onClick={() => setIsOpen(!isOpen)}
-                style={{ width: '60px', height: '24px', padding: '0 8px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}
+                style={{ width: width, height: '24px', padding: padding, border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}
                 title="선 종류"
             >
                 {value === 'none' ? (
@@ -262,14 +322,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         선택된 선: {borderNames[selectedBorder]}
                                     </span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
-                                            <input 
-                                                type="color" 
-                                                value={(settings.render[`${selectedBorder}_color`] || '#000000').slice(0, 7)} 
-                                                onChange={(e) => handleChange(`render.${selectedBorder}_color`, e.target.value.toUpperCase())} 
-                                                style={{ width: '20px', height: '20px', padding: 0, border: 'none', cursor: 'pointer' }} 
-                                            />
-                                        </div>
+                                        <ColorInput
+                                            value={settings.render[`${selectedBorder}_color`] || ''}
+                                            onChange={(val) => handleChange(`render.${selectedBorder}_color`, val)}
+                                        />
                                         <LineStylePicker 
                                             value={settings.render[`${selectedBorder}_style`] || 'solid'} 
                                             onChange={(val) => {
@@ -607,10 +663,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 <div key={item.field} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '8px', paddingTop: '4px' }}>
                                     <label style={{ fontSize: '12px', fontWeight: 600, color: '#475569', whiteSpace: 'nowrap' }}>{item.label}</label>
                                     {item.type === 'color' ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '3px 8px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff', width: '100px', boxSizing: 'border-box' }}>
-                                            <input type="color" value={(settings.render[item.field] || '#ffffff').slice(0, 7)} onChange={(e) => handleChange(`render.${item.field}`, e.target.value.toUpperCase())} style={{ width: '18px', height: '18px', padding: 0, border: 'none', cursor: 'pointer', borderRadius: '4px' }} />
-                                            <span style={{ fontSize: '11px', color: '#64748B', fontFamily: 'monospace' }}>{settings.render[item.field]?.slice(0, 7) || '#FFFFFF'}</span>
-                                        </div>
+                                        <ColorInput
+                                            value={settings.render[item.field] || ''}
+                                            onChange={(val) => handleChange(`render.${item.field}`, val)}
+                                        />
                                     ) : (
                                         <input type={item.type} value={settings.render[item.field] || ''} onChange={(e) => handleChange(`render.${item.field}`, item.type === 'number' ? Number(e.target.value) : e.target.value)} style={{ width: '100px', boxSizing: 'border-box', padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }} />
                                     )}
@@ -625,12 +681,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                     <div className="dp-setting-card-header" style={{ padding: '12px 16px', borderBottom: '1px solid #E2E8F0', fontWeight: 600, color: '#1E293B', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', background: '#F8FAFC', borderRadius: '8px 8px 0 0' }}>
                         <Type size={16} color="#475569" /> 선 스타일 설정
                     </div>
-                    <div className="dp-setting-card-body" style={{ padding: '16px', flex: 1 }}>
+                    <div className="dp-setting-card-body" style={{ padding: '12px 16px', flex: 1 }}>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <div style={{ marginBottom: '16px' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '12px' }}>표 외곽선 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', alignContent: 'start' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ marginBottom: '8px' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '8px' }}>표 외곽선 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '8px', rowGap: '6px', alignContent: 'start' }}>
                                     {[
                                         { group: '표 상단', prefix: 'theme_table_outer_top', color: 'theme_table_outer_top_color', style: 'theme_table_outer_top_style', width: 'theme_table_outer_top_width' },
                                         { group: '표 하단', prefix: 'theme_table_outer_bottom', color: 'theme_table_outer_bottom_color', style: 'theme_table_outer_bottom_style', width: 'theme_table_outer_bottom_width' },
@@ -646,22 +702,27 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 onMouseLeave={() => setHoveredBorder(null)}
                                                 style={{ 
                                                     display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'space-between', 
+                                                    flexDirection: 'column',
+                                                    alignItems: 'stretch', 
+                                                    gap: '4px',
                                                     padding: '6px 8px', 
                                                     border: isSelected ? '1px solid #BFDBFE' : '1px solid transparent', 
                                                     borderRadius: '6px',
                                                     background: isSelected ? '#EFF6FF' : 'transparent',
                                                     cursor: 'pointer',
-                                                    transition: 'all 0.2s',
-                                                    marginBottom: '2px'
+                                                    transition: 'all 0.2s'
                                                 }}
                                             >
                                                 <div style={{ fontSize: '11px', fontWeight: 600, color: isSelected ? '#1D4ED8' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
-                                                        <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
-                                                    </div>
+                                                    <ColorInput
+                                                        value={settings.render[g.color] || ''}
+                                                        onChange={(val) => handleChange(`render.${g.color}`, val)}
+                                                        width="95px"
+                                                        textWidth="55px"
+                                                        padding="2px 4px"
+                                                        gap="4px"
+                                                    />
                                                     <LineStylePicker 
                                                         value={settings.render[g.style] || 'solid'} 
                                                         onChange={(val) => {
@@ -675,8 +736,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                         }}
                                                         color={settings.render[g.color] || '#000000'} 
                                                         direction={i >= 2 ? 'up' : 'down'}
+                                                        width="50px"
+                                                        padding="0 4px"
                                                     />
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                                                         <input
                                                             type="number"
                                                             min={settings.render[g.style] === 'double' ? 3 : 0}
@@ -689,7 +752,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                                 if (isDouble && val !== '' && val < 3) val = 3;
                                                                 handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
                                                             }}
-                                                            style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                            style={{ width: '32px', padding: '2px 4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
                                                             title="두께(숫자)"
                                                         />
                                                         <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>
@@ -700,10 +763,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     })}
                                 </div>
                             </div>
-
+ 
                             <div>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '12px' }}>표 내부 구분선 설정</div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '20px', rowGap: '12px', alignContent: 'start' }}>
+                                <div style={{ fontSize: '12px', fontWeight: 700, color: '#334155', borderBottom: '1px solid #E2E8F0', paddingBottom: '4px', marginBottom: '8px' }}>표 내부 구분선 설정</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', columnGap: '8px', rowGap: '6px', alignContent: 'start' }}>
                                     {[
                                         { group: '헤더 하단선', prefix: 'theme_header_divider', color: 'theme_header_divider_color', style: 'theme_header_divider_style', width: 'theme_header_divider_width' },
                                         { group: '스터브 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
@@ -719,22 +782,27 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 onMouseLeave={() => setHoveredBorder(null)}
                                                 style={{ 
                                                     display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'space-between', 
+                                                    flexDirection: 'column',
+                                                    alignItems: 'stretch', 
+                                                    gap: '4px',
                                                     padding: '6px 8px', 
                                                     border: isSelected ? '1px solid #BFDBFE' : '1px solid transparent', 
                                                     borderRadius: '6px',
                                                     background: isSelected ? '#EFF6FF' : 'transparent',
                                                     cursor: 'pointer',
-                                                    transition: 'all 0.2s',
-                                                    marginBottom: '2px'
+                                                    transition: 'all 0.2s'
                                                 }}
                                             >
                                                 <div style={{ fontSize: '11px', fontWeight: 600, color: isSelected ? '#1D4ED8' : '#475569', whiteSpace: 'nowrap' }}>{g.group}</div>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', padding: '3px', border: '1px solid #CBD5E1', borderRadius: '4px', background: '#fff' }} title="색상">
-                                                        <input type="color" value={(settings.render[g.color] || '#000000').slice(0, 7)} onChange={(e) => handleChange(`render.${g.color}`, e.target.value.toUpperCase())} style={{ width: '16px', height: '16px', padding: 0, border: 'none', cursor: 'pointer' }} />
-                                                    </div>
+                                                    <ColorInput
+                                                        value={settings.render[g.color] || ''}
+                                                        onChange={(val) => handleChange(`render.${g.color}`, val)}
+                                                        width="95px"
+                                                        textWidth="55px"
+                                                        padding="2px 4px"
+                                                        gap="4px"
+                                                    />
                                                     <LineStylePicker 
                                                         value={settings.render[g.style] || 'solid'} 
                                                         onChange={(val) => {
@@ -748,8 +816,10 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                         }}
                                                         color={settings.render[g.color] || '#000000'} 
                                                         direction={i >= 2 ? 'up' : 'down'}
+                                                        width="50px"
+                                                        padding="0 4px"
                                                     />
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                                                         <input
                                                             type="number"
                                                             min={settings.render[g.style] === 'double' ? 3 : 0}
@@ -762,7 +832,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                                 if (isDouble && val !== '' && val < 3) val = 3;
                                                                 handleChange(`render.${g.width}`, val !== '' ? `${val}px` : '');
                                                             }}
-                                                            style={{ width: '40px', padding: '4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                                            style={{ width: '32px', padding: '2px 4px', fontSize: '11px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
                                                             title="두께(숫자)"
                                                         />
                                                         <span style={{ fontSize: '11px', color: '#94A3B8' }}>px</span>

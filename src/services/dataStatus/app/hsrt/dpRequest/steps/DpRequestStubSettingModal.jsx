@@ -1622,47 +1622,6 @@ const DpRequestStubSettingModal = ({ show, onClose, variables = [], rowData, onA
                                     그리드 편집
                                 </span>
                             </div>
-
-                            {isDetailSetting && (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginRight: 'auto', marginLeft: '24px' }}>
-                                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#475569' }}>BASE 배경색 일괄 적용:</span>
-                                    <input
-                                        type="text"
-                                        placeholder="#FFFFFF"
-                                        value={baseGlobalColor}
-                                        onChange={e => setBaseGlobalColor(e.target.value.toUpperCase())}
-                                        style={{
-                                            width: '80px',
-                                            height: '24px',
-                                            fontSize: '11px',
-                                            padding: '0 6px',
-                                            border: '1px solid #cbd5e1',
-                                            borderRadius: '4px',
-                                            outline: 'none'
-                                        }}
-                                    />
-                                    <button
-                                        onClick={applyBaseColorGlobally}
-                                        style={{
-                                            height: '24px',
-                                            padding: '0 8px',
-                                            background: '#2563eb',
-                                            color: '#fff',
-                                            border: 'none',
-                                            borderRadius: '4px',
-                                            fontSize: '11px',
-                                            fontWeight: 'bold',
-                                            cursor: 'pointer',
-                                            transition: 'background 0.2s'
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.background = '#1d4ed8'}
-                                        onMouseLeave={e => e.currentTarget.style.background = '#2563eb'}
-                                    >
-                                        적용
-                                    </button>
-                                </div>
-                            )}
-
                             <div
                                 style={{
                                     display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
