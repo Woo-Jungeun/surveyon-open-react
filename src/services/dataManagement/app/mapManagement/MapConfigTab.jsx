@@ -204,7 +204,7 @@ const InputCell = (props) => {
                     whiteSpace: 'nowrap', 
                     overflow: 'hidden', 
                     textOverflow: 'ellipsis',
-                    fontSize: '12px',
+                    fontSize: '13px',
                     color: '#475569',
                     padding: '2px 4px',
                     width: '100%',
@@ -355,11 +355,11 @@ const INLINE_STYLE = `
     padding: 2px 8px !important;
 }
 .dm-dropdown-popup .k-list-item-text {
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 1.2 !important;
 }
 .dm-type-dropdown, .dm-type-dropdown .k-input-inner, .dm-type-dropdown .k-input-value-text {
-    font-size: 12px !important;
+    font-size: 13px !important;
 }
 .dm-type-dropdown {
     height: 22px !important;
@@ -384,7 +384,7 @@ const INLINE_STYLE = `
     justify-content: center !important;
 }
 .dm-type-cell .variable-text-readonly {
-    font-size: 12px !important;
+    font-size: 13px !important;
 }
 `;
 document.head.insertAdjacentHTML('beforeend', `<style>${INLINE_STYLE}</style>`);

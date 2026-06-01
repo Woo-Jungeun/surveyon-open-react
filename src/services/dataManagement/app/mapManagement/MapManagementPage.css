@@ -227,7 +227,7 @@ input:checked+.slider:before {
 }
 
 .variable-sidebar {
-    width: 280px;
+    width: 240px;
     border-right: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
@@ -235,39 +235,39 @@ input:checked+.slider:before {
 }
 
 .sidebar-header-box {
-    padding: 15px 20px;
+    padding: 10px 14px;
     background: #fff;
     border-bottom: 1px solid #e2e8f0;
 }
 
 .sidebar-header-box h3 {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     color: var(--dm-text-main);
 }
 
 .search-box input {
     width: 100%;
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 6px 10px;
+    font-size: 12px;
     border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    border-radius: 6px;
     background: #f1f5f9;
 }
 
 .map-variable-list {
     flex: 1;
     overflow-y: auto;
-    padding: 12px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .map-variable-item {
-    padding: 12px 14px;
-    border-radius: 8px;
+    padding: 8px 10px;
+    border-radius: 6px;
     background: #fff;
     border: 1px solid #e2e8f0;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -288,7 +288,7 @@ input:checked+.slider:before {
 
 .map-variable-item .v-name {
     font-weight: 700;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--dm-text-main);
     margin-bottom: 2px;
 }
@@ -298,9 +298,9 @@ input:checked+.slider:before {
 }
 
 .map-variable-item .v-label {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--dm-text-sub);
-    line-height: 1.4;
+    line-height: 1.3;
     word-break: break-keep-all;
     white-space: normal;
     overflow: visible;
@@ -319,11 +319,11 @@ input:checked+.slider:before {
 }
 
 .detail-header {
-    padding: 23px 28px;
+    padding: 10px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     border-bottom: 1px solid #e2e8f0;
     min-width: 0;
     /* flex 자식이 overflow 처리되도록 */
@@ -334,7 +334,7 @@ input:checked+.slider:before {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 6px;
+    gap: 4px;
     min-width: 0;
     /* overflow 처리를 위해 필수 */
     flex: 1;
@@ -342,7 +342,7 @@ input:checked+.slider:before {
 }
 
 .v-info-title>span:first-child {
-    font-size: 20px;
+    font-size: 15px;
     font-weight: 800;
     color: #0f172a;
     /* 더 진한 텍스트로 강조 */
@@ -350,7 +350,7 @@ input:checked+.slider:before {
 }
 
 .v-info-label {
-    font-size: 13.5px;
+    font-size: 12px;
     color: #64748b;
     font-weight: 500;
     /* 긴 텍스트 말줄임 */
@@ -361,12 +361,12 @@ input:checked+.slider:before {
 }
 
 .add-value-btn {
-    padding: 8px 16px;
-    background: var(--dm-primary);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
+    padding: 5px 12px;
+    border: 1px solid var(--dm-primary);
+    background: #fff;
+    color: var(--dm-primary);
+    border-radius: 6px;
+    font-size: 12px;
     font-weight: 700;
     display: flex;
     align-items: center;
@@ -375,19 +375,16 @@ input:checked+.slider:before {
     flex-shrink: 0;
     /* 텍스트가 길어도 버튼 크기 유지 */
     white-space: nowrap;
-    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.2);
     transition: all 0.2s;
 }
 
 .add-value-btn:hover {
-    background: var(--dm-primary-hover);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 12px rgba(22, 163, 74, 0.3);
+    background: var(--dm-primary-light);
 }
 
 .category-grid-container {
     flex: 1;
-    padding: 32px;
+    padding: 10px;
     background: #f8fafc;
     overflow: hidden;
 }
@@ -1684,14 +1681,19 @@ input:checked+.slider:before {
 
 /* 사용자 요청: 그리드 공간 확보를 위한 패딩 축소 및 헤더 글자 크기 지정 */
 .variable-page-card .k-grid td,
-.variable-page-card .k-grid th {
+.variable-page-card .k-grid th,
+.category-grid-container .k-grid td,
+.category-grid-container .k-grid th {
     padding-left: 2px !important;
     padding-right: 2px !important;
 }
 
 .variable-page-card .k-grid th,
 .variable-page-card .k-grid th *,
-.variable-page-card .k-grid th .k-column-title {
+.variable-page-card .k-grid th .k-column-title,
+.category-grid-container .k-grid th,
+.category-grid-container .k-grid th *,
+.category-grid-container .k-grid th .k-column-title {
     font-size: 12px !important;
     white-space: pre-line !important;
     line-height: 1.2 !important;
@@ -1700,7 +1702,10 @@ input:checked+.slider:before {
 /* 필터(컬럼메뉴) 아이콘 및 버튼 크기 대폭 축소 (가로공간 회수) */
 .variable-page-card .k-grid th .k-grid-filter,
 .variable-page-card .k-grid th .k-header-column-menu,
-.variable-page-card .k-grid th .k-grid-column-menu {
+.variable-page-card .k-grid th .k-grid-column-menu,
+.category-grid-container .k-grid th .k-grid-filter,
+.category-grid-container .k-grid th .k-header-column-menu,
+.category-grid-container .k-grid th .k-grid-column-menu {
     padding: 2px !important;
     width: 20px !important;
     height: 20px !important;
@@ -1712,7 +1717,13 @@ input:checked+.slider:before {
 .variable-page-card .k-grid th .k-header-column-menu .k-svg-icon,
 .variable-page-card .k-grid th .k-header-column-menu svg,
 .variable-page-card .k-grid th .k-grid-column-menu .k-svg-icon,
-.variable-page-card .k-grid th .k-grid-column-menu svg {
+.variable-page-card .k-grid th .k-grid-column-menu svg,
+.category-grid-container .k-grid th .k-grid-filter .k-svg-icon,
+.category-grid-container .k-grid th .k-grid-filter svg,
+.category-grid-container .k-grid th .k-header-column-menu .k-svg-icon,
+.category-grid-container .k-grid th .k-header-column-menu svg,
+.category-grid-container .k-grid th .k-grid-column-menu .k-svg-icon,
+.category-grid-container .k-grid th .k-grid-column-menu svg {
     width: 12px !important;
     height: 12px !important;
     flex-basis: 12px !important;
@@ -1759,11 +1770,15 @@ input:checked+.slider:before {
 .variable-page-card .k-grid td,
 .variable-page-card .k-grid .k-grid-content td,
 .variable-page-card .k-grid .k-table-row>td,
-.variable-page-card .k-grid .k-table-td {
+.variable-page-card .k-grid .k-table-td,
+.category-grid-container .k-grid td,
+.category-grid-container .k-grid .k-grid-content td,
+.category-grid-container .k-grid .k-table-row>td,
+.category-grid-container .k-grid .k-table-td {
     padding: 0px 4px !important;
     height: 24px !important;
     line-height: 1.2 !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     box-sizing: border-box !important;
     vertical-align: middle !important;
 }
@@ -1774,7 +1789,7 @@ input:checked+.slider:before {
     min-height: 22px !important;
     height: 22px !important;
     padding: 0px 4px !important;
-    font-size: 12px !important;
+    font-size: 13px !important;
     line-height: 20px !important;
     box-sizing: border-box !important;
 }
@@ -1806,7 +1821,18 @@ input:checked+.slider:before {
 
 .variable-page-card .cmn_grid.singlehead .k-grid-header th.k-header,
 .variable-page-card .cmn_grid.singlehead .k-grid-header th.k-table-th,
-.variable-page-card .variable-column-header {
+.variable-page-card .variable-column-header,
+.category-grid-container .cmn_grid.singlehead .k-grid-header th.k-header,
+.category-grid-container .cmn_grid.singlehead .k-grid-header th.k-table-th {
     height: 32px !important;
     /* 헤더 높이 60px -> 32px로 대폭 축소 */
+}
+
+/* 보기 레이블 탭 그리드 셀 간격 조율 (맵구성 탭의 내포 div 패딩 수준으로 일치) */
+.category-grid-container .k-grid td,
+.category-grid-container .k-grid .k-grid-content td,
+.category-grid-container .k-grid .k-table-row>td,
+.category-grid-container .k-grid .k-table-td {
+    padding: 2px 6px !important;
+    height: 26px !important;
 }

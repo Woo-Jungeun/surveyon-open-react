@@ -1,5 +1,5 @@
-import React from 'react';
-import KendoGrid from '../../../../components/kendo/KendoGrid';
+import React, { useRef } from 'react';
+import KendoGridV2 from '../../../../components/kendo/KendoGridV2';
 import { GridColumn as Column } from "@progress/kendo-react-grid";
 import { Plus, Trash2, Edit2 } from 'lucide-react';
 
@@ -76,18 +76,15 @@ const ViewLabelTab = ({
                 <div className="category-grid-container">
                     <div className="cmn_grid singlehead" style={{ height: '100%' }}>
                         {/* key로 변수 선택/변경 시 강제 재마운트 → 내부 viewData 캐시 초기화 */}
-                        <KendoGrid
-                            key={`${selectedVariableId ?? 'empty'}_${selectedVariable?.category ?? ''}`}
-                            parentProps={{
-                                data: selectedVariable?.labels?.map((l, idx) => ({
-                                    ...l,
-                                    rowNo: idx + 1,
-                                    id: idx + 1
-                                })) || [],
-                                dataItemKey: "id",
-                                height: "100%",
-                                filterable: false,
-                            }}
+                        <KendoGridV2
+                            key={selectedVariableId ?? 'empty'}
+                            data={selectedVariable?.labels?.map((l, idx) => ({
+                                ...l,
+                                rowNo: idx + 1,
+                                id: idx + 1
+                            })) || []}
+                            height="100%"
+                            scrollable="scrollable"
                         >
                             <Column field="rowNo" title="no" width="60px" />
                             <Column field="code" title="코드" width="100px" />
@@ -95,6 +92,7 @@ const ViewLabelTab = ({
                             <Column field="delete" title="삭제" width="80px" cell={(props) => (
                                 <td style={{ padding: 0 }}>
                                     <button
+                                        type="button"
                                         style={{
                                             border: 'none',
                                             background: 'transparent',
@@ -104,15 +102,18 @@ const ViewLabelTab = ({
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
-                                            minHeight: '36px' // 셀 높이 최소 보장
                                         }}
-                                        onClick={() => handleDeleteLabel(props.dataItem.code)}
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleDeleteLabel(props.dataItem.code);
+                                        }}
                                     >
                                         <Trash2 size={16} color="#64748b" />
                                     </button>
                                 </td>
                             )} />
-                        </KendoGrid>
+                        </KendoGridV2>
                     </div>
                 </div>
             </div>
