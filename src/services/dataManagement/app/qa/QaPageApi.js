@@ -21,5 +21,10 @@ export function QaPageApi() {
         async (data) => await api.post(data, "/qa/validate-document", "API_BASE_URL_DATAMANAGEMENT"),
     );
 
-    return { analyzeAll, getParsedDocument, validateDocument };
+    /** 구조화 문서 저장 - save-parsed-document (pn, user, items) */
+    const saveParsedDocument = useMutation(
+        async (data) => await api.post(data, "/qa/save-parsed-document", "API_BASE_URL_DATAMANAGEMENT"),
+    );
+
+    return { analyzeAll, getParsedDocument, validateDocument, saveParsedDocument };
 }

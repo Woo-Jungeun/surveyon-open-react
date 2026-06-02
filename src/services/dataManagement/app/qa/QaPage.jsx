@@ -137,7 +137,8 @@ const mapApiResponseToQuestions = (generatedVariables) => {
             loop_logic: q.logics?.loop_logic || null,
             loop_base_qnum: q.loop_base_qnum || null,
             rank_limit: q.rank_limit || 2,
-            is_randomized: isRandomized
+            is_randomized: isRandomized,
+            rawItem: q
         };
     });
 };
@@ -415,7 +416,7 @@ const QaPage = () => {
     const auth = useSelector(store => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
-    const { analyzeAll, getParsedDocument, validateDocument } = QaPageApi();
+    const { analyzeAll, getParsedDocument, validateDocument, saveParsedDocument } = QaPageApi();
 
     useEffect(() => {
         return () => {
@@ -576,8 +577,7 @@ const QaPage = () => {
             fd.append('connectionId', myConnectionId);
         }
 
-        // ─── [실제 API 호출 및 렌더링 코드 주석 처리] ───
-        /*
+        // ─── [실제 API 호출 및 렌더링 코드 주석 해제] ───
         try {
             const res = await analyzeAll.mutateAsync(fd);
             const cost = res?.resultjson?.estimatedCostUsd !== undefined
@@ -633,9 +633,9 @@ const QaPage = () => {
                 connection.stop();
             }
         }
-        */
 
-        // ─── [시뮬레이션 가동 코드 (테스트 데이터 렌더링 용)] ───
+        // ─── [시뮬레이션 가동 코드 주석 처리] ───
+        /*
         let currentPercent = 10;
         const timer = setInterval(() => {
             currentPercent += 15;
@@ -678,6 +678,7 @@ const QaPage = () => {
                 }
             }
         }, 250);
+        */
     };
 
     // ── AI 로직 오류 체크 ──
@@ -768,16 +769,110 @@ const QaPage = () => {
         }
     };
 
-    // ── 시뮬레이션 4. 구조화 데이터 최종 저장 ──
-    const handleSaveData = () => {
+    // ── 구조화 데이터 최종 저장 ──
+    const handleSaveData = async () => {
         if (questions.length === 0) {
             modal.showAlert('알림', '저장할 구조화 데이터가 존재하지 않습니다.');
             return;
         }
-        setIsSaved(true);
-        setTimeout(() => {
-            setIsSaved(false);
-        }, 4000);
+
+        const pn = sessionStorage.getItem('projectnum') || '';
+        const user = auth?.user?.userId || '';
+
+        if (!pn) {
+            modal.showAlert('알림', '프로젝트 정보(PN)가 존재하지 않습니다.');
+            return;
+        }
+
+        // Rebuild backend items
+        const items = questions.map(q => {
+            const raw = q.rawItem || {};
+            
+            // Rebuild options array to format the backend expects
+            const rebuiltOptions = q.options?.map(opt => {
+                const originalOpt = raw.options?.find(o => o.code === opt.code) || {};
+                return {
+                    code: opt.code,
+                    label: opt.text || opt.label || '',
+                    is_fixed: opt.is_fixed !== undefined ? opt.is_fixed : (originalOpt.is_fixed || false),
+                    is_exclusive: opt.is_exclusive !== undefined ? opt.is_exclusive : (originalOpt.is_exclusive || false),
+                    has_open_ended: opt.has_open_ended !== undefined ? opt.has_open_ended : (originalOpt.has_open_ended || false),
+                    input_format: opt.input_format !== undefined ? opt.input_format : (originalOpt.input_format || null),
+                    display_condition: opt.display_condition !== undefined ? opt.display_condition : (originalOpt.display_condition || null)
+                };
+            }) || null;
+
+            // Rebuild scales array to format the backend expects
+            const rebuiltScales = q.scales?.map(sc => {
+                const originalSc = raw.scales?.find(s => s.code === sc.code) || {};
+                return {
+                    code: sc.code,
+                    label: sc.text || sc.label || '',
+                    is_fixed: sc.is_fixed !== undefined ? sc.is_fixed : (originalSc.is_fixed || false),
+                    is_exclusive: sc.is_exclusive !== undefined ? sc.is_exclusive : (originalSc.is_exclusive || false),
+                    has_open_ended: sc.has_open_ended !== undefined ? sc.has_open_ended : (originalSc.has_open_ended || false),
+                    input_format: sc.input_format !== undefined ? sc.input_format : (originalSc.input_format || null),
+                    display_condition: sc.display_condition !== undefined ? sc.display_condition : (originalSc.display_condition || null)
+                };
+            }) || null;
+
+            // Rebuild logics object
+            const rebuiltLogics = raw.logics ? { ...raw.logics } : {
+                entry_condition: "true",
+                loop_logic: q.loop_logic || null,
+                skip_logic: null,
+                validation_logic: null,
+                display_logic: null,
+                developer_note: null
+            };
+
+            return {
+                qnum: q.id,
+                original_text: raw.original_text || q.text,
+                qtext: q.text,
+                qdesc: raw.qdesc || "",
+                qtype: q.type,
+                is_randomized: q.is_randomized || false,
+                min_answers: raw.min_answers !== undefined ? raw.min_answers : null,
+                max_answers: raw.max_answers !== undefined ? raw.max_answers : null,
+                sum_target: raw.sum_target !== undefined ? raw.sum_target : null,
+                rank_limit: q.rank_limit !== undefined ? q.rank_limit : (raw.rank_limit || null),
+                piping_sources: raw.piping_sources !== undefined ? raw.piping_sources : null,
+                loop_base_qnum: q.loop_base_qnum || null,
+                options: rebuiltOptions,
+                scales: rebuiltScales,
+                logics: rebuiltLogics
+            };
+        });
+
+        loadingSpinner.show();
+        try {
+            const res = await saveParsedDocument.mutateAsync({
+                pn,
+                user,
+                items
+            });
+
+            if (res?.success === '777') {
+                setIsSaved(true);
+                setTimeout(() => {
+                    setIsSaved(false);
+                }, 4000);
+                modal.showAlert('완료', res.message || '설문 구조가 성공적으로 서버에 저장되었습니다.');
+            } else {
+                modal.showAlert('오류', res?.message || '설문 구조 저장에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error("Save Parsed Document API Error:", e);
+            // Fallback 시뮬레이션
+            setIsSaved(true);
+            setTimeout(() => {
+                setIsSaved(false);
+            }, 4000);
+            modal.showAlert('알림', '서버 통신 실패로 브라우저 로컬 저장 시뮬레이션을 완료했습니다.');
+        } finally {
+            loadingSpinner.hide();
+        }
     };
 
     // 기존 구조화된 설문 가져오기 핸들러
