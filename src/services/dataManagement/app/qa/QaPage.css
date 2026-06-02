@@ -294,7 +294,6 @@
     min-height: 0;
 }
 
-/* 좌측 문항 색인 리스트 */
 .qa-index-list {
     width: 300px; /* 테이블 목록과 동일하게 너비 확장 */
     flex-shrink: 0;
@@ -306,6 +305,25 @@
     gap: 10px;
     background: #f8fafc;
 }
+
+/* Custom slim scrollbar for qa-index-list */
+.qa-index-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.qa-index-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.qa-index-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 99px;
+}
+
+.qa-index-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 
 .qa-index-item {
     display: flex;
@@ -433,7 +451,6 @@
     border: 1px solid #c7d2fe;
 }
 
-/* 우측 문항 상세 리스트 */
 .qa-detail-list {
     flex: 1;
     padding: 16px 20px;
@@ -443,6 +460,25 @@
     gap: 16px;
     scroll-behavior: smooth;
 }
+
+/* Custom slim scrollbar for qa-detail-list */
+.qa-detail-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.qa-detail-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.qa-detail-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 99px;
+}
+
+.qa-detail-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
 
 .qa-empty-viewer {
     display: flex;
@@ -883,6 +919,27 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    padding-right: 6px;
+    padding-left: 2px;
+    padding-bottom: 8px;
+}
+
+/* Custom slim scrollbar for qa-right-error-list */
+.qa-right-error-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.qa-right-error-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.qa-right-error-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 99px;
+}
+
+.qa-right-error-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 .qa-error-card-lite {
