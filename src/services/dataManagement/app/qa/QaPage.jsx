@@ -384,6 +384,12 @@ const QaPage = () => {
     const [estimatedCost, setEstimatedCost] = useState('0.0000'); // 예상 API 비용
     const [elapsedTime, setElapsedTime] = useState('0.0'); // 소요 시간
 
+    // 새 문항 삽입/수정 팝업 상태
+    const [isInsertPopupOpen, setIsInsertPopupOpen] = useState(false);
+    const [popupMode, setPopupMode] = useState('insert'); // 'insert' | 'modify'
+    const [insertTargetId, setInsertTargetId] = useState('');
+    const [insertText, setInsertText] = useState('');
+
     const userAnswers = {};
     const setUserAnswers = () => {};
     const openEndedTexts = {};
@@ -771,13 +777,115 @@ const QaPage = () => {
         }
     };
 
+    // 문항 객체를 텍스트 표현으로 변환하는 헬퍼
+    const getQuestionTextRepresentation = (q) => {
+        if (!q) return '';
+        let text = `${q.id}. ${q.text}`;
+        const items = (q.options && q.options.length > 0) ? q.options : (q.scales && q.scales.length > 0 ? q.scales : []);
+        if (items.length > 0) {
+            const optLines = items.map(opt => `${opt.code}. ${opt.text}`).join('\n');
+            text += '\n' + optLines;
+        }
+        return text;
+    };
+
     // 문항 조작 시뮬레이션 핸들러
     const handleInsertQuestion = (id) => {
-        modal.showAlert('삽입 시뮬레이션', `[${id}] 하위에 새로운 빈 문항 노드를 삽입합니다.`);
+        setInsertTargetId(id);
+        setPopupMode('insert');
+        setInsertText('');
+        setIsInsertPopupOpen(true);
     };
 
     const handleModifyQuestion = (id) => {
-        modal.showAlert('수정 시뮬레이션', `[${id}] 문항 속성 편집을 진행합니다.`);
+        const q = questions.find(item => item.id === id);
+        if (!q) return;
+
+        setInsertTargetId(id);
+        setPopupMode('modify');
+        setInsertText(getQuestionTextRepresentation(q));
+        setIsInsertPopupOpen(true);
+    };
+
+    const handleExecuteInsert = () => {
+        if (!insertText.trim()) {
+            modal.showAlert('알림', popupMode === 'modify' ? '수정할 문항 텍스트를 입력해 주세요.' : '삽입할 문항 텍스트를 입력해 주세요.');
+            return;
+        }
+
+        // 텍스트를 문항 객체로 파싱
+        const lines = insertText.split('\n').map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) return;
+
+        const firstLine = lines[0];
+        let qnum = '';
+        let qtext = '';
+
+        const qMatch = firstLine.match(/^([a-zA-Z0-9_\-]+)[\.\s]+(.*)$/);
+        if (qMatch) {
+            qnum = qMatch[1];
+            qtext = qMatch[2].trim();
+        } else {
+            qnum = popupMode === 'modify' ? insertTargetId : `${insertTargetId}_new`;
+            qtext = firstLine;
+        }
+
+        const options = [];
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i];
+            const optMatch = line.match(/^(\d+)[\.\s]+(.*)$/);
+            if (optMatch) {
+                options.push({
+                    code: optMatch[1],
+                    text: optMatch[2].trim()
+                });
+            } else {
+                options.push({
+                    code: String(i),
+                    text: line
+                });
+            }
+        }
+
+        const oldQ = questions.find(q => q.id === insertTargetId);
+
+        const newQuestion = {
+            id: qnum,
+            type: options.length > 0 ? (oldQ?.type === 'grid_multi' || oldQ?.type === 'scale' ? oldQ.type : 'single') : 'open',
+            text: qtext,
+            options: oldQ?.type === 'scale' ? [] : options,
+            scales: oldQ?.type === 'scale' ? options : (oldQ?.scales || []),
+            logic: oldQ?.logic || '',
+            loop_logic: oldQ?.loop_logic || null,
+            loop_base_qnum: oldQ?.loop_base_qnum || null,
+            rank_limit: oldQ?.rank_limit || 2,
+            is_randomized: oldQ?.is_randomized || false
+        };
+
+        if (popupMode === 'modify') {
+            setQuestions(prev => prev.map(q => q.id === insertTargetId ? newQuestion : q));
+            if (qnum !== insertTargetId) {
+                setActiveQuestionId(qnum);
+            }
+        } else {
+            setQuestions(prev => {
+                const targetIdx = prev.findIndex(q => q.id === insertTargetId);
+                if (targetIdx === -1) {
+                    return [...prev, newQuestion];
+                }
+                const next = [...prev];
+                next.splice(targetIdx + 1, 0, newQuestion);
+                return next;
+            });
+        }
+
+        setIsInsertPopupOpen(false);
+        setInsertText('');
+        
+        // 포커스 이동
+        setTimeout(() => {
+            handleFocusQuestion(qnum);
+        }, 100);
     };
 
     const handleDeleteQuestion = (id) => {
@@ -1623,6 +1731,48 @@ const QaPage = () => {
                 message={progressMessage}
                 isComplete={isProgressComplete}
             />
+
+            {/* 새 문항 삽입/수정 팝업 모달 */}
+            <div className={`qa-insert-overlay ${isInsertPopupOpen ? 'active' : ''}`}>
+                <div className="qa-insert-card">
+                    <div className="qa-insert-header">
+                        <div className="qa-insert-header-title-box">
+                            <div className="qa-insert-header-accent"></div>
+                            <h3 className="qa-insert-title">
+                                {popupMode === 'modify' ? '문항 수정 파싱' : '새 문항 삽입 파싱'}
+                            </h3>
+                        </div>
+                        <button onClick={() => setIsInsertPopupOpen(false)} className="qa-insert-close">&times;</button>
+                    </div>
+                    <div className="qa-insert-body">
+                        <p className="qa-insert-subtitle">
+                            {popupMode === 'modify' 
+                                ? '수정할 문항의 텍스트 전체를 입력하세요. AI가 분석하여 목록에 업데이트합니다.' 
+                                : '추가할 새 문항의 텍스트 전체를 붙여넣으세요. AI가 분석하여 목록에 삽입합니다.'}
+                        </p>
+                        <p className="qa-insert-target">
+                            {popupMode === 'modify' 
+                                ? `대상 문항: ${insertTargetId} 수정` 
+                                : `대상 문항: ${insertTargetId} 바로 뒤에 삽입`}
+                        </p>
+                        <textarea
+                            className="qa-insert-textarea"
+                            placeholder="수정 또는 삽입할 설문지 텍스트를 입력해주세요."
+                            value={insertText}
+                            onChange={(e) => setInsertText(e.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                    <div className="qa-insert-footer">
+                        <button className="qa-insert-btn-cancel" onClick={() => setIsInsertPopupOpen(false)}>
+                            취소
+                        </button>
+                        <button className="qa-insert-btn-submit" onClick={handleExecuteInsert}>
+                            {popupMode === 'modify' ? '수정 완료' : '재파싱 실행'}
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

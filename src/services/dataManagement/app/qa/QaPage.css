@@ -1054,8 +1054,8 @@
 }
 
 .qa-index-search-wrapper:focus-within {
-    border-color: #2563eb;
-    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.12);
+    border-color: var(--dm-primary, #16a34a);
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.12);
 }
 
 .qa-index-search-icon {
@@ -1299,6 +1299,175 @@
     color: #475569;
     background: #f1f5f9;
     border: 1px solid #cbd5e1;
+}
+
+/* ─────────────────────────────────────────────────── */
+/* 새 문항 삽입/수정 파싱 팝업 스타일                     */
+/* ─────────────────────────────────────────────────── */
+.qa-insert-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* darkened overlay without blur */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+}
+
+.qa-insert-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.qa-insert-card {
+    background: #ffffff; /* White background matching edit label popup */
+    border: 1px solid #e2e8f0;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 12px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.qa-insert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.qa-insert-header-title-box {
+    display: flex;
+    align-items: center;
+}
+
+.qa-insert-header-accent {
+    width: 4px;
+    height: 18px;
+    background-color: var(--dm-primary, #16a34a); /* Brand green */
+    border-radius: 4px;
+    margin-right: 8px;
+}
+
+.qa-insert-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.qa-insert-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 22px;
+    color: #94a3b8;
+    line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s;
+}
+
+.qa-insert-close:hover {
+    color: #475569;
+}
+
+.qa-insert-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.qa-insert-subtitle {
+    font-size: 13px;
+    color: #475569;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.qa-insert-target {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--dm-primary, #16a34a); /* Green brand theme highlight */
+    margin: 0;
+}
+
+.qa-insert-textarea {
+    width: 100%;
+    height: 240px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 12px;
+    color: #334155;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.qa-insert-textarea:focus {
+    border-color: var(--dm-primary, #16a34a);
+    box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.15);
+}
+
+.qa-insert-textarea::placeholder {
+    color: #cbd5e1;
+}
+
+.qa-insert-footer {
+    padding: 16px 20px;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    background: #ffffff;
+}
+
+.qa-insert-btn-cancel {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #fff;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.qa-insert-btn-cancel:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+
+.qa-insert-btn-submit {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: var(--dm-primary, #16a34a) !important;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.qa-insert-btn-submit:hover {
+    background: var(--dm-primary-hover, #15803d) !important;
 }
 
 
