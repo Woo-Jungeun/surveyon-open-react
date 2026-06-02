@@ -296,7 +296,7 @@
 
 /* 좌측 문항 색인 리스트 */
 .qa-index-list {
-    width: 250px; /* 테이블 목록과 동일하게 너비 확장 */
+    width: 300px; /* 테이블 목록과 동일하게 너비 확장 */
     flex-shrink: 0;
     border-right: 1px solid #e2e8f0;
     padding: 12px 10px;
@@ -339,6 +339,11 @@
     box-shadow: 0 4px 12px rgba(22, 163, 74, 0.15);
 }
 
+/* 로테이션/루프 문항 리스트 연동 디자인 */
+.qa-index-item.qa-loop-child {
+    padding-left: 22px;
+}
+
 .qa-index-item-info {
     display: flex;
     flex-direction: column;
@@ -356,6 +361,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: block;
+}
+
+.qa-index-label-title span {
+    font-size: 12.5px;
 }
 
 .qa-index-item.active .qa-index-label-title {
@@ -560,6 +569,12 @@
     color: #0284c7;
     background: #f0f9ff;
     border: 1px solid #bae6fd;
+}
+
+.qa-badge-condition {
+    color: #4f46e5;
+    background: #e0e7ff;
+    border: 1px solid #c7d2fe;
 }
 
 .qa-qc-controls {
@@ -1197,6 +1212,30 @@
     gap: 6px;
 }
 
+.qa-qc-details-container {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #94a3b8; /* medium-light gray vertical line */
+    border-radius: 6px;
+    padding: 14px 16px;
+    margin-left: 4px;
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.qa-qc-details-container .qa-qc-section {
+    margin-top: 0;
+}
+
+.qa-qc-section-content-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 4px;
+}
+
 .qa-qc-section-title {
     font-size: 12px;
     font-weight: 700;
@@ -1205,8 +1244,11 @@
 }
 
 .qa-qc-section-content {
-    border-left: 2px solid var(--dm-primary, #16a34a); /* green vertical line */
-    padding-left: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid var(--dm-primary, #16a34a); /* green vertical line */
+    border-radius: 6px;
+    padding: 10px 14px;
     margin-left: 4px;
     display: flex;
     flex-direction: column;
@@ -1223,12 +1265,14 @@
 }
 
 .qa-qc-option-code {
+    font-size: 13px;
     font-weight: 700;
     color: var(--dm-primary-hover, #15803d); /* green code font matching theme */
     font-family: 'Consolas', monospace;
 }
 
 .qa-qc-option-text {
+    font-size: 13px;
     color: #334155;
 }
 
@@ -1237,6 +1281,18 @@
     color: #334155;
     line-height: 1.45;
     word-break: break-all;
+}
+
+.qa-qc-logic-label {
+    font-size: 13px;
+    font-weight: 800; /* Extra bold */
+    color: var(--dm-primary-hover, #15803d); /* theme brand green */
+    margin-right: 6px;
+}
+
+.qa-qc-logic-value {
+    font-size: 13px;
+    color: #1e293b; /* darker slate for high readability */
 }
 
 .qa-badge-open {

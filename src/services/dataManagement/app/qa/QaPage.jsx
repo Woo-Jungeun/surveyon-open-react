@@ -53,7 +53,8 @@ const mapApiResponseToQuestions = (generatedVariables) => {
             is_exclusive: opt.is_exclusive || false,
             is_fixed: opt.is_fixed || false,
             has_open_ended: opt.has_open_ended || false,
-            input_format: opt.input_format || ''
+            input_format: opt.input_format || '',
+            display_condition: opt.display_condition || ''
         })) || [];
 
         const isRandomized = q.is_randomized || false;
@@ -63,24 +64,61 @@ const mapApiResponseToQuestions = (generatedVariables) => {
             code: sc.code,
             text: sc.label || sc.text || '',
             has_open_ended: sc.has_open_ended || false,
-            input_format: sc.input_format || ''
+            input_format: sc.input_format || '',
+            display_condition: sc.display_condition || ''
         })) || [];
 
         const formatLogics = (logicsObj) => {
             if (!logicsObj) return '';
             const parts = [];
             if (logicsObj.entry_condition) {
-                parts.push(`[진입 조건] ${logicsObj.entry_condition}`);
+                const norm = String(logicsObj.entry_condition).replace(/\s/g, '').toLowerCase();
+                if (norm !== 'true') {
+                    parts.push(`진입 조건: ${logicsObj.entry_condition}`);
+                }
             }
             if (logicsObj.skip_logic) {
-                parts.push(`[분기/스킵] ${logicsObj.skip_logic}`);
+                const skipVal = typeof logicsObj.skip_logic === 'object'
+                    ? JSON.stringify(logicsObj.skip_logic)
+                    : logicsObj.skip_logic;
+                parts.push(`흐름 스킵: ${skipVal}`);
             }
             if (logicsObj.loop_logic) {
                 const loop = logicsObj.loop_logic;
-                parts.push(`[루프 정의] 범위: ${loop.target_range} | 반복조건: ${loop.repeat_condition}`);
+                if (typeof loop === 'object') {
+                    parts.push(`루프 정의: 범위: ${loop.target_range || ''} | 반복조건: ${loop.repeat_condition || ''}`);
+                } else {
+                    parts.push(`루프 정의: ${loop}`);
+                }
+            }
+            if (logicsObj.validation_logic) {
+                if (Array.isArray(logicsObj.validation_logic)) {
+                    const valLines = logicsObj.validation_logic.map(v => {
+                        if (typeof v === 'object' && v !== null) {
+                            return `  • ${v.message || v.text || JSON.stringify(v)}`;
+                        }
+                        return `  • ${v}`;
+                    }).join('\n');
+                    parts.push(`유효성 조건:\n${valLines}`);
+                } else {
+                    parts.push(`유효성 조건: ${logicsObj.validation_logic}`);
+                }
+            }
+            if (logicsObj.display_logic) {
+                if (Array.isArray(logicsObj.display_logic)) {
+                    const dispLines = logicsObj.display_logic.map(d => {
+                        if (typeof d === 'object' && d !== null) {
+                            return `  • ${d.condition || d.text || JSON.stringify(d)}`;
+                        }
+                        return `  • ${d}`;
+                    }).join('\n');
+                    parts.push(`표시 조건:\n${dispLines}`);
+                } else {
+                    parts.push(`표시 조건: ${logicsObj.display_logic}`);
+                }
             }
             if (logicsObj.developer_note) {
-                parts.push(`[개발 참고] ${logicsObj.developer_note}`);
+                parts.push(`설계 메모: ${logicsObj.developer_note}`);
             }
             if (parts.length === 0) {
                 return typeof logicsObj === 'object' ? JSON.stringify(logicsObj, null, 2) : String(logicsObj);
@@ -338,21 +376,13 @@ const QaPage = () => {
     const [isRightCollapsed, setIsRightCollapsed] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // 분석 데이터 상태 (테스트용 고정 데이터 파싱하여 기본값으로 주입)
-    const initialQuestions = mapApiResponseToQuestions(TEST_RESPONSE.resultjson.generatedVariables);
-    const initialErrors = TEST_RESPONSE.resultjson.warnings?.map(warn => ({
-        id: 'Warning',
-        type: 'warning',
-        title: 'WARNING',
-        message: warn
-    })) || [];
-
-    const [questions, setQuestions] = useState(initialQuestions); // 문항 리스트
+    // 분석 데이터 상태 (초기 상태는 비어 있음)
+    const [questions, setQuestions] = useState([]); // 문항 리스트
     const [errors, setErrors] = useState([]); // 검증 오류 리스트
-    const [apiErrors, setApiErrors] = useState(initialErrors); // API에서 반환받은 실제 오류 리스트
-    const [activeQuestionId, setActiveQuestionId] = useState(initialQuestions[0]?.id || ''); // 현재 선택된 문항 ID (스크롤 연계)
-    const [estimatedCost, setEstimatedCost] = useState(TEST_RESPONSE.resultjson.estimatedCostUsd.toFixed(4)); // 예상 API 비용
-    const [elapsedTime, setElapsedTime] = useState(TEST_RESPONSE.resultjson.processingTimeSeconds.toString()); // 소요 시간
+    const [apiErrors, setApiErrors] = useState([]); // API에서 반환받은 실제 오류 리스트
+    const [activeQuestionId, setActiveQuestionId] = useState(''); // 현재 선택된 문항 ID (스크롤 연계)
+    const [estimatedCost, setEstimatedCost] = useState('0.0000'); // 예상 API 비용
+    const [elapsedTime, setElapsedTime] = useState('0.0'); // 소요 시간
 
     const userAnswers = {};
     const setUserAnswers = () => {};
@@ -370,9 +400,20 @@ const QaPage = () => {
 
     const fileInputRef = useRef(null);
     const questionCardRefs = useRef({});
+    const leftItemRefs = useRef({});
+    const detailListRef = useRef(null);
+    const isProgrammaticScrollRef = useRef(false);
+    const scrollTimeoutRef = useRef(null);
+
     const auth = useSelector(store => store.auth);
     const modal = useContext(modalContext);
-    const { analyzeAll } = QaPageApi();
+    const { analyzeAll, getParsedDocument } = QaPageApi();
+
+    useEffect(() => {
+        return () => {
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        };
+    }, []);
 
     // ── 드래그앤드롭 이벤트 핸들러 ──
     const handleDrop = useCallback((e) => {
@@ -403,16 +444,58 @@ const QaPage = () => {
 
     // ── 문항 포커스 및 스크롤 이동 ──
     const handleFocusQuestion = (id) => {
-        if (id === 'global_rule_1') {
-            setActiveQuestionId(id);
-            const element = questionCardRefs.current[id];
-            if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            return;
-        }
         setActiveQuestionId(id);
         const element = questionCardRefs.current[id];
         if (element) {
+            isProgrammaticScrollRef.current = true;
+            if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+            
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            scrollTimeoutRef.current = setTimeout(() => {
+                isProgrammaticScrollRef.current = false;
+            }, 800);
+        }
+
+        // 좌측 색인 리스트의 해당 아이템도 보이도록 스크롤 처리
+        const leftItemEl = leftItemRefs.current[id];
+        if (leftItemEl) {
+            leftItemEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    };
+
+    // 우측 상세 스크롤 감지 ➔ 좌측 목록 동기화 (Scroll Spy)
+    const handleDetailScroll = () => {
+        if (isProgrammaticScrollRef.current) return;
+
+        const container = detailListRef.current;
+        if (!container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const containerTop = containerRect.top;
+
+        let closestId = null;
+        let closestDiff = Infinity;
+
+        Object.entries(questionCardRefs.current).forEach(([id, element]) => {
+            if (!element) return;
+            const rect = element.getBoundingClientRect();
+            // 카드 상단이 뷰포트 컨테이너 상단 근처에 위치한 거리를 계산
+            const diff = Math.abs(rect.top - containerTop - 16); 
+            if (diff < closestDiff) {
+                closestDiff = diff;
+                closestId = id;
+            }
+        });
+
+        if (closestId && closestId !== activeQuestionId) {
+            setActiveQuestionId(closestId);
+
+            // 좌측 목록에서도 스크롤 연동하여 자동으로 해당 카드 보이게 처리
+            const leftItemEl = leftItemRefs.current[closestId];
+            if (leftItemEl) {
+                leftItemEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         }
     };
 
@@ -620,8 +703,72 @@ const QaPage = () => {
     };
 
     // 기존 구조화된 설문 가져오기 핸들러
-    const handleLoadExistingSurvey = () => {
-        modal.showAlert('알림', '기존 구조화된 설문 가져오기 API를 연동할 예정입니다.');
+    const handleLoadExistingSurvey = async () => {
+        const pn = sessionStorage.getItem('projectnum') || '';
+        const user = auth?.user?.userId || '';
+
+        if (!pn) {
+            modal.showAlert('알림', '프로젝트 정보(PN)가 존재하지 않습니다.');
+            return;
+        }
+
+        try {
+            const res = await getParsedDocument.mutateAsync({
+                pn: pn,
+                user: user
+            });
+
+            if (res?.success === '777' && res?.resultjson) {
+                const result = res.resultjson;
+                const variables = Array.isArray(result) ? result : (result.generatedVariables || []);
+                const cost = (!Array.isArray(result) && result.estimatedCostUsd !== undefined)
+                    ? result.estimatedCostUsd.toFixed(4)
+                    : ((!Array.isArray(result) && result.estimatedApiCost !== undefined) ? result.estimatedApiCost.toFixed(4) : '0.00');
+                const time = (!Array.isArray(result) && result.processingTimeSeconds !== undefined)
+                    ? result.processingTimeSeconds.toString()
+                    : '0.0';
+
+                const parsedQs = mapApiResponseToQuestions(variables);
+                setQuestions(parsedQs);
+                if (parsedQs.length > 0) {
+                    setActiveQuestionId(parsedQs[0].id);
+                }
+                setEstimatedCost(cost);
+                setElapsedTime(time);
+
+                // Parse errors/warnings
+                const parsedErrors = [];
+                if (!Array.isArray(result)) {
+                    if (result.warnings) {
+                        result.warnings.forEach((warn) => {
+                            parsedErrors.push({
+                                id: 'Warning',
+                                type: 'warning',
+                                title: 'WARNING',
+                                message: warn
+                            });
+                        });
+                    }
+                    if (result.validationErrors) {
+                        result.validationErrors.forEach((err) => {
+                            parsedErrors.push({
+                                id: err.qnum || 'Error',
+                                type: err.type || 'critical',
+                                title: err.title || 'CRITICAL',
+                                message: err.message || err.desc || 'Validation Error'
+                            });
+                        });
+                    }
+                }
+                setApiErrors(parsedErrors);
+                modal.showAlert('완료', '기존 구조화 설문 데이터를 성공적으로 가져왔습니다.');
+            } else {
+                modal.showAlert('오류', res?.message || '구조화 데이터를 가져오는 데 실패했습니다.');
+            }
+        } catch (e) {
+            console.error("Load Existing Survey Error:", e);
+            modal.showAlert('오류', '서버 통신 중 오류가 발생했습니다.');
+        }
     };
 
     // 문항 조작 시뮬레이션 핸들러
@@ -1208,6 +1355,7 @@ const QaPage = () => {
                                     {filteredGlobalRules.map(r => (
                                         <div
                                             key={r.id}
+                                            ref={el => leftItemRefs.current[r.id] = el}
                                             className={`qa-index-item ${activeQuestionId === r.id ? 'active' : ''}`}
                                             onClick={() => handleFocusQuestion(r.id)}
                                         >
@@ -1224,25 +1372,40 @@ const QaPage = () => {
                                             </div>
                                         </div>
                                     ))}
-                                    {filteredVisibleQuestions.map((q) => (
-                                        <div
-                                            key={q.id}
-                                            className={`qa-index-item ${activeQuestionId === q.id ? 'active' : ''}`}
-                                            onClick={() => handleFocusQuestion(q.id)}
-                                        >
-                                            <div className="qa-index-item-info">
-                                                <span className="qa-index-label-title" title={q.text}>
-                                                    {q.id}. {q.text}
-                                                </span>
-                                                <span className="qa-index-label-sub">
-                                                    {q.id}_stub
-                                                </span>
+                                    {filteredVisibleQuestions.map((q) => {
+                                        const isLoopBase = questions.some(otherQ => otherQ.loop_base_qnum === q.id);
+                                        const isLoopChild = !!q.loop_base_qnum;
+                                        return (
+                                            <div
+                                                key={q.id}
+                                                ref={el => leftItemRefs.current[q.id] = el}
+                                                className={`qa-index-item ${activeQuestionId === q.id ? 'active' : ''} ${isLoopChild ? 'qa-loop-child' : ''}`}
+                                                onClick={() => handleFocusQuestion(q.id)}
+                                            >
+                                                <div className="qa-index-item-info">
+                                                    <span className="qa-index-label-title" title={q.text} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        {isLoopBase && (
+                                                            <span className="qa-loop-base-badge" title="로테이션 루프 시작 문항" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: '#dbeafe', color: '#1e40af', borderRadius: '4px', padding: '3px', marginRight: '4px', flexShrink: 0 }}>
+                                                                <RefreshCw size={11} />
+                                                            </span>
+                                                        )}
+                                                        {isLoopChild && (
+                                                            <span className="qa-loop-child-prefix" style={{ color: '#94a3b8', fontWeight: '800', marginRight: '4px', flexShrink: 0 }}>
+                                                                ↳
+                                                            </span>
+                                                        )}
+                                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.id}. {q.text}</span>
+                                                    </span>
+                                                    <span className="qa-index-label-sub">
+                                                        {q.id}_stub
+                                                    </span>
+                                                </div>
+                                                <div className={`qa-index-type-badge type-${q.type}`}>
+                                                    {getShortTypeName(q.type)}
+                                                </div>
                                             </div>
-                                            <div className={`qa-index-type-badge type-${q.type}`}>
-                                                {getShortTypeName(q.type)}
-                                            </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                     {filteredGlobalRules.length === 0 && filteredVisibleQuestions.length === 0 && (
                                         <div className="qa-index-search-empty">
                                             검색 결과가 없습니다.
@@ -1250,8 +1413,8 @@ const QaPage = () => {
                                     )}
                                 </div>
 
-                                {/* 우측 문항 상세 리스트 */}
-                                <div className="qa-detail-list">
+                                 {/* 우측 문항 상세 리스트 */}
+                                 <div className="qa-detail-list" ref={detailListRef} onScroll={handleDetailScroll}>
                                     {globalLogicRules.map(r => (
                                         <div
                                             key={r.id}
@@ -1264,7 +1427,22 @@ const QaPage = () => {
                                                         <BrainCircuit size={12} color="#4f46e5" />
                                                         [전역 로직] {r.text}
                                                     </div>
-                                                    <p style={{ margin: '4px 0 0 0', lineHeight: 1.4 }}>{r.logic}</p>
+                                                     <div style={{ margin: '4px 0 0 0', lineHeight: 1.4, fontSize: '11.5px' }}>
+                                                         {r.logic.split('\n').filter(Boolean).map((line, idx) => {
+                                                             const colonIdx = line.indexOf(':');
+                                                             if (colonIdx !== -1) {
+                                                                 const label = line.substring(0, colonIdx + 1);
+                                                                 const val = line.substring(colonIdx + 1);
+                                                                 return (
+                                                                     <div key={idx}>
+                                                                         <strong style={{ fontWeight: 800, color: 'var(--dm-primary-hover, #15803d)', marginRight: '6px' }}>{label}</strong>
+                                                                         <span style={{ color: '#1e293b' }}>{val}</span>
+                                                                     </div>
+                                                                 );
+                                                             }
+                                                             return <div key={idx}>{line}</div>;
+                                                         })}
+                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1300,56 +1478,75 @@ const QaPage = () => {
                                             <div className="qa-qc-body">
                                                 <p className="qa-qc-question-text">{q.text}</p>
                                                 
-                                                {q.options && q.options.length > 0 && (
-                                                    <div className="qa-qc-section">
-                                                        <div className="qa-qc-section-title">보기 목록 (OPTIONS)</div>
-                                                        <div className="qa-qc-section-content">
-                                                            {q.options.map(opt => (
-                                                                <div key={opt.code} className="qa-qc-option-item">
-                                                                    <span className="qa-qc-option-code">[{opt.code}]</span>{' '}
-                                                                    <span className="qa-qc-option-text">{opt.text}</span>
-                                                                    {opt.is_exclusive && <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[배타]</span>}
-                                                                    {opt.is_fixed && <span className="qa-control-badge qa-badge-fixed" style={{ marginLeft: '6px' }}>📌 고정</span>}
-                                                                    {opt.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                 {((q.options && q.options.length > 0) || (q.scales && q.scales.length > 0) || (q.logic && q.logic.trim())) && (
+                                                     <div className="qa-qc-details-container">
+                                                         {q.options && q.options.length > 0 && (
+                                                             <div className="qa-qc-section">
+                                                                 <div className="qa-qc-section-title">보기 목록 (OPTIONS)</div>
+                                                                 <div className="qa-qc-section-content-inner">
+                                                                     {q.options.map(opt => (
+                                                                         <div key={opt.code} className="qa-qc-option-item">
+                                                                             <span className="qa-qc-option-code">[{opt.code}]</span>{' '}
+                                                                             <span className="qa-qc-option-text">{opt.text}</span>
+                                                                             {opt.is_exclusive && <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[배타]</span>}
+                                                                             {opt.is_fixed && <span className="qa-control-badge qa-badge-fixed" style={{ marginLeft: '6px' }}>📌 고정</span>}
+                                                                             {opt.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
+                                                                             {opt.display_condition && <span className="qa-control-badge qa-badge-condition" style={{ marginLeft: '6px' }}>👁 {opt.display_condition}</span>}
+                                                                         </div>
+                                                                     ))}
+                                                                 </div>
+                                                             </div>
+                                                         )}
 
-                                                {q.scales && q.scales.length > 0 && (
-                                                    <div className="qa-qc-section">
-                                                        <div className="qa-qc-section-title">척도 목록 (SCALES)</div>
-                                                        <div className="qa-qc-section-content">
-                                                            {q.scales.map(sc => (
-                                                                <div key={sc.code} className="qa-qc-option-item">
-                                                                    <span className="qa-qc-option-code">[{sc.code}]</span>{' '}
-                                                                    <span className="qa-qc-option-text">{sc.text}</span>
-                                                                    {sc.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                         {q.scales && q.scales.length > 0 && (
+                                                             <div className="qa-qc-section">
+                                                                 <div className="qa-qc-section-title">척도 목록 (SCALES)</div>
+                                                                 <div className="qa-qc-section-content-inner">
+                                                                     {q.scales.map(sc => (
+                                                                         <div key={sc.code} className="qa-qc-option-item">
+                                                                             <span className="qa-qc-option-code">[{sc.code}]</span>{' '}
+                                                                             <span className="qa-qc-option-text">{sc.text}</span>
+                                                                             {sc.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
+                                                                             {sc.display_condition && <span className="qa-control-badge qa-badge-condition" style={{ marginLeft: '6px' }}>👁 {sc.display_condition}</span>}
+                                                                         </div>
+                                                                     ))}
+                                                                 </div>
+                                                             </div>
+                                                         )}
 
-                                                {q.logic && q.logic.trim() && (
-                                                    <div className="qa-qc-section">
-                                                        <div className="qa-qc-section-title">상호 연계 로직 (LOGICS)</div>
-                                                        <div className="qa-qc-section-content">
-                                                            {q.logic.split('\n').filter(Boolean).map((line, idx) => (
-                                                                <div key={idx} className="qa-qc-logic-item">
-                                                                    {line}
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                )}
+                                                         {q.logic && q.logic.trim() && (
+                                                             <div className="qa-qc-section">
+                                                                 <div className="qa-qc-section-title">상호 연계 로직 (LOGICS)</div>
+                                                                 <div className="qa-qc-section-content-inner">
+                                                                     {q.logic.split('\n').filter(Boolean).map((line, idx) => {
+                                                                         const colonIdx = line.indexOf(':');
+                                                                         if (colonIdx !== -1) {
+                                                                             const label = line.substring(0, colonIdx + 1);
+                                                                             const val = line.substring(colonIdx + 1);
+                                                                             return (
+                                                                                 <div key={idx} className="qa-qc-logic-item">
+                                                                                     <strong className="qa-qc-logic-label">{label}</strong>
+                                                                                     <span className="qa-qc-logic-value">{val}</span>
+                                                                                 </div>
+                                                                             );
+                                                                         }
+                                                                         return (
+                                                                             <div key={idx} className="qa-qc-logic-item">
+                                                                                 {line}
+                                                                             </div>
+                                                                         );
+                                                                     })}
+                                                                 </div>
+                                                             </div>
+                                                         )}
+                                                     </div>
+                                                 )}
 
-                                                {q.loop_base_qnum && (
-                                                    <div className="qa-bottom-link-bar">
-                                                        <span>🔗 본 문항은 {q.loop_base_qnum}에 종속된 반복 로테이션 문항입니다.</span>
-                                                    </div>
-                                                )}
+                                                 {q.loop_base_qnum && (
+                                                     <div className="qa-bottom-link-bar">
+                                                         <span>🔗 본 문항은 {q.loop_base_qnum}에 종속된 반복 로테이션 문항입니다.</span>
+                                                     </div>
+                                                 )}
                                             </div>
                                         </div>
                                     ))}

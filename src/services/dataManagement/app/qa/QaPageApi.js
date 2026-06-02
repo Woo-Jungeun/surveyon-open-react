@@ -11,5 +11,10 @@ export function QaPageApi() {
         async (data) => await api.post(data, "/qa/setup-from-document", "API_BASE_URL_DATAMANAGEMENT"),
     );
 
-    return { analyzeAll };
+    /** 구조화 문서 데이터 조회 - parsed-document (Pn, User) */
+    const getParsedDocument = useMutation(
+        async (data) => await api.post(data, "/qa/parsed-document", "API_BASE_URL_DATAMANAGEMENT"),
+    );
+
+    return { analyzeAll, getParsedDocument };
 }
