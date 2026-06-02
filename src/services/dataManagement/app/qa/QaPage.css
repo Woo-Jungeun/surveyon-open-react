@@ -3,6 +3,11 @@
 /* ─────────────────────────────────────────────────── */
 
 .qa-parser-page {
+    --dm-primary: #16a34a !important;
+    --dm-primary-hover: #15803d !important;
+    --dm-primary-light: #f0fdf4 !important;
+    --dm-primary-border: #dcfce7 !important;
+
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -45,9 +50,9 @@
 
 /* 드롭 존 - 슬림 패널 최적화 */
 .qa-left-dropzone {
-    border: 1.5px dashed #cbd5e1;
+    border: 1.5px dashed var(--dm-primary, #16a34a);
     border-radius: 8px;
-    background: #f8fafc;
+    background: #f0fdf4;
     min-height: 90px;
     display: flex;
     flex-direction: column;
@@ -61,13 +66,13 @@
 }
 
 .qa-left-dropzone:hover:not(.is-filled) {
-    border-color: var(--dm-primary, #16a34a);
-    background: #f0fdf4;
+    border-color: var(--dm-primary-hover, #15803d);
+    background: #dcfce7;
 }
 
 .qa-left-dropzone.is-dragging {
-    border-color: var(--dm-primary, #16a34a);
-    background: #ecfdf5;
+    border-color: var(--dm-primary-hover, #15803d);
+    background: #dcfce7;
 }
 
 .qa-left-dropzone.is-filled {
@@ -85,13 +90,13 @@
 }
 
 .qa-dz-icon {
-    color: #94a3b8;
+    color: var(--dm-primary, #16a34a);
 }
 
 .qa-dz-text {
     font-size: 11.5px;
-    color: #64748b;
-    font-weight: 600;
+    color: var(--dm-primary-hover, #15803d);
+    font-weight: 700;
 }
 
 .qa-dz-subtext {
