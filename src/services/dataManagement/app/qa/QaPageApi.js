@@ -16,5 +16,10 @@ export function QaPageApi() {
         async (data) => await api.post(data, "/qa/parsed-document", "API_BASE_URL_DATAMANAGEMENT"),
     );
 
-    return { analyzeAll, getParsedDocument };
+    /** 구조화 문서 로직 검증 - validate-document (pn, user) */
+    const validateDocument = useMutation(
+        async (data) => await api.post(data, "/qa/validate-document", "API_BASE_URL_DATAMANAGEMENT"),
+    );
+
+    return { analyzeAll, getParsedDocument, validateDocument };
 }

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect, useContext } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
+import { loadingSpinnerContext } from "@/components/common/LoadingSpinner.jsx";
 import { FileText, X, CheckCircle, AlertTriangle, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, RefreshCw, Layers, BrainCircuit, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { QaPageApi } from './QaPageApi';
@@ -413,7 +414,8 @@ const QaPage = () => {
 
     const auth = useSelector(store => store.auth);
     const modal = useContext(modalContext);
-    const { analyzeAll, getParsedDocument } = QaPageApi();
+    const loadingSpinner = useContext(loadingSpinnerContext);
+    const { analyzeAll, getParsedDocument, validateDocument } = QaPageApi();
 
     useEffect(() => {
         return () => {
@@ -679,20 +681,90 @@ const QaPage = () => {
     };
 
     // ── AI 로직 오류 체크 ──
-    const handleCheckErrors = () => {
+    const handleCheckErrors = async () => {
         if (questions.length === 0) {
             modal.showAlert('알림', '먼저 설문지 JSON 구조화를 진행해 주세요.');
             return;
         }
 
-        if (apiErrors && apiErrors.length > 0) {
-            setErrors(apiErrors);
+        const pn = sessionStorage.getItem('projectnum') || '';
+        const user = auth?.user?.userId || '';
+
+        if (!pn) {
+            modal.showAlert('알림', '프로젝트 정보(PN)가 존재하지 않습니다.');
+            return;
+        }
+
+        loadingSpinner.show();
+        try {
+            const res = await validateDocument.mutateAsync({
+                pn: pn,
+                user: user
+            });
+
+            if (res?.success === '777' && res?.resultjson) {
+                const validationErrors = res.resultjson.validationErrors || [];
+                const mappedErrors = validationErrors.map(err => {
+                    let title = '확인';
+                    if (err.severity === 'critical') title = '심각';
+                    else if (err.severity === 'error') title = '오류';
+                    return {
+                        id: err.qnum || '검증',
+                        type: err.severity || 'warning',
+                        title: title,
+                        message: err.message
+                    };
+                });
+
+                setErrors(mappedErrors);
+                setIsRightCollapsed(false);
+                
+                if (mappedErrors.length > 0) {
+                    modal.showAlert('알림', `AI 로직 검증 결과 총 ${mappedErrors.length}건의 이슈가 감지되었습니다.`);
+                } else {
+                    modal.showAlert('알림', 'AI 로직 검증 결과 감지된 이슈가 없습니다.');
+                }
+            } else {
+                modal.showAlert('오류', res?.message || 'AI 로직 검증을 완료할 수 없습니다.');
+            }
+        } catch (e) {
+            console.error("AI 로직 검증 API 오류:", e);
+            // 백엔드 통신 실패 시 모의 동작(Fallback) 시뮬레이션
+            const mockErrors = [
+                {
+                    qnum: "Q2-1",
+                    severity: "critical",
+                    message: "Q2-1 문항에 배타적 옵션(99번)이 체크되어 있으나 배타적 옵션 선택 시 타 옵션의 선택 해제 연계 처리가 스크립트에 누락되어 있습니다."
+                },
+                {
+                    qnum: "Q2-3",
+                    severity: "error",
+                    message: "Q2-3 문항의 진입 조건(Q2-1 해당 브랜드 선택 시)이 설계서 사양과 일치하지 않습니다. 스크립트에는 무조건 진입으로 구현되어 있습니다."
+                },
+                {
+                    qnum: "Q4",
+                    severity: "warning",
+                    message: "Q4 문항(격자 매트릭스형)의 96번 열은 라디오 버튼 대신 직접 텍스트 기입용 input 상자가 위치해야 합니다."
+                }
+            ];
+            
+            const mappedErrors = mockErrors.map(err => {
+                let title = '확인';
+                if (err.severity === 'critical') title = '심각';
+                else if (err.severity === 'error') title = '오류';
+                return {
+                    id: err.qnum || '검증',
+                    type: err.severity || 'warning',
+                    title: title,
+                    message: err.message
+                };
+            });
+
+            setErrors(mappedErrors);
             setIsRightCollapsed(false);
-            modal.showAlert('알림', `AI 로직 검증 결과 총 ${apiErrors.length}건의 이슈가 감지되었습니다.`);
-        } else {
-            setErrors([]);
-            setIsRightCollapsed(false);
-            modal.showAlert('알림', 'AI 로직 검증 결과 감지된 이슈가 없습니다.');
+            modal.showAlert('알림', `서버 통신 실패로 모의 검증 데이터를 로드했습니다. 총 ${mappedErrors.length}건의 이슈가 감지되었습니다.`);
+        } finally {
+            loadingSpinner.hide();
         }
     };
 
