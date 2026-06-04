@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import './QaProgressModal.css';
 
-const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을 준비하고 있습니다...', isComplete = false }) => {
+const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을 준비하고 있습니다...', isComplete = false, mode = 'analyze' }) => {
     const [displayNum, setDisplayNum] = useState(0);
+
+    const isValidate = mode === 'validate';
 
     // calculate step states based on percentage
     const trackWidth = percentage === 100 ? '100%' :
@@ -37,6 +39,12 @@ const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을
         </svg>
     );
 
+    const shieldSvg = (
+        <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+    );
+
     const mergeSvg = (
         <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="18" cy="18" r="3"></circle>
@@ -68,13 +76,22 @@ const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을
 
     if (!isOpen) return null;
 
+    const title = isValidate ? '설문 스크립트 QA 유효성 검증' : 'AI 로직 교차 검증';
+    const subtitle = isValidate 
+        ? '업로드된 설문 템플릿의 문항 구문 오류, 누락, 논리 모순을 정밀 유효성 검증합니다.'
+        : '문서와 설문 스크립트의 불일치 여부를 분석합니다. 화면을 닫지 마세요.';
+    const step1Label = isValidate ? '파싱 구문 비교 대조' : '설문 분석';
+    const step2Label = isValidate ? 'QA 유효성 규칙 검사' : '스크립트 분석';
+    const step3Label = isValidate ? '불일치 리포트 매핑' : '교차 분석';
+    const closeBtnText = isValidate ? 'QA 검증 완료' : '결과 리포트 확인하기';
+
     // Return component UI
     return (
         <div className={`qa-modal-overlay active`}>
             <div className={`qa-modal-card ${isComplete ? 'success-mode' : ''}`}>
                 <div className="qa-header-section">
-                    <h2>AI 로직 교차 검증</h2>
-                    <p className="qa-subtitle">문서와 설문 스크립트의 불일치 여부를 분석합니다.<br/>화면을 닫지 마세요.</p>
+                    <h2>{title}</h2>
+                    <p className="qa-subtitle">{subtitle}</p>
                 </div>
 
                 <div className="qa-steps-container">
@@ -86,21 +103,21 @@ const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을
                         <div className="qa-step-icon-box">
                             {step1Status === 'completed' ? checkSvg : docSvg}
                         </div>
-                        <span className="qa-step-label">설문 분석</span>
+                        <span className="qa-step-label">{step1Label}</span>
                     </div>
 
                     <div className={`qa-step-item ${step2Status}`}>
                         <div className="qa-step-icon-box">
-                            {step2Status === 'completed' ? checkSvg : codeSvg}
+                            {step2Status === 'completed' ? checkSvg : (isValidate ? shieldSvg : codeSvg)}
                         </div>
-                        <span className="qa-step-label">스크립트 분석</span>
+                        <span className="qa-step-label">{step2Label}</span>
                     </div>
 
                     <div className={`qa-step-item ${step3Status}`}>
                         <div className="qa-step-icon-box">
                             {step3Status === 'completed' ? checkSvg : mergeSvg}
                         </div>
-                        <span className="qa-step-label">교차 분석</span>
+                        <span className="qa-step-label">{step3Label}</span>
                     </div>
                 </div>
 
@@ -117,7 +134,7 @@ const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을
                 </div>
 
                 <button className="qa-close-btn" onClick={onClose}>
-                    결과 리포트 확인하기
+                    {closeBtnText}
                 </button>
             </div>
         </div>
