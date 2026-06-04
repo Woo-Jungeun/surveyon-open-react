@@ -2018,7 +2018,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <span style={{ fontSize: '13px', fontWeight: 700, color: showN ? '#1e293b' : '#94a3b8' }}>소수점</span>
                             <div style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: '32px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
                                 background: showN ? '#ffffff' : '#f1f5f9'
                             }}>
                                 <input
@@ -2026,14 +2026,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     disabled={!showN}
                                     value={localDecimalN}
                                     onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-5]/g, '');
-                                        if (val.length > 1) val = val.slice(-1); // 마지막 입력 문자만 유지
-                                        setLocalDecimalN(val !== '' ? parseInt(val) : '');
+                                        let val = e.target.value.replace(/[^0-9]/g, '');
+                                        if (val !== '') {
+                                            let num = parseInt(val);
+                                            if (num > 13) num = 13;
+                                            setLocalDecimalN(num);
+                                        } else {
+                                            setLocalDecimalN('');
+                                        }
                                     }}
                                     onKeyDown={(e) => {
                                         if (e.key === 'ArrowUp') {
                                             e.preventDefault();
-                                            setLocalDecimalN(prev => Math.min(5, (prev === '' ? 0 : prev) + 1));
+                                            setLocalDecimalN(prev => Math.min(13, (prev === '' ? 0 : prev) + 1));
                                         } else if (e.key === 'ArrowDown') {
                                             e.preventDefault();
                                             setLocalDecimalN(prev => Math.max(0, (prev === '' ? 0 : prev) - 1));
@@ -2080,7 +2085,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             <span style={{ fontSize: '13px', fontWeight: 700, color: showPct ? '#1e293b' : '#94a3b8' }}>소수점</span>
                             <div style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                width: '32px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                width: '38px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
                                 background: showPct ? '#ffffff' : '#f1f5f9'
                             }}>
                                 <input
@@ -2088,14 +2093,19 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                     disabled={!showPct}
                                     value={localDecimalPct}
                                     onChange={(e) => {
-                                        let val = e.target.value.replace(/[^0-5]/g, '');
-                                        if (val.length > 1) val = val.slice(-1);
-                                        setLocalDecimalPct(val !== '' ? parseInt(val) : '');
+                                        let val = e.target.value.replace(/[^0-9]/g, '');
+                                        if (val !== '') {
+                                            let num = parseInt(val);
+                                            if (num > 13) num = 13;
+                                            setLocalDecimalPct(num);
+                                        } else {
+                                            setLocalDecimalPct('');
+                                        }
                                     }}
                                     onKeyDown={(e) => {
                                         if (e.key === 'ArrowUp') {
                                             e.preventDefault();
-                                            setLocalDecimalPct(prev => Math.min(5, (prev === '' ? 1 : prev) + 1));
+                                            setLocalDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
                                         } else if (e.key === 'ArrowDown') {
                                             e.preventDefault();
                                             setLocalDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));

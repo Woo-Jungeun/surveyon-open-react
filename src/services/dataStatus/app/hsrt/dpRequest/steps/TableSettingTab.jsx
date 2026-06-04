@@ -607,7 +607,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             <div style={{ display: 'flex', alignItems: 'center', background: '#fff', borderRadius: '4px', border: '1px solid #CBD5E1', overflow: 'hidden' }}>
                                                 <button onClick={() => handleChange(`display.${item.field}`, Math.max(0, val - 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderRight: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>−</button>
                                                 <div style={{ width: '24px', textAlign: 'center', fontSize: '11px', fontWeight: 600 }}>{val}</div>
-                                                <button onClick={() => handleChange(`display.${item.field}`, Math.min(5, val + 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderLeft: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
+                                                <button onClick={() => handleChange(`display.${item.field}`, Math.min(13, val + 1))} style={{ width: '22px', height: '22px', background: '#F8FAFC', border: 'none', borderLeft: '1px solid #CBD5E1', cursor: 'pointer', fontWeight: 'bold' }}>+</button>
                                             </div>
                                         </div>
                                     );

@@ -759,7 +759,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                             <span style={{ fontWeight: 700, color: showN ? '#1e40af' : '#64748b', transition: 'all 0.2s' }}>N</span>
                                         </div>
                                         <div style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', opacity: showN ? 1 : 0.4, pointerEvents: showN ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
-                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="5" value={decimalN} onChange={(e) => setDecimalN(parseInt(e.target.value) || 0)} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '28px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showN ? '#1e40af' : '#64748b', outline: 'none', padding: 0 }} />
+                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="13" value={decimalN} onChange={(e) => { let val = parseInt(e.target.value) || 0; if (val > 13) val = 13; setDecimalN(val); }} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '36px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showN ? '#1e40af' : '#64748b', outline: 'none', padding: 0 }} />
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', border: '1px solid #cbd5e1', borderRadius: '16px', overflow: 'hidden', fontSize: '12px', background: '#fff' }}>
@@ -773,7 +773,7 @@ const DetailEditPreview = ({ item, onClose }) => {
                                             <span style={{ fontWeight: 700, color: showP ? '#1e40af' : '#64748b', transition: 'all 0.2s' }}>%</span>
                                         </div>
                                         <div style={{ padding: '4px 12px', display: 'flex', alignItems: 'center', gap: '6px', opacity: showP ? 1 : 0.4, pointerEvents: showP ? 'auto' : 'none', transition: 'opacity 0.2s' }}>
-                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="5" value={decimalP} onChange={(e) => setDecimalP(parseInt(e.target.value) || 0)} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '28px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showP ? '#1e40af' : '#64748b', outline: 'none', padding: 0 }} />
+                                            소수점 <input type="number" className="dp-decimal-input" min="0" max="13" value={decimalP} onChange={(e) => { let val = parseInt(e.target.value) || 0; if (val > 13) val = 13; setDecimalP(val); }} style={{ background: '#f8fafc', border: '1px solid #cbd5e1', width: '36px', height: '22px', borderRadius: '12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: showP ? '#1e40af' : '#64748b', outline: 'none', padding: 0 }} />
                                         </div>
                                     </div>
                                 </div>

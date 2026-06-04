@@ -102,7 +102,7 @@ const CrossOptionModal = ({ onClose, onApply }) => {
                             {options.showRatio && (
                                 <div className="option-extra">
                                     <span>소수점:</span>
-                                    <input type="number" value={options.ratioDecimal} onChange={(e) => setOptions({...options, ratioDecimal: Number(e.target.value)})} min="0" max="5" />
+                                    <input type="number" value={options.ratioDecimal} onChange={(e) => { let val = Number(e.target.value); if (val > 13) val = 13; setOptions({...options, ratioDecimal: val}); }} min="0" max="13" />
                                     <span>자리</span>
                                 </div>
                             )}
@@ -125,7 +125,7 @@ const CrossOptionModal = ({ onClose, onApply }) => {
                             {options.showMedian && (
                                 <div className="option-extra">
                                     <span>소수점:</span>
-                                    <input type="number" value={options.medianDecimal} onChange={(e) => setOptions({...options, medianDecimal: Number(e.target.value)})} min="0" max="5" />
+                                    <input type="number" value={options.medianDecimal} onChange={(e) => { let val = Number(e.target.value); if (val > 13) val = 13; setOptions({...options, medianDecimal: val}); }} min="0" max="13" />
                                     <span>자리</span>
                                 </div>
                             )}
@@ -140,7 +140,7 @@ const CrossOptionModal = ({ onClose, onApply }) => {
                             {options.showStdDev && (
                                 <div className="option-extra">
                                     <span>소수점:</span>
-                                    <input type="number" value={options.stdDevDecimal} onChange={(e) => setOptions({...options, stdDevDecimal: Number(e.target.value)})} min="0" max="5" />
+                                    <input type="number" value={options.stdDevDecimal} onChange={(e) => { let val = Number(e.target.value); if (val > 13) val = 13; setOptions({...options, stdDevDecimal: val}); }} min="0" max="13" />
                                     <span>자리</span>
                                 </div>
                             )}
