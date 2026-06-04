@@ -50,9 +50,7 @@ const SurveyTestPage = () => {
         syntax: true,
         cross: true
     });
-    const [isNavExpanded, setIsNavExpanded] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
 
     // Progress Modal States
     const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
@@ -271,52 +269,35 @@ const SurveyTestPage = () => {
         <div className="survey-test-page" data-theme="data-management">
             <DataHeader title="설문 테스트" />
 
-            <div className="survey-test-body">
-                {/* ── 1. 좌측 컨트롤 패널 (250px 슬림) ── */}
-                <div className={`st-parser-left st-panel ${isLeftCollapsed ? 'collapsed' : ''}`}>
-                    {isLeftCollapsed ? (
-                        <div className="st-collapsed-trigger-bar" onClick={() => setIsLeftCollapsed(false)} title="컨트롤 패널 열기">
-                            <ChevronRight size={18} color="#64748b" />
-                            <span className="vertical-text">컨트롤 패널</span>
-                        </div>
-                    ) : (
-                        <>
-                            {/* 헤더 및 접기 버튼 */}
-                            <div className="st-form-group">
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#1e293b' }}>AI 교차 검증</span>
-                                    <button className="st-panel-toggle-btn" onClick={() => setIsLeftCollapsed(true)} title="컨트롤 패널 접기">
-                                        <ChevronLeft size={16} color="#64748b" />
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* 실행 버튼 (초록색) */}
-                            <button className="st-btn-action btn-green" onClick={handleAnalyze} disabled={analyzeAll.isLoading} style={{ marginBottom: resultJson ? '12px' : '0px' }}>
-                                <Search size={14} />
-                                AI 교차 검증 시작
-                            </button>
-
-                            {/* 검증 요약 카드 - 결과 생성 시 노출 */}
-                            {resultJson && (
-                                <div className="st-stats-card" style={{ animation: 'qaFadeIn 0.35s ease' }}>
-                                    <div className="st-stats-row">
-                                        <span className="st-stats-label">총 변수/문항 수</span>
-                                        <span className="st-stats-value">{totalQuestions} 개</span>
-                                    </div>
-                                    <div className="st-stats-row">
-                                        <span className="st-stats-label">교차 검증 비용</span>
-                                        <span className="st-stats-value">${validationCost}</span>
-                                    </div>
-                                    <div className="st-stats-row">
-                                        <span className="st-stats-label">검증 소요 시간</span>
-                                        <span className="st-stats-value">{validationTime} 초</span>
-                                    </div>
-                                </div>
-                            )}
-                        </>
-                    )}
+            {/* ── 상단 가로 컨트롤 패널 ───────────────────────── */}
+            <div className="st-parser-top st-panel">
+                {/* AI 교차 검증 */}
+                <div className="st-top-section">
+                    <span className="st-top-section-title">AI 교차 검증</span>
+                    <button className="st-btn-action compact-btn btn-green" onClick={handleAnalyze} disabled={analyzeAll.isLoading}>
+                        <Search size={12} />
+                        AI 교차 검증 시작
+                    </button>
                 </div>
+
+                {/* 검증 요약 카드 - 항상 표시하되 결과 대기 시에는 placeholder 상태 */}
+                <div className={`st-top-stats-card ${!resultJson ? 'placeholder' : ''}`}>
+                    <div className="st-top-stat-item">
+                        <span className="st-top-stat-label">총 변수/문항 수</span>
+                        <span className="st-top-stat-value">{resultJson ? `${totalQuestions} 개` : '- 개'}</span>
+                    </div>
+                    <div className="st-top-stat-item">
+                        <span className="st-top-stat-label">교차 검증 비용</span>
+                        <span className="st-top-stat-value green-text">{resultJson ? `$${validationCost}` : '$-'}</span>
+                    </div>
+                    <div className="st-top-stat-item">
+                        <span className="st-top-stat-label">검증 소요 시간</span>
+                        <span className="st-top-stat-value">{resultJson ? `${validationTime} 초` : '- 초'}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="survey-test-body">
 
                 {/* ── 오른쪽: 탭 + 컨텐츠 ── */}
                 <div className="survey-test-content">

@@ -1865,28 +1865,34 @@ const QaPage = () => {
                     </button>
                 </div>
 
-                {/* 검증 요약 카드 - 결과 생성 시 노출 */}
-                {questions.length > 0 && (
-                    <>
-                        <div className="qa-top-separator"></div>
-                        <div className="qa-top-stats-card">
-                            {showQuestionCount && (
-                                <div className="qa-top-stat-item">
-                                    <span className="qa-top-stat-label">파싱 문항 수</span>
-                                    <span className="qa-top-stat-value">{questions.filter(q => q.type !== 'global_logic').length} 개</span>
-                                </div>
-                            )}
-                            <div className="qa-top-stat-item">
-                                <span className="qa-top-stat-label">예상 API 비용</span>
-                                <span className="qa-top-stat-value green-text">${estimatedCost}</span>
-                            </div>
-                            <div className="qa-top-stat-item">
-                                <span className="qa-top-stat-label">소요 시간</span>
-                                <span className="qa-top-stat-value">{elapsedTime} 초</span>
-                            </div>
+                <div className="qa-top-separator"></div>
+
+                {/* 검증 요약 카드 - 항상 표시하되 결과 대기 시에는 placeholder 상태 */}
+                <div className={`qa-top-stats-card ${questions.length === 0 ? 'placeholder' : ''}`}>
+                    {showQuestionCount && (
+                        <div className="qa-top-stat-item">
+                            <span className="qa-top-stat-label">파싱 문항 수</span>
+                            <span className="qa-top-stat-value">
+                                {questions.length > 0
+                                    ? `${questions.filter(q => q.type !== 'global_logic').length} 개`
+                                    : '- 개'
+                                }
+                            </span>
                         </div>
-                    </>
-                )}
+                    )}
+                    <div className="qa-top-stat-item">
+                        <span className="qa-top-stat-label">예상 API 비용</span>
+                        <span className="qa-top-stat-value green-text">
+                            {questions.length > 0 ? `$${estimatedCost}` : '$-'}
+                        </span>
+                    </div>
+                    <div className="qa-top-stat-item">
+                        <span className="qa-top-stat-label">소요 시간</span>
+                        <span className="qa-top-stat-value">
+                            {questions.length > 0 ? `${elapsedTime} 초` : '- 초'}
+                        </span>
+                    </div>
+                </div>
 
                 {/* 저장 완료 피드백 토스트 */}
                 {isSaved && (

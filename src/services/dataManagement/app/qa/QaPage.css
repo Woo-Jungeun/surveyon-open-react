@@ -155,6 +155,17 @@
     height: 38px;
     margin-left: auto;
     flex-shrink: 0;
+    transition: all 0.2s ease;
+}
+
+.qa-top-stats-card.placeholder {
+    opacity: 0.55;
+    border-style: dashed;
+    background: #f8fafc;
+}
+
+.qa-top-stats-card.placeholder .green-text {
+    color: #94a3b8 !important;
 }
 
 .qa-top-stat-item {
