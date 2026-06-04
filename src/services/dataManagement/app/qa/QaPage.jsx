@@ -1841,13 +1841,6 @@ const QaPage = () => {
                         <RefreshCw size={12} className={analyzeAll.isLoading ? 'spin-anim' : ''} />
                         설문지 ➔ JSON 구조화 시작
                     </button>
-                </div>
-
-                <div className="qa-top-separator"></div>
-
-                {/* 2단계: AI 로직 검증 */}
-                <div className="qa-top-section">
-                    <span className="qa-top-section-title">2단계. AI 로직 검증</span>
                     <button
                         className="qa-btn-action compact-btn btn-gray"
                         onClick={handleLoadExistingSurvey}
@@ -1855,6 +1848,13 @@ const QaPage = () => {
                         <FileText size={12} />
                         기존 구조화된 설문 가져오기
                     </button>
+                </div>
+
+                <div className="qa-top-separator"></div>
+
+                {/* 2단계: AI 로직 검증 */}
+                <div className="qa-top-section">
+                    <span className="qa-top-section-title">2단계. AI 로직 검증</span>
                     <button
                         className={`qa-btn-action compact-btn ${questions.length > 0 ? 'btn-orange' : 'btn-disabled'}`}
                         onClick={handleCheckErrors}
@@ -1864,8 +1864,6 @@ const QaPage = () => {
                         AI 로직 오류 체크
                     </button>
                 </div>
-
-                <div className="qa-top-separator"></div>
 
                 {/* 검증 요약 카드 - 항상 표시하되 결과 대기 시에는 placeholder 상태 */}
                 <div className={`qa-top-stats-card ${questions.length === 0 ? 'placeholder' : ''}`}>
