@@ -1357,7 +1357,7 @@ const QaPage = () => {
     const handleDeleteQuestion = (id) => {
         modal.showConfirm('삭제', `[${id}] 문항을 정말 삭제하시겠습니까?`, {
             btns: [
-                { title: "취소", click: () => {} },
+                { title: "취소", click: () => { } },
                 {
                     title: "확인",
                     click: () => {
@@ -2138,7 +2138,7 @@ const QaPage = () => {
                             <div className="qa-empty-viewer">
                                 <FileText size={48} strokeWidth={1.5} />
                                 <span style={{ fontSize: '14px', fontWeight: 600 }}>구조화된 설문 분석 결과가 존재하지 않습니다.</span>
-                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>좌측 패널에서 설문을 가져오거나 구조화를 진행해 주세요.</span>
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>상단 패널에서 설문을 가져오거나 구조화를 진행해 주세요.</span>
                             </div>
                         )}
                     </div>
