@@ -72,19 +72,19 @@ const mapApiResponseToQuestions = (generatedVariables) => {
         const formatLogics = (logicsObj) => {
             if (!logicsObj) return '';
             const parts = [];
-            if (logicsObj.entry_condition) {
+            if (logicsObj.entry_condition && logicsObj.entry_condition !== 'null') {
                 const norm = String(logicsObj.entry_condition).replace(/\s/g, '').toLowerCase();
                 if (norm !== 'true') {
                     parts.push(`진입 조건: ${logicsObj.entry_condition}`);
                 }
             }
-            if (logicsObj.skip_logic) {
+            if (logicsObj.skip_logic && logicsObj.skip_logic !== 'null') {
                 const skipVal = typeof logicsObj.skip_logic === 'object'
                     ? JSON.stringify(logicsObj.skip_logic)
                     : logicsObj.skip_logic;
                 parts.push(`흐름 스킵: ${skipVal}`);
             }
-            if (logicsObj.loop_logic) {
+            if (logicsObj.loop_logic && logicsObj.loop_logic !== 'null') {
                 const loop = logicsObj.loop_logic;
                 if (typeof loop === 'object') {
                     parts.push(`루프 정의: 범위: ${loop.target_range || ''} | 반복조건: ${loop.repeat_condition || ''}`);
@@ -92,7 +92,7 @@ const mapApiResponseToQuestions = (generatedVariables) => {
                     parts.push(`루프 정의: ${loop}`);
                 }
             }
-            if (logicsObj.validation_logic) {
+            if (logicsObj.validation_logic && logicsObj.validation_logic !== 'null') {
                 if (Array.isArray(logicsObj.validation_logic)) {
                     const valLines = logicsObj.validation_logic.map(v => {
                         if (typeof v === 'object' && v !== null) {
@@ -105,7 +105,7 @@ const mapApiResponseToQuestions = (generatedVariables) => {
                     parts.push(`유효성 조건: ${logicsObj.validation_logic}`);
                 }
             }
-            if (logicsObj.display_logic) {
+            if (logicsObj.display_logic && logicsObj.display_logic !== 'null') {
                 if (Array.isArray(logicsObj.display_logic)) {
                     const dispLines = logicsObj.display_logic.map(d => {
                         if (typeof d === 'object' && d !== null) {
@@ -118,11 +118,11 @@ const mapApiResponseToQuestions = (generatedVariables) => {
                     parts.push(`표시 조건: ${logicsObj.display_logic}`);
                 }
             }
-            if (logicsObj.developer_note) {
+            if (logicsObj.developer_note && logicsObj.developer_note !== 'null') {
                 parts.push(`설계 메모: ${logicsObj.developer_note}`);
             }
             if (parts.length === 0) {
-                return typeof logicsObj === 'object' ? JSON.stringify(logicsObj, null, 2) : String(logicsObj);
+                return '';
             }
             return parts.join('\n');
         };
@@ -387,6 +387,7 @@ const QaPage = () => {
     const [activeQuestionId, setActiveQuestionId] = useState(''); // 현재 선택된 문항 ID (스크롤 연계)
     const [estimatedCost, setEstimatedCost] = useState('0.0000'); // 예상 API 비용
     const [elapsedTime, setElapsedTime] = useState('0.0'); // 소요 시간
+    const [showQuestionCount, setShowQuestionCount] = useState(true); // 문항 수 노출 여부 제어
 
     // 새 문항 삽입/수정 팝업 상태
     const [isInsertPopupOpen, setIsInsertPopupOpen] = useState(false);
@@ -523,6 +524,7 @@ const QaPage = () => {
         setProgressMessage('연결 준비 중...');
         setIsProgressComplete(false);
         setIsProgressModalOpen(true);
+        setShowQuestionCount(true);
 
         const pn = sessionStorage.getItem('projectnum') || '';
         const user = auth?.user?.userId || '';
@@ -595,6 +597,7 @@ const QaPage = () => {
                 setIsProgressComplete(true);
                 const parsedQs = mapApiResponseToQuestions(res?.resultjson?.generatedVariables);
                 setQuestions(parsedQs);
+                setShowQuestionCount(true);
                 if (parsedQs.length > 0) {
                     setActiveQuestionId(parsedQs[0].id);
                 }
@@ -719,6 +722,23 @@ const QaPage = () => {
                     };
                 });
 
+                // Update estimatedCost and elapsedTime in state from validateDocument API response
+                const costVal = res.resultjson.estimatedCostUsd !== undefined
+                    ? res.resultjson.estimatedCostUsd
+                    : (res.resultjson.estimatedCostUsd !== undefined
+                        ? res.resultjson.estimatedCostUsd
+                        : (res.resultjson.estimatedApiCost || 0));
+
+                const timeVal = res.resultjson.processingTimeSeconds !== undefined
+                    ? res.resultjson.processingTimeSeconds
+                    : (res.resultjson.processingTimeSeconds !== undefined
+                        ? res.resultjson.processingTimeSeconds
+                        : (res.processingTimeSeconds || 0));
+
+                setEstimatedCost(typeof costVal === 'number' ? costVal.toFixed(4) : String(costVal));
+                setElapsedTime(String(timeVal));
+                setShowQuestionCount(false);
+
                 setErrors(mappedErrors);
                 setIsRightCollapsed(false);
 
@@ -763,6 +783,9 @@ const QaPage = () => {
                 };
             });
 
+            setEstimatedCost('0.0012');
+            setElapsedTime('1.8');
+            setShowQuestionCount(false);
             setErrors(mappedErrors);
             setIsRightCollapsed(false);
             modal.showAlert('알림', `서버 통신 실패로 모의 검증 데이터를 로드했습니다. 총 ${mappedErrors.length}건의 이슈가 감지되었습니다.`);
@@ -786,8 +809,8 @@ const QaPage = () => {
             return;
         }
 
-        // Rebuild backend items
-        const items = questions.map(q => {
+        // Rebuild backend items (excluding deleted questions)
+        const items = questions.filter(q => !q.isDeleted).map(q => {
             const raw = q.rawItem || {};
 
             // Rebuild options array to format the backend expects
@@ -905,6 +928,7 @@ const QaPage = () => {
 
                 const parsedQs = mapApiResponseToQuestions(variables);
                 setQuestions(parsedQs);
+                setShowQuestionCount(true);
                 if (parsedQs.length > 0) {
                     setActiveQuestionId(parsedQs[0].id);
                 }
@@ -1016,13 +1040,13 @@ const QaPage = () => {
 
         setInsertTargetId(id);
         setPopupMode('modify');
-        setInsertText(getQuestionTextRepresentation(q));
+        setInsertText('');
         setIsInsertPopupOpen(true);
     };
 
     const handleExecuteInsert = async () => {
         if (!insertText.trim()) {
-            modal.showAlert('알림', popupMode === 'modify' ? '수정할 문항 텍스트를 입력해 주세요.' : '삽입할 문항 텍스트를 입력해 주세요.');
+            modal.showAlert('알림', popupMode === 'modify' ? '교체할 문항 텍스트를 입력해 주세요.' : '삽입할 문항 텍스트를 입력해 주세요.');
             return;
         }
 
@@ -1185,10 +1209,31 @@ const QaPage = () => {
     };
 
     const handleDeleteQuestion = (id) => {
-        modal.showConfirmAlert('삭제 시뮬레이션', `[${id}] 문항을 정말 삭제하시겠습니까?`, () => {
-            setQuestions(prev => prev.filter(q => q.id !== id));
-            setErrors(prev => prev.filter(e => e.id !== id));
-            modal.showAlert('완료', `[${id}] 문항이 임시 삭제되었습니다.`);
+        modal.showConfirm('삭제', `[${id}] 문항을 정말 삭제하시겠습니까?`, {
+            btns: [
+                { title: "취소", click: () => {} },
+                {
+                    title: "확인",
+                    click: () => {
+                        setQuestions(prev => {
+                            const next = prev.map(q => q.id === id ? { ...q, isDeleted: true } : q);
+
+                            // 삭제 후 현재 삭제된 질문이 활성화된 경우 다른 질문으로 포커스 이동
+                            if (activeQuestionId === id) {
+                                const remaining = next.filter(q => !q.isDeleted && q.type !== 'global_logic');
+                                if (remaining.length > 0) {
+                                    setActiveQuestionId(remaining[0].id);
+                                } else {
+                                    setActiveQuestionId('');
+                                }
+                            }
+                            return next;
+                        });
+                        setErrors(prev => prev.filter(e => e.id !== id));
+                        modal.showAlert('완료', `[${id}] 문항이 임시 삭제되었습니다.`);
+                    }
+                }
+            ]
         });
     };
 
@@ -1593,8 +1638,8 @@ const QaPage = () => {
         }
     };
 
-    const visibleQuestions = questions.filter(q => q.type !== 'global_logic');
-    const globalLogicRules = questions.filter(q => q.type === 'global_logic');
+    const visibleQuestions = questions.filter(q => q.type !== 'global_logic' && !q.isDeleted);
+    const globalLogicRules = questions.filter(q => q.type === 'global_logic' && !q.isDeleted);
 
     const filteredVisibleQuestions = visibleQuestions.filter(q =>
         q.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1704,10 +1749,12 @@ const QaPage = () => {
                             {/* 검증 요약 카드 - 결과 생성 시 노출 */}
                             {questions.length > 0 && (
                                 <div className="qa-stats-card" style={{ animation: 'qaFadeIn 0.35s ease', marginBottom: '12px' }}>
-                                    <div className="qa-stats-row">
-                                        <span className="qa-stats-label">파싱 문항 수</span>
-                                        <span className="qa-stats-value">{questions.filter(q => q.type !== 'global_logic').length} 개</span>
-                                    </div>
+                                    {showQuestionCount && (
+                                        <div className="qa-stats-row">
+                                            <span className="qa-stats-label">파싱 문항 수</span>
+                                            <span className="qa-stats-value">{questions.filter(q => q.type !== 'global_logic').length} 개</span>
+                                        </div>
+                                    )}
                                     <div className="qa-stats-row">
                                         <span className="qa-stats-label">예상 API 비용</span>
                                         <span className="qa-stats-value">${estimatedCost}</span>
@@ -1876,7 +1923,7 @@ const QaPage = () => {
                                                 </div>
                                                 <div className="qa-qc-controls">
                                                     <button className="qa-mini-btn btn-insert" onClick={() => handleInsertQuestion(q.id)}>+ 삽입</button>
-                                                    <button className="qa-mini-btn" onClick={() => handleModifyQuestion(q.id)}>수정</button>
+                                                    <button className="qa-mini-btn" onClick={() => handleModifyQuestion(q.id)}>교체</button>
                                                     <button className="qa-mini-btn btn-delete" onClick={() => handleDeleteQuestion(q.id)}>삭제</button>
                                                 </div>
                                             </div>
@@ -2032,14 +2079,14 @@ const QaPage = () => {
                 isComplete={isProgressComplete}
             />
 
-            {/* 새 문항 삽입/수정 팝업 모달 */}
+            {/* 새 문항 삽입/교체 팝업 모달 */}
             <div className={`qa-insert-overlay ${isInsertPopupOpen ? 'active' : ''}`}>
                 <div className="qa-insert-card">
                     <div className="qa-insert-header">
                         <div className="qa-insert-header-title-box">
                             <div className="qa-insert-header-accent"></div>
                             <h3 className="qa-insert-title">
-                                {popupMode === 'modify' ? '문항 수정 파싱' : '새 문항 삽입 파싱'}
+                                {popupMode === 'modify' ? '문항 교체 파싱' : '새 문항 삽입 파싱'}
                             </h3>
                         </div>
                         <button onClick={() => setIsInsertPopupOpen(false)} className="qa-insert-close">&times;</button>
@@ -2047,17 +2094,17 @@ const QaPage = () => {
                     <div className="qa-insert-body">
                         <p className="qa-insert-subtitle">
                             {popupMode === 'modify'
-                                ? '수정할 문항의 텍스트 전체를 입력하세요. AI가 분석하여 목록에 업데이트합니다.'
+                                ? '교체할 문항의 텍스트 전체를 입력하세요. AI가 분석하여 목록에 업데이트합니다.'
                                 : '추가할 새 문항의 텍스트 전체를 붙여넣으세요. AI가 분석하여 목록에 삽입합니다.'}
                         </p>
                         <p className="qa-insert-target">
                             {popupMode === 'modify'
-                                ? `대상 문항: ${insertTargetId} 수정`
+                                ? `대상 문항: ${insertTargetId} 교체`
                                 : `대상 문항: ${insertTargetId} 바로 뒤에 삽입`}
                         </p>
                         <textarea
                             className="qa-insert-textarea"
-                            placeholder="수정 또는 삽입할 설문지 텍스트를 입력해주세요."
+                            placeholder="교체 또는 삽입할 설문지 텍스트를 입력해주세요."
                             value={insertText}
                             onChange={(e) => setInsertText(e.target.value)}
                             autoFocus
@@ -2068,7 +2115,7 @@ const QaPage = () => {
                             취소
                         </button>
                         <button className="qa-insert-btn-submit" onClick={handleExecuteInsert}>
-                            {popupMode === 'modify' ? '수정 완료' : '재파싱 실행'}
+                            {popupMode === 'modify' ? '교체 완료' : '재파싱 실행'}
                         </button>
                     </div>
                 </div>
