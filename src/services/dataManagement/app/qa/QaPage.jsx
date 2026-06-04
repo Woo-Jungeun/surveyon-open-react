@@ -410,6 +410,8 @@ const QaPage = () => {
     const [isProgressComplete, setIsProgressComplete] = useState(false);
     const [progressModalMode, setProgressModalMode] = useState('analyze'); // 'analyze' | 'validate'
     const pendingValidationResponseRef = useRef(null);
+    const pendingAnalyzeResponseRef = useRef(null);
+    const [progressQuestionsCount, setProgressQuestionsCount] = useState(0);
 
     const fileInputRef = useRef(null);
     const questionCardRefs = useRef({});
@@ -562,6 +564,9 @@ const QaPage = () => {
                 } else if (args.length === 1 && typeof args[0] === 'object') {
                     msg = args[0].message || args[0].Message;
                     percent = args[0].percent || args[0].Percent || args[0].percentage || args[0].Percentage;
+                } else if (args.length >= 2 && typeof args[0] === 'number') {
+                    percent = args[0];
+                    msg = args[1];
                 }
 
                 setProgressPercentage(percent || 0);
@@ -601,41 +606,47 @@ const QaPage = () => {
                     : (res?.processingTimeSeconds !== undefined ? res.processingTimeSeconds : 3.5));
             const time = String(timeVal);
 
+            const parsedQs = mapApiResponseToQuestions(res?.resultjson?.generatedVariables);
+            setProgressQuestionsCount(parsedQs.length);
             setProgressPercentage(100);
-            setProgressMessage('설문지 JSON 구조화가 완료되었습니다!');
-            setTimeout(() => {
-                setIsProgressComplete(true);
-                const parsedQs = mapApiResponseToQuestions(res?.resultjson?.generatedVariables);
-                setQuestions(parsedQs);
-                setShowQuestionCount(true);
-                if (parsedQs.length > 0) {
-                    setActiveQuestionId(parsedQs[0].id);
+            setProgressMessage(prev => {
+                if (prev && (prev.includes('처리 완료') || prev.includes('추출)'))) {
+                    return prev;
                 }
-                setEstimatedCost(cost);
-                setElapsedTime(time);
+                return `설문 스크립트 AI 정밀 구조화 파싱 처리 완료 (총 ${parsedQs.length}개 문항 추출)`;
+            });
 
-                // Parse errors/warnings
-                const parsedErrors = [];
-                if (res?.resultjson?.warnings) {
-                    res.resultjson.warnings.forEach((warn) => {
-                        parsedErrors.push({
-                            id: 'Warning',
-                            type: 'warning',
-                            title: 'WARNING',
-                            message: warn
-                        });
-                    });
-                }
-                const validationErrorsList = res?.resultjson?.ValidationErrors || res?.resultjson?.validationErrors || [];
-                validationErrorsList.forEach((err) => {
+            // Parse errors/warnings
+            const parsedErrors = [];
+            if (res?.resultjson?.warnings) {
+                res.resultjson.warnings.forEach((warn) => {
                     parsedErrors.push({
-                        id: err.qnum || err.Qnum || 'Error',
-                        type: err.type || err.severity || err.Severity || 'critical',
-                        title: err.title || (err.severity === 'error' ? '오류' : err.severity === 'warning' ? '확인' : 'CRITICAL'),
-                        message: err.message || err.desc || 'Validation Error'
+                        id: 'Warning',
+                        type: 'warning',
+                        title: 'WARNING',
+                        message: warn
                     });
                 });
-                setApiErrors(parsedErrors);
+            }
+            const validationErrorsList = res?.resultjson?.ValidationErrors || res?.resultjson?.validationErrors || [];
+            validationErrorsList.forEach((err) => {
+                parsedErrors.push({
+                    id: err.qnum || err.Qnum || 'Error',
+                    type: err.type || err.severity || err.Severity || 'critical',
+                    title: err.title || (err.severity === 'error' ? '오류' : err.severity === 'warning' ? '확인' : 'CRITICAL'),
+                    message: err.message || err.desc || 'Validation Error'
+                });
+            });
+
+            pendingAnalyzeResponseRef.current = {
+                parsedQs,
+                cost,
+                time,
+                parsedErrors
+            };
+
+            setTimeout(() => {
+                setIsProgressComplete(true);
             }, 600);
 
         } catch (e) {
@@ -715,6 +726,20 @@ const QaPage = () => {
                 }
                 pendingValidationResponseRef.current = null;
             }
+        } else if (progressModalMode === 'analyze') {
+            const res = pendingAnalyzeResponseRef.current;
+            if (res) {
+                // Process structural parsing response
+                setQuestions(res.parsedQs);
+                setShowQuestionCount(true);
+                if (res.parsedQs.length > 0) {
+                    setActiveQuestionId(res.parsedQs[0].id);
+                }
+                setEstimatedCost(res.cost);
+                setElapsedTime(res.time);
+                setApiErrors(res.parsedErrors);
+                pendingAnalyzeResponseRef.current = null;
+            }
         }
     };
 
@@ -769,6 +794,9 @@ const QaPage = () => {
                 } else if (args.length === 1 && typeof args[0] === 'object') {
                     msg = args[0].message || args[0].Message;
                     percent = args[0].percent || args[0].Percent || args[0].percentage || args[0].Percentage;
+                } else if (args.length >= 2 && typeof args[0] === 'number') {
+                    percent = args[0];
+                    msg = args[1];
                 }
 
                 setProgressPercentage(percent || 0);
@@ -825,7 +853,12 @@ const QaPage = () => {
                 const time = String(timeVal);
 
                 setProgressPercentage(100);
-                setProgressMessage('설문 스크립트 QA 유효성 무결성 정밀 분석 완료 (최종 리포트 생성 완료)');
+                setProgressMessage(prev => {
+                    if (prev && (prev.includes('분석 완료') || prev.includes('리포트 생성'))) {
+                        return prev;
+                    }
+                    return '설문 스크립트 QA 유효성 무결성 정밀 분석 완료 (최종 리포트 생성 완료)';
+                });
 
                 pendingValidationResponseRef.current = {
                     mappedErrors,
@@ -2192,6 +2225,7 @@ const QaPage = () => {
                 message={progressMessage}
                 isComplete={isProgressComplete}
                 mode={progressModalMode}
+                questionsCount={progressQuestionsCount}
             />
 
             {/* 새 문항 삽입/교체 팝업 모달 */}

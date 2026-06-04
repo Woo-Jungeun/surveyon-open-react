@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './QaProgressModal.css';
 
-const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을 준비하고 있습니다...', isComplete = false, mode = 'analyze' }) => {
+const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을 준비하고 있습니다...', isComplete = false, mode = 'analyze', questionsCount = 0 }) => {
     const [displayNum, setDisplayNum] = useState(0);
 
     const isValidate = mode === 'validate';
@@ -76,14 +76,21 @@ const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을
 
     if (!isOpen) return null;
 
-    const title = isValidate ? '설문 스크립트 QA 유효성 검증' : 'AI 로직 교차 검증';
+    const title = isValidate ? '설문 스크립트 QA 유효성 검증' : 'AI 설문지 구조화 템플릿 생성';
     const subtitle = isValidate 
         ? '업로드된 설문 템플릿의 문항 구문 오류, 누락, 논리 모순을 정밀 유효성 검증합니다.'
-        : '문서와 설문 스크립트의 불일치 여부를 분석합니다. 화면을 닫지 마세요.';
-    const step1Label = isValidate ? '파싱 구문 비교 대조' : '설문 분석';
-    const step2Label = isValidate ? 'QA 유효성 규칙 검사' : '스크립트 분석';
-    const step3Label = isValidate ? '불일치 리포트 매핑' : '교차 분석';
-    const closeBtnText = isValidate ? 'QA 검증 완료' : '결과 리포트 확인하기';
+        : (
+            <>
+                설문지 아래아한글(HWP)/Word 문서를 AI로 정밀 분석하여<br />
+                구조화 JSON 템플릿을 생성합니다.
+            </>
+        );
+    const step1Label = isValidate ? '파싱 구문 비교 대조' : '문서 텍스트 정제';
+    const step2Label = isValidate ? 'QA 유효성 규칙 검사' : 'AI 문항 영역 분석';
+    const step3Label = isValidate ? '불일치 리포트 매핑' : '구조화 JSON 빌드';
+    const closeBtnText = isValidate ? 'QA 검증 완료' : '구조화 템플릿 생성 완료';
+
+    const displayMessage = message;
 
     // Return component UI
     return (
@@ -122,7 +129,7 @@ const QaProgressModal = ({ isOpen, onClose, percentage = 0, message = '요청을
                 </div>
 
                 <div className="qa-status-header">
-                    <span className="qa-status-msg" key={message}>{message}</span>
+                    <span className="qa-status-msg" key={displayMessage}>{displayMessage}</span>
                     <div className="qa-percentage">
                         <span className="qa-percentage-num">{displayNum}</span>
                         <span className="qa-percentage-sign">%</span>
