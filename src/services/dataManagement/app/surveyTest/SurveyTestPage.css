@@ -657,7 +657,7 @@
     background: #f8fafc; /* 훨씬 부드러운 밝은 톤 */
     color: #475569; /* 진회색 텍스트 */
     border: 1px solid #e2e8f0;
-    border-left: 3px solid #cbd5e1; /* 왼쪽은 살짝 강조표시 */
+    border-left: 3px solid #94a3b8; /* 왼쪽은 살짝 강조표시 (QA의 구조화 색상과 동일하게 좀 더 진한 회색으로 맞춤) */
     border-radius: 6px;
     font-size: 11.5px;
     font-family: 'Consolas', 'Monaco', 'Cascadia Code', 'Courier New', monospace;
