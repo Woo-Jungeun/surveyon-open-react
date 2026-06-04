@@ -576,23 +576,34 @@
 }
 
 /* ── 빈 상태 ── */
-.qa-empty-state {
-    padding: 24px 0;
+/* ── 빈 상태 ── */
+.st-empty-viewer {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    padding: 60px 20px;
+    color: #94a3b8;
+    gap: 12px;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+    flex: 1;
 }
 
-.qa-empty-icon {
-    color: #e2e8f0;
-}
-
-.qa-empty-text {
-    font-size: 12.5px;
+.st-empty-viewer svg {
     color: #cbd5e1;
-    margin: 0;
+}
+
+.st-empty-viewer .st-empty-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #475569;
+}
+
+.st-empty-viewer .st-empty-desc {
+    font-size: 12px;
+    color: #94a3b8;
 }
 
 /* ─────────────────────────────────────────────────── */

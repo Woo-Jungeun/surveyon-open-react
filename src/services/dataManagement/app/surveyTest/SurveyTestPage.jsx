@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import DataHeader from '@/services/dataStatus/components/DataHeader';
 import { modalContext } from "@/components/common/Modal.jsx";
-import { CheckCircle, AlertTriangle, ChevronLeft, ChevronRight, SmilePlus, Bot, FileDown, Database, Search } from 'lucide-react';
+import { CheckCircle, AlertTriangle, ChevronLeft, ChevronRight, FileText, Bot, FileDown, Database, Search } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { SurveyTestPageApi } from './SurveyTestPageApi';
 import SurveyTestProgressModal from './SurveyTestProgressModal';
@@ -428,7 +428,13 @@ const SurveyTestPage = () => {
                                             const localWarningCnt = items.filter(x => x.type === 'warning').length;
 
                                             return (
-                                                <div key={s.key} className={`qa-section-block ${items.length === 0 ? 'is-empty' : ''}`} style={{ border: 'none', background: 'transparent' }}>
+                                                <div key={s.key} className={`qa-section-block ${items.length === 0 ? 'is-empty' : ''}`} style={{
+                                                    border: 'none',
+                                                    background: 'transparent',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    flex: visibleSections.length === 1 ? 1 : (items.length === 0 ? 'none' : 1)
+                                                }}>
 
                                                     {/* 우측 본문 헤더 (앵커 역할 & 개별 탭 상세 요약) */}
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '16px', borderBottom: '2px solid #f1f5f9' }}>
@@ -462,19 +468,18 @@ const SurveyTestPage = () => {
                                                                 ))}
                                                             </div>
                                                         ) : (
-                                                            <div className="qa-empty-state" style={{
-                                                                background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '12px',
-                                                                padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                                                            }}>
+                                                            <div className="st-empty-viewer">
                                                                 {resultJson ? (
                                                                     <>
-                                                                        <CheckCircle size={32} color="#10b981" style={{ marginBottom: '16px' }} />
-                                                                        <span style={{ fontSize: '15px', fontWeight: 600, color: '#059669' }}>이 항목은 오류 없이 완벽하게 검증되었습니다.</span>
+                                                                        <CheckCircle size={48} strokeWidth={1.5} style={{ color: '#10b981' }} />
+                                                                        <span className="st-empty-title" style={{ color: '#059669' }}>이 항목은 오류 없이 완벽하게 검증되었습니다.</span>
+                                                                        <span className="st-empty-desc">교차 검증 분석 결과 문법 및 논리 모순이 발견되지 않았습니다.</span>
                                                                     </>
                                                                 ) : (
                                                                     <>
-                                                                        <SmilePlus size={32} className="qa-empty-icon" style={{ marginBottom: '16px', color: '#cbd5e1' }} />
-                                                                        <p className="qa-empty-text" style={{ fontSize: '14px', color: '#64748b' }}>분석 결과가 없습니다.</p>
+                                                                        <FileText size={48} strokeWidth={1.5} />
+                                                                        <span className="st-empty-title">분석 결과가 존재하지 않습니다.</span>
+                                                                        <span className="st-empty-desc">상단 패널에서 AI 교차 검증을 시작해 주세요.</span>
                                                                     </>
                                                                 )}
                                                             </div>
