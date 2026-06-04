@@ -66,13 +66,13 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
 
     const showLabel3Header = columns.some(c => String(c.label3 ?? "").trim());
     const showLabel2Header = columns.some(c => String(c.label2 ?? "").trim());
-    
+
     const showRowLabel3 = rows.some(r => String(r.label3 ?? "").trim());
     const showRowLabel2 = rows.some(r => String(r.label2 ?? "").trim());
-    
+
     const rowSpansL3 = {};
     const rowSpansL2 = {};
-    
+
     if (showRowLabel3 || showRowLabel2) {
         let i = 0;
         while (i < rows.length) {
@@ -284,7 +284,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                         left: 0,
                                         minWidth: '110px', width: '110px', maxWidth: '110px'
                                     }}>
-                                        <div title={row.label3} style={{ textAlign: 'center',  }}>
+                                        <div title={row.label3} style={{ textAlign: 'center', }}>
                                             {row.label3}
                                         </div>
                                     </td>
@@ -299,7 +299,7 @@ const CrossTableGrid = React.memo(({ dataItem, showN, showPct, decimalN, decimal
                                         left: showRowLabel3 ? '110px' : 0,
                                         minWidth: '110px', width: '110px', maxWidth: '110px'
                                     }}>
-                                        <div title={row.label2} style={{ textAlign: 'center',  }}>
+                                        <div title={row.label2} style={{ textAlign: 'center', }}>
                                             {row.label2}
                                         </div>
                                     </td>
@@ -426,7 +426,7 @@ const ConditionHeaderCell = (props) => {
                             width: '18px', height: '18px', borderRadius: '50%',
                             background: '#e2e8f0', color: '#64748b',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '11px', 
+                            fontSize: '11px',
                         }}>i</div>
                         <span style={{ color: '#2563eb', fontWeight: '800', fontSize: '13px' }}>조건</span>
                     </div>
@@ -1211,6 +1211,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
     const [showPct, setShowPct] = useState(true);
     const [excelShowPct, setExcelShowPct] = useState(true); // 엑셀 다운로드 시 % 표출 여부
     const [excelShowBaseParenthesis, setExcelShowBaseParenthesis] = useState(true); // 엑셀 다운로드 시 Base 기본 괄호 여부
+    const [excelDecimalPct, setExcelDecimalPct] = useState(1); // 엑셀 다운로드 시 % 소수점 자리수
     const [decimalPct, setDecimalPct] = useState(1);
     const [hideZeroBaseColumns, setHideZeroBaseColumns] = useState(false);
     const [selectedXInfo, setSelectedXInfo] = useState('__none__');
@@ -1497,7 +1498,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                 setShowPct(fetchedUi.format_show_percent ?? true);
                 setDecimalPct(fetchedUi.format_percent_round ?? ctxPayload.percent_digits ?? 1);
                 setHideZeroBaseColumns(fetchedUi.hide_zero_base_columns ?? false);
-                
+
                 let hasBaseParenthesis = true;
                 if (fetchedUi.base_prefix !== undefined && fetchedUi.base_prefix !== null) {
                     hasBaseParenthesis = (fetchedUi.base_prefix === "(" && fetchedUi.base_postfix === ")");
@@ -1601,7 +1602,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
             const payload = overviewRes?.resultjson || overviewRes || {};
             const tablesList = payload.tables || [];
             const resultsList = payload.results || [];
-            
+
             setOverviewPayload(payload);
 
             if (tablesList.length > 0 || (overviewRes?.success === '777')) {
@@ -1811,7 +1812,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                     hide_zero_stubs: uiSettings?.hide_zero_stubs ?? false,
                     hide_zero_banners: uiSettings?.hide_zero_banners ?? false,
                     n_digits: Number(decimalN === '' ? 0 : decimalN),
-                    percent_digits: Number(decimalPct === '' ? 1 : decimalPct),
+                    percent_digits: Number(excelDecimalPct === '' ? 1 : excelDecimalPct),
                     mean_digits: uiSettings?.mean_digits ?? 1,
                     std_digits: uiSettings?.std_digits ?? 1,
                     median_digits: uiSettings?.median_digits ?? 1,
@@ -2203,21 +2204,22 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                         onClick={() => {
                             // 현재 화면에 표시 중인 표(selectedBanner)의 Base 행에 괄호가 적용되어 있는지 확인
                             const activeBanner = banners.find(b => b.id === selectedBanner) || banners[0];
-                            const baseRow = activeBanner?.info?.find(row => 
-                                String(row.row_role ?? "").toLowerCase() === 'base' || 
-                                String(row.type ?? "").toLowerCase() === 'base' || 
+                            const baseRow = activeBanner?.info?.find(row =>
+                                String(row.row_role ?? "").toLowerCase() === 'base' ||
+                                String(row.type ?? "").toLowerCase() === 'base' ||
                                 String(row.key ?? "").toLowerCase() === 'base'
-                            ) || activeBanner?.dataResult?.rows?.find(row => 
-                                String(row.row_role ?? "").toLowerCase() === 'base' || 
-                                String(row.type ?? "").toLowerCase() === 'base' || 
+                            ) || activeBanner?.dataResult?.rows?.find(row =>
+                                String(row.row_role ?? "").toLowerCase() === 'base' ||
+                                String(row.type ?? "").toLowerCase() === 'base' ||
                                 String(row.key ?? "").toLowerCase() === 'base'
                             );
 
-                            const hasParenthesisOnScreen = baseRow 
-                                ? (baseRow.prefix === "(" && baseRow.postfix === ")") 
+                            const hasParenthesisOnScreen = baseRow
+                                ? (baseRow.prefix === "(" && baseRow.postfix === ")")
                                 : true; // 못 찾으면 기본값인 true로 설정
 
                             setExcelShowBaseParenthesis(hasParenthesisOnScreen);
+                            setExcelDecimalPct(decimalPct);
                             setIsExcelModalOpen(true);
                         }}
                         style={{
@@ -2319,9 +2321,9 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                 textTransform: 'lowercase',
                                                 ...(banner.raw.type === 'single' ? { background: '#fff7ed', color: '#c2410c', border: '1px solid #ffedd5' } :
                                                     (banner.raw.type === 'double' || banner.raw.type === 'multi') ? { background: '#eff6ff', color: '#1d4ed8', border: '1px solid #dbeafe' } :
-                                                    banner.raw.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
-                                                    banner.raw.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
-                                                    { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' })
+                                                        banner.raw.type === 'scale' ? { background: '#f0fdf4', color: '#15803d', border: '1px solid #dcfce7' } :
+                                                            banner.raw.type === 'rank' ? { background: '#fdf4ff', color: '#a21caf', border: '1px solid #fae8ff' } :
+                                                                { background: '#f1f5f9', color: '#64748b', border: '1px solid #e2e8f0' })
                                             }}>
                                                 {banner.raw.type === 'double' ? 'multi' : banner.raw.type}
                                             </div>
@@ -2533,7 +2535,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         modal.showAlert('알림', '저장본 이름을 입력해주세요.');
                                         return;
                                     }
-                                    
+
                                     const pageId = sessionStorage.getItem('pageId');
                                     const user = auth?.user?.userId;
                                     if (!pageId || !user) return;
@@ -2581,15 +2583,15 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                         }
 
                                         const result = await createSnapshot.mutateAsync(requestData);
-                                        
+
                                         if (result?.success === "777") {
                                             setIsSnapshotModalOpen(false);
-                                            setToast({ 
-                                                show: true, 
+                                            setToast({
+                                                show: true,
                                                 message: (
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                         <span>{result.resultjson?.reused ? '기존 저장본을 재사용합니다.' : '보관함에 저장되었습니다.'}</span>
-                                                        <button 
+                                                        <button
                                                             onClick={() => {
                                                                 const url = new URL(window.location);
                                                                 url.searchParams.set('tab', 'TableSnapshotTab');
@@ -2600,7 +2602,7 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                                                             보관함에서 보기
                                                         </button>
                                                     </div>
-                                                ) 
+                                                )
                                             });
                                         } else {
                                             modal.showAlert('오류', '저장에 실패했습니다.');
@@ -2632,27 +2634,70 @@ const CrossAnalysisPage = forwardRef(({ onUnsavedChange }, ref) => {
                             교차분석표를 엑셀 파일로 다운로드 하시겠습니까?
                         </p>
                         <div style={{ marginBottom: '28px', padding: '16px 20px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                            <div
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
-                                }}
-                                onClick={() => setExcelShowPct(!excelShowPct)}
-                            >
-                                <div style={{
-                                    width: '20px', height: '20px', borderRadius: '5px',
-                                    background: excelShowPct ? '#2563eb' : '#fff',
-                                    border: `1.5px solid ${excelShowPct ? '#2563eb' : '#cbd5e1'}`,
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0,
-                                    transition: 'all 0.15s'
-                                }}>
-                                    {excelShowPct && (
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
-                                            <polyline points="20 6 9 17 4 12"></polyline>
-                                        </svg>
-                                    )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
+                                <div
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', userSelect: 'none'
+                                    }}
+                                    onClick={() => setExcelShowPct(!excelShowPct)}
+                                >
+                                    <div style={{
+                                        width: '20px', height: '20px', borderRadius: '5px',
+                                        background: excelShowPct ? '#2563eb' : '#fff',
+                                        border: `1.5px solid ${excelShowPct ? '#2563eb' : '#cbd5e1'}`,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        flexShrink: 0,
+                                        transition: 'all 0.15s'
+                                    }}>
+                                        {excelShowPct && (
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">
+                                                <polyline points="20 6 9 17 4 12"></polyline>
+                                            </svg>
+                                        )}
+                                    </div>
+                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 표출 여부</span>
                                 </div>
-                                <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 표출 여부</span>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '14px', fontWeight: 600, color: '#334155' }}>% 소수점</span>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: '42px', height: '22px', border: '1.5px solid #cbd5e1', borderRadius: '12px',
+                                        background: '#ffffff'
+                                    }}>
+                                        <input
+                                            type="text"
+                                            value={excelDecimalPct}
+                                            onChange={(e) => {
+                                                let val = e.target.value.replace(/[^0-9]/g, '');
+                                                if (val !== '') {
+                                                    let num = parseInt(val);
+                                                    if (num > 13) num = 13;
+                                                    setExcelDecimalPct(num);
+                                                } else {
+                                                    setExcelDecimalPct('');
+                                                }
+                                            }}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'ArrowUp') {
+                                                    e.preventDefault();
+                                                    setExcelDecimalPct(prev => Math.min(13, (prev === '' ? 1 : prev) + 1));
+                                                } else if (e.key === 'ArrowDown') {
+                                                    e.preventDefault();
+                                                    setExcelDecimalPct(prev => Math.max(0, (prev === '' ? 1 : prev) - 1));
+                                                }
+                                            }}
+                                            onBlur={() => {
+                                                if (excelDecimalPct === '') setExcelDecimalPct(1);
+                                            }}
+                                            style={{
+                                                width: '100%', height: '100%', border: 'none', background: 'transparent',
+                                                textAlign: 'center', fontSize: '13px', fontWeight: 800, color: '#1e3a8a',
+                                                outline: 'none', padding: 0
+                                            }}
+                                        />
+                                    </div>
+                                </div>
                             </div>
 
                             <div
