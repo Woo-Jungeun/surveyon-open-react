@@ -5,28 +5,14 @@ const SurveyTestProgressModal = ({ isOpen, onClose, percentage = 0, message = '�
     const [displayNum, setDisplayNum] = useState(0);
 
     // calculate step states based on percentage
-    const trackWidth = percentage === 100 ? '100%' :
-                       percentage >= 70 ? '100%' :
-                       percentage >= 40 ? '50%' : '0%';
+    const trackWidth = percentage >= 70 ? '100%' : '0%';
 
-    const step1Status = percentage >= 40 ? 'completed' : 'active';
-    const step2Status = percentage >= 70 ? 'completed' : (percentage >= 40 ? 'active' : '');
-    const step3Status = percentage >= 100 ? 'completed' : (percentage >= 70 ? 'active' : '');
+    const step1Status = percentage >= 70 ? 'completed' : 'active';
+    const step2Status = percentage >= 100 ? 'completed' : (percentage >= 70 ? 'active' : '');
 
     const checkSvg = (
         <svg fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 13l4 4L19 7"></path>
-        </svg>
-    );
-
-    const docSvg = (
-        <svg fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 12h62M9 16h62M9 8h62m-7-5v20a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2H8a2 2 0 00-2 2z" stroke="none"></path>
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-            <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
     );
 
@@ -84,21 +70,14 @@ const SurveyTestProgressModal = ({ isOpen, onClose, percentage = 0, message = '�
 
                     <div className={`qa-step-item ${step1Status}`}>
                         <div className="qa-step-icon-box">
-                            {step1Status === 'completed' ? checkSvg : docSvg}
-                        </div>
-                        <span className="qa-step-label">설문 분석</span>
-                    </div>
-
-                    <div className={`qa-step-item ${step2Status}`}>
-                        <div className="qa-step-icon-box">
-                            {step2Status === 'completed' ? checkSvg : codeSvg}
+                            {step1Status === 'completed' ? checkSvg : codeSvg}
                         </div>
                         <span className="qa-step-label">스크립트 분석</span>
                     </div>
 
-                    <div className={`qa-step-item ${step3Status}`}>
+                    <div className={`qa-step-item ${step2Status}`}>
                         <div className="qa-step-icon-box">
-                            {step3Status === 'completed' ? checkSvg : mergeSvg}
+                            {step2Status === 'completed' ? checkSvg : mergeSvg}
                         </div>
                         <span className="qa-step-label">교차 분석</span>
                     </div>
