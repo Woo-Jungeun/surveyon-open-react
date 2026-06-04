@@ -1064,8 +1064,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const item = next[data.gIdx][data.iIdx];
                     next[data.gIdx].splice(data.iIdx, 1);
                     if (targetIdx === 'new') {
-                        if (next.length >= 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                        if (next.length >= 20) {
+                            modal.showAlert('알림', '최대 20개 그룹까지만 구성할 수 있습니다.');
                             return prev;
                         }
                         next.push([item]);
@@ -1086,8 +1086,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                     const group = next[data.gIdx];
                     next.splice(data.gIdx, 1);
                     if (targetIdx === 'new') {
-                        if (next.length >= 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                        if (next.length >= 20) {
+                            modal.showAlert('알림', '최대 20개 그룹까지만 구성할 수 있습니다.');
                             return prev;
                         }
                         next.push(group);
@@ -1097,9 +1097,9 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (data.type === 'EXTERNAL') {
                     const itemsToAdd = data.items;
                     if (targetIdx === 'new') {
-                        // 새로 추가되면서 10개를 넘는지 체크
-                        if (next.length + itemsToAdd.length > 10) {
-                            modal.showAlert('알림', '최대 10개 그룹까지만 구성할 수 있습니다.');
+                        // 새로 추가되면서 20개를 넘는지 체크
+                        if (next.length + itemsToAdd.length > 20) {
+                            modal.showAlert('알림', '최대 20개 그룹까지만 구성할 수 있습니다.');
                             // 가능힌 부분까지만 추가하거나 아예 안하거나 결정 (여기서는 안전하게 경고 후 중단)
                             return prev;
                         }
@@ -1813,13 +1813,13 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                     )}
                                 </div>
 
-                                {/* 우측 가로축 드롭존 (개선: 5개씩 2줄 그리드) */}
+                                {/* 우측 가로축 드롭존 (개선: 5개씩 그리드) */}
                                 <div className="drop-zones-container" style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
 
                                     <div className="axis-header" style={{ padding: '8px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <span style={{ fontSize: '12px', fontWeight: 700, color: '#475569' }}>가로축 (열)</span>
-                                            <span className="group-count-badge" style={{ fontSize: '10px' }}>{colVars.length} / 10</span>
+                                            <span className="group-count-badge" style={{ fontSize: '10px' }}>{colVars.length} / 20</span>
                                         </div>
                                         <button onClick={() => setColVars([])} className="axis-clear-btn" title="모두 비우기" style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                                             <X size={14} color="#94a3b8" />
