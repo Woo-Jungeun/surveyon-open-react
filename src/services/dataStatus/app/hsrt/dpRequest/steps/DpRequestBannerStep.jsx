@@ -706,6 +706,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     const [colVars, setColVars] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const listContainerRef = useRef(null);
+    const draggedTypeRef = useRef(null);
 
     const [selectedCells, setSelectedCells] = useState([]); // [{r, c}]
     const [isSelecting, setIsSelecting] = useState(false);
@@ -1033,6 +1034,7 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, []);
 
     const handleDragStart = useCallback((e, draggedVar) => {
+        draggedTypeRef.current = 'EXTERNAL';
         let targets = [];
         if (selectedIds.includes(draggedVar.id)) {
             targets = baseVariables.filter(v => selectedIds.includes(v.id));
@@ -1044,14 +1046,16 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
     }, [selectedIds, baseVariables]);
 
     const handleInternalItemDragStart = (e, gIdx, iIdx) => {
+        draggedTypeRef.current = 'INTERNAL_ITEM';
         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_ITEM', gIdx, iIdx }));
     };
 
     const handleInternalGroupDragStart = (e, gIdx) => {
+        draggedTypeRef.current = 'INTERNAL_GROUP';
         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'INTERNAL_GROUP', gIdx }));
     };
 
-    const handleDrop = (e, targetIdx) => {
+    const handleDrop = (e, targetIdx, targetItemIdx = null) => {
         e.preventDefault();
         try {
             const dataStr = e.dataTransfer.getData('text/plain');
@@ -1070,14 +1074,23 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                         }
                         next.push([item]);
                     } else {
-                        if (!next[targetIdx].find(v => v.id === item.id)) {
-                            if (next[targetIdx].length >= 3) {
-                                modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
-                                return prev;
+                        // 만약 동일 그룹 내에서 위치 이동하는 경우
+                        if (data.gIdx === targetIdx) {
+                            let insertIdx = targetItemIdx !== null ? targetItemIdx : next[targetIdx].length;
+                            if (data.iIdx < insertIdx) {
+                                insertIdx -= 1;
                             }
-                            next[targetIdx].push(item);
-                        } else if (data.gIdx === targetIdx) {
-                            next[targetIdx].splice(data.iIdx, 0, item);
+                            next[targetIdx].splice(insertIdx, 0, item);
+                        } else {
+                            // 다른 그룹으로 이동하는 경우
+                            if (!next[targetIdx].find(v => v.id === item.id)) {
+                                if (next[targetIdx].length >= 3) {
+                                    modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
+                                    return prev;
+                                }
+                                let insertIdx = targetItemIdx !== null ? targetItemIdx : next[targetIdx].length;
+                                next[targetIdx].splice(insertIdx, 0, item);
+                            }
                         }
                     }
                     return next.filter(g => g.length > 0);
@@ -1110,7 +1123,8 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                             modal.showAlert('알림', '한 그룹에는 최대 3개 문항까지만 넣을 수 있습니다.');
                             return prev;
                         }
-                        next[targetIdx] = [...next[targetIdx], ...unique];
+                        let insertIdx = targetItemIdx !== null ? targetItemIdx : next[targetIdx].length;
+                        next[targetIdx].splice(insertIdx, 0, ...unique);
                     }
                 }
                 return next;
@@ -1595,6 +1609,21 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
         setSelectedCells([]);
     }, [selectedBanner]);
 
+    // 드래그 종료 시 글로벌 초기화 및 클래스 제거
+    useEffect(() => {
+        const handleDragEndGlobal = () => {
+            draggedTypeRef.current = null;
+            document.querySelectorAll('.col-group').forEach(el => {
+                el.classList.remove('drag-over-group-left', 'drag-over-item');
+            });
+            document.querySelectorAll('.dropped-tag.grouped').forEach(el => {
+                el.classList.remove('drag-over-item-top', 'drag-over-item-bottom');
+            });
+        };
+        window.addEventListener('dragend', handleDragEndGlobal);
+        return () => window.removeEventListener('dragend', handleDragEndGlobal);
+    }, []);
+
     useEffect(() => {
         fetchBannerData();
         const handlePageUpdate = () => fetchBannerData();
@@ -1831,10 +1860,11 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                             flex: 1,
                                             display: 'grid',
                                             gridTemplateColumns: 'repeat(5, 1fr)',
-                                            gap: '12px',
-                                            padding: '16px',
+                                            gap: '8px',
+                                            padding: '12px',
                                             background: '#eff6ff',
                                             overflowY: 'auto',
+                                            overflowX: 'hidden',
                                             alignContent: 'start',
                                             position: 'relative'
                                         }}
@@ -1847,8 +1877,29 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                 className="col-group"
                                                 draggable
                                                 onDragStart={(e) => handleInternalGroupDragStart(e, groupIndex)}
-                                                onDragOver={(e) => e.preventDefault()}
-                                                onDrop={(e) => { e.stopPropagation(); handleDrop(e, groupIndex); }}
+                                                onDragOver={(e) => {
+                                                    e.preventDefault();
+                                                    e.dataTransfer.dropEffect = 'move';
+                                                    document.querySelectorAll('.col-group').forEach(el => {
+                                                        if (el !== e.currentTarget) {
+                                                            el.classList.remove('drag-over-group-left', 'drag-over-item');
+                                                        }
+                                                    });
+                                                    const type = draggedTypeRef.current;
+                                                    if (type === 'INTERNAL_GROUP') {
+                                                        e.currentTarget.classList.add('drag-over-group-left');
+                                                    } else if (type === 'INTERNAL_ITEM' || type === 'EXTERNAL') {
+                                                        e.currentTarget.classList.add('drag-over-item');
+                                                    }
+                                                }}
+                                                onDragLeave={(e) => {
+                                                    e.currentTarget.classList.remove('drag-over-group-left', 'drag-over-item');
+                                                }}
+                                                onDrop={(e) => {
+                                                    e.stopPropagation();
+                                                    e.currentTarget.classList.remove('drag-over-group-left', 'drag-over-item');
+                                                    handleDrop(e, groupIndex);
+                                                }}
                                                 style={{ width: '100%', marginBottom: '0', borderRadius: '8px' }}
                                             >
                                                 <div className="group-drag-handle" style={{ padding: '2px 0' }}><GripVertical size={14} /></div>
@@ -1859,6 +1910,41 @@ const DpRequestBannerStep = forwardRef(({ onUnsavedChange }, ref) => {
                                                             className="dropped-tag grouped"
                                                             draggable
                                                             onDragStart={(e) => { e.stopPropagation(); handleInternalItemDragStart(e, groupIndex, itemIndex); }}
+                                                            onDragOver={(e) => {
+                                                                const type = draggedTypeRef.current;
+                                                                if (type === 'INTERNAL_ITEM' || type === 'EXTERNAL') {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    document.querySelectorAll('.dropped-tag.grouped').forEach(el => {
+                                                                        if (el !== e.currentTarget) {
+                                                                            el.classList.remove('drag-over-item-top', 'drag-over-item-bottom');
+                                                                        }
+                                                                    });
+                                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                                    const y = e.clientY - rect.top;
+                                                                    if (y < rect.height / 2) {
+                                                                        e.currentTarget.classList.add('drag-over-item-top');
+                                                                        e.currentTarget.classList.remove('drag-over-item-bottom');
+                                                                    } else {
+                                                                        e.currentTarget.classList.add('drag-over-item-bottom');
+                                                                        e.currentTarget.classList.remove('drag-over-item-top');
+                                                                    }
+                                                                }
+                                                            }}
+                                                            onDragLeave={(e) => {
+                                                                e.currentTarget.classList.remove('drag-over-item-top', 'drag-over-item-bottom');
+                                                            }}
+                                                            onDrop={(e) => {
+                                                                e.stopPropagation();
+                                                                e.currentTarget.classList.remove('drag-over-item-top', 'drag-over-item-bottom');
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                const y = e.clientY - rect.top;
+                                                                let dropIdx = itemIndex;
+                                                                if (y >= rect.height / 2) {
+                                                                    dropIdx += 1;
+                                                                }
+                                                                handleDrop(e, groupIndex, dropIdx);
+                                                            }}
                                                             style={{ marginBottom: '3px', borderRadius: '4px', height: 'auto', minHeight: '26px', alignItems: 'flex-start', padding: '6px 4px' }}
                                                         >
                                                             <div className="item-drag-handle" style={{ marginTop: '2px' }}><GripVertical size={10} /></div>

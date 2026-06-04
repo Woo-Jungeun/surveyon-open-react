@@ -1145,19 +1145,19 @@
     display: flex;
     flex-direction: row;
     align-items: stretch;
-    gap: 6px;
-    padding: 8px;
+    gap: 4px;
+    padding: 6px;
     border: 1px dashed #93c5fd;
     border-radius: 8px;
     background: #eff6ff;
-    min-width: 180px;
+    min-width: 0;
     flex-shrink: 0;
 }
 
 .dp-wizard-setup .col-group-items {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     flex: 1;
 }
 
@@ -1167,7 +1167,7 @@
     align-items: flex-start;
     padding-top: 4px;
     cursor: grab;
-    width: 20px;
+    width: 16px;
     color: #cbd5e1;
     border-radius: 4px;
     flex-shrink: 0;
@@ -1184,10 +1184,10 @@
     background: #fff;
     border: 1px solid #cbd5e1;
     color: #334155;
-    padding: 5px 8px 5px 5px;
+    padding: 4px 6px;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     width: 100%;
-    min-height: 32px;
+    min-height: 28px;
     box-sizing: border-box;
 }
 
@@ -1196,9 +1196,9 @@
     align-items: center;
     justify-content: center;
     cursor: grab;
-    margin-right: 6px;
-    width: 20px;
-    height: 20px;
+    margin-right: 4px;
+    width: 16px;
+    height: 16px;
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 4px;
@@ -1938,4 +1938,23 @@
     background: #eff6ff !important;
     box-shadow: none !important;
     outline: none !important;
+}
+
+/* Drag over feedback for banner col-group */
+.col-group.drag-over-group-left {
+    box-shadow: -4px 0 0 0 #2563eb !important;
+}
+
+.col-group.drag-over-item {
+    border: 1px solid #2563eb !important;
+    background-color: #dbeafe !important;
+}
+
+/* Item drag over reordering inside banner group */
+.dropped-tag.grouped.drag-over-item-top {
+    box-shadow: 0 -2px 0 0 #2563eb, 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.dropped-tag.grouped.drag-over-item-bottom {
+    box-shadow: 0 2px 0 0 #2563eb, 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
