@@ -154,219 +154,221 @@ const getShortTypeName = (type) => {
 
 // ─── 테스트용 고정 응답 데이터 ───────────────────────────────────────────
 const TEST_RESPONSE = {
-  "success": "777",
-  "message": "q260271 프로젝트의 텍스트 파싱 및 로직 검증이 완료되었습니다.",
-  "resultjson": {
-    "totalVariables": 13,
-    "totalInputTokens": 14205,
-    "totalOutputTokens": 6250,
-    "estimatedCostUsd": 0.0029,
-    "processingTimeSeconds": 8.4,
-    "generatedVariables": [
-      {
-        "qnum": "Q1",
-        "original_text": "Q1. 귀하의 성별은 무엇입니까?",
-        "qtext": "귀하의 성별은 무엇입니까?",
-        "qdesc": "응답자의 생물학적 성별을 수집합니다.",
-        "qtype": "single",
-        "options": [
-          { "code": "1", "label": "남성" },
-          { "code": "2", "label": "여성" }
+    "success": "777",
+    "message": "q260271 프로젝트의 텍스트 파싱 및 로직 검증이 완료되었습니다.",
+    "resultjson": {
+        "totalVariables": 13,
+        "totalInputTokens": 14205,
+        "totalOutputTokens": 6250,
+        "estimatedCostUsd": 0.0029,
+        "processingTimeSeconds": 8.4,
+        "generatedVariables": [
+            {
+                "qnum": "Q1",
+                "original_text": "Q1. 귀하의 성별은 무엇입니까?",
+                "qtext": "귀하의 성별은 무엇입니까?",
+                "qdesc": "응답자의 생물학적 성별을 수집합니다.",
+                "qtype": "single",
+                "options": [
+                    { "code": "1", "label": "남성" },
+                    { "code": "2", "label": "여성" }
+                ],
+                "logics": {
+                    "entry_condition": "True",
+                    "developer_note": "성별 수집 기본 항목"
+                }
+            },
+            {
+                "qnum": "Q2-1",
+                "original_text": "Q2-1. 귀하가 최근 3개월 이내에 이용해 본 커피 브랜드를 모두 선택해 주세요. (중복 선택 가능)",
+                "qtext": "귀하가 최근 3개월 이내에 이용해 본 커피 브랜드를 모두 선택해 주세요.",
+                "qdesc": "이후 로테이션 루프(Q2-2 ~ Q2-6)의 대상 브랜드를 선정하기 위한 다중 선택 문항입니다.",
+                "qtype": "multi",
+                "is_randomized": true,
+                "min_answers": 1,
+                "max_answers": 10,
+                "options": [
+                    { "code": "1", "label": "스타벅스" },
+                    { "code": "2", "label": "투썸플레이스" },
+                    { "code": "3", "label": "메가커피" },
+                    { "code": "4", "label": "컴포즈커피" },
+                    { "code": "5", "label": "이디야커피" },
+                    { "code": "96", "label": "기타 (직접 작성):", "is_fixed": true, "has_open_ended": true, "input_format": "text" },
+                    { "code": "99", "label": "최근 3개월 이내에 커피 브랜드를 이용한 적이 없음", "is_fixed": true, "is_exclusive": true }
+                ],
+                "logics": {
+                    "entry_condition": "True",
+                    "developer_note": "Q2-1에서 응답자가 선택한 브랜드들로 로테이션(Q2-2 ~ Q2-6) 루프가 생성됩니다. 99번(배타) 항목 체크 시 타 항목은 전부 선택 해제 및 비활성화되어야 합니다."
+                }
+            },
+            {
+                "qnum": "Q2-2",
+                "original_text": "[로테이션 시작] Q2-2. 귀하는 본 브랜드의 인테리어 및 매장 분위기에 대해 얼마나 만족하십니까?",
+                "qtext": "귀하는 본 브랜드의 인테리어 및 매장 분위기에 대해 얼마나 만족하십니까?",
+                "qdesc": "각 브랜드별 인테리어 만족도 평가 (로테이션 루프 시작 문항)",
+                "qtype": "scale",
+                "loop_base_qnum": "Q2-1",
+                "scales": [
+                    { "code": "1", "label": "매우 불만족" },
+                    { "code": "2", "label": "불만족" },
+                    { "code": "3", "label": "보통" },
+                    { "code": "4", "label": "만족" },
+                    { "code": "5", "label": "매우 만족" }
+                ],
+                "logics": {
+                    "loop_logic": {
+                        "target_range": "Q2-2 ~ Q2-6",
+                        "repeat_condition": "Q2-1에서 선택한 브랜드 개수만큼 반복"
+                    },
+                    "entry_condition": "Q2-1의 선택 문항 수 >= 1",
+                    "developer_note": "로테이션 루프 시작 구간 헤더를 렌더링하고, Q2-1에 종속되어 루프가 돎을 명시해 줍니다."
+                }
+            },
+            {
+                "qnum": "Q2-3",
+                "original_text": "Q2-3. 본 브랜드를 다른 주변 지인에게 추천할 의향이 있으십니까?",
+                "qtext": "본 브랜드를 다른 주변 지인에게 추천할 의향이 있으십니까?",
+                "qdesc": "브랜드별 NPS 지수 수집 척도 문항 (로테이션 내부 루프 두 번째 문항)",
+                "qtype": "single",
+                "loop_base_qnum": "Q2-1",
+                "options": [
+                    { "code": "1", "label": "추천하지 않음" },
+                    { "code": "2", "label": "중립" },
+                    { "code": "3", "label": "강력 추천함" }
+                ],
+                "logics": {
+                    "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입",
+                    "developer_note": "Q2-1 종속 로테이션 문항 링크가 노출되어야 합니다."
+                }
+            },
+            {
+                "qnum": "Q2-4",
+                "original_text": "Q2-4. 향후 본 브랜드를 다시 방문하실 의향이 있으십니까?",
+                "qtext": "향후 본 브랜드를 다시 방문하실 의향이 있으십니까?",
+                "qdesc": "재방문 의향 측정 문항",
+                "qtype": "single",
+                "loop_base_qnum": "Q2-1",
+                "options": [
+                    { "code": "1", "label": "방문 의향 없음" },
+                    { "code": "2", "label": "보통" },
+                    { "code": "3", "label": "적극 방문할 것임" }
+                ],
+                "logics": {
+                    "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입"
+                }
+            },
+            {
+                "qnum": "Q2-5",
+                "original_text": "Q2-5. 본 커피 브랜드의 이용 편의성을 높이기 위한 개선 건의사항을 적어 주세요.",
+                "qtext": "본 커피 브랜드의 이용 편의성을 높이기 위한 개선 건의사항을 적어 주세요.",
+                "qdesc": "브랜드별 개선 요구사항 주관식 의견 수집",
+                "qtype": "open",
+                "loop_base_qnum": "Q2-1",
+                "logics": {
+                    "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입"
+                }
+            },
+            {
+                "qnum": "Q2-6",
+                "original_text": "[로테이션 끝] Q2-6. 본 브랜드에서 제공하는 음료 및 디저트 맛을 평가해 주십시오.",
+                "qtext": "본 브랜드에서 제공하는 음료 및 디저트 맛을 평가해 주십시오.",
+                "qdesc": "브랜드별 단행 주관식 문항 (로테이션 루프 종료 문항)",
+                "qtype": "open",
+                "loop_base_qnum": "Q2-1",
+                "logics": {
+                    "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입",
+                    "developer_note": "이 문항이 로테이션 루프의 마지막 문항입니다."
+                }
+            },
+            {
+                "qnum": "Q3",
+                "original_text": "Q3. 귀하가 평소 커피 전문점을 방문하는 목적으로 가장 중요한 것을 1순위와 2순위 순서대로 골라주세요.",
+                "qtext": "귀하가 평소 커피 전문점을 방문하는 목적으로 가장 중요한 것을 1순위와 2순위 순서대로 골라주세요.",
+                "qdesc": "방문 목적 순위형 문항입니다.",
+                "qtype": "rank",
+                "is_randomized": true,
+                "rank_limit": 2,
+                "options": [
+                    { "code": "1", "label": "맛있는 커피/음료를 마시기 위해" },
+                    { "code": "2", "label": "친구/가족과 대화하거나 만남을 위해" },
+                    { "code": "3", "label": "공부나 노트북 작업(카공)을 위해" },
+                    { "code": "4", "label": "시간을 때우거나 휴식을 위해" },
+                    { "code": "96", "label": "기타 목적 (직접 입력):", "is_fixed": true, "has_open_ended": true, "input_format": "text" }
+                ],
+                "logics": {
+                    "entry_condition": "True",
+                    "developer_note": "우선순위 1순위, 2순위 지정 UI 또는 뱃지 마킹이 필요합니다."
+                }
+            },
+            {
+                "qnum": "Q4",
+                "original_text": "Q4. 다음 각 브랜드 속성에 대해 만족 정도를 평가해 주십시오. (격자/매트릭스형)",
+                "qtext": "다음 각 브랜드 속성에 대해 만족 정도를 평가해 주십시오.",
+                "qdesc": "주관식 입력 필드가 결합된 특수 격자 매트릭스형 문항입니다.",
+                "qtype": "grid_multi",
+                "options": [
+                    { "code": "A", "label": "브랜드 인지도 및 명성" },
+                    { "code": "B", "label": "프로모션 및 제휴 할인 혜택" },
+                    { "code": "C", "label": "모바일 앱(오더) 편의성" }
+                ],
+                "scales": [
+                    { "code": "1", "label": "불만족" },
+                    { "code": "2", "label": "보통" },
+                    { "code": "3", "label": "만족" },
+                    { "code": "96", "label": "기타 구체적 사유 기입", "has_open_ended": true, "input_format": "text" }
+                ],
+                "logics": {
+                    "entry_condition": "True",
+                    "developer_note": "scales 열 중에서 96번 열은 라디오 버튼 대신 직접 텍스트를 기입할 수 있는 <input type='text'>가 위치해야 합니다."
+                }
+            },
+            {
+                "qnum": "Q5",
+                "original_text": "Q5. 당사 서비스 개선을 위한 제안 사항이나 추가 의견을 자유롭게 적어 주십시오.",
+                "qtext": "당사 서비스 개선을 위한 제안 사항이나 추가 의견을 자유롭게 적어 주십시오.",
+                "qdesc": "멀티라인 서술형 주관식 문항입니다.",
+                "qtype": "open",
+                "logics": {
+                    "entry_condition": "True",
+                    "developer_note": "넓은 입력 칸인 <textarea> 요소를 제공해 줍니다."
+                }
+            },
+            {
+                "qnum": "PERSONAL_1",
+                "original_text": "[개인 정보] 성명 및 비상 연락처를 입력해 주세요.",
+                "qtext": "성명 및 비상 연락처를 입력해 주세요.",
+                "qdesc": "설문 리워드 지급 또는 본인 식별을 위한 개인정보 폼 필드입니다.",
+                "qtype": "personal_info",
+                "options": [
+                    { "code": "NAME", "label": "이름 (성명)", "has_open_ended": true, "input_format": "text" },
+                    { "code": "TEL", "label": "휴대폰 번호 (- 제외)", "has_open_ended": true, "input_format": "tel" }
+                ],
+                "logics": {
+                    "entry_condition": "True",
+                    "developer_note": "개인 정보 수집 동의 후 입력 폼을 그룹화하여 렌더링합니다."
+                }
+            },
+            {
+                "qnum": "GLOBAL_L1",
+                "original_text": "[전역 로직] Q2-1에서 '이용하는 브랜드 없음(99)' 응답 시 설문 종료(Screenout)",
+                "qtext": "Q2-1에서 '이용하는 브랜드 없음(99)' 응답 시 설문 종료(Screenout)",
+                "qdesc": "이용 경험이 없는 응답자를 걸러내기 위한 스크린아웃 조건 분기 룰셋입니다.",
+                "qtype": "global_logic",
+                "logics": {
+                    "skip_logic": "If Q2-1 == '99' Then Go to Screenout",
+                    "developer_note": "메인 문항 카드 렌더링 리스트에서는 제외하되, 페이지 최상단 전역 룰셋 카드 패널에 별도 노출합니다."
+                }
+            }
         ],
-        "logics": {
-          "entry_condition": "True",
-          "developer_note": "성별 수집 기본 항목"
-        }
-      },
-      {
-        "qnum": "Q2-1",
-        "original_text": "Q2-1. 귀하가 최근 3개월 이내에 이용해 본 커피 브랜드를 모두 선택해 주세요. (중복 선택 가능)",
-        "qtext": "귀하가 최근 3개월 이내에 이용해 본 커피 브랜드를 모두 선택해 주세요.",
-        "qdesc": "이후 로테이션 루프(Q2-2 ~ Q2-6)의 대상 브랜드를 선정하기 위한 다중 선택 문항입니다.",
-        "qtype": "multi",
-        "is_randomized": true,
-        "min_answers": 1,
-        "max_answers": 10,
-        "options": [
-          { "code": "1", "label": "스타벅스" },
-          { "code": "2", "label": "투썸플레이스" },
-          { "code": "3", "label": "메가커피" },
-          { "code": "4", "label": "컴포즈커피" },
-          { "code": "5", "label": "이디야커피" },
-          { "code": "96", "label": "기타 (직접 작성):", "is_fixed": true, "has_open_ended": true, "input_format": "text" },
-          { "code": "99", "label": "최근 3개월 이내에 커피 브랜드를 이용한 적이 없음", "is_fixed": true, "is_exclusive": true }
+        "warnings": [
+            "원본 텍스트에서 다음 문항 패턴이 감지되었으나 AI 파싱 결과에 없습니다: SQ1"
         ],
-        "logics": {
-          "entry_condition": "True",
-          "developer_note": "Q2-1에서 응답자가 선택한 브랜드들로 로테이션(Q2-2 ~ Q2-6) 루프가 생성됩니다. 99번(배타) 항목 체크 시 타 항목은 전부 선택 해제 및 비활성화되어야 합니다."
-        }
-      },
-      {
-        "qnum": "Q2-2",
-        "original_text": "[로테이션 시작] Q2-2. 귀하는 본 브랜드의 인테리어 및 매장 분위기에 대해 얼마나 만족하십니까?",
-        "qtext": "귀하는 본 브랜드의 인테리어 및 매장 분위기에 대해 얼마나 만족하십니까?",
-        "qdesc": "각 브랜드별 인테리어 만족도 평가 (로테이션 루프 시작 문항)",
-        "qtype": "scale",
-        "loop_base_qnum": "Q2-1",
-        "scales": [
-          { "code": "1", "label": "매우 불만족" },
-          { "code": "2", "label": "불만족" },
-          { "code": "3", "label": "보통" },
-          { "code": "4", "label": "만족" },
-          { "code": "5", "label": "매우 만족" }
-        ],
-        "logics": {
-          "loop_logic": {
-            "target_range": "Q2-2 ~ Q2-6",
-            "repeat_condition": "Q2-1에서 선택한 브랜드 개수만큼 반복"
-          },
-          "entry_condition": "Q2-1의 선택 문항 수 >= 1",
-          "developer_note": "로테이션 루프 시작 구간 헤더를 렌더링하고, Q2-1에 종속되어 루프가 돎을 명시해 줍니다."
-        }
-      },
-      {
-        "qnum": "Q2-3",
-        "original_text": "Q2-3. 본 브랜드를 다른 주변 지인에게 추천할 의향이 있으십니까?",
-        "qtext": "본 브랜드를 다른 주변 지인에게 추천할 의향이 있으십니까?",
-        "qdesc": "브랜드별 NPS 지수 수집 척도 문항 (로테이션 내부 루프 두 번째 문항)",
-        "qtype": "single",
-        "loop_base_qnum": "Q2-1",
-        "options": [
-          { "code": "1", "label": "추천하지 않음" },
-          { "code": "2", "label": "중립" },
-          { "code": "3", "label": "강력 추천함" }
-        ],
-        "logics": {
-          "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입",
-          "developer_note": "Q2-1 종속 로테이션 문항 링크가 노출되어야 합니다."
-        }
-      },
-      {
-        "qnum": "Q2-4",
-        "original_text": "Q2-4. 향후 본 브랜드를 다시 방문하실 의향이 있으십니까?",
-        "qtext": "향후 본 브랜드를 다시 방문하실 의향이 있으십니까?",
-        "qdesc": "재방문 의향 측정 문항",
-        "qtype": "single",
-        "loop_base_qnum": "Q2-1",
-        "options": [
-          { "code": "1", "label": "방문 의향 없음" },
-          { "code": "2", "label": "보통" },
-          { "code": "3", "label": "적극 방문할 것임" }
-        ],
-        "logics": {
-          "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입"
-        }
-      },
-      {
-        "qnum": "Q2-5",
-        "original_text": "Q2-5. 본 커피 브랜드의 이용 편의성을 높이기 위한 개선 건의사항을 적어 주세요.",
-        "qtext": "본 커피 브랜드의 이용 편의성을 높이기 위한 개선 건의사항을 적어 주세요.",
-        "qdesc": "브랜드별 개선 요구사항 주관식 의견 수집",
-        "qtype": "open",
-        "loop_base_qnum": "Q2-1",
-        "logics": {
-          "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입"
-        }
-      },
-      {
-        "qnum": "Q2-6",
-        "original_text": "[로테이션 끝] Q2-6. 본 브랜드에서 제공하는 음료 및 디저트 맛을 평가해 주십시오.",
-        "qtext": "본 브랜드에서 제공하는 음료 및 디저트 맛을 평가해 주십시오.",
-        "qdesc": "브랜드별 단행 주관식 문항 (로테이션 루프 종료 문항)",
-        "qtype": "open",
-        "loop_base_qnum": "Q2-1",
-        "logics": {
-          "entry_condition": "Q2-1의 해당 브랜드 선택 시 진입",
-          "developer_note": "이 문항이 로테이션 루프의 마지막 문항입니다."
-        }
-      },
-      {
-        "qnum": "Q3",
-        "original_text": "Q3. 귀하가 평소 커피 전문점을 방문하는 목적으로 가장 중요한 것을 1순위와 2순위 순서대로 골라주세요.",
-        "qtext": "귀하가 평소 커피 전문점을 방문하는 목적으로 가장 중요한 것을 1순위와 2순위 순서대로 골라주세요.",
-        "qdesc": "방문 목적 순위형 문항입니다.",
-        "qtype": "rank",
-        "is_randomized": true,
-        "rank_limit": 2,
-        "options": [
-          { "code": "1", "label": "맛있는 커피/음료를 마시기 위해" },
-          { "code": "2", "label": "친구/가족과 대화하거나 만남을 위해" },
-          { "code": "3", "label": "공부나 노트북 작업(카공)을 위해" },
-          { "code": "4", "label": "시간을 때우거나 휴식을 위해" },
-          { "code": "96", "label": "기타 목적 (직접 입력):", "is_fixed": true, "has_open_ended": true, "input_format": "text" }
-        ],
-        "logics": {
-          "entry_condition": "True",
-          "developer_note": "우선순위 1순위, 2순위 지정 UI 또는 뱃지 마킹이 필요합니다."
-        }
-      },
-      {
-        "qnum": "Q4",
-        "original_text": "Q4. 다음 각 브랜드 속성에 대해 만족 정도를 평가해 주십시오. (격자/매트릭스형)",
-        "qtext": "다음 각 브랜드 속성에 대해 만족 정도를 평가해 주십시오.",
-        "qdesc": "주관식 입력 필드가 결합된 특수 격자 매트릭스형 문항입니다.",
-        "qtype": "grid_multi",
-        "options": [
-          { "code": "A", "label": "브랜드 인지도 및 명성" },
-          { "code": "B", "label": "프로모션 및 제휴 할인 혜택" },
-          { "code": "C", "label": "모바일 앱(오더) 편의성" }
-        ],
-        "scales": [
-          { "code": "1", "label": "불만족" },
-          { "code": "2", "label": "보통" },
-          { "code": "3", "label": "만족" },
-          { "code": "96", "label": "기타 구체적 사유 기입", "has_open_ended": true, "input_format": "text" }
-        ],
-        "logics": {
-          "entry_condition": "True",
-          "developer_note": "scales 열 중에서 96번 열은 라디오 버튼 대신 직접 텍스트를 기입할 수 있는 <input type='text'>가 위치해야 합니다."
-        }
-      },
-      {
-        "qnum": "Q5",
-        "original_text": "Q5. 당사 서비스 개선을 위한 제안 사항이나 추가 의견을 자유롭게 적어 주십시오.",
-        "qtext": "당사 서비스 개선을 위한 제안 사항이나 추가 의견을 자유롭게 적어 주십시오.",
-        "qdesc": "멀티라인 서술형 주관식 문항입니다.",
-        "qtype": "open",
-        "logics": {
-          "entry_condition": "True",
-          "developer_note": "넓은 입력 칸인 <textarea> 요소를 제공해 줍니다."
-        }
-      },
-      {
-        "qnum": "PERSONAL_1",
-        "original_text": "[개인 정보] 성명 및 비상 연락처를 입력해 주세요.",
-        "qtext": "성명 및 비상 연락처를 입력해 주세요.",
-        "qdesc": "설문 리워드 지급 또는 본인 식별을 위한 개인정보 폼 필드입니다.",
-        "qtype": "personal_info",
-        "options": [
-          { "code": "NAME", "label": "이름 (성명)", "has_open_ended": true, "input_format": "text" },
-          { "code": "TEL", "label": "휴대폰 번호 (- 제외)", "has_open_ended": true, "input_format": "tel" }
-        ],
-        "logics": {
-          "entry_condition": "True",
-          "developer_note": "개인 정보 수집 동의 후 입력 폼을 그룹화하여 렌더링합니다."
-        }
-      },
-      {
-        "qnum": "GLOBAL_L1",
-        "original_text": "[전역 로직] Q2-1에서 '이용하는 브랜드 없음(99)' 응답 시 설문 종료(Screenout)",
-        "qtext": "Q2-1에서 '이용하는 브랜드 없음(99)' 응답 시 설문 종료(Screenout)",
-        "qdesc": "이용 경험이 없는 응답자를 걸러내기 위한 스크린아웃 조건 분기 룰셋입니다.",
-        "qtype": "global_logic",
-        "logics": {
-          "skip_logic": "If Q2-1 == '99' Then Go to Screenout",
-          "developer_note": "메인 문항 카드 렌더링 리스트에서는 제외하되, 페이지 최상단 전역 룰셋 카드 패널에 별도 노출합니다."
-        }
-      }
-    ],
-    "warnings": [
-      "원본 텍스트에서 다음 문항 패턴이 감지되었으나 AI 파싱 결과에 없습니다: SQ1"
-    ],
-    "parsedText": "Q1. 귀하의 성별은 무엇입니까? ... (추출된 설문지 텍스트 전체 원문 예시)",
-    "validationErrors": []
-  }
+        "parsedText": "Q1. 귀하의 성별은 무엇입니까? ... (추출된 설문지 텍스트 전체 원문 예시)",
+        "validationErrors": []
+    }
 };
+
+const KNOWN_LOGIC_LABELS = ['유효성 조건:', '설계 메모:', '흐름 스킵:', '루프 정의:', '진입 조건:', '표시 조건:'];
 
 // ─── 메인 컴포넌트 ────────────────────────────────────────
 const QaPage = () => {
@@ -393,9 +395,9 @@ const QaPage = () => {
     const [insertText, setInsertText] = useState('');
 
     const userAnswers = {};
-    const setUserAnswers = () => {};
+    const setUserAnswers = () => { };
     const openEndedTexts = {};
-    const setOpenEndedTexts = () => {};
+    const setOpenEndedTexts = () => { };
     const openEndedInputRefs = { current: {} };
 
 
@@ -416,7 +418,7 @@ const QaPage = () => {
     const auth = useSelector(store => store.auth);
     const modal = useContext(modalContext);
     const loadingSpinner = useContext(loadingSpinnerContext);
-    const { analyzeAll, getParsedDocument, validateDocument, saveParsedDocument } = QaPageApi();
+    const { analyzeAll, getParsedDocument, validateDocument, saveParsedDocument, applyPartialParse } = QaPageApi();
 
     useEffect(() => {
         return () => {
@@ -458,9 +460,9 @@ const QaPage = () => {
         if (element) {
             isProgrammaticScrollRef.current = true;
             if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-            
+
             element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            
+
             scrollTimeoutRef.current = setTimeout(() => {
                 isProgrammaticScrollRef.current = false;
             }, 800);
@@ -490,7 +492,7 @@ const QaPage = () => {
             if (!element) return;
             const rect = element.getBoundingClientRect();
             // 카드 상단이 뷰포트 컨테이너 상단 근처에 위치한 거리를 계산
-            const diff = Math.abs(rect.top - containerTop - 16); 
+            const diff = Math.abs(rect.top - containerTop - 16);
             if (diff < closestDiff) {
                 closestDiff = diff;
                 closestId = id;
@@ -719,7 +721,7 @@ const QaPage = () => {
 
                 setErrors(mappedErrors);
                 setIsRightCollapsed(false);
-                
+
                 if (mappedErrors.length > 0) {
                     modal.showAlert('알림', `AI 로직 검증 결과 총 ${mappedErrors.length}건의 이슈가 감지되었습니다.`);
                 } else {
@@ -748,7 +750,7 @@ const QaPage = () => {
                     message: "Q4 문항(격자 매트릭스형)의 96번 열은 라디오 버튼 대신 직접 텍스트 기입용 input 상자가 위치해야 합니다."
                 }
             ];
-            
+
             const mappedErrors = mockErrors.map(err => {
                 let title = '확인';
                 if (err.severity === 'critical') title = '심각';
@@ -787,7 +789,7 @@ const QaPage = () => {
         // Rebuild backend items
         const items = questions.map(q => {
             const raw = q.rawItem || {};
-            
+
             // Rebuild options array to format the backend expects
             const rebuiltOptions = q.options?.map(opt => {
                 const originalOpt = raw.options?.find(o => o.code === opt.code) || {};
@@ -947,12 +949,56 @@ const QaPage = () => {
     // 문항 객체를 텍스트 표현으로 변환하는 헬퍼
     const getQuestionTextRepresentation = (q) => {
         if (!q) return '';
-        let text = `${q.id}. ${q.text}`;
+
+        // 1. rawItem.original_text가 있다면 이를 우선적으로 사용하여 줄바꿈 변환 후 리턴
+        if (q.rawItem && q.rawItem.original_text) {
+            return q.rawItem.original_text.replace(/\\n/g, '\n');
+        }
+
+        // 2. 만약 original_text가 없다면 (Fallback) 기존 필드들로 텍스트를 재구성
+        let text = `${q.text}`;
+
         const items = (q.options && q.options.length > 0) ? q.options : (q.scales && q.scales.length > 0 ? q.scales : []);
         if (items.length > 0) {
-            const optLines = items.map(opt => `${opt.code}. ${opt.text}`).join('\n');
+            const optLines = items.map(opt => `${opt.code}) ${opt.text}`).join('\n');
             text += '\n' + optLines;
         }
+
+        // logics에 따른 텍스트 구성 (예: skip_logic)
+        if (q.rawItem && q.rawItem.logics) {
+            const logics = q.rawItem.logics;
+            const skipLogic = logics.skip_logic;
+            if (skipLogic) {
+                try {
+                    let parsedSkips = [];
+                    if (typeof skipLogic === 'string') {
+                        parsedSkips = JSON.parse(skipLogic);
+                    } else if (Array.isArray(skipLogic)) {
+                        parsedSkips = skipLogic;
+                    } else if (typeof skipLogic === 'object') {
+                        parsedSkips = [skipLogic];
+                    }
+
+                    if (Array.isArray(parsedSkips)) {
+                        parsedSkips.forEach(skip => {
+                            const condition = skip.condition || skip.Condition || '';
+                            const target = skip.target || skip.Target || '';
+                            if (condition && target) {
+                                text += `\n* ${condition} 후 ${target}로 자동스킵`;
+                            } else if (target) {
+                                text += `\n* ${target}로 자동스킵`;
+                            }
+                        });
+                    } else if (typeof skipLogic === 'string') {
+                        text += `\n* ${skipLogic}`;
+                    }
+                } catch (e) {
+                    console.error("Error parsing skip_logic for text representation:", e);
+                    text += `\n* ${String(skipLogic)}`;
+                }
+            }
+        }
+
         return text;
     };
 
@@ -974,85 +1020,168 @@ const QaPage = () => {
         setIsInsertPopupOpen(true);
     };
 
-    const handleExecuteInsert = () => {
+    const handleExecuteInsert = async () => {
         if (!insertText.trim()) {
             modal.showAlert('알림', popupMode === 'modify' ? '수정할 문항 텍스트를 입력해 주세요.' : '삽입할 문항 텍스트를 입력해 주세요.');
             return;
         }
 
-        // 텍스트를 문항 객체로 파싱
-        const lines = insertText.split('\n').map(l => l.trim()).filter(Boolean);
-        if (lines.length === 0) return;
+        const pn = sessionStorage.getItem('projectnum') || '';
+        const user = auth?.user?.userId || '';
 
-        const firstLine = lines[0];
-        let qnum = '';
-        let qtext = '';
-
-        const qMatch = firstLine.match(/^([a-zA-Z0-9_\-]+)[\.\s]+(.*)$/);
-        if (qMatch) {
-            qnum = qMatch[1];
-            qtext = qMatch[2].trim();
-        } else {
-            qnum = popupMode === 'modify' ? insertTargetId : `${insertTargetId}_new`;
-            qtext = firstLine;
+        if (!pn) {
+            modal.showAlert('알림', '프로젝트 정보(PN)가 존재하지 않습니다.');
+            return;
         }
 
-        const options = [];
-        for (let i = 1; i < lines.length; i++) {
-            const line = lines[i];
-            const optMatch = line.match(/^(\d+)[\.\s]+(.*)$/);
-            if (optMatch) {
-                options.push({
-                    code: optMatch[1],
-                    text: optMatch[2].trim()
-                });
-            } else {
-                options.push({
-                    code: String(i),
-                    text: line
-                });
-            }
-        }
-
-        const oldQ = questions.find(q => q.id === insertTargetId);
-
-        const newQuestion = {
-            id: qnum,
-            type: options.length > 0 ? (oldQ?.type === 'grid_multi' || oldQ?.type === 'scale' ? oldQ.type : 'single') : 'open',
-            text: qtext,
-            options: oldQ?.type === 'scale' ? [] : options,
-            scales: oldQ?.type === 'scale' ? options : (oldQ?.scales || []),
-            logic: oldQ?.logic || '',
-            loop_logic: oldQ?.loop_logic || null,
-            loop_base_qnum: oldQ?.loop_base_qnum || null,
-            rank_limit: oldQ?.rank_limit || 2,
-            is_randomized: oldQ?.is_randomized || false
-        };
-
-        if (popupMode === 'modify') {
-            setQuestions(prev => prev.map(q => q.id === insertTargetId ? newQuestion : q));
-            if (qnum !== insertTargetId) {
-                setActiveQuestionId(qnum);
-            }
-        } else {
-            setQuestions(prev => {
-                const targetIdx = prev.findIndex(q => q.id === insertTargetId);
-                if (targetIdx === -1) {
-                    return [...prev, newQuestion];
-                }
-                const next = [...prev];
-                next.splice(targetIdx + 1, 0, newQuestion);
-                return next;
+        loadingSpinner.show();
+        try {
+            const res = await applyPartialParse.mutateAsync({
+                Pn: pn,
+                RawText: insertText,
+                User: user
             });
-        }
 
-        setIsInsertPopupOpen(false);
-        setInsertText('');
-        
-        // 포커스 이동
-        setTimeout(() => {
-            handleFocusQuestion(qnum);
-        }, 100);
+            if (res?.success === '777' && res?.resultjson?.generatedVariables) {
+                const parsedQs = mapApiResponseToQuestions(res.resultjson.generatedVariables);
+                if (parsedQs.length === 0) {
+                    modal.showAlert('오류', '파싱된 문항 결과가 비어 있습니다.');
+                    return;
+                }
+
+                if (popupMode === 'modify') {
+                    setQuestions(prev => {
+                        const targetIdx = prev.findIndex(q => q.id === insertTargetId);
+                        if (targetIdx === -1) return prev;
+                        const next = [...prev];
+                        next.splice(targetIdx, 1, ...parsedQs);
+                        return next;
+                    });
+                } else {
+                    setQuestions(prev => {
+                        const targetIdx = prev.findIndex(q => q.id === insertTargetId);
+                        if (targetIdx === -1) {
+                            return [...prev, ...parsedQs];
+                        }
+                        const next = [...prev];
+                        next.splice(targetIdx + 1, 0, ...parsedQs);
+                        return next;
+                    });
+                }
+
+                setIsInsertPopupOpen(false);
+                setInsertText('');
+
+                const targetQnum = parsedQs[0].id;
+                setTimeout(() => {
+                    handleFocusQuestion(targetQnum);
+                }, 100);
+
+                modal.showAlert('완료', res.message || '문항이 성공적으로 파싱되어 반영되었습니다.');
+            } else {
+                modal.showAlert('오류', res?.message || '문항 파싱 변환에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error("Partial Parse API Error:", e);
+            // Fallback: 백엔드 실패 시 프론트엔드 자체 파싱 시뮬레이션 코드 동작
+            const lines = insertText.split('\n').map(l => l.trim()).filter(Boolean);
+            if (lines.length > 0) {
+                const firstLine = lines[0];
+                let qnum = '';
+                let qtext = '';
+
+                const qMatch = firstLine.match(/^([a-zA-Z0-9_\-]+)[\.\s]+(.*)$/);
+                if (qMatch) {
+                    qnum = qMatch[1];
+                    qtext = qMatch[2].trim();
+                } else {
+                    qnum = popupMode === 'modify' ? insertTargetId : `${insertTargetId}_new`;
+                    qtext = firstLine;
+                }
+
+                const options = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i];
+                    const optMatch = line.match(/^(\d+)[\.\s]+(.*)$/);
+                    if (optMatch) {
+                        options.push({
+                            code: optMatch[1],
+                            text: optMatch[2].trim()
+                        });
+                    } else {
+                        options.push({
+                            code: String(i),
+                            text: line
+                        });
+                    }
+                }
+
+                const oldQ = questions.find(q => q.id === insertTargetId);
+
+                const newQuestion = {
+                    id: qnum,
+                    type: options.length > 0 ? (oldQ?.type === 'grid_multi' || oldQ?.type === 'scale' ? oldQ.type : 'single') : 'open',
+                    text: qtext,
+                    options: oldQ?.type === 'scale' ? [] : options.map(opt => ({
+                        code: opt.code,
+                        text: opt.text,
+                        is_fixed: false,
+                        is_exclusive: false,
+                        has_open_ended: false,
+                        input_format: '',
+                        display_condition: ''
+                    })),
+                    scales: oldQ?.type === 'scale' ? options.map(opt => ({
+                        code: opt.code,
+                        text: opt.text,
+                        has_open_ended: false,
+                        input_format: '',
+                        display_condition: ''
+                    })) : (oldQ?.scales || []),
+                    logic: oldQ?.logic || '',
+                    loop_logic: oldQ?.loop_logic || null,
+                    loop_base_qnum: oldQ?.loop_base_qnum || null,
+                    rank_limit: oldQ?.rank_limit || 2,
+                    is_randomized: oldQ?.is_randomized || false,
+                    rawItem: {
+                        qnum: qnum,
+                        qtext: qtext,
+                        qtype: options.length > 0 ? (oldQ?.type === 'grid_multi' || oldQ?.type === 'scale' ? oldQ.type : 'single') : 'open',
+                        options: options.map(opt => ({ code: opt.code, label: opt.text })),
+                        scales: oldQ?.type === 'scale' ? options.map(opt => ({ code: opt.code, label: opt.text })) : (oldQ?.scales || []),
+                        logics: oldQ?.rawItem?.logics || null
+                    }
+                };
+
+                if (popupMode === 'modify') {
+                    setQuestions(prev => {
+                        const targetIdx = prev.findIndex(q => q.id === insertTargetId);
+                        if (targetIdx === -1) return prev;
+                        const next = [...prev];
+                        next.splice(targetIdx, 1, newQuestion);
+                        return next;
+                    });
+                } else {
+                    setQuestions(prev => {
+                        const targetIdx = prev.findIndex(q => q.id === insertTargetId);
+                        if (targetIdx === -1) return [...prev, newQuestion];
+                        const next = [...prev];
+                        next.splice(targetIdx + 1, 0, newQuestion);
+                        return next;
+                    });
+                }
+
+                setIsInsertPopupOpen(false);
+                setInsertText('');
+                setTimeout(() => {
+                    handleFocusQuestion(qnum);
+                }, 100);
+
+                modal.showAlert('알림', '서버 통신 실패로 프론트엔드 자체 파싱 시뮬레이션 데이터를 반영했습니다.');
+            }
+        } finally {
+            loadingSpinner.hide();
+        }
     };
 
     const handleDeleteQuestion = (id) => {
@@ -1639,7 +1768,7 @@ const QaPage = () => {
                                                     전역 룰셋
                                                 </span>
                                                 <span className="qa-index-label-sub">
-                                                    {r.id}_stub
+                                                    {r.id}
                                                 </span>
                                             </div>
                                             <div className="qa-index-type-badge type-rule">
@@ -1669,10 +1798,10 @@ const QaPage = () => {
                                                                 ↳
                                                             </span>
                                                         )}
-                                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.id}. {q.text}</span>
+                                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.text}</span>
                                                     </span>
                                                     <span className="qa-index-label-sub">
-                                                        {q.id}_stub
+                                                        {q.id}
                                                     </span>
                                                 </div>
                                                 <div className={`qa-index-type-badge type-${q.type}`}>
@@ -1688,8 +1817,8 @@ const QaPage = () => {
                                     )}
                                 </div>
 
-                                 {/* 우측 문항 상세 리스트 */}
-                                 <div className="qa-detail-list" ref={detailListRef} onScroll={handleDetailScroll}>
+                                {/* 우측 문항 상세 리스트 */}
+                                <div className="qa-detail-list" ref={detailListRef} onScroll={handleDetailScroll}>
                                     {globalLogicRules.map(r => (
                                         <div
                                             key={r.id}
@@ -1702,22 +1831,24 @@ const QaPage = () => {
                                                         <BrainCircuit size={12} color="#4f46e5" />
                                                         [전역 로직] {r.text}
                                                     </div>
-                                                     <div style={{ margin: '4px 0 0 0', lineHeight: 1.4, fontSize: '11.5px' }}>
-                                                         {r.logic.split('\n').filter(Boolean).map((line, idx) => {
-                                                             const colonIdx = line.indexOf(':');
-                                                             if (colonIdx !== -1) {
-                                                                 const label = line.substring(0, colonIdx + 1);
-                                                                 const val = line.substring(colonIdx + 1);
-                                                                 return (
-                                                                     <div key={idx}>
-                                                                         <strong style={{ fontWeight: 800, color: 'var(--dm-primary-hover, #15803d)', marginRight: '6px' }}>{label}</strong>
-                                                                         <span style={{ color: '#1e293b' }}>{val}</span>
-                                                                     </div>
-                                                                 );
-                                                             }
-                                                             return <div key={idx}>{line}</div>;
-                                                         })}
-                                                     </div>
+                                                    <div style={{ margin: '4px 0 0 0', lineHeight: 1.4, fontSize: '11.5px' }}>
+                                                        {r.logic.split('\n').filter(Boolean).map((line, idx) => {
+                                                            const trimmed = line.trim();
+                                                            const matchedLabel = KNOWN_LOGIC_LABELS.find(lbl => trimmed.startsWith(lbl));
+                                                            if (matchedLabel) {
+                                                                const labelIdx = line.indexOf(matchedLabel);
+                                                                const label = line.substring(0, labelIdx + matchedLabel.length);
+                                                                const val = line.substring(labelIdx + matchedLabel.length);
+                                                                return (
+                                                                    <div key={idx}>
+                                                                        <strong style={{ fontWeight: 800, color: 'var(--dm-primary-hover, #15803d)', marginRight: '6px' }}>{label}</strong>
+                                                                        <span style={{ color: '#1e293b' }}>{val}</span>
+                                                                    </div>
+                                                                );
+                                                            }
+                                                            return <div key={idx} style={{ color: '#1e293b' }}>{line}</div>;
+                                                        })}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1752,76 +1883,78 @@ const QaPage = () => {
 
                                             <div className="qa-qc-body">
                                                 <p className="qa-qc-question-text">{q.text}</p>
-                                                
-                                                 {((q.options && q.options.length > 0) || (q.scales && q.scales.length > 0) || (q.logic && q.logic.trim())) && (
-                                                     <div className="qa-qc-details-container">
-                                                         {q.options && q.options.length > 0 && (
-                                                             <div className="qa-qc-section">
-                                                                 <div className="qa-qc-section-title">보기 목록 (OPTIONS)</div>
-                                                                 <div className="qa-qc-section-content-inner">
-                                                                     {q.options.map(opt => (
-                                                                         <div key={opt.code} className="qa-qc-option-item">
-                                                                             <span className="qa-qc-option-code">[{opt.code}]</span>{' '}
-                                                                             <span className="qa-qc-option-text">{opt.text}</span>
-                                                                             {opt.is_exclusive && <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[배타]</span>}
-                                                                             {opt.is_fixed && <span className="qa-control-badge qa-badge-fixed" style={{ marginLeft: '6px' }}>📌 고정</span>}
-                                                                             {opt.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
-                                                                             {opt.display_condition && <span className="qa-control-badge qa-badge-condition" style={{ marginLeft: '6px' }}>👁 {opt.display_condition}</span>}
-                                                                         </div>
-                                                                     ))}
-                                                                 </div>
-                                                             </div>
-                                                         )}
 
-                                                         {q.scales && q.scales.length > 0 && (
-                                                             <div className="qa-qc-section">
-                                                                 <div className="qa-qc-section-title">척도 목록 (SCALES)</div>
-                                                                 <div className="qa-qc-section-content-inner">
-                                                                     {q.scales.map(sc => (
-                                                                         <div key={sc.code} className="qa-qc-option-item">
-                                                                             <span className="qa-qc-option-code">[{sc.code}]</span>{' '}
-                                                                             <span className="qa-qc-option-text">{sc.text}</span>
-                                                                             {sc.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
-                                                                             {sc.display_condition && <span className="qa-control-badge qa-badge-condition" style={{ marginLeft: '6px' }}>👁 {sc.display_condition}</span>}
-                                                                         </div>
-                                                                     ))}
-                                                                 </div>
-                                                             </div>
-                                                         )}
+                                                {((q.options && q.options.length > 0) || (q.scales && q.scales.length > 0) || (q.logic && q.logic.trim())) && (
+                                                    <div className="qa-qc-details-container">
+                                                        {q.options && q.options.length > 0 && (
+                                                            <div className="qa-qc-section">
+                                                                <div className="qa-qc-section-title">보기 목록 (OPTIONS)</div>
+                                                                <div className="qa-qc-section-content-inner">
+                                                                    {q.options.map(opt => (
+                                                                        <div key={opt.code} className="qa-qc-option-item">
+                                                                            <span className="qa-qc-option-code">[{opt.code}]</span>{' '}
+                                                                            <span className="qa-qc-option-text">{opt.text}</span>
+                                                                            {opt.is_exclusive && <span className="qa-control-badge qa-badge-exclusive" style={{ marginLeft: '6px' }}>[배타]</span>}
+                                                                            {opt.is_fixed && <span className="qa-control-badge qa-badge-fixed" style={{ marginLeft: '6px' }}>📌 고정</span>}
+                                                                            {opt.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
+                                                                            {opt.display_condition && <span className="qa-control-badge qa-badge-condition" style={{ marginLeft: '6px' }}>👁 {opt.display_condition}</span>}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
 
-                                                         {q.logic && q.logic.trim() && (
-                                                             <div className="qa-qc-section">
-                                                                 <div className="qa-qc-section-title">상호 연계 로직 (LOGICS)</div>
-                                                                 <div className="qa-qc-section-content-inner">
-                                                                     {q.logic.split('\n').filter(Boolean).map((line, idx) => {
-                                                                         const colonIdx = line.indexOf(':');
-                                                                         if (colonIdx !== -1) {
-                                                                             const label = line.substring(0, colonIdx + 1);
-                                                                             const val = line.substring(colonIdx + 1);
-                                                                             return (
-                                                                                 <div key={idx} className="qa-qc-logic-item">
-                                                                                     <strong className="qa-qc-logic-label">{label}</strong>
-                                                                                     <span className="qa-qc-logic-value">{val}</span>
-                                                                                 </div>
-                                                                             );
-                                                                         }
-                                                                         return (
-                                                                             <div key={idx} className="qa-qc-logic-item">
-                                                                                 {line}
-                                                                             </div>
-                                                                         );
-                                                                     })}
-                                                                 </div>
-                                                             </div>
-                                                         )}
-                                                     </div>
-                                                 )}
+                                                        {q.scales && q.scales.length > 0 && (
+                                                            <div className="qa-qc-section">
+                                                                <div className="qa-qc-section-title">척도 목록 (SCALES)</div>
+                                                                <div className="qa-qc-section-content-inner">
+                                                                    {q.scales.map(sc => (
+                                                                        <div key={sc.code} className="qa-qc-option-item">
+                                                                            <span className="qa-qc-option-code">[{sc.code}]</span>{' '}
+                                                                            <span className="qa-qc-option-text">{sc.text}</span>
+                                                                            {sc.has_open_ended && <span className="qa-control-badge qa-badge-open" style={{ marginLeft: '6px' }}>✍ 주관식 입력</span>}
+                                                                            {sc.display_condition && <span className="qa-control-badge qa-badge-condition" style={{ marginLeft: '6px' }}>👁 {sc.display_condition}</span>}
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </div>
+                                                        )}
 
-                                                 {q.loop_base_qnum && (
-                                                     <div className="qa-bottom-link-bar">
-                                                         <span>🔗 본 문항은 {q.loop_base_qnum}에 종속된 반복 로테이션 문항입니다.</span>
-                                                     </div>
-                                                 )}
+                                                        {q.logic && q.logic.trim() && (
+                                                            <div className="qa-qc-section">
+                                                                <div className="qa-qc-section-title">상호 연계 로직 (LOGICS)</div>
+                                                                <div className="qa-qc-section-content-inner">
+                                                                    {q.logic.split('\n').filter(Boolean).map((line, idx) => {
+                                                                        const trimmed = line.trim();
+                                                                        const matchedLabel = KNOWN_LOGIC_LABELS.find(lbl => trimmed.startsWith(lbl));
+                                                                        if (matchedLabel) {
+                                                                            const labelIdx = line.indexOf(matchedLabel);
+                                                                            const label = line.substring(0, labelIdx + matchedLabel.length);
+                                                                            const val = line.substring(labelIdx + matchedLabel.length);
+                                                                            return (
+                                                                                <div key={idx} className="qa-qc-logic-item">
+                                                                                    <strong className="qa-qc-logic-label">{label}</strong>
+                                                                                    <span className="qa-qc-logic-value">{val}</span>
+                                                                                </div>
+                                                                            );
+                                                                        }
+                                                                        return (
+                                                                            <div key={idx} className="qa-qc-logic-item" style={{ color: '#1e293b' }}>
+                                                                                {line}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {q.loop_base_qnum && (
+                                                    <div className="qa-bottom-link-bar">
+                                                        <span>🔗 본 문항은 {q.loop_base_qnum}에 종속된 반복 로테이션 문항입니다.</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -1913,13 +2046,13 @@ const QaPage = () => {
                     </div>
                     <div className="qa-insert-body">
                         <p className="qa-insert-subtitle">
-                            {popupMode === 'modify' 
-                                ? '수정할 문항의 텍스트 전체를 입력하세요. AI가 분석하여 목록에 업데이트합니다.' 
+                            {popupMode === 'modify'
+                                ? '수정할 문항의 텍스트 전체를 입력하세요. AI가 분석하여 목록에 업데이트합니다.'
                                 : '추가할 새 문항의 텍스트 전체를 붙여넣으세요. AI가 분석하여 목록에 삽입합니다.'}
                         </p>
                         <p className="qa-insert-target">
-                            {popupMode === 'modify' 
-                                ? `대상 문항: ${insertTargetId} 수정` 
+                            {popupMode === 'modify'
+                                ? `대상 문항: ${insertTargetId} 수정`
                                 : `대상 문항: ${insertTargetId} 바로 뒤에 삽입`}
                         </p>
                         <textarea

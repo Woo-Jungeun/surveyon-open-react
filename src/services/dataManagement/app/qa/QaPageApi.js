@@ -26,5 +26,10 @@ export function QaPageApi() {
         async (data) => await api.post(data, "/qa/save-parsed-document", "API_BASE_URL_DATAMANAGEMENT"),
     );
 
-    return { analyzeAll, getParsedDocument, validateDocument, saveParsedDocument };
+    /** 설문 문항 부분 AI 파싱 변환 - apply-partial-parse (Pn, RawText, User) */
+    const applyPartialParse = useMutation(
+        async (data) => await api.post(data, "/qa/apply-partial-parse", "API_BASE_URL_DATAMANAGEMENT"),
+    );
+
+    return { analyzeAll, getParsedDocument, validateDocument, saveParsedDocument, applyPartialParse };
 }
