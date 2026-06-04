@@ -1269,15 +1269,15 @@
 
 .qa-btn-action.active-pulse {
     animation: activePulse 2s infinite;
-    background: var(--dm-primary, #16a34a) !important;
-    color: #ffffff !important;
+    background: #ffffff !important;
+    color: var(--dm-primary, #16a34a) !important;
     border-color: var(--dm-primary, #16a34a) !important;
 }
 
 .qa-btn-action.active-pulse:hover {
-    background: var(--dm-primary-hover, #15803d) !important;
+    background: var(--dm-primary-light, #f0fdf4) !important;
     border-color: var(--dm-primary-hover, #15803d) !important;
-    color: #ffffff !important;
+    color: var(--dm-primary-hover, #15803d) !important;
 }
 
 /* ── 문항 상세 구조화 정보 정적 리스트 표출 스타일 ── */
