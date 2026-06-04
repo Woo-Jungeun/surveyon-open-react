@@ -376,7 +376,6 @@ const QaPage = () => {
     const [uploadedFile, setUploadedFile] = useState(null);
     const [isDragging, setIsDragging] = useState(false);
     const [isSaved, setIsSaved] = useState(false); // 저장 완료 토스트 알림 상태
-    const [isLeftCollapsed, setIsLeftCollapsed] = useState(false);
     const [isRightCollapsed, setIsRightCollapsed] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -1806,123 +1805,98 @@ const QaPage = () => {
                 saveButtonLabel="구조화 데이터 저장"
             />
 
-            <div className="qa-parser-body">
-                {/* ── 1. 좌측 컨트롤 패널 (250px 슬림) ───────────────────────── */}
-                <div className={`qa-parser-left qa-panel ${isLeftCollapsed ? 'collapsed' : ''}`}>
-                    {isLeftCollapsed ? (
-                        <div className="qa-collapsed-trigger-bar" onClick={() => setIsLeftCollapsed(false)} title="컨트롤 패널 열기">
-                            <ChevronRight size={18} color="#64748b" />
-                            <span className="vertical-text">컨트롤 패널</span>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="qa-left-panel-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', padding: '0 4px' }}>
-                                <span style={{ fontSize: '13px', fontWeight: 800, color: '#475569' }}></span>
-                                <button className="qa-panel-toggle-btn" onClick={() => setIsLeftCollapsed(true)} title="컨트롤 패널 접기">
-                                    <ChevronLeft size={16} color="#64748b" />
+            {/* ── 상단 가로 컨트롤 패널 ───────────────────────── */}
+            <div className="qa-parser-top qa-panel">
+                <input type="file" ref={fileInputRef}
+                    accept=".docx,.doc,.hwp,.hwpx"
+                    style={{ display: 'none' }}
+                    onChange={handleFileChange} />
+
+                {/* 1단계: 설문지 분석 */}
+                <div className="qa-top-section">
+                    <span className="qa-top-section-title">1단계. 설문지 분석</span>
+                    <div className={`qa-left-dropzone compact ${isDragging ? 'is-dragging' : ''} ${uploadedFile ? 'is-filled' : ''}`}
+                        onClick={() => !uploadedFile && fileInputRef.current?.click()}
+                        onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
+                        {uploadedFile ? (
+                            <div className="qa-dz-filled compact">
+                                <CheckCircle size={14} color="#10b981" style={{ flexShrink: 0 }} />
+                                <span className="qa-dz-filename compact-filename" title={uploadedFile.name}>{uploadedFile.name}</span>
+                                <button className="qa-dz-remove compact-remove" onClick={(e) => { e.stopPropagation(); handleRemoveFile(); }}>
+                                    <X size={10} />
                                 </button>
                             </div>
-
-                            {/* 1단계: 설문 구조화 분석 카드 */}
-                            <div className="qa-analysis-card">
-                                <div className="qa-card-header">
-                                    <span className="qa-card-title">1단계. 설문지 분석</span>
-                                </div>
-
-                                <input type="file" ref={fileInputRef}
-                                    accept=".docx,.doc,.hwp,.hwpx"
-                                    style={{ display: 'none' }}
-                                    onChange={handleFileChange} />
-
-                                <div className={`qa-left-dropzone ${isDragging ? 'is-dragging' : ''} ${uploadedFile ? 'is-filled' : ''}`}
-                                    onClick={() => !uploadedFile && fileInputRef.current?.click()}
-                                    onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}>
-                                    {uploadedFile ? (
-                                        <div className="qa-dz-filled">
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-                                                <CheckCircle size={16} color="#10b981" style={{ flexShrink: 0 }} />
-                                                <span className="qa-dz-filename" title={uploadedFile.name}>{uploadedFile.name}</span>
-                                            </div>
-                                            <button className="qa-dz-remove" onClick={(e) => { e.stopPropagation(); handleRemoveFile(); }}>
-                                                <X size={12} />
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="qa-dz-empty">
-                                            <FileText size={18} className="qa-dz-icon" />
-                                            <span className="qa-dz-text">클릭하여 파일찾기</span>
-                                            <span className="qa-dz-subtext">.docx · .hwp</span>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <button
-                                    className={`qa-btn-action ${uploadedFile ? 'btn-green active-pulse' : 'btn-disabled'}`}
-                                    onClick={handleAnalyze}
-                                    disabled={!uploadedFile || analyzeAll.isLoading}
-                                    style={{ width: '100%' }}
-                                >
-                                    <RefreshCw size={14} className={analyzeAll.isLoading ? 'spin-anim' : ''} />
-                                    설문지 ➔ JSON 구조화 시작
-                                </button>
+                        ) : (
+                            <div className="qa-dz-empty compact-empty">
+                                <FileText size={14} className="qa-dz-icon" />
+                                <span className="qa-dz-text">클릭하여 파일찾기</span>
                             </div>
-
-                            {/* 2단계: AI 로직 검증 카드 */}
-                            <div className="qa-analysis-card">
-                                <div className="qa-card-header">
-                                    <span className="qa-card-title">2단계. AI 로직 검증</span>
-                                </div>
-                                <div className="qa-action-buttons">
-                                    <button
-                                        className="qa-btn-action btn-gray"
-                                        onClick={handleLoadExistingSurvey}
-                                        style={{ width: '100%' }}
-                                    >
-                                        <FileText size={14} />
-                                        기존 구조화된 설문 가져오기
-                                    </button>
-                                    <button
-                                        className={`qa-btn-action ${questions.length > 0 ? 'btn-orange' : 'btn-disabled'}`}
-                                        onClick={handleCheckErrors}
-                                        disabled={questions.length === 0}
-                                        style={{ width: '100%' }}
-                                    >
-                                        <BrainCircuit size={14} />
-                                        AI 로직 오류 체크
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* 검증 요약 카드 - 결과 생성 시 노출 */}
-                            {questions.length > 0 && (
-                                <div className="qa-stats-card" style={{ animation: 'qaFadeIn 0.35s ease', marginBottom: '12px' }}>
-                                    {showQuestionCount && (
-                                        <div className="qa-stats-row">
-                                            <span className="qa-stats-label">파싱 문항 수</span>
-                                            <span className="qa-stats-value">{questions.filter(q => q.type !== 'global_logic').length} 개</span>
-                                        </div>
-                                    )}
-                                    <div className="qa-stats-row">
-                                        <span className="qa-stats-label">예상 API 비용</span>
-                                        <span className="qa-stats-value">${estimatedCost}</span>
-                                    </div>
-                                    <div className="qa-stats-row">
-                                        <span className="qa-stats-label">소요 시간</span>
-                                        <span className="qa-stats-value">{elapsedTime} 초</span>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* 저장 완료 피드백 토스트 */}
-                            {isSaved && (
-                                <div className="qa-save-toast">
-                                    서버 DB 영구 저장 완료 (시뮬레이션)
-                                </div>
-                            )}
-                        </>
-                    )}
+                        )}
+                    </div>
+                    <button
+                        className={`qa-btn-action compact-btn ${uploadedFile ? 'btn-green active-pulse' : 'btn-disabled'}`}
+                        onClick={handleAnalyze}
+                        disabled={!uploadedFile || analyzeAll.isLoading}
+                    >
+                        <RefreshCw size={12} className={analyzeAll.isLoading ? 'spin-anim' : ''} />
+                        설문지 ➔ JSON 구조화 시작
+                    </button>
                 </div>
 
+                <div className="qa-top-separator"></div>
+
+                {/* 2단계: AI 로직 검증 */}
+                <div className="qa-top-section">
+                    <span className="qa-top-section-title">2단계. AI 로직 검증</span>
+                    <button
+                        className="qa-btn-action compact-btn btn-gray"
+                        onClick={handleLoadExistingSurvey}
+                    >
+                        <FileText size={12} />
+                        기존 구조화된 설문 가져오기
+                    </button>
+                    <button
+                        className={`qa-btn-action compact-btn ${questions.length > 0 ? 'btn-orange' : 'btn-disabled'}`}
+                        onClick={handleCheckErrors}
+                        disabled={questions.length === 0}
+                    >
+                        <BrainCircuit size={12} />
+                        AI 로직 오류 체크
+                    </button>
+                </div>
+
+                {/* 검증 요약 카드 - 결과 생성 시 노출 */}
+                {questions.length > 0 && (
+                    <>
+                        <div className="qa-top-separator"></div>
+                        <div className="qa-top-stats-card">
+                            {showQuestionCount && (
+                                <div className="qa-top-stat-item">
+                                    <span className="qa-top-stat-label">파싱 문항 수</span>
+                                    <span className="qa-top-stat-value">{questions.filter(q => q.type !== 'global_logic').length} 개</span>
+                                </div>
+                            )}
+                            <div className="qa-top-stat-item">
+                                <span className="qa-top-stat-label">예상 API 비용</span>
+                                <span className="qa-top-stat-value green-text">${estimatedCost}</span>
+                            </div>
+                            <div className="qa-top-stat-item">
+                                <span className="qa-top-stat-label">소요 시간</span>
+                                <span className="qa-top-stat-value">{elapsedTime} 초</span>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {/* 저장 완료 피드백 토스트 */}
+                {isSaved && (
+                    <div className="qa-save-toast">
+                        서버 DB 영구 저장 완료 (시뮬레이션)
+                    </div>
+                )}
+            </div>
+
+            <div className="qa-parser-body">
                 {/* ── 2. 중앙 구조화 상세 뷰어 (색인 + 상세 뷰 분할) ─────────────────── */}
                 <div className="qa-parser-center qa-panel">
                     <div className="qa-center-header">
