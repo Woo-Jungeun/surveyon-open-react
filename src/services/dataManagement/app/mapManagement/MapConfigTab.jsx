@@ -185,24 +185,24 @@ const InputCell = (props) => {
 
     if (!isEditing) {
         return (
-            <td 
-                style={{ 
-                    ...style, 
+            <td
+                style={{
+                    ...style,
                     verticalAlign: 'middle',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     maxWidth: style?.width || '1px'
-                }} 
+                }}
                 className={className}
                 title={dataItem[field] ? String(dataItem[field]) : ''}
             >
-                <div style={{ 
-                    background: 'transparent', 
-                    border: 'none', 
-                    pointerEvents: 'none', 
-                    whiteSpace: 'nowrap', 
-                    overflow: 'hidden', 
+                <div style={{
+                    background: 'transparent',
+                    border: 'none',
+                    pointerEvents: 'none',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     fontSize: '13px',
                     color: '#475569',
@@ -469,9 +469,9 @@ const TypeCell = memo((props) => {
             isDraggingTypeCell = true;
             dragStartId = dataItem.id;
             dragLastEnteredId = dataItem.id;
-            
+
             const isMultiSelect = e.ctrlKey || e.metaKey;
-            
+
             if (!isMultiSelect) {
                 // 일반 클릭이면 전부 지움
                 dragSelectedIds.clear();
@@ -488,7 +488,7 @@ const TypeCell = memo((props) => {
 
             // 스냅샷 베이스 저장 (Ctrl 드래그 지지대가 됌)
             dragBaseSelectedIds = new Set(dragSelectedIds);
-            
+
             dragSelectedIds.add(dataItem.id);
             e.currentTarget.classList.add('type-cell-selected');
         }
@@ -500,11 +500,11 @@ const TypeCell = memo((props) => {
             const cells = Array.from(document.querySelectorAll('td.dm-type-cell'));
             const startIndex = cells.findIndex(c => c.getAttribute('data-row-id') == dragStartId);
             const currentIndex = cells.findIndex(c => c.getAttribute('data-row-id') == dataItem.id);
-            
+
             if (startIndex !== -1 && currentIndex !== -1) {
                 const min = Math.min(startIndex, currentIndex);
                 const max = Math.max(startIndex, currentIndex);
-                
+
                 // 기존 상태 클리어 (Ctrl로 스냅샷 떠둔 것 제외)
                 document.querySelectorAll('.type-cell-selected').forEach(el => {
                     const idStr = el.getAttribute('data-row-id');
@@ -512,27 +512,27 @@ const TypeCell = memo((props) => {
                         el.classList.remove('type-cell-selected');
                     }
                 });
-                
+
                 dragSelectedIds.clear();
                 dragBaseSelectedIds.forEach(id => dragSelectedIds.add(id));
-                
+
                 for (let i = min; i <= max; i++) {
                     const targetCell = cells[i];
                     targetCell.classList.add('type-cell-selected');
                     const rowIdStr = targetCell.getAttribute('data-row-id');
                     dragSelectedIds.add(Number(rowIdStr));
-                    dragSelectedIds.add(rowIdStr); 
+                    dragSelectedIds.add(rowIdStr);
                 }
             }
         }
     };
-    
+
     const isSelectedManually = dragSelectedIds.has(dataItem.id) || dragSelectedIds.has(String(dataItem.id)) || dragSelectedIds.has(Number(dataItem.id));
-    
+
     if (!isEditing) {
         return (
-            <td 
-                style={{ ...cellStyle, cursor: 'cell' }} 
+            <td
+                style={{ ...cellStyle, cursor: 'cell' }}
                 className={`${className || ''} dm-type-cell ${isSelectedManually ? 'type-cell-selected' : ''}`}
                 data-row-id={dataItem.id}
                 onPointerDown={handlePointerDown}
@@ -551,8 +551,8 @@ const TypeCell = memo((props) => {
     }
 
     return (
-        <td 
-            style={cellStyle} 
+        <td
+            style={cellStyle}
             className={`${className || ''} dm-type-cell ${isSelectedManually ? 'type-cell-selected' : ''}`}
             onMouseDown={e => e.stopPropagation()}
             onClick={e => e.stopPropagation()}
@@ -799,7 +799,7 @@ const MapConfigTab = ({
     const BakedSelectionCell = useCallback((props) => {
         const { dataItem } = props;
         if (!dataItem) return <td />;
-        
+
         const isSelectable = isItemSelectable(dataItem);
         const checked = !!bakedSelectedState[dataItem.id];
 
@@ -835,7 +835,7 @@ const MapConfigTab = ({
 
     const BakedSelectionHeaderCell = useCallback(() => {
         const ref = useRef(null);
-        
+
         const selectableItems = useMemo(
             () => (ctxVars ?? []).filter((item) => isItemSelectable(item)),
             [ctxVars]
@@ -868,27 +868,42 @@ const MapConfigTab = ({
                 onClick={stop}
                 style={{
                     display: 'flex',
-                    flexDirection: 'column',
+                    flexDirection: 'row',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '2px',
+                    gap: '6px',
                     width: '100%',
                     cursor: 'pointer',
-                    paddingTop: '0px',
-                    paddingBottom: '0px'
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    msUserSelect: 'none',
+                    paddingTop: '4px',
+                    paddingBottom: '4px'
                 }}
             >
-                <span style={{ fontSize: '11px', lineHeight: '1.0' }}>SRT<br />이관</span>
-                <label className="dm-checkbox-label" style={{ marginTop: '2px' }}>
+                <label className="dm-checkbox-label" style={{ margin: 0, display: 'flex', alignItems: 'center', cursor: 'pointer', paddingTop: '2px', paddingBottom: '2px' }}>
                     <input
                         ref={ref}
                         type="checkbox"
                         className="dm-checkbox-input"
                         checked={allChecked}
                         onChange={onHeaderChange}
+                        style={{ cursor: 'pointer' }}
                     />
-                    <span className="dm-checkbox-box" />
+                    <span className="dm-checkbox-box" style={{ cursor: 'pointer' }} />
                 </label>
+                <span style={{
+                    fontSize: '11px',
+                    lineHeight: '1.3',
+                    textAlign: 'left',
+                    display: 'inline-block',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    msUserSelect: 'none',
+                    paddingTop: '1px',
+                    paddingBottom: '1px'
+                }}>SRT<br />이관</span>
             </div>
         );
     }, [ctxVars, bakedSelectedState, handleBakedSelectedChange, isItemSelectable]);
@@ -989,11 +1004,11 @@ const MapConfigTab = ({
 
         const insertAfterField = (isDetailed || isResearcher) ? "reLabel" : "label";
         const insertIdx = cols.findIndex(c => c.field === insertAfterField);
-        
+
         const selectionCol = {
             field: 'isBaked',
             title: 'SRT 이관',
-            width: '60px',
+            width: '75px',
             cell: BakedSelectionCell,
             headerCell: BakedSelectionHeaderCell
         };
@@ -1003,7 +1018,7 @@ const MapConfigTab = ({
         } else {
             cols.push(selectionCol);
         }
-        
+
         return cols;
     }, [isDetailed, isResearcher, BakedSelectionCell, BakedSelectionHeaderCell]);
 
