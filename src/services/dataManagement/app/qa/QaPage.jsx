@@ -1766,7 +1766,7 @@ const QaPage = () => {
     return (
         <div className="qa-parser-page" data-theme="data-management">
             <DataHeader
-                title="QA"
+                title="설문지 인식"
                 onSave={handleSaveData}
                 saveButtonLabel="구조화 데이터 저장"
             />

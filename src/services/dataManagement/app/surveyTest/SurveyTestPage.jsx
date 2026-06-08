@@ -267,7 +267,7 @@ const SurveyTestPage = () => {
 
     return (
         <div className="survey-test-page" data-theme="data-management">
-            <DataHeader title="설문 테스트" />
+            <DataHeader title="설문&스크립트 교차검증" />
 
             {/* ── 상단 가로 컨트롤 패널 ───────────────────────── */}
             <div className="st-parser-top st-panel">
