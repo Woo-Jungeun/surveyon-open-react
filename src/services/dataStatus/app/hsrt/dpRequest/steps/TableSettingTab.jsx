@@ -115,7 +115,10 @@ const borderNames = {
     theme_header_divider: '헤더 하단선',
     theme_stub_divider: '스터브 구분선',
     theme_section_separator: '섹션 구분선',
-    theme_grid: '데이터 기본선'
+    theme_grid: '데이터 기본선',
+    theme_stub_tier_divider: '스터브 계층선',
+    theme_header_tier_divider: '헤더 단 구분선',
+    theme_banner_divider: '배너 그룹 구분선'
 };
 
 const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
@@ -379,7 +382,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                             borderRight: `${settings.render.theme_table_outer_right_width || '0px'} ${settings.render.theme_table_outer_right_style || 'none'} ${settings.render.theme_table_outer_right_color || 'transparent'}`
                         }}>
                             <thead>
-                                <tr style={{ background: settings.render.theme_primary || '#2F5597', color: settings.render.theme_primary_fg || '#FFFFFF' }}>
+                                <tr style={{ background: settings.render.theme_header_group_bg || settings.render.theme_primary || '#2F5597', color: settings.render.theme_header_group_fg || settings.render.theme_primary_fg || '#FFFFFF' }}>
                                     <th style={{
                                         position: 'relative',
                                         padding: '4px 8px',
@@ -387,7 +390,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
                                         textAlign: 'left',
                                         fontWeight: 500,
-                                        fontFamily: settings.render.font_family || 'inherit',
+                                        fontFamily: settings.render.theme_header_font || settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>
                                         구분
@@ -402,7 +405,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             padding: '4px 8px', textAlign: 'right', fontWeight: 500,
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                             borderBottom: `${settings.render.theme_header_divider_width || '2px'} ${settings.render.theme_header_divider_style || 'double'} ${settings.render.theme_header_divider_color || '#000'}`,
-                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontFamily: settings.render.theme_header_font || settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             <div>{col.label}</div>
@@ -420,11 +423,11 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     <td style={{
                                         position: 'relative',
                                         padding: '3px 8px',
-                                        background: settings.render.theme_stub_header_bg || '#D9E1F2',
-                                        color: settings.render.theme_stub_header_fg || '#000',
+                                        background: settings.render.theme_stub_group_bg || settings.render.theme_stub_header_bg || '#D9E1F2',
+                                        color: settings.render.theme_stub_group_fg || settings.render.theme_stub_header_fg || '#000',
                                         fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
-                                        fontFamily: settings.render.font_family || 'inherit',
+                                        fontFamily: settings.render.theme_stub_font || settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>
                                         Base
@@ -436,7 +439,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             position: 'relative',
                                             padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
-                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontFamily: settings.render.theme_data_font || settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {settings.display?.show_base_parenthesis
@@ -458,10 +461,12 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                     <tr key={row.label} style={{ background: idx % 2 === 1 ? (settings.render.theme_stripe || '#F1F5F9') : (settings.render.theme_bg || '#FFFFFF') }}>
                                         <td style={{
                                             position: 'relative',
-                                            padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000',
+                                            padding: '3px 8px',
+                                            background: settings.render.theme_stub_leaf_bg || settings.render.theme_stub_header_bg || '#D9E1F2',
+                                            color: settings.render.theme_stub_leaf_fg || settings.render.theme_stub_header_fg || '#000',
                                             borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                             borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontFamily: settings.render.theme_stub_font || settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {row.label}
@@ -475,7 +480,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                                 padding: '3px 8px', textAlign: 'right',
                                                 borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                                 borderTop: `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}`,
-                                                fontFamily: settings.render.font_family || 'inherit',
+                                                fontFamily: settings.render.theme_data_font || settings.render.font_family || 'inherit',
                                                 fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                             }}>
                                                 {showN && <div>{formatN(col[row.vKey])}</div>}
@@ -490,10 +495,13 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 <tr style={{ background: settings.render.theme_bg || '#FFFFFF' }}>
                                     <td style={{
                                         position: 'relative',
-                                        padding: '3px 8px', background: settings.render.theme_stub_header_bg || '#D9E1F2', color: settings.render.theme_stub_header_fg || '#000', fontWeight: 600,
+                                        padding: '3px 8px',
+                                        background: settings.render.theme_stub_group_bg || settings.render.theme_stub_header_bg || '#D9E1F2',
+                                        color: settings.render.theme_stub_group_fg || settings.render.theme_stub_header_fg || '#000',
+                                        fontWeight: 600,
                                         borderRight: `${settings.render.theme_stub_divider_width || '1px'} ${settings.render.theme_stub_divider_style || 'solid'} ${settings.render.theme_stub_divider_color || '#CBD5E1'}`,
                                         borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
-                                        fontFamily: settings.render.font_family || 'inherit',
+                                        fontFamily: settings.render.theme_stub_font || settings.render.font_family || 'inherit',
                                         fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                     }}>
                                         top2
@@ -507,7 +515,7 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                             padding: '3px 8px', textAlign: 'right', fontWeight: 600, color: settings.render.theme_text || '#000',
                                             borderLeft: i > 0 ? `${settings.render.theme_grid_width || '1px'} ${settings.render.theme_grid_style || 'solid'} ${settings.render.theme_grid_color || '#000'}` : 'none',
                                             borderTop: `${settings.render.theme_section_separator_width || '2px'} ${settings.render.theme_section_separator_style || 'dashed'} ${settings.render.theme_section_separator_color || '#000'}`,
-                                            fontFamily: settings.render.font_family || 'inherit',
+                                            fontFamily: settings.render.theme_data_font || settings.render.font_family || 'inherit',
                                             fontSize: settings.render.font_size ? `${settings.render.font_size}px` : '12px'
                                         }}>
                                             {showN && <div>{formatN(col.tV)}</div>}
@@ -650,11 +658,66 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                 </div>
                             </div>
 
+                            {/* 영역별 글꼴 */}
+                            <div style={{ gridColumn: '1 / -1', display: 'flex', flexDirection: 'column', gap: '8px', borderBottom: '1px solid #F1F5F9', paddingBottom: '12px', paddingTop: '4px' }}>
+                                <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>영역별 글꼴 (빈 값 설정 시 상위/전역 글꼴 적용)</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>헤더 글꼴</label>
+                                        <select
+                                            value={settings.render.theme_header_font || ""}
+                                            onChange={(e) => handleChange('render.theme_header_font', e.target.value)}
+                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                        >
+                                            <option value="">기본 글꼴 상속</option>
+                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
+                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+                                            <option value="Arial, sans-serif">Arial</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>스터브 글꼴</label>
+                                        <select
+                                            value={settings.render.theme_stub_font || ""}
+                                            onChange={(e) => handleChange('render.theme_stub_font', e.target.value)}
+                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                        >
+                                            <option value="">기본 글꼴 상속</option>
+                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
+                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+                                            <option value="Arial, sans-serif">Arial</option>
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748B', whiteSpace: 'nowrap' }}>데이터 글꼴</label>
+                                        <select
+                                            value={settings.render.theme_data_font || ""}
+                                            onChange={(e) => handleChange('render.theme_data_font', e.target.value)}
+                                            style={{ flex: 1, padding: '5px 8px', fontSize: '12px', border: '1px solid #CBD5E1', borderRadius: '4px', outline: 'none' }}
+                                        >
+                                            <option value="">기본 글꼴 상속</option>
+                                            <option value="'Spoqa Han Sans Neo', 'SpoqaHanSansNeo', sans-serif">Spoqa Han Sans Neo</option>
+                                            <option value="'Noto Sans KR', sans-serif">Noto Sans KR</option>
+                                            <option value="'Apple SD Gothic Neo', sans-serif">Apple SD Gothic Neo</option>
+                                            <option value="Arial, sans-serif">Arial</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
                             {[
                                 { label: '헤더 상단 배경', field: 'theme_primary', type: 'color' },
                                 { label: '헤더 상단 글자', field: 'theme_primary_fg', type: 'color' },
+                                { label: '헤더 그룹 배경', field: 'theme_header_group_bg', type: 'color' },
+                                { label: '헤더 그룹 글자', field: 'theme_header_group_fg', type: 'color' },
                                 { label: '구분 헤더 배경', field: 'theme_stub_header_bg', type: 'color' },
                                 { label: '구분 헤더 글자', field: 'theme_stub_header_fg', type: 'color' },
+                                { label: '스터브 구분 배경', field: 'theme_stub_group_bg', type: 'color' },
+                                { label: '스터브 구분 글자', field: 'theme_stub_group_fg', type: 'color' },
+                                { label: '스터브 항목 배경', field: 'theme_stub_leaf_bg', type: 'color' },
+                                { label: '스터브 항목 글자', field: 'theme_stub_leaf_fg', type: 'color' },
                                 { label: '본문 배경', field: 'theme_bg', type: 'color' },
                                 { label: '교차 행 배경', field: 'theme_stripe', type: 'color' },
                                 { label: '본문 글자', field: 'theme_text', type: 'color' },
@@ -772,6 +835,9 @@ const TableSettingTab = ({ settings, setSettings, onUnsavedChange }) => {
                                         { group: '스터브 구분선', prefix: 'theme_stub_divider', color: 'theme_stub_divider_color', style: 'theme_stub_divider_style', width: 'theme_stub_divider_width' },
                                         { group: '섹션 구분선', prefix: 'theme_section_separator', color: 'theme_section_separator_color', style: 'theme_section_separator_style', width: 'theme_section_separator_width' },
                                         { group: '데이터 기본선', prefix: 'theme_grid', color: 'theme_grid_color', style: 'theme_grid_style', width: 'theme_grid_width' },
+                                        { group: '스터브 계층선', prefix: 'theme_stub_tier_divider', color: 'theme_stub_tier_divider_color', style: 'theme_stub_tier_divider_style', width: 'theme_stub_tier_divider_width' },
+                                        { group: '헤더 단 구분선', prefix: 'theme_header_tier_divider', color: 'theme_header_tier_divider_color', style: 'theme_header_tier_divider_style', width: 'theme_header_tier_divider_width' },
+                                        { group: '배너 그룹 구분선', prefix: 'theme_banner_divider', color: 'theme_banner_divider_color', style: 'theme_banner_divider_style', width: 'theme_banner_divider_width' },
                                     ].map((g, i) => {
                                         const isSelected = selectedBorder === g.prefix;
                                         return (

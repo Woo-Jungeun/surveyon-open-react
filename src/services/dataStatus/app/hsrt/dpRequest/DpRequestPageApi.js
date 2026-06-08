@@ -182,6 +182,11 @@ export function DpRequestPageApi() {
         async (data) => await api.post(data, "/analysis/evaluate/table", "API_BASE_URL_DATASTATUS")
     );
 
+    /** 교차분석 - 차트 데이터 조회 */
+    const evaluateChartData = useMutation(
+        async (data) => await api.post(data, "/analysis/evaluate/chart-data", "API_BASE_URL_DATASTATUS")
+    );
+
     /** 교차분석 - 초기 문맥 조회 */
     const getOverviewContext = useMutation(
         async (data) => await api.post(data, "/datasets/overview/context", "API_BASE_URL_DATASTATUS")
@@ -190,6 +195,11 @@ export function DpRequestPageApi() {
     /** 교차분석 - 전체표 결과 조회 */
     const getOverview = useMutation(
         async (data) => await api.post(data, "/datasets/overview", "API_BASE_URL_DATASTATUS")
+    );
+
+    /** 교차분석 - 전체표 결과 조회 (스타일 포함 HTML) */
+    const getOverviewStyled = useMutation(
+        async (data) => await api.post(data, "/datasets/overview/styled", "API_BASE_URL_DATASTATUS")
     );
 
     /** 교차분석 - HTML 복사 (export) */
@@ -251,8 +261,10 @@ export function DpRequestPageApi() {
         getOrderDetail,
         saveOrderDetail,
         evaluateVariable,
+        evaluateChartData,
         getOverviewContext,
         getOverview,
+        getOverviewStyled,
         exportOverviewHtml,
         exportOverviewXlsx,
         createSnapshot,
