@@ -274,7 +274,7 @@ const SurveyTestPage = () => {
                 {/* AI 교차 검증 */}
                 <div className="st-top-section">
                     <span className="st-top-section-title">AI 교차 검증</span>
-                    <button className="st-btn-action compact-btn btn-green" onClick={handleAnalyze} disabled={analyzeAll.isLoading}>
+                    <button className={`st-btn-action compact-btn btn-green ${!resultJson && !analyzeAll.isLoading ? 'active-pulse' : ''}`} onClick={handleAnalyze} disabled={analyzeAll.isLoading}>
                         <Search size={12} />
                         AI 교차 검증 시작
                     </button>

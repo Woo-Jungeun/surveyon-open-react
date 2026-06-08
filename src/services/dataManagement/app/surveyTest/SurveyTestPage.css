@@ -745,6 +745,31 @@
     box-shadow: 0 4px 8px rgba(22, 163, 74, 0.05);
 }
 
+@keyframes activePulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 6px rgba(22, 163, 74, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
+    }
+}
+
+.st-btn-action.active-pulse {
+    animation: activePulse 2s infinite;
+    background: #ffffff !important;
+    color: var(--dm-primary, #16a34a) !important;
+    border-color: var(--dm-primary, #16a34a) !important;
+}
+
+.st-btn-action.active-pulse:hover {
+    background: var(--dm-primary-light, #f0fdf4) !important;
+    border-color: var(--dm-primary-hover, #15803d) !important;
+    color: var(--dm-primary-hover, #15803d) !important;
+}
+
 .st-btn-action.btn-green:active {
     transform: translateY(0);
     box-shadow: none;
