@@ -304,7 +304,7 @@ const SurveyTestPage = () => {
                     <div className="tab-container">
                         <button className={`tab-btn ${activeTab === 'qaReport' ? 'active' : ''}`}
                             onClick={() => handleTabChange('qaReport')}>
-                            통합 QA 리포트
+                            교차검증 결과
                         </button>
                         <button className={`tab-btn ${activeTab === 'virtualData' ? 'active' : ''}`}
                             onClick={() => handleTabChange('virtualData')}>
