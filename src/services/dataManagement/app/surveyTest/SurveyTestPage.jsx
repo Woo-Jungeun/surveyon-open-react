@@ -10,8 +10,8 @@ import './SurveyTestPage.css';
 
 // ─── QA 섹션 정의 ────────────────────────────────────
 const QA_SECTIONS = [
-    { key: 'syntax', label: 'QMaster 스크립트 문법 오류', dataKey: 'scriptErrors', countKey: 'scriptErrorCount' },
-    { key: 'cross', label: '교차 검증 (표준안 vs 스크립트 불일치)', dataKey: 'mismatchErrors', countKey: 'mismatchErrorCount' },
+    { key: 'syntax', label: '스크립트(qm) 오류', dataKey: 'scriptErrors', countKey: 'scriptErrorCount' },
+    { key: 'cross', label: '설문 vs 스크립트 불일치', dataKey: 'mismatchErrors', countKey: 'mismatchErrorCount' },
 ];
 
 // ─── 에러 타입 설정 ────────────────────────────────────
