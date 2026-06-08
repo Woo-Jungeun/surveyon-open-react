@@ -10,40 +10,6 @@ import * as signalR from "@microsoft/signalr";
 import './QaPage.css';
 
 
-
-
-
-// ─── Shuffle options keeping is_fixed options at their original index ───
-const shuffleOptionsWithFixed = (options) => {
-    if (!options || !Array.isArray(options)) return [];
-    const fixedItems = [];
-    const nonFixedItems = [];
-    options.forEach((opt, idx) => {
-        if (opt.is_fixed) {
-            fixedItems.push({ item: opt, index: idx });
-        } else {
-            nonFixedItems.push(opt);
-        }
-    });
-
-    for (let i = nonFixedItems.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [nonFixedItems[i], nonFixedItems[j]] = [nonFixedItems[j], nonFixedItems[i]];
-    }
-
-    const result = [];
-    let nonFixedIdx = 0;
-    for (let i = 0; i < options.length; i++) {
-        const fixed = fixedItems.find(f => f.index === i);
-        if (fixed) {
-            result.push(fixed.item);
-        } else {
-            result.push(nonFixedItems[nonFixedIdx++]);
-        }
-    }
-    return result;
-};
-
 // ─── API 응답 데이터를 UI용 문항 구조로 변환하는 헬퍼 함수 ────────────────
 const mapApiResponseToQuestions = (generatedVariables) => {
     if (!generatedVariables || !Array.isArray(generatedVariables)) return [];
@@ -59,7 +25,7 @@ const mapApiResponseToQuestions = (generatedVariables) => {
         })) || [];
 
         const isRandomized = q.is_randomized || false;
-        const displayOptions = isRandomized ? shuffleOptionsWithFixed(mappedOptions) : mappedOptions;
+        const displayOptions = mappedOptions;
 
         const mappedScales = q.scales?.map(sc => ({
             code: sc.code,
