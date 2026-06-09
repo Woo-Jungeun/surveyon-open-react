@@ -154,7 +154,6 @@ export function LoginApi() {
                             "교차분석": "/data_status/hsrt/cross_analysis",
                             "추가분석": "/data_status/analysis/additional",
                             "dp의뢰서": "/data_status/hsrt/dp_request",
-                            "dp의뢰서정의": "/data_status/hsrt/dp_request",
                             "문항추가": "/data_status/hsrt/add_question",
                         };
                         if (menuPathMap[firstMenuLabel]) {

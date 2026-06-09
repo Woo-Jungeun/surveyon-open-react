@@ -388,7 +388,8 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
           const cleanLabel = item.label.replace(/\s+/g, '').toLowerCase();
           return allowedMenus.some(allowed =>
             allowed === cleanLabel ||
-            (cleanLabel === "dp의뢰서")
+            (cleanLabel === "dp의뢰서") ||
+            (cleanLabel === "문항추가")
           );
         });
         return { ...group, items: filteredItems };
