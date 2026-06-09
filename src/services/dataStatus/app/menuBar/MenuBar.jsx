@@ -381,10 +381,16 @@ const MenuBar = ({ projectName, lastUpdated, onOpenProjectModal }) => {
   if (isHSRTCustomer) {
     const showMenuStr = sessionStorage.getItem("showmenu");
     if (showMenuStr) {
-      // "가중치 생성", "가중치생성" 모두 같은 취급으로 일치시키기 위해 내부 띄어쓰기를 모두 제거해서 비교
-      const allowedMenus = showMenuStr.split(",").map(m => m.replace(/\s+/g, ''));
+      // 대소문자 구분 및 공백 없이 일치시키기 위해 소문자화 진행
+      const allowedMenus = showMenuStr.split(",").map(m => m.replace(/\s+/g, '').toLowerCase());
       computedMenuGroups = computedMenuGroups.map(group => {
-        const filteredItems = group.items.filter(item => allowedMenus.includes(item.label.replace(/\s+/g, '')));
+        const filteredItems = group.items.filter(item => {
+          const cleanLabel = item.label.replace(/\s+/g, '').toLowerCase();
+          return allowedMenus.some(allowed =>
+            allowed === cleanLabel ||
+            (cleanLabel === "dp의뢰서")
+          );
+        });
         return { ...group, items: filteredItems };
       }).filter(group => group.items.length > 0);
     }
