@@ -40,6 +40,7 @@ const MapManagementPage = () => {
     const [isDetailed, setIsDetailed] = useState(false);      // 상세 설정 토글
     const [selectedVariableId, setSelectedVariableId] = useState(null); // 보기 레이블 탭에서 선택된 변수 id
     const [editingRowId, setEditingRowId] = useState(null);   // 현재 편집 중인 행 id
+    const [editingField, setEditingField] = useState(null);   // 현재 편집 진입 시 클릭한 필드명
 
     const [sidebarSearchQuery, setSidebarSearchQuery] = useState(''); // 변수 목록 검색어
     const [mappingSearchQuery, setMappingSearchQuery] = useState(''); // MAP 구성 탭 검색어
@@ -593,12 +594,13 @@ const MapManagementPage = () => {
         });
     }, []);
 
-    // ── Context 값 ──
     const contextValue = useMemo(() => ({
         variables,
         setVariables,
         editingRowId,
         setEditingRowId,
+        editingField,
+        setEditingField,
         SetEditingCategoryPopupOpen,
         setEditingLogicPopupOpen,
         isDetailed,
@@ -606,7 +608,7 @@ const MapManagementPage = () => {
         onDelete: handleDeleteVariable,
         moveVariable,
         refreshData: () => setRefreshKey(prev => prev + 1)
-    }), [variables, editingRowId, isDetailed, handleAddVariable, handleDeleteVariable, moveVariable]);
+    }), [variables, editingRowId, editingField, isDetailed, handleAddVariable, handleDeleteVariable, moveVariable]);
 
     // ── 렌더 ──
     return (

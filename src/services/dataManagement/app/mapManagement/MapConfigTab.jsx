@@ -143,7 +143,7 @@ const DragCell = (props) => {
 
 /** 텍스트 입력 셀 - 편집 중이면 textarea, 아니면 읽기 전용 div */
 const InputCell = (props) => {
-    const { setVariables, editingRowId } = useContext(MapManagementContext);
+    const { setVariables, editingRowId, setEditingRowId, editingField, setEditingField } = useContext(MapManagementContext);
     const textareaRef = useRef(null);
     const { dataItem, field, style, className } = props;
 
@@ -181,6 +181,20 @@ const InputCell = (props) => {
         }
     };
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // 엔터 입력 시 줄바꿈 방지
+            e.target.blur(); // 포커스 해제 -> handleBlur 트리거 유도
+            setEditingRowId(null); // 편집 모드 종료
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            if (textareaRef.current) {
+                textareaRef.current.value = dataItem[field] || ''; // 입력값을 기존 값으로 롤백해 변경 방지
+            }
+            setEditingRowId(null); // 편집 모드 종료
+        }
+    };
+
     const isEditing = dataItem.id === editingRowId || dataItem.isNew;
 
     if (!isEditing) {
@@ -192,10 +206,15 @@ const InputCell = (props) => {
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    maxWidth: style?.width || '1px'
+                    maxWidth: style?.width || '1px',
+                    cursor: 'pointer'
                 }}
                 className={className}
                 title={dataItem[field] ? String(dataItem[field]) : ''}
+                onClick={() => {
+                    setEditingField(field);
+                    setEditingRowId(dataItem.id);
+                }}
             >
                 <div style={{
                     background: 'transparent',
@@ -217,6 +236,8 @@ const InputCell = (props) => {
         );
     }
 
+    const shouldAutoFocus = editingField === field || (dataItem.isNew && field === 'label');
+
     return (
         <td style={{ ...style, verticalAlign: 'middle' }} className={className}>
             <textarea
@@ -226,7 +247,8 @@ const InputCell = (props) => {
                 rows={1}
                 onInput={adjustHeight}
                 onBlur={handleBlur}
-                autoFocus
+                onKeyDown={handleKeyDown}
+                autoFocus={shouldAutoFocus}
             />
         </td>
     );
@@ -254,6 +276,7 @@ const CategoryCell = memo((props) => {
                     <button
                         onClick={() => SetEditingCategoryPopupOpen(props.dataItem)}
                         className="category-edit-btn"
+                        style={{ cursor: 'pointer', userSelect: 'none' }}
                     >
                         변경
                     </button>
@@ -290,7 +313,8 @@ const LogicCell = (props) => {
                         fontSize: '11px',
                         fontWeight: '600',
                         cursor: 'pointer',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        userSelect: 'none'
                     }}
                 >
                     설정
