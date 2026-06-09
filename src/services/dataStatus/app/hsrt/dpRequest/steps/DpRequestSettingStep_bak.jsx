@@ -66,7 +66,25 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
             theme_table_outer_left_width: '1px',
             theme_table_outer_right_color: '#CBD5E1',
             theme_table_outer_right_style: 'solid',
-            theme_table_outer_right_width: '1px'
+            theme_table_outer_right_width: '1px',
+            theme_header_font: '',
+            theme_stub_font: '',
+            theme_data_font: '',
+            theme_header_group_bg: '#FFFFFF',
+            theme_header_group_fg: '#0F172A',
+            theme_stub_group_bg: '#F1F5F9',
+            theme_stub_group_fg: '#0F172A',
+            theme_stub_leaf_bg: '#FFFFFF',
+            theme_stub_leaf_fg: '#0F172A',
+            theme_stub_tier_divider_color: '#cbd5e1',
+            theme_stub_tier_divider_style: 'solid',
+            theme_stub_tier_divider_width: '1px',
+            theme_header_tier_divider_color: '#cbd5e1',
+            theme_header_tier_divider_style: 'solid',
+            theme_header_tier_divider_width: '1px',
+            theme_banner_divider_color: '#cbd5e1',
+            theme_banner_divider_style: 'solid',
+            theme_banner_divider_width: '1px'
         },
         display: {
             show_n: true,
@@ -139,7 +157,7 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                 if (ui.hide_zero_base_columns !== undefined && ui.hide_zero_base_columns !== null) initDisplay.hide_zero_base_columns = ui.hide_zero_base_columns;
                 if (ui.hide_zero_banners !== undefined && ui.hide_zero_banners !== null) initDisplay.hide_zero_banners = ui.hide_zero_banners;
                 if (ui.hide_zero_stubs !== undefined && ui.hide_zero_stubs !== null) initDisplay.hide_zero_stubs = ui.hide_zero_stubs;
-
+                
                 // base_prefix / base_postfix 값에 따라 show_base_parenthesis 값 판별
                 const policy = actualTableDetail?.display_policy || renderContext?.effective_display_policy;
                 if (policy && policy.base_prefix !== undefined && policy.base_prefix !== null) {
@@ -190,6 +208,24 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_table_outer_right_color: ui.theme_table_outer_right_color || settings.render.theme_table_outer_right_color,
                     theme_table_outer_right_style: ui.theme_table_outer_right_style || settings.render.theme_table_outer_right_style,
                     theme_table_outer_right_width: ui.theme_table_outer_right_width || settings.render.theme_table_outer_right_width,
+                    theme_header_font: ui.theme_header_font || settings.render.theme_header_font,
+                    theme_stub_font: ui.theme_stub_font || settings.render.theme_stub_font,
+                    theme_data_font: ui.theme_data_font || settings.render.theme_data_font,
+                    theme_header_group_bg: ui.theme_header_group_bg || settings.render.theme_header_group_bg,
+                    theme_header_group_fg: ui.theme_header_group_fg || settings.render.theme_header_group_fg,
+                    theme_stub_group_bg: ui.theme_stub_group_bg || settings.render.theme_stub_group_bg,
+                    theme_stub_group_fg: ui.theme_stub_group_fg || settings.render.theme_stub_group_fg,
+                    theme_stub_leaf_bg: ui.theme_stub_leaf_bg || settings.render.theme_stub_leaf_bg,
+                    theme_stub_leaf_fg: ui.theme_stub_leaf_fg || settings.render.theme_stub_leaf_fg,
+                    theme_stub_tier_divider_color: ui.theme_stub_tier_divider_color || settings.render.theme_stub_tier_divider_color,
+                    theme_stub_tier_divider_style: ui.theme_stub_tier_divider_style || settings.render.theme_stub_tier_divider_style,
+                    theme_stub_tier_divider_width: ui.theme_stub_tier_divider_width || settings.render.theme_stub_tier_divider_width,
+                    theme_header_tier_divider_color: ui.theme_header_tier_divider_color || settings.render.theme_header_tier_divider_color,
+                    theme_header_tier_divider_style: ui.theme_header_tier_divider_style || settings.render.theme_header_tier_divider_style,
+                    theme_header_tier_divider_width: ui.theme_header_tier_divider_width || settings.render.theme_header_tier_divider_width,
+                    theme_banner_divider_color: ui.theme_banner_divider_color || settings.render.theme_banner_divider_color,
+                    theme_banner_divider_style: ui.theme_banner_divider_style || settings.render.theme_banner_divider_style,
+                    theme_banner_divider_width: ui.theme_banner_divider_width || settings.render.theme_banner_divider_width,
                 };
 
                 nextSettings = {
@@ -512,6 +548,24 @@ const DpRequestSettingStep = forwardRef(({ onUnsavedChange }, ref) => {
                     theme_table_outer_right_color: settings.render.theme_table_outer_right_color?.toUpperCase(),
                     theme_table_outer_right_style: settings.render.theme_table_outer_right_style,
                     theme_table_outer_right_width: settings.render.theme_table_outer_right_width,
+                    theme_header_font: settings.render.theme_header_font,
+                    theme_stub_font: settings.render.theme_stub_font,
+                    theme_data_font: settings.render.theme_data_font,
+                    theme_header_group_bg: settings.render.theme_header_group_bg?.toUpperCase(),
+                    theme_header_group_fg: settings.render.theme_header_group_fg?.toUpperCase(),
+                    theme_stub_group_bg: settings.render.theme_stub_group_bg?.toUpperCase(),
+                    theme_stub_group_fg: settings.render.theme_stub_group_fg?.toUpperCase(),
+                    theme_stub_leaf_bg: settings.render.theme_stub_leaf_bg?.toUpperCase(),
+                    theme_stub_leaf_fg: settings.render.theme_stub_leaf_fg?.toUpperCase(),
+                    theme_stub_tier_divider_color: settings.render.theme_stub_tier_divider_color?.toUpperCase(),
+                    theme_stub_tier_divider_style: settings.render.theme_stub_tier_divider_style,
+                    theme_stub_tier_divider_width: settings.render.theme_stub_tier_divider_width,
+                    theme_header_tier_divider_color: settings.render.theme_header_tier_divider_color?.toUpperCase(),
+                    theme_header_tier_divider_style: settings.render.theme_header_tier_divider_style,
+                    theme_header_tier_divider_width: settings.render.theme_header_tier_divider_width,
+                    theme_banner_divider_color: settings.render.theme_banner_divider_color?.toUpperCase(),
+                    theme_banner_divider_style: settings.render.theme_banner_divider_style,
+                    theme_banner_divider_width: settings.render.theme_banner_divider_width,
                     format_show_n: settings.display.show_n,
                     format_show_percent: settings.display.show_percent,
                     format_n_round: settings.display.n_digits !== "" && settings.display.n_digits !== null ? Number(settings.display.n_digits) : undefined,
