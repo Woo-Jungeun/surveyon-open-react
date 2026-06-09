@@ -434,9 +434,9 @@ input:checked+.slider:before {
 }
 
 .variable-page-card .variable-input:focus {
-    overflow-y: hidden !important; /* 스크롤바 완전히 감춤 */
+    overflow-y: hidden !important;
+    /* 스크롤바 완전히 감춤 */
     border-color: var(--dm-primary) !important;
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2) !important;
     background-color: #fff !important;
     white-space: pre-wrap !important;
     word-break: break-all !important;
@@ -1808,7 +1808,8 @@ input:checked+.slider:before {
 
 .variable-page-card .variable-input,
 .variable-page-card .variable-text-readonly,
-.variable-page-card .category-cell-content {
+.variable-page-card .category-cell-content,
+.category-grid-container .variable-input {
     min-height: 22px !important;
     height: 22px !important;
     padding: 0px 4px !important;
