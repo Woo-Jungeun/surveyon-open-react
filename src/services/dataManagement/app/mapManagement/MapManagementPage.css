@@ -866,14 +866,18 @@ input:checked+.slider:before {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    cursor: pointer;
+    cursor: pointer !important;
     line-height: 1;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
 }
 
 .variable-page .dm-checkbox-label.dm-checkbox-disabled,
 [data-theme="data-management"] .dm-checkbox-label.dm-checkbox-disabled,
 [data-theme="data-dashboard"] .dm-checkbox-label.dm-checkbox-disabled {
-    cursor: default;
+    cursor: default !important;
     opacity: 0.35;
     pointer-events: none;
 }
@@ -889,6 +893,7 @@ input:checked+.slider:before {
     margin: 0;
     padding: 0;
     pointer-events: none;
+    user-select: none !important;
 }
 
 /* 커스텀 박스 */
@@ -904,6 +909,11 @@ input:checked+.slider:before {
     position: relative;
     transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
     flex-shrink: 0;
+    cursor: pointer !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
 }
 
 /* 체크됐을 때 박스 - 배경 없이 테두리만 색상 */

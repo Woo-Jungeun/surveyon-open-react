@@ -587,17 +587,18 @@ const CheckboxCell = memo((props) => {
     const isChecked = !!(dataItem[field]);
 
     return (
-        <td style={{ ...style, textAlign: 'center', verticalAlign: 'middle', padding: 0 }} className={className}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%' }}>
-                <label className={`dm-checkbox-label ${isEditing ? '' : 'dm-checkbox-disabled'}`}>
+        <td style={{ ...style, textAlign: 'center', verticalAlign: 'middle', padding: 0, cursor: isEditing ? 'pointer' : 'default', userSelect: 'none' }} className={className}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%', userSelect: 'none', cursor: isEditing ? 'pointer' : 'default' }}>
+                <label className={`dm-checkbox-label ${isEditing ? '' : 'dm-checkbox-disabled'}`} style={{ userSelect: 'none', cursor: isEditing ? 'pointer' : 'default' }}>
                     <input
                         type="checkbox"
                         className="dm-checkbox-input"
                         checked={isChecked}
                         onChange={handleChange}
                         disabled={!isEditing}
+                        style={{ userSelect: 'none', cursor: isEditing ? 'pointer' : 'default' }}
                     />
-                    <span className="dm-checkbox-box" />
+                    <span className="dm-checkbox-box" style={{ userSelect: 'none', cursor: isEditing ? 'pointer' : 'default' }} />
                 </label>
             </div>
         </td>
@@ -641,18 +642,19 @@ const RowSelectCell = (props) => {
     };
 
     return (
-        <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', padding: 0 }}
+        <td style={{ ...props.style, textAlign: 'center', verticalAlign: 'middle', padding: 0, cursor: 'pointer', userSelect: 'none' }}
             onClick={e => e.stopPropagation()}
         >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%' }}>
-                <label className="dm-checkbox-label">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%', userSelect: 'none', cursor: 'pointer' }}>
+                <label className="dm-checkbox-label" style={{ userSelect: 'none', cursor: 'pointer' }}>
                     <input
                         type="checkbox"
                         className="dm-checkbox-input"
                         checked={checked}
                         onChange={handleChange}
+                        style={{ userSelect: 'none', cursor: 'pointer' }}
                     />
-                    <span className="dm-checkbox-box" />
+                    <span className="dm-checkbox-box" style={{ userSelect: 'none', cursor: 'pointer' }} />
                 </label>
             </div>
         </td>
@@ -815,9 +817,9 @@ const MapConfigTab = ({
         };
 
         return (
-            <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%' }}>
-                    <label className={`dm-checkbox-label ${isSelectable ? '' : 'dm-checkbox-disabled'}`}>
+            <td style={{ textAlign: 'center', verticalAlign: 'middle', padding: 0, cursor: isSelectable ? 'pointer' : 'default', userSelect: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '24px', width: '100%', userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }}>
+                    <label className={`dm-checkbox-label ${isSelectable ? '' : 'dm-checkbox-disabled'}`} style={{ userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }}>
                         <input
                             type="checkbox"
                             className="dm-checkbox-input"
@@ -825,8 +827,9 @@ const MapConfigTab = ({
                             disabled={!isSelectable}
                             onChange={handleChange}
                             onClick={(e) => e.stopPropagation()}
+                            style={{ userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }}
                         />
-                        <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} />
+                        <span className="dm-checkbox-box" onClick={(e) => e.stopPropagation()} style={{ userSelect: 'none', cursor: isSelectable ? 'pointer' : 'default' }} />
                     </label>
                 </div>
             </td>
