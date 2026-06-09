@@ -150,8 +150,8 @@ const InputCell = (props) => {
     // textarea 높이를 내용에 맞게 자동 조정
     const adjustHeight = () => {
         if (textareaRef.current) {
-            textareaRef.current.style.height = "auto";
-            textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+            textareaRef.current.style.setProperty("height", "auto", "important");
+            textareaRef.current.style.setProperty("height", textareaRef.current.scrollHeight + "px", "important");
         }
     };
 
@@ -236,6 +236,11 @@ const InputCell = (props) => {
         );
     }
 
+    const handleFocus = (e) => {
+        const val = e.target.value || '';
+        e.target.setSelectionRange(val.length, val.length);
+    };
+
     const shouldAutoFocus = editingField === field || (dataItem.isNew && field === 'label');
 
     return (
@@ -248,6 +253,7 @@ const InputCell = (props) => {
                 onInput={adjustHeight}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
+                onFocus={handleFocus}
                 autoFocus={shouldAutoFocus}
             />
         </td>

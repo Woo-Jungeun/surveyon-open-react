@@ -433,9 +433,13 @@ input:checked+.slider:before {
     display: block;
 }
 
-.variable-input:focus {
-    border-color: var(--dm-primary);
-    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+.variable-page-card .variable-input:focus {
+    overflow-y: hidden !important; /* 스크롤바 완전히 감춤 */
+    border-color: var(--dm-primary) !important;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.2) !important;
+    background-color: #fff !important;
+    white-space: pre-wrap !important;
+    word-break: break-all !important;
 }
 
 /* Category Cell */
@@ -830,6 +834,15 @@ input:checked+.slider:before {
     background-color: #f0faf5 !important;
     cursor: pointer;
     transition: background-color 0.1s ease;
+}
+
+.variable-page .k-grid tr.editing-row>td,
+.variable-page .k-grid .k-grid-content tr.editing-row>td,
+.variable-page .k-grid .k-table-row.editing-row>td,
+.variable-page .k-grid .k-table-row.editing-row>.k-table-td {
+    height: auto !important;
+    min-height: 24px !important;
+    overflow: visible !important;
 }
 
 
